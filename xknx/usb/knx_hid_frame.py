@@ -307,7 +307,10 @@ class KNXHIDFrameData:
 
 
 class KNXHIDFrame:
-    """Represents `3.4.1.1 HID report frame structure` of the KNX specification"""
+    """
+    Represents `3.4.1.1 HID report frame structure` of the KNX specification
+    `09_03 Basic and System Components - Couplers v01.03.03 AS.pdf`
+    """
 
     def __init__(self) -> None:
         self._body: Optional[KNXHIDReportBody] = None
@@ -330,10 +333,10 @@ class KNXHIDFrame:
         return obj
 
     @classmethod
-    def from_knx(cls, data: bytes, partial: bool = False):
+    def from_knx(cls, data: bytes):
         """Takes USB HID data and creates a `KNXHIDFrame` object."""
         obj = cls()
-        obj._init(data, partial)
+        obj._init(data)
         return obj
 
     def to_knx(self) -> bytes:
@@ -380,13 +383,12 @@ class KNXHIDFrame:
         """
         return self._body
 
-    def _init(self, data: bytes, partial: bool):
+    def _init(self, data: bytes):
         """ """
         if len(data) < self._expected_byte_count:
             logger.warning(
                 f"only received {len(data)} bytes, expected {self._expected_byte_count}. (Unused bytes in the last HID report frame shall be filled with 00h (3.4.1.2.2 Sequence number))"
             )
-        self._partial = partial
         self._header = KNXHIDReportHeader.from_knx(data[:3])
-        self._body = KNXHIDReportBody.from_knx(data[3:], partial=partial)
+        self._body = KNXHIDReportBody.from_knx(data[3:], partial=self._header.packet_info.sequence_number != SequenceNumber.FIRST_PACKET)
         self._is_valid = self._header.is_valid and self._body.is_valid

@@ -61,7 +61,18 @@ class KNXToTelegram:
 
 
 def get_packet_type(overall_length: int, remaining_length: int, sequence_number: SequenceNumber) -> PacketType:
-    """ """
+    """
+    Returns the packet type depending on sequence number and bytes in frame.
+
+    The overall size of a HID frame is 64 octets.
+    The KNX HID Report Header has 3 octet.
+    The KNX USB Transfer Protocol Header in the KNX HID Report Body
+    has 8 octets and is only present in the first packet.
+
+    Therefore:
+        if the first packet has 64 - 3 - 8 = 53 octets or less, it fits in one frame.
+        after the first frame there are 61 usable octets for the payload.
+    """
     if overall_length <= 53:
         # one frame is necessary
         if sequence_number == SequenceNumber.FIRST_PACKET:
@@ -82,10 +93,11 @@ def get_packet_type(overall_length: int, remaining_length: int, sequence_number:
         # at least three frames are necessary
         if sequence_number == SequenceNumber.FIRST_PACKET:
             return PacketType.START_AND_PARTIAL
-        elif sequence_number > SequenceNumber.FIRST_PACKET:
-            return PacketType.PARTIAL
+        # order of evaluation is important, the last condition would also be true, but yield the wrong value
         elif sequence_number > SequenceNumber.FIRST_PACKET and remaining_length <= 61:
             return PacketType.PARTIAL_AND_END
+        elif sequence_number > SequenceNumber.FIRST_PACKET:
+            return PacketType.PARTIAL
     return PacketType.START_AND_END
 
 
