@@ -18,7 +18,7 @@ KNOWN_DEVICES = [
     # Future Technology Devices International Limited
     (0x0403, 0x6898),  # Tokka
     # b+b
-    (0x04cc, 0x0301),  # b+b Automations- und Steuerungstechnik
+    (0x04CC, 0x0301),  # b+b Automations- und Steuerungstechnik
     # Siemens OCI700 interface (Synco family)
     (0x0681, 0x0014),  # Siemens HVAC
     # Siemens Automation & Drives
@@ -26,73 +26,73 @@ KNOWN_DEVICES = [
     (0x0908, 0x02DC),  # Siemens HVAC
     (0x0908, 0x02E6),  # Schrack Technik GmbH
     # Weinzierl Engineering GmbH
-    (0x0e77, 0x0111),  # Siemens
-    (0x0e77, 0x0112),
-    (0x0e77, 0x6910),  # Busch-Jaeger Elektro
-    (0x0e77, 0x0104),  # GEWISS
-    (0x0e77, 0x0104),  # Somfy
-    (0x0e77, 0x0115),  # CONTROLtronic
-    (0x0e77, 0x0102),  # Weinzierl Engineering GmbH
-    (0x0e77, 0x0103),
-    (0x0e77, 0x0104),
-    (0x0e77, 0x2001),
-    (0x0e77, 0x0121),  # Gustav Hensel GmbH & Co. KG
-    (0x0e77, 0x0141),  # Schneider Electric (MG)
+    (0x0E77, 0x0111),  # Siemens
+    (0x0E77, 0x0112),
+    (0x0E77, 0x6910),  # Busch-Jaeger Elektro
+    (0x0E77, 0x0104),  # GEWISS
+    (0x0E77, 0x0104),  # Somfy
+    (0x0E77, 0x0115),  # CONTROLtronic
+    (0x0E77, 0x0102),  # Weinzierl Engineering GmbH
+    (0x0E77, 0x0103),
+    (0x0E77, 0x0104),
+    (0x0E77, 0x2001),
+    (0x0E77, 0x0121),  # Gustav Hensel GmbH & Co. KG
+    (0x0E77, 0x0141),  # Schneider Electric (MG)
     # Insta
-    (0x135e, 0x0023),  # Albrecht Jung
-    (0x135e, 0x0123),
-    (0x135e, 0x0323),
-    (0x135e, 0x0021),  # Berker
-    (0x135e, 0x0022),  # GIRA Giersiepen
-    (0x135e, 0x0122),
-    (0x135e, 0x0322),
-    (0x135e, 0x0025),  # Hager Electro
-    (0x135e, 0x0020),  # Insta GmbH
-    (0x135e, 0x0320),
-    (0x135e, 0x0024),  # Merten
-    (0x135e, 0x0026),  # Feller
-    (0x135e, 0x0326),
-    (0x135e, 0x0028),  # Glamox AS
-    (0x135e, 0x0027),  # Panasonic
-    (0x135e, 0x0329),  # B.E.G.
+    (0x135E, 0x0023),  # Albrecht Jung
+    (0x135E, 0x0123),
+    (0x135E, 0x0323),
+    (0x135E, 0x0021),  # Berker
+    (0x135E, 0x0022),  # GIRA Giersiepen
+    (0x135E, 0x0122),
+    (0x135E, 0x0322),
+    (0x135E, 0x0025),  # Hager Electro
+    (0x135E, 0x0020),  # Insta GmbH
+    (0x135E, 0x0320),
+    (0x135E, 0x0024),  # Merten
+    (0x135E, 0x0026),  # Feller
+    (0x135E, 0x0326),
+    (0x135E, 0x0028),  # Glamox AS
+    (0x135E, 0x0027),  # Panasonic
+    (0x135E, 0x0329),  # B.E.G.
     # Busch-Jaeger
-    (0x145c, 0x1330),  # Busch-Jaeger Elektro
-    (0x145c, 0x1490),
+    (0x145C, 0x1330),  # Busch-Jaeger Elektro
+    (0x145C, 0x1490),
     # ABB STOTZ‐KONTAKT GmbH
-    (0x147b, 0x2200),  # ABB
-    (0x147b, 0x5120),
+    (0x147B, 0x2200),  # ABB
+    (0x147B, 0x5120),
     # MCS Electronics ‐ OBSOLETE
-    (0x16d0, 0x0490),  # TAPKO Technologies
-    (0x16d0, 0x0491),  # MDT technologies
-    (0x16d0, 0x0492),  # preussen automation
+    (0x16D0, 0x0490),  # TAPKO Technologies
+    (0x16D0, 0x0491),  # MDT technologies
+    (0x16D0, 0x0492),  # preussen automation
     # SATEL Ltd.
-    (0x24d5, 0x0106),  # Satel sp. z o.o.
+    (0x24D5, 0x0106),  # Satel sp. z o.o.
     # Tapko Technologies GmbH
-    (0x28c2, 0x001A),  # VIMAR
-    (0x28c2, 0x0002),  # Zennio
-    (0x28c2, 0x0004),  # TAPKO Technologies
-    (0x28c2, 0x0008),
-    (0x28c2, 0x0006),  # HDL
-    (0x28c2, 0x0007),  # Niko-Zublin
-    (0x28c2, 0x000C),  # ESYLUX
-    (0x28c2, 0x0010),  # Video-Star
-    (0x28c2, 0x0015),  # Bes – Ingenium
-    (0x28c2, 0x000E),  # APRICUM
-    (0x28c2, 0x000F),
-    (0x28c2, 0x0005),  # Philips Controls
-    (0x28c2, 0x0003),  # Ekinex S.p.A.
-    (0x28c2, 0x0011),  # Griesser AG
-    (0x28c2, 0x0012),
-    (0x28c2, 0x000B),  # VIVO
-    (0x28c2, 0x000D),
-    (0x28c2, 0x0017),  # Interra
-    (0x28c2, 0x0013),  # MEAN WELL Enterprises Co. Ltd.
-    (0x28c2, 0x0014),  # Ergo3 Sarl
+    (0x28C2, 0x001A),  # VIMAR
+    (0x28C2, 0x0002),  # Zennio
+    (0x28C2, 0x0004),  # TAPKO Technologies
+    (0x28C2, 0x0008),
+    (0x28C2, 0x0006),  # HDL
+    (0x28C2, 0x0007),  # Niko-Zublin
+    (0x28C2, 0x000C),  # ESYLUX
+    (0x28C2, 0x0010),  # Video-Star
+    (0x28C2, 0x0015),  # Bes – Ingenium
+    (0x28C2, 0x000E),  # APRICUM
+    (0x28C2, 0x000F),
+    (0x28C2, 0x0005),  # Philips Controls
+    (0x28C2, 0x0003),  # Ekinex S.p.A.
+    (0x28C2, 0x0011),  # Griesser AG
+    (0x28C2, 0x0012),
+    (0x28C2, 0x000B),  # VIVO
+    (0x28C2, 0x000D),
+    (0x28C2, 0x0017),  # Interra
+    (0x28C2, 0x0013),  # MEAN WELL Enterprises Co. Ltd.
+    (0x28C2, 0x0014),  # Ergo3 Sarl
     # ise GmbH
-    (0x2a07, 0x0001),  # ise GmbH
-    (0x2a07, 0x0002),  # Elsner Elektronik GmbH
+    (0x2A07, 0x0001),  # ise GmbH
+    (0x2A07, 0x0002),  # Elsner Elektronik GmbH
     # DOGAWIST ‐ Investment GmbH
-    (0x2d72, 0x0002),  # PEAKnx a DOGAWIST company
+    (0x2D72, 0x0002),  # PEAKnx a DOGAWIST company
     (0x7660, 0x0002),  # KNX Association
 ]
 
@@ -108,7 +108,7 @@ class USBKNXInterfaceData:
 
 
 class USBDevice:
-    """ Abstraction with basic information of usb devices """
+    """Abstraction with basic information of usb devices"""
 
     def __init__(self):
         """"""
@@ -123,7 +123,7 @@ class USBDevice:
 
     @property
     def device(self) -> Optional[usb.core.Device]:
-        """ `usb.core.Device` object """
+        """`usb.core.Device` object"""
         return self._device
 
     @property
@@ -144,7 +144,7 @@ class USBDevice:
 
     @device.setter
     def device(self, device: usb.core.Device):
-        """ returns `usb.core.Device` object """
+        """returns `usb.core.Device` object"""
         self._device = device
 
     @manufacturer.setter
@@ -170,17 +170,13 @@ class USBDevice:
             self._ep_in = usb.util.find_descriptor(
                 self._interface,
                 # match the first IN endpoint
-                custom_match= \
-                    lambda e: \
-                        usb.util.endpoint_direction(e.bEndpointAddress) == \
-                        usb.util.ENDPOINT_IN)
+                custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN,
+            )
             self._ep_out = usb.util.find_descriptor(
                 self._interface,
                 # match the first OUT endpoint
-                custom_match= \
-                    lambda e: \
-                        usb.util.endpoint_direction(e.bEndpointAddress) == \
-                        usb.util.ENDPOINT_OUT)
+                custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT,
+            )
             self._claim_interface()
 
     def release(self) -> None:
@@ -251,8 +247,11 @@ def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Option
     """
     device = None
     devices = get_connected_usb_device_list(interface_data)
-    matching_devices = [device for device in devices if
-                        (interface_data.serial_number and device.serial_number == str(interface_data.serial_number))]
+    matching_devices = [
+        device
+        for device in devices
+        if (interface_data.serial_number and device.serial_number == str(interface_data.serial_number))
+    ]
     if matching_devices:
         device = matching_devices[0]
     elif devices and not interface_data.serial_number:
@@ -276,8 +275,13 @@ def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> List[U
     device_list = []
     try:
         usb_device_list = list(
-            usb.core.find(find_all=True, idVendor=interface_data.idVendor, idProduct=interface_data.idProduct,
-                          backend=_get_usb_backend()))
+            usb.core.find(
+                find_all=True,
+                idVendor=interface_data.idVendor,
+                idProduct=interface_data.idProduct,
+                backend=_get_usb_backend(),
+            )
+        )
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError as e:
         usb_logger.error(str(e))
@@ -290,7 +294,9 @@ def get_all_known_knx_usb_devices() -> List[USBDevice]:
     device_list = []
     try:
         usb_device_list = list(usb.core.find(find_all=True, backend=_get_usb_backend()))
-        usb_device_list = list(filter(lambda device: bool((device.idVendor, device.idProduct) in KNOWN_DEVICES), usb_device_list))
+        usb_device_list = list(
+            filter(lambda device: bool((device.idVendor, device.idProduct) in KNOWN_DEVICES), usb_device_list)
+        )
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError as e:
         usb_logger.error(str(e))
@@ -315,10 +321,7 @@ class FindHIDClass(object):
         # continue search in the interface descriptor
         for configuration in device:
             # find_descriptor: what's it?
-            interface = usb.util.find_descriptor(
-                configuration,
-                bInterfaceClass=self._class
-            )
+            interface = usb.util.find_descriptor(configuration, bInterfaceClass=self._class)
             if interface is not None:
                 return True
         return False
@@ -345,7 +348,8 @@ def get_all_hid_devices() -> List[USBDevice]:
     device_list = []
     try:
         usb_device_list = list(
-            usb.core.find(find_all=True, custom_match=FindHIDClass(hid_device_class), backend=_get_usb_backend()))
+            usb.core.find(find_all=True, custom_match=FindHIDClass(hid_device_class), backend=_get_usb_backend())
+        )
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError:
         usb_logger.error("No backend found")
@@ -356,18 +360,21 @@ def get_all_hid_devices() -> List[USBDevice]:
 def _get_usb_backend():
     """ """
     backend = None
-    if platform.system() == 'Windows':
+    if platform.system() == "Windows":
         # TODO: here we loaded libusb dll and use it as backend
         #       libusb as backend on windows supports almost no function (install WinUSB with Zadig?)
         import os
         import usb.backend.libusb1
+
         dll_location = os.environ.get("XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll")
         try:
             backend = usb.backend.libusb1.get_backend(find_library=lambda x: f"{dll_location}")
         except usb.core.NoBackendError as ex:
             logger.error(str(ex))
         if not backend:
-            usb_logger.error("No USB backend found. Set XKNX_LIBUSB environment variable pointing to libusb-1.0.dll or install it to C:\\Windows\\System32")
+            usb_logger.error(
+                "No USB backend found. Set XKNX_LIBUSB environment variable pointing to libusb-1.0.dll or install it to C:\\Windows\\System32"
+            )
     return backend
 
 
@@ -399,6 +406,7 @@ def _create_usb_device_list(usb_device_list: List[usb.core.Device]) -> List[USBD
             device_list.append(_create_usb_device(device))
         except ValueError as e:
             usb_logger.error(
-                f"Exception reading information of idVendor: {device.idVendor}, idProduct: {device.idProduct}")
+                f"Exception reading information of idVendor: {device.idVendor}, idProduct: {device.idProduct}"
+            )
             usb_logger.error(str(e))
     return device_list

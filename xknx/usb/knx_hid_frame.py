@@ -2,7 +2,7 @@ import logging
 import struct
 from typing import Optional
 
-from .knx_hid_datatypes import PacketType, ProtocolID, SequenceNumber, EMIID
+from .knx_hid_datatypes import EMIID, PacketType, ProtocolID, SequenceNumber
 from .knx_hid_transfer import (
     KNXUSBTransferProtocolBody,
     KNXUSBTransferProtocolBodyData,
@@ -19,7 +19,7 @@ class PacketInfoData:
     """ """
 
     def __init__(self, sequence_number: SequenceNumber, packet_type: PacketType) -> None:
-        self.sequence_number = sequence_number
+        self.sequence_number = SequenceNumber(sequence_number)
         self.packet_type = packet_type
 
 
@@ -156,7 +156,7 @@ class KNXHIDReportHeader:
         if self._valid:
             return struct.pack("<B1sB", self._report_id, self._packet_info.to_knx(), self._data_length)
         else:
-            return bytes()
+            return 3 * b"\x00"
 
     @property
     def report_id(self) -> int:
@@ -206,15 +206,17 @@ class KNXHIDReportHeader:
 class KNXHIDReportBodyData:
     """ """
 
-    def __init__(self, protocol_id: ProtocolID, emi_id: EMIID, emi_data: bytes, partial: bool) -> None:
+    def __init__(self, protocol_id: ProtocolID, emi_id: EMIID, data: bytes, partial: bool) -> None:
         self.protocol_id = protocol_id
         self.emi_id = emi_id
-        self.emi_data = emi_data
+        self.data = data
         self.partial = partial
 
 
 class KNXHIDReportBody:
-    """Represents `3.4.1.3 Data (KNX HID report body)` of the KNX specification"""
+    """3.4.1.3 Data (KNX HID report body)
+    The data field (KNX HID Report Body) consists of the KNX USB Transfer Header
+    and the KNX USB Transfer Body (example for an L_Data_Request in cEMI format)"""
 
     def __init__(self):
         self._max_size = 61  # HID frame has max. size of 64 - 3 octets for the header
@@ -227,7 +229,8 @@ class KNXHIDReportBody:
     def from_data(cls, data: KNXHIDReportBodyData):
         """ """
         obj = cls()
-        obj._body = KNXUSBTransferProtocolBody.from_data(KNXUSBTransferProtocolBodyData(data.emi_data, data.partial))
+        obj._partial = data.partial
+        obj._body = KNXUSBTransferProtocolBody.from_data(KNXUSBTransferProtocolBodyData(data.data, data.partial))
         if data.partial:
             obj._is_valid = obj._body.is_valid
         else:
@@ -249,31 +252,27 @@ class KNXHIDReportBody:
         if self._header and self._body:
             return self._header.to_knx() + self._body.to_knx(self._partial)
         else:
-            return bytes()
+            return 61 * b"\x00"
 
     @property
     def transfer_protocol_header(self) -> Optional[KNXUSBTransferProtocolHeader]:
-        """
-        Contains the header part as described in `3.4.1.3 Data (KNX HID report body)`
-        of the KNX specification
-        """
+        """3.4.1.3 Data (KNX HID report body)
+        Contains the header part `KNX USB Transfer Protocol Header (only in start packet!)`."""
         return self._header
 
     @property
     def transfer_protocol_body(self) -> Optional[KNXUSBTransferProtocolBody]:
-        """
-        Contains the body part as described in `3.4.1.3 Data (KNX HID report body)`
-        of the KNX specification
-        """
+        """3.4.1.3 Data (KNX HID report body)
+        Contains the body part `KNX USB Transfer Protocol Body`."""
         return self._body
 
     @property
-    def length(self) -> int:
+    def data_length(self) -> int:
         """ """
+        if self._header and self._body:
+            return self.transfer_protocol_header.header_length + self.transfer_protocol_header.body_length
         if self._partial and self._body:
-            return self._body.length
-        elif self._header and self._body:
-            return self._header.header_length + self._body.length
+            return self._body.length  # in partial message there is no `transfer_protocol_body`
         return 0
 
     @property
@@ -307,9 +306,8 @@ class KNXHIDFrameData:
 
 
 class KNXHIDFrame:
-    """
-    Represents `3.4.1.1 HID report frame structure` of the KNX specification
-    `09_03 Basic and System Components - Couplers v01.03.03 AS.pdf`
+    """ 3.4.1.1 HID report frame structure
+    see `09_03 Basic and System Components - Couplers v01.03.03 AS.pdf`
     """
 
     def __init__(self) -> None:
@@ -324,8 +322,8 @@ class KNXHIDFrame:
         """ """
         obj = cls()
         obj._body = KNXHIDReportBody.from_data(data.hid_report_body_data)
-        obj._header = KNXHIDReportHeader.from_data(KNXHIDReportHeaderData(data.packet_info, obj._body.length))
-        obj._partial = data.hid_report_body_data.partial
+        obj._header = KNXHIDReportHeader.from_data(KNXHIDReportHeaderData(data.packet_info, obj._body.data_length))
+        obj._partial = data.hid_report_body_data is None
         if data.hid_report_body_data.partial:
             obj._is_valid = obj._body.is_valid
         else:
@@ -345,19 +343,15 @@ class KNXHIDFrame:
 
     @property
     def is_valid(self) -> bool:
-        """
-        Returns true if all fields were parsed successfully and seem to
-        be plausible
-        """
+        """Returns true if all fields were parsed successfully."""
         return self._is_valid
 
     @property
     def report_header(self) -> Optional[KNXHIDReportHeader]:
-        """
-        Contains the information as described in `3.4.1.2 KNX HID report header`
-        of the KNX specification
+        """3.4.1.2 KNX HID report header
 
         Fields
+        ------
           - Report ID
           - Sequence number
           - Packet type
@@ -367,11 +361,10 @@ class KNXHIDFrame:
 
     @property
     def report_body(self) -> Optional[KNXHIDReportBody]:
-        """
-        Contains the information as described in `3.4.1.3 Data (KNX HID report body)`
-        of the KNX specification
+        """3.4.1.3 Data (KNX HID report body)
 
         Fields
+        ------
           - Protocol version
           - Header length
           - Body length
@@ -390,5 +383,7 @@ class KNXHIDFrame:
                 f"only received {len(data)} bytes, expected {self._expected_byte_count}. (Unused bytes in the last HID report frame shall be filled with 00h (3.4.1.2.2 Sequence number))"
             )
         self._header = KNXHIDReportHeader.from_knx(data[:3])
-        self._body = KNXHIDReportBody.from_knx(data[3:], partial=self._header.packet_info.sequence_number != SequenceNumber.FIRST_PACKET)
+        self._body = KNXHIDReportBody.from_knx(
+            data[3:], partial=self._header.packet_info.sequence_number != SequenceNumber.FIRST_PACKET
+        )
         self._is_valid = self._header.is_valid and self._body.is_valid

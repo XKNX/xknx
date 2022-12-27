@@ -1,6 +1,7 @@
 import logging
 import queue
 from queue import Queue
+
 from xknx.core.thread import BaseThread
 from xknx.knxip import CEMIFrame, CEMIMessageCode
 from xknx.telegram import Telegram
@@ -37,6 +38,4 @@ class USBSendThread(BaseThread):
                 for hid_frame in hid_frames:
                     self.usb_device.write(hid_frame.to_knx())
             except queue.Empty:
-                logger.debug("USBSendThread nothing to send")
                 pass
-

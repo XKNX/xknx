@@ -1,5 +1,6 @@
 import logging
 import asyncio
+
 from xknx.core.thread import BaseThread
 from xknx.telegram import Telegram
 from xknx.usb.knx_hid_helper import KNXToTelegram
@@ -21,7 +22,6 @@ class USBReceiveThread(BaseThread):
 
     def run(self) -> None:
         """ """
-        import time
         while self._is_active.is_set():
             usb_data = self._usb_device.read()
             done, telegram = self._knx_to_telegram.process(usb_data)
