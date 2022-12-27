@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.2.0 Expose cooldown 2022-12-27
 
 ### Devices
 
@@ -24,7 +24,7 @@ nav_order: 2
 - Add new logger `xknx.cemi` for incoming and outgoing CEMIFrames.
 - Remove timestamp and line break in knx and raw logger.
 
-# 2.1.0 Enhance notification device
+# 2.1.0 Enhance notification device 2022-11-29
 
 ### Devices
 
