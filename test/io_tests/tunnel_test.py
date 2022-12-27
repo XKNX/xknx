@@ -155,7 +155,9 @@ class TestUDPTunnel:
         assert self.tunnel.expected_sequence_number == 11
         assert self.tg_received_mock.call_count == 1
         # wrong sequence number - no ACK, not processed
-        self.tunnel._request_received(test_frame_9, None, None)
+        # reconnect if `auto_reconnect` was True
+        with pytest.raises(CommunicationError):
+            self.tunnel._request_received(test_frame_9, None, None)
         await time_travel(0)
         assert self.tunnel.transport.send.call_args_list == []
         self.tunnel.transport.send.reset_mock()
