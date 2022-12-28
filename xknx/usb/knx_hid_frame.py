@@ -97,9 +97,8 @@ class PacketInfo:
         try:
             self._sequence_number = SequenceNumber(data[0] >> 4)
             self._packet_type = PacketType(data[0] & 0x0F)
-        except ValueError as e:
-            logger.error(str(e))
-            return
+        except ValueError as ex:
+            logger.error(str(ex))
 
 
 class KNXHIDReportHeaderData:
@@ -139,8 +138,8 @@ class KNXHIDReportHeader:
         """ """
         obj = cls()
         obj._packet_info = data.packet_info
+        obj._data_length = data.data_length
         if data.data_length <= obj._max_expected_data_length:
-            obj._data_length = data.data_length
             obj._valid = True
         return obj
 
@@ -162,13 +161,6 @@ class KNXHIDReportHeader:
     def report_id(self) -> int:
         """ """
         return self._report_id
-
-    @report_id.setter
-    def report_id(self, value: int):
-        """ """
-        if value != 0x01:
-            logger.warning("the Report ID value shall have the fixed value 01h (3.4.1.2.1 Report ID)")
-        self._report_id = value
 
     @property
     def packet_info(self) -> Optional[PacketInfo]:
@@ -198,7 +190,7 @@ class KNXHIDReportHeader:
         self._report_id = data[0]
         self._packet_info = PacketInfo.from_knx(data[1:2])
         self._data_length = data[2]
-        if self._report_id == 0x01:
+        if self._report_id == 0x01 and self._data_length <= self._max_expected_data_length:
             if self._packet_info.packet_type and self._packet_info.sequence_number:
                 self._valid = True
 

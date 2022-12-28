@@ -141,10 +141,10 @@ class KNXToUSBHIDConverter:
             current_data_length = remaining_data_length if remaining_data_length < max_data_length else max_data_length
             current_data = data[:current_data_length]
             # setup KNXHIDFrame that is ready to be sent over USB
-            partial = sequence_number != SequenceNumber.FIRST_PACKET
-            report_body_data = KNXHIDReportBodyData(ProtocolID.KNX_TUNNEL, EMIID.COMMON_EMI, current_data, partial)
+            partial = sequence_number > SequenceNumber.FIRST_PACKET
             packet_type = get_packet_type(overall_data_length, remaining_data_length, sequence_number)
             packet_info_data = PacketInfoData(sequence_number, packet_type)
+            report_body_data = KNXHIDReportBodyData(ProtocolID.KNX_TUNNEL, EMIID.COMMON_EMI, current_data, partial)
             frame_data = KNXHIDFrameData(PacketInfo.from_data(packet_info_data), report_body_data)
             hid_frame = KNXHIDFrame.from_data(frame_data)
             hid_frames.append(hid_frame)

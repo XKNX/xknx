@@ -142,6 +142,7 @@ class XKNX:
         self.started.clear()
 
     async def idle(self) -> None:
+        """ """
         while True:
             await asyncio.sleep(1.0)
 

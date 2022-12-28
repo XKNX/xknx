@@ -1,3 +1,4 @@
+import time
 import logging
 from typing import List, Optional
 import platform
@@ -190,12 +191,13 @@ class USBDevice:
         response = bytes()
         if self._ep_in and self._device:
             try:
-                response = self._ep_in.read(size_or_buffer=64).tobytes()
+                response = self._ep_in.read(size_or_buffer=64, timeout=-1).tobytes()
                 logger.debug(f"read {len(response)} bytes: {response.hex()}")
             except usb.core.USBTimeoutError:
                 pass
             except usb.core.USBError as error:
                 logger.warning(f"{str(error)}")
+                time.sleep(1)
         else:
             logger.warning("no USB IN endpoint to read from")
         return response

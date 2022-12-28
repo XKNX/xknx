@@ -27,9 +27,8 @@ class KNXUSBTransferProtocolBodyData:
 
 
 class KNXUSBTransferProtocolHeader:
-    """
+    """3.4.1.3 Data (KNX HID report body)
     The KNX USB Transfer Protocol Header shall only be located in the start packet.
-    (3.4.1.3 Data (KNX HID report body))
 
     Parameters
     ----------
