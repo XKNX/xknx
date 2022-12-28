@@ -6,11 +6,16 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.2.0 Expose cooldown 2022-12-27
 
 ### Devices
 
 - ExposeSensor: Add `cooldown` option to allow rate-limiting of sent telegrams.
+- ExposeSensor: Add `respond_to_read` option.
+
+### Connection
+
+- Disconnect when tunnelling sequence number (UDP) gets out of sync.
 
 ### Internals
 
@@ -20,11 +25,11 @@ nav_order: 2
 - Add new logger `xknx.cemi` for incoming and outgoing CEMIFrames.
 - Remove timestamp and line break in knx and raw logger.
 
-# 2.1.0 Enhance notification device
+# 2.1.0 Enhance notification device 2022-11-29
 
 ### Devices
 
-- ExposeSensor and Notification: Add `respond_to_read` option.
+- Notification: Add `respond_to_read` option.
 - Notification: Rename `self._message` to `self.remote_value`.
 
 # 2.0.0 Find and Connect 2022-11-25
