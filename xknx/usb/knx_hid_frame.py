@@ -16,7 +16,7 @@ usb_logger = logging.getLogger("xknx.usb")
 
 
 class PacketInfoData:
-    """ """
+    """Container for `PacketInfo` initialization data"""
 
     def __init__(self, sequence_number: SequenceNumber, packet_type: PacketType) -> None:
         self.sequence_number = SequenceNumber(sequence_number)
@@ -67,13 +67,13 @@ class PacketInfo:
 
     @classmethod
     def from_knx(cls, data: bytes):
-        """ """
+        """Takes the report body data bytes and create a `PacketInfo` object"""
         obj = cls()
         obj._init(data)
         return obj
 
     def to_knx(self) -> bytes:
-        """ """
+        """Converts the data in the object to its byte representation, ready to be sent over USB."""
         if self._sequence_number and self._packet_type:
             return struct.pack("<B", (self._sequence_number.value << 4) | self._packet_type.value)
         else:
@@ -81,12 +81,35 @@ class PacketInfo:
 
     @property
     def sequence_number(self) -> Optional[SequenceNumber]:
-        """ """
+        """3.4.1.2.2 Sequence number
+        If the length of a KNX frame to be passed through USB exceeds the maximal
+        length of the KNX HID Report Body, this is 61 octets, the KNX frame
+        shall be transmitted in multiple HID reports.
+        - Unused bytes in the last HID report frame shall be filled with 00h.
+        - The first HID report frame shall have sequence number 1.
+          Also if a single HID report is sufficient for the transmission of the KNX frame,
+          this single HID report shall have sequence number 1.
+          The use of sequence number 0 is not allowed.
+          The sequence number shall be incremented for each next HID report that
+          is used for the transmission of a KNX frame.
+        """
         return self._sequence_number
 
     @property
     def packet_type(self) -> Optional[PacketType]:
-        """ """
+        """3.4.1.2.3 Packet type
+        The packet type bit-set as specified in clause 3.4.1.1 shall be used in
+        HID Reports as specified in Figure 15.
+
+        | Packet Type Value | Description                                     |
+        |:----------------- |:----------------------------------------------- |
+        | 0h                | reserved / not allowed                          |
+        | 3h (0011b)        | start & end packet (1st and last packet in one) |
+        | 4h (0100b)        | partial packet (not start & not end packet)     |
+        | 5h (0101b)        | start & partial packet                          |
+        | 6h (0110b)        | partial & end packet                            |
+        | all other values  | reserved; not allowed                           |
+        """
         return self._packet_type
 
     def _init(self, data: bytes):
@@ -102,7 +125,7 @@ class PacketInfo:
 
 
 class KNXHIDReportHeaderData:
-    """ """
+    """Container for `KNXHIDReportHeader` initialization data"""
 
     def __init__(self, packet_info: PacketInfo, data_length: int) -> None:
         self.packet_info = packet_info
@@ -145,13 +168,13 @@ class KNXHIDReportHeader:
 
     @classmethod
     def from_knx(cls, data: bytes):
-        """ """
+        """Takes the report body data bytes and create a `KNXHIDReportHeader` object"""
         obj = cls()
         obj._init(data)
         return obj
 
     def to_knx(self) -> bytes:
-        """ """
+        """Converts the data in the object to its byte representation, ready to be sent over USB."""
         if self._valid:
             return struct.pack("<B1sB", self._report_id, self._packet_info.to_knx(), self._data_length)
         else:
@@ -159,29 +182,35 @@ class KNXHIDReportHeader:
 
     @property
     def report_id(self) -> int:
-        """ """
+        """3.4.1.2.1 Report ID
+        The Report ID allows the HID Class host driver to distinguish incoming data,
+        e.g. pointer from keyboard data, by examining this transfer prefix.
+        The Report ID is a feature, which is supported and can be managed by the Host driver.
+        Further structures and features within the HID Report frames must be driven by "higher level" SW."""
         return self._report_id
 
     @property
     def packet_info(self) -> Optional[PacketInfo]:
         """
-        returns an object containing information about the sequence number (3.4.1.2.2 Sequence number)
+        Returns an object containing information about the sequence number (3.4.1.2.2 Sequence number)
         and packet type (start/partial/end packet) (3.4.1.2.3 Packet type)
         """
         return self._packet_info
 
     @property
     def data_length(self) -> int:
-        """ """
+        """3.4.1.2.4 Datalength
+        The data length is the number of octets of the data field (KNX HID Report Body).
+        This is the information following the data length field itself. The maximum value is 61."""
         return self._data_length
 
     @property
     def is_valid(self) -> bool:
-        """ """
+        """Returns True if the information in the structure is valid"""
         return self._valid
 
     def _init(self, data: bytes):
-        """ """
+        """Helper function to parse raw KNX data"""
         if len(data) > self._max_expected_data_length:
             logger.error(
                 f"KNX HID Report Header: received {len(data)} bytes, but expected not more than {self._max_expected_data_length}"
@@ -196,7 +225,7 @@ class KNXHIDReportHeader:
 
 
 class KNXHIDReportBodyData:
-    """ """
+    """Container for `KNXHIDReportBody` initialization data"""
 
     def __init__(self, protocol_id: ProtocolID, emi_id: EMIID, data: bytes, partial: bool) -> None:
         self.protocol_id = protocol_id
@@ -260,10 +289,12 @@ class KNXHIDReportBody:
 
     @property
     def data_length(self) -> int:
-        """ """
+        """3.4.1.2.4 Datalength
+        The data length is the number of octets of the data field (KNX HID Report Body).
+        This is the information following the data length field itself. The maximum value is 61."""
         if self._header and self._body:
             return self.transfer_protocol_header.header_length + self.transfer_protocol_header.body_length
-        if self._partial and self._body:
+        if self._partial and self._body:  # the whole `KNX HID Report Body` contains payload
             return self._body.length  # in partial message there is no `transfer_protocol_body`
         return 0
 
@@ -273,7 +304,7 @@ class KNXHIDReportBody:
         return self._is_valid
 
     def _init(self, data: bytes, partial: bool) -> None:
-        """ """
+        """Helper function to parse raw KNX data"""
         if len(data) != self._max_size:
             logger.error(
                 f"only received {len(data)} bytes, expected {self._max_size}. (Unused bytes in the last HID report frame shall be filled with 00h (3.4.1.2.2 Sequence number))"
@@ -369,7 +400,7 @@ class KNXHIDFrame:
         return self._body
 
     def _init(self, data: bytes):
-        """ """
+        """Helper function to parse raw KNX data"""
         if len(data) < self._expected_byte_count:
             logger.warning(
                 f"only received {len(data)} bytes, expected {self._expected_byte_count}. (Unused bytes in the last HID report frame shall be filled with 00h (3.4.1.2.2 Sequence number))"
