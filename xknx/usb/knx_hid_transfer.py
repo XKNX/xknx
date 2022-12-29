@@ -10,7 +10,7 @@ usb_logger = logging.getLogger("xknx.log")
 
 
 class KNXUSBTransferProtocolHeaderData:
-    """ """
+    """Container for `KNXUSBTransferProtocolHeader` initialization data"""
 
     def __init__(self, body_length: int, protocol_id: ProtocolID, emi_id: EMIID) -> None:
         self.body_length = body_length
@@ -19,7 +19,7 @@ class KNXUSBTransferProtocolHeaderData:
 
 
 class KNXUSBTransferProtocolBodyData:
-    """ """
+    """Container for `KNXUSBTransferProtocolBody` initialization data"""
 
     def __init__(self, data: bytes, partial: bool) -> None:
         self.data = data
@@ -215,10 +215,10 @@ class KNXUSBTransferProtocolBody:
         obj = cls()
         obj._valid = False
         obj._partial = data.partial
-        if len(data.data) <= obj._max_bytes_partial and data.partial:
+        if data.partial and len(data.data) <= obj._max_bytes_partial:
             obj._data = data.data
             obj._valid = True
-        elif len(data.data) <= obj._max_bytes and not data.partial:
+        elif not data.partial and len(data.data) <= obj._max_bytes:
             obj._data = data.data
             obj._valid = True
         return obj
@@ -227,17 +227,14 @@ class KNXUSBTransferProtocolBody:
     def from_knx(cls, data: bytes):
         """Creates an instance of this class filled with the KNX data passed in.
         The data is expected to have the format EMI message code followed by
-        the payload.
-        """
+        the payload."""
         obj = cls()
         obj._init(data)
         return obj
 
     def to_knx(self, partial: bool) -> bytes:
-        """
-        Return the octets of the `KNX USB Transfer Protocol Body` padded with
-        0x00 to the right to fill up the HID frame
-        """
+        """Return the octets of the `KNX USB Transfer Protocol Body` padded with
+        0x00 to the right to fill up the HID frame."""
         if self._valid:
             data_length = self._max_bytes_partial if partial else self._max_bytes
             data = self._data.ljust(data_length, b"\x00")
@@ -246,9 +243,13 @@ class KNXUSBTransferProtocolBody:
 
     @property
     def emi_message_code(self) -> Optional[CEMIMessageCode]:
-        """Return the EMI message code (first octet of `KNX USB Transfer Protocol Body`)"""
-        if not self._partial and len(self._data) > 0:
-            return CEMIMessageCode(self._data[0])
+        """Return the EMI message code (first octet of `KNX USB Transfer Protocol Body`)
+        Returns None for partial frames, as they don't contain a message code"""
+        if not self._partial and self._data and len(self._data) > 0:
+            try:
+                return CEMIMessageCode(self._data[0])
+            except ValueError as ex:
+                    logging.error(str(ex))
         return None
 
     @property

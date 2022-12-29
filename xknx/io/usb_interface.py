@@ -9,7 +9,7 @@ logger = logging.getLogger("xknx.log")
 
 
 class USBInterface(Interface):
-    """ """
+    """USB implementation of the abstract `Interface` class"""
 
     def __init__(self, xknx, connection_config: ConnectionConfigUSB) -> None:
         self.xknx = xknx
@@ -17,8 +17,11 @@ class USBInterface(Interface):
         self.usb_client: USBClient = USBClient(xknx, connection_config)
 
     async def start(self) -> None:
-        """
-        Find USB device with given idVendor and idProduct in the connection config.
+        """Start the USB interface
+        Tries to find the specified USB device or if not provided,
+        searches for known devices.
+
+        Once a device is found, the send and receive threads are started.
 
         Raises
         ------
@@ -28,7 +31,7 @@ class USBInterface(Interface):
         self.usb_client.start()
 
     async def stop(self) -> None:
-        """ """
+        """Stops the USB interface by stopping the USB send and receive threads"""
         self.usb_client.stop()
 
     async def connect(self) -> bool:

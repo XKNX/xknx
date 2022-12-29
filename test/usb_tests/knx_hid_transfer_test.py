@@ -1,17 +1,25 @@
 from collections import namedtuple
 import pytest
+from unittest.mock import Mock
 
-from xknx.usb.knx_hid_transfer import KNXUSBTransferProtocolBodyData, KNXUSBTransferProtocolHeader, KNXUSBTransferProtocolHeaderData
+from xknx.knxip.knxip_enum import CEMIMessageCode
+from xknx.usb.knx_hid_transfer import (
+    KNXUSBTransferProtocolBodyData,
+    KNXUSBTransferProtocolBody,
+    KNXUSBTransferProtocolHeader,
+    KNXUSBTransferProtocolHeaderData,
+)
 
 
 class TestKNXUSBTransferProtocolHeaderData:
     """ """
+
     @pytest.mark.parametrize(
-    "body_length,protocol_id,emi_id",
-    [
-        (1, 2, 3),
-        (3, 4, 1),
-    ],
+        "body_length,protocol_id,emi_id",
+        [
+            (1, 2, 3),
+            (3, 4, 1),
+        ],
     )
     def test_initialization(self, body_length, protocol_id, emi_id):
         """ """
@@ -23,14 +31,15 @@ class TestKNXUSBTransferProtocolHeaderData:
 
 class TestKNXUSBTransferProtocolBodyData:
     """ """
+
     @pytest.mark.parametrize(
-    "data,partial",
-    [
-        (b"\x01", True),
-        (b"\x0201", True),
-        (b"\x0201", False),
-        (b"\x01", False),
-    ],
+        "data,partial",
+        [
+            (b"\x01", True),
+            (b"\x0201", True),
+            (b"\x0201", False),
+            (b"\x01", False),
+        ],
     )
     def test_initialization(self, data, partial):
         """ """
@@ -83,17 +92,17 @@ class TestKNXUSBTransferProtocolHeader:
         assert header.protocol_version == expected.protocol_version
 
     @pytest.mark.parametrize(
-    "data,is_valid",
-    [
-        (b"\x01\x08\x00\x10\x01\x03\x00\x00", False),  # invalid protocl version
-        (b"\x00\x07\x00\x10\x01\x03\x00\x00", False),  # invalid header length
-        (b"\x00\x07\x00\x10\x01\x06\x00\x00", False),  # invalid EMI ID
-        (b"\x00\x08\x00\x10\x01\x03\x00\x00", True),
-        (b"\x00\x08\x00\x20\x01\x03\x00\x00", True),  # one byte body length
-        (b"\x00\x08\x20\x10\x01\x03\x00\x00", True),  # two byte body length
-        (b"\x00\x08\x20\x10\x01\x02\x00\x00", True),  # different EMI ID
-        (b"\x00\x08\x20\x10\x01\x02\x10\x20", True),  # different manufacturer code
-    ],
+        "data,is_valid",
+        [
+            (b"\x01\x08\x00\x10\x01\x03\x00\x00", False),  # invalid protocl version
+            (b"\x00\x07\x00\x10\x01\x03\x00\x00", False),  # invalid header length
+            (b"\x00\x07\x00\x10\x01\x06\x00\x00", False),  # invalid EMI ID
+            (b"\x00\x08\x00\x10\x01\x03\x00\x00", True),
+            (b"\x00\x08\x00\x20\x01\x03\x00\x00", True),  # one byte body length
+            (b"\x00\x08\x20\x10\x01\x03\x00\x00", True),  # two byte body length
+            (b"\x00\x08\x20\x10\x01\x02\x00\x00", True),  # different EMI ID
+            (b"\x00\x08\x20\x10\x01\x02\x10\x20", True),  # different manufacturer code
+        ],
     )
     def test_from_knx(self, data, is_valid):
         """ """
@@ -107,11 +116,11 @@ class TestKNXUSBTransferProtocolHeader:
         assert knx_usb_transfer_protocol_header.is_valid == is_valid
 
     @pytest.mark.parametrize(
-    "data",
-    [
-        (b"\x01\x08\x00\x10\x01\x03\x00\x00", False),  # invalid protocl version
-        (b"\x00\x08\x00\x10\x01\x03", False),  # not enough bytes
-    ],
+        "data",
+        [
+            (b"\x01\x08\x00\x10\x01\x03\x00\x00", False),  # invalid protocl version
+            (b"\x00\x08\x00\x10\x01\x03", False),  # not enough bytes
+        ],
     )
     def test_from_knx_invalid(self, data):
         """ """
@@ -125,14 +134,14 @@ class TestKNXUSBTransferProtocolHeader:
         assert not knx_usb_transfer_protocol_header.is_valid
 
     @pytest.mark.parametrize(
-    "data",
-    [
-        (b"\x00\x08\x00\x10\x01\x03\x00\x00"),
-        (b"\x00\x08\x00\x20\x01\x03\x00\x00"),  # one byte body length
-        (b"\x00\x08\x20\x10\x01\x03\x00\x00"),  # two byte body length
-        (b"\x00\x08\x20\x10\x01\x02\x00\x00"),  # different EMI ID
-        (b"\x00\x08\x20\x10\x01\x02\x10\x20"),  # different manufacturer code
-    ],
+        "data",
+        [
+            (b"\x00\x08\x00\x10\x01\x03\x00\x00"),
+            (b"\x00\x08\x00\x20\x01\x03\x00\x00"),  # one byte body length
+            (b"\x00\x08\x20\x10\x01\x03\x00\x00"),  # two byte body length
+            (b"\x00\x08\x20\x10\x01\x02\x00\x00"),  # different EMI ID
+            (b"\x00\x08\x20\x10\x01\x02\x10\x20"),  # different manufacturer code
+        ],
     )
     def test_to_knx(self, data):
         knx_usb_transfer_protocol_header = KNXUSBTransferProtocolHeader.from_knx(data)
@@ -141,3 +150,84 @@ class TestKNXUSBTransferProtocolHeader:
 
 class TestKNXUSBTransferProtocolBody:
     """ """
+
+    def test_default_initialization(self):
+        """ """
+        transfer_body = KNXUSBTransferProtocolBody()
+        assert not transfer_body.is_valid
+        assert not transfer_body.emi_message_code
+        assert not transfer_body.data
+        assert transfer_body.length == 0
+
+    @pytest.mark.parametrize(
+        "data,partial,length",
+        [
+            (b"\x10\x01\x02\x03", False, 4),
+            (b"\x13\x01\x02\x03", False, 4),
+            (b"\x13\x01" + 51 * b"\x02", False, 53),
+        ],
+    )
+    def test_from_data(self, data, partial, length):
+        """ """
+        mock = Mock()
+        mock.data = data
+        mock.partial = partial
+        body = KNXUSBTransferProtocolBody.from_data(mock)
+        assert body.emi_message_code == CEMIMessageCode(data[0])
+        assert body.data == data
+        assert body.length == length
+
+    @pytest.mark.parametrize(
+        "data,partial,length",
+        [
+            (b"\x01\x02", True, 2),  # does not have a message code
+            (b"\x01" + 60 * b"\x0f", True, 61),  # does not have a message code
+        ],
+    )
+    def test_from_data_partial(self, data, partial, length):
+        """ """
+        mock = Mock()
+        mock.data = data
+        mock.partial = partial
+        body = KNXUSBTransferProtocolBody.from_data(mock)
+        assert body.emi_message_code is None
+        assert body.data == data
+        assert body.length == length
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            (b"\x01" + 52 * b"\x02"),  # initial frame
+            (b"\x01" + 60 * b"\x03"),  # partial frame
+        ],
+    )
+    def test_from_knx(self, data):
+        """ """
+        knx_usb_transfer_protocol_body = KNXUSBTransferProtocolBody.from_knx(data)
+        assert knx_usb_transfer_protocol_body.data == data
+        assert knx_usb_transfer_protocol_body.is_valid
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            (b"\x01\x02"),  # invalid message code
+            (b"\x13\x02\x03"),  # not enough bytes
+        ],
+    )
+    def test_from_knx_invalid(self, data):
+        """ """
+        knx_usb_transfer_protocol_body = KNXUSBTransferProtocolBody.from_knx(data)
+        assert knx_usb_transfer_protocol_body.data is None
+        assert not knx_usb_transfer_protocol_body.is_valid
+
+    @pytest.mark.parametrize(
+        "data,partial",
+        [
+            (b"\x01" + 52 * b"\x02", False),
+            (b"\x01" + 60 * b"\x03", True),
+        ],
+    )
+    def test_to_knx(self, data, partial):
+        """ """
+        knx_usb_transfer_protocol_body = KNXUSBTransferProtocolBody.from_knx(data)
+        assert data == knx_usb_transfer_protocol_body.to_knx(partial)
