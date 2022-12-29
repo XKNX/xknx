@@ -76,7 +76,7 @@ class KNXUSBTransferProtocolHeader:
         self._protocol_version = 0x00
         self._header_length = 0x08
         self._body_length = 0x0000
-        self._protocol_id = 0x00
+        self._protocol_id = None
         self._emi_id = None
         self._manufacturer_code = 0x0000
         self._expected_byte_count = 8
@@ -136,7 +136,7 @@ class KNXUSBTransferProtocolHeader:
         return self._body_length
 
     @property
-    def protocol_id(self) -> int:
+    def protocol_id(self) -> Optional[ProtocolID]:
         """3.4.1.3.4 Protocol identifiers
         It is required that an interface device connecting a PC with a field bus
         via an USB link can not only transfer KNX frames but also other protocols.
@@ -165,6 +165,11 @@ class KNXUSBTransferProtocolHeader:
         """ """
         return self._valid
 
+    def _is_valid(self) -> bool:
+        """ """
+        return self._protocol_version == 0 and \
+               self._header_length == 8
+
     def _init(self, data: bytes):
         """ """
         if len(data) != self._expected_byte_count:
@@ -181,9 +186,9 @@ class KNXUSBTransferProtocolHeader:
         try:
             self._protocol_id = ProtocolID(self._protocol_id)
             self._emi_id = EMIID(self._emi_id)
-            self._valid = True
-        except ValueError as e:
-            usb_logger.error(str(e))
+            self._valid = self._is_valid()
+        except ValueError as ex:
+            usb_logger.error(str(ex))
 
 
 class KNXUSBTransferProtocolBody:
