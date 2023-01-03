@@ -52,7 +52,7 @@ class TPCI(ABC):
         return f"{self.__class__.__name__}({_sequence_number})"
 
     @staticmethod
-    def resolve(raw_tpci: int, dst_is_group_address: bool) -> TPCI:
+    def resolve(raw_tpci: int, dst_is_group_address: bool, dst_is_zero: bool) -> TPCI:
         """
         Return TPCI instance from TPCI command.
 
@@ -66,6 +66,8 @@ class TPCI(ABC):
             if control or numbered:
                 raise ConversionError("Invalid TPCI flags in group addressed frame.")
             if not sequence_number:
+                if dst_is_zero:
+                    return TDataBroadcast()
                 return TDataGroup()
             if sequence_number == 1:
                 # TDataTagGroup uses sequence number field as flag
@@ -96,11 +98,18 @@ class TPCI(ABC):
 
 
 class TDataGroup(TPCI):
-    """
-    T_Data_Group class.
+    """T_Data_Group class."""
 
-    Includes T_Data_Broadcast and T_Data_Group depending on destination address.
-    """
+    control = False
+    numbered = False
+
+    def to_knx(self) -> int:
+        """Serialize to KNX/IP raw data."""
+        return 0
+
+
+class TDataBroadcast(TPCI):
+    """T_Data_Broadcast class."""
 
     control = False
     numbered = False

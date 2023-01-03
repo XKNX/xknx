@@ -22,6 +22,7 @@ from xknx.exceptions import (
 from xknx.io import util
 from xknx.secure.keyring import XMLInterface, load_keyring
 from xknx.telegram import IndividualAddress, Telegram
+from xknx.telegram.tpci import TDataGroup
 
 from .connection import ConnectionConfig, ConnectionType
 from .const import DEFAULT_INDIVIDUAL_ADDRESS, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
@@ -432,13 +433,13 @@ class KNXIPInterface:
 
     async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
         """Put received telegram into queue. Callback for having received telegram."""
+        if isinstance(telegram.tpci, TDataGroup):
+            self.xknx.telegrams.put_nowait(telegram)
+            return None
         if isinstance(telegram.destination_address, IndividualAddress):
             if telegram.destination_address != self.xknx.current_address:
                 return None
-            return self.xknx.management.process(telegram)
-
-        self.xknx.telegrams.put_nowait(telegram)
-        return None
+        return self.xknx.management.process(telegram)
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """Send telegram to connected device (either Tunneling or Routing)."""

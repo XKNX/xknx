@@ -55,11 +55,13 @@ class TestTelegramQueue:
         sleep_time = 0.05  # 1 / 20
 
         telegram_in = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.INCOMING,
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
         telegram_out = Telegram(
+            destination_address=GroupAddress("1/2/3"),
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueWrite(DPTBinary(1)),
         )

@@ -6,7 +6,7 @@ from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
-from xknx.telegram.tpci import TAck, TConnect, TDataGroup
+from xknx.telegram.tpci import TAck, TConnect, TDataBroadcast, TDataGroup
 
 
 def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
@@ -31,13 +31,13 @@ def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
 
 def test_valid_command():
     """Test for valid frame parsing."""
-    raw = get_data(0x29, 0, 0x0080, 0, 0, 1, 0, [])
+    raw = get_data(0x29, 0, 0x0080, 1, 1, 1, 0, [])
     frame = CEMIFrame()
     packet_len = frame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
     assert frame.flags == 0x0080
-    assert frame.src_addr == IndividualAddress(0)
-    assert frame.dst_addr == GroupAddress(0)
+    assert frame.src_addr == IndividualAddress(1)
+    assert frame.dst_addr == GroupAddress(1)
     assert frame.payload == GroupValueRead()
     assert frame.tpci == TDataGroup()
     assert packet_len == 11
@@ -180,11 +180,24 @@ def test_from_knx_individual_address():
 def test_telegram_group_address():
     """Test telegram conversion flags with a group address."""
     frame = CEMIFrame()
-    _telegram = Telegram(destination_address=GroupAddress(0))
+    _telegram = Telegram(destination_address=GroupAddress(1))
     # test CEMIFrame.telegram setter
     frame.telegram = _telegram
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
+    # test CEMIFrame.telegram property
+    assert frame.telegram == _telegram
+
+
+def test_telegram_broadcast():
+    """Test telegram conversion flags with a group address."""
+    frame = CEMIFrame()
+    _telegram = Telegram(destination_address=GroupAddress(0))
+    # test CEMIFrame.telegram setter
+    frame.telegram = _telegram
+    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
+    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
+    assert frame.tpci == TDataBroadcast()
     # test CEMIFrame.telegram property
     assert frame.telegram == _telegram
 

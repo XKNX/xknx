@@ -42,7 +42,10 @@ class TestRouting:
         test_telegram = _cemi.telegram
         test_telegram.direction = TelegramDirection.INCOMING
 
-        response_telegram = Telegram(tpci=tpci.TDisconnect())
+        response_telegram = Telegram(
+            destination_address=IndividualAddress(test_telegram.source_address),
+            tpci=tpci.TDisconnect(),
+        )
         response_cemi = CEMIFrame.init_from_telegram(
             telegram=response_telegram,
             src_addr=DEFAULT_INDIVIDUAL_ADDRESS,
