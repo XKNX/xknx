@@ -19,6 +19,8 @@ nav_order: 2
 - Refactor APCI to return complete Subclass `APCI.from_knx()` and removed `APCI.resolve_apci()`.
 - Rename `xknx.secure.ip_secure` to `xknx.secure.security_primitives`.
 - Fix wrong string length in keyfile signature verification for multi-byte UTF-8 encoded attribute values.
+- `destination_address` in `Telegram` init is no longer optional.
+- `timestamp` in `Telegram` is removed.
 
 # 2.3.0 Routing security, DPTs and CEMI-Refactoring 2023-01-10
 
