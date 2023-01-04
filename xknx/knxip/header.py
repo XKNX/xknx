@@ -18,7 +18,6 @@ class KNXIPHeader:
     def __init__(self) -> None:
         """Initialize KNXIPHeader class."""
         self.service_type_ident = KNXIPServiceType.ROUTING_INDICATION
-        self.b4_reserve = 0
         self.total_length = 0  # to be set later
 
     def from_knx(self, data: bytes) -> int:
@@ -28,17 +27,14 @@ class KNXIPHeader:
         if data[0] != KNXIPHeader.HEADERLENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
         # set immediately, as we need it for tcp stream parsing before raising exception
-        self.total_length = data[5]
+        self.total_length = data[4] * 256 + data[5]
         if data[1] != KNXIPHeader.PROTOCOLVERSION:
             raise CouldNotParseKNXIP("wrong protocol version")
 
         try:
             self.service_type_ident = KNXIPServiceType(data[2] * 256 + data[3])
         except ValueError:
-            raise CouldNotParseKNXIP(
-                f"KNXIPServiceType unknown: {hex(data[2] * 256 + data[3])}"
-            )
-        self.b4_reserve = data[4]
+            raise CouldNotParseKNXIP(f"KNXIPServiceType unknown: 0x{data[2:4].hex()}")
         return KNXIPHeader.HEADERLENGTH
 
     def set_length(self, body: KNXIPBody) -> None:
@@ -62,7 +58,6 @@ class KNXIPHeader:
             f'HeaderLength="{KNXIPHeader.HEADERLENGTH}" '
             f'ProtocolVersion="{KNXIPHeader.PROTOCOLVERSION}" '
             f'KNXIPServiceType="{self.service_type_ident.name}" '
-            f'Reserve="{self.b4_reserve}" '
             f'TotalLength="{self.total_length}" />'
         )
 

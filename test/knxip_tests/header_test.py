@@ -16,7 +16,6 @@ class TestKNXIPHeader:
         assert header.HEADERLENGTH == 6
         assert header.PROTOCOLVERSION == 16
         assert header.service_type_ident == KNXIPServiceType.TUNNELLING_ACK
-        assert header.b4_reserve == 0
         assert header.total_length == 10
         assert header.to_knx() == raw
 
