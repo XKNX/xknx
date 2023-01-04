@@ -513,7 +513,7 @@ class TestStringRepresentations:
         header.total_length = 42
         assert (
             str(header)
-            == '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="ROUTING_INDICATION" Reserve="0" TotalLength="42" '
+            == '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="ROUTING_INDICATION" TotalLength="42" '
             "/>"
         )
 
@@ -660,7 +660,7 @@ class TestStringRepresentations:
         assert (
             str(knxipframe)
             == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
-            'Reserve="0" TotalLength="14" /> body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
+            'TotalLength="14" /> body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
         )
 
     #

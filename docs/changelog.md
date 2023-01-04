@@ -11,6 +11,7 @@ nav_order: 2
 ### Internals
 
 - Parse T_Data_Broadcast TPCI. Forward these telegrams to the Management class.
+- KNXIPHeader total_length is 2 bytes long. There are no reserved bytes.
 
 # 2.2.0 Expose cooldown 2022-12-27
 
