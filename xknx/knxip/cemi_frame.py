@@ -16,7 +16,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
-from xknx.telegram.tpci import TPCI, TDataGroup
+from xknx.telegram.tpci import TPCI, TDataBroadcast, TDataGroup
 
 from .knxip_enum import CEMIFlags, CEMIMessageCode
 
@@ -82,7 +82,11 @@ class CEMIFrame:
         )
 
         if isinstance(telegram.destination_address, GroupAddress):
-            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.PRIORITY_LOW
+            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+            if isinstance(telegram.tpci, TDataBroadcast):
+                self.flags |= CEMIFlags.PRIORITY_SYSTEM
+            else:
+                self.flags |= CEMIFlags.PRIORITY_LOW
         elif isinstance(telegram.destination_address, IndividualAddress):
             self.flags |= (
                 CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
@@ -143,10 +147,10 @@ class CEMIFrame:
         # Control field 1 and Control field 2 - first 2 octets after Additional information
         self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = IndividualAddress((cemi[4 + addil], cemi[5 + addil]))
+        self.src_addr = IndividualAddress(cemi[4 + addil] * 256 + cemi[5 + addil])
 
         dst_is_group_address = bool(self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
-        dst_raw_address = (cemi[6 + addil], cemi[7 + addil])
+        dst_raw_address = cemi[6 + addil] * 256 + cemi[7 + addil]
         self.dst_addr = (
             GroupAddress(dst_raw_address)
             if dst_is_group_address
@@ -169,7 +173,9 @@ class CEMIFrame:
         # APCI (application layer control information) -> Last  10 bit of TPCI/APCI
         try:
             self.tpci = TPCI.resolve(
-                raw_tpci=tpdu[0], dst_is_group_address=dst_is_group_address
+                raw_tpci=tpdu[0],
+                dst_is_group_address=dst_is_group_address,
+                dst_is_zero=not dst_raw_address,
             )
         except ConversionError as err:
             raise UnsupportedCEMIMessage(f"TPCI not supported: {tpdu[0]:#10b}") from err

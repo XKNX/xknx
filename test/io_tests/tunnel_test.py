@@ -28,7 +28,7 @@ from xknx.knxip import (
     TunnellingRequest,
 )
 from xknx.knxip.knxip_enum import CEMIMessageCode, HostProtocol
-from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -95,7 +95,10 @@ class TestUDPTunnel:
         test_telegram.direction = TelegramDirection.INCOMING
         self.tunnel.expected_sequence_number = 0x81
 
-        response_telegram = Telegram(source_address=self.tunnel._src_address)
+        response_telegram = Telegram(
+            destination_address=test_telegram.source_address,
+            source_address=self.tunnel._src_address,
+        )
 
         async def tg_received_mock(telegram):
             """Mock for telegram_received_callback."""
@@ -125,7 +128,10 @@ class TestUDPTunnel:
         self.tunnel.communication_channel = 1
         self.tunnel.expected_sequence_number = 10
 
-        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_telegram = Telegram(
+            destination_address=GroupAddress(1),
+            payload=GroupValueWrite(DPTArray((1,))),
+        )
         cemi = CEMIFrame.init_from_telegram(
             test_telegram, code=CEMIMessageCode.L_DATA_IND
         )
@@ -195,7 +201,10 @@ class TestUDPTunnel:
         self.tunnel.communication_channel = 1
         self.tunnel.expected_sequence_number = 23
 
-        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_telegram = Telegram(
+            destination_address=GroupAddress(1),
+            payload=GroupValueWrite(DPTArray((1,))),
+        )
         cemi = CEMIFrame.init_from_telegram(
             test_telegram, code=CEMIMessageCode.L_DATA_CON
         )
@@ -227,7 +236,10 @@ class TestUDPTunnel:
         self.tunnel.sequence_number = 23
         self.tunnel.expected_sequence_number = 15
 
-        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_telegram = Telegram(
+            destination_address=GroupAddress(1),
+            payload=GroupValueWrite(DPTArray((1,))),
+        )
         cemi = CEMIFrame.init_from_telegram(
             test_telegram,
             code=CEMIMessageCode.L_DATA_REQ,
@@ -333,7 +345,10 @@ class TestUDPTunnel:
 
         # Send - use data endpoint
         self.tunnel.transport.send.reset_mock()
-        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_telegram = Telegram(
+            destination_address=GroupAddress(1),
+            payload=GroupValueWrite(DPTArray((1,))),
+        )
         cemi = CEMIFrame.init_from_telegram(
             test_telegram,
             code=CEMIMessageCode.L_DATA_REQ,
@@ -417,7 +432,10 @@ class TestTCPTunnel:
         self.tunnel.transport.send = Mock()
         self.tunnel.communication_channel = 1
 
-        test_telegram = Telegram(payload=GroupValueWrite(DPTArray((1,))))
+        test_telegram = Telegram(
+            destination_address=GroupAddress(1),
+            payload=GroupValueWrite(DPTArray((1,))),
+        )
         cemi = CEMIFrame.init_from_telegram(
             test_telegram, code=CEMIMessageCode.L_DATA_CON
         )

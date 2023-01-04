@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internals
+
+- Parse T_Data_Broadcast TPCI. Forward these telegrams to the Management class.
+
 # 2.2.0 Expose cooldown 2022-12-27
 
 ### Devices
