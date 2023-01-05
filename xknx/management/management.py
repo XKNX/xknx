@@ -34,35 +34,34 @@ class Management:
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
 
-    def process(self, telegram: Telegram) -> list[Telegram]:
+    def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
-        response = []
         if isinstance(telegram.tpci, TDataConnected):
             ack = Telegram(
                 destination_address=telegram.source_address,
                 tpci=TAck(sequence_number=telegram.tpci.sequence_number),
             )
-            response.append(ack)
+            asyncio.create_task(self.xknx.knxip_interface.send_telegram(ack))
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
-            return response
+            return
         if telegram.tpci.numbered:
             logger.warning(
                 "No active point-to-point connection for received telegram: %s",
                 telegram,
             )
-            return response
+            return
         if isinstance(telegram.tpci, TConnect):
             # refuse incoming connections
-            # TODO: handle incoming telegrams for connections not initiated by us, or connection-less
-            # TODO: maybe use outgoing telegram queue or new task to not stall the consumer task
+            # TODO: handle incoming telegrams for connections
+            # not initiated by us, connection-less and broadcast
             disconnect = Telegram(
                 destination_address=telegram.source_address, tpci=TDisconnect()
             )
-            response.append(disconnect)
-            return response
+            asyncio.create_task(self.xknx.knxip_interface.send_telegram(disconnect))
+            return
         logger.warning("Unhandled management telegram: %r", telegram)
-        return response
+        return
 
     async def connect(self, address: IndividualAddress) -> P2PConnection:
         """Open a point-to-point connection to a KNX device."""

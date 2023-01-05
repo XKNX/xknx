@@ -269,17 +269,9 @@ class Routing(Interface):
         if cemi.src_addr == self.individual_address:
             logger.debug("Ignoring own packet")
             return
-        # TODO: is cemi message code L_DATA.req or .con valid for routing? if not maybe warn and ignore
-        asyncio.create_task(self.handle_cemi_frame(cemi))
-
-    async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
-        """Handle incoming telegram and send responses if applicable (device management)."""
         telegram = cemi.telegram
         telegram.direction = TelegramDirection.INCOMING
-
-        if response_tgs := await self.telegram_received_callback(telegram):
-            for response in response_tgs:
-                await self.send_telegram(response)
+        self.telegram_received_callback(telegram)
 
 
 class SecureRouting(Routing):
