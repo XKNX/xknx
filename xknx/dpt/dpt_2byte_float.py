@@ -173,6 +173,15 @@ class DPTPartsPerMillion(DPT2ByteFloat):
     unit = "ppm"
 
 
+class DPTAirFlow(DPT2ByteFloat):
+    """DPT 9.009 DPT_Value_AirFlow."""
+
+    dpt_main_number = 9
+    dpt_sub_number = 9
+    value_type = "air_flow"
+    unit = "m³/h"
+
+
 class DPTTime1(DPT2ByteFloat):
     """DPT 9.010 DPT_Value_Time1 (s)."""
 
