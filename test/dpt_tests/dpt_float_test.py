@@ -8,6 +8,7 @@ import pytest
 from xknx.dpt import (
     DPT2ByteFloat,
     DPT4ByteFloat,
+    DPTAirFlow,
     DPTElectricCurrent,
     DPTElectricPotential,
     DPTEnthalpy,
@@ -189,6 +190,13 @@ class TestDPTFloat:
     def test_partspermillion_settings(self):
         """Test attributes of DPTPartsPerMillion."""
         assert DPTPartsPerMillion.unit == "ppm"
+
+    #
+    # DPTAirFlow
+    #
+    def test_airflow_settings(self):
+        """Test attributes of DPTPartsPerMillion."""
+        assert DPTAirFlow.unit == "m³/h"
 
     #
     # DPTVoltage

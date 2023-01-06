@@ -17,6 +17,7 @@ from .dpt_1byte_uint import (
 )
 from .dpt_2byte_float import (
     DPT2ByteFloat,
+    DPTAirFlow,
     DPTCurrent,
     DPTEnthalpy,
     DPTHumidity,
