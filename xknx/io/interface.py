@@ -8,12 +8,11 @@ Abstract base for a specific KNX/IP connection (Tunneling or Routing).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable
-from typing import Callable, Optional
+from typing import Callable
 
 from xknx.telegram import Telegram
 
-TelegramCallbackType = Callable[[Telegram], Awaitable[Optional[list[Telegram]]]]
+TelegramCallbackType = Callable[[Telegram], None]
 
 
 class Interface(ABC):

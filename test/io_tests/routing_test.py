@@ -31,9 +31,13 @@ class TestRouting:
         routing = Routing(
             self.xknx,
             individual_address=None,
-            telegram_received_callback=self.tg_received_mock,
+            # telegram_received_callback=self.tg_received_mock,
+            telegram_received_callback=self.xknx.knxip_interface.telegram_received,
             local_ip="192.168.1.1",
         )
+        self.xknx.knxip_interface._interface = routing
+        # set current address so management telegram is processed
+        self.xknx.current_address = IndividualAddress("1.0.255")
         # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint)
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw_ind = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
@@ -54,12 +58,6 @@ class TestRouting:
             RoutingIndication(raw_cemi=response_cemi.to_knx())
         )
 
-        async def tg_received_mock(telegram):
-            """Mock for telegram_received_callback."""
-            assert telegram == test_telegram
-            return [response_telegram]
-
-        routing.telegram_received_callback = tg_received_mock
         routing.transport.data_received_callback(raw_ind, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
         assert send_knxipframe_mock.call_args_list == [

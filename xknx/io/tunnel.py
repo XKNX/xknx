@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from copy import copy
 import logging
 from typing import TYPE_CHECKING
 
@@ -365,33 +364,14 @@ class _Tunnel(Interface):
             # L_DATA_CON confirmation frame signals ready to send next telegram
             self._tunnelling_request_confirmation_event.set()
             return
-
         if cemi.code is CEMIMessageCode.L_DATA_REQ:
-            confirmation = copy(cemi)
-            confirmation.code = CEMIMessageCode.L_DATA_CON
-            asyncio.create_task(self._send_cemi(confirmation))
+            # L_DATA_REQ frames should only be outgoing.
+            logger.warning("Tunnel received unexpected L_DATA_REQ frame: %s", cemi)
+            return
 
-        asyncio.create_task(self.handle_cemi_frame(cemi))
-
-    async def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
-        """Handle incoming telegram and send responses if applicable (device management)."""
         telegram = cemi.telegram
         telegram.direction = TelegramDirection.INCOMING
-
-        if response_tgs := await self.telegram_received_callback(telegram):
-            response_code = (
-                CEMIMessageCode.L_DATA_IND
-                if cemi.code is CEMIMessageCode.L_DATA_REQ
-                else CEMIMessageCode.L_DATA_REQ
-            )
-            for response in response_tgs:
-                await self._send_cemi(
-                    CEMIFrame.init_from_telegram(
-                        telegram=response,
-                        code=response_code,
-                        src_addr=self._src_address,
-                    )
-                )
+        self.telegram_received_callback(telegram)
 
     def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest

@@ -131,7 +131,7 @@ async def test_failed_connect_disconnect(_if_mock):
 async def test_reject_incoming_connection():
     """Test rejecting incoming transport connections."""
     # Note: incoming L_DATA.ind indication connection requests are rejected
-    # L_DATA.req frames received from a tunnelling server are not yet supported
+    # L_DATA.req frames received from a tunnelling client are not yet supported
     xknx = XKNX()
     individual_address = IndividualAddress("4.0.10")
 
@@ -146,7 +146,10 @@ async def test_reject_incoming_connection():
         destination_address=individual_address,
         tpci=tpci.TDisconnect(),
     )
-    assert await xknx.knxip_interface.telegram_received(connect) == [disconnect]
+    with patch("xknx.io.KNXIPInterface.send_telegram") as send_telegram:
+        xknx.knxip_interface.telegram_received(connect)
+        await asyncio.sleep(0)
+        assert send_telegram.call_args_list == [call(disconnect)]
 
 
 async def test_incoming_unexpected_numbered_telegram():
@@ -167,7 +170,10 @@ async def test_incoming_unexpected_numbered_telegram():
         direction=TelegramDirection.OUTGOING,
         tpci=tpci.TAck(0),
     )
-    assert await xknx.knxip_interface.telegram_received(device_desc_read) == [ack]
+    with patch("xknx.io.KNXIPInterface.send_telegram") as send_telegram:
+        xknx.knxip_interface.telegram_received(device_desc_read)
+        await asyncio.sleep(0)
+        assert send_telegram.call_args_list == [call(ack)]
 
 
 async def test_incoming_wrong_address():
@@ -195,6 +201,9 @@ async def test_incoming_wrong_address():
         direction=TelegramDirection.INCOMING,
         tpci=tpci.TDisconnect(),
     )
-    assert await xknx.knxip_interface.telegram_received(connect) is None
-    assert await xknx.knxip_interface.telegram_received(ack) is None
-    assert await xknx.knxip_interface.telegram_received(disconnect) is None
+    with patch("xknx.io.KNXIPInterface.send_telegram") as send_telegram:
+        xknx.knxip_interface.telegram_received(connect)
+        xknx.knxip_interface.telegram_received(ack)
+        xknx.knxip_interface.telegram_received(disconnect)
+        await asyncio.sleep(0)
+        send_telegram.assert_not_called()

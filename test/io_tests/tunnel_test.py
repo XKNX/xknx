@@ -28,7 +28,13 @@ from xknx.knxip import (
     TunnellingRequest,
 )
 from xknx.knxip.knxip_enum import CEMIMessageCode, HostProtocol
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
+from xknx.telegram import (
+    GroupAddress,
+    IndividualAddress,
+    Telegram,
+    TelegramDirection,
+    tpci,
+)
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -85,42 +91,38 @@ class TestUDPTunnel:
         send_ack_mock,
     ):
         """Test Tunnel for responding to L_DATA.req with confirmation and indication."""
-        # L_Data.req T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
+        self.tunnel.telegram_received_callback = (
+            self.xknx.knxip_interface.telegram_received
+        )
+        self.xknx.knxip_interface._interface = self.tunnel
+        # set current address so management telegram is processed
+        self.xknx.current_address = IndividualAddress("1.0.255")
+        # L_Data.ing T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
         # communication_channel_id: 0x02   sequence_counter: 0x81
-        raw_req = bytes.fromhex("0610 0420 0014 04 02 81 00 1100b06010fa10ff0080")
+        raw_ind = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
 
         _cemi = CEMIFrame()
-        _cemi.from_knx(raw_req[10:])
+        _cemi.from_knx(raw_ind[10:])
         test_telegram = _cemi.telegram
         test_telegram.direction = TelegramDirection.INCOMING
         self.tunnel.expected_sequence_number = 0x81
 
         response_telegram = Telegram(
-            destination_address=test_telegram.source_address,
-            source_address=self.tunnel._src_address,
+            destination_address=IndividualAddress(test_telegram.source_address),
+            tpci=tpci.TDisconnect(),
         )
 
-        async def tg_received_mock(telegram):
-            """Mock for telegram_received_callback."""
-            assert telegram == test_telegram
-            return [response_telegram]
-
-        self.tunnel.telegram_received_callback = tg_received_mock
-        self.tunnel.transport.data_received_callback(raw_req, ("192.168.1.2", 3671))
-
+        self.tunnel.transport.data_received_callback(raw_ind, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
-        confirmation_cemi = _cemi
-        confirmation_cemi.code = CEMIMessageCode.L_DATA_CON
         response_cemi = CEMIFrame.init_from_telegram(
             response_telegram,
-            code=CEMIMessageCode.L_DATA_IND,
+            code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self.tunnel._src_address,
         )
         assert send_cemi_mock.call_args_list == [
-            call(confirmation_cemi),
             call(response_cemi),
         ]
-        send_ack_mock.assert_called_once_with(raw_req[7], raw_req[8])
+        send_ack_mock.assert_called_once_with(raw_ind[7], raw_ind[8])
 
     async def test_repeated_tunnel_request(self, time_travel):
         """Test Tunnel for receiving repeated TunnellingRequest frames."""
