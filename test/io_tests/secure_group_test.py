@@ -88,6 +88,9 @@ class TestSecureGroup:
                 timer_value=0,
                 serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                 message_tag=bytes.fromhex("12 34"),
+                message_authentication_code=bytes.fromhex(
+                    "3195051bb981941d57e6c5b55355f341"
+                ),
             )
         )
         secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
@@ -135,7 +138,9 @@ class TestSecureGroup:
                 message_tag=_message_tag,
             )
         )
-        secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
+        with patch("xknx.io.ip_secure.SecureSequenceTimer.verify_timer_notify_mac"):
+            # TimerNotify MAC is random so we don't verify it in tests
+            secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
         await time_travel(0)
         _leeway_for_ci = 50  # ms
         assert (
@@ -180,12 +185,25 @@ class TestSecureGroup:
         with patch.object(
             secure_timer, "reschedule", wraps=secure_timer.reschedule
         ) as mock_reschedule:
+            # TimerNotify with invalid MAC shall be discarded
+            timer_invalid_mac = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_invalid_mac, HPAI(*self.mock_addr))
+            mock_reschedule.assert_not_called()
             # E1
             timer_newer = KNXIPFrame.init_from_body(
                 TimerNotify(
                     timer_value=ONE_HOUR_MS,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "d2fad5657a5788a36cdd8a3ef84c90ab"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_newer, HPAI(*self.mock_addr))
@@ -200,6 +218,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "d2fad5657a5788a36cdd8a3ef84c90ab"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_exact, HPAI(*self.mock_addr))
@@ -216,6 +237,9 @@ class TestSecureGroup:
                     + 1,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "7572b70b4f986d7ae68891a00c0d46d3"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_valid, HPAI(*self.mock_addr))
@@ -230,6 +254,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "3d70cc44607ad9b4a4425de95101a54c"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_tolerable_1, HPAI(*self.mock_addr))
@@ -240,6 +267,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS - secure_timer.latency_tolerance_ms + 1,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "66b8b2e52196bcce3dce2da7e0dc50ec"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_tolerable_2, HPAI(*self.mock_addr))
@@ -250,6 +280,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS - secure_timer.latency_tolerance_ms,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "873d9a5a25b8508446bbd5ff1bb4b465"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
