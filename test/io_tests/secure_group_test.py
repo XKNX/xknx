@@ -1,10 +1,10 @@
 """Test Secure Group."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
-from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, TimerNotify
+from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
 from xknx.knxip.cemi_frame import CEMIFrame
 from xknx.knxip.routing_indication import RoutingIndication
 from xknx.telegram import GroupAddress, Telegram, apci
@@ -467,3 +467,33 @@ class TestSecureGroup:
                 KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
             )
             mock_reschedule.assert_not_called()
+
+    async def test_receive_plain_frames(
+        self,
+        mock_super_send,
+        mock_super_connect,
+    ):
+        """Test class for KNXnet/IP secure routing."""
+        frame_received_mock = Mock()
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_group.register_callback(frame_received_mock)
+        plain_routing_indication = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
+        secure_group.data_received_callback(
+            plain_routing_indication, ("192.168.1.2", 3671)
+        )
+        frame_received_mock.assert_not_called()
+        plain_search_response = bytes.fromhex(
+            "0610020c006608010a0100280e57360102001000000000082d40834de000170c"
+            "000ab3274a3247697261204b4e582f49502d526f757465720000000000000000"
+            "000000000e02020203020402050207010901140700dc10f1fffe10f2ffff10f3"
+            "ffff10f4ffff"
+        )
+        secure_group.data_received_callback(
+            plain_search_response, ("192.168.1.2", 3671)
+        )
+        frame_received_mock.assert_called_once()
