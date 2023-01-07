@@ -12,7 +12,13 @@ from xknx.io.routing import (
     ROUTING_INDICATION_WAIT_TIME,
     _RoutingFlowControl,
 )
-from xknx.knxip import CEMIFrame, KNXIPFrame, RoutingBusy, RoutingIndication
+from xknx.knxip import (
+    CEMIFrame,
+    CEMIMessageCode,
+    KNXIPFrame,
+    RoutingBusy,
+    RoutingIndication,
+)
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
 
 
@@ -23,7 +29,7 @@ class TestRouting:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
-        self.tg_received_mock = AsyncMock()
+        self.cemi_received_mock = AsyncMock()
 
     @patch("xknx.io.Routing._send_knxipframe")
     async def test_request_received_callback(self, send_knxipframe_mock):
@@ -31,7 +37,7 @@ class TestRouting:
         routing = Routing(
             self.xknx,
             individual_address=None,
-            telegram_received_callback=self.xknx.knxip_interface.telegram_received,
+            cemi_received_callback=self.xknx.knxip_interface.cemi_received,
             local_ip="192.168.1.1",
         )
         self.xknx.knxip_interface._interface = routing
@@ -51,7 +57,7 @@ class TestRouting:
         )
         response_cemi = CEMIFrame.init_from_telegram(
             telegram=response_telegram,
-            src_addr=DEFAULT_INDIVIDUAL_ADDRESS,
+            src_addr=IndividualAddress("1.0.255"),
         )
         response_frame = KNXIPFrame.init_from_body(
             RoutingIndication(raw_cemi=response_cemi.to_knx())
@@ -62,6 +68,7 @@ class TestRouting:
         assert send_knxipframe_mock.call_args_list == [
             call(response_frame),
         ]
+        await asyncio.sleep(0)  # await local L_Data.con
 
     @patch("logging.Logger.warning")
     async def test_routing_indication_received_apci_unsupported(self, logging_mock):
@@ -69,7 +76,7 @@ class TestRouting:
         routing = Routing(
             self.xknx,
             individual_address=None,
-            telegram_received_callback=self.tg_received_mock,
+            cemi_received_callback=self.cemi_received_mock,
             local_ip="192.168.1.1",
         )
         # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
@@ -77,7 +84,7 @@ class TestRouting:
         raw = bytes.fromhex("0610 0530 0010 2900b0d0000100000103f8")
 
         routing.transport.data_received_callback(raw, ("192.168.1.2", 3671))
-        self.tg_received_mock.assert_not_called()
+        self.cemi_received_mock.assert_not_called()
         logging_mock.assert_called_once()
 
     @patch("logging.Logger.warning")
@@ -86,7 +93,7 @@ class TestRouting:
         routing = Routing(
             self.xknx,
             individual_address=None,
-            telegram_received_callback=AsyncMock(),
+            cemi_received_callback=AsyncMock(),
             local_ip="192.168.1.1",
         )
         raw = bytes((0x06, 0x10, 0x05, 0x31, 0x00, 0x0A, 0x04, 0x00, 0x00, 0x05))

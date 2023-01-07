@@ -98,8 +98,7 @@ class TestKNXIPInterface:
             assert interface._interface.auto_reconnect_wait == 3
             assert interface._interface.route_back is False
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_udp.assert_called_once_with()
 
@@ -128,8 +127,7 @@ class TestKNXIPInterface:
             assert interface._interface.auto_reconnect
             assert interface._interface.auto_reconnect_wait == 3
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_tcp.assert_called_once_with()
 
@@ -152,8 +150,7 @@ class TestKNXIPInterface:
             assert isinstance(interface._interface, Routing)
             assert interface._interface.local_ip == local_ip
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_routing.assert_called_once_with()
 
@@ -175,36 +172,36 @@ class TestKNXIPInterface:
             await interface.start()
             start_automatic_mock.assert_called_once_with()
 
-    async def test_threaded_send_telegram(self):
-        """Test sending telegram with threaded connection."""
+    async def test_threaded_send_cemi(self):
+        """Test sending cemi with threaded connection."""
         # pylint: disable=attribute-defined-outside-init
         self.main_thread = threading.get_ident()
 
         def assert_thread(*args, **kwargs):
             """Test threaded connection."""
             assert self.main_thread != threading.get_ident()
-            return DEFAULT  # to not disable `return_value` of send_telegram_mock
+            return DEFAULT  # to not disable `return_value` of send_cemi_mock
 
         local_ip = "127.0.0.1"
         # set local_ip to avoid gateway scanner; use routing as it is the simplest mode
         connection_config = ConnectionConfig(
             connection_type=ConnectionType.ROUTING, local_ip=local_ip, threaded=True
         )
-        telegram_mock = Mock()
+        cemi_mock = Mock()
         with patch(
             "xknx.io.routing.Routing.connect", side_effect=assert_thread
         ) as connect_routing_mock, patch(
-            "xknx.io.routing.Routing.send_telegram",
+            "xknx.io.routing.Routing.send_cemi",
             side_effect=assert_thread,
             return_value="test",
-        ) as send_telegram_mock, patch(
+        ) as send_cemi_mock, patch(
             "xknx.io.routing.Routing.disconnect", side_effect=assert_thread
         ) as disconnect_routing_mock:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             connect_routing_mock.assert_called_once_with()
-            assert await interface.send_telegram(telegram_mock) == "test"
-            send_telegram_mock.assert_called_once_with(telegram_mock)
+            assert await interface.send_cemi(cemi_mock) == "test"
+            send_cemi_mock.assert_called_once_with(cemi_mock)
             await interface.stop()
             disconnect_routing_mock.assert_called_once_with()
             assert interface._interface is None
@@ -247,8 +244,7 @@ class TestKNXIPInterface:
                 == "authenticationcode"
             )
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
 
@@ -281,8 +277,7 @@ class TestKNXIPInterface:
                 == "authenticationcode"
             )
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
 
@@ -336,8 +331,7 @@ class TestKNXIPInterface:
                 == "authenticationcode"
             )
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
 
@@ -368,8 +362,7 @@ class TestKNXIPInterface:
                 == "authenticationcode"
             )
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
 
@@ -462,8 +455,7 @@ class TestKNXIPInterface:
                 3671,
             )
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
 
@@ -487,7 +479,6 @@ class TestKNXIPInterface:
                 3671,
             )
             assert (  # pylint: disable=comparison-with-callable
-                interface._interface.telegram_received_callback
-                == interface.telegram_received
+                interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()

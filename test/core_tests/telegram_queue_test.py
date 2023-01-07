@@ -116,7 +116,7 @@ class TestTelegramQueue:
         """Test telegram_received_callback with outgoing telegrams."""
 
         xknx = XKNX()
-        xknx.knxip_interface = AsyncMock()
+        xknx.cemi_handler = AsyncMock()
         async_telegram_received_cb = AsyncMock()
         xknx.telegram_queue.register_telegram_received_cb(
             async_telegram_received_cb, None, None, True
@@ -135,7 +135,7 @@ class TestTelegramQueue:
         """Test telegram_received_callback with outgoing telegrams."""
 
         xknx = XKNX()
-        xknx.knxip_interface = AsyncMock()
+        xknx.cemi_handler = AsyncMock()
         async_telegram_received_cb = AsyncMock()
         xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
 
@@ -225,9 +225,9 @@ class TestTelegramQueue:
             await xknx.telegram_queue.process_telegram_outgoing(telegram)
 
         # if we have an interface send the telegram (doesn't raise)
-        xknx.knxip_interface.send_telegram = AsyncMock()
+        xknx.cemi_handler.send_telegram = AsyncMock()
         await xknx.telegram_queue.process_telegram_outgoing(telegram)
-        xknx.knxip_interface.send_telegram.assert_called_once_with(telegram)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(telegram)
 
     @patch("logging.Logger.error")
     @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=MagicMock)

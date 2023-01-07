@@ -1,16 +1,16 @@
 """Test management procedures."""
 import asyncio
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 from xknx import XKNX
 from xknx.management import procedures
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_dm_restart(_if_mock):
+async def test_dm_restart():
     """Test dm_restart."""
     xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
     individual_address = IndividualAddress("4.0.10")
 
     connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
@@ -24,17 +24,17 @@ async def test_dm_restart(_if_mock):
         tpci=tpci.TDisconnect(),
     )
     await procedures.dm_restart(xknx, individual_address)
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
         call(restart),
         call(disconnect),
     ]
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_nm_individual_address_check_success(_if_mock):
+async def test_nm_individual_address_check_success():
     """Test nm_individual_address_check."""
     xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
     individual_address = IndividualAddress("4.0.10")
 
     connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
@@ -60,7 +60,7 @@ async def test_nm_individual_address_check_success(_if_mock):
         procedures.nm_individual_address_check(xknx, individual_address)
     )
     await asyncio.sleep(0)
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
         call(device_desc_read),
     ]
@@ -70,10 +70,10 @@ async def test_nm_individual_address_check_success(_if_mock):
     assert await task
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_nm_individual_address_check_refused(_if_mock):
+async def test_nm_individual_address_check_refused():
     """Test nm_individual_address_check."""
     xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
     individual_address = IndividualAddress("4.0.10")
 
     connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
@@ -98,7 +98,7 @@ async def test_nm_individual_address_check_refused(_if_mock):
         procedures.nm_individual_address_check(xknx, individual_address)
     )
     await asyncio.sleep(0)
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
         call(device_desc_read),
     ]
