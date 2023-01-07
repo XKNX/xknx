@@ -31,7 +31,6 @@ class TestRouting:
         routing = Routing(
             self.xknx,
             individual_address=None,
-            # telegram_received_callback=self.tg_received_mock,
             telegram_received_callback=self.xknx.knxip_interface.telegram_received,
             local_ip="192.168.1.1",
         )

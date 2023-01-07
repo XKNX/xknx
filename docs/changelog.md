@@ -8,6 +8,12 @@ nav_order: 2
 
 # Unreleased changes
 
+### IP Secure
+
+- SecureRouting: verify MAC of received TimerNotify frames.
+- SecureRouting: verify and handle timer value of received SecureWrapper frames after verification of MAC.
+- SecureRouting: Discard received unencrypted RoutingIndication frames.
+
 ### Internals
 
 - Parse T_Data_Broadcast TPCI. Forward these telegrams to the Management class.
