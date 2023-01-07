@@ -13,8 +13,6 @@ from typing import TYPE_CHECKING
 from xknx.core import XknxConnectionState
 from xknx.exceptions import (
     CommunicationError,
-    ConfirmationError,
-    ConversionError,
     TunnellingAckError,
     UnsupportedCEMIMessage,
 )
@@ -30,11 +28,11 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
-from xknx.telegram import IndividualAddress, Telegram, TelegramDirection
+from xknx.telegram import IndividualAddress
 
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
-from .interface import Interface, TelegramCallbackType
+from .interface import CEMICallbackType, Interface
 from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
 from .self_description import DescriptionQuery
@@ -46,9 +44,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 cemi_logger = logging.getLogger("xknx.cemi")
 
-# See 3/6/3 EMI_IMI §4.1.5 Data Link Layer messages
-REQUEST_TO_CONFIRMATION_TIMEOUT = 3
-
 
 class _Tunnel(Interface):
     """Class for handling KNX/IP tunnels."""
@@ -58,7 +53,7 @@ class _Tunnel(Interface):
     def __init__(
         self,
         xknx: XKNX,
-        telegram_received_callback: TelegramCallbackType,
+        cemi_received_callback: CEMICallbackType,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
     ):
@@ -70,7 +65,7 @@ class _Tunnel(Interface):
         self.communication_channel: int | None = None
         self.local_hpai: HPAI = HPAI()
         self.sequence_number = 0
-        self.telegram_received_callback = telegram_received_callback
+        self.cemi_received_callback = cemi_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
         self._heartbeat_task: asyncio.Task[None] | None = None
         self._initial_connection = True
@@ -78,7 +73,7 @@ class _Tunnel(Interface):
         self._reconnect_task: asyncio.Task[None] | None = None
         self._src_address = IndividualAddress(0)
         self._send_telegram_lock = asyncio.Lock()
-        self._tunnelling_request_confirmation_event = asyncio.Event()
+        # self._tunnelling_request_confirmation_event = asyncio.Event()
 
         self._init_transport()
         self.transport.register_callback(
@@ -258,36 +253,29 @@ class _Tunnel(Interface):
         await description.start()
         return description.gateway_descriptor
 
-    async def send_telegram(self, telegram: Telegram) -> None:
-        """Send Telegram to tunnelling server."""
-        cemi = CEMIFrame.init_from_telegram(
-            telegram=telegram,
-            code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self._src_address,
-        )
-        await self._send_cemi(cemi)
+    # async def send_telegram(self, telegram: Telegram) -> None:
+    #     """Send Telegram to tunnelling server."""
+    #     cemi = CEMIFrame.init_from_telegram(
+    #         telegram=telegram,
+    #         code=CEMIMessageCode.L_DATA_REQ,
+    #         src_addr=self._src_address,
+    #     )
+    #     await self._send_cemi(cemi)
 
-    async def _send_cemi(self, cemi: CEMIFrame) -> None:
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
         """
         Send CEMI Frame to tunnelling server.
 
         A transport layer confirmation shall be awaited before sending the next telegram.
         """
+        raw_cemi = cemi.to_knx()
         async with self._send_telegram_lock:
-            cemi_logger.debug("Outgoing CEMI: %s", cemi)
-            skip_increase_sequence_number = False
             try:
-                await self._tunnelling_request(cemi)
-            except ConversionError as ex:
-                # invalid CEMIFrame configurations preventing sending any frame
-                # shall not increase the sequence number
-                logger.warning("Could not send CEMI frame: %s", ex)
-                skip_increase_sequence_number = True
+                await self._tunnelling_request(raw_cemi)
             finally:
-                if not skip_increase_sequence_number:
-                    self._increase_sequence_number()
+                self._increase_sequence_number()
 
-    async def _tunnelling_request(self, cemi: CEMIFrame) -> None:
+    async def _tunnelling_request(self, raw_cemi: bytes) -> None:
         """Send CEMI Frame to tunnelling server."""
         if self.communication_channel is None:
             raise CommunicationError(
@@ -296,32 +284,32 @@ class _Tunnel(Interface):
         tunnelling_request = TunnellingRequest(
             communication_channel_id=self.communication_channel,
             sequence_counter=self.sequence_number,
-            raw_cemi=cemi.to_knx(),
+            raw_cemi=raw_cemi,
         )
 
-        if cemi.code is CEMIMessageCode.L_DATA_REQ:
-            await self._wait_for_tunnelling_request_confirmation(tunnelling_request)
-        else:
-            await self._send_tunnelling_request(tunnelling_request)
+        # if cemi.code is CEMIMessageCode.L_DATA_REQ:
+        #     await self._wait_for_tunnelling_request_confirmation(tunnelling_request)
+        # else:
+        await self._send_tunnelling_request(tunnelling_request)
 
-    async def _wait_for_tunnelling_request_confirmation(
-        self, frame: TunnellingRequest
-    ) -> None:
-        """Wait for confirmation of tunnelling request."""
-        self._tunnelling_request_confirmation_event.clear()
-        send_and_wait_for_confirmation = asyncio.gather(
-            self._send_tunnelling_request(frame),
-            self._tunnelling_request_confirmation_event.wait(),
-        )
-        try:
-            await asyncio.wait_for(
-                send_and_wait_for_confirmation,
-                timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
-            )
-        except asyncio.TimeoutError:
-            raise ConfirmationError(
-                f"L_DATA_CON Data Link Layer confirmation timed out for {frame}"
-            )
+    # async def _wait_for_tunnelling_request_confirmation(
+    #     self, frame: TunnellingRequest
+    # ) -> None:
+    #     """Wait for confirmation of tunnelling request."""
+    #     self._tunnelling_request_confirmation_event.clear()
+    #     send_and_wait_for_confirmation = asyncio.gather(
+    #         self._send_tunnelling_request(frame),
+    #         self._tunnelling_request_confirmation_event.wait(),
+    #     )
+    #     try:
+    #         await asyncio.wait_for(
+    #             send_and_wait_for_confirmation,
+    #             timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
+    #         )
+    #     except asyncio.TimeoutError:
+    #         raise ConfirmationError(
+    #             f"L_DATA_CON Data Link Layer confirmation timed out for {frame}"
+    #         )
 
     @abstractmethod
     async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
@@ -355,23 +343,26 @@ class _Tunnel(Interface):
         cemi = CEMIFrame()
         try:
             cemi.from_knx(tunneling_request.raw_cemi)
-            cemi_logger.debug("Incoming CEMI: %s", cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return
-
-        if cemi.code is CEMIMessageCode.L_DATA_CON:
-            # L_DATA_CON confirmation frame signals ready to send next telegram
-            self._tunnelling_request_confirmation_event.set()
+        if cemi.code not in (CEMIMessageCode.L_DATA_IND, CEMIMessageCode.L_DATA_CON):
+            logger.warning("Received invalid CEMI code in: %s", cemi)
             return
-        if cemi.code is CEMIMessageCode.L_DATA_REQ:
-            # L_DATA_REQ frames should only be outgoing.
-            logger.warning("Tunnel received unexpected L_DATA_REQ frame: %s", cemi)
-            return
+        self.cemi_received_callback(cemi)
 
-        telegram = cemi.telegram
-        telegram.direction = TelegramDirection.INCOMING
-        self.telegram_received_callback(telegram)
+        # if cemi.code is CEMIMessageCode.L_DATA_CON:
+        #     # L_DATA_CON confirmation frame signals ready to send next telegram
+        #     self._tunnelling_request_confirmation_event.set()
+        #     return
+        # if cemi.code is CEMIMessageCode.L_DATA_REQ:
+        #     # L_DATA_REQ frames should only be outgoing.
+        #     logger.warning("Tunnel received unexpected L_DATA_REQ frame: %s", cemi)
+        #     return
+
+        # telegram = cemi.telegram
+        # telegram.direction = TelegramDirection.INCOMING
+        # self.cemi_received_callback(telegram)
 
     def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest
@@ -441,7 +432,7 @@ class UDPTunnel(_Tunnel):
     def __init__(
         self,
         xknx: XKNX,
-        telegram_received_callback: TelegramCallbackType,
+        cemi_received_callback: CEMICallbackType,
         gateway_ip: str,
         gateway_port: int,
         local_ip: str,
@@ -458,7 +449,7 @@ class UDPTunnel(_Tunnel):
         self.route_back = route_back
         super().__init__(
             xknx=xknx,
-            telegram_received_callback=telegram_received_callback,
+            cemi_received_callback=cemi_received_callback,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
@@ -484,7 +475,7 @@ class UDPTunnel(_Tunnel):
 
     # OUTGOING REQUESTS
 
-    async def _send_cemi(self, cemi: CEMIFrame) -> None:
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
         """
         Send CEMI Frame to tunnelling server - with retry mechanism for UDP connection.
 
@@ -501,18 +492,19 @@ class UDPTunnel(_Tunnel):
         connection by sending a DISCONNECT_REQUEST frame to the other devices
         control endpoint.
         """
+        raw_cemi = cemi.to_knx()
         async with self._send_telegram_lock:
             cemi_logger.debug("Outgoing CEMI: %s", cemi)
             try:
                 try:
-                    await self._tunnelling_request(cemi)
+                    await self._tunnelling_request(raw_cemi)
                 except TunnellingAckError as err:
                     logger.debug("%s. Retrying a second time.", err)
                 else:
                     return
 
                 try:
-                    await self._tunnelling_request(cemi)
+                    await self._tunnelling_request(raw_cemi)
                 except TunnellingAckError as err:
                     logger.debug("%s. Reconnecting tunnel.", err)
                 else:
@@ -522,7 +514,7 @@ class UDPTunnel(_Tunnel):
                     self._tunnel_lost()
                 await self.xknx.connection_manager.connected.wait()
                 try:
-                    await self._tunnelling_request(cemi)
+                    await self._tunnelling_request(raw_cemi)
                 except TunnellingAckError as err:
                     raise CommunicationError(
                         f"Resending the telegram repeatedly failed. {err}", True
@@ -612,7 +604,7 @@ class TCPTunnel(_Tunnel):
     def __init__(
         self,
         xknx: XKNX,
-        telegram_received_callback: TelegramCallbackType,
+        cemi_received_callback: CEMICallbackType,
         gateway_ip: str,
         gateway_port: int,
         auto_reconnect: bool = True,
@@ -623,7 +615,7 @@ class TCPTunnel(_Tunnel):
         self.gateway_port = gateway_port
         super().__init__(
             xknx=xknx,
-            telegram_received_callback=telegram_received_callback,
+            cemi_received_callback=cemi_received_callback,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
@@ -653,7 +645,7 @@ class SecureTunnel(TCPTunnel):
     def __init__(
         self,
         xknx: XKNX,
-        telegram_received_callback: TelegramCallbackType,
+        cemi_received_callback: CEMICallbackType,
         gateway_ip: str,
         gateway_port: int,
         user_id: int,
@@ -668,7 +660,7 @@ class SecureTunnel(TCPTunnel):
         self._user_password = user_password
         super().__init__(
             xknx=xknx,
-            telegram_received_callback=telegram_received_callback,
+            cemi_received_callback=cemi_received_callback,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             auto_reconnect=auto_reconnect,

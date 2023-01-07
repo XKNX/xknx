@@ -11,6 +11,7 @@ from sys import platform
 from types import TracebackType
 from typing import Callable
 
+from xknx.cemi import CEMIHandler
 from xknx.core import (
     ConnectionManager,
     TaskRegistry,
@@ -60,6 +61,7 @@ class XKNX:
         self.management = Management(self)
         self.telegrams: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self.telegram_queue = TelegramQueue(self)
+        self.cemi_handler = CEMIHandler(self)
         self.state_updater = StateUpdater(self, default_tracker_option=state_updater)
         self.task_registry = TaskRegistry(self)
 
