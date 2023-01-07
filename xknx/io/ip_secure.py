@@ -21,6 +21,7 @@ from xknx.knxip import (
     HPAI,
     KNXIPFrame,
     KNXIPServiceType,
+    RoutingIndication,
     SecureWrapper,
     SessionResponse,
     SessionStatus,
@@ -421,7 +422,12 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        # TODO: disallow unencrypted frames with exceptions for discovery etc. eg. SearchRequest
+        if isinstance(knxipframe.body, RoutingIndication):
+            ip_secure_logger.info(
+                "Discarding received unencrypted RoutingIndication: %s",
+                knxipframe,
+            )
+            return
         if isinstance(knxipframe.body, TimerNotify):
             self.secure_timer.handle_timer_notify(knxipframe.body)
             return
@@ -432,8 +438,10 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                     knxipframe,
                 )
                 return
+            secure_wrapper = knxipframe.body
             try:
-                decrypted_knxipframe = self.decrypt_frame(knxipframe)
+                knxipframe = self.decrypt_frame(knxipframe)
+                print(secure_wrapper)
             except KNXSecureValidationError as err:
                 ip_secure_logger.warning("Could not decrypt KNXIPFrame: %s", err)
                 # Frame shall be discarded
@@ -444,14 +452,15 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                     couldnotparseknxip.description,
                 )
                 return
-            if not self.secure_timer.validate_secure_wrapper(knxipframe.body):
+            if not self.secure_timer.validate_secure_wrapper(secure_wrapper):
                 ip_secure_logger.warning(
                     "Discarding SecureWrapper with invalid timer value: %s",
-                    knxipframe,
+                    secure_wrapper,
                 )
                 return
-            knx_logger.debug("Decrypted frame: %s", decrypted_knxipframe)
-        super().handle_knxipframe(decrypted_knxipframe, source)
+            knx_logger.debug("Decrypted frame: %s", knxipframe)
+        # handle decrypted frames and plain frames (e.g. SearchRequest for discovery)
+        super().handle_knxipframe(knxipframe, source)
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""

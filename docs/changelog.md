@@ -12,6 +12,7 @@ nav_order: 2
 
 - SecureRouting: verify MAC of received TimerNotify frames.
 - SecureRouting: verify and handle timer value of received SecureWrapper frames after verification of MAC.
+- SecureRouting: Discard received unencrypted RoutingIndication frames.
 
 ### Internals
 
