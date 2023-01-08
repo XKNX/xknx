@@ -267,9 +267,6 @@ class Routing(Interface):
         if cemi.src_addr == self.individual_address:
             logger.debug("Ignoring own packet %s", cemi)
             return
-        if cemi.code is not CEMIMessageCode.L_DATA_IND:
-            logger.warning("Received invalid CEMI code in: %s", cemi)
-            return
         self.cemi_received_callback(cemi)
 
 

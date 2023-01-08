@@ -19,7 +19,6 @@ from xknx.exceptions import (
 from xknx.knxip import (
     HPAI,
     CEMIFrame,
-    CEMIMessageCode,
     DisconnectRequest,
     DisconnectResponse,
     HostProtocol,
@@ -313,9 +312,6 @@ class _Tunnel(Interface):
             cemi.from_knx(tunneling_request.raw_cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.warning("CEMI not supported: %s", unsupported_cemi_err)
-            return
-        if cemi.code not in (CEMIMessageCode.L_DATA_IND, CEMIMessageCode.L_DATA_CON):
-            logger.warning("Received invalid CEMI code in: %s", cemi)
             return
         self.cemi_received_callback(cemi)
 
