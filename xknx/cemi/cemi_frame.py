@@ -16,7 +16,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
-from xknx.telegram.tpci import TPCI, TDataBroadcast, TDataGroup
+from xknx.telegram.tpci import TPCI, TDataBroadcast
 
 from .const import CEMIFlags, CEMIMessageCode
 
@@ -26,19 +26,20 @@ class CEMIFrame:
 
     def __init__(
         self,
-        code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
-        flags: int = 0,
-        src_addr: IndividualAddress | None = None,
-        dst_addr: GroupAddress | IndividualAddress | None = None,
-        tpci: TPCI | None = None,
-        payload: APCI | None = None,
+        *,
+        code: CEMIMessageCode,
+        flags: int,
+        src_addr: IndividualAddress,
+        dst_addr: GroupAddress | IndividualAddress,
+        tpci: TPCI,
+        payload: APCI | None,
     ):
         """Initialize CEMIFrame object."""
         self.code = code
         self.flags = flags
-        self.src_addr = src_addr or IndividualAddress(None)
-        self.dst_addr = dst_addr or GroupAddress(None)
-        self.tpci = tpci or TDataGroup()
+        self.src_addr = src_addr
+        self.dst_addr = dst_addr
+        self.tpci = tpci
         self.payload = payload
 
     @staticmethod
