@@ -72,7 +72,7 @@ class _Tunnel(Interface):
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._src_address = IndividualAddress(0)
-        self._send_telegram_lock = asyncio.Lock()
+        self._send_lock = asyncio.Lock()
         # self._tunnelling_request_confirmation_event = asyncio.Event()
 
         self._init_transport()
@@ -253,15 +253,6 @@ class _Tunnel(Interface):
         await description.start()
         return description.gateway_descriptor
 
-    # async def send_telegram(self, telegram: Telegram) -> None:
-    #     """Send Telegram to tunnelling server."""
-    #     cemi = CEMIFrame.init_from_telegram(
-    #         telegram=telegram,
-    #         code=CEMIMessageCode.L_DATA_REQ,
-    #         src_addr=self._src_address,
-    #     )
-    #     await self._send_cemi(cemi)
-
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """
         Send CEMI Frame to tunnelling server.
@@ -269,7 +260,7 @@ class _Tunnel(Interface):
         A transport layer confirmation shall be awaited before sending the next telegram.
         """
         raw_cemi = cemi.to_knx()
-        async with self._send_telegram_lock:
+        async with self._send_lock:
             try:
                 await self._tunnelling_request(raw_cemi)
             finally:
@@ -286,30 +277,7 @@ class _Tunnel(Interface):
             sequence_counter=self.sequence_number,
             raw_cemi=raw_cemi,
         )
-
-        # if cemi.code is CEMIMessageCode.L_DATA_REQ:
-        #     await self._wait_for_tunnelling_request_confirmation(tunnelling_request)
-        # else:
         await self._send_tunnelling_request(tunnelling_request)
-
-    # async def _wait_for_tunnelling_request_confirmation(
-    #     self, frame: TunnellingRequest
-    # ) -> None:
-    #     """Wait for confirmation of tunnelling request."""
-    #     self._tunnelling_request_confirmation_event.clear()
-    #     send_and_wait_for_confirmation = asyncio.gather(
-    #         self._send_tunnelling_request(frame),
-    #         self._tunnelling_request_confirmation_event.wait(),
-    #     )
-    #     try:
-    #         await asyncio.wait_for(
-    #             send_and_wait_for_confirmation,
-    #             timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
-    #         )
-    #     except asyncio.TimeoutError:
-    #         raise ConfirmationError(
-    #             f"L_DATA_CON Data Link Layer confirmation timed out for {frame}"
-    #         )
 
     @abstractmethod
     async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
@@ -350,19 +318,6 @@ class _Tunnel(Interface):
             logger.warning("Received invalid CEMI code in: %s", cemi)
             return
         self.cemi_received_callback(cemi)
-
-        # if cemi.code is CEMIMessageCode.L_DATA_CON:
-        #     # L_DATA_CON confirmation frame signals ready to send next telegram
-        #     self._tunnelling_request_confirmation_event.set()
-        #     return
-        # if cemi.code is CEMIMessageCode.L_DATA_REQ:
-        #     # L_DATA_REQ frames should only be outgoing.
-        #     logger.warning("Tunnel received unexpected L_DATA_REQ frame: %s", cemi)
-        #     return
-
-        # telegram = cemi.telegram
-        # telegram.direction = TelegramDirection.INCOMING
-        # self.cemi_received_callback(telegram)
 
     def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest
@@ -493,7 +448,7 @@ class UDPTunnel(_Tunnel):
         control endpoint.
         """
         raw_cemi = cemi.to_knx()
-        async with self._send_telegram_lock:
+        async with self._send_lock:
             cemi_logger.debug("Outgoing CEMI: %s", cemi)
             try:
                 try:
