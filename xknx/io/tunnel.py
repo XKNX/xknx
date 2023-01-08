@@ -307,9 +307,8 @@ class _Tunnel(Interface):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnel request."""
-        cemi = CEMIFrame()
         try:
-            cemi.from_knx(tunneling_request.raw_cemi)
+            cemi = CEMIFrame.from_knx(tunneling_request.raw_cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return

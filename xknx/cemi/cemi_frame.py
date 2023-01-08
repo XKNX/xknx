@@ -104,27 +104,29 @@ class CEMIFrame:
             return 10
         raise TypeError("Data TPDU must have a payload; control TPDU must not.")
 
-    def from_knx(self, raw: bytes) -> int:
+    @staticmethod
+    def from_knx(raw: bytes) -> CEMIFrame:
         """Parse/deserialize from KNX/IP raw data."""
         try:
-            self.code = CEMIMessageCode(raw[0])
+            code = CEMIMessageCode(raw[0])
         except ValueError:
             raise UnsupportedCEMIMessage(
                 f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
             )
 
-        if self.code not in (
+        if code in (
             CEMIMessageCode.L_DATA_IND,
             CEMIMessageCode.L_DATA_REQ,
             CEMIMessageCode.L_DATA_CON,
         ):
-            raise UnsupportedCEMIMessage(
-                f"Could not handle CEMIMessageCode: {self.code} / {raw[0]} in CEMI: {raw.hex()}"
-            )
+            return CEMIFrame.from_knx_data_link_layer(raw, code)
 
-        return self.from_knx_data_link_layer(raw)
+        raise UnsupportedCEMIMessage(
+            f"Could not handle CEMIMessageCode: {code} / {raw[0]} in CEMI: {raw.hex()}"
+        )
 
-    def from_knx_data_link_layer(self, cemi: bytes) -> int:
+    @staticmethod
+    def from_knx_data_link_layer(cemi: bytes, code: CEMIMessageCode) -> CEMIFrame:
         """Parse L_DATA_IND, CEMIMessageCode.L_DATA_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 10:
             raise UnsupportedCEMIMessage(
@@ -136,26 +138,24 @@ class CEMIFrame:
         # Additional information is not yet parsed.
         addil = cemi[1]
         # Control field 1 and Control field 2 - first 2 octets after Additional information
-        self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
+        flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = IndividualAddress(cemi[4 + addil] * 256 + cemi[5 + addil])
+        src_addr = IndividualAddress(cemi[4 + addil] * 256 + cemi[5 + addil])
 
-        dst_is_group_address = bool(self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
-        dst_raw_address = cemi[6 + addil] * 256 + cemi[7 + addil]
-        self.dst_addr = (
-            GroupAddress(dst_raw_address)
-            if dst_is_group_address
-            else IndividualAddress(dst_raw_address)
+        _dst_is_group_address = bool(flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
+        _dst_raw_address = cemi[6 + addil] * 256 + cemi[7 + addil]
+        dst_addr: GroupAddress | IndividualAddress = (
+            GroupAddress(_dst_raw_address)
+            if _dst_is_group_address
+            else IndividualAddress(_dst_raw_address)
         )
 
-        npdu_len = cemi[8 + addil]
-
-        tpdu = cemi[9 + addil :]
-        apdu = bytes([tpdu[0] & 0b11]) + tpdu[1:]  # clear TPCI bits
-
-        if len(apdu) != (npdu_len + 1):  # TCPI octet not included in NPDU length
+        _npdu_len = cemi[8 + addil]
+        _tpdu = cemi[9 + addil :]
+        _apdu = bytes([_tpdu[0] & 0b11]) + _tpdu[1:]  # clear TPCI bits
+        if len(_apdu) != (_npdu_len + 1):  # TCPI octet not included in NPDU length
             raise UnsupportedCEMIMessage(
-                f"APDU LEN should be {npdu_len} but is {len(apdu) - 1} in CEMI: {cemi.hex()}"
+                f"APDU LEN should be {_npdu_len} but is {len(_apdu) - 1} in CEMI: {cemi.hex()}"
             )
 
         # TPCI (transport layer control information)
@@ -163,30 +163,45 @@ class CEMIFrame:
         # - no control bit set (data) -> First 6 bit
         # APCI (application layer control information) -> Last  10 bit of TPCI/APCI
         try:
-            self.tpci = TPCI.resolve(
-                raw_tpci=tpdu[0],
-                dst_is_group_address=dst_is_group_address,
-                dst_is_zero=not dst_raw_address,
+            tpci = TPCI.resolve(
+                raw_tpci=_tpdu[0],
+                dst_is_group_address=_dst_is_group_address,
+                dst_is_zero=not _dst_raw_address,
             )
         except ConversionError as err:
-            raise UnsupportedCEMIMessage(f"TPCI not supported: {tpdu[0]:#10b}") from err
+            raise UnsupportedCEMIMessage(
+                f"TPCI not supported: {_tpdu[0]:#10b}"
+            ) from err
 
-        if self.tpci.control:
-            if npdu_len:
+        if tpci.control:
+            if _npdu_len:
                 raise UnsupportedCEMIMessage(
-                    f"Invalid length for control TPDU {self.tpci}: {npdu_len}"
+                    f"Invalid length for control TPDU {tpci}: {_npdu_len}"
                 )
-            return 10 + addil
+            return CEMIFrame(
+                code=code,
+                flags=flags,
+                src_addr=src_addr,
+                dst_addr=dst_addr,
+                tpci=tpci,
+                payload=None,
+            )
 
-        _apci = apdu[0] * 256 + apdu[1]
+        _apci = _apdu[0] * 256 + _apdu[1]
         try:
-            self.payload = APCI.resolve_apci(_apci)
+            payload = APCI.resolve_apci(_apci)
         except ConversionError as err:
             raise UnsupportedCEMIMessage(f"APCI not supported: {_apci:#012b}") from err
+        payload.from_knx(_apdu)
 
-        self.payload.from_knx(apdu)
-
-        return 10 + addil + npdu_len
+        return CEMIFrame(
+            code=code,
+            flags=flags,
+            src_addr=src_addr,
+            dst_addr=dst_addr,
+            tpci=tpci,
+            payload=payload,
+        )
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""

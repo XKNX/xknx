@@ -17,7 +17,7 @@ nav_order: 2
 ### Internals
 
 - Move `CEMIFrame`, `CEMIFlags` and `CEMIMessageCode` to xknx.cemi package.
-- Remove `CEMIFrame.telegram` setter in favour of `init_from_telegram()` staticmethod.
+- Remove `CEMIFrame.telegram` setter in favour of `init_from_telegram()` staticmethod; convert `from_knx()` and `from_knx_data_link_layer()` to staticmethods returning a CEMIFrame.
 - Parse T_Data_Broadcast TPCI. Forward these telegrams to the Management class.
 - KNXIPHeader total_length is 2 bytes long. There are no reserved bytes.
 - Revert handling L_Data.req frames for incoming device management requests.

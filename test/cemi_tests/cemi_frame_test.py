@@ -32,15 +32,13 @@ def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
 def test_valid_command():
     """Test for valid frame parsing."""
     raw = get_data(0x29, 0, 0x0080, 1, 1, 1, 0, [])
-    frame = CEMIFrame()
-    packet_len = frame.from_knx(raw)
+    frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
     assert frame.flags == 0x0080
     assert frame.src_addr == IndividualAddress(1)
     assert frame.dst_addr == GroupAddress(1)
     assert frame.payload == GroupValueRead()
     assert frame.tpci == TDataGroup()
-    assert packet_len == 11
     assert frame.calculated_length() == 11
     assert frame.to_knx() == raw
 
@@ -48,15 +46,13 @@ def test_valid_command():
 def test_valid_tpci_control():
     """Test for valid tpci control."""
     raw = bytes((0x29, 0, 0, 0, 0, 0, 0, 0, 0, 0x80))
-    frame = CEMIFrame()
-    packet_len = frame.from_knx(raw)
+    frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
     assert frame.flags == 0
     assert frame.payload is None
     assert frame.src_addr == IndividualAddress(0)
     assert frame.dst_addr == IndividualAddress(0)
     assert frame.tpci == TConnect()
-    assert packet_len == 10
     assert frame.calculated_length() == 10
     assert frame.to_knx() == raw
 
@@ -80,16 +76,14 @@ def test_valid_tpci_control():
 )
 def test_invalid_tpci_apci(raw, err_msg):
     """Test for invalid APCIService."""
-    frame = CEMIFrame()
     with pytest.raises(UnsupportedCEMIMessage, match=err_msg):
-        frame.from_knx_data_link_layer(raw)
+        CEMIFrame.from_knx_data_link_layer(raw, code=CEMIMessageCode.L_DATA_IND)
 
 
 def test_invalid_apdu_len():
     """Test for invalid apdu len."""
-    frame = CEMIFrame()
     with pytest.raises(UnsupportedCEMIMessage, match=r".*APDU LEN should be .*"):
-        frame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
+        CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 
 def test_invalid_src_addr():
@@ -136,44 +130,40 @@ def test_invalid_payload():
 
 def test_from_knx_with_not_handleable_cemi():
     """Test for having unhandlebale cemi set."""
-    frame = CEMIFrame()
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*CEMIMessageCode not implemented:.*"
     ):
-        frame.from_knx(get_data(0x30, 0, 0, 0, 0, 2, 0, []))
+        CEMIFrame.from_knx(get_data(0x30, 0, 0, 0, 0, 2, 0, []))
 
 
 def test_from_knx_with_not_implemented_cemi():
     """Test for having not implemented CEMI set."""
-    frame = CEMIFrame()
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*Could not handle CEMIMessageCode:.*"
     ):
-        frame.from_knx(
+        CEMIFrame.from_knx(
             get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
         )
 
 
 def test_invalid_invalid_len():
     """Test for invalid cemi len."""
-    frame = CEMIFrame()
     with pytest.raises(UnsupportedCEMIMessage, match=r".*CEMI too small.*"):
-        frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
+        CEMIFrame.from_knx_data_link_layer(
+            get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5],
+            code=CEMIMessageCode.L_DATA_IND,
+        )
 
 
 def test_from_knx_group_address():
     """Test conversion for a cemi with a group address as destination."""
-    frame = CEMIFrame()
-    frame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
-
+    frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
     assert frame.dst_addr == GroupAddress(0)
 
 
 def test_from_knx_individual_address():
     """Test conversion for a cemi with a individual address as destination."""
-    frame = CEMIFrame()
-    frame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
-
+    frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
     assert frame.dst_addr == IndividualAddress(0)
 
 

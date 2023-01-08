@@ -24,8 +24,7 @@ class TestKNXIPTunnellingRequest:
         assert knxipframe.body.sequence_counter == 23
         assert isinstance(knxipframe.body.raw_cemi, bytes)
 
-        incoming_cemi = CEMIFrame()
-        incoming_cemi.from_knx(knxipframe.body.raw_cemi)
+        incoming_cemi = CEMIFrame.from_knx(knxipframe.body.raw_cemi)
         assert incoming_cemi.telegram == Telegram(
             destination_address=GroupAddress("9/0/8"),
             payload=GroupValueWrite(DPTBinary(1)),
