@@ -41,7 +41,7 @@ class Management:
                 destination_address=telegram.source_address,
                 tpci=TAck(sequence_number=telegram.tpci.sequence_number),
             )
-            asyncio.create_task(self.xknx.knxip_interface.send_telegram(ack))
+            asyncio.create_task(self.xknx.cemi_handler.send_telegram(ack))
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
             return
@@ -58,7 +58,7 @@ class Management:
             disconnect = Telegram(
                 destination_address=telegram.source_address, tpci=TDisconnect()
             )
-            asyncio.create_task(self.xknx.knxip_interface.send_telegram(disconnect))
+            asyncio.create_task(self.xknx.cemi_handler.send_telegram(disconnect))
             return
         logger.warning("Unhandled management telegram: %r", telegram)
         return
@@ -146,7 +146,7 @@ class P2PConnection:
             tpci=TConnect(),
         )
         try:
-            await self.xknx.knxip_interface.send_telegram(connect)
+            await self.xknx.cemi_handler.send_telegram(connect)
         except ConfirmationError as exc:
             self._response_waiter.cancel()
             raise ManagementConnectionError(
@@ -172,7 +172,7 @@ class P2PConnection:
             tpci=TDisconnect(),
         )
         try:
-            await self.xknx.knxip_interface.send_telegram(disconnect)
+            await self.xknx.cemi_handler.send_telegram(disconnect)
         except ConfirmationError as exc:
             raise ManagementConnectionError(
                 f"Disconnect from {self.address} failed: {exc}"
@@ -237,7 +237,7 @@ class P2PConnection:
             tpci=TDataConnected(sequence_number=seq_num),
         )
         try:
-            await self.xknx.knxip_interface.send_telegram(telegram)
+            await self.xknx.cemi_handler.send_telegram(telegram)
             ack = await asyncio.wait_for(self._ack_waiter, MANAGAMENT_ACK_TIMEOUT)
         except asyncio.TimeoutError:
             logger.debug(
@@ -246,7 +246,7 @@ class P2PConnection:
             # resend once after 3 seconds without ACK
             # on timeout the Future is cancelled so create a new
             self._ack_waiter = asyncio.get_event_loop().create_future()
-            await self.xknx.knxip_interface.send_telegram(telegram)
+            await self.xknx.cemi_handler.send_telegram(telegram)
             try:
                 ack = await asyncio.wait_for(self._ack_waiter, MANAGAMENT_ACK_TIMEOUT)
             except asyncio.TimeoutError:

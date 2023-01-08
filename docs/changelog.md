@@ -19,6 +19,9 @@ nav_order: 2
 - Parse T_Data_Broadcast TPCI. Forward these telegrams to the Management class.
 - KNXIPHeader total_length is 2 bytes long. There are no reserved bytes.
 - Revert handling L_Data.req frames for incoming device management requests.
+- Decouple CEMIFrame handling from IP interface
+  - Add CEMIHandler class. This class handles incoming CEMIFrames and dispatches them to the upper layers as Telegram objects and creates CEMIFrames from Telegram objects to be sent to the network.
+  - Use `CEMIFrame` instead of `Telegram` in KNXIPInterface.
 
 # 2.2.0 Expose cooldown 2022-12-27
 

@@ -10,9 +10,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable
 
-from xknx.telegram import Telegram
+from xknx.knxip import CEMIFrame
 
-TelegramCallbackType = Callable[[Telegram], None]
+CEMICallbackType = Callable[[CEMIFrame], None]
 
 
 class Interface(ABC):
@@ -27,5 +27,5 @@ class Interface(ABC):
         """Disconnect from KNX bus."""
 
     @abstractmethod
-    async def send_telegram(self, telegram: Telegram) -> None:
-        """Send Telegram to KNX bus."""
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
+        """Send CEMIFrame to KNX bus."""

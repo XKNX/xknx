@@ -45,14 +45,14 @@ class TestUDPTunnel:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
-        self.tg_received_mock = AsyncMock()
+        self.cemi_received_mock = Mock()
         self.tunnel = UDPTunnel(
             self.xknx,
             gateway_ip="192.168.1.2",
             gateway_port=3671,
             local_ip="192.168.1.1",
             local_port=0,
-            telegram_received_callback=self.tg_received_mock,
+            cemi_received_callback=self.cemi_received_mock,
             auto_reconnect=False,
             auto_reconnect_wait=3,
             route_back=False,
@@ -72,38 +72,34 @@ class TestUDPTunnel:
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     async def test_tunnel_request_received(self, send_ack_mock, raw):
         """Test Tunnel for calling send_ack on normal frames."""
-        _cemi = CEMIFrame()
-        _cemi.from_knx(raw[10:])
-        telegram = _cemi.telegram
-        telegram.direction = TelegramDirection.INCOMING
+        test_cemi = CEMIFrame()
+        test_cemi.from_knx(raw[10:])
         self.tunnel.expected_sequence_number = 0x21
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
-        self.tg_received_mock.assert_called_once_with(telegram)
+        self.cemi_received_mock.assert_called_once_with(test_cemi)
         send_ack_mock.assert_called_once_with(raw[7], raw[8])
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    @patch("xknx.io.UDPTunnel._send_cemi")
+    @patch("xknx.io.UDPTunnel.send_cemi")
     async def test_tunnel_request_received_callback(
         self,
         send_cemi_mock,
         send_ack_mock,
     ):
-        """Test Tunnel for responding to L_DATA.req with confirmation and indication."""
-        self.tunnel.telegram_received_callback = (
-            self.xknx.knxip_interface.telegram_received
-        )
+        """Test Tunnel for responding to point-to-point connection."""
+        self.tunnel.cemi_received_callback = self.xknx.knxip_interface.cemi_received
         self.xknx.knxip_interface._interface = self.tunnel
         # set current address so management telegram is processed
         self.xknx.current_address = IndividualAddress("1.0.255")
-        # L_Data.ing T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
+        # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint) - ETS Line-Scan
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw_ind = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
 
-        _cemi = CEMIFrame()
-        _cemi.from_knx(raw_ind[10:])
-        test_telegram = _cemi.telegram
+        test_cemi = CEMIFrame()
+        test_cemi.from_knx(raw_ind[10:])
+        test_telegram = test_cemi.telegram
         test_telegram.direction = TelegramDirection.INCOMING
         self.tunnel.expected_sequence_number = 0x81
 
@@ -117,7 +113,7 @@ class TestUDPTunnel:
         response_cemi = CEMIFrame.init_from_telegram(
             response_telegram,
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.tunnel._src_address,
+            src_addr=IndividualAddress("1.0.255"),
         )
         assert send_cemi_mock.call_args_list == [
             call(response_cemi),
@@ -154,14 +150,14 @@ class TestUDPTunnel:
         assert self.tunnel.transport.send.call_args_list == [call(test_ack, addr=None)]
         self.tunnel.transport.send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
-        assert self.tg_received_mock.call_count == 1
+        assert self.cemi_received_mock.call_count == 1
         # same sequence number as before - ACK, not processed
         self.tunnel._request_received(test_frame, None, None)
         await time_travel(0)
         assert self.tunnel.transport.send.call_args_list == [call(test_ack, addr=None)]
         self.tunnel.transport.send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
-        assert self.tg_received_mock.call_count == 1
+        assert self.cemi_received_mock.call_count == 1
         # wrong sequence number - no ACK, not processed
         # reconnect if `auto_reconnect` was True
         with pytest.raises(CommunicationError):
@@ -170,7 +166,7 @@ class TestUDPTunnel:
         assert self.tunnel.transport.send.call_args_list == []
         self.tunnel.transport.send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
-        assert self.tg_received_mock.call_count == 1
+        assert self.cemi_received_mock.call_count == 1
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
@@ -181,7 +177,7 @@ class TestUDPTunnel:
         self.tunnel.expected_sequence_number = 0x81
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
-        self.tg_received_mock.assert_not_called()
+        self.cemi_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x81)
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
@@ -194,42 +190,8 @@ class TestUDPTunnel:
         self.tunnel.expected_sequence_number = 0x4F
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
-        self.tg_received_mock.assert_not_called()
+        self.cemi_received_mock.assert_not_called()
         send_ack_mock.assert_called_once_with(0x02, 0x4F)
-
-    async def test_tunnel_send_and_wait_for_l2_confirmation(self, time_travel):
-        """Test tunnel waits for L_DATA.con before sending another L_DATA.req."""
-        self.tunnel.transport.send = Mock()
-        self.tunnel.communication_channel = 1
-        self.tunnel.expected_sequence_number = 23
-
-        test_telegram = Telegram(
-            destination_address=GroupAddress(1),
-            payload=GroupValueWrite(DPTArray((1,))),
-        )
-        cemi = CEMIFrame.init_from_telegram(
-            test_telegram, code=CEMIMessageCode.L_DATA_CON
-        )
-        test_ack = KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=23))
-        confirmation = KNXIPFrame.init_from_body(
-            TunnellingRequest(
-                communication_channel_id=1,
-                sequence_counter=23,
-                raw_cemi=cemi.to_knx(),
-            )
-        )
-        task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
-        await time_travel(0)
-        self.tunnel.transport.handle_knxipframe(test_ack, HPAI())
-        await time_travel(0)
-        assert not task.done()
-        assert self.tunnel.transport.send.call_count == 1
-        self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
-        await time_travel(0)
-        assert task.done()
-        # one call for the outgoing request and one for the ACK for the confirmation
-        assert self.tunnel.transport.send.call_count == 2
-        await task
 
     async def test_tunnel_send_retry(self, time_travel):
         """Test tunnel resends the telegram when no ACK was received."""
@@ -242,7 +204,7 @@ class TestUDPTunnel:
             destination_address=GroupAddress(1),
             payload=GroupValueWrite(DPTArray((1,))),
         )
-        cemi = CEMIFrame.init_from_telegram(
+        test_cemi = CEMIFrame.init_from_telegram(
             test_telegram,
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self.tunnel._src_address,
@@ -251,7 +213,7 @@ class TestUDPTunnel:
             TunnellingRequest(
                 communication_channel_id=self.tunnel.communication_channel,
                 sequence_counter=self.tunnel.sequence_number,
-                raw_cemi=cemi.to_knx(),
+                raw_cemi=test_cemi.to_knx(),
             )
         )
         test_ack = KNXIPFrame.init_from_body(
@@ -269,7 +231,7 @@ class TestUDPTunnel:
         )
         confirmation_ack = KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=15))
 
-        task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+        task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
         await time_travel(0)
         assert self.tunnel.transport.send.call_args_list == [call(request, addr=None)]
         self.tunnel.transport.send.reset_mock()
@@ -279,19 +241,19 @@ class TestUDPTunnel:
         self.tunnel.transport.send.reset_mock()
         self.tunnel.transport.handle_knxipframe(test_ack, HPAI())
         await time_travel(0)
-        assert not task.done()
+        assert task.done()
+        await task
+        # L_Data.con ACK for UDP tunneling
         self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
         await time_travel(0)
-        assert task.done()
         assert self.tunnel.transport.send.call_args_list == [
             call(confirmation_ack, addr=None)
         ]
         self.tunnel.transport.send.reset_mock()
-        await task
 
         # Test raise after 2 missed ACKs (reconnect if `auto_reconnect` was True)
         with pytest.raises(CommunicationError):
-            task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+            task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
             # no ACKs received, for 2x wait time (with advancing the loop in between)
             await time_travel(1)
             await time_travel(1)
@@ -351,7 +313,7 @@ class TestUDPTunnel:
             destination_address=GroupAddress(1),
             payload=GroupValueWrite(DPTArray((1,))),
         )
-        cemi = CEMIFrame.init_from_telegram(
+        test_cemi = CEMIFrame.init_from_telegram(
             test_telegram,
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=IndividualAddress(7),
@@ -360,10 +322,10 @@ class TestUDPTunnel:
             TunnellingRequest(
                 communication_channel_id=23,
                 sequence_counter=0,
-                raw_cemi=cemi.to_knx(),
+                raw_cemi=test_cemi.to_knx(),
             )
         )
-        asyncio.create_task(self.tunnel.send_telegram(test_telegram))
+        asyncio.create_task(self.tunnel.send_cemi(test_cemi))
         await time_travel(0)
         self.tunnel.transport.send.assert_called_once_with(
             test_telegram_frame, addr=data_endpoint_addr
@@ -419,45 +381,15 @@ class TestTCPTunnel:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
-        self.tg_received_mock = AsyncMock()
+        self.cemi_received_mock = AsyncMock()
         self.tunnel = TCPTunnel(
             self.xknx,
             gateway_ip="192.168.1.2",
             gateway_port=3671,
-            telegram_received_callback=self.tg_received_mock,
+            cemi_received_callback=self.cemi_received_mock,
             auto_reconnect=False,
             auto_reconnect_wait=3,
         )
-
-    async def test_tunnel_send_and_wait_for_l2_confirmation(self, time_travel):
-        """Test tunnel waits for L_DATA.con before sending another L_DATA.req."""
-        self.tunnel.transport.send = Mock()
-        self.tunnel.communication_channel = 1
-
-        test_telegram = Telegram(
-            destination_address=GroupAddress(1),
-            payload=GroupValueWrite(DPTArray((1,))),
-        )
-        cemi = CEMIFrame.init_from_telegram(
-            test_telegram, code=CEMIMessageCode.L_DATA_CON
-        )
-        confirmation = KNXIPFrame.init_from_body(
-            TunnellingRequest(
-                communication_channel_id=1,
-                sequence_counter=23,
-                raw_cemi=cemi.to_knx(),
-            )
-        )
-        task = asyncio.create_task(self.tunnel.send_telegram(test_telegram))
-        await time_travel(0)
-        assert not task.done()
-        assert self.tunnel.transport.send.call_count == 1
-        self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
-        await time_travel(0)
-        assert task.done()
-        # one call for the outgoing request. No Acks for TCP.
-        assert self.tunnel.transport.send.call_count == 1
-        await task
 
     async def test_tunnel_heartbeat(self, time_travel):
         """Test tunnel sends heartbeat frame."""
