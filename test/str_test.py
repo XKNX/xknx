@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from xknx import XKNX
+from xknx.cemi import CEMIFrame
 from xknx.devices import (
     BinarySensor,
     Climate,
@@ -29,7 +30,6 @@ from xknx.exceptions import (
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
-    CEMIFrame,
     ConnectionStateRequest,
     ConnectionStateResponse,
     ConnectRequest,

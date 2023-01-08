@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from xknx import XKNX
+from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import CommunicationError
 from xknx.io import TCPTunnel, UDPTunnel
@@ -13,7 +14,6 @@ from xknx.io.const import CONNECTIONSTATE_REQUEST_TIMEOUT, HEARTBEAT_RATE
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
-    CEMIFrame,
     ConnectionStateRequest,
     ConnectionStateResponse,
     ConnectRequest,
@@ -27,7 +27,7 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
-from xknx.knxip.knxip_enum import CEMIMessageCode, HostProtocol
+from xknx.knxip.knxip_enum import HostProtocol
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,

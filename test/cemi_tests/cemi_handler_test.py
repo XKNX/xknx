@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from xknx import XKNX
+from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConfirmationError
-from xknx.knxip import CEMIFrame, CEMIMessageCode
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, apci, tpci
 
 

@@ -1,12 +1,12 @@
 """Tests for the CEMIFrame object."""
 import pytest
 
+from xknx.cemi import CEMIFlags, CEMIMessageCode
+from xknx.cemi.cemi_frame import CEMIFrame
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
-from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.knxip_enum import CEMIFlags, CEMIMessageCode
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
-from xknx.telegram.tpci import TAck, TConnect, TDataBroadcast, TDataGroup
+from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataGroup
 
 
 def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):

@@ -18,7 +18,7 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import TPCI, TDataBroadcast, TDataGroup
 
-from .knxip_enum import CEMIFlags, CEMIMessageCode
+from .const import CEMIFlags, CEMIMessageCode
 
 
 class CEMIFrame:

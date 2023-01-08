@@ -12,8 +12,10 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.exceptions import CommunicationError, ConfirmationError, ConversionError
-from xknx.knxip import CEMIFrame, CEMIMessageCode
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
+
+from .cemi_frame import CEMIFrame
+from .const import CEMIMessageCode
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX

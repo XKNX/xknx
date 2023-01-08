@@ -14,13 +14,13 @@ import logging
 import threading
 from typing import TYPE_CHECKING, TypeVar
 
+from xknx.cemi import CEMIFrame
 from xknx.exceptions import (
     CommunicationError,
     InvalidSecureConfiguration,
     XKNXException,
 )
 from xknx.io import util
-from xknx.knxip import CEMIFrame
 from xknx.secure.keyring import XMLInterface, load_keyring
 
 from .connection import ConnectionConfig, ConnectionType
