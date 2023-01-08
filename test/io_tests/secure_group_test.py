@@ -2,11 +2,10 @@
 import asyncio
 from unittest.mock import Mock, patch
 
+from xknx.cemi import CEMIFrame
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
-from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.routing_indication import RoutingIndication
 from xknx.telegram import GroupAddress, Telegram, apci
 
 ONE_HOUR_MS = 60 * 60 * 1000

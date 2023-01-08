@@ -1,9 +1,10 @@
 """Unit test for KNX/IP TunnellingRequest objects."""
 import pytest
 
+from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.dpt import DPTBinary
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import CEMIFrame, CEMIMessageCode, KNXIPFrame, TunnellingRequest
+from xknx.knxip import KNXIPFrame, TunnellingRequest
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 

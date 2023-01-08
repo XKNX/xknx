@@ -12,12 +12,11 @@ import logging
 import random
 from typing import TYPE_CHECKING, Final
 
+from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.core import XknxConnectionState
 from xknx.exceptions import CommunicationError, UnsupportedCEMIMessage
 from xknx.knxip import (
     HPAI,
-    CEMIFrame,
-    CEMIMessageCode,
     KNXIPFrame,
     KNXIPServiceType,
     RoutingBusy,

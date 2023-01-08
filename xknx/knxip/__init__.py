@@ -1,7 +1,6 @@
 """This package contains all methods for serialization and deserialization of KNX/IP packets."""
 # flake8: noqa
 from .body import KNXIPBody, KNXIPBodyResponse
-from .cemi_frame import CEMIFrame
 from .connect_request import ConnectRequest
 from .connect_response import ConnectResponse
 from .connectionstate_request import ConnectionStateRequest
@@ -23,8 +22,6 @@ from .header import KNXIPHeader
 from .hpai import HPAI
 from .knxip import KNXIPFrame
 from .knxip_enum import (
-    CEMIFlags,
-    CEMIMessageCode,
     ConnectRequestType,
     DIBServiceFamily,
     DIBTypeCode,
@@ -53,7 +50,6 @@ from .tunnelling_request import TunnellingRequest
 __all__ = [
     "KNXIPBody",
     "KNXIPBodyResponse",
-    "CEMIFrame",
     "ConnectRequest",
     "ConnectResponse",
     "ConnectionStateRequest",
@@ -72,8 +68,6 @@ __all__ = [
     "KNXIPHeader",
     "HPAI",
     "KNXIPFrame",
-    "CEMIFlags",
-    "CEMIMessageCode",
     "ConnectRequestType",
     "DIBServiceFamily",
     "DIBTypeCode",

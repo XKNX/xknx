@@ -1,8 +1,9 @@
 """Unit test for KNX/IP RountingIndication objects."""
 import time
 
+from xknx.cemi import CEMIFrame
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
-from xknx.knxip import CEMIFrame, KNXIPFrame, KNXIPServiceType, RoutingIndication
+from xknx.knxip import KNXIPFrame, KNXIPServiceType, RoutingIndication
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 

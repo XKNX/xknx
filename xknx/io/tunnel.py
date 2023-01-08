@@ -10,6 +10,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
+from xknx.cemi import CEMIFrame
 from xknx.core import XknxConnectionState
 from xknx.exceptions import (
     CommunicationError,
@@ -18,7 +19,6 @@ from xknx.exceptions import (
 )
 from xknx.knxip import (
     HPAI,
-    CEMIFrame,
     DisconnectRequest,
     DisconnectResponse,
     HostProtocol,

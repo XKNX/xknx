@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from xknx import XKNX
+from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.io import Routing
 from xknx.io.const import DEFAULT_INDIVIDUAL_ADDRESS
 from xknx.io.routing import (
@@ -12,13 +13,7 @@ from xknx.io.routing import (
     ROUTING_INDICATION_WAIT_TIME,
     _RoutingFlowControl,
 )
-from xknx.knxip import (
-    CEMIFrame,
-    CEMIMessageCode,
-    KNXIPFrame,
-    RoutingBusy,
-    RoutingIndication,
-)
+from xknx.knxip import KNXIPFrame, RoutingBusy, RoutingIndication
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
 
 

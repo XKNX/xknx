@@ -10,7 +10,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable
 
-from xknx.knxip import CEMIFrame
+from xknx.cemi import CEMIFrame
 
 CEMICallbackType = Callable[[CEMIFrame], None]
 
