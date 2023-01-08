@@ -39,7 +39,9 @@ class CEMIHandler:
         cemi = CEMIFrame.init_from_telegram(
             telegram=telegram,
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.xknx.current_address,  # TODO: if Telegram address is 0 ?
+            src_addr=(
+                self.xknx.current_address if telegram.source_address.raw == 0 else None
+            ),
         )
         self._l_data_confirmation_event.clear()
         logger.debug("Outgoing CEMI: %s", cemi)

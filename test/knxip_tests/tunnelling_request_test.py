@@ -31,10 +31,12 @@ class TestKNXIPTunnellingRequest:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-        outgoing_cemi = CEMIFrame(code=CEMIMessageCode.L_DATA_REQ)
-        outgoing_cemi.telegram = Telegram(
-            destination_address=GroupAddress("9/0/8"),
-            payload=GroupValueWrite(DPTBinary(1)),
+        outgoing_cemi = CEMIFrame.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress("9/0/8"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
+            code=CEMIMessageCode.L_DATA_REQ,
         )
         tunnelling_request = TunnellingRequest(
             communication_channel_id=1,

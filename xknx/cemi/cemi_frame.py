@@ -48,13 +48,35 @@ class CEMIFrame:
         src_addr: IndividualAddress | None = None,
     ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
-        cemi = CEMIFrame(
-            code=code,
-            src_addr=src_addr or IndividualAddress(None),
+        flags = (
+            CEMIFlags.FRAME_TYPE_STANDARD
+            | CEMIFlags.DO_NOT_REPEAT
+            | CEMIFlags.BROADCAST
+            | CEMIFlags.NO_ACK_REQUESTED
+            | CEMIFlags.CONFIRM_NO_ERROR
+            | CEMIFlags.HOP_COUNT_1ST
         )
-        # dst_addr, payload and cmd are set by telegram.setter
-        cemi.telegram = telegram
-        return cemi
+        if isinstance(telegram.destination_address, GroupAddress):
+            flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+            if isinstance(telegram.tpci, TDataBroadcast):
+                flags |= CEMIFlags.PRIORITY_SYSTEM
+            else:
+                flags |= CEMIFlags.PRIORITY_LOW
+        elif isinstance(telegram.destination_address, IndividualAddress):
+            flags |= (
+                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
+            )
+        else:
+            raise TypeError()
+
+        return CEMIFrame(
+            code=code,
+            flags=flags,
+            src_addr=src_addr or telegram.source_address,
+            dst_addr=telegram.destination_address,
+            tpci=telegram.tpci,
+            payload=telegram.payload,
+        )
 
     @property
     def telegram(self) -> Telegram:
@@ -66,37 +88,6 @@ class CEMIFrame:
             source_address=self.src_addr,
             tpci=self.tpci,
         )
-
-    @telegram.setter
-    def telegram(self, telegram: Telegram) -> None:
-        """Set telegram."""
-        # TODO: Move to separate function, together with setting of
-        # CEMIMessageCode
-        self.flags = (
-            CEMIFlags.FRAME_TYPE_STANDARD
-            | CEMIFlags.DO_NOT_REPEAT
-            | CEMIFlags.BROADCAST
-            | CEMIFlags.NO_ACK_REQUESTED
-            | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.HOP_COUNT_1ST
-        )
-
-        if isinstance(telegram.destination_address, GroupAddress):
-            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
-            if isinstance(telegram.tpci, TDataBroadcast):
-                self.flags |= CEMIFlags.PRIORITY_SYSTEM
-            else:
-                self.flags |= CEMIFlags.PRIORITY_LOW
-        elif isinstance(telegram.destination_address, IndividualAddress):
-            self.flags |= (
-                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
-            )
-        else:
-            raise TypeError()
-
-        self.dst_addr = telegram.destination_address
-        self.tpci = telegram.tpci
-        self.payload = telegram.payload
 
     def set_hops(self, hops: int) -> None:
         """Set hops."""
