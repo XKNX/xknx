@@ -100,6 +100,7 @@ def test_incoming_cemi():
     ],
 )
 def test_incoming_management_telegram(telegram):
+    """Test incoming management CEMI."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.1")
 
