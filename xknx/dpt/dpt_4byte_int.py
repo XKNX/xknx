@@ -24,7 +24,6 @@ class DPT4ByteUnsigned(DPTNumeric):
     dpt_main_number = 12
     dpt_sub_number: int | None = None
     value_type = "4byte_unsigned"
-    unit = ""
     payload_length = 4
 
     value_min = 0
@@ -70,13 +69,48 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     dpt_main_number = 13
     dpt_sub_number: int | None = None
     value_type = "4byte_signed"
-    unit = ""
 
     value_min = -2147483648
     value_max = 2147483647
     resolution = 1
 
     _struct_format = ">i"
+
+
+class DPTValue4Ucount(DPT4ByteUnsigned):
+    """DPT 12.001 DPT_Value_4_Ucount."""
+
+    dpt_main_number = 12
+    dpt_sub_number = 1
+    value_type = "pulse_4_ucount"
+    unit = "counter pulses"
+
+
+class DPTLongTimePeriodSec(DPT4ByteUnsigned):
+    """DPT 12.100 DPT_LongTimePeriod_Sec (seconds)."""
+
+    dpt_main_number = 12
+    dpt_sub_number = 100
+    value_type = "long_time_period_sec"
+    unit = "s"
+
+
+class DPTLongTimePeriodMin(DPT4ByteUnsigned):
+    """DPT 12.101 DPT_LongTimePeriod_Min (minutes)."""
+
+    dpt_main_number = 12
+    dpt_sub_number = 101
+    value_type = "long_time_period_min"
+    unit = "min"
+
+
+class DPTLongTimePeriodHrs(DPT4ByteUnsigned):
+    """DPT 12.102 DPT_LongTimePeriod_Hrs (hours)."""
+
+    dpt_main_number = 12
+    dpt_sub_number = 102
+    value_type = "long_time_period_hrs"
+    unit = "h"
 
 
 class DPTVolumeLiquidLitre(DPT4ByteUnsigned):
@@ -103,7 +137,7 @@ class DPTValue4Count(DPT4ByteSigned):
     dpt_main_number = 13
     dpt_sub_number = 1
     value_type = "pulse_4byte"
-    unit = "pulses"
+    unit = "counter pulses"
 
 
 class DPTFlowRateM3H(DPT4ByteSigned):
@@ -132,7 +166,6 @@ class DPTApparantEnergy(DPT4ByteSigned):
     dpt_sub_number = 11
     value_type = "apparant_energy"
     unit = "VAh"
-    ha_device_class = "energy"
 
 
 class DPTReactiveEnergy(DPT4ByteSigned):
@@ -142,7 +175,6 @@ class DPTReactiveEnergy(DPT4ByteSigned):
     dpt_sub_number = 12
     value_type = "reactive_energy"
     unit = "VARh"
-    ha_device_class = "energy"
 
 
 class DPTActiveEnergykWh(DPT4ByteSigned):
@@ -162,7 +194,6 @@ class DPTApparantEnergykVAh(DPT4ByteSigned):
     dpt_sub_number = 14
     value_type = "apparant_energy_kvah"
     unit = "kVAh"
-    ha_device_class = "energy"
 
 
 class DPTReactiveEnergykVARh(DPT4ByteSigned):
@@ -172,7 +203,15 @@ class DPTReactiveEnergykVARh(DPT4ByteSigned):
     dpt_sub_number = 15
     value_type = "reactive_energy_kvarh"
     unit = "kVARh"
-    ha_device_class = "energy"
+
+
+class DPTActiveEnergyMWh(DPT4ByteSigned):
+    """DPT 13.016 DPT_ActiveEnergy_MWh (MWh)."""
+
+    dpt_main_number = 13
+    dpt_sub_number = 16
+    value_type = "active_energy_mwh"
+    unit = "MWh"
 
 
 class DPTLongDeltaTimeSec(DPT4ByteSigned):

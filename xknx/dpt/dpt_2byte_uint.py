@@ -18,7 +18,6 @@ class DPT2ByteUnsigned(DPTNumeric):
     dpt_main_number = 7
     dpt_sub_number: int | None = None
     value_type = "2byte_unsigned"
-    unit = ""
     payload_length = 2
 
     value_min = 0
@@ -109,6 +108,14 @@ class DPTTimePeriodHrs(DPT2ByteUnsigned):
     dpt_sub_number = 7
     value_type = "time_period_hrs"
     unit = "h"
+
+
+class DPTPropDataType(DPT2ByteUnsigned):
+    """DPT 7.010 DPT_PropDataType."""
+
+    dpt_main_number = 7
+    dpt_sub_number = 10
+    value_type = "prop_data_type"
 
 
 class DPTLengthMm(DPT2ByteUnsigned):

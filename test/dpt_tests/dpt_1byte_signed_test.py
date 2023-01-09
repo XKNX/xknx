@@ -50,6 +50,6 @@ class TestDPTRelativeValue:
 
     def test_unit(self):
         """Test unit of 1 byte relative value objects."""
-        assert DPTSignedRelativeValue.unit == ""
+        assert DPTSignedRelativeValue.unit is None
         assert DPTPercentV8.unit == "%"
         assert DPTValue1Count.unit == "counter pulses"
