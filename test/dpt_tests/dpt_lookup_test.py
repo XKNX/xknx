@@ -4,6 +4,24 @@ import pytest
 
 from xknx.dpt import *
 
+# """
+# Generate a list of all DPTs for the following test.
+# Run this function manually to update the list.
+# """
+
+# dpt_dict = {}
+# for dpt in DPTBase.dpt_class_tree():
+#     if dpt.value_type is not None:
+#         dpt_dict[dpt.value_type] = dpt
+
+# for _, dpt in sorted(dpt_dict.items()):
+#     unit = None
+#     if dpt.unit is not None:
+#         unit = f'"{dpt.unit}"'
+#     print(
+#         f'("{dpt.value_type}", {dpt.__name__}, {dpt.dpt_main_number}, {dpt.dpt_sub_number}, {unit}),'
+#     )
+
 
 @pytest.mark.parametrize(
     "value_type,dpt_class,main,sub,unit",
