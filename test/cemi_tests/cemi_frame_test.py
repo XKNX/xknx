@@ -1,8 +1,7 @@
 """Tests for the CEMIFrame object."""
 import pytest
 
-from xknx.cemi import CEMIFlags, CEMIMessageCode
-from xknx.cemi.cemi_frame import CEMIFrame
+from xknx.cemi import CEMIFlags, CEMIFrame, CEMIMessageCode
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
