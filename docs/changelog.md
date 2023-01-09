@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### DPTs
+
+- Add definitions for DPTs 7.010, 8.012, 9.009, 9.029, 9.030, 12.001, 12.100, 12.101, 12.102, 13.016, 14.080
+
 ### IP Secure
 
 - SecureRouting: verify MAC of received TimerNotify frames.
