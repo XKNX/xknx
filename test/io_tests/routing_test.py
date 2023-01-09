@@ -41,8 +41,7 @@ class TestRouting:
         # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint)
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw_ind = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
-        _cemi = CEMIFrame()
-        _cemi.from_knx(raw_ind[6:])
+        _cemi = CEMIFrame.from_knx(raw_ind[6:])
         test_telegram = _cemi.telegram
         test_telegram.direction = TelegramDirection.INCOMING
 

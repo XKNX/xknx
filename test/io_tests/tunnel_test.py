@@ -72,8 +72,7 @@ class TestUDPTunnel:
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     async def test_tunnel_request_received(self, send_ack_mock, raw):
         """Test Tunnel for calling send_ack on normal frames."""
-        test_cemi = CEMIFrame()
-        test_cemi.from_knx(raw[10:])
+        test_cemi = CEMIFrame.from_knx(raw[10:])
         self.tunnel.expected_sequence_number = 0x21
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
@@ -97,8 +96,7 @@ class TestUDPTunnel:
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw_ind = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
 
-        test_cemi = CEMIFrame()
-        test_cemi.from_knx(raw_ind[10:])
+        test_cemi = CEMIFrame.from_knx(raw_ind[10:])
         test_telegram = test_cemi.telegram
         test_telegram.direction = TelegramDirection.INCOMING
         self.tunnel.expected_sequence_number = 0x81

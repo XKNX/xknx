@@ -641,11 +641,12 @@ class TestStringRepresentations:
 
     def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
-        cemi_frame = CEMIFrame()
-        cemi_frame.src_addr = IndividualAddress("1.2.3")
-        cemi_frame.telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"),
-            payload=GroupValueWrite(DPTBinary(7)),
+        cemi_frame = CEMIFrame.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTBinary(7)),
+            ),
+            src_addr=IndividualAddress("1.2.3"),
         )
         assert (
             str(cemi_frame)

@@ -1,8 +1,7 @@
 """Tests for the CEMIFrame object."""
 import pytest
 
-from xknx.cemi import CEMIFlags, CEMIMessageCode
-from xknx.cemi.cemi_frame import CEMIFrame
+from xknx.cemi import CEMIFlags, CEMIFrame, CEMIMessageCode
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
@@ -32,15 +31,13 @@ def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
 def test_valid_command():
     """Test for valid frame parsing."""
     raw = get_data(0x29, 0, 0x0080, 1, 1, 1, 0, [])
-    frame = CEMIFrame()
-    packet_len = frame.from_knx(raw)
+    frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
     assert frame.flags == 0x0080
     assert frame.src_addr == IndividualAddress(1)
     assert frame.dst_addr == GroupAddress(1)
     assert frame.payload == GroupValueRead()
     assert frame.tpci == TDataGroup()
-    assert packet_len == 11
     assert frame.calculated_length() == 11
     assert frame.to_knx() == raw
 
@@ -48,15 +45,13 @@ def test_valid_command():
 def test_valid_tpci_control():
     """Test for valid tpci control."""
     raw = bytes((0x29, 0, 0, 0, 0, 0, 0, 0, 0, 0x80))
-    frame = CEMIFrame()
-    packet_len = frame.from_knx(raw)
+    frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
     assert frame.flags == 0
     assert frame.payload is None
     assert frame.src_addr == IndividualAddress(0)
     assert frame.dst_addr == IndividualAddress(0)
     assert frame.tpci == TConnect()
-    assert packet_len == 10
     assert frame.calculated_length() == 10
     assert frame.to_knx() == raw
 
@@ -80,52 +75,26 @@ def test_valid_tpci_control():
 )
 def test_invalid_tpci_apci(raw, err_msg):
     """Test for invalid APCIService."""
-    frame = CEMIFrame()
     with pytest.raises(UnsupportedCEMIMessage, match=err_msg):
-        frame.from_knx_data_link_layer(raw)
+        CEMIFrame.from_knx_data_link_layer(raw, code=CEMIMessageCode.L_DATA_IND)
 
 
 def test_invalid_apdu_len():
     """Test for invalid apdu len."""
-    frame = CEMIFrame()
     with pytest.raises(UnsupportedCEMIMessage, match=r".*APDU LEN should be .*"):
-        frame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
-
-
-def test_invalid_src_addr():
-    """Test for invalid src addr."""
-    frame = CEMIFrame()
-    frame.code = CEMIMessageCode.L_DATA_IND
-    frame.flags = 0
-    frame.payload = GroupValueRead()
-    frame.src_addr = GroupAddress(0)
-    frame.dst_addr = IndividualAddress(0)
-
-    with pytest.raises(ConversionError, match=r"src_addr invalid"):
-        frame.to_knx()
-
-
-def test_invalid_dst_addr():
-    """Test for invalid dst addr."""
-    frame = CEMIFrame()
-    frame.code = CEMIMessageCode.L_DATA_IND
-    frame.flags = 0
-    frame.payload = GroupValueRead()
-    frame.src_addr = IndividualAddress(0)
-    frame.dst_addr = None
-
-    with pytest.raises(ConversionError, match=r"dst_addr invalid"):
-        frame.to_knx()
+        CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 
 def test_invalid_payload():
     """Test for having wrong payload set."""
-    frame = CEMIFrame()
-    frame.code = CEMIMessageCode.L_DATA_IND
-    frame.flags = 0
-    frame.payload = None
-    frame.src_addr = IndividualAddress(0)
-    frame.dst_addr = IndividualAddress(0)
+    frame = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        flags=0,
+        src_addr=IndividualAddress(0),
+        dst_addr=IndividualAddress(0),
+        tpci=TDataGroup(),
+        payload=None,
+    )
 
     with pytest.raises(TypeError):
         frame.calculated_length()
@@ -136,53 +105,47 @@ def test_invalid_payload():
 
 def test_from_knx_with_not_handleable_cemi():
     """Test for having unhandlebale cemi set."""
-    frame = CEMIFrame()
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*CEMIMessageCode not implemented:.*"
     ):
-        frame.from_knx(get_data(0x30, 0, 0, 0, 0, 2, 0, []))
+        CEMIFrame.from_knx(get_data(0x30, 0, 0, 0, 0, 2, 0, []))
 
 
 def test_from_knx_with_not_implemented_cemi():
     """Test for having not implemented CEMI set."""
-    frame = CEMIFrame()
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*Could not handle CEMIMessageCode:.*"
     ):
-        frame.from_knx(
+        CEMIFrame.from_knx(
             get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
         )
 
 
 def test_invalid_invalid_len():
     """Test for invalid cemi len."""
-    frame = CEMIFrame()
     with pytest.raises(UnsupportedCEMIMessage, match=r".*CEMI too small.*"):
-        frame.from_knx_data_link_layer(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
+        CEMIFrame.from_knx_data_link_layer(
+            get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5],
+            code=CEMIMessageCode.L_DATA_IND,
+        )
 
 
 def test_from_knx_group_address():
     """Test conversion for a cemi with a group address as destination."""
-    frame = CEMIFrame()
-    frame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
-
+    frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
     assert frame.dst_addr == GroupAddress(0)
 
 
 def test_from_knx_individual_address():
     """Test conversion for a cemi with a individual address as destination."""
-    frame = CEMIFrame()
-    frame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
-
+    frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
     assert frame.dst_addr == IndividualAddress(0)
 
 
 def test_telegram_group_address():
     """Test telegram conversion flags with a group address."""
-    frame = CEMIFrame()
     _telegram = Telegram(destination_address=GroupAddress(1))
-    # test CEMIFrame.telegram setter
-    frame.telegram = _telegram
+    frame = CEMIFrame.init_from_telegram(_telegram)
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
     # test CEMIFrame.telegram property
@@ -191,10 +154,8 @@ def test_telegram_group_address():
 
 def test_telegram_broadcast():
     """Test telegram conversion flags with a group address."""
-    frame = CEMIFrame()
     _telegram = Telegram(destination_address=GroupAddress(0))
-    # test CEMIFrame.telegram setter
-    frame.telegram = _telegram
+    frame = CEMIFrame.init_from_telegram(_telegram)
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
     assert frame.tpci == TDataBroadcast()
@@ -204,10 +165,8 @@ def test_telegram_broadcast():
 
 def test_telegram_individual_address():
     """Test telegram conversion flags with a individual address."""
-    frame = CEMIFrame()
     _telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
-    # test CEMIFrame.telegram setter
-    frame.telegram = _telegram
+    frame = CEMIFrame.init_from_telegram(_telegram)
     assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
     assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
     assert frame.flags & 0x0200 == CEMIFlags.NO_ACK_REQUESTED
@@ -217,6 +176,5 @@ def test_telegram_individual_address():
 
 def test_telegram_unsupported_address():
     """Test telegram conversion flags with an unsupported address."""
-    frame = CEMIFrame()
     with pytest.raises(TypeError):
-        frame.telegram = Telegram(destination_address=object())
+        CEMIFrame.init_from_telegram(Telegram(destination_address=object()))

@@ -257,9 +257,8 @@ class Routing(Interface):
 
     def _handle_routing_indication(self, routing_indication: RoutingIndication) -> None:
         """Handle incoming RoutingIndication."""
-        cemi = CEMIFrame()
         try:
-            cemi.from_knx(routing_indication.raw_cemi)
+            cemi = CEMIFrame.from_knx(routing_indication.raw_cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.warning("CEMI not supported: %s", unsupported_cemi_err)
             return
