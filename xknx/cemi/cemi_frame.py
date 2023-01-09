@@ -212,16 +212,11 @@ class CEMIFrame:
         else:
             if not isinstance(self.payload, APCI):
                 raise ConversionError(
-                    f"Invalid payload set for data TPDU: {self.payload.__class__}"
+                    f"Invalid payload set for data TPDU: {type(self.payload)}"
                 )
             tpdu = self.payload.to_knx()
             tpdu[0] |= self.tpci.to_knx()
             npdu_len = self.payload.calculated_length()
-
-        if not isinstance(self.src_addr, IndividualAddress):
-            raise ConversionError("src_addr invalid")
-        if not isinstance(self.dst_addr, (GroupAddress, IndividualAddress)):
-            raise ConversionError("dst_addr invalid")
 
         return (
             bytes(

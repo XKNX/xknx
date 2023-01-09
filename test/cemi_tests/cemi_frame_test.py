@@ -86,36 +86,6 @@ def test_invalid_apdu_len():
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 
-def test_invalid_src_addr():
-    """Test for invalid src addr."""
-    frame = CEMIFrame(
-        code=CEMIMessageCode.L_DATA_IND,
-        flags=0,
-        src_addr=GroupAddress(0),
-        dst_addr=IndividualAddress(0),
-        tpci=TDataGroup(),
-        payload=GroupValueRead(),
-    )
-
-    with pytest.raises(ConversionError, match=r"src_addr invalid"):
-        frame.to_knx()
-
-
-def test_invalid_dst_addr():
-    """Test for invalid dst addr."""
-    frame = CEMIFrame(
-        code=CEMIMessageCode.L_DATA_IND,
-        flags=0,
-        src_addr=IndividualAddress(0),
-        dst_addr=None,
-        tpci=TDataGroup(),
-        payload=GroupValueRead(),
-    )
-
-    with pytest.raises(ConversionError, match=r"dst_addr invalid"):
-        frame.to_knx()
-
-
 def test_invalid_payload():
     """Test for having wrong payload set."""
     frame = CEMIFrame(
