@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.3.0 Routing security, DPTs and CEMI-Refactoring 2023-01-10
 
 ### DPTs
 
