@@ -8,6 +8,21 @@ nav_order: 2
 
 # Unreleased changes
 
+### DPTs
+
+- Add definitions for DPTs
+  - 7.010 "prop_data_type"
+  - 8.012 "length_m"
+  - 9.009 "air_flow"
+  - 9.029 "absolute_humidity"
+  - 9.030 "concentration_ugm3"
+  - 12.001 "pulse_4_ucount"
+  - 12.100 "long_time_period_sec"
+  - 12.101 "long_time_period_min"
+  - 12.102 "long_time_period_hrs"
+  - 13.016 "active_energy_mwh"
+  - 14.080 "apparent_power"
+
 ### IP Secure
 
 - SecureRouting: verify MAC of received TimerNotify frames.

@@ -30,7 +30,6 @@ class DPTControlStepCode(DPTBase, ABC):
     APCI_STEPCODEMASK = 0x07
     APCI_MAX_VALUE = APCI_CONTROLMASK | APCI_STEPCODEMASK
 
-    unit = ""
     payload_length = 1
 
     @classmethod
@@ -100,7 +99,6 @@ class DPTControlStepwise(DPTControlStepCode):
     """Abstraction for KNX DPT 3.xxx in stepwise mode with conversion to an incement value."""
 
     dpt_main_number = 3
-    dpt_sub_number: int | None = None
     value_type = "stepwise"
     unit = "%"
 
@@ -184,7 +182,6 @@ class DPTControlStartStop(DPTControlStepCode):
     """Abstraction for KNX DPT 3.xxx in start/stop mode."""
 
     value_type = "startstop"
-    unit = ""
 
     class Direction(TitleEnum):
         """Enum for indicating the direction."""
