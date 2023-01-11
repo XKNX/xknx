@@ -305,6 +305,8 @@ class DPTAbsoluteHumidity(DPT2ByteFloat):
     value_type = "absolute_humidity"
     unit = "g/m³"
 
+    value_min = 0
+
 
 class DPTConcentrationUGM3(DPT2ByteFloat):
     """DPT 9.030 DPT_Value_Concentration_μgm3."""
@@ -313,6 +315,8 @@ class DPTConcentrationUGM3(DPT2ByteFloat):
     dpt_sub_number = 30
     value_type = "concentration_ugm3"
     unit = "μg/m³"
+
+    value_min = 0
 
 
 class DPTEnthalpy(DPT2ByteFloat):
