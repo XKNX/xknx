@@ -28,10 +28,7 @@ class USBSendThread(BaseThread):
                 telegram = self._queue.get(block=True)
                 emi_code = CEMIMessageCode.L_DATA_REQ
                 # create a cEMI frame from the telegram
-                cemi = CEMIFrame.init_from_telegram(
-                    telegram=telegram,
-                    code=emi_code
-                )
+                cemi = CEMIFrame.init_from_telegram(telegram=telegram, code=emi_code)
                 data = bytes(cemi.to_knx())
                 hid_frames = KNXToUSBHIDConverter.split_into_hid_frames(data)
                 # after successful splitting actually send the frames

@@ -7,6 +7,7 @@ class SequenceNumber(IntEnum):
     0h            reserved; shall not be used
     other values  reserved; not used
     """
+
     FIRST_PACKET = 0x01
     SECOND_PACKET = 0x02
     THIRD_PACKET = 0x03
@@ -15,7 +16,8 @@ class SequenceNumber(IntEnum):
 
 
 class DataSizeBySequenceNumber:
-    """ Returns the data size of the `KNX HID Report Body` by sequence number """
+    """Returns the data size of the `KNX HID Report Body` by sequence number"""
+
     sizes: dict = {
         SequenceNumber.FIRST_PACKET: 53,
         SequenceNumber.SECOND_PACKET: 61,
@@ -35,6 +37,7 @@ class PacketType(IntEnum):
     (3.4.1.2.3 Packet type)
     all other values are reserved / not allowed
     """
+
     # START/END just as convenience for lookup, don't use!
     # START = 0x01  # (0001b)
     # END = 0x02  # (0010b)
@@ -45,7 +48,8 @@ class PacketType(IntEnum):
 
 
 class ProtocolID(IntEnum):
-    """ (3.4.1.3.4 Protocol identifiers) """
+    """(3.4.1.3.4 Protocol identifiers)"""
+
     KNX_TUNNEL = 0x01
     M_BUS_TUNNEL = 0x02
     BATI_BUS_TUNNEL = 0x03
@@ -53,7 +57,8 @@ class ProtocolID(IntEnum):
 
 
 class EMIID(IntEnum):
-    """ (Coding of EMI ID octet (for “KNX Tunnel”)) """
+    """(Coding of EMI ID octet (for “KNX Tunnel”))"""
+
     EMI1 = 0x01
     EMI2 = 0x02
     COMMON_EMI = 0x03

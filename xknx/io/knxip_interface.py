@@ -51,8 +51,11 @@ def knx_interface_factory(
     if connection_config.threaded:
         return KNXIPInterfaceThreaded(xknx=xknx, connection_config=connection_config)
     elif isinstance(connection_config, ConnectionConfigUSB):
-        logger.info("XKNX start logging on USB device (idVendor: 0x%04x, idProduct: 0x%04x)",
-                    connection_config.idVendor, connection_config.idProduct)
+        logger.info(
+            "XKNX start logging on USB device (idVendor: 0x%04x, idProduct: 0x%04x)",
+            connection_config.idVendor,
+            connection_config.idProduct,
+        )
         return USBInterface(xknx=xknx, connection_config=connection_config)
     return KNXIPInterface(xknx=xknx, connection_config=connection_config)
 

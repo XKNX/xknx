@@ -24,7 +24,9 @@ class TestKNXUSBTransferProtocolHeaderData:
     )
     def test_initialization(self, body_length, protocol_id, emi_id):
         """ """
-        knx_usb_transfer_protocol_header_data = KNXUSBTransferProtocolHeaderData(body_length, protocol_id, emi_id)
+        knx_usb_transfer_protocol_header_data = KNXUSBTransferProtocolHeaderData(
+            body_length, protocol_id, emi_id
+        )
         assert knx_usb_transfer_protocol_header_data.body_length == body_length
         assert knx_usb_transfer_protocol_header_data.protocol_id == protocol_id
         assert knx_usb_transfer_protocol_header_data.emi_id == emi_id
@@ -44,7 +46,9 @@ class TestKNXUSBTransferProtocolBodyData:
     )
     def test_initialization(self, data, partial):
         """ """
-        knx_usb_transfer_protocol_body_data = KNXUSBTransferProtocolBodyData(data, partial)
+        knx_usb_transfer_protocol_body_data = KNXUSBTransferProtocolBodyData(
+            data, partial
+        )
         assert knx_usb_transfer_protocol_body_data.data == data
         assert knx_usb_transfer_protocol_body_data.partial == partial
 
@@ -68,7 +72,9 @@ class TestKNXUSBTransferProtocolHeader:
         "input,expected",
         [
             (
-                KNXUSBTransferProtocolHeaderData(body_length=8, protocol_id=1, emi_id=1),
+                KNXUSBTransferProtocolHeaderData(
+                    body_length=8, protocol_id=1, emi_id=1
+                ),
                 TransferProtocolHeaderExpected(
                     body_length=8,
                     emi_id=1,
@@ -110,10 +116,14 @@ class TestKNXUSBTransferProtocolHeader:
         knx_usb_transfer_protocol_header = KNXUSBTransferProtocolHeader.from_knx(data)
         assert knx_usb_transfer_protocol_header.protocol_version == data[0]
         assert knx_usb_transfer_protocol_header.header_length == data[1]
-        assert knx_usb_transfer_protocol_header.body_length == int.from_bytes(data[2:4], byteorder="big")
+        assert knx_usb_transfer_protocol_header.body_length == int.from_bytes(
+            data[2:4], byteorder="big"
+        )
         assert knx_usb_transfer_protocol_header.protocol_id == data[4]
         assert knx_usb_transfer_protocol_header.emi_id == data[5]
-        assert knx_usb_transfer_protocol_header.manufacturer_code == int.from_bytes(data[6:8], byteorder="big")
+        assert knx_usb_transfer_protocol_header.manufacturer_code == int.from_bytes(
+            data[6:8], byteorder="big"
+        )
         assert knx_usb_transfer_protocol_header.is_valid == is_valid
 
     @pytest.mark.parametrize(

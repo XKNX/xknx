@@ -135,11 +135,12 @@ class ConnectionConfigUSB:
     Contains the device parameters necessary for a USB connection.
     At least the vendor and product id should be specified.
     """
+
     def __init__(
         self,
         idVendor: int = 0x0000,
         idProduct: int = 0x0000,
-        serial_number: str = ""
+        serial_number: str = "",
     ):
         """ """
         self.idVendor = idVendor
@@ -151,4 +152,3 @@ class ConnectionConfigUSB:
     def __eq__(self, other: object) -> bool:
         """ """
         return self.__dict__ == other.__dict__
-

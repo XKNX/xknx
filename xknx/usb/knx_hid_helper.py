@@ -27,12 +27,12 @@ class KNXToTelegram:
 
     def __init__(self) -> None:
         self._knx_data_length = 0
-        self._knx_raw: bytes = b''
+        self._knx_raw: bytes = b""
 
     def _reset(self):
         """ """
         self._knx_data_length = 0
-        self._knx_raw: bytes = b''
+        self._knx_raw: bytes = b""
 
     def process(self, data: bytes) -> tuple[bool, Union[Telegram, None]]:
         """ """
@@ -41,18 +41,38 @@ class KNXToTelegram:
             if knx_hid_frame.is_valid:
                 # 3.4.1.3 Data (KNX HID report body)
                 # KNX USB Transfer Protocol Header (only in start packet!)
-                if knx_hid_frame.report_header.packet_info.packet_type == PacketType.START_AND_END:
+                if (
+                    knx_hid_frame.report_header.packet_info.packet_type
+                    == PacketType.START_AND_END
+                ):
                     self._knx_raw = knx_hid_frame.report_body.transfer_protocol_body.data[
                         : knx_hid_frame.report_body.transfer_protocol_header.body_length
                     ]
                     return True, self.create_telegram()
-                elif knx_hid_frame.report_header.packet_info.packet_type == PacketType.START_AND_PARTIAL:
-                    self._knx_data_length = knx_hid_frame.report_body.transfer_protocol_header.body_length
-                    self._knx_raw = knx_hid_frame.report_body.transfer_protocol_body.data
-                elif knx_hid_frame.report_header.packet_info.packet_type == PacketType.PARTIAL:
-                    self._knx_raw += knx_hid_frame.report_body.transfer_protocol_body.data
-                elif knx_hid_frame.report_header.packet_info.packet_type == PacketType.PARTIAL_AND_END:
-                    self._knx_raw += knx_hid_frame.report_body.transfer_protocol_body.data
+                elif (
+                    knx_hid_frame.report_header.packet_info.packet_type
+                    == PacketType.START_AND_PARTIAL
+                ):
+                    self._knx_data_length = (
+                        knx_hid_frame.report_body.transfer_protocol_header.body_length
+                    )
+                    self._knx_raw = (
+                        knx_hid_frame.report_body.transfer_protocol_body.data
+                    )
+                elif (
+                    knx_hid_frame.report_header.packet_info.packet_type
+                    == PacketType.PARTIAL
+                ):
+                    self._knx_raw += (
+                        knx_hid_frame.report_body.transfer_protocol_body.data
+                    )
+                elif (
+                    knx_hid_frame.report_header.packet_info.packet_type
+                    == PacketType.PARTIAL_AND_END
+                ):
+                    self._knx_raw += (
+                        knx_hid_frame.report_body.transfer_protocol_body.data
+                    )
                     self._knx_raw = self._knx_raw[: self._knx_data_length]
                     return True, self.create_telegram()
             else:
@@ -75,7 +95,9 @@ class KNXToTelegram:
         return telegram
 
 
-def get_packet_type(overall_length: int, remaining_length: int, sequence_number: SequenceNumber) -> PacketType:
+def get_packet_type(
+    overall_length: int, remaining_length: int, sequence_number: SequenceNumber
+) -> PacketType:
     """
     Returns the packet type depending on sequence number and bytes in frame.
 
@@ -150,14 +172,24 @@ class KNXToUSBHIDConverter:
         sequence_number = SequenceNumber.FIRST_PACKET
         while remaining_data_length > 0:
             max_data_length = DataSizeBySequenceNumber.of(sequence_number)
-            current_data_length = remaining_data_length if remaining_data_length < max_data_length else max_data_length
+            current_data_length = (
+                remaining_data_length
+                if remaining_data_length < max_data_length
+                else max_data_length
+            )
             current_data = data[:current_data_length]
             # setup KNXHIDFrame that is ready to be sent over USB
             partial = sequence_number > SequenceNumber.FIRST_PACKET
-            packet_type = get_packet_type(overall_data_length, remaining_data_length, sequence_number)
+            packet_type = get_packet_type(
+                overall_data_length, remaining_data_length, sequence_number
+            )
             packet_info_data = PacketInfoData(sequence_number, packet_type)
-            report_body_data = KNXHIDReportBodyData(ProtocolID.KNX_TUNNEL, EMIID.COMMON_EMI, current_data, partial)
-            frame_data = KNXHIDFrameData(PacketInfo.from_data(packet_info_data), report_body_data)
+            report_body_data = KNXHIDReportBodyData(
+                ProtocolID.KNX_TUNNEL, EMIID.COMMON_EMI, current_data, partial
+            )
+            frame_data = KNXHIDFrameData(
+                PacketInfo.from_data(packet_info_data), report_body_data
+            )
             hid_frame = KNXHIDFrame.from_data(frame_data)
             hid_frames.append(hid_frame)
             # update remaining data

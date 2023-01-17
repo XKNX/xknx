@@ -28,7 +28,11 @@ class TestPacketInfoData:
                 PacketType.START_AND_PARTIAL,
                 (SequenceNumber.FIRST_PACKET, PacketType.START_AND_PARTIAL),
             ),
-            (SequenceNumber.SECOND_PACKET, PacketType.PARTIAL, (SequenceNumber.SECOND_PACKET, PacketType.PARTIAL)),
+            (
+                SequenceNumber.SECOND_PACKET,
+                PacketType.PARTIAL,
+                (SequenceNumber.SECOND_PACKET, PacketType.PARTIAL),
+            ),
             (
                 SequenceNumber.SECOND_PACKET,
                 PacketType.PARTIAL_AND_END,
@@ -42,7 +46,10 @@ class TestPacketInfoData:
         ],
     )
     def test_initialization(
-        self, sequence_number: SequenceNumber, packet_type: PacketType, expected: tuple[SequenceNumber, PacketType]
+        self,
+        sequence_number: SequenceNumber,
+        packet_type: PacketType,
+        expected: tuple[SequenceNumber, PacketType],
     ):
         """ """
         packet_info_data = PacketInfoData(sequence_number, packet_type)
@@ -163,11 +170,41 @@ class TestKNXHIDReportHeader:
     @pytest.mark.parametrize(
         "data,sequence_number,packet_type,data_length,is_valid",
         [
-            (b"\x01\x13\x10", SequenceNumber.FIRST_PACKET, PacketType.START_AND_END, 16, True),
-            (b"\x00\x13\x10", SequenceNumber.FIRST_PACKET, PacketType.START_AND_END, 16, False),
-            (b"\x01\x23\x10", SequenceNumber.SECOND_PACKET, PacketType.START_AND_END, 16, True),
-            (b"\x01\x16\x20", SequenceNumber.FIRST_PACKET, PacketType.PARTIAL_AND_END, 32, True),
-            (b"\x01\x16\x3e", SequenceNumber.FIRST_PACKET, PacketType.PARTIAL_AND_END, 62, False),
+            (
+                b"\x01\x13\x10",
+                SequenceNumber.FIRST_PACKET,
+                PacketType.START_AND_END,
+                16,
+                True,
+            ),
+            (
+                b"\x00\x13\x10",
+                SequenceNumber.FIRST_PACKET,
+                PacketType.START_AND_END,
+                16,
+                False,
+            ),
+            (
+                b"\x01\x23\x10",
+                SequenceNumber.SECOND_PACKET,
+                PacketType.START_AND_END,
+                16,
+                True,
+            ),
+            (
+                b"\x01\x16\x20",
+                SequenceNumber.FIRST_PACKET,
+                PacketType.PARTIAL_AND_END,
+                32,
+                True,
+            ),
+            (
+                b"\x01\x16\x3e",
+                SequenceNumber.FIRST_PACKET,
+                PacketType.PARTIAL_AND_END,
+                62,
+                False,
+            ),
         ],
     )
     def test_from_knx(self, data, sequence_number, packet_type, data_length, is_valid):

@@ -16,7 +16,9 @@ usb_logger = logging.getLogger("xknx.log")
 class KNXUSBTransferProtocolHeaderData:
     """Container for `KNXUSBTransferProtocolHeader` initialization data"""
 
-    def __init__(self, body_length: int, protocol_id: ProtocolID, emi_id: EMIID) -> None:
+    def __init__(
+        self, body_length: int, protocol_id: ProtocolID, emi_id: EMIID
+    ) -> None:
         self.body_length = body_length
         self.protocol_id = protocol_id
         self.emi_id = emi_id
@@ -118,7 +120,7 @@ class KNXUSBTransferProtocolHeader:
                 self._emi_id.value,
                 self._manufacturer_code,
             )
-        return b''
+        return b""
 
     @property
     def protocol_version(self) -> int:
@@ -171,13 +173,14 @@ class KNXUSBTransferProtocolHeader:
 
     def _is_valid(self) -> bool:
         """ """
-        return self._protocol_version == 0 and \
-               self._header_length == 8
+        return self._protocol_version == 0 and self._header_length == 8
 
     def _init(self, data: bytes):
         """ """
         if len(data) != self._expected_byte_count:
-            usb_logger.error(f"received {len(data)} bytes, expected {self._expected_byte_count}")
+            usb_logger.error(
+                f"received {len(data)} bytes, expected {self._expected_byte_count}"
+            )
             return
         (
             self._protocol_version,
@@ -211,7 +214,9 @@ class KNXUSBTransferProtocolBody:
         self._valid = False
         self._partial = False
         self._max_bytes = DataSizeBySequenceNumber.of(SequenceNumber.FIRST_PACKET)
-        self._max_bytes_partial = DataSizeBySequenceNumber.of(SequenceNumber.SECOND_PACKET)
+        self._max_bytes_partial = DataSizeBySequenceNumber.of(
+            SequenceNumber.SECOND_PACKET
+        )
 
     @classmethod
     def from_data(cls, data: KNXUSBTransferProtocolBodyData):
@@ -243,7 +248,7 @@ class KNXUSBTransferProtocolBody:
             data_length = self._max_bytes_partial if partial else self._max_bytes
             data = self._data.ljust(data_length, b"\x00")
             return struct.pack(f"<{len(data)}s", data)
-        return b''
+        return b""
 
     @property
     def emi_message_code(self) -> Optional[CEMIMessageCode]:
@@ -253,7 +258,7 @@ class KNXUSBTransferProtocolBody:
             try:
                 return CEMIMessageCode(self._data[0])
             except ValueError as ex:
-                    logging.error(str(ex))
+                logging.error(str(ex))
         return None
 
     @property

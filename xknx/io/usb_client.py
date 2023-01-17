@@ -49,8 +49,12 @@ class USBClient:
             raise USBDeviceNotFoundError(message)
 
         self.usb_device.use()
-        self._usb_send_thread = USBSendThread(self.xknx, self.usb_device, self._send_queue)
-        self._usb_receive_thread = USBReceiveThread(self.xknx, self.usb_device, self.xknx.telegrams)
+        self._usb_send_thread = USBSendThread(
+            self.xknx, self.usb_device, self._send_queue
+        )
+        self._usb_receive_thread = USBReceiveThread(
+            self.xknx, self.usb_device, self.xknx.telegrams
+        )
         self._usb_send_thread.start()
         self._usb_receive_thread.start()
 

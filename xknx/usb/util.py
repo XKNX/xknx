@@ -101,7 +101,9 @@ KNOWN_DEVICES = [
 class USBKNXInterfaceData:
     """ """
 
-    def __init__(self, idVendor: int = 0x0000, idProduct: int = 0x0000, serial_number: str = ""):
+    def __init__(
+        self, idVendor: int = 0x0000, idProduct: int = 0x0000, serial_number: str = ""
+    ):
         """ """
         self.idVendor = idVendor
         self.idProduct = idProduct
@@ -171,12 +173,14 @@ class USBDevice:
             self._ep_in = usb.util.find_descriptor(
                 self._interface,
                 # match the first IN endpoint
-                custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN,
+                custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+                == usb.util.ENDPOINT_IN,
             )
             self._ep_out = usb.util.find_descriptor(
                 self._interface,
                 # match the first OUT endpoint
-                custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_OUT,
+                custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress)
+                == usb.util.ENDPOINT_OUT,
             )
             self._claim_interface()
 
@@ -188,7 +192,7 @@ class USBDevice:
 
     def read(self) -> bytes:
         """ """
-        response = b''
+        response = b""
         if self._ep_in and self._device:
             try:
                 response = self._ep_in.read(size_or_buffer=64, timeout=-1).tobytes()
@@ -208,7 +212,9 @@ class USBDevice:
             logger.debug(f"write {len(data)} bytes: {data.hex()}")
             write_count = self._ep_out.write(data)
             if write_count != len(data):
-                logger.warning(f"{write_count} bytes instead of {len(data)} were written")
+                logger.warning(
+                    f"{write_count} bytes instead of {len(data)} were written"
+                )
         else:
             logger.warning("no USB OUT endpoint to write to")
 
@@ -226,7 +232,9 @@ class USBDevice:
                 usb_logger.debug(str(e))
 
 
-def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Optional[USBDevice]:
+def get_first_matching_usb_device(
+    interface_data: USBKNXInterfaceData,
+) -> Optional[USBDevice]:
     """
     Returns the device with serial number matching `interface_data.serial_number`.
     If there is more than one device with the same serial number, the first is returned.
@@ -252,7 +260,10 @@ def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Option
     matching_devices = [
         device
         for device in devices
-        if (interface_data.serial_number and device.serial_number == str(interface_data.serial_number))
+        if (
+            interface_data.serial_number
+            and device.serial_number == str(interface_data.serial_number)
+        )
     ]
     if matching_devices:
         device = matching_devices[0]
@@ -261,7 +272,9 @@ def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Option
     return device
 
 
-def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> list[USBDevice]:
+def get_connected_usb_device_list(
+    interface_data: USBKNXInterfaceData,
+) -> list[USBDevice]:
     """
     Enumerates all devices matching the vendor id `idVendor` and product id `idProduct`.
 
@@ -297,7 +310,12 @@ def get_all_known_knx_usb_devices() -> list[USBDevice]:
     try:
         usb_device_list = list(usb.core.find(find_all=True, backend=_get_usb_backend()))
         usb_device_list = list(
-            filter(lambda device: bool((device.idVendor, device.idProduct) in KNOWN_DEVICES), usb_device_list)
+            filter(
+                lambda device: bool(
+                    (device.idVendor, device.idProduct) in KNOWN_DEVICES
+                ),
+                usb_device_list,
+            )
         )
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError as e:
@@ -323,7 +341,9 @@ class FindHIDClass:
         # continue search in the interface descriptor
         for configuration in device:
             # find_descriptor: what's it?
-            interface = usb.util.find_descriptor(configuration, bInterfaceClass=self._class)
+            interface = usb.util.find_descriptor(
+                configuration, bInterfaceClass=self._class
+            )
             if interface is not None:
                 return True
         return False
@@ -350,7 +370,11 @@ def get_all_hid_devices() -> list[USBDevice]:
     device_list = []
     try:
         usb_device_list = list(
-            usb.core.find(find_all=True, custom_match=FindHIDClass(hid_device_class), backend=_get_usb_backend())
+            usb.core.find(
+                find_all=True,
+                custom_match=FindHIDClass(hid_device_class),
+                backend=_get_usb_backend(),
+            )
         )
         device_list = _create_usb_device_list(usb_device_list)
     except usb.core.NoBackendError:
@@ -369,9 +393,13 @@ def _get_usb_backend():
 
         import usb.backend.libusb1
 
-        dll_location = os.environ.get("XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll")
+        dll_location = os.environ.get(
+            "XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll"
+        )
         try:
-            backend = usb.backend.libusb1.get_backend(find_library=lambda x: f"{dll_location}")
+            backend = usb.backend.libusb1.get_backend(
+                find_library=lambda x: f"{dll_location}"
+            )
         except usb.core.NoBackendError as ex:
             logger.error(str(ex))
         if not backend:
@@ -384,8 +412,12 @@ def _get_usb_backend():
 def _log_usb_device(index: int, device: usb.core.Device):
     """ """
     usb_logger.info(f"device {index}")
-    usb_logger.info(f"    manufacturer  : {device.manufacturer} (idVendor: {device.idVendor:#0{6}x})")
-    usb_logger.info(f"    product       : {device.product} (idProduct: {device.idProduct:#0{6}x})")
+    usb_logger.info(
+        f"    manufacturer  : {device.manufacturer} (idVendor: {device.idVendor:#0{6}x})"
+    )
+    usb_logger.info(
+        f"    product       : {device.product} (idProduct: {device.idProduct:#0{6}x})"
+    )
     usb_logger.info(f"    serial_number : {device.serial_number}")
 
 
