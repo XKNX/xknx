@@ -262,8 +262,8 @@ local vs_emi2_message_code = {
 -- 4.1.3.2 Overview of the cEMI Message Codes
 -- The codes for the Data Link Layer messages shall be the same as used for EMI 2. Please refer to Table 1
 -- for the overview of the EMI message codes and the message code set supported by cEMI.
--- NOTE Codes for cEMI Transport Layer services are not yet listed in Table 1. If needed later (if the cEMI specification is 
--- extended with the corresponding definitions in clause 4.1.6, “Transport Layer messages”), the same codes as defined for EMI 2 
+-- NOTE Codes for cEMI Transport Layer services are not yet listed in Table 1. If needed later (if the cEMI specification is
+-- extended with the corresponding definitions in clause 4.1.6, “Transport Layer messages”), the same codes as defined for EMI 2
 -- shall be used for the Transport Layer services.
 local vs_cemi_message_code = {
 	-- [0x] = "Ph_Data.req",
@@ -392,7 +392,7 @@ local f_feature_data = ProtoField.bytes("usbhid.knx.data", "Feature data")
 
 p_knx.fields = { f_report_id, f_sequence_number, f_packet_type, f_data_length, f_report_body,
                  f_protocol_version, f_header_length, f_body_length, f_protocol_id, f_service_id, f_supported_emi_type_emi1, f_supported_emi_type_emi2, f_supported_emi_type_cemi, f_emi_id, f_manufacturer_code,
-                 f_emi1_message_code, f_emi2_message_code, f_cemi_message_code, f_service_feature_id, f_emi_data, f_feature_data 
+                 f_emi1_message_code, f_emi2_message_code, f_cemi_message_code, f_service_feature_id, f_emi_data, f_feature_data
                }
 
 function p_knx.dissector(buf, pkt, tree)
@@ -412,11 +412,11 @@ function p_knx.dissector(buf, pkt, tree)
 	knx_hid_report_header_tree:add(f_sequence_number, buf(1,1))
 	knx_hid_report_header_tree:add(f_packet_type, buf(1,1))
 	knx_hid_report_header_tree:add(f_data_length, buf(2,1))
-	
+
 	-- KNX HID Report Body
 	local knx_hid_report_body_tree = knx_hid_data_tree:add(p_knx, buf(knx_hid_report_header_length, buf:len() - knx_hid_report_header_length))
 	knx_hid_report_body_tree:set_text("KNX HID Report Body")
-	
+
 	-- KNX USB Transfer Protocol Header
 	local knx_usb_transfer_protocol_header_length = 0
 	local knx_usb_transfer_protocol_body_start = 0
