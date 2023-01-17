@@ -77,7 +77,7 @@ class PacketInfo:
         if self._sequence_number and self._packet_type:
             return struct.pack("<B", (self._sequence_number.value << 4) | self._packet_type.value)
         else:
-            return bytes()
+            return b''
 
     @property
     def sequence_number(self) -> Optional[SequenceNumber]:

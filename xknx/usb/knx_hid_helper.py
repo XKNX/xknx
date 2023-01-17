@@ -15,14 +15,14 @@ class KNXToTelegram:
 
     def __init__(self) -> None:
         self._knx_data_length = 0
-        self._knx_raw: bytes = bytes()
+        self._knx_raw: bytes = b''
 
     def _reset(self):
         """ """
         self._knx_data_length = 0
-        self._knx_raw: bytes = bytes()
+        self._knx_raw: bytes = b''
 
-    def process(self, data: bytes) -> Tuple[bool, Union[Telegram, None]]:
+    def process(self, data: bytes) -> tuple[bool, Union[Telegram, None]]:
         """ """
         if data:
             knx_hid_frame = KNXHIDFrame.from_knx(data)
@@ -128,9 +128,9 @@ class KNXToUSBHIDConverter:
         pass
 
     @staticmethod
-    def split_into_hid_frames(data: bytes) -> List[KNXHIDFrame]:
+    def split_into_hid_frames(data: bytes) -> list[KNXHIDFrame]:
         """ """
-        hid_frames: List[KNXHIDFrame] = []
+        hid_frames: list[KNXHIDFrame] = []
         overall_data_length = len(data)
         remaining_data_length = overall_data_length
 

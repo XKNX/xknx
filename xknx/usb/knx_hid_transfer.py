@@ -114,7 +114,7 @@ class KNXUSBTransferProtocolHeader:
                 self._emi_id.value,
                 self._manufacturer_code,
             )
-        return bytes()
+        return b''
 
     @property
     def protocol_version(self) -> int:
@@ -239,7 +239,7 @@ class KNXUSBTransferProtocolBody:
             data_length = self._max_bytes_partial if partial else self._max_bytes
             data = self._data.ljust(data_length, b"\x00")
             return struct.pack(f"<{len(data)}s", data)
-        return bytes()
+        return b''
 
     @property
     def emi_message_code(self) -> Optional[CEMIMessageCode]:

@@ -188,7 +188,7 @@ class USBDevice:
 
     def read(self) -> bytes:
         """ """
-        response = bytes()
+        response = b''
         if self._ep_in and self._device:
             try:
                 response = self._ep_in.read(size_or_buffer=64, timeout=-1).tobytes()
@@ -261,7 +261,7 @@ def get_first_matching_usb_device(interface_data: USBKNXInterfaceData) -> Option
     return device
 
 
-def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> List[USBDevice]:
+def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> list[USBDevice]:
     """
     Enumerates all devices matching the vendor id `idVendor` and product id `idProduct`.
 
@@ -291,7 +291,7 @@ def get_connected_usb_device_list(interface_data: USBKNXInterfaceData) -> List[U
     return device_list
 
 
-def get_all_known_knx_usb_devices() -> List[USBDevice]:
+def get_all_known_knx_usb_devices() -> list[USBDevice]:
     """ """
     device_list = []
     try:
@@ -306,7 +306,7 @@ def get_all_known_knx_usb_devices() -> List[USBDevice]:
     return device_list
 
 
-class FindHIDClass(object):
+class FindHIDClass:
     """
     https://github.com/pyusb/pyusb/blob/master/docs/tutorial.rst
     """
@@ -329,7 +329,7 @@ class FindHIDClass(object):
         return False
 
 
-def get_all_hid_devices() -> List[USBDevice]:
+def get_all_hid_devices() -> list[USBDevice]:
     """
     Can be used to get a list of all potential HID devices that could be a
     valid KNX interface.
@@ -398,7 +398,7 @@ def _create_usb_device(device: usb.core.Device) -> USBDevice:
     return usb_device
 
 
-def _create_usb_device_list(usb_device_list: List[usb.core.Device]) -> List[USBDevice]:
+def _create_usb_device_list(usb_device_list: list[usb.core.Device]) -> list[USBDevice]:
     """ """
     device_list = []
     usb_logger.info(f"found {len(usb_device_list)} device(s)")

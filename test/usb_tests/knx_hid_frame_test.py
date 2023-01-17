@@ -36,7 +36,7 @@ class TestPacketInfoData:
         ],
     )
     def test_initialization(
-        self, sequence_number: SequenceNumber, packet_type: PacketType, expected: Tuple[SequenceNumber, PacketType]
+        self, sequence_number: SequenceNumber, packet_type: PacketType, expected: tuple[SequenceNumber, PacketType]
     ):
         """ """
         packet_info_data = PacketInfoData(sequence_number, packet_type)
