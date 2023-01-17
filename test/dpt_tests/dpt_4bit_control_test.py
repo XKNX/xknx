@@ -70,7 +70,7 @@ class TestDPTControlStepCode:
 
     def test_unit(self):
         """Test unit_of_measurement function."""
-        assert DPTControlStepCode.unit == ""
+        assert DPTControlStepCode.unit is None
 
 
 class TestDPTControlStepwise:

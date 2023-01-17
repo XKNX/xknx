@@ -34,35 +34,34 @@ class Management:
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
 
-    def process(self, telegram: Telegram) -> list[Telegram]:
+    def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
-        response = []
         if isinstance(telegram.tpci, TDataConnected):
             ack = Telegram(
                 destination_address=telegram.source_address,
                 tpci=TAck(sequence_number=telegram.tpci.sequence_number),
             )
-            response.append(ack)
+            asyncio.create_task(self.xknx.cemi_handler.send_telegram(ack))
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
-            return response
+            return
         if telegram.tpci.numbered:
             logger.warning(
                 "No active point-to-point connection for received telegram: %s",
                 telegram,
             )
-            return response
+            return
         if isinstance(telegram.tpci, TConnect):
             # refuse incoming connections
-            # TODO: handle incoming telegrams for connections not initiated by us, or connection-less
-            # TODO: maybe use outgoing telegram queue or new task to not stall the consumer task
+            # TODO: handle incoming telegrams for connections
+            # not initiated by us, connection-less and broadcast
             disconnect = Telegram(
                 destination_address=telegram.source_address, tpci=TDisconnect()
             )
-            response.append(disconnect)
-            return response
+            asyncio.create_task(self.xknx.cemi_handler.send_telegram(disconnect))
+            return
         logger.warning("Unhandled management telegram: %r", telegram)
-        return response
+        return
 
     async def connect(self, address: IndividualAddress) -> P2PConnection:
         """Open a point-to-point connection to a KNX device."""
@@ -147,7 +146,7 @@ class P2PConnection:
             tpci=TConnect(),
         )
         try:
-            await self.xknx.knxip_interface.send_telegram(connect)
+            await self.xknx.cemi_handler.send_telegram(connect)
         except ConfirmationError as exc:
             self._response_waiter.cancel()
             raise ManagementConnectionError(
@@ -173,7 +172,7 @@ class P2PConnection:
             tpci=TDisconnect(),
         )
         try:
-            await self.xknx.knxip_interface.send_telegram(disconnect)
+            await self.xknx.cemi_handler.send_telegram(disconnect)
         except ConfirmationError as exc:
             raise ManagementConnectionError(
                 f"Disconnect from {self.address} failed: {exc}"
@@ -238,7 +237,7 @@ class P2PConnection:
             tpci=TDataConnected(sequence_number=seq_num),
         )
         try:
-            await self.xknx.knxip_interface.send_telegram(telegram)
+            await self.xknx.cemi_handler.send_telegram(telegram)
             ack = await asyncio.wait_for(self._ack_waiter, MANAGAMENT_ACK_TIMEOUT)
         except asyncio.TimeoutError:
             logger.debug(
@@ -247,7 +246,7 @@ class P2PConnection:
             # resend once after 3 seconds without ACK
             # on timeout the Future is cancelled so create a new
             self._ack_waiter = asyncio.get_event_loop().create_future()
-            await self.xknx.knxip_interface.send_telegram(telegram)
+            await self.xknx.cemi_handler.send_telegram(telegram)
             try:
                 ack = await asyncio.wait_for(self._ack_waiter, MANAGAMENT_ACK_TIMEOUT)
             except asyncio.TimeoutError:

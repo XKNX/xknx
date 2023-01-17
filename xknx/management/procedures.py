@@ -28,7 +28,7 @@ async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) 
             payload=apci.Restart(),
             tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
-        await xknx.knxip_interface.send_telegram(telegram)
+        await xknx.cemi_handler.send_telegram(telegram)
 
 
 async def nm_individual_address_check(

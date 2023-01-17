@@ -8,6 +8,7 @@ import pytest
 from xknx.dpt import (
     DPT2ByteFloat,
     DPT4ByteFloat,
+    DPTAirFlow,
     DPTElectricCurrent,
     DPTElectricPotential,
     DPTEnthalpy,
@@ -191,6 +192,13 @@ class TestDPTFloat:
         assert DPTPartsPerMillion.unit == "ppm"
 
     #
+    # DPTAirFlow
+    #
+    def test_airflow_settings(self):
+        """Test attributes of DPTAirFlow."""
+        assert DPTAirFlow.unit == "m³/h"
+
+    #
     # DPTVoltage
     #
     def test_voltage_settings(self):
@@ -221,7 +229,7 @@ class TestDPTFloat:
         """Test DPT4ByteFloat object."""
         assert DPT4ByteFloat.from_knx((0x3F, 0x71, 0xEB, 0x86)) == 0.9450001
         assert DPT4ByteFloat.to_knx(0.945000052452) == (0x3F, 0x71, 0xEB, 0x86)
-        assert DPT4ByteFloat.unit == ""
+        assert DPT4ByteFloat.unit is None
 
     def test_4byte_float_values_from_voltage_meter(self):
         """Test parsing DPT4ByteFloat from voltage meter."""

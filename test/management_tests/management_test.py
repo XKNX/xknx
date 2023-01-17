@@ -1,6 +1,6 @@
 """Test management handling."""
 import asyncio
-from unittest.mock import call, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
@@ -15,10 +15,10 @@ from xknx.management.management import MANAGAMENT_ACK_TIMEOUT
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_connect(_if_mock):
+async def test_connect():
     """Test establishing connections."""
     xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
     ia_1 = IndividualAddress("4.0.1")
     ia_2 = IndividualAddress("4.0.2")
 
@@ -45,16 +45,16 @@ async def test_connect(_if_mock):
         # no 2 connections to the same IA
         await xknx.management.connect(ia_1)
 
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(tg_connect(ia_1)),
         call(tg_connect(ia_2)),
     ]
-    xknx.knxip_interface.send_telegram.reset_mock()
+    xknx.cemi_handler.send_telegram.reset_mock()
 
     await xknx.management.disconnect(ia_1)
     await conn_2.disconnect()
 
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(tg_disconnect(ia_1)),
         call(tg_disconnect(ia_2)),
     ]
@@ -63,14 +63,14 @@ async def test_connect(_if_mock):
     await xknx.management.connect(ia_1)
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_ack_timeout(_if_mock, time_travel):
+async def test_ack_timeout(time_travel):
     """Test ACK timeout handling."""
     xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
     _ia = IndividualAddress("4.0.1")
 
     conn = await xknx.management.connect(_ia)
-    xknx.knxip_interface.send_telegram.reset_mock()
+    xknx.cemi_handler.send_telegram.reset_mock()
 
     device_desc_read = Telegram(
         destination_address=_ia,
@@ -84,12 +84,12 @@ async def test_ack_timeout(_if_mock, time_travel):
         )
     )
     await asyncio.sleep(0)
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(device_desc_read),
     ]
     await time_travel(MANAGAMENT_ACK_TIMEOUT)
     # telegram repeated
-    assert xknx.knxip_interface.send_telegram.call_args_list == [
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(device_desc_read),
         call(device_desc_read),
     ]
@@ -101,29 +101,29 @@ async def test_ack_timeout(_if_mock, time_travel):
     await conn.disconnect()
 
 
-@patch("xknx.io.knxip_interface.KNXIPInterface", autospec=True)
-async def test_failed_connect_disconnect(_if_mock):
+async def test_failed_connect_disconnect():
     """Test failing connections."""
     xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
     ia_1 = IndividualAddress("4.0.1")
 
-    xknx.knxip_interface.send_telegram.side_effect = ConfirmationError("")
+    xknx.cemi_handler.send_telegram.side_effect = ConfirmationError("")
     with pytest.raises(ManagementConnectionError):
         await xknx.management.connect(ia_1)
 
-    xknx.knxip_interface.send_telegram.side_effect = CommunicationError("")
+    xknx.cemi_handler.send_telegram.side_effect = CommunicationError("")
     with pytest.raises(ManagementConnectionError):
         await xknx.management.connect(ia_1)
 
-    xknx.knxip_interface.send_telegram.side_effect = None
+    xknx.cemi_handler.send_telegram.side_effect = None
     conn_1 = await xknx.management.connect(ia_1)
-    xknx.knxip_interface.send_telegram.side_effect = ConfirmationError("")
+    xknx.cemi_handler.send_telegram.side_effect = ConfirmationError("")
     with pytest.raises(ManagementConnectionError):
         await xknx.management.disconnect(ia_1)
 
-    xknx.knxip_interface.send_telegram.side_effect = None
+    xknx.cemi_handler.send_telegram.side_effect = None
     conn_1 = await xknx.management.connect(ia_1)
-    xknx.knxip_interface.send_telegram.side_effect = CommunicationError("")
+    xknx.cemi_handler.send_telegram.side_effect = CommunicationError("")
     with pytest.raises(ManagementConnectionError):
         await conn_1.disconnect()
 
@@ -131,7 +131,7 @@ async def test_failed_connect_disconnect(_if_mock):
 async def test_reject_incoming_connection():
     """Test rejecting incoming transport connections."""
     # Note: incoming L_DATA.ind indication connection requests are rejected
-    # L_DATA.req frames received from a tunnelling server are not yet supported
+    # L_DATA.req frames received from a tunnelling client are not yet supported
     xknx = XKNX()
     individual_address = IndividualAddress("4.0.10")
 
@@ -146,7 +146,10 @@ async def test_reject_incoming_connection():
         destination_address=individual_address,
         tpci=tpci.TDisconnect(),
     )
-    assert await xknx.knxip_interface.telegram_received(connect) == [disconnect]
+    with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
+        xknx.cemi_handler.telegram_received(connect)
+        await asyncio.sleep(0)
+        assert send_telegram.call_args_list == [call(disconnect)]
 
 
 async def test_incoming_unexpected_numbered_telegram():
@@ -167,7 +170,10 @@ async def test_incoming_unexpected_numbered_telegram():
         direction=TelegramDirection.OUTGOING,
         tpci=tpci.TAck(0),
     )
-    assert await xknx.knxip_interface.telegram_received(device_desc_read) == [ack]
+    with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
+        xknx.cemi_handler.telegram_received(device_desc_read)
+        await asyncio.sleep(0)
+        assert send_telegram.call_args_list == [call(ack)]
 
 
 async def test_incoming_wrong_address():
@@ -195,6 +201,9 @@ async def test_incoming_wrong_address():
         direction=TelegramDirection.INCOMING,
         tpci=tpci.TDisconnect(),
     )
-    assert await xknx.knxip_interface.telegram_received(connect) is None
-    assert await xknx.knxip_interface.telegram_received(ack) is None
-    assert await xknx.knxip_interface.telegram_received(disconnect) is None
+    with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
+        xknx.cemi_handler.telegram_received(connect)
+        xknx.cemi_handler.telegram_received(ack)
+        xknx.cemi_handler.telegram_received(disconnect)
+        await asyncio.sleep(0)
+        send_telegram.assert_not_called()

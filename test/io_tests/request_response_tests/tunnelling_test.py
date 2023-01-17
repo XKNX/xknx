@@ -1,12 +1,12 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
 from unittest.mock import patch
 
+from xknx.cemi import CEMIFrame
 from xknx.dpt import DPTArray
 from xknx.io.request_response import Tunnelling
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
     HPAI,
-    CEMIFrame,
     ConnectionStateRequest,
     ErrorCode,
     KNXIPFrame,

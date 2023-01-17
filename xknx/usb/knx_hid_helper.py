@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 
+from xknx.cemi import CEMIFrame
 from xknx.exceptions import UnsupportedCEMIMessage
-from xknx.knxip import CEMIFrame
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.usb.knx_hid_datatypes import (
     EMIID,
@@ -83,9 +83,8 @@ class KNXToTelegram:
 
     def create_telegram(self) -> Telegram | None:
         """ """
-        cemi_frame = CEMIFrame()
         try:
-            cemi_frame.from_knx(self._knx_raw)
+            cemi_frame = CEMIFrame.from_knx(self._knx_raw)
         except UnsupportedCEMIMessage as e:
             logger.warning(str(e))
             return None

@@ -182,7 +182,7 @@ class TestSensorExposeLoop:
     async def test_array_sensor_loop(self, value_type, test_payload, test_value):
         """Test sensor and expose_sensor with different values."""
         xknx = XKNX()
-        xknx.knxip_interface = AsyncMock()
+        xknx.cemi_handler = AsyncMock()
         await xknx.telegram_queue.start()
 
         expose = ExposeSensor(
@@ -202,7 +202,7 @@ class TestSensorExposeLoop:
             payload=GroupValueWrite(test_payload),
         )
         await xknx.telegrams.join()
-        xknx.knxip_interface.send_telegram.assert_called_with(outgoing_telegram)
+        xknx.cemi_handler.send_telegram.assert_called_with(outgoing_telegram)
         assert expose.resolve_state() == test_value
 
         # init sensor after expose is set - with same group address
@@ -227,7 +227,7 @@ class TestSensorExposeLoop:
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueResponse(test_payload),
         )
-        xknx.knxip_interface.send_telegram.assert_has_calls(
+        xknx.cemi_handler.send_telegram.assert_has_calls(
             [
                 call(read_telegram),
                 call(response_telegram),
@@ -252,7 +252,7 @@ class TestBinarySensorExposeLoop:
     async def test_binary_sensor_loop(self, value_type, test_payload, test_value):
         """Test binary_sensor and expose_sensor with binary values."""
         xknx = XKNX()
-        xknx.knxip_interface = AsyncMock()
+        xknx.cemi_handler = AsyncMock()
         await xknx.telegram_queue.start()
 
         expose = ExposeSensor(
@@ -270,7 +270,7 @@ class TestBinarySensorExposeLoop:
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueWrite(test_payload),
         )
-        xknx.knxip_interface.send_telegram.assert_called_with(outgoing_telegram)
+        xknx.cemi_handler.send_telegram.assert_called_with(outgoing_telegram)
         assert expose.resolve_state() == test_value
 
         bin_sensor = BinarySensor(xknx, "TestSensor", group_address_state="1/1/1")
@@ -289,7 +289,7 @@ class TestBinarySensorExposeLoop:
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueResponse(test_payload),
         )
-        xknx.knxip_interface.send_telegram.assert_has_calls(
+        xknx.cemi_handler.send_telegram.assert_has_calls(
             [
                 call(read_telegram),
                 call(response_telegram),
@@ -314,7 +314,7 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
     async def test_binary_sensor_loop(self, value_type, test_payload, test_value):
         """Test binary_sensor and expose_sensor with binary values."""
         xknx = XKNX()
-        xknx.knxip_interface = AsyncMock()
+        xknx.cemi_handler = AsyncMock()
 
         telegram_callback = AsyncMock()
         xknx.telegram_queue.register_telegram_received_cb(
@@ -340,7 +340,7 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
             payload=GroupValueWrite(test_payload),
         )
         # InternalGroupAddress isn't passed to knxip_interface
-        xknx.knxip_interface.send_telegram.assert_not_called()
+        xknx.cemi_handler.send_telegram.assert_not_called()
         telegram_callback.assert_called_with(outgoing_telegram)
         assert expose.resolve_state() == test_value
 
@@ -360,7 +360,7 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
             direction=TelegramDirection.OUTGOING,
             payload=GroupValueResponse(test_payload),
         )
-        xknx.knxip_interface.send_telegram.assert_not_called()
+        xknx.cemi_handler.send_telegram.assert_not_called()
         telegram_callback.assert_has_calls(
             [
                 call(read_telegram),

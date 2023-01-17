@@ -21,6 +21,7 @@ from xknx.knxip import (
     HPAI,
     KNXIPFrame,
     KNXIPServiceType,
+    RoutingIndication,
     SecureWrapper,
     SessionResponse,
     SessionStatus,
@@ -421,25 +422,26 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        # TODO: disallow unencrypted frames with exceptions for discovery etc. eg. SearchRequest
+        if isinstance(knxipframe.body, RoutingIndication):
+            ip_secure_logger.info(
+                "Discarding received unencrypted RoutingIndication: %s",
+                knxipframe,
+            )
+            return
         if isinstance(knxipframe.body, TimerNotify):
             self.secure_timer.handle_timer_notify(knxipframe.body)
             return
         if isinstance(knxipframe.body, SecureWrapper):
-            if not self.secure_timer.validate_secure_wrapper(knxipframe.body):
-                ip_secure_logger.warning(
-                    "Discarding SecureWrapper with invalid timer value: %s",
-                    knxipframe,
-                )
-                return
             if not self.secure_timer.timer_authenticated:
                 ip_secure_logger.debug(
                     "Discarding received SecureWrapper before timer synchronisazion finished: %s",
                     knxipframe,
                 )
                 return
+            secure_wrapper = knxipframe.body
             try:
                 knxipframe = self.decrypt_frame(knxipframe)
+                print(secure_wrapper)
             except KNXSecureValidationError as err:
                 ip_secure_logger.warning("Could not decrypt KNXIPFrame: %s", err)
                 # Frame shall be discarded
@@ -450,7 +452,14 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                     couldnotparseknxip.description,
                 )
                 return
+            if not self.secure_timer.validate_secure_wrapper(secure_wrapper):
+                ip_secure_logger.warning(
+                    "Discarding SecureWrapper with invalid timer value: %s",
+                    secure_wrapper,
+                )
+                return
             knx_logger.debug("Decrypted frame: %s", knxipframe)
+        # handle decrypted frames and plain frames (e.g. SearchRequest for discovery)
         super().handle_knxipframe(knxipframe, source)
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
@@ -476,6 +485,8 @@ class SecureSequenceTimer:
 
     According to AN159 v06 KNXnet-IP Secure AS §2.2.2.3 Timer synchronizing
     """
+
+    TIMER_NOTIFY_HEADER = bytes.fromhex("06 10 09 55 00 24")
 
     min_delay_time_keeper_periodic_notify: Final = 10  # pylint: disable=invalid-name
     min_delay_time_keeper_update_notify: Final = 0.1  # pylint: disable=invalid-name
@@ -605,10 +616,9 @@ class SecureSequenceTimer:
         b_0 = timer_bytes + serial_number + _message_tag + b"\x00\x00"
         # TODO: get header data and total_length from TimerNotify class
         #       or handle mac calculation in TimerNotify class directly
-        timer_notify_header = bytes.fromhex("06 10 09 55 00 24")
         mac_cbc = calculate_message_authentication_code_cbc(
             key=self._backbone_key,
-            additional_data=timer_notify_header,
+            additional_data=self.TIMER_NOTIFY_HEADER,
             block_0=b_0,
         )
         c_0 = timer_bytes + serial_number + _message_tag + b"\xff\x00"
@@ -628,6 +638,34 @@ class SecureSequenceTimer:
             ),
             None,
         )
+
+    def verify_timer_notify_mac(self, timer_notify: TimerNotify) -> None:
+        """Verify MAC of timer notify."""
+        timer_bytes = timer_notify.timer_value.to_bytes(6, "big")
+        b_0 = (
+            timer_bytes
+            + timer_notify.serial_number
+            + timer_notify.message_tag
+            + b"\x00\x00"
+        )
+        c_0 = (
+            timer_bytes
+            + timer_notify.serial_number
+            + timer_notify.message_tag
+            + b"\xff\x00"
+        )
+        _, mac_tr = decrypt_ctr(
+            key=self._backbone_key,
+            counter_0=c_0,
+            mac=timer_notify.message_authentication_code,
+        )
+        mac_cbc = calculate_message_authentication_code_cbc(
+            key=self._backbone_key,
+            additional_data=self.TIMER_NOTIFY_HEADER,
+            block_0=b_0,
+        )
+        if mac_cbc != mac_tr:
+            raise KNXSecureValidationError("MAC verification failed")
 
     async def synchronize(self) -> None:
         """Synchronize timer with remote time keeper."""
@@ -685,6 +723,13 @@ class SecureSequenceTimer:
     def handle_timer_notify(self, timer_notify: TimerNotify) -> None:
         """Handle received TimerNotify frame."""
         local_timer_value = self.current_timer_value()
+        try:
+            self.verify_timer_notify_mac(timer_notify)
+        except KNXSecureValidationError:
+            ip_secure_logger.warning(
+                "Discarding TimerNotify with invalid MAC: %s", timer_notify
+            )
+            return
         received_timer_value = timer_notify.timer_value
         # §2.2.2.3.2.5 Events: E11
         if (
@@ -693,7 +738,7 @@ class SecureSequenceTimer:
             and timer_notify.message_tag == self._expected_notify_handler[0]
         ):
             fut = self._expected_notify_handler[1]
-            fut.set_result(timer_notify.timer_value)
+            fut.set_result(received_timer_value)
             return
         # §2.2.2.3.2.5 Events: E1 - E4
         if received_timer_value > local_timer_value:

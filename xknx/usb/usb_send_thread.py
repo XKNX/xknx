@@ -2,8 +2,8 @@ import logging
 import queue
 from queue import Queue
 
+from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.core.thread import BaseThread
-from xknx.knxip import CEMIFrame, CEMIMessageCode
 from xknx.telegram import Telegram
 from xknx.usb.knx_hid_helper import KNXToUSBHIDConverter
 from xknx.usb.util import USBDevice

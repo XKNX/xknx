@@ -6,6 +6,41 @@ nav_order: 2
 
 # Changelog
 
+# 2.3.0 Routing security, DPTs and CEMI-Refactoring 2023-01-10
+
+### DPTs
+
+- Add definitions for DPTs
+  - 7.010 "prop_data_type"
+  - 8.012 "length_m"
+  - 9.009 "air_flow"
+  - 9.029 "absolute_humidity"
+  - 9.030 "concentration_ugm3"
+  - 12.001 "pulse_4_ucount"
+  - 12.100 "long_time_period_sec"
+  - 12.101 "long_time_period_min"
+  - 12.102 "long_time_period_hrs"
+  - 13.016 "active_energy_mwh"
+  - 14.080 "apparent_power"
+
+### IP Secure
+
+- SecureRouting: verify MAC of received TimerNotify frames.
+- SecureRouting: verify and handle timer value of received SecureWrapper frames after verification of MAC.
+- SecureRouting: Discard received unencrypted RoutingIndication frames.
+
+### Internals
+
+- Move `CEMIFrame`, `CEMIFlags` and `CEMIMessageCode` to xknx.cemi package.
+- Remove `CEMIFrame.telegram` setter in favour of `init_from_telegram()` staticmethod; convert `from_knx()` and `from_knx_data_link_layer()` to staticmethods returning a CEMIFrame.
+- Remove default values for `CEMIFrame` constructor.
+- Parse T_Data_Broadcast TPCI. Forward these telegrams to the Management class.
+- KNXIPHeader total_length is 2 bytes long. There are no reserved bytes.
+- Revert handling L_Data.req frames for incoming device management requests.
+- Decouple CEMIFrame handling from IP interface
+  - Add CEMIHandler class. This class handles incoming CEMIFrames and dispatches them to the upper layers as Telegram objects and creates CEMIFrames from Telegram objects to be sent to the network.
+  - Use `CEMIFrame` instead of `Telegram` in KNXIPInterface.
+
 # 2.2.0 Expose cooldown 2022-12-27
 
 ### Devices

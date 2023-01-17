@@ -23,7 +23,6 @@ class DPT2ByteSigned(DPTNumeric):
     dpt_main_number = 8
     dpt_sub_number: int | None = None
     value_type = "2byte_signed"
-    unit = ""
     payload_length = 2
 
     value_min = -32768
@@ -138,3 +137,12 @@ class DPTRotationAngle(DPT2ByteSigned):
     dpt_sub_number = 11
     value_type = "rotation_angle"
     unit = "°"
+
+
+class DPTLengthM(DPT2ByteSigned):
+    """DPT 8.012 DPT_Length_m."""
+
+    dpt_main_number = 8
+    dpt_sub_number = 12
+    value_type = "length_m"
+    unit = "m"

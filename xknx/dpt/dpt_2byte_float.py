@@ -20,7 +20,6 @@ class DPT2ByteFloat(DPTNumeric):
     dpt_main_number = 9
     dpt_sub_number: int | None = None
     value_type = "2byte_float"
-    unit = ""
     payload_length = 2
 
     value_min = -671088.64
@@ -173,6 +172,15 @@ class DPTPartsPerMillion(DPT2ByteFloat):
     unit = "ppm"
 
 
+class DPTAirFlow(DPT2ByteFloat):
+    """DPT 9.009 DPT_Value_AirFlow."""
+
+    dpt_main_number = 9
+    dpt_sub_number = 9
+    value_type = "air_flow"
+    unit = "m³/h"
+
+
 class DPTTime1(DPT2ByteFloat):
     """DPT 9.010 DPT_Value_Time1 (s)."""
 
@@ -287,6 +295,28 @@ class DPTWspKmh(DPT2ByteFloat):
 
     value_min = 0
     value_max = 670760
+
+
+class DPTAbsoluteHumidity(DPT2ByteFloat):
+    """DPT 9.029 DPT_Value_Absolute_Humidity."""
+
+    dpt_main_number = 9
+    dpt_sub_number = 29
+    value_type = "absolute_humidity"
+    unit = "g/m³"
+
+    value_min = 0
+
+
+class DPTConcentrationUGM3(DPT2ByteFloat):
+    """DPT 9.030 DPT_Value_Concentration_μgm3."""
+
+    dpt_main_number = 9
+    dpt_sub_number = 30
+    value_type = "concentration_ugm3"
+    unit = "μg/m³"
+
+    value_min = 0
 
 
 class DPTEnthalpy(DPT2ByteFloat):

@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from xknx.knxip.knxip_enum import CEMIMessageCode
+from xknx.cemi import CEMIMessageCode
 from xknx.usb.knx_hid_transfer import (
     KNXUSBTransferProtocolBody,
     KNXUSBTransferProtocolBodyData,

@@ -29,7 +29,6 @@ class DPT4ByteFloat(DPTNumeric):
     dpt_main_number = 14
     dpt_sub_number: int | None = None
     value_type = "4byte_float"
-    unit = ""
     payload_length = 4
 
     value_min = float("-inf")
@@ -114,7 +113,6 @@ class DPTAmplitude(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 5
     value_type = "amplitude"
-    unit = ""
 
 
 class DPTAngleRad(DPT4ByteFloat):
@@ -586,7 +584,6 @@ class DPTPowerFactor(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 57
     value_type = "powerfactor"
-    unit = "cosΦ"
     ha_device_class = "power_factor"
 
 
@@ -624,7 +621,7 @@ class DPTResistivity(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 61
     value_type = "resistivity"
-    unit = "Ω m"
+    unit = "Ωm"
 
 
 class DPTSelfInductance(DPT4ByteFloat):
@@ -750,7 +747,7 @@ class DPTTorque(DPT4ByteFloat):
     dpt_main_number = 14
     dpt_sub_number = 75
     value_type = "torque"
-    unit = "N m"
+    unit = "Nm"
 
 
 class DPTVolume(DPT4ByteFloat):
@@ -787,3 +784,12 @@ class DPTWork(DPT4ByteFloat):
     dpt_sub_number = 79
     value_type = "work"
     unit = "J"
+
+
+class DPTApparentPower(DPT4ByteFloat):
+    """DPT 14.080 DPT_Value_Apparent_Power."""
+
+    dpt_main_number = 14
+    dpt_sub_number = 80
+    value_type = "apparent_power"
+    unit = "VA"

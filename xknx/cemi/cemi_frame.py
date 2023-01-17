@@ -16,9 +16,9 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
-from xknx.telegram.tpci import TPCI, TDataGroup
+from xknx.telegram.tpci import TPCI, TDataBroadcast
 
-from .knxip_enum import CEMIFlags, CEMIMessageCode
+from .const import CEMIFlags, CEMIMessageCode
 
 
 class CEMIFrame:
@@ -26,19 +26,20 @@ class CEMIFrame:
 
     def __init__(
         self,
-        code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
-        flags: int = 0,
-        src_addr: IndividualAddress | None = None,
-        dst_addr: GroupAddress | IndividualAddress | None = None,
-        tpci: TPCI | None = None,
-        payload: APCI | None = None,
+        *,
+        code: CEMIMessageCode,
+        flags: int,
+        src_addr: IndividualAddress,
+        dst_addr: GroupAddress | IndividualAddress,
+        tpci: TPCI,
+        payload: APCI | None,
     ):
         """Initialize CEMIFrame object."""
         self.code = code
         self.flags = flags
-        self.src_addr = src_addr or IndividualAddress(None)
-        self.dst_addr = dst_addr or GroupAddress(None)
-        self.tpci = tpci or TDataGroup()
+        self.src_addr = src_addr
+        self.dst_addr = dst_addr
+        self.tpci = tpci
         self.payload = payload
 
     @staticmethod
@@ -48,13 +49,35 @@ class CEMIFrame:
         src_addr: IndividualAddress | None = None,
     ) -> CEMIFrame:
         """Return CEMIFrame from a Telegram."""
-        cemi = CEMIFrame(
-            code=code,
-            src_addr=src_addr or IndividualAddress(None),
+        flags = (
+            CEMIFlags.FRAME_TYPE_STANDARD
+            | CEMIFlags.DO_NOT_REPEAT
+            | CEMIFlags.BROADCAST
+            | CEMIFlags.NO_ACK_REQUESTED
+            | CEMIFlags.CONFIRM_NO_ERROR
+            | CEMIFlags.HOP_COUNT_1ST
         )
-        # dst_addr, payload and cmd are set by telegram.setter
-        cemi.telegram = telegram
-        return cemi
+        if isinstance(telegram.destination_address, GroupAddress):
+            flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+            if isinstance(telegram.tpci, TDataBroadcast):
+                flags |= CEMIFlags.PRIORITY_SYSTEM
+            else:
+                flags |= CEMIFlags.PRIORITY_LOW
+        elif isinstance(telegram.destination_address, IndividualAddress):
+            flags |= (
+                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
+            )
+        else:
+            raise TypeError()
+
+        return CEMIFrame(
+            code=code,
+            flags=flags,
+            src_addr=src_addr or telegram.source_address,
+            dst_addr=telegram.destination_address,
+            tpci=telegram.tpci,
+            payload=telegram.payload,
+        )
 
     @property
     def telegram(self) -> Telegram:
@@ -66,33 +89,6 @@ class CEMIFrame:
             source_address=self.src_addr,
             tpci=self.tpci,
         )
-
-    @telegram.setter
-    def telegram(self, telegram: Telegram) -> None:
-        """Set telegram."""
-        # TODO: Move to separate function, together with setting of
-        # CEMIMessageCode
-        self.flags = (
-            CEMIFlags.FRAME_TYPE_STANDARD
-            | CEMIFlags.DO_NOT_REPEAT
-            | CEMIFlags.BROADCAST
-            | CEMIFlags.NO_ACK_REQUESTED
-            | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.HOP_COUNT_1ST
-        )
-
-        if isinstance(telegram.destination_address, GroupAddress):
-            self.flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS | CEMIFlags.PRIORITY_LOW
-        elif isinstance(telegram.destination_address, IndividualAddress):
-            self.flags |= (
-                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
-            )
-        else:
-            raise TypeError()
-
-        self.dst_addr = telegram.destination_address
-        self.tpci = telegram.tpci
-        self.payload = telegram.payload
 
     def set_hops(self, hops: int) -> None:
         """Set hops."""
@@ -109,27 +105,29 @@ class CEMIFrame:
             return 10
         raise TypeError("Data TPDU must have a payload; control TPDU must not.")
 
-    def from_knx(self, raw: bytes) -> int:
+    @staticmethod
+    def from_knx(raw: bytes) -> CEMIFrame:
         """Parse/deserialize from KNX/IP raw data."""
         try:
-            self.code = CEMIMessageCode(raw[0])
+            code = CEMIMessageCode(raw[0])
         except ValueError:
             raise UnsupportedCEMIMessage(
                 f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
             )
 
-        if self.code not in (
+        if code in (
             CEMIMessageCode.L_DATA_IND,
             CEMIMessageCode.L_DATA_REQ,
             CEMIMessageCode.L_DATA_CON,
         ):
-            raise UnsupportedCEMIMessage(
-                f"Could not handle CEMIMessageCode: {self.code} / {raw[0]} in CEMI: {raw.hex()}"
-            )
+            return CEMIFrame.from_knx_data_link_layer(raw, code)
 
-        return self.from_knx_data_link_layer(raw)
+        raise UnsupportedCEMIMessage(
+            f"Could not handle CEMIMessageCode: {code} / {raw[0]} in CEMI: {raw.hex()}"
+        )
 
-    def from_knx_data_link_layer(self, cemi: bytes) -> int:
+    @staticmethod
+    def from_knx_data_link_layer(cemi: bytes, code: CEMIMessageCode) -> CEMIFrame:
         """Parse L_DATA_IND, CEMIMessageCode.L_DATA_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(cemi) < 10:
             raise UnsupportedCEMIMessage(
@@ -141,26 +139,24 @@ class CEMIFrame:
         # Additional information is not yet parsed.
         addil = cemi[1]
         # Control field 1 and Control field 2 - first 2 octets after Additional information
-        self.flags = cemi[2 + addil] * 256 + cemi[3 + addil]
+        flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        self.src_addr = IndividualAddress((cemi[4 + addil], cemi[5 + addil]))
+        src_addr = IndividualAddress(cemi[4 + addil] * 256 + cemi[5 + addil])
 
-        dst_is_group_address = bool(self.flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
-        dst_raw_address = (cemi[6 + addil], cemi[7 + addil])
-        self.dst_addr = (
-            GroupAddress(dst_raw_address)
-            if dst_is_group_address
-            else IndividualAddress(dst_raw_address)
+        _dst_is_group_address = bool(flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
+        _dst_raw_address = cemi[6 + addil] * 256 + cemi[7 + addil]
+        dst_addr: GroupAddress | IndividualAddress = (
+            GroupAddress(_dst_raw_address)
+            if _dst_is_group_address
+            else IndividualAddress(_dst_raw_address)
         )
 
-        npdu_len = cemi[8 + addil]
-
-        tpdu = cemi[9 + addil :]
-        apdu = bytes([tpdu[0] & 0b11]) + tpdu[1:]  # clear TPCI bits
-
-        if len(apdu) != (npdu_len + 1):  # TCPI octet not included in NPDU length
+        _npdu_len = cemi[8 + addil]
+        _tpdu = cemi[9 + addil :]
+        _apdu = bytes([_tpdu[0] & 0b11]) + _tpdu[1:]  # clear TPCI bits
+        if len(_apdu) != (_npdu_len + 1):  # TCPI octet not included in NPDU length
             raise UnsupportedCEMIMessage(
-                f"APDU LEN should be {npdu_len} but is {len(apdu) - 1} in CEMI: {cemi.hex()}"
+                f"APDU LEN should be {_npdu_len} but is {len(_apdu) - 1} in CEMI: {cemi.hex()}"
             )
 
         # TPCI (transport layer control information)
@@ -168,28 +164,45 @@ class CEMIFrame:
         # - no control bit set (data) -> First 6 bit
         # APCI (application layer control information) -> Last  10 bit of TPCI/APCI
         try:
-            self.tpci = TPCI.resolve(
-                raw_tpci=tpdu[0], dst_is_group_address=dst_is_group_address
+            tpci = TPCI.resolve(
+                raw_tpci=_tpdu[0],
+                dst_is_group_address=_dst_is_group_address,
+                dst_is_zero=not _dst_raw_address,
             )
         except ConversionError as err:
-            raise UnsupportedCEMIMessage(f"TPCI not supported: {tpdu[0]:#10b}") from err
+            raise UnsupportedCEMIMessage(
+                f"TPCI not supported: {_tpdu[0]:#10b}"
+            ) from err
 
-        if self.tpci.control:
-            if npdu_len:
+        if tpci.control:
+            if _npdu_len:
                 raise UnsupportedCEMIMessage(
-                    f"Invalid length for control TPDU {self.tpci}: {npdu_len}"
+                    f"Invalid length for control TPDU {tpci}: {_npdu_len}"
                 )
-            return 10 + addil
+            return CEMIFrame(
+                code=code,
+                flags=flags,
+                src_addr=src_addr,
+                dst_addr=dst_addr,
+                tpci=tpci,
+                payload=None,
+            )
 
-        _apci = apdu[0] * 256 + apdu[1]
+        _apci = _apdu[0] * 256 + _apdu[1]
         try:
-            self.payload = APCI.resolve_apci(_apci)
+            payload = APCI.resolve_apci(_apci)
         except ConversionError as err:
             raise UnsupportedCEMIMessage(f"APCI not supported: {_apci:#012b}") from err
+        payload.from_knx(_apdu)
 
-        self.payload.from_knx(apdu)
-
-        return 10 + addil + npdu_len
+        return CEMIFrame(
+            code=code,
+            flags=flags,
+            src_addr=src_addr,
+            dst_addr=dst_addr,
+            tpci=tpci,
+            payload=payload,
+        )
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
@@ -199,16 +212,11 @@ class CEMIFrame:
         else:
             if not isinstance(self.payload, APCI):
                 raise ConversionError(
-                    f"Invalid payload set for data TPDU: {self.payload.__class__}"
+                    f"Invalid payload set for data TPDU: {type(self.payload)}"
                 )
             tpdu = self.payload.to_knx()
             tpdu[0] |= self.tpci.to_knx()
             npdu_len = self.payload.calculated_length()
-
-        if not isinstance(self.src_addr, IndividualAddress):
-            raise ConversionError("src_addr invalid")
-        if not isinstance(self.dst_addr, (GroupAddress, IndividualAddress)):
-            raise ConversionError("dst_addr invalid")
 
         return (
             bytes(

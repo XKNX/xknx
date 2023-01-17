@@ -14,6 +14,7 @@ import logging
 import threading
 from typing import TYPE_CHECKING, TypeVar
 
+from xknx.cemi import CEMIFrame
 from xknx.exceptions import (
     CommunicationError,
     InvalidSecureConfiguration,
@@ -22,7 +23,6 @@ from xknx.exceptions import (
 from xknx.io import util
 from xknx.io.usb_interface import USBInterface
 from xknx.secure.keyring import XMLInterface, load_keyring
-from xknx.telegram import IndividualAddress, Telegram
 
 from .connection import ConnectionConfig, ConnectionConfigUSB, ConnectionType
 from .const import DEFAULT_INDIVIDUAL_ADDRESS, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
@@ -173,7 +173,7 @@ class KNXIPInterface:
             self.xknx,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
-            telegram_received_callback=self.telegram_received,
+            cemi_received_callback=self.cemi_received,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
         )
@@ -238,7 +238,7 @@ class KNXIPInterface:
             user_id=user_id,
             user_password=user_password,
             device_authentication_password=device_authentication_password,
-            telegram_received_callback=self.telegram_received,
+            cemi_received_callback=self.cemi_received,
         )
         await self._interface.connect()
 
@@ -331,7 +331,7 @@ class KNXIPInterface:
             local_ip=local_ip,
             local_port=local_port,
             route_back=route_back,
-            telegram_received_callback=self.telegram_received,
+            cemi_received_callback=self.cemi_received,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
         )
@@ -362,7 +362,7 @@ class KNXIPInterface:
         self._interface = Routing(
             self.xknx,
             individual_address=individual_address,
-            telegram_received_callback=self.telegram_received,
+            cemi_received_callback=self.cemi_received,
             local_ip=local_ip,
             multicast_group=multicast_group,
             multicast_port=multicast_port,
@@ -423,7 +423,7 @@ class KNXIPInterface:
         self._interface = SecureRouting(
             self.xknx,
             individual_address=individual_address,
-            telegram_received_callback=self.telegram_received,
+            cemi_received_callback=self.cemi_received,
             local_ip=local_ip,
             backbone_key=backbone_key,
             latency_ms=latency_ms,
@@ -438,21 +438,15 @@ class KNXIPInterface:
             await self._interface.disconnect()
             self._interface = None
 
-    async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
-        """Put received telegram into queue. Callback for having received telegram."""
-        if isinstance(telegram.destination_address, IndividualAddress):
-            if telegram.destination_address != self.xknx.current_address:
-                return None
-            return self.xknx.management.process(telegram)
+    def cemi_received(self, cemi: CEMIFrame) -> None:
+        """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""
+        self.xknx.cemi_handler.handle_cemi_frame(cemi)
 
-        self.xknx.telegrams.put_nowait(telegram)
-        return None
-
-    async def send_telegram(self, telegram: Telegram) -> None:
-        """Send telegram to connected device (either Tunneling or Routing)."""
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
+        """Send CEMIFrame to connected device (either Tunneling or Routing)."""
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
-        return await self._interface.send_telegram(telegram)
+        return await self._interface.send_cemi(cemi)
 
     async def gateway_info(self) -> GatewayDescriptor | None:
         """Get gateway descriptor from interface."""
@@ -493,13 +487,9 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         loop_loaded.set()
         self._thread_loop.run_forever()
 
-    async def _await_from_different_thread(
-        self,
-        coro: Awaitable[T],
-        target_loop: asyncio.AbstractEventLoop,
-    ) -> T:
+    async def _await_from_connection_thread(self, coro: Awaitable[T]) -> T:
         """Await coroutine in different thread."""
-        fut = asyncio.run_coroutine_threadsafe(coro, target_loop)
+        fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
         finished = threading.Event()
 
         def fut_finished_cb(_: concurrent.futures.Future[T]) -> None:
@@ -507,13 +497,13 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             finished.set()
 
         fut.add_done_callback(fut_finished_cb)
-        # wait on that event in an executor, yielding control to current loop
-        await asyncio.get_running_loop().run_in_executor(None, finished.wait)
+        # wait on that event in an executor, yielding control to _main_loop
+        await self._main_loop.run_in_executor(None, finished.wait)
         return fut.result()
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
-        return await self._await_from_different_thread(self._start(), self._thread_loop)
+        return await self._await_from_connection_thread(self._start())
 
     async def stop(self) -> None:
         """
@@ -522,34 +512,28 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         Can not be restarted, create a new instance instead.
         """
         if self._interface is not None:
-            await self._await_from_different_thread(
-                self._interface.disconnect(), self._thread_loop
-            )
+            await self._await_from_connection_thread(self._interface.disconnect())
             self._interface = None
         self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
         self.connection_thread.join()
 
-    async def telegram_received(self, telegram: Telegram) -> list[Telegram] | None:
-        """Put received telegram into queue. Callback for having received telegram."""
-        return await self._await_from_different_thread(
-            super().telegram_received(telegram), self._main_loop
-        )
+    def cemi_received(self, cemi: CEMIFrame) -> None:
+        """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""
+        self._main_loop.call_soon_threadsafe(super().cemi_received, cemi)
 
-    async def send_telegram(self, telegram: Telegram) -> None:
-        """Send telegram to connected device (either Tunneling or Routing)."""
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
+        """Send CEMIFrame to connected device (either Tunneling or Routing)."""
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
 
-        return await self._await_from_different_thread(
-            self._interface.send_telegram(telegram), self._thread_loop
-        )
+        return await self._await_from_connection_thread(self._interface.send_cemi(cemi))
 
     async def gateway_info(self) -> GatewayDescriptor | None:
         """Get gateway descriptor from interface."""
         if self._gateway_info is not None:
             return self._gateway_info
         if isinstance(self._interface, _Tunnel):
-            return await self._await_from_different_thread(
-                self._interface.request_description(), self._thread_loop
+            return await self._await_from_connection_thread(
+                self._interface.request_description()
             )
         return None

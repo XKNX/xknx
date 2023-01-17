@@ -16,7 +16,6 @@ class DPTSignedRelativeValue(DPTNumeric):
     dpt_main_number = 6
     dpt_sub_number: int | None = None
     value_type = "1byte_signed"
-    unit = ""
     payload_length = 1
 
     value_min = -128

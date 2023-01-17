@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import struct
 
-from xknx.knxip.knxip_enum import CEMIMessageCode
+from xknx.cemi import CEMIMessageCode
 from xknx.usb.knx_hid_datatypes import (
     EMIID,
     DataSizeBySequenceNumber,

@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from xknx import XKNX
+from xknx.cemi import CEMIFrame
 from xknx.devices import (
     BinarySensor,
     Climate,
@@ -29,7 +30,6 @@ from xknx.exceptions import (
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
     HPAI,
-    CEMIFrame,
     ConnectionStateRequest,
     ConnectionStateResponse,
     ConnectRequest,
@@ -513,7 +513,7 @@ class TestStringRepresentations:
         header.total_length = 42
         assert (
             str(header)
-            == '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="ROUTING_INDICATION" Reserve="0" TotalLength="42" '
+            == '<KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="ROUTING_INDICATION" TotalLength="42" '
             "/>"
         )
 
@@ -641,11 +641,12 @@ class TestStringRepresentations:
 
     def test_cemi_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
-        cemi_frame = CEMIFrame()
-        cemi_frame.src_addr = IndividualAddress("1.2.3")
-        cemi_frame.telegram = Telegram(
-            destination_address=GroupAddress("1/2/5"),
-            payload=GroupValueWrite(DPTBinary(7)),
+        cemi_frame = CEMIFrame.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTBinary(7)),
+            ),
+            src_addr=IndividualAddress("1.2.3"),
         )
         assert (
             str(cemi_frame)
@@ -660,7 +661,7 @@ class TestStringRepresentations:
         assert (
             str(knxipframe)
             == '<KNXIPFrame <KNXIPHeader HeaderLength="6" ProtocolVersion="16" KNXIPServiceType="SEARCH_REQUEST" '
-            'Reserve="0" TotalLength="14" /> body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
+            'TotalLength="14" /> body="<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />" />'
         )
 
     #

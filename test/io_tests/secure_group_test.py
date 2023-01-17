@@ -1,12 +1,11 @@
 """Test Secure Group."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+from xknx.cemi import CEMIFrame
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
-from xknx.knxip import HPAI, KNXIPFrame, SecureWrapper, TimerNotify
-from xknx.knxip.cemi_frame import CEMIFrame
-from xknx.knxip.routing_indication import RoutingIndication
+from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
 from xknx.telegram import GroupAddress, Telegram, apci
 
 ONE_HOUR_MS = 60 * 60 * 1000
@@ -88,6 +87,9 @@ class TestSecureGroup:
                 timer_value=0,
                 serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                 message_tag=bytes.fromhex("12 34"),
+                message_authentication_code=bytes.fromhex(
+                    "3195051bb981941d57e6c5b55355f341"
+                ),
             )
         )
         secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
@@ -135,7 +137,9 @@ class TestSecureGroup:
                 message_tag=_message_tag,
             )
         )
-        secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
+        with patch("xknx.io.ip_secure.SecureSequenceTimer.verify_timer_notify_mac"):
+            # TimerNotify MAC is random so we don't verify it in tests
+            secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
         await time_travel(0)
         _leeway_for_ci = 50  # ms
         assert (
@@ -180,12 +184,25 @@ class TestSecureGroup:
         with patch.object(
             secure_timer, "reschedule", wraps=secure_timer.reschedule
         ) as mock_reschedule:
+            # TimerNotify with invalid MAC shall be discarded
+            timer_invalid_mac = KNXIPFrame.init_from_body(
+                TimerNotify(
+                    timer_value=ONE_HOUR_MS,
+                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                    message_tag=bytes.fromhex("12 34"),
+                )
+            )
+            secure_group.handle_knxipframe(timer_invalid_mac, HPAI(*self.mock_addr))
+            mock_reschedule.assert_not_called()
             # E1
             timer_newer = KNXIPFrame.init_from_body(
                 TimerNotify(
                     timer_value=ONE_HOUR_MS,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "d2fad5657a5788a36cdd8a3ef84c90ab"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_newer, HPAI(*self.mock_addr))
@@ -200,6 +217,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "d2fad5657a5788a36cdd8a3ef84c90ab"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_exact, HPAI(*self.mock_addr))
@@ -216,6 +236,9 @@ class TestSecureGroup:
                     + 1,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "7572b70b4f986d7ae68891a00c0d46d3"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_valid, HPAI(*self.mock_addr))
@@ -230,6 +253,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "3d70cc44607ad9b4a4425de95101a54c"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_tolerable_1, HPAI(*self.mock_addr))
@@ -240,6 +266,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS - secure_timer.latency_tolerance_ms + 1,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "66b8b2e52196bcce3dce2da7e0dc50ec"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_tolerable_2, HPAI(*self.mock_addr))
@@ -250,6 +279,9 @@ class TestSecureGroup:
                     timer_value=ONE_HOUR_MS - secure_timer.latency_tolerance_ms,
                     serial_number=bytes.fromhex("00 fa 12 34 56 78"),
                     message_tag=bytes.fromhex("12 34"),
+                    message_authentication_code=bytes.fromhex(
+                        "873d9a5a25b8508446bbd5ff1bb4b465"
+                    ),
                 )
             )
             secure_group.handle_knxipframe(timer_invalid, HPAI(*self.mock_addr))
@@ -434,3 +466,33 @@ class TestSecureGroup:
                 KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
             )
             mock_reschedule.assert_not_called()
+
+    async def test_receive_plain_frames(
+        self,
+        mock_super_send,
+        mock_super_connect,
+    ):
+        """Test class for KNXnet/IP secure routing."""
+        frame_received_mock = Mock()
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_group.register_callback(frame_received_mock)
+        plain_routing_indication = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
+        secure_group.data_received_callback(
+            plain_routing_indication, ("192.168.1.2", 3671)
+        )
+        frame_received_mock.assert_not_called()
+        plain_search_response = bytes.fromhex(
+            "0610020c006608010a0100280e57360102001000000000082d40834de000170c"
+            "000ab3274a3247697261204b4e582f49502d526f757465720000000000000000"
+            "000000000e02020203020402050207010901140700dc10f1fffe10f2ffff10f3"
+            "ffff10f4ffff"
+        )
+        secure_group.data_received_callback(
+            plain_search_response, ("192.168.1.2", 3671)
+        )
+        frame_received_mock.assert_called_once()

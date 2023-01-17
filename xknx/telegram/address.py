@@ -84,13 +84,11 @@ class BaseAddress(ABC):
         Returns `True` if we check against the same subclass and the
         raw Value matches.
         """
-        if isinstance(self, type(other)):
-            return self.__hash__() == other.__hash__()
-        return False
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
-        return self.raw
+        return hash((self.__class__, self.raw))
 
 
 class IndividualAddress(BaseAddress):
@@ -363,10 +361,8 @@ class InternalGroupAddress:
         Returns `True` if we check against the same subclass and the
         raw Value matches.
         """
-        if isinstance(self, type(other)):
-            return self.__hash__() == other.__hash__()
-        return False
+        return self.__hash__() == other.__hash__()
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
-        return hash(self.address)
+        return hash((self.__class__, self.address))

@@ -8,12 +8,11 @@ Abstract base for a specific KNX/IP connection (Tunneling or Routing).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable
-from typing import Callable, Optional
+from typing import Callable
 
-from xknx.telegram import Telegram
+from xknx.cemi import CEMIFrame
 
-TelegramCallbackType = Callable[[Telegram], Awaitable[Optional[list[Telegram]]]]
+CEMICallbackType = Callable[[CEMIFrame], None]
 
 
 class Interface(ABC):
@@ -28,5 +27,5 @@ class Interface(ABC):
         """Disconnect from KNX bus."""
 
     @abstractmethod
-    async def send_telegram(self, telegram: Telegram) -> None:
-        """Send Telegram to KNX bus."""
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
+        """Send CEMIFrame to KNX bus."""
