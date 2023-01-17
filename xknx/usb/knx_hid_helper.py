@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import logging
-from typing import List, Tuple, Union
 
 from xknx.exceptions import UnsupportedCEMIMessage
 from xknx.knxip import CEMIFrame
@@ -34,7 +35,7 @@ class KNXToTelegram:
         self._knx_data_length = 0
         self._knx_raw: bytes = b""
 
-    def process(self, data: bytes) -> tuple[bool, Union[Telegram, None]]:
+    def process(self, data: bytes) -> tuple[bool, Telegram | None]:
         """ """
         if data:
             knx_hid_frame = KNXHIDFrame.from_knx(data)
@@ -80,7 +81,7 @@ class KNXToTelegram:
                 self._reset()
         return False, None
 
-    def create_telegram(self) -> Union[Telegram, None]:
+    def create_telegram(self) -> Telegram | None:
         """ """
         cemi_frame = CEMIFrame()
         try:

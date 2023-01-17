@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import IntEnum
 
 
@@ -18,7 +20,7 @@ class SequenceNumber(IntEnum):
 class DataSizeBySequenceNumber:
     """Returns the data size of the `KNX HID Report Body` by sequence number"""
 
-    sizes: dict = {
+    sizes: dict[SequenceNumber, int] = {
         SequenceNumber.FIRST_PACKET: 53,
         SequenceNumber.SECOND_PACKET: 61,
         SequenceNumber.THIRD_PACKET: 61,

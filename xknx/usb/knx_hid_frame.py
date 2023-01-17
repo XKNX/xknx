@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 import struct
-from typing import Optional
 
 from .knx_hid_datatypes import EMIID, PacketType, ProtocolID, SequenceNumber
 from .knx_hid_transfer import (
@@ -84,7 +85,7 @@ class PacketInfo:
             return b""
 
     @property
-    def sequence_number(self) -> Optional[SequenceNumber]:
+    def sequence_number(self) -> SequenceNumber | None:
         """3.4.1.2.2 Sequence number
         If the length of a KNX frame to be passed through USB exceeds the maximal
         length of the KNX HID Report Body, this is 61 octets, the KNX frame
@@ -100,7 +101,7 @@ class PacketInfo:
         return self._sequence_number
 
     @property
-    def packet_type(self) -> Optional[PacketType]:
+    def packet_type(self) -> PacketType | None:
         """3.4.1.2.3 Packet type
         The packet type bit-set as specified in clause 3.4.1.1 shall be used in
         HID Reports as specified in Figure 15.
@@ -196,7 +197,7 @@ class KNXHIDReportHeader:
         return self._report_id
 
     @property
-    def packet_info(self) -> Optional[PacketInfo]:
+    def packet_info(self) -> PacketInfo | None:
         """
         Returns an object containing information about the sequence number (3.4.1.2.2 Sequence number)
         and packet type (start/partial/end packet) (3.4.1.2.3 Packet type)
@@ -252,8 +253,8 @@ class KNXHIDReportBody:
 
     def __init__(self):
         self._max_size = 61  # HID frame has max. size of 64 - 3 octets for the header
-        self._header: Optional[KNXUSBTransferProtocolHeader] = None
-        self._body: Optional[KNXUSBTransferProtocolBody] = None
+        self._header: KNXUSBTransferProtocolHeader | None = None
+        self._body: KNXUSBTransferProtocolBody | None = None
         self._is_valid = False
         self._partial = False
 
@@ -291,13 +292,13 @@ class KNXHIDReportBody:
             return 61 * b"\x00"
 
     @property
-    def transfer_protocol_header(self) -> Optional[KNXUSBTransferProtocolHeader]:
+    def transfer_protocol_header(self) -> KNXUSBTransferProtocolHeader | None:
         """3.4.1.3 Data (KNX HID report body)
         Contains the header part `KNX USB Transfer Protocol Header (only in start packet!)`."""
         return self._header
 
     @property
-    def transfer_protocol_body(self) -> Optional[KNXUSBTransferProtocolBody]:
+    def transfer_protocol_body(self) -> KNXUSBTransferProtocolBody | None:
         """3.4.1.3 Data (KNX HID report body)
         Contains the body part `KNX USB Transfer Protocol Body`."""
         return self._body
@@ -360,9 +361,9 @@ class KNXHIDFrame:
     """
 
     def __init__(self) -> None:
-        self._body: Optional[KNXHIDReportBody] = None
+        self._body: KNXHIDReportBody | None = None
         self._expected_byte_count = 64
-        self._header: Optional[KNXHIDReportHeader] = None
+        self._header: KNXHIDReportHeader | None = None
         self._is_valid = False
         self._partial = False
 
@@ -398,7 +399,7 @@ class KNXHIDFrame:
         return self._is_valid
 
     @property
-    def report_header(self) -> Optional[KNXHIDReportHeader]:
+    def report_header(self) -> KNXHIDReportHeader | None:
         """3.4.1.2 KNX HID report header
 
         Fields
@@ -411,7 +412,7 @@ class KNXHIDFrame:
         return self._header
 
     @property
-    def report_body(self) -> Optional[KNXHIDReportBody]:
+    def report_body(self) -> KNXHIDReportBody | None:
         """3.4.1.3 Data (KNX HID report body)
 
         Fields

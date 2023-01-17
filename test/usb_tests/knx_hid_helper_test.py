@@ -1,6 +1,3 @@
-from typing import Tuple
-import unittest
-
 import pytest
 
 from xknx.usb.knx_hid_datatypes import PacketType, SequenceNumber

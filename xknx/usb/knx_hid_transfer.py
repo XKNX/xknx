@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 import struct
-from typing import Optional
 
 from xknx.knxip.knxip_enum import CEMIMessageCode
 from xknx.usb.knx_hid_datatypes import (
@@ -142,7 +143,7 @@ class KNXUSBTransferProtocolHeader:
         return self._body_length
 
     @property
-    def protocol_id(self) -> Optional[ProtocolID]:
+    def protocol_id(self) -> ProtocolID | None:
         """3.4.1.3.4 Protocol identifiers
         It is required that an interface device connecting a PC with a field bus
         via an USB link can not only transfer KNX frames but also other protocols.
@@ -151,7 +152,7 @@ class KNXUSBTransferProtocolHeader:
         return self._protocol_id
 
     @property
-    def emi_id(self) -> Optional[EMIID]:
+    def emi_id(self) -> EMIID | None:
         """3.4.1.3.4 Protocol identifiers
         The EMI ID octet is used as an enumeration: each value (0 … 2) shall
         represent an own EMI format. Its value shall not be '0' if the
@@ -251,7 +252,7 @@ class KNXUSBTransferProtocolBody:
         return b""
 
     @property
-    def emi_message_code(self) -> Optional[CEMIMessageCode]:
+    def emi_message_code(self) -> CEMIMessageCode | None:
         """Return the EMI message code (first octet of `KNX USB Transfer Protocol Body`)
         Returns None for partial frames, as they don't contain a message code"""
         if not self._partial and self._data and len(self._data) > 0:
@@ -262,7 +263,7 @@ class KNXUSBTransferProtocolBody:
         return None
 
     @property
-    def data(self) -> Optional[bytes]:
+    def data(self) -> bytes | None:
         """Return the `KNX USB Transfer Protocol Body` (includes the EMI message code)"""
         return self._data
 

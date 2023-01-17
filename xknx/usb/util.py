@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import logging
 import platform
 import time
-from typing import List, Optional
 
 import usb
 
@@ -115,17 +116,17 @@ class USBDevice:
 
     def __init__(self):
         """"""
-        self._device: Optional[usb.core.Device] = None
+        self._device: usb.core.Device | None = None
         self._manufacturer = ""
         self._product = ""
         self._serial_number = ""
-        self._interface: Optional[usb.core.Interface] = None
+        self._interface: usb.core.Interface | None = None
         self._active_configuration = None
-        self._ep_in: Optional[usb.core.Endpoint] = None
-        self._ep_out: Optional[usb.core.Endpoint] = None
+        self._ep_in: usb.core.Endpoint | None = None
+        self._ep_out: usb.core.Endpoint | None = None
 
     @property
-    def device(self) -> Optional[usb.core.Device]:
+    def device(self) -> usb.core.Device | None:
         """`usb.core.Device` object"""
         return self._device
 
@@ -234,7 +235,7 @@ class USBDevice:
 
 def get_first_matching_usb_device(
     interface_data: USBKNXInterfaceData,
-) -> Optional[USBDevice]:
+) -> USBDevice | None:
     """
     Returns the device with serial number matching `interface_data.serial_number`.
     If there is more than one device with the same serial number, the first is returned.

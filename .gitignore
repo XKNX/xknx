@@ -1,9 +1,3 @@
-.idea/
-.vscode/
-.vs/
-
-env/
-
 *.pyc
 docs/_site/
 docs/vendor/
@@ -17,7 +11,9 @@ xknx.egg-info/
 .coverage
 coverage.xml
 venv
+env/
 .idea/
+.vs/
 .vscode/
 .sass-cache/
 .pytest_cache/
