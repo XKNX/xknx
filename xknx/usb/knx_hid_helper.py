@@ -1,11 +1,23 @@
 import logging
 from typing import List, Tuple, Union
 
-from xknx.knxip import CEMIFrame
 from xknx.exceptions import UnsupportedCEMIMessage
+from xknx.knxip import CEMIFrame
 from xknx.telegram import Telegram, TelegramDirection
-from xknx.usb.knx_hid_frame import KNXHIDFrame, KNXHIDFrameData, KNXHIDReportBodyData, PacketInfo, PacketInfoData
-from xknx.usb.knx_hid_datatypes import EMIID, DataSizeBySequenceNumber, PacketType, ProtocolID, SequenceNumber
+from xknx.usb.knx_hid_datatypes import (
+    EMIID,
+    DataSizeBySequenceNumber,
+    PacketType,
+    ProtocolID,
+    SequenceNumber,
+)
+from xknx.usb.knx_hid_frame import (
+    KNXHIDFrame,
+    KNXHIDFrameData,
+    KNXHIDReportBodyData,
+    PacketInfo,
+    PacketInfoData,
+)
 
 logger = logging.getLogger("xknx.log")
 

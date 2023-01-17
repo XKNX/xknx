@@ -1,9 +1,15 @@
 from typing import Tuple
-import pytest
 from unittest.mock import Mock
 
+import pytest
+
 from xknx.usb.knx_hid_datatypes import PacketType, SequenceNumber
-from xknx.usb.knx_hid_frame import KNXHIDReportHeaderData, KNXHIDReportHeader, PacketInfoData, PacketInfo
+from xknx.usb.knx_hid_frame import (
+    KNXHIDReportHeader,
+    KNXHIDReportHeaderData,
+    PacketInfo,
+    PacketInfoData,
+)
 
 
 class TestPacketInfoData:

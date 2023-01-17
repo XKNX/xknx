@@ -4,8 +4,14 @@ from queue import Queue
 from xknx.exceptions.exception import USBDeviceNotFoundError
 from xknx.io.connection import ConnectionConfigUSB
 from xknx.telegram import Telegram
+from xknx.usb import (
+    USBKNXInterfaceData,
+    USBReceiveThread,
+    USBSendThread,
+    get_all_known_knx_usb_devices,
+    get_first_matching_usb_device,
+)
 from xknx.usb.util import USBDevice
-from xknx.usb import get_all_known_knx_usb_devices, get_first_matching_usb_device, USBKNXInterfaceData, USBSendThread, USBReceiveThread
 
 logger = logging.getLogger("xknx.log")
 

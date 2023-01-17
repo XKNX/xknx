@@ -1,9 +1,10 @@
-import pytest
-import unittest
 from typing import Tuple
+import unittest
 
-from xknx.usb.knx_hid_helper import get_packet_type, KNXToTelegram, KNXToUSBHIDConverter
+import pytest
+
 from xknx.usb.knx_hid_datatypes import PacketType, SequenceNumber
+from xknx.usb.knx_hid_helper import KNXToTelegram, KNXToUSBHIDConverter, get_packet_type
 
 
 class TestKNXToTelegram:

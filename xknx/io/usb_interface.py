@@ -1,9 +1,10 @@
 import logging
 
-from xknx.io.usb_client import USBClient
-from .interface import Interface
 from xknx.io.connection import ConnectionConfigUSB
+from xknx.io.usb_client import USBClient
 from xknx.telegram import Telegram
+
+from .interface import Interface
 
 logger = logging.getLogger("xknx.log")
 

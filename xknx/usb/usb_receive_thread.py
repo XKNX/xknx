@@ -1,5 +1,5 @@
-import logging
 import asyncio
+import logging
 
 from xknx.core.thread import BaseThread
 from xknx.telegram import Telegram

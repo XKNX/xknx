@@ -4,11 +4,10 @@ import asyncio
 import logging
 import textwrap
 
-from xknx.xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
 from xknx.io.connection import ConnectionConfigUSB
 from xknx.telegram import AddressFilter, Telegram
-
+from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 logger.setLevel(logging.DEBUG)

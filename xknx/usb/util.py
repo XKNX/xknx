@@ -1,7 +1,7 @@
-import time
 import logging
-from typing import List, Optional
 import platform
+import time
+from typing import List, Optional
 
 import usb
 
@@ -366,6 +366,7 @@ def _get_usb_backend():
         # TODO: here we loaded libusb dll and use it as backend
         #       libusb as backend on windows supports almost no function (install WinUSB with Zadig?)
         import os
+
         import usb.backend.libusb1
 
         dll_location = os.environ.get("XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll")

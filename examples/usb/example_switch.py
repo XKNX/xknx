@@ -1,10 +1,9 @@
 import asyncio
 import logging
-from xknx.xknx import XKNX
 
 from xknx.devices import Switch
 from xknx.io.connection import ConnectionConfigUSB
-
+from xknx.xknx import XKNX
 
 logging.basicConfig(level=logging.DEBUG)
 

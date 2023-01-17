@@ -3,8 +3,12 @@ import struct
 from typing import Optional
 
 from xknx.knxip.knxip_enum import CEMIMessageCode
-from xknx.usb.knx_hid_datatypes import DataSizeBySequenceNumber, EMIID, ProtocolID, SequenceNumber
-
+from xknx.usb.knx_hid_datatypes import (
+    EMIID,
+    DataSizeBySequenceNumber,
+    ProtocolID,
+    SequenceNumber,
+)
 
 usb_logger = logging.getLogger("xknx.log")
 

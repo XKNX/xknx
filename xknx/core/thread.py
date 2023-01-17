@@ -1,5 +1,5 @@
 import logging
-from threading import Thread, Event
+from threading import Event, Thread
 
 logger = logging.getLogger("xknx.log")
 
