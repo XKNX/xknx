@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 from xknx.core.thread import BaseThread
 from xknx.telegram import Telegram
 from xknx.usb.knx_hid_helper import KNXToTelegram
 from xknx.usb.util import USBDevice
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -15,7 +19,7 @@ class USBReceiveThread(BaseThread):
     """ """
 
     def __init__(
-        self, xknx, usb_device: USBDevice, queue: asyncio.Queue[Telegram | None]
+        self, xknx: XKNX, usb_device: USBDevice, queue: asyncio.Queue[Telegram | None]
     ):
         """ """
         super().__init__(name="USBReceiveThread")

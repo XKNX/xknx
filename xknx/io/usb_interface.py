@@ -1,10 +1,14 @@
 import logging
+from typing import TYPE_CHECKING
 
+from xknx.cemi import CEMIFrame
 from xknx.io.connection import ConnectionConfigUSB
 from xknx.io.usb_client import USBClient
-from xknx.telegram import Telegram
 
 from .interface import Interface
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
 
@@ -12,7 +16,7 @@ logger = logging.getLogger("xknx.log")
 class USBInterface(Interface):
     """USB implementation of the abstract `Interface` class"""
 
-    def __init__(self, xknx, connection_config: ConnectionConfigUSB) -> None:
+    def __init__(self, xknx: XKNX, connection_config: ConnectionConfigUSB) -> None:
         self.xknx = xknx
         self.connection_config = connection_config
         self.usb_client: USBClient = USBClient(xknx, connection_config)
@@ -43,6 +47,6 @@ class USBInterface(Interface):
         """Disconnect from KNX bus."""
         self.usb_client.disconnect()
 
-    async def send_telegram(self, telegram: Telegram) -> None:
-        """Send Telegram to KNX bus."""
-        self.usb_client.send_telegram(telegram=telegram)
+    async def send_cemi(self, cemi: CEMIFrame) -> None:
+        """Send CEMIFrame to KNX bus."""
+        self.usb_client.send_cemi(cemi=cemi)

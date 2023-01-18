@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import logging
 from queue import Queue
+from typing import TYPE_CHECKING
 
+from xknx.cemi import CEMIFrame
 from xknx.exceptions.exception import USBDeviceNotFoundError
 from xknx.io.connection import ConnectionConfigUSB
-from xknx.telegram import Telegram
 from xknx.usb import (
     USBKNXInterfaceData,
     USBReceiveThread,
@@ -13,13 +16,16 @@ from xknx.usb import (
 )
 from xknx.usb.util import USBDevice
 
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
+
 logger = logging.getLogger("xknx.log")
 
 
 class USBClient:
     """Initializes the USB interface and start the send and receive threads"""
 
-    def __init__(self, xknx, connection_config: ConnectionConfigUSB) -> None:
+    def __init__(self, xknx: XKNX, connection_config: ConnectionConfigUSB) -> None:
         self.xknx = xknx
         self.connection_config = connection_config
         self.id_vendor = self.connection_config.idVendor
@@ -27,7 +33,7 @@ class USBClient:
         self.usb_device: USBDevice | None = None
         self._usb_send_thread: USBSendThread | None = None
         self._usb_receive_thread: USBReceiveThread | None = None
-        self._send_queue: Queue[Telegram] = Queue()
+        self._send_queue: Queue[CEMIFrame] = Queue()
 
     @property
     def interface_data(self):
@@ -79,10 +85,10 @@ class USBClient:
         """Releases the USB intercace"""
         self.usb_device.release()
 
-    def send_telegram(self, telegram: Telegram) -> None:
+    def send_cemi(self, cemi: CEMIFrame) -> None:
         """
-        Puts the telegram into the send queue, where the send thread will
+        Puts the CEMIFrame into the send queue, where the send thread will
         eventually get and send it
         """
-        logger.debug(f"sending: {telegram}")
-        self._send_queue.put(telegram)
+        logger.debug(f"sending: {cemi}")
+        self._send_queue.put(cemi)
