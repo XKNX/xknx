@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import queue
 from queue import Queue
