@@ -4,7 +4,6 @@ import logging
 
 from xknx.cemi import CEMIFrame
 from xknx.exceptions import UnsupportedCEMIMessage
-from xknx.telegram import Telegram, TelegramDirection
 from xknx.usb.knx_hid_datatypes import (
     EMIID,
     DataSizeBySequenceNumber,
@@ -23,7 +22,7 @@ from xknx.usb.knx_hid_frame import (
 logger = logging.getLogger("xknx.log")
 
 
-class KNXToTelegram:
+class KNXtoCEMI:
     """ """
 
     def __init__(self) -> None:
@@ -35,7 +34,7 @@ class KNXToTelegram:
         self._knx_data_length = 0
         self._knx_raw: bytes = b""
 
-    def process(self, data: bytes) -> tuple[bool, Telegram | None]:
+    def process(self, data: bytes) -> tuple[bool, CEMIFrame | None]:
         """ """
         if data:
             knx_hid_frame = KNXHIDFrame.from_knx(data)
@@ -49,7 +48,7 @@ class KNXToTelegram:
                     self._knx_raw = knx_hid_frame.report_body.transfer_protocol_body.data[
                         : knx_hid_frame.report_body.transfer_protocol_header.body_length
                     ]
-                    return True, self.create_telegram()
+                    return True, self.create_cemi()
                 elif (
                     knx_hid_frame.report_header.packet_info.packet_type
                     == PacketType.START_AND_PARTIAL
@@ -75,24 +74,22 @@ class KNXToTelegram:
                         knx_hid_frame.report_body.transfer_protocol_body.data
                     )
                     self._knx_raw = self._knx_raw[: self._knx_data_length]
-                    return True, self.create_telegram()
+                    return True, self.create_cemi()
             else:
                 logger.warning(f"ignoring invalid USB HID frame: {data.hex()}")
                 self._reset()
         return False, None
 
-    def create_telegram(self) -> Telegram | None:
+    def create_cemi(self) -> CEMIFrame | None:
         """ """
         try:
             cemi_frame = CEMIFrame.from_knx(self._knx_raw)
         except UnsupportedCEMIMessage as e:
             logger.warning(str(e))
             return None
-        telegram = cemi_frame.telegram
-        telegram.direction = TelegramDirection.INCOMING
-        logger.debug(f"assembled: {telegram}")
+        logger.debug(f"assembled: {cemi_frame}")
         self._reset()
-        return telegram
+        return cemi_frame
 
 
 def get_packet_type(

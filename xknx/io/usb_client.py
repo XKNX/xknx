@@ -41,7 +41,9 @@ class USBClient:
 
     def start(self) -> None:
         """ """
-        all_knx_usb_devices = get_all_known_knx_usb_devices(self.id_vendor, self.id_product)
+        all_knx_usb_devices = get_all_known_knx_usb_devices(
+            self.id_vendor, self.id_product
+        )
         if len(all_knx_usb_devices) > 0:
             self.usb_device = all_knx_usb_devices[0]
 
@@ -55,7 +57,7 @@ class USBClient:
             self.xknx, self.usb_device, self._send_queue
         )
         self._usb_receive_thread = USBReceiveThread(
-            self.xknx, self.usb_device, self.xknx.telegrams
+            self.xknx, self.usb_device, self.cemi_received
         )
         self._usb_send_thread.start()
         self._usb_receive_thread.start()
@@ -88,3 +90,7 @@ class USBClient:
         """
         logger.debug(f"sending: {cemi}")
         self._send_queue.put(cemi)
+
+    def cemi_received(self, cemi: CEMIFrame) -> None:
+        """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""
+        self.xknx.cemi_handler.handle_cemi_frame(cemi)

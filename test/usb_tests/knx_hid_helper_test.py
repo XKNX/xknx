@@ -1,10 +1,10 @@
 import pytest
 
 from xknx.usb.knx_hid_datatypes import PacketType, SequenceNumber
-from xknx.usb.knx_hid_helper import KNXToTelegram, KNXToUSBHIDConverter, get_packet_type
+from xknx.usb.knx_hid_helper import KNXtoCEMI, KNXToUSBHIDConverter, get_packet_type
 
 
-class TestKNXToTelegram:
+class TestKNXtoCEMI:
     """ """
 
     @pytest.mark.parametrize(
@@ -63,7 +63,7 @@ class TestKNXToTelegram:
     )
     def test_process(self, data: bytes, expected: bool):
         """ """
-        converter = KNXToTelegram()
+        converter = KNXtoCEMI()
         for frame in data:
             done, _ = converter.process(frame)
         assert expected == done
