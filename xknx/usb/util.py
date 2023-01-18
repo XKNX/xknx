@@ -240,32 +240,6 @@ def get_all_known_knx_usb_devices(vendor_id: int, product_id: int) -> list[USBDe
     return device_list
 
 
-def _get_usb_backend():
-    """ """
-    backend = None
-    if platform.system() == "Windows":
-        # TODO: here we loaded libusb dll and use it as backend
-        #       libusb as backend on windows supports almost no function (install WinUSB with Zadig?)
-        import os
-
-        import usb.backend.libusb1
-
-        dll_location = os.environ.get(
-            "XKNX_LIBUSB", "C:\\Windows\\System32\\libusb-1.0.dll"
-        )
-        try:
-            backend = usb.backend.libusb1.get_backend(
-                find_library=lambda x: f"{dll_location}"
-            )
-        except usb.core.NoBackendError as ex:
-            logger.error(str(ex))
-        if not backend:
-            usb_logger.error(
-                "No USB backend found. Set XKNX_LIBUSB environment variable pointing to libusb-1.0.dll or install it to C:\\Windows\\System32"
-            )
-    return backend
-
-
 def _log_usb_device(index: int, device: dict):
     """ """
     usb_logger.info(f"device {index}")
