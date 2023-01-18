@@ -12,7 +12,6 @@ from xknx.usb import (
     USBReceiveThread,
     USBSendThread,
     get_all_known_knx_usb_devices,
-    get_first_matching_usb_device,
 )
 from xknx.usb.util import USBDevice
 
@@ -42,12 +41,9 @@ class USBClient:
 
     def start(self) -> None:
         """ """
-        if self.id_vendor == 0x0000 and self.id_product == 0x0000:
-            all_knx_usb_devices = get_all_known_knx_usb_devices()
-            if len(all_knx_usb_devices) > 0:
-                self.usb_device = all_knx_usb_devices[0]
-        else:
-            self.usb_device = get_first_matching_usb_device(self.interface_data)
+        all_knx_usb_devices = get_all_known_knx_usb_devices(self.id_vendor, self.id_product)
+        if len(all_knx_usb_devices) > 0:
+            self.usb_device = all_knx_usb_devices[0]
 
         if not self.usb_device:
             message = f"Could not find a/any KNX device (idVendor: {self.id_vendor}, idProduct: {self.id_product})"
