@@ -119,6 +119,8 @@ class APCI(ABC):
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
+        if self.__class__ != other.__class__:
+            return False
         return self.__dict__ == other.__dict__
 
     @classmethod

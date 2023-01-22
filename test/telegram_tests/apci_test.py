@@ -139,8 +139,8 @@ class TestGroupValueResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload_a = APCI.from_knx(bytes([0x00, 0x80, 0x05, 0x04, 0x03, 0x02, 0x01]))
-        payload_b = APCI.from_knx(bytes([0x00, 0x82]))
+        payload_a = APCI.from_knx(bytes([0x00, 0x40, 0x05, 0x04, 0x03, 0x02, 0x01]))
+        payload_b = APCI.from_knx(bytes([0x00, 0x42]))
 
         assert payload_a == GroupValueResponse(DPTArray((0x05, 0x04, 0x03, 0x02, 0x01)))
         assert payload_b == GroupValueResponse(DPTBinary(0x02))
