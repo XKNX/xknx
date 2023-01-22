@@ -69,7 +69,7 @@ def test_valid_tpci_control():
         ),
         (
             get_data(0x29, 0, 0, 0, 0, 1, 0x03C0, []),
-            r".*APCI not supported*",
+            r".*APDU not supported*",
         ),
     ],
 )

@@ -47,89 +47,6 @@ from xknx.telegram.apci import (
 class TestAPCI:
     """Test class for APCI objects."""
 
-    def test_resolve_apci(self):
-        """Test resolve_apci for supported APCI services."""
-        test_cases = [
-            (APCIService.GROUP_READ.value, GroupValueRead),
-            (APCIService.GROUP_WRITE.value, GroupValueWrite),
-            (APCIService.GROUP_RESPONSE.value, GroupValueResponse),
-            (APCIService.INDIVIDUAL_ADDRESS_WRITE.value, IndividualAddressWrite),
-            (APCIService.INDIVIDUAL_ADDRESS_READ.value, IndividualAddressRead),
-            (APCIService.INDIVIDUAL_ADDRESS_RESPONSE.value, IndividualAddressResponse),
-            (APCIService.ADC_READ.value, ADCRead),
-            (APCIService.ADC_RESPONSE.value, ADCResponse),
-            (APCIService.MEMORY_READ.value, MemoryRead),
-            (APCIService.MEMORY_WRITE.value, MemoryWrite),
-            (APCIService.MEMORY_RESPONSE.value, MemoryResponse),
-            (APCIService.DEVICE_DESCRIPTOR_READ.value, DeviceDescriptorRead),
-            (APCIService.DEVICE_DESCRIPTOR_RESPONSE.value, DeviceDescriptorResponse),
-            (APCIService.RESTART.value, Restart),
-        ]
-
-        for code, clazz in test_cases:
-            assert isinstance(APCI.resolve_apci(code), clazz)
-
-    def test_resolve_class_user(self):
-        """Test resolve_class for supported user APCI services."""
-        test_cases = [
-            (APCIUserService.USER_MEMORY_READ.value, UserMemoryRead),
-            (APCIUserService.USER_MEMORY_RESPONSE.value, UserMemoryResponse),
-            (APCIUserService.USER_MEMORY_WRITE.value, UserMemoryWrite),
-            (
-                APCIUserService.USER_MANUFACTURER_INFO_READ.value,
-                UserManufacturerInfoRead,
-            ),
-            (
-                APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value,
-                UserManufacturerInfoResponse,
-            ),
-            (APCIUserService.FUNCTION_PROPERTY_COMMAND.value, FunctionPropertyCommand),
-            (
-                APCIUserService.FUNCTION_PROPERTY_STATE_READ.value,
-                FunctionPropertyStateRead,
-            ),
-            (
-                APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE.value,
-                FunctionPropertyStateResponse,
-            ),
-        ]
-
-        for code, clazz in test_cases:
-            assert isinstance(APCI.resolve_apci(code), clazz)
-
-    def test_resolve_class_extended(self):
-        """Test resolve_class for supported extended APCI services."""
-        test_cases = [
-            (APCIExtendedService.AUTHORIZE_REQUEST.value, AuthorizeRequest),
-            (APCIExtendedService.AUTHORIZE_RESPONSE.value, AuthorizeResponse),
-            (APCIExtendedService.PROPERTY_VALUE_READ.value, PropertyValueRead),
-            (APCIExtendedService.PROPERTY_VALUE_WRITE.value, PropertyValueWrite),
-            (APCIExtendedService.PROPERTY_VALUE_RESPONSE.value, PropertyValueResponse),
-            (
-                APCIExtendedService.PROPERTY_DESCRIPTION_READ.value,
-                PropertyDescriptionRead,
-            ),
-            (
-                APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value,
-                PropertyDescriptionResponse,
-            ),
-            (
-                APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value,
-                IndividualAddressSerialRead,
-            ),
-            (
-                APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value,
-                IndividualAddressSerialResponse,
-            ),
-            (
-                APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value,
-                IndividualAddressSerialWrite,
-            ),
-        ]
-
-        for code, clazz in test_cases:
-            assert isinstance(APCI.resolve_apci(code), clazz)
-
     def test_resolve_apci_unsupported(self):
         """Test resolve_apci for unsupported services."""
 
@@ -137,13 +54,13 @@ class TestAPCI:
             ConversionError, match=r".*Class not implemented for APCI.*"
         ):
             # Unsupported user service.
-            APCI.resolve_apci(0x02C3)
+            APCI.from_knx(bytes((0x02, 0xC3)))
 
         with pytest.raises(
             ConversionError, match=r".*Class not implemented for APCI.*"
         ):
             # Unsupported extended service.
-            APCI.resolve_apci(0x03C0)
+            APCI.from_knx(bytes((0x03, 0xC0)))
 
 
 class TestGroupValueRead:
@@ -157,8 +74,7 @@ class TestGroupValueRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = GroupValueRead()
-        payload.from_knx(bytes([0x00, 0x00]))
+        payload = APCI.from_knx(bytes([0x00, 0x00]))
 
         assert payload == GroupValueRead()
 
@@ -186,19 +102,10 @@ class TestGroupValueWrite:
         assert payload_a.calculated_length() == 4
         assert payload_b.calculated_length() == 1
 
-    def test_calculated_length_exception(self):
-        """Test the test_calculated_length method for unsupported dpt."""
-        payload = GroupValueWrite(object())
-
-        with pytest.raises(TypeError):
-            payload.calculated_length()
-
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload_a = GroupValueWrite()
-        payload_a.from_knx(bytes([0x00, 0x80, 0x05, 0x04, 0x03, 0x02, 0x01]))
-        payload_b = GroupValueWrite()
-        payload_b.from_knx(bytes([0x00, 0x82]))
+        payload_a = APCI.from_knx(bytes([0x00, 0x80, 0x05, 0x04, 0x03, 0x02, 0x01]))
+        payload_b = APCI.from_knx(bytes([0x00, 0x82]))
 
         assert payload_a == GroupValueWrite(DPTArray((0x05, 0x04, 0x03, 0x02, 0x01)))
         assert payload_b == GroupValueWrite(DPTBinary(0x02))
@@ -211,13 +118,6 @@ class TestGroupValueWrite:
 
         assert payload_a.to_knx() == bytes([0x00, 0x80, 0x01, 0x02, 0x03])
         assert payload_b.to_knx() == bytes([0x00, 0x81])
-
-    def test_to_knx_exception(self):
-        """Test the to_knx method for unsupported dpt."""
-        payload = GroupValueWrite(object())
-
-        with pytest.raises(TypeError):
-            payload.to_knx()
 
     def test_str(self):
         """Test the __str__ method."""
@@ -237,19 +137,10 @@ class TestGroupValueResponse:
         assert payload_a.calculated_length() == 4
         assert payload_b.calculated_length() == 1
 
-    def test_calculated_length_exception(self):
-        """Test the test_calculated_length method for unsupported dpt."""
-        payload = GroupValueResponse(object())
-
-        with pytest.raises(TypeError):
-            payload.calculated_length()
-
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload_a = GroupValueResponse()
-        payload_a.from_knx(bytes([0x00, 0x80, 0x05, 0x04, 0x03, 0x02, 0x01]))
-        payload_b = GroupValueResponse()
-        payload_b.from_knx(bytes([0x00, 0x82]))
+        payload_a = APCI.from_knx(bytes([0x00, 0x80, 0x05, 0x04, 0x03, 0x02, 0x01]))
+        payload_b = APCI.from_knx(bytes([0x00, 0x82]))
 
         assert payload_a == GroupValueResponse(DPTArray((0x05, 0x04, 0x03, 0x02, 0x01)))
         assert payload_b == GroupValueResponse(DPTBinary(0x02))
@@ -263,13 +154,6 @@ class TestGroupValueResponse:
         assert payload_a.to_knx() == bytes([0x00, 0x40, 0x01, 0x02, 0x03])
         assert payload_b.to_knx() == bytes([0x00, 0x41])
 
-    def test_to_knx_exception(self):
-        """Test the to_knx method for unsupported dpt."""
-        payload = GroupValueResponse(object())
-
-        with pytest.raises(TypeError):
-            payload.to_knx()
-
     def test_str(self):
         """Test the __str__ method."""
         payload = GroupValueResponse(DPTBinary(1))
@@ -282,14 +166,13 @@ class TestIndividualAddressWrite:
 
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
-        payload = IndividualAddressWrite()
+        payload = IndividualAddressWrite(IndividualAddress("1.2.3"))
 
         assert payload.calculated_length() == 3
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = IndividualAddressWrite()
-        payload.from_knx(bytes([0x00, 0xC0, 0x12, 0x03]))
+        payload = APCI.from_knx(bytes([0x00, 0xC0, 0x12, 0x03]))
 
         assert payload == IndividualAddressWrite(IndividualAddress("1.2.3"))
 
@@ -317,8 +200,7 @@ class TestIndividualAddressRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = IndividualAddressRead()
-        payload.from_knx(bytes([0x01, 0x00]))
+        payload = APCI.from_knx(bytes([0x01, 0x00]))
 
         assert payload == IndividualAddressRead()
 
@@ -346,8 +228,7 @@ class TestIndividualAddressResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = IndividualAddressResponse()
-        payload.from_knx(bytes([0x01, 0x40]))
+        payload = APCI.from_knx(bytes([0x01, 0x40]))
 
         assert payload == IndividualAddressResponse()
 
@@ -369,14 +250,13 @@ class TestADCRead:
 
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
-        payload = ADCRead()
+        payload = ADCRead(channel=2, count=4)
 
         assert payload.calculated_length() == 2
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = ADCRead()
-        payload.from_knx(bytes([0x01, 0x82, 0x04]))
+        payload = APCI.from_knx(bytes([0x01, 0x82, 0x04]))
 
         assert payload == ADCRead(channel=2, count=4)
 
@@ -398,14 +278,13 @@ class TestADCResponse:
 
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
-        payload = ADCResponse()
+        payload = ADCResponse(channel=2, count=4, value=1023)
 
         assert payload.calculated_length() == 4
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = ADCResponse()
-        payload.from_knx(bytes([0x01, 0xC2, 0x04, 0x03, 0xFF]))
+        payload = APCI.from_knx(bytes([0x01, 0xC2, 0x04, 0x03, 0xFF]))
 
         assert payload == ADCResponse(channel=2, count=4, value=1023)
 
@@ -427,14 +306,13 @@ class TestMemoryRead:
 
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
-        payload = MemoryRead()
+        payload = MemoryRead(address=0x1234, count=11)
 
         assert payload.calculated_length() == 3
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = MemoryRead()
-        payload.from_knx(bytes([0x02, 0x0B, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x02, 0x0B, 0x12, 0x34]))
 
         assert payload == MemoryRead(address=0x1234, count=11)
 
@@ -474,8 +352,7 @@ class TestMemoryWrite:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = MemoryWrite()
-        payload.from_knx(bytes([0x02, 0x83, 0x12, 0x34, 0xAA, 0xBB, 0xCC]))
+        payload = APCI.from_knx(bytes([0x02, 0x83, 0x12, 0x34, 0xAA, 0xBB, 0xCC]))
 
         assert payload == MemoryWrite(
             address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC])
@@ -523,8 +400,7 @@ class TestMemoryResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = MemoryResponse()
-        payload.from_knx(bytes([0x02, 0x43, 0x12, 0x34, 0xAA, 0xBB, 0xCC]))
+        payload = APCI.from_knx(bytes([0x02, 0x43, 0x12, 0x34, 0xAA, 0xBB, 0xCC]))
 
         assert payload == MemoryResponse(
             address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC])
@@ -577,8 +453,7 @@ class TestDeviceDescriptorRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = DeviceDescriptorRead()
-        payload.from_knx(bytes([0x03, 0x0D]))
+        payload = APCI.from_knx(bytes([0x03, 0x0D]))
 
         assert payload == DeviceDescriptorRead(13)
 
@@ -613,8 +488,7 @@ class TestDeviceDescriptorResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = DeviceDescriptorResponse()
-        payload.from_knx(bytes([0x03, 0x4D, 0x00, 0x7B]))
+        payload = APCI.from_knx(bytes([0x03, 0x4D, 0x00, 0x7B]))
 
         assert payload == DeviceDescriptorResponse(descriptor=13, value=123)
 
@@ -649,8 +523,7 @@ class TestUserMemoryRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = UserMemoryRead()
-        payload.from_knx(bytes([0x02, 0xC0, 0x1B, 0x23, 0x45]))
+        payload = APCI.from_knx(bytes([0x02, 0xC0, 0x1B, 0x23, 0x45]))
 
         assert payload == UserMemoryRead(address=0x12345, count=11)
 
@@ -692,8 +565,7 @@ class TestUserMemoryWrite:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = UserMemoryWrite()
-        payload.from_knx(bytes([0x02, 0xC2, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC]))
+        payload = APCI.from_knx(bytes([0x02, 0xC2, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC]))
 
         assert payload == UserMemoryWrite(
             address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
@@ -750,8 +622,7 @@ class TestUserMemoryResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = UserMemoryResponse()
-        payload.from_knx(bytes([0x02, 0xC1, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC]))
+        payload = APCI.from_knx(bytes([0x02, 0xC1, 0x13, 0x23, 0x45, 0xAA, 0xBB, 0xCC]))
 
         assert payload == UserMemoryResponse(
             address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
@@ -806,8 +677,7 @@ class TestRestart:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = Restart()
-        payload.from_knx(bytes([0x03, 0x80]))
+        payload = APCI.from_knx(bytes([0x03, 0x80]))
 
         assert payload == Restart()
 
@@ -835,8 +705,7 @@ class TestUserManufacturerInfoRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = UserManufacturerInfoRead()
-        payload.from_knx(bytes([0x02, 0xC5]))
+        payload = APCI.from_knx(bytes([0x02, 0xC5]))
 
         assert payload == UserManufacturerInfoRead()
 
@@ -864,8 +733,7 @@ class TestUserManufacturerInfoResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = UserManufacturerInfoResponse()
-        payload.from_knx(bytes([0x02, 0xC6, 0x7B, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x02, 0xC6, 0x7B, 0x12, 0x34]))
 
         assert payload == UserManufacturerInfoResponse(
             manufacturer_id=123, data=b"\x12\x34"
@@ -900,8 +768,7 @@ class TestFunctionPropertyCommand:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = FunctionPropertyCommand()
-        payload.from_knx(bytes([0x02, 0xC7, 0x01, 0x04, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x02, 0xC7, 0x01, 0x04, 0x12, 0x34]))
 
         assert payload == FunctionPropertyCommand(
             object_index=1, property_id=4, data=b"\x12\x34"
@@ -940,8 +807,7 @@ class TestFunctionPropertyStateRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = FunctionPropertyStateRead()
-        payload.from_knx(bytes([0x02, 0xC8, 0x01, 0x04, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x02, 0xC8, 0x01, 0x04, 0x12, 0x34]))
 
         assert payload == FunctionPropertyStateRead(
             object_index=1, property_id=4, data=b"\x12\x34"
@@ -980,8 +846,7 @@ class TestFunctionPropertyStateResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = FunctionPropertyStateResponse()
-        payload.from_knx(bytes([0x02, 0xC8, 0x01, 0x04, 0x08, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x02, 0xC9, 0x01, 0x04, 0x08, 0x12, 0x34]))
 
         assert payload == FunctionPropertyStateResponse(
             object_index=1, property_id=4, return_code=8, data=b"\x12\x34"
@@ -993,7 +858,7 @@ class TestFunctionPropertyStateResponse:
             object_index=1, property_id=4, return_code=8, data=b"\x12\x34"
         )
 
-        assert payload.to_knx() == bytes([0x02, 0xC8, 0x01, 0x04, 0x08, 0x12, 0x34])
+        assert payload.to_knx() == bytes([0x02, 0xC9, 0x01, 0x04, 0x08, 0x12, 0x34])
 
     def test_str(self):
         """Test the __str__ method."""
@@ -1018,8 +883,7 @@ class TestAuthorizeRequest:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = AuthorizeRequest()
-        payload.from_knx(bytes([0x03, 0xD1, 0x00, 0x00, 0xBC, 0x61, 0x4E]))
+        payload = APCI.from_knx(bytes([0x03, 0xD1, 0x00, 0x00, 0xBC, 0x61, 0x4E]))
 
         assert payload == AuthorizeRequest(key=12345678)
 
@@ -1047,8 +911,7 @@ class TestAuthorizeResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = AuthorizeResponse()
-        payload.from_knx(bytes([0x03, 0xD2, 0x7B]))
+        payload = APCI.from_knx(bytes([0x03, 0xD2, 0x7B]))
 
         assert payload == AuthorizeResponse(level=123)
 
@@ -1078,8 +941,7 @@ class TestPropertyValueRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = PropertyValueRead()
-        payload.from_knx(bytes([0x03, 0xD5, 0x01, 0x04, 0x20, 0x08]))
+        payload = APCI.from_knx(bytes([0x03, 0xD5, 0x01, 0x04, 0x20, 0x08]))
 
         assert payload == PropertyValueRead(
             object_index=1, property_id=4, count=2, start_index=8
@@ -1127,8 +989,7 @@ class TestPropertyValueWrite:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = PropertyValueWrite()
-        payload.from_knx(bytes([0x03, 0xD7, 0x01, 0x04, 0x20, 0x08, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x03, 0xD7, 0x01, 0x04, 0x20, 0x08, 0x12, 0x34]))
 
         assert payload == PropertyValueWrite(
             object_index=1, property_id=4, count=2, start_index=8, data=b"\x12\x34"
@@ -1178,8 +1039,7 @@ class TestPropertyValueResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = PropertyValueResponse()
-        payload.from_knx(bytes([0x03, 0xD6, 0x01, 0x04, 0x20, 0x08, 0x12, 0x34]))
+        payload = APCI.from_knx(bytes([0x03, 0xD6, 0x01, 0x04, 0x20, 0x08, 0x12, 0x34]))
 
         assert payload == PropertyValueResponse(
             object_index=1, property_id=4, count=2, start_index=8, data=b"\x12\x34"
@@ -1229,8 +1089,7 @@ class TestPropertyDescriptionRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = PropertyDescriptionRead()
-        payload.from_knx(bytes([0x03, 0xD8, 0x01, 0x04, 0x08]))
+        payload = APCI.from_knx(bytes([0x03, 0xD8, 0x01, 0x04, 0x08]))
 
         assert payload == PropertyDescriptionRead(
             object_index=1, property_id=4, property_index=8
@@ -1274,8 +1133,9 @@ class TestPropertyDescriptionResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = PropertyDescriptionResponse()
-        payload.from_knx(bytes([0x03, 0xD9, 0x01, 0x04, 0x08, 0x03, 0x00, 0x05, 0x07]))
+        payload = APCI.from_knx(
+            bytes([0x03, 0xD9, 0x01, 0x04, 0x08, 0x03, 0x00, 0x05, 0x07])
+        )
 
         assert payload == PropertyDescriptionResponse(
             object_index=1,
@@ -1343,8 +1203,7 @@ class TestIndividualAddressSerialRead:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = IndividualAddressSerialRead()
-        payload.from_knx(bytes([0x03, 0xDC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]))
+        payload = APCI.from_knx(bytes([0x03, 0xDC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]))
 
         assert payload == IndividualAddressSerialRead(b"\xaa\xbb\xcc\x11\x22\x33")
 
@@ -1376,8 +1235,7 @@ class TestIndividualAddressSerialResponse:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = IndividualAddressSerialResponse()
-        payload.from_knx(
+        payload = APCI.from_knx(
             bytes(
                 [0x03, 0xDD, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33, 0x12, 0x03, 0x00, 0x00]
             )
@@ -1422,8 +1280,7 @@ class TestIndividualAddressSerialWrite:
 
     def test_from_knx(self):
         """Test the from_knx method."""
-        payload = IndividualAddressSerialWrite()
-        payload.from_knx(
+        payload = APCI.from_knx(
             bytes(
                 [
                     0x03,
