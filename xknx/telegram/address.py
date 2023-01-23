@@ -69,13 +69,13 @@ class BaseAddress(ABC):
         """Initialize instance variables needed by all subclasses."""
         self.raw: int = 0
 
-    def to_knx(self) -> tuple[int, int]:
+    def to_knx(self) -> bytes:
         """
         Serialize to KNX/IP raw data.
 
-        Returns a 2-Byte tuple generated from the raw Value.
+        Returns a bytes object with length of 2 from the raw value.
         """
-        return (self.raw >> 8) & 255, self.raw & 255
+        return int.to_bytes(self.raw, 2, "big")
 
     def __eq__(self, other: object | None) -> bool:
         """

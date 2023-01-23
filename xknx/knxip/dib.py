@@ -190,7 +190,7 @@ class DIBDeviceInformation(DIB):
                     self.programming_mode,
                 )
             )
-            + bytes(self.individual_address.to_knx())
+            + self.individual_address.to_knx()
             + installation_project_identifier
             + hex_notation_to_knx(self.serial_number)
             + ip_to_knx(self.multicast_address)
@@ -372,7 +372,7 @@ class DIBTunnelingInfo(DIB):
             bytes((self.calculated_length(), DIBTypeCode.TUNNELING_INFO.value))
             + self.max_apdu_length.to_bytes(2, "big")
             + b"".join(
-                bytes(address.to_knx()) + bytes(status)
+                address.to_knx() + bytes(status)
                 for address, status in self.slots.items()
             )
         )

@@ -349,9 +349,7 @@ class IndividualAddressWrite(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(
-            self.CODE, appended_payload=bytes(self.address.to_knx())
-        )
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.address.to_knx())
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1525,8 +1523,7 @@ class IndividualAddressSerialResponse(APCI):
         if len(self.serial) != 6:
             raise ConversionError("Serial must be 6 bytes.")
 
-        address_high, address_low = self.address.to_knx()
-        payload = struct.pack("!6sBBH", self.serial, address_high, address_low, 0)
+        payload = struct.pack("!6s2sH", self.serial, self.address.to_knx(), 0)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
@@ -1569,8 +1566,7 @@ class IndividualAddressSerialWrite(APCI):
         if len(self.serial) != 6:
             raise ConversionError("Serial must be 6 bytes.")
 
-        address_high, address_low = self.address.to_knx()
-        payload = struct.pack("!6sBBI", self.serial, address_high, address_low, 0)
+        payload = struct.pack("!6s2sI", self.serial, self.address.to_knx(), 0)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 

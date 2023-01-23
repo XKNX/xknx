@@ -159,9 +159,9 @@ class TestIndividualAddress:
         assert not IndividualAddress("1.0.0").is_device
 
     def test_to_knx(self):
-        """Test if `IndividualAddress.to_knx()` generates valid byte tuples."""
-        assert IndividualAddress("0.0.0").to_knx() == (0x0, 0x0)
-        assert IndividualAddress("15.15.255").to_knx() == (0xFF, 0xFF)
+        """Test if `IndividualAddress.to_knx()` generates valid byte objects."""
+        assert IndividualAddress("0.0.0").to_knx() == bytes((0x0, 0x0))
+        assert IndividualAddress("15.15.255").to_knx() == bytes((0xFF, 0xFF))
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""
@@ -263,8 +263,8 @@ class TestGroupAddress:
 
     def test_to_knx(self):
         """Test if `GroupAddress.to_knx()` generates valid byte tuples."""
-        assert GroupAddress("0/0").to_knx() == (0x0, 0x0)
-        assert GroupAddress("31/2047").to_knx() == (0xFF, 0xFF)
+        assert GroupAddress("0/0").to_knx() == bytes((0x0, 0x0))
+        assert GroupAddress("31/2047").to_knx() == bytes((0xFF, 0xFF))
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""

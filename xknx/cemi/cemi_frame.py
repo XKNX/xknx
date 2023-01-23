@@ -207,7 +207,7 @@ class CEMIFrame:
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.tpci.control:
-            tpdu = bytes([self.tpci.to_knx()])
+            tpdu = self.tpci.to_knx().to_bytes(1, "big")
             npdu_len = 0
         else:
             if not isinstance(self.payload, APCI):
@@ -226,13 +226,9 @@ class CEMIFrame:
                 )
             )
             + self.flags.to_bytes(2, "big")
-            + bytes(
-                (
-                    *self.src_addr.to_knx(),
-                    *self.dst_addr.to_knx(),
-                    npdu_len,
-                )
-            )
+            + self.src_addr.to_knx()
+            + self.dst_addr.to_knx()
+            + npdu_len.to_bytes(1, "big")
             + tpdu
         )
 
