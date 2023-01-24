@@ -49,12 +49,13 @@ def parse_device_group_address(
 class BaseAddress(ABC):
     """Base class for all knx address types."""
 
+    raw: int
+
     @abstractmethod
     def __init__(
         self, address: IndividualAddressableType | GroupAddressableType
     ) -> None:
         """Initialize Address instance. To be implemented in derived class."""
-        self.raw: int
 
     @classmethod
     def from_knx(cls: type[Self], raw: bytes) -> Self:
