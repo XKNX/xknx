@@ -343,9 +343,8 @@ class IndividualAddressWrite(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        address_high, address_low = struct.unpack("!BB", raw[2:])
-
-        self.address = IndividualAddress((address_high, address_low))
+        (raw_address,) = struct.unpack("!H", raw[2:])
+        self.address = IndividualAddress(raw_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1514,9 +1513,8 @@ class IndividualAddressSerialResponse(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        self.serial, address_high, address_low, _ = struct.unpack("!6sBBH", raw[2:])
-
-        self.address = IndividualAddress((address_high, address_low))
+        self.serial, raw_address, _ = struct.unpack("!6sHH", raw[2:])
+        self.address = IndividualAddress(raw_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1557,9 +1555,8 @@ class IndividualAddressSerialWrite(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        self.serial, address_high, address_low, _ = struct.unpack("!6sBBI", raw[2:])
-
-        self.address = IndividualAddress((address_high, address_low))
+        self.serial, raw_address, _ = struct.unpack("!6sHI", raw[2:])
+        self.address = IndividualAddress(raw_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""

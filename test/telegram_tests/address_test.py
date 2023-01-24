@@ -140,9 +140,10 @@ class TestIndividualAddress:
         """Test initialization with free format address as integer."""
         assert IndividualAddress(49552).raw == 49552
 
-    def test_with_bytes(self):
+    def test_from_knx(self):
         """Test initialization with Bytes."""
-        assert IndividualAddress((0x12, 0x34)).raw == 0x1234
+        ia = IndividualAddress.from_knx(bytes((0x12, 0x34)))
+        assert ia.raw == 0x1234
 
     def test_with_none(self):
         """Test initialization with None object."""
@@ -260,6 +261,11 @@ class TestGroupAddress:
         assert GroupAddress("0/0").sub == 0
         assert GroupAddress("1/0").sub == 2048
         assert GroupAddress("31/2047").sub == 65535
+
+    def test_from_knx(self):
+        """Test initialization with Bytes."""
+        ga = GroupAddress.from_knx(bytes((0x12, 0x34)))
+        assert ga.raw == 0x1234
 
     def test_to_knx(self):
         """Test if `GroupAddress.to_knx()` generates valid byte tuples."""

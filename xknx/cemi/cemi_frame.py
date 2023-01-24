@@ -141,14 +141,13 @@ class CEMIFrame:
         # Control field 1 and Control field 2 - first 2 octets after Additional information
         flags = cemi[2 + addil] * 256 + cemi[3 + addil]
 
-        src_addr = IndividualAddress(cemi[4 + addil] * 256 + cemi[5 + addil])
+        src_addr = IndividualAddress.from_knx(cemi[4 + addil : 6 + addil])
 
         _dst_is_group_address = bool(flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
-        _dst_raw_address = cemi[6 + addil] * 256 + cemi[7 + addil]
         dst_addr: GroupAddress | IndividualAddress = (
-            GroupAddress(_dst_raw_address)
+            GroupAddress.from_knx(cemi[6 + addil : 8 + addil])
             if _dst_is_group_address
-            else IndividualAddress(_dst_raw_address)
+            else IndividualAddress.from_knx(cemi[6 + addil : 8 + addil])
         )
 
         _npdu_len = cemi[8 + addil]
@@ -167,7 +166,7 @@ class CEMIFrame:
             tpci = TPCI.resolve(
                 raw_tpci=_tpdu[0],
                 dst_is_group_address=_dst_is_group_address,
-                dst_is_zero=not _dst_raw_address,
+                dst_is_zero=not dst_addr.raw,
             )
         except ConversionError as err:
             raise UnsupportedCEMIMessage(

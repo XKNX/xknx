@@ -151,7 +151,7 @@ class DIBDeviceInformation(DIB):
         self.knx_medium = KNXMedium(raw[2])
         # last bit of device_status. All other bits are unused
         self.programming_mode = bool(raw[3])
-        self.individual_address = IndividualAddress((raw[4], raw[5]))
+        self.individual_address = IndividualAddress.from_knx(raw[4:6])
         installation_project_identifier = raw[6] * 256 + raw[7]
         self.project_number = installation_project_identifier >> 4
         self.installation_number = installation_project_identifier & 15

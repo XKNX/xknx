@@ -15,10 +15,10 @@ The module supports all different writings of group addresses:
 """
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
 from re import compile as re_compile
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Optional, TypeVar, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
@@ -30,6 +30,8 @@ IndividualAddressableType = Optional[
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
 DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
 DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
+# py3.10 backwards compatibility - in py3.11 typing.Self is available
+Self = TypeVar("Self", bound="BaseAddress")
 
 
 def parse_device_group_address(
@@ -65,9 +67,17 @@ def address_tuple_to_int(address: tuple[int, int]) -> int:
 class BaseAddress(ABC):
     """Base class for all knx address types."""
 
-    def __init__(self) -> None:
-        """Initialize instance variables needed by all subclasses."""
-        self.raw: int = 0
+    @abstractmethod
+    def __init__(
+        self, address: IndividualAddressableType | GroupAddressableType
+    ) -> None:
+        """Initialize Address instance. To be implemented in derived class."""
+        self.raw: int
+
+    @classmethod
+    def from_knx(cls: type[Self], raw: bytes) -> Self:
+        """Parse/deserialize from KNX/IP raw data."""
+        return cls(int.from_bytes(raw, "big"))
 
     def to_knx(self) -> bytes:
         """
@@ -103,8 +113,9 @@ class IndividualAddress(BaseAddress):
 
     def __init__(self, address: IndividualAddressableType) -> None:
         """Initialize IndividualAddress class."""
-        super().__init__()
-        if isinstance(address, IndividualAddress):
+        if isinstance(address, int):
+            self.raw = address
+        elif isinstance(address, IndividualAddress):
             self.raw = address.raw
         elif isinstance(address, str):
             if address.isdigit():
@@ -113,8 +124,6 @@ class IndividualAddress(BaseAddress):
                 self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
             self.raw = address_tuple_to_int(address)
-        elif isinstance(address, int):
-            self.raw = address
         elif address is None:
             self.raw = 0
         else:
@@ -210,9 +219,9 @@ class GroupAddress(BaseAddress):
 
     def __init__(self, address: GroupAddressableType) -> None:
         """Initialize GroupAddress class."""
-        super().__init__()
-
-        if isinstance(address, GroupAddress):
+        if isinstance(address, int):
+            self.raw = address
+        elif isinstance(address, GroupAddress):
             self.raw = address.raw
         elif isinstance(address, str):
             if address.isdigit():
@@ -221,8 +230,6 @@ class GroupAddress(BaseAddress):
                 self.raw = self.__string_to_int(address)
         elif isinstance(address, tuple) and len(address) == 2:
             self.raw = address_tuple_to_int(address)
-        elif isinstance(address, int):
-            self.raw = address
         elif address is None:
             self.raw = 0
         else:
