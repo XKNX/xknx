@@ -23,10 +23,8 @@ from typing import ClassVar, Optional, TypeVar, Union
 from xknx.exceptions import CouldNotParseAddress
 
 # TODO: typing - remove need for Optional here
-GroupAddressableType = Optional[Union["GroupAddress", str, int, tuple[int, int]]]
-IndividualAddressableType = Optional[
-    Union["IndividualAddress", str, int, tuple[int, int]]
-]
+GroupAddressableType = Optional[Union["GroupAddress", str, int]]
+IndividualAddressableType = Optional[Union["IndividualAddress", str, int]]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
 DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
 DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
@@ -46,22 +44,6 @@ def parse_device_group_address(
         if isinstance(address, str):
             return InternalGroupAddress(address)
         raise ex
-
-
-def address_tuple_to_int(address: tuple[int, int]) -> int:
-    """
-    Convert the tuple `address` to an integer.
-
-    Valid values inside the `address` tuple are:
-    * Positive Numbers between 0 and 255 (binary)
-    """
-    if (
-        any(not isinstance(byte, int) for byte in address)
-        or any(byte < 0 for byte in address)
-        or any(byte > 255 for byte in address)
-    ):
-        raise CouldNotParseAddress(address)
-    return int(address[0] * 256 + address[1])
 
 
 class BaseAddress(ABC):
@@ -122,14 +104,12 @@ class IndividualAddress(BaseAddress):
                 self.raw = int(address)
             else:
                 self.raw = self.__string_to_int(address)
-        elif isinstance(address, tuple) and len(address) == 2:
-            self.raw = address_tuple_to_int(address)
         elif address is None:
             self.raw = 0
         else:
             raise CouldNotParseAddress(address)
 
-        if self.raw > 65535:
+        if not 0 <= self.raw <= 65535:
             raise CouldNotParseAddress(address)
 
     def __string_to_int(self, address: str) -> int:
@@ -228,14 +208,12 @@ class GroupAddress(BaseAddress):
                 self.raw = int(address)
             else:
                 self.raw = self.__string_to_int(address)
-        elif isinstance(address, tuple) and len(address) == 2:
-            self.raw = address_tuple_to_int(address)
         elif address is None:
             self.raw = 0
         else:
             raise CouldNotParseAddress(address)
 
-        if self.raw > 65535:
+        if not 0 <= self.raw <= 65535:
             raise CouldNotParseAddress(address)
 
     def __string_to_int(self, address: str) -> int:

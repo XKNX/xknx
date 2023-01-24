@@ -357,7 +357,7 @@ class DIBTunnelingInfo(DIB):
 
         self.max_apdu_length = int.from_bytes(raw[2:4], "big")
         for pos in range(4, length, 4):
-            address = IndividualAddress((raw[pos], raw[pos + 1]))
+            address = IndividualAddress.from_knx(raw[pos : pos + 2])
             status = TunnelingSlotStatus(
                 usable=bool(raw[pos + 3] >> 2 & 0b1),
                 authorized=bool(raw[pos + 3] >> 1 & 0b1),

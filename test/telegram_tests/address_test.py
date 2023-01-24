@@ -33,7 +33,6 @@ group_addresses_valid = {
     "1": 1,
     0: 0,
     65535: 65535,
-    (0xFF, 0xFF): 65535,
     GroupAddress("1/1/111"): 2415,
     None: 0,
 }
@@ -50,9 +49,8 @@ group_addresses_invalid = [
     "0.0",
     IndividualAddress("11.11.111"),
     65536,
-    (0xFF, 0xFFF),
-    (0xFFF, 0xFF),
-    (-1, -1),
+    (0xAB, 0xCD),
+    -1,
     [],
 ]
 
@@ -68,7 +66,6 @@ individual_addresses_valid = {
     "11.11.111": 47983,
     IndividualAddress("11.11.111"): 47983,
     "15.15.255": 65535,
-    (0xFF, 0xFF): 65535,
     0: 0,
     65535: 65535,
 }
@@ -84,9 +81,8 @@ individual_addresses_invalid = [
     "0/0",
     GroupAddress("1/1/111"),
     65536,
-    (0xFF, 0xFFF),
-    (0xFFF, 0xFF),
-    (-1, -1),
+    (0xAB, 0xCD),
+    -1,
     [],
 ]
 
