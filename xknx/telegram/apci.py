@@ -343,15 +343,12 @@ class IndividualAddressWrite(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        address_high, address_low = struct.unpack("!BB", raw[2:])
-
-        self.address = IndividualAddress((address_high, address_low))
+        (raw_address,) = struct.unpack("!H", raw[2:])
+        self.address = IndividualAddress(raw_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(
-            self.CODE, appended_payload=bytes(self.address.to_knx())
-        )
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.address.to_knx())
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1516,17 +1513,15 @@ class IndividualAddressSerialResponse(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        self.serial, address_high, address_low, _ = struct.unpack("!6sBBH", raw[2:])
-
-        self.address = IndividualAddress((address_high, address_low))
+        self.serial, raw_address, _ = struct.unpack("!6sHH", raw[2:])
+        self.address = IndividualAddress(raw_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
         if len(self.serial) != 6:
             raise ConversionError("Serial must be 6 bytes.")
 
-        address_high, address_low = self.address.to_knx()
-        payload = struct.pack("!6sBBH", self.serial, address_high, address_low, 0)
+        payload = struct.pack("!6s2sH", self.serial, self.address.to_knx(), 0)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
@@ -1560,17 +1555,15 @@ class IndividualAddressSerialWrite(APCI):
 
     def from_knx(self, raw: bytes) -> None:
         """Parse/deserialize from KNX/IP raw data."""
-        self.serial, address_high, address_low, _ = struct.unpack("!6sBBI", raw[2:])
-
-        self.address = IndividualAddress((address_high, address_low))
+        self.serial, raw_address, _ = struct.unpack("!6sHI", raw[2:])
+        self.address = IndividualAddress(raw_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
         if len(self.serial) != 6:
             raise ConversionError("Serial must be 6 bytes.")
 
-        address_high, address_low = self.address.to_knx()
-        payload = struct.pack("!6sBBI", self.serial, address_high, address_low, 0)
+        payload = struct.pack("!6s2sI", self.serial, self.address.to_knx(), 0)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
