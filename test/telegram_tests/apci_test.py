@@ -222,7 +222,7 @@ class TestIndividualAddressResponse:
 
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
-        payload = IndividualAddressRead()
+        payload = IndividualAddressResponse()
 
         assert payload.calculated_length() == 1
 
@@ -500,7 +500,7 @@ class TestDeviceDescriptorResponse:
 
     def test_to_knx_conversion_error(self):
         """Test the to_knx method for conversion errors."""
-        payload = DeviceDescriptorRead(255)
+        payload = DeviceDescriptorResponse(255)
 
         with pytest.raises(ConversionError, match=r".*Descriptor.*"):
             payload.to_knx()
