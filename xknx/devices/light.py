@@ -69,7 +69,7 @@ class _SwitchAndBrightness:
             group_address_switch_state,
             sync_state=sync_state,
             device_name=name,
-            feature_name=feature_name + "_state",
+            feature_name=f"{feature_name}_state",
             after_update_cb=after_update_cb,
         )
         self.brightness = RemoteValueScaling(
@@ -78,7 +78,7 @@ class _SwitchAndBrightness:
             group_address_brightness_state,
             sync_state=sync_state,
             device_name=name,
-            feature_name=feature_name + "_brightness",
+            feature_name=f"{feature_name}_brightness",
             after_update_cb=after_update_cb,
             range_from=0,
             range_to=255,
@@ -460,11 +460,10 @@ class Light(Device):
 
         If the device supports RGBW, get the current RGB+White values instead.
         """
-        if self.supports_rgbw:
-            if self.rgbw.initialized:
-                if not self.rgbw.value:
-                    return None, None
-                return self.rgbw.value[:3], self.rgbw.value[3]
+        if self.supports_rgbw and self.rgbw.initialized:
+            if not self.rgbw.value:
+                return None, None
+            return self.rgbw.value[:3], self.rgbw.value[3]
         if self.color.initialized:
             return self.color.value, None
         # individual RGB addresses - white will return None when it is not initialized
@@ -607,90 +606,86 @@ class Light(Device):
     def __str__(self) -> str:
         """Return object as readable string."""
         str_brightness = (
-            ""
-            if not self.supports_brightness
-            else f" brightness={self.brightness.group_addr_str()}"
+            f" brightness={self.brightness.group_addr_str()}"
+            if self.supports_brightness
+            else ""
         )
 
         str_color = (
-            "" if not self.supports_color else f" color={self.color.group_addr_str()}"
+            f" color={self.color.group_addr_str()}" if self.supports_color else ""
         )
 
-        str_rgbw = (
-            "" if not self.supports_rgbw else f" rgbw={self.rgbw.group_addr_str()}"
-        )
+        str_rgbw = f" rgbw={self.rgbw.group_addr_str()}" if self.supports_rgbw else ""
 
         str_hue = (
-            ""
-            if not self.hue.initialized
-            else f" brightness={self.hue.group_addr_str()}"
+            f" brightness={self.hue.group_addr_str()}" if self.hue.initialized else ""
         )
 
         str_saturation = (
-            ""
-            if not self.saturation.initialized
-            else f" brightness={self.saturation.group_addr_str()}"
+            f" brightness={self.saturation.group_addr_str()}"
+            if self.saturation.initialized
+            else ""
         )
 
         str_xyy_color = (
-            ""
-            if not self.supports_xyy_color
-            else f" xyy_color={self.xyy_color.group_addr_str()}"
+            f" xyy_color={self.xyy_color.group_addr_str()}"
+            if self.supports_xyy_color
+            else ""
         )
         str_tunable_white = (
-            ""
-            if not self.supports_tunable_white
-            else f" tunable_white={self.tunable_white.group_addr_str()}"
+            f" tunable_white={self.tunable_white.group_addr_str()}"
+            if self.supports_tunable_white
+            else ""
         )
 
         str_color_temperature = (
-            ""
-            if not self.supports_color_temperature
-            else f" color_temperature={self.color_temperature.group_addr_str()}"
+            f" color_temperature={self.color_temperature.group_addr_str()}"
+            if self.supports_color_temperature
+            else ""
         )
 
         str_red_state = (
-            ""
-            if not self.red.switch.initialized
-            else f" red_state={self.red.switch.group_addr_str()}"
+            f" red_state={self.red.switch.group_addr_str()}"
+            if self.red.switch.initialized
+            else ""
         )
         str_red_brightness = (
-            ""
-            if not self.red.brightness.initialized
-            else f" red_brightness={self.red.brightness.group_addr_str()}"
+            f" red_brightness={self.red.brightness.group_addr_str()}"
+            if self.red.brightness.initialized
+            else ""
         )
 
         str_green_state = (
-            ""
-            if not self.green.switch.initialized
-            else f" green_state={self.green.switch.group_addr_str()}"
+            f" green_state={self.green.switch.group_addr_str()}"
+            if self.green.switch.initialized
+            else ""
         )
         str_green_brightness = (
-            ""
-            if not self.green.brightness.initialized
-            else f" green_brightness={self.green.brightness.group_addr_str()}"
+            f" green_brightness={self.green.brightness.group_addr_str()}"
+            if self.green.brightness.initialized
+            else ""
         )
 
         str_blue_state = (
-            ""
-            if not self.blue.switch.initialized
-            else f" blue_state={self.blue.switch.group_addr_str()}"
+            f" blue_state={self.blue.switch.group_addr_str()}"
+            if self.blue.switch.initialized
+            else ""
         )
         str_blue_brightness = (
-            ""
-            if not self.blue.brightness.initialized
-            else f" blue_brightness={self.blue.brightness.group_addr_str()}"
+            f" blue_brightness={self.blue.brightness.group_addr_str()}"
+            if self.blue.brightness.initialized
+            else ""
         )
 
         str_white_state = (
-            ""
-            if not self.white.switch.initialized
-            else f" white_state={self.white.switch.group_addr_str()}"
+            f" white_state={self.white.switch.group_addr_str()}"
+            if self.white.switch.initialized
+            else ""
         )
         str_white_brightness = (
-            ""
-            if not self.white.brightness.initialized
-            else f" white_brightness={self.white.brightness.group_addr_str()}"
+            f" white_brightness={self.white.brightness.group_addr_str()}"
+            if self.white.brightness.initialized
+            else ""
         )
 
         return (

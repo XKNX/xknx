@@ -52,15 +52,17 @@ class Telegram:
         self.timestamp = datetime.now()
         self.tpci: TPCI
         if tpci is None:
-            if isinstance(destination_address, GroupAddress):
-                if destination_address.raw == 0:
-                    self.tpci = TDataBroadcast()
-                else:
-                    self.tpci = TDataGroup()
-            elif isinstance(destination_address, IndividualAddress):
-                self.tpci = TDataIndividual()
-            else:  # InternalGroupAddress
+            if (
+                isinstance(destination_address, GroupAddress)
+                and destination_address.raw == 0
+            ):
+                self.tpci = TDataBroadcast()
+            elif isinstance(destination_address, GroupAddress) or not isinstance(
+                destination_address, IndividualAddress
+            ):
                 self.tpci = TDataGroup()
+            else:
+                self.tpci = TDataIndividual()
         else:
             self.tpci = tpci
 
@@ -96,10 +98,7 @@ class Telegram:
                 return False
             if other.__dict__[key] != value:
                 return False
-        for key, value in other.__dict__.items():
-            if key not in self.__dict__:
-                return False
-        return True
+        return all(key in self.__dict__ for key, value in other.__dict__.items())
 
     def __hash__(self) -> int:
         """Hash function."""

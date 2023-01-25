@@ -209,9 +209,8 @@ class StateUpdater:
         if state == XknxConnectionState.CONNECTED:
             if not self.started:
                 self._start()
-        else:
-            if self.started:
-                self._stop()
+        elif self.started:
+            self._stop()
 
 
 class StateTrackerType(Enum):

@@ -84,7 +84,9 @@ class CEMIHandler:
         if isinstance(telegram.tpci, tpci.TDataGroup):
             self.xknx.telegrams.put_nowait(telegram)
             return
-        if isinstance(telegram.destination_address, IndividualAddress):
-            if telegram.destination_address != self.xknx.current_address:
-                return
+        if (
+            isinstance(telegram.destination_address, IndividualAddress)
+            and telegram.destination_address != self.xknx.current_address
+        ):
+            return
         self.xknx.management.process(telegram)

@@ -308,11 +308,10 @@ class ClimateMode(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
             for rv_mode in self._iter_operation_remote_values():
-                if await rv_mode.process(telegram):
-                    #  ignore inactive RemoteValueBinaryOperationMode
-                    if rv_mode.value:
-                        await self._set_internal_operation_mode(rv_mode.value)
-                        return
+                #  ignore inactive RemoteValueBinaryOperationMode
+                if await rv_mode.process(telegram) and rv_mode.value:
+                    await self._set_internal_operation_mode(rv_mode.value)
+                    return
 
         if self.supports_controller_mode:
             for rv_controller in self._iter_controller_remote_values():

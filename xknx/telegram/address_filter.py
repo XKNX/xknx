@@ -167,7 +167,4 @@ class AddressFilter:
 
         def match(self, digit: int) -> bool:
             """Return if given digit is within range of pattern."""
-            for _range in self.ranges:
-                if _range.match(digit):
-                    return True
-            return False
+            return any(_range.match(digit) for _range in self.ranges)

@@ -40,10 +40,9 @@ class DPTDateTime(DPTBase):
             if weekday == 0:
                 # struct_time has no concept of "no/any day"
                 weekday_invalid = True
-            else:
-                # in knx Sunday is 7; in strftime %w its 0
-                if weekday == 7:
-                    weekday = 0
+            # in knx Sunday is 7; in strftime %w its 0
+            elif weekday == 7:
+                weekday = 0
             # string conversion used for catching exceptions and inferring invalid data
             _time_strings = []
             _time_formats = []

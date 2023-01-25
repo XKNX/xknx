@@ -86,13 +86,16 @@ class Switch(Device):
 
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        if await self.switch.process(telegram):
-            if self.reset_after is not None and self.switch.value:
-                self._reset_task = self.xknx.task_registry.register(
-                    name=self._reset_task_name,
-                    async_func=partial(self._reset_state, self.reset_after),
-                    track_task=True,
-                ).start()
+        if (
+            await self.switch.process(telegram)
+            and self.reset_after is not None
+            and self.switch.value
+        ):
+            self._reset_task = self.xknx.task_registry.register(
+                name=self._reset_task_name,
+                async_func=partial(self._reset_state, self.reset_after),
+                track_task=True,
+            ).start()
 
     async def process_group_read(self, telegram: "Telegram") -> None:
         """Process incoming GroupValueResponse telegrams."""

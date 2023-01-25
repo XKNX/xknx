@@ -258,11 +258,14 @@ class Keyring(AttributeReader):
 
     def get_device_by_interface(self, interface: XMLInterface) -> XMLDevice | None:
         """Get the device for a given interface."""
-        for device in self.devices:
-            if device.individual_address == interface.host:
-                return device
-
-        return None
+        return next(
+            (
+                device
+                for device in self.devices
+                if device.individual_address == interface.host
+            ),
+            None,
+        )
 
     def get_tunnel_interfaces_by_host(
         self, host: IndividualAddress
@@ -321,12 +324,6 @@ class Keyring(AttributeReader):
                 backbone: XMLBackbone = XMLBackbone()
                 backbone.parse_xml(sub_node)
                 self.backbone = backbone
-            if sub_node.nodeName == "GroupAddresses":
-                ga_doc: Document
-                for ga_doc in filter(lambda x: x.nodeType != 3, sub_node.childNodes):
-                    xml_ga: XMLGroupAddress = XMLGroupAddress()
-                    xml_ga.parse_xml(ga_doc)
-                    self.group_addresses.append(xml_ga)
             if sub_node.nodeName == "Devices":
                 device_doc: Document
                 for device_doc in filter(
@@ -335,6 +332,13 @@ class Keyring(AttributeReader):
                     device: XMLDevice = XMLDevice()
                     device.parse_xml(device_doc)
                     self.devices.append(device)
+
+            elif sub_node.nodeName == "GroupAddresses":
+                ga_doc: Document
+                for ga_doc in filter(lambda x: x.nodeType != 3, sub_node.childNodes):
+                    xml_ga: XMLGroupAddress = XMLGroupAddress()
+                    xml_ga.parse_xml(ga_doc)
+                    self.group_addresses.append(xml_ga)
 
     def decrypt(self, password: str) -> None:
         """Decrypt all data."""
@@ -363,11 +367,10 @@ async def load_keyring(
 def _load_keyring(path: str, password: str, validate_signature: bool = True) -> Keyring:
     """Load a .knxkeys file from the given path."""
 
-    if validate_signature:
-        if not verify_keyring_signature(path, password):
-            raise InvalidSecureConfiguration(
-                "Signature verification of keyring file failed. Invalid password or malformed file content."
-            )
+    if validate_signature and not verify_keyring_signature(path, password):
+        raise InvalidSecureConfiguration(
+            "Signature verification of keyring file failed. Invalid password or malformed file content."
+        )
 
     keyring: Keyring = Keyring()
     try:

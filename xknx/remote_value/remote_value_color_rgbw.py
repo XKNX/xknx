@@ -107,7 +107,7 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, tuple[int, int, int, int]]):
         values are initialized to 0.
         """
         _result = list(self.previous_value)
-        for i in range(0, len(payload.value) - 2):
+        for i in range(len(payload.value) - 2):
             if payload.value[5] & (0x08 >> i):  # R,G,B,W value valid?
                 _result[i] = payload.value[i]
         result = (_result[0], _result[1], _result[2], _result[3])

@@ -56,7 +56,7 @@ class Row:
     def __repr__(self):
         def _format_column_ljust(index):
             content = getattr(self, index)
-            return "| " + content.ljust(Row.column_width[index] + 1)
+            return f"| {content.ljust(Row.column_width[index] + 1)}"
 
         _row = ""
         for column in COLUMN_ORDER:
@@ -94,8 +94,8 @@ class DPTRow(Row):
                 if text.startswith("DPT"):
                     return text.split()[1]
         except IndexError:
-            print("Error: Could not read docstring for: %s" % dpt_class)
-        print("Error: Could not find DPT in docstring for: %s" % dpt_class)
+            print(f"Error: Could not read docstring for: {dpt_class}")
+        print(f"Error: Could not find DPT in docstring for: {dpt_class}")
         raise ValueError
 
     def _dpt_number_sort(self, dpt_str: str) -> int:
