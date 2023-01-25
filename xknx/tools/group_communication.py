@@ -82,7 +82,6 @@ async def read_group_value(
     response = await value_reader.read()
     if response is not None:
         assert isinstance(response.payload, (GroupValueWrite, GroupValueResponse))
-        assert response.payload.value is not None
         if transcoder is not None:
             return transcoder.from_knx(response.payload.value.value)  # type: ignore[arg-type]
         return response.payload.value.value

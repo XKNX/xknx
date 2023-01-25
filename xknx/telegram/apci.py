@@ -112,94 +112,99 @@ class APCI(ABC):
         """Get length of APCI payload - to be implemented in derived class."""
 
     @abstractmethod
-    def from_knx(self, raw: bytes) -> None:
-        """Parse/deserialize from KNX/IP raw data - to be implemented in derived class."""
-
-    @abstractmethod
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data - to be implemented in derived class."""
+        # shall return bytearray instead of bytes so TPCI can be
+        # added to first 6 bits of first byte later
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
+        if self.__class__ != other.__class__:
+            return False
         return self.__dict__ == other.__dict__
 
-    @staticmethod
-    def resolve_apci(apci: int) -> APCI:
+    @classmethod
+    @abstractmethod
+    def from_knx(cls, raw: bytes) -> APCI:
         """
-        Return APCI instance from APCI command.
+        Parse/deserialize from KNX/IP raw data - to be implemented in derived class.
+
+        `raw` shall be a complete APDU.
+        Return APCI instance based on APCI service.
 
         There are only 16 possible APCI services. The
         `APCIService.USER_MESSAGE` and `APCIService.ESCAPE` service have
         several sub-services.
         """
+        apci = (raw[0] * 256 + raw[1]) & 0x03FF
         service = apci & 0x03C0
 
         if service == APCIService.GROUP_READ.value:
-            return GroupValueRead()
+            return GroupValueRead.from_knx(raw)
         if service == APCIService.GROUP_WRITE.value:
-            return GroupValueWrite()
+            return GroupValueWrite.from_knx(raw)
         if service == APCIService.GROUP_RESPONSE.value:
-            return GroupValueResponse()
+            return GroupValueResponse.from_knx(raw)
         if service == APCIService.INDIVIDUAL_ADDRESS_WRITE.value:
-            return IndividualAddressWrite()
+            return IndividualAddressWrite.from_knx(raw)
         if service == APCIService.INDIVIDUAL_ADDRESS_READ.value:
-            return IndividualAddressRead()
+            return IndividualAddressRead.from_knx(raw)
         if service == APCIService.INDIVIDUAL_ADDRESS_RESPONSE.value:
-            return IndividualAddressResponse()
+            return IndividualAddressResponse.from_knx(raw)
         if service == APCIService.ADC_READ.value:
-            return ADCRead()
+            return ADCRead.from_knx(raw)
         if service == APCIService.ADC_RESPONSE.value:
-            return ADCResponse()
+            return ADCResponse.from_knx(raw)
         if service == APCIService.MEMORY_READ.value:
-            return MemoryRead()
+            return MemoryRead.from_knx(raw)
         if service == APCIService.MEMORY_WRITE.value:
-            return MemoryWrite()
+            return MemoryWrite.from_knx(raw)
         if service == APCIService.MEMORY_RESPONSE.value:
-            return MemoryResponse()
+            return MemoryResponse.from_knx(raw)
         if service == APCIService.USER_MESSAGE.value:
             if apci == APCIUserService.USER_MEMORY_READ.value:
-                return UserMemoryRead()
+                return UserMemoryRead.from_knx(raw)
             if apci == APCIUserService.USER_MEMORY_RESPONSE.value:
-                return UserMemoryResponse()
+                return UserMemoryResponse.from_knx(raw)
             if apci == APCIUserService.USER_MEMORY_WRITE.value:
-                return UserMemoryWrite()
+                return UserMemoryWrite.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
-                return UserManufacturerInfoRead()
+                return UserManufacturerInfoRead.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
-                return UserManufacturerInfoResponse()
+                return UserManufacturerInfoResponse.from_knx(raw)
             if apci == APCIUserService.FUNCTION_PROPERTY_COMMAND.value:
-                return FunctionPropertyCommand()
+                return FunctionPropertyCommand.from_knx(raw)
             if apci == APCIUserService.FUNCTION_PROPERTY_STATE_READ.value:
-                return FunctionPropertyStateRead()
+                return FunctionPropertyStateRead.from_knx(raw)
             if apci == APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE.value:
-                return FunctionPropertyStateResponse()
+                return FunctionPropertyStateResponse.from_knx(raw)
         if service == APCIService.DEVICE_DESCRIPTOR_READ.value:
-            return DeviceDescriptorRead()
+            return DeviceDescriptorRead.from_knx(raw)
         if service == APCIService.DEVICE_DESCRIPTOR_RESPONSE.value:
-            return DeviceDescriptorResponse()
+            return DeviceDescriptorResponse.from_knx(raw)
         if service == APCIService.RESTART.value:
-            return Restart()
+            return Restart.from_knx(raw)
         if service == APCIService.ESCAPE.value:
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
-                return AuthorizeRequest()
+                return AuthorizeRequest.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
-                return AuthorizeResponse()
+                return AuthorizeResponse.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_READ.value:
-                return PropertyValueRead()
+                return PropertyValueRead.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_WRITE.value:
-                return PropertyValueWrite()
+                return PropertyValueWrite.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_RESPONSE.value:
-                return PropertyValueResponse()
+                return PropertyValueResponse.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_DESCRIPTION_READ.value:
-                return PropertyDescriptionRead()
+                return PropertyDescriptionRead.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value:
-                return PropertyDescriptionResponse()
+                return PropertyDescriptionResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
-                return IndividualAddressSerialRead()
+                return IndividualAddressSerialRead.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
-                return IndividualAddressSerialResponse()
+                return IndividualAddressSerialResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
-                return IndividualAddressSerialWrite()
+                return IndividualAddressSerialWrite.from_knx(raw)
 
         raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
@@ -217,11 +222,11 @@ class GroupValueRead(APCI):
         """Get length of APCI payload."""
         return 1
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupValueRead:
         """Parse/deserialize from KNX/IP raw data."""
-
         # Nothing to parse, but must be implemented explicitly.
-        return
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -241,7 +246,7 @@ class GroupValueWrite(APCI):
 
     CODE = APCIService.GROUP_WRITE
 
-    def __init__(self, value: DPTBinary | DPTArray | None = None) -> None:
+    def __init__(self, value: DPTBinary | DPTArray) -> None:
         """Initialize a new instance of GroupValueWrite."""
         self.value = value
 
@@ -249,26 +254,24 @@ class GroupValueWrite(APCI):
         """Get length of APCI payload."""
         if isinstance(self.value, DPTBinary):
             return 1
-        if isinstance(self.value, DPTArray):
-            return 1 + len(self.value.value)
-        raise TypeError()
+        return 1 + len(self.value.value)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupValueWrite:
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) == 2:
-            self.value = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
-        else:
-            self.value = DPTArray(raw[2:])
+            return cls(value=DPTBinary(raw[1] & DPTBinary.APCI_BITMASK))
+
+        return cls(value=DPTArray(raw[2:]))
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
         if isinstance(self.value, DPTBinary):
             return encode_cmd_and_payload(self.CODE, encoded_payload=self.value.value)
-        if isinstance(self.value, DPTArray):
-            return encode_cmd_and_payload(
-                self.CODE, appended_payload=bytes(self.value.value)
-            )
-        raise TypeError()
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=bytes(self.value.value)
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -284,7 +287,7 @@ class GroupValueResponse(APCI):
 
     CODE = APCIService.GROUP_RESPONSE
 
-    def __init__(self, value: DPTBinary | DPTArray | None = None) -> None:
+    def __init__(self, value: DPTBinary | DPTArray) -> None:
         """Initialize a new instance of GroupValueResponse."""
         self.value = value
 
@@ -292,26 +295,22 @@ class GroupValueResponse(APCI):
         """Get length of APCI payload."""
         if isinstance(self.value, DPTBinary):
             return 1
-        if isinstance(self.value, DPTArray):
-            return 1 + len(self.value.value)
-        raise TypeError()
+        return 1 + len(self.value.value)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupValueResponse:
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) == 2:
-            self.value = DPTBinary(raw[1] & DPTBinary.APCI_BITMASK)
-        else:
-            self.value = DPTArray(raw[2:])
+            return cls(value=DPTBinary(raw[1] & DPTBinary.APCI_BITMASK))
+        return cls(value=DPTArray(raw[2:]))
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
         if isinstance(self.value, DPTBinary):
             return encode_cmd_and_payload(self.CODE, encoded_payload=self.value.value)
-        if isinstance(self.value, DPTArray):
-            return encode_cmd_and_payload(
-                self.CODE, appended_payload=bytes(self.value.value)
-            )
-        raise TypeError()
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=bytes(self.value.value)
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -327,24 +326,19 @@ class IndividualAddressWrite(APCI):
 
     CODE = APCIService.INDIVIDUAL_ADDRESS_WRITE
 
-    def __init__(
-        self,
-        address: IndividualAddress | None = None,
-    ) -> None:
+    def __init__(self, address: IndividualAddress) -> None:
         """Initialize a new instance of IndividualAddressWrite."""
-        if address is None:
-            address = IndividualAddress("0.0.0")
-
         self.address = address
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 3
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressWrite:
         """Parse/deserialize from KNX/IP raw data."""
         (raw_address,) = struct.unpack("!H", raw[2:])
-        self.address = IndividualAddress(raw_address)
+        return cls(address=IndividualAddress(raw_address))
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -364,11 +358,11 @@ class IndividualAddressRead(APCI):
         """Get length of APCI payload."""
         return 1
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressRead:
         """Parse/deserialize from KNX/IP raw data."""
-
         # Nothing to parse, but must be implemented explicitly.
-        return
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -393,11 +387,11 @@ class IndividualAddressResponse(APCI):
         """Get length of APCI payload."""
         return 1
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressResponse:
         """Parse/deserialize from KNX/IP raw data."""
-
         # Nothing to parse, but must be implemented explicitly.
-        return
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -417,7 +411,7 @@ class ADCRead(APCI):
 
     CODE = APCIService.ADC_READ
 
-    def __init__(self, channel: int = 0, count: int = 1) -> None:
+    def __init__(self, channel: int, count: int = 1) -> None:
         """Initialize a new instance of ADCRead."""
         self.channel = channel
         self.count = count
@@ -426,11 +420,15 @@ class ADCRead(APCI):
         """Get length of APCI payload."""
         return 2
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> ADCRead:
         """Parse/deserialize from KNX/IP raw data."""
-        channel, self.count = struct.unpack("!BB", raw[1:])
+        channel, count = struct.unpack("!BB", raw[1:])
 
-        self.channel = channel & DPTBinary.APCI_BITMASK
+        return cls(
+            channel=channel & DPTBinary.APCI_BITMASK,
+            count=count,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -454,7 +452,7 @@ class ADCResponse(APCI):
 
     CODE = APCIService.ADC_RESPONSE
 
-    def __init__(self, channel: int = 0, count: int = 0, value: int = 0) -> None:
+    def __init__(self, channel: int, count: int = 1, value: int = 0) -> None:
         """Initialize a new instance of ADCResponse."""
         self.channel = channel
         self.count = count
@@ -464,11 +462,16 @@ class ADCResponse(APCI):
         """Get length of APCI payload."""
         return 4
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> ADCResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        channel, self.count, self.value = struct.unpack("!BBH", raw[1:])
+        channel, count, value = struct.unpack("!BBH", raw[1:])
 
-        self.channel = channel & DPTBinary.APCI_BITMASK
+        return cls(
+            channel=channel & DPTBinary.APCI_BITMASK,
+            count=count,
+            value=value,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -492,7 +495,7 @@ class MemoryRead(APCI):
 
     CODE = APCIService.MEMORY_READ
 
-    def __init__(self, address: int = 0, count: int = 1) -> None:
+    def __init__(self, address: int, count: int = 1) -> None:
         """Initialize a new instance of MemoryRead."""
         self.address = address
         self.count = count
@@ -501,11 +504,15 @@ class MemoryRead(APCI):
         """Get length of APCI payload."""
         return 3
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryRead:
         """Parse/deserialize from KNX/IP raw data."""
-        count, self.address = struct.unpack("!BH", raw[1:])
+        count, address = struct.unpack("!BH", raw[1:])
 
-        self.count = count & DPTBinary.APCI_BITMASK
+        return cls(
+            address=address,
+            count=count & DPTBinary.APCI_BITMASK,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -534,14 +541,10 @@ class MemoryWrite(APCI):
 
     CODE = APCIService.MEMORY_WRITE
 
-    def __init__(
-        self, address: int = 0, count: int = 1, data: bytes | None = None
-    ) -> None:
+    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
         """Initialize a new instance of MemoryWrite."""
-
-        if data is None:
-            data = bytearray()
-
+        if count is None:
+            count = len(data)
         self.address = address
         self.count = count
         self.data = data
@@ -550,13 +553,18 @@ class MemoryWrite(APCI):
         """Get length of APCI payload."""
         return 3 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryWrite:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 4
 
-        count, self.address, self.data = struct.unpack(f"!BH{size}s", raw[1:])
+        count, address, data = struct.unpack(f"!BH{size}s", raw[1:])
 
-        self.count = count & DPTBinary.APCI_BITMASK
+        return cls(
+            count=count & DPTBinary.APCI_BITMASK,
+            address=address,
+            data=data,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -586,14 +594,10 @@ class MemoryResponse(APCI):
 
     CODE = APCIService.MEMORY_RESPONSE
 
-    def __init__(
-        self, address: int = 0, count: int = 1, data: bytes | None = None
-    ) -> None:
+    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
         """Initialize a new instance of MemoryResponse."""
-
-        if data is None:
-            data = bytearray()
-
+        if count is None:
+            count = len(data)
         self.address = address
         self.count = count
         self.data = data
@@ -602,13 +606,18 @@ class MemoryResponse(APCI):
         """Get length of APCI payload."""
         return 3 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryResponse:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 4
 
-        count, self.address, self.data = struct.unpack(f"!BH{size}s", raw[1:])
+        count, address, data = struct.unpack(f"!BH{size}s", raw[1:])
 
-        self.count = count & DPTBinary.APCI_BITMASK
+        return cls(
+            count=count & DPTBinary.APCI_BITMASK,
+            address=address,
+            data=data,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -646,9 +655,10 @@ class DeviceDescriptorRead(APCI):
         """Get length of APCI payload."""
         return 1
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DeviceDescriptorRead:
         """Parse/deserialize from KNX/IP raw data."""
-        self.descriptor = raw[1] & 0x3F
+        return cls(descriptor=raw[1] & 0x3F)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -680,11 +690,12 @@ class DeviceDescriptorResponse(APCI):
         """Get length of APCI payload."""
         return 3
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DeviceDescriptorResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        self.descriptor, self.value = struct.unpack("!BH", raw[1:])
+        descriptor, value = struct.unpack("!BH", raw[1:])
 
-        self.descriptor = self.descriptor & 0x3F
+        return cls(descriptor=descriptor & 0x3F, value=value)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -718,11 +729,11 @@ class Restart(APCI):
         """Get length of APCI payload."""
         return 1
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> Restart:
         """Parse/deserialize from KNX/IP raw data."""
-
         # Nothing to parse, but must be implemented explicitly.
-        return
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -751,12 +762,15 @@ class UserMemoryRead(APCI):
         """Get length of APCI payload."""
         return 4
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserMemoryRead:
         """Parse/deserialize from KNX/IP raw data."""
         byte0, address = struct.unpack("!BH", raw[2:])
 
-        self.count = byte0 & 0x0F
-        self.address = (((byte0 & 0xF0) >> 4) << 16) + address
+        return cls(
+            count=byte0 & 0x0F,
+            address=(((byte0 & 0xF0) >> 4) << 16) + address,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -786,14 +800,10 @@ class UserMemoryWrite(APCI):
 
     CODE = APCIUserService.USER_MEMORY_WRITE
 
-    def __init__(
-        self, address: int = 0, count: int = 1, data: bytes | None = None
-    ) -> None:
+    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
         """Initialize a new instance of UserMemoryWrite."""
-
-        if data is None:
-            data = bytearray()
-
+        if count is None:
+            count = len(data)
         self.address = address
         self.count = count
         self.data = data
@@ -802,14 +812,18 @@ class UserMemoryWrite(APCI):
         """Get length of APCI payload."""
         return 4 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserMemoryWrite:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 5
 
-        byte0, address, self.data = struct.unpack(f"!BH{size}s", raw[2:])
+        byte0, address, data = struct.unpack(f"!BH{size}s", raw[2:])
 
-        self.count = byte0 & 0x0F
-        self.address = (((byte0 & 0xF0) >> 4) << 16) + address
+        return cls(
+            address=(((byte0 & 0xF0) >> 4) << 16) + address,
+            data=data,
+            count=byte0 & 0x0F,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -840,14 +854,10 @@ class UserMemoryResponse(APCI):
 
     CODE = APCIUserService.USER_MEMORY_RESPONSE
 
-    def __init__(
-        self, address: int = 0, count: int = 1, data: bytes | None = None
-    ) -> None:
+    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
         """Initialize a new instance of UserMemoryResponse."""
-
-        if data is None:
-            data = bytearray()
-
+        if count is None:
+            count = len(data)
         self.address = address
         self.count = count
         self.data = data
@@ -856,14 +866,18 @@ class UserMemoryResponse(APCI):
         """Get length of APCI payload."""
         return 4 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserMemoryResponse:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 5
 
-        byte0, address, self.data = struct.unpack(f"!BH{size}s", raw[2:])
+        byte0, address, data = struct.unpack(f"!BH{size}s", raw[2:])
 
-        self.count = byte0 & 0x0F
-        self.address = (((byte0 & 0xF0) >> 4) << 16) + address
+        return cls(
+            address=(((byte0 & 0xF0) >> 4) << 16) + address,
+            data=data,
+            count=byte0 & 0x0F,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -894,11 +908,11 @@ class UserManufacturerInfoRead(APCI):
         """Get length of APCI payload."""
         return 1
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserManufacturerInfoRead:
         """Parse/deserialize from KNX/IP raw data."""
-
         # Nothing to parse, but must be implemented explicitly.
-        return
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -927,9 +941,11 @@ class UserManufacturerInfoResponse(APCI):
         """Get length of APCI payload."""
         return 4
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserManufacturerInfoResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        self.manufacturer_id, self.data = struct.unpack("!B2s", raw[2:])
+        manufacturer_id, data = struct.unpack("!B2s", raw[2:])
+        return cls(manufacturer_id=manufacturer_id, data=data)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -948,12 +964,9 @@ class FunctionPropertyCommand(APCI):
     CODE = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
     def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: bytes | None = None
+        self, object_index: int = 0, property_id: int = 0, data: bytes = b""
     ) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
-        if data is None:
-            data = b""
-
         self.object_index = object_index
         self.property_id = property_id
         self.data = data
@@ -962,12 +975,15 @@ class FunctionPropertyCommand(APCI):
         """Get length of APCI payload."""
         return 3 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyCommand:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 4
-
-        self.object_index, self.property_id, self.data = struct.unpack(
-            f"!BB{size}s", raw[2:]
+        object_index, property_id, data = struct.unpack(f"!BB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            data=data,
         )
 
     def to_knx(self) -> bytearray:
@@ -990,12 +1006,9 @@ class FunctionPropertyStateRead(APCI):
     CODE = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
     def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: bytes | None = None
+        self, object_index: int = 0, property_id: int = 0, data: bytes = b""
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateRead."""
-        if data is None:
-            data = b""
-
         self.object_index = object_index
         self.property_id = property_id
         self.data = data
@@ -1004,12 +1017,15 @@ class FunctionPropertyStateRead(APCI):
         """Get length of APCI payload."""
         return 3 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyStateRead:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 4
-
-        self.object_index, self.property_id, self.data = struct.unpack(
-            f"!BB{size}s", raw[2:]
+        object_index, property_id, data = struct.unpack(f"!BB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            data=data,
         )
 
     def to_knx(self) -> bytearray:
@@ -1029,19 +1045,16 @@ class FunctionPropertyStateRead(APCI):
 class FunctionPropertyStateResponse(APCI):
     """FunctionPropertyStateResponse service."""
 
-    CODE = APCIUserService.FUNCTION_PROPERTY_STATE_READ
+    CODE = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
 
     def __init__(
         self,
         object_index: int = 0,
         property_id: int = 0,
         return_code: int = 0,
-        data: bytes | None = None,
+        data: bytes = b"",
     ) -> None:
         """Initialize a new instance of FunctionPropertyStateResponse."""
-        if data is None:
-            data = b""
-
         self.object_index = object_index
         self.property_id = property_id
         self.return_code = return_code
@@ -1051,16 +1064,22 @@ class FunctionPropertyStateResponse(APCI):
         """Get length of APCI payload."""
         return 4 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 5
-
         (
-            self.object_index,
-            self.property_id,
-            self.return_code,
-            self.data,
+            object_index,
+            property_id,
+            return_code,
+            data,
         ) = struct.unpack(f"!BBB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            return_code=return_code,
+            data=data,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1093,9 +1112,11 @@ class AuthorizeRequest(APCI):
         """Get length of APCI payload."""
         return 6
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> AuthorizeRequest:
         """Parse/deserialize from KNX/IP raw data."""
-        _, self.key = struct.unpack("!BI", raw[2:])
+        _, key = struct.unpack("!BI", raw[2:])
+        return cls(key=key)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1121,9 +1142,11 @@ class AuthorizeResponse(APCI):
         """Get length of APCI payload."""
         return 2
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> AuthorizeResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        (self.level,) = struct.unpack("!B", raw[2:])
+        (level,) = struct.unpack("!B", raw[2:])
+        return cls(level=level)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1162,16 +1185,21 @@ class PropertyValueRead(APCI):
         """Get length of APCI payload."""
         return 5
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyValueRead:
         """Parse/deserialize from KNX/IP raw data."""
         (
-            self.object_index,
-            self.property_id,
+            object_index,
+            property_id,
             count,
-            self.start_index,
+            start_index,
         ) = struct.unpack("!BBBB", raw[2:])
-
-        self.count = count >> 4
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            count=count >> 4,
+            start_index=(count & 0xF) * 256 + start_index,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1182,8 +1210,8 @@ class PropertyValueRead(APCI):
             "!BBBB",
             self.object_index,
             self.property_id,
-            self.count << 4,
-            self.start_index,
+            (self.count << 4) + (self.start_index >> 8),
+            self.start_index & 0xFF,
         )
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
@@ -1215,13 +1243,9 @@ class PropertyValueWrite(APCI):
         property_id: int = 0,
         count: int = 1,
         start_index: int = 0,
-        data: bytes | None = None,
+        data: bytes = b"",
     ) -> None:
         """Initialize a new instance of PropertyValueWrite."""
-
-        if data is None:
-            data = bytearray()
-
         self.object_index = object_index
         self.property_id = property_id
         self.count = count
@@ -1238,32 +1262,35 @@ class PropertyValueWrite(APCI):
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
-        count = self.count << 4
         payload = struct.pack(
             f"!BBBB{size}s",
             self.object_index,
             self.property_id,
-            count,
-            self.start_index,
+            (self.count << 4) + (self.start_index >> 8),
+            self.start_index & 0xFF,
             self.data,
         )
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyValueWrite:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 6
-
         (
-            _,
-            self.object_index,
-            self.property_id,
-            self.count,
-            self.start_index,
-            self.data,
-        ) = struct.unpack(f"!BBBBB{size}s", raw[1:])
-
-        self.count = self.count >> 4
+            object_index,
+            property_id,
+            count,
+            start_index,
+            data,
+        ) = struct.unpack(f"!BBBB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            count=count >> 4,
+            start_index=(count & 0xF) * 256 + start_index,
+            data=data,
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -1294,13 +1321,9 @@ class PropertyValueResponse(APCI):
         property_id: int = 0,
         count: int = 1,
         start_index: int = 0,
-        data: bytes | None = None,
+        data: bytes = b"",
     ) -> None:
         """Initialize a new instance of PropertyValueResponse."""
-
-        if data is None:
-            data = bytearray()
-
         self.object_index = object_index
         self.property_id = property_id
         self.count = count
@@ -1311,20 +1334,24 @@ class PropertyValueResponse(APCI):
         """Get length of APCI payload."""
         return 5 + len(self.data)
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyValueResponse:
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 6
-
         (
-            _,
-            self.object_index,
-            self.property_id,
-            self.count,
-            self.start_index,
-            self.data,
-        ) = struct.unpack(f"!BBBBB{size}s", raw[1:])
-
-        self.count = self.count >> 4
+            object_index,
+            property_id,
+            count,
+            start_index,
+            data,
+        ) = struct.unpack(f"!BBBB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            count=count >> 4,
+            start_index=(count & 0xF) * 256 + start_index,
+            data=data,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1332,13 +1359,12 @@ class PropertyValueResponse(APCI):
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
-        count = self.count << 4
         payload = struct.pack(
             f"!BBBB{size}s",
             self.object_index,
             self.property_id,
-            count,
-            self.start_index,
+            (self.count << 4) + (self.start_index >> 8),
+            self.start_index & 0xFF,
             self.data,
         )
 
@@ -1374,10 +1400,14 @@ class PropertyDescriptionRead(APCI):
         """Get length of APCI payload."""
         return 4
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyDescriptionRead:
         """Parse/deserialize from KNX/IP raw data."""
-        self.object_index, self.property_id, self.property_index = struct.unpack(
-            "!BBB", raw[2:]
+        object_index, property_id, property_index = struct.unpack("!BBB", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            property_index=property_index,
         )
 
     def to_knx(self) -> bytearray:
@@ -1419,18 +1449,26 @@ class PropertyDescriptionResponse(APCI):
         """Get length of APCI payload."""
         return 8
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyDescriptionResponse:
         """Parse/deserialize from KNX/IP raw data."""
         (
-            self.object_index,
-            self.property_id,
-            self.property_index,
-            self.type,
+            object_index,
+            property_id,
+            property_index,
+            type_,
             max_count,
-            self.access,
+            access,
         ) = struct.unpack("!BBBBHB", raw[2:])
 
-        self.max_count = max_count & 0x0FFF
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            property_index=property_index,
+            type_=type_,
+            max_count=max_count & 0x0FFF,
+            access=access,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1459,20 +1497,19 @@ class IndividualAddressSerialRead(APCI):
 
     CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
 
-    def __init__(self, serial: bytes | None = None) -> None:
+    def __init__(self, serial: bytes) -> None:
         """Initialize a new instance of PropertyDescriptionRead."""
-        if serial is None:
-            serial = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-
         self.serial = serial
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 7
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressSerialRead:
         """Parse/deserialize from KNX/IP raw data."""
-        (self.serial,) = struct.unpack("!6s", raw[2:])
+        (serial,) = struct.unpack("!6s", raw[2:])
+        return cls(serial=serial)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1495,15 +1532,10 @@ class IndividualAddressSerialResponse(APCI):
 
     def __init__(
         self,
-        serial: bytes | None = None,
-        address: IndividualAddress | None = None,
+        serial: bytes,
+        address: IndividualAddress,
     ) -> None:
         """Initialize a new instance of IndividualAddressSerialResponse."""
-        if serial is None:
-            serial = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-        if address is None:
-            address = IndividualAddress("0.0.0")
-
         self.serial = serial
         self.address = address
 
@@ -1511,10 +1543,14 @@ class IndividualAddressSerialResponse(APCI):
         """Get length of APCI payload."""
         return 11
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressSerialResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        self.serial, raw_address, _ = struct.unpack("!6sHH", raw[2:])
-        self.address = IndividualAddress(raw_address)
+        serial, raw_address, _ = struct.unpack("!6sHH", raw[2:])
+        return cls(
+            serial=serial,
+            address=IndividualAddress(raw_address),
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -1537,15 +1573,10 @@ class IndividualAddressSerialWrite(APCI):
 
     def __init__(
         self,
-        serial: bytes | None = None,
-        address: IndividualAddress | None = None,
+        serial: bytes,
+        address: IndividualAddress,
     ) -> None:
         """Initialize a new instance of IndividualAddressSerialWrite."""
-        if serial is None:
-            serial = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-        if address is None:
-            address = IndividualAddress("0.0.0")
-
         self.serial = serial
         self.address = address
 
@@ -1553,10 +1584,14 @@ class IndividualAddressSerialWrite(APCI):
         """Get length of APCI payload."""
         return 13
 
-    def from_knx(self, raw: bytes) -> None:
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressSerialWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        self.serial, raw_address, _ = struct.unpack("!6sHI", raw[2:])
-        self.address = IndividualAddress(raw_address)
+        serial, raw_address, _ = struct.unpack("!6sHI", raw[2:])
+        return cls(
+            serial=serial,
+            address=IndividualAddress(raw_address),
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""

@@ -187,12 +187,10 @@ class CEMIFrame:
                 payload=None,
             )
 
-        _apci = _apdu[0] * 256 + _apdu[1]
         try:
-            payload = APCI.resolve_apci(_apci)
+            payload = APCI.from_knx(_apdu)
         except ConversionError as err:
-            raise UnsupportedCEMIMessage(f"APCI not supported: {_apci:#012b}") from err
-        payload.from_knx(_apdu)
+            raise UnsupportedCEMIMessage("APDU not supported") from err
 
         return CEMIFrame(
             code=code,
