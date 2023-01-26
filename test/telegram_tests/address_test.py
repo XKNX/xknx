@@ -33,7 +33,6 @@ group_addresses_valid = {
     "1": 1,
     0: 0,
     65535: 65535,
-    (0xFF, 0xFF): 65535,
     GroupAddress("1/1/111"): 2415,
     None: 0,
 }
@@ -50,9 +49,8 @@ group_addresses_invalid = [
     "0.0",
     IndividualAddress("11.11.111"),
     65536,
-    (0xFF, 0xFFF),
-    (0xFFF, 0xFF),
-    (-1, -1),
+    (0xAB, 0xCD),
+    -1,
     [],
 ]
 
@@ -68,7 +66,6 @@ individual_addresses_valid = {
     "11.11.111": 47983,
     IndividualAddress("11.11.111"): 47983,
     "15.15.255": 65535,
-    (0xFF, 0xFF): 65535,
     0: 0,
     65535: 65535,
 }
@@ -84,9 +81,8 @@ individual_addresses_invalid = [
     "0/0",
     GroupAddress("1/1/111"),
     65536,
-    (0xFF, 0xFFF),
-    (0xFFF, 0xFF),
-    (-1, -1),
+    (0xAB, 0xCD),
+    -1,
     [],
 ]
 
@@ -140,9 +136,10 @@ class TestIndividualAddress:
         """Test initialization with free format address as integer."""
         assert IndividualAddress(49552).raw == 49552
 
-    def test_with_bytes(self):
+    def test_from_knx(self):
         """Test initialization with Bytes."""
-        assert IndividualAddress((0x12, 0x34)).raw == 0x1234
+        ia = IndividualAddress.from_knx(bytes((0x12, 0x34)))
+        assert ia.raw == 0x1234
 
     def test_with_none(self):
         """Test initialization with None object."""
@@ -159,9 +156,9 @@ class TestIndividualAddress:
         assert not IndividualAddress("1.0.0").is_device
 
     def test_to_knx(self):
-        """Test if `IndividualAddress.to_knx()` generates valid byte tuples."""
-        assert IndividualAddress("0.0.0").to_knx() == (0x0, 0x0)
-        assert IndividualAddress("15.15.255").to_knx() == (0xFF, 0xFF)
+        """Test if `IndividualAddress.to_knx()` generates valid byte objects."""
+        assert IndividualAddress("0.0.0").to_knx() == bytes((0x0, 0x0))
+        assert IndividualAddress("15.15.255").to_knx() == bytes((0xFF, 0xFF))
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""
@@ -261,10 +258,15 @@ class TestGroupAddress:
         assert GroupAddress("1/0").sub == 2048
         assert GroupAddress("31/2047").sub == 65535
 
+    def test_from_knx(self):
+        """Test initialization with Bytes."""
+        ga = GroupAddress.from_knx(bytes((0x12, 0x34)))
+        assert ga.raw == 0x1234
+
     def test_to_knx(self):
         """Test if `GroupAddress.to_knx()` generates valid byte tuples."""
-        assert GroupAddress("0/0").to_knx() == (0x0, 0x0)
-        assert GroupAddress("31/2047").to_knx() == (0xFF, 0xFF)
+        assert GroupAddress("0/0").to_knx() == bytes((0x0, 0x0))
+        assert GroupAddress("31/2047").to_knx() == bytes((0xFF, 0xFF))
 
     def test_equal(self):
         """Test if the equal operator works in all cases."""

@@ -6,6 +6,14 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internals
+
+- Return `bytes` from `BaseAddress.to_knx()` instead of `tuple[int, int]`. This is used in `IndividualAddress` and `GroupAddress`.
+- Add `BaseAddress.from_knx()` to instantiate from `bytes`, remove instantiation form `tuple[int, int]`.
+- Refactor APCI to return complete Subclass `APCI.from_knx()` and removed `APCI.resolve_apci()`.
+
 # 2.3.0 Routing security, DPTs and CEMI-Refactoring 2023-01-10
 
 ### DPTs
