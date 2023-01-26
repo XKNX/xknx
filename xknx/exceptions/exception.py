@@ -155,8 +155,12 @@ class DeviceIllegalValue(XKNXException):
         return f'<DeviceIllegalValue description="{self.value}" value="{self.description}" />'
 
 
+class DataSecureException(XKNXException):
+    """Exception class for KNX Data Secure handling."""
+
+
 class SecureException(XKNXException):
-    """Exception class for ip secure handling."""
+    """Exception class for IP secure handling."""
 
 
 class InvalidSecureConfiguration(SecureException):

@@ -164,6 +164,7 @@ class XMLGroupAddress(AttributeReader):
     """Group Address in a knxkeys file."""
 
     address: GroupAddress
+    decrypted_key: bytes | None = None
     key: str
 
     def parse_xml(self, node: Document) -> None:
@@ -171,6 +172,15 @@ class XMLGroupAddress(AttributeReader):
         attributes = node.attributes
         self.address = GroupAddress(self.get_attribute_value(attributes.get("Address")))
         self.key = self.get_attribute_value(attributes.get("Key"))
+
+    def decrypt_attributes(
+        self, password_hash: bytes, initialization_vector: bytes
+    ) -> None:
+        """Decrypt attribute data."""
+        if self.key:
+            self.decrypted_key = decrypt_aes128cbc(
+                base64.b64decode(self.key), password_hash, initialization_vector
+            )
 
 
 class XMLDevice(AttributeReader):

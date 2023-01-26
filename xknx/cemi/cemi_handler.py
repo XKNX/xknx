@@ -74,6 +74,7 @@ class CEMIHandler:
             logger.warning("Received unexpected L_DATA_REQ frame: %s", cemi)
             return
 
+        # TODO: check if DataSecure and pass CEMIFrame (do we have to decrypt L_DATA_CON?)
         # TODO: remove telegram init from CEMIFrame class and move it here?
         telegram = cemi.telegram
         telegram.direction = TelegramDirection.INCOMING
