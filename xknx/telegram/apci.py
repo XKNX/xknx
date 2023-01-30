@@ -15,9 +15,8 @@ from typing import ClassVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
+from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
 from xknx.telegram.address import IndividualAddress
-
-from .apci_data_secure import SecurityControlFiled
 
 
 def encode_cmd_and_payload(
@@ -1619,7 +1618,7 @@ class SecureAPDU(APCI):
 
     CODE = APCIExtendedService.APCI_SEC
 
-    def __init__(self, scf: SecurityControlFiled, secured_data: bytes = b"") -> None:
+    def __init__(self, scf: SecurityControlField, secured_data: SecureData) -> None:
         """Initialize a new instance of AuthorizeRequest."""
         self.scf = scf
         self.secured_data = secured_data
@@ -1631,14 +1630,14 @@ class SecureAPDU(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> SecureAPDU:
         """Parse/deserialize from KNX/IP raw data."""
-        return cls(scf=SecurityControlFiled.from_knx(raw[2]), secured_data=raw[3:])
+        return cls(
+            scf=SecurityControlField.from_knx(raw[2]),
+            secured_data=SecureData.from_knx(raw[3:]),
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.scf is None:
-            raise ConversionError("scf must not be None.")
-        payload = self.scf.to_knx() + self.secured_data
-
+        payload = self.scf.to_knx() + self.secured_data.to_knx()
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
