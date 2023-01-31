@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
-from xknx.exceptions import DataSecureException
+from xknx.exceptions import DataSecureError
 from xknx.telegram.tpci import TPCI
 
 # TODO: move to other module
@@ -177,7 +177,7 @@ class SecureData:
                 payload=apdu,
             )
         else:
-            raise DataSecureException(f"Unknown secure algorithm {scf.algorithm}")
+            raise DataSecureError(f"Unknown secure algorithm {scf.algorithm}")
 
         return SecureData(
             sequence_number_bytes=sequence_number_bytes,
@@ -239,7 +239,7 @@ class SecureData:
                 ),
             )[:4]
             if mac_cbc != mac_tr:
-                raise DataSecureException("Data Secure MAC verification failed")
+                raise DataSecureError("Data Secure MAC verification failed")
             return dec_payload
 
         if scf.algorithm == SecurityAlgorithmIdentifier.CCM_AUTHENTICATION:
@@ -255,9 +255,9 @@ class SecureData:
                 ),
             )[:4]
             if mac != self.message_authentication_code:
-                raise DataSecureException(
+                raise DataSecureError(
                     "Message authentication code verification failed."
                 )
             return self.secured_apdu
 
-        raise DataSecureException(f"Unknown secure algorithm {scf.algorithm}")
+        raise DataSecureError(f"Unknown secure algorithm {scf.algorithm}")

@@ -141,14 +141,15 @@ class TestKNXIPInterface:
         with patch("xknx.io.KNXIPInterface._start_routing") as start_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
-            start_routing.assert_called_once_with(
-                local_ip=local_ip, multicast_group="224.0.23.12", multicast_port=3671
-            )
+            start_routing.assert_called_once_with()
+
         with patch("xknx.io.routing.Routing.connect") as connect_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             assert isinstance(interface._interface, Routing)
             assert interface._interface.local_ip == local_ip
+            assert interface._interface.multicast_group == "224.0.23.12"
+            assert interface._interface.multicast_port == 3671
             assert (  # pylint: disable=comparison-with-callable
                 interface._interface.cemi_received_callback == interface.cemi_received
             )

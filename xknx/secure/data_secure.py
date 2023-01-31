@@ -5,10 +5,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import copy
 from datetime import datetime, timezone
+import logging
 import time
 
 from xknx.cemi import CEMIFrame
-from xknx.exceptions import DataSecureException
+from xknx.exceptions import DataSecureError
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, SecureAPDU
 
@@ -18,6 +19,9 @@ from .data_secure_asdu import (
     SecurityALService,
     SecurityControlField,
 )
+from .keyring import Keyring
+
+_LOGGER = logging.getLogger("xknx.data_secure")
 
 # Same timedelta in milliseconds as used in Falcon used for initial sequence_number_sending
 # py3.10 backwards compatibility - py3.11 "2018-01-05T00:00:00Z" is supported
@@ -51,11 +55,48 @@ class DataSecure:
         self._individual_address_table = individual_address_table
 
         if not 0 < self._sequence_number_sending < 0xFFFFFFFFFFFF:
-            _local_time_info = f" Local time not set properly? {datetime.now(timezone.utc).isoformat()}"
-            raise DataSecureException(
-                f"Initial sequence number out of range: {self._sequence_number_sending}"
-                f"{_local_time_info if not last_sequence_number_sending else ''}"
+            _local_time_info = (
+                f" Local time not set properly? {datetime.now(timezone.utc).isoformat()}"
+                if not last_sequence_number_sending
+                else ""
             )
+            raise DataSecureError(
+                f"Initial sequence number out of range: {self._sequence_number_sending}"
+                f"{_local_time_info}"
+            )
+        _LOGGER.debug(
+            "Data Secure initialized for GroupAddresses: %s\nfrom IndividualAddresses: %s",
+            [str(ga) for ga in self.group_key_table],
+            [str(ia) for ia in self._individual_address_table],
+        )
+
+    @staticmethod
+    def init_from_keyring(keyring: Keyring) -> DataSecure | None:
+        """
+        Initialize DataSecure from Keyring.
+
+        Return None if no Data Secure information is found in the Keyring.
+        """
+        ga_key_table: dict[GroupAddress, bytes] = {}
+        ia_seq_table: dict[IndividualAddress, int] = {}
+
+        for xml_ga in keyring.group_addresses:
+            if xml_ga.decrypted_key is not None:
+                ga_key_table[xml_ga.address] = xml_ga.decrypted_key
+
+        for xml_ia in keyring.devices:
+            # TODO: check if this should default to 0 or if devices without a sequence number
+            #       in keyfile should be excluded from the table
+            ia_seq_table[xml_ia.individual_address] = xml_ia.sequence_number
+        # TODO: persist local individual_address_table and update from that file on start
+        #       to have more fresh initial sequence numbers
+
+        if not ga_key_table:
+            return None
+        return DataSecure(
+            group_key_table=ga_key_table,
+            individual_address_table=ia_seq_table,
+        )
 
     def get_sequence_number(self) -> int:
         """Return current sequence number sending and increment local stored value."""
@@ -71,23 +112,23 @@ class DataSecure:
         Check the last valid sequence number for incoming frames from `source_address`.
 
         Update the Security Individual Address Table if no further exception is raised.
-        Raise `DataSecureException` if sequence number is invalid or sender is not known.
+        Raise `DataSecureError` if sequence number is invalid or sender is not known.
         """
         try:
             last_valid_sequence_number = self._individual_address_table[source_address]
         except KeyError:
-            raise DataSecureException(
+            raise DataSecureError(
                 f"Source address not found in Security Individual Address Table: {source_address}"
             )
-        if last_valid_sequence_number <= received_sequence_number:
+        if not received_sequence_number > last_valid_sequence_number:
             # TODO: implement and increment Security Failure Log counter (not when equal)
-            raise DataSecureException(
+            raise DataSecureError(
                 f"Sequence number too low for {source_address}: "
                 f"{received_sequence_number} received, {last_valid_sequence_number} last valid"
             )
         try:
             yield
-        except DataSecureException:
+        except DataSecureError:
             # Don't increment sequence number if exception is raised while decrypting
             raise
         self._individual_address_table[source_address] = received_sequence_number
@@ -100,7 +141,7 @@ class DataSecure:
         # Plain group communication frame
         if isinstance(cemi.dst_addr, GroupAddress):
             if cemi.dst_addr in self.group_key_table:
-                raise DataSecureException(
+                raise DataSecureError(
                     f"Discarding frame with plain APDU for secure group address: {cemi}"
                 )
             return cemi
@@ -113,26 +154,24 @@ class DataSecure:
     def _received_secure_cemi(self, cemi: CEMIFrame, s_apdu: SecureAPDU) -> CEMIFrame:
         """Handle received secured CEMI frame."""
         if s_apdu.scf.service is not SecurityALService.S_A_DATA:
-            raise DataSecureException(
-                f"Only SecurityALService.S_A_DATA supported {cemi}"
-            )
+            raise DataSecureError(f"Only SecurityALService.S_A_DATA supported {cemi}")
         if s_apdu.scf.system_broadcast or s_apdu.scf.tool_access:
             # TODO: handle incoming responses with tool key of sending device
             # when we can send with tool key
-            raise DataSecureException(
+            raise DataSecureError(
                 f"System broadcast and tool access not supported {cemi}"
             )
 
         # Secure group communication frame
         if isinstance(cemi.dst_addr, GroupAddress):
             if not (key := self.group_key_table.get(cemi.dst_addr)):
-                raise DataSecureException(
+                raise DataSecureError(
                     f"No key found for group address {cemi.dst_addr} from {cemi.src_addr}"
                 )
         # Secure point-to-point frame
         else:
             # TODO: maybe possible to implement this over tool key
-            raise DataSecureException(
+            raise DataSecureError(
                 f"Secure Point-to-Point communication not supported {cemi}"
             )
 
