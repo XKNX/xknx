@@ -70,7 +70,8 @@ class DataSecure:
             len(self._individual_address_table),
         )
         _LOGGER.debug(
-            "Data Secure groups: %s, senders: %s",
+            "Data Secure initial sequence number: %s, groups: %s, senders: %s",
+            self._sequence_number_sending,
             [str(ga) for ga in self.group_key_table],
             [str(ia) for ia in self._individual_address_table],
         )
@@ -131,11 +132,9 @@ class DataSecure:
                 f"Sequence number too low for {source_address}: "
                 f"{received_sequence_number} received, {last_valid_sequence_number} last valid"
             )
-        try:
-            yield
-        except DataSecureError:
-            # Don't increment sequence number if exception is raised while decrypting
-            raise
+
+        yield
+        # Don't increment sequence number if exception is raised while decrypting (yield)
         self._individual_address_table[source_address] = received_sequence_number
 
     def received_cemi(self, cemi: CEMIFrame) -> CEMIFrame:
