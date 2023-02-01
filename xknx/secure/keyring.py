@@ -258,14 +258,11 @@ class Keyring(AttributeReader):
 
     def get_device_by_interface(self, interface: XMLInterface) -> XMLDevice | None:
         """Get the device for a given interface."""
-        return next(
-            (
-                device
-                for device in self.devices
-                if device.individual_address == interface.host
-            ),
-            None,
-        )
+        for device in self.devices:
+            if device.individual_address == interface.host:
+                return device
+
+        return None
 
     def get_tunnel_interfaces_by_host(
         self, host: IndividualAddress

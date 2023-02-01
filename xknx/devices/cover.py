@@ -355,10 +355,9 @@ class Cover(Device):
                     target_position=self.travelcalculator.position_closed
                 )
         # stop from bus
-        if (
-            await self.stop_.process(telegram) or await self.step.process(telegram)
-        ) and self.is_traveling():
-            await self._stop_position_update()
+        if await self.stop_.process(telegram) or await self.step.process(telegram):
+            if self.is_traveling():
+                await self._stop_position_update()
 
         await self.position_current.process(telegram, always_callback=True)
         await self.position_target.process(telegram)

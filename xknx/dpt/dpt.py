@@ -109,28 +109,20 @@ class DPTBase(ABC):
         cls: T, dpt_main: int, dpt_sub: int | None = None
     ) -> T | None:
         """Return Class reference of DPTBase subclass with matching DPT number."""
-        return next(
-            (
-                dpt
-                for dpt in cls.dpt_class_tree()
-                if dpt.has_distinct_dpt_numbers()
-                and dpt_main == dpt.dpt_main_number
-                and dpt_sub == dpt.dpt_sub_number
-            ),
-            None,
-        )
+        for dpt in cls.dpt_class_tree():
+            if dpt.has_distinct_dpt_numbers():
+                if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
+                    return dpt
+        return None
 
     @classmethod
     def transcoder_by_value_type(cls: T, value_type: str) -> T | None:
         """Return Class reference of DPTBase subclass with matching value_type."""
-        return next(
-            (
-                dpt
-                for dpt in cls.dpt_class_tree()
-                if dpt.has_distinct_value_type() and value_type == dpt.value_type
-            ),
-            None,
-        )
+        for dpt in cls.dpt_class_tree():
+            if dpt.has_distinct_value_type():
+                if value_type == dpt.value_type:
+                    return dpt
+        return None
 
     @classmethod
     def parse_transcoder(cls: T, value_type: int | str) -> T | None:

@@ -52,17 +52,15 @@ class Telegram:
         self.timestamp = datetime.now()
         self.tpci: TPCI
         if tpci is None:
-            if (
-                isinstance(destination_address, GroupAddress)
-                and destination_address.raw == 0
-            ):
-                self.tpci = TDataBroadcast()
-            elif isinstance(destination_address, GroupAddress) or not isinstance(
-                destination_address, IndividualAddress
-            ):
-                self.tpci = TDataGroup()
-            else:
+            if isinstance(destination_address, GroupAddress):
+                if destination_address.raw == 0:
+                    self.tpci = TDataBroadcast()
+                else:
+                    self.tpci = TDataGroup()
+            elif isinstance(destination_address, IndividualAddress):
                 self.tpci = TDataIndividual()
+            else:  # InternalGroupAddress
+                self.tpci = TDataGroup()
         else:
             self.tpci = tpci
 
