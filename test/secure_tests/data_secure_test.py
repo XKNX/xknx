@@ -68,8 +68,8 @@ class TestDataSecure:
             mock_ds_received_cemi.assert_called_once()
             mock_telegram_received.assert_called_once()
 
-    def test_data_secure_group_receive(self) -> None:
-        """Test incoming DataSecure group communication."""
+    def test_data_secure_group_send(self) -> None:
+        """Test outgoing DataSecure group communication."""
         xknx = XKNX()
         xknx.knxip_interface = AsyncMock()
         xknx.current_address = IndividualAddress("5.0.1")
@@ -95,8 +95,12 @@ class TestDataSecure:
         # sequence number sending was incremented
         assert data_secure._sequence_number_sending == 160170101608
 
-    def test_data_secure_group_send(self) -> None:
-        """Test outgoing DataSecure group communication."""
+        assert secured_frame.to_knx() == bytes.fromhex(
+            "1100bce0500104000e03f11000254ae1cb67cd184afe5744"
+        )
+
+    def test_data_secure_group_receive(self) -> None:
+        """Test incoming DataSecure group communication."""
         xknx = XKNX()
         xknx.current_address = IndividualAddress("5.0.1")
         xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
