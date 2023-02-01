@@ -103,10 +103,10 @@ class SecurityControlField:
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            f'<SecurityControlField tool_access="{self.tool_access}" '
-            f'algorithm="{self.algorithm}" '
-            f'system_broadcast="{self.system_broadcast}" '
-            f'service="{self.service}" />'
+            f"<SecurityControlField tool_access={self.tool_access} "
+            f"algorithm={self.algorithm.name} "
+            f"system_broadcast={self.system_broadcast} "
+            f"service={self.service.name} />"
         )
 
 
@@ -255,9 +255,16 @@ class SecureData:
                 ),
             )[:4]
             if mac != self.message_authentication_code:
-                raise DataSecureError(
-                    "Message authentication code verification failed."
-                )
+                raise DataSecureError("Data Secure MAC verification failed.")
             return self.secured_apdu
 
         raise DataSecureError(f"Unknown secure algorithm {scf.algorithm}")
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<SecureData "
+            f"sequence_number={int.from_bytes(self.sequence_number_bytes, 'big')} "
+            f'secured_apdu="{self.secured_apdu.hex()}" '
+            f'message_authentication_code="{self.message_authentication_code.hex()}" />'
+        )

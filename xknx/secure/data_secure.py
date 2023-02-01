@@ -190,6 +190,7 @@ class DataSecure:
                 tpci=cemi.tpci,
             )
         decrypted_payload = APCI.from_knx(plain_apdu_raw)
+        _LOGGER.debug("Unpacked APDU %s from %s", decrypted_payload, s_apdu)
         plain_cemi = copy(cemi)
         plain_cemi.payload = decrypted_payload
         return plain_cemi
@@ -235,4 +236,5 @@ class DataSecure:
         )
         secure_cemi = copy(cemi)
         secure_cemi.payload = SecureAPDU(scf=scf, secured_data=secure_asdu)
+        _LOGGER.debug("Secured APDU %s with %s", cemi.payload, secure_cemi.payload)
         return secure_cemi
