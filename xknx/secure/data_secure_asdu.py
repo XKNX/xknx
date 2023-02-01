@@ -13,7 +13,9 @@ from .ip_secure import (
     encrypt_data_ctr,
 )
 
-APCI_SEC = 0x03F1
+# Secure APCI is 0x03F1 - in block_0 it is used split into 2 octets
+_APCI_SEC_HIGH = 0x03
+_APCI_SEC_LOW = 0xF1
 # only Address Type (IA / GA) and Extended Frame format are used
 B0_AT_FIELD_FLAGS_MASK = 0b10001111
 
@@ -29,11 +31,16 @@ def block_0(
     return (
         sequence_number
         + address_fields_raw
-        + b"\x00"
-        + (frame_flags & B0_AT_FIELD_FLAGS_MASK).to_bytes(1, "big")
-        + ((tpci_int << 10) + APCI_SEC).to_bytes(2, "big")  # TODO: refactor this?
-        + b"\x00"
-        + payload_length.to_bytes(1, "big")
+        + bytes(
+            (
+                0,
+                frame_flags & B0_AT_FIELD_FLAGS_MASK,
+                (tpci_int << 2) + _APCI_SEC_HIGH,
+                _APCI_SEC_LOW,
+                0,
+                payload_length,
+            )
+        )
     )
 
 
