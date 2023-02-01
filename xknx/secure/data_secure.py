@@ -64,8 +64,13 @@ class DataSecure:
                 f"Initial sequence number out of range: {self._sequence_number_sending}"
                 f"{_local_time_info}"
             )
+        _LOGGER.info(
+            "Data Secure initialized for %s group addresses from %s individual addresses.",
+            len(self.group_key_table),
+            len(self._individual_address_table),
+        )
         _LOGGER.debug(
-            "Data Secure initialized for GroupAddresses: %s\nfrom IndividualAddresses: %s",
+            "Data Secure groups: %s, senders: %s",
             [str(ga) for ga in self.group_key_table],
             [str(ia) for ia in self._individual_address_table],
         )

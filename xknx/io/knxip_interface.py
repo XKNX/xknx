@@ -115,10 +115,6 @@ class KNXIPInterface:
                 keyring=keyring,
             )
         else:
-            if keyring is not None and keyring.group_addresses:
-                logger.warning(
-                    "Data Secure communication is not supported for automatic interface discovery mode."
-                )
             await self._start_automatic()
 
     async def _start_automatic(self) -> None:
