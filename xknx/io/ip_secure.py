@@ -28,7 +28,7 @@ from xknx.knxip import (
     TimerNotify,
 )
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
-from xknx.secure.ip_secure import (
+from xknx.secure.security_primitives import (
     calculate_message_authentication_code_cbc,
     decrypt_ctr,
     derive_device_authentication_password,

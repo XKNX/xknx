@@ -6,8 +6,7 @@ from enum import IntEnum
 from xknx.exceptions import DataSecureError
 from xknx.telegram.tpci import TPCI
 
-# TODO: move to other module
-from .ip_secure import (
+from .security_primitives import (
     calculate_message_authentication_code_cbc,
     decrypt_ctr,
     encrypt_data_ctr,
