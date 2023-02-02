@@ -355,10 +355,7 @@ class TestClimate:
 
         await climate_mode.set_operation_mode(HVACOperationMode.COMFORT)
         assert xknx.telegrams.qsize() == 4
-        telegrams = []
-        for _ in range(4):
-            telegrams.append(xknx.telegrams.get_nowait())
-
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
         test_telegrams = [
             Telegram(
                 destination_address=GroupAddress("1/2/4"),
@@ -982,9 +979,7 @@ class TestClimate:
         await climate_mode.sync()
         assert xknx.telegrams.qsize() == 3
 
-        telegrams = []
-        for _ in range(3):
-            telegrams.append(xknx.telegrams.get_nowait())
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(3)]
         assert telegrams == [
             Telegram(GroupAddress("1/2/5"), payload=GroupValueRead()),
             Telegram(GroupAddress("1/2/6"), payload=GroupValueRead()),

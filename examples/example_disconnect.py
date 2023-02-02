@@ -29,7 +29,7 @@ async def main():
     await udp_transport.connect()
     local_hpai = HPAI(*udp_transport.getsockname())
 
-    for i in range(0, 255):
+    for i in range(255):
 
         conn_state = ConnectionState(
             udp_transport, communication_channel_id=i, local_hpai=local_hpai

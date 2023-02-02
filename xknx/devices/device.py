@@ -128,10 +128,10 @@ class Device(ABC):
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
-        for remote_value in self._iter_remote_values():
-            if remote_value.has_group_address(group_address):
-                return True
-        return False
+        return any(
+            remote_value.has_group_address(group_address)
+            for remote_value in self._iter_remote_values()
+        )
 
     def __eq__(self, other: object) -> bool:
         """Compare for quality."""

@@ -297,10 +297,7 @@ class TestLight:
         await light.sync()
         assert xknx.telegrams.qsize() == expected_telegrams
 
-        telegrams = []
-        for _ in range(expected_telegrams):
-            telegrams.append(xknx.telegrams.get_nowait())
-
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(expected_telegrams)]
         test_telegrams = [
             Telegram(
                 destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()

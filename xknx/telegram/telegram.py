@@ -96,10 +96,7 @@ class Telegram:
                 return False
             if other.__dict__[key] != value:
                 return False
-        for key, value in other.__dict__.items():
-            if key not in self.__dict__:
-                return False
-        return True
+        return all(key in self.__dict__ for key in other.__dict__)
 
     def __hash__(self) -> int:
         """Hash function."""

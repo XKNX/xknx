@@ -245,11 +245,10 @@ class _DIBServiceFamilies(DIB):
 
     def supports(self, name: DIBServiceFamily, version: int | None = None) -> bool:
         """Return if device supports a given service family by name and optional minimum version."""
-        for family in self.families:
-            if name == family.name:
-                if version is None or family.version >= version:
-                    return True
-        return False
+        return any(
+            name == family.name and (version is None or family.version >= version)
+            for family in self.families
+        )
 
     def version(self, name: DIBServiceFamily) -> int | None:
         """Return version of a given service family."""

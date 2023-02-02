@@ -25,7 +25,7 @@ class TestKNXIPRountingIndication:
         raw = bytes.fromhex("06 10 05 30 00 12 29 00 bc d0 12 02 01 51 02 00 40 f0")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
 
-        assert knxipframe.header.to_knx() == raw[0:6]
+        assert knxipframe.header.to_knx() == raw[:6]
         assert knxipframe.body.to_knx() == raw[6:]
         assert knxipframe.to_knx() == raw
 
@@ -49,7 +49,7 @@ class TestKNXIPRountingIndication:
             "06 10 05 30 00 14 29 00 bc d0 12 02 01 51 04 00 80 0d 17 2a"
         )
 
-        assert knxipframe.header.to_knx() == raw[0:6]
+        assert knxipframe.header.to_knx() == raw[:6]
         assert knxipframe.body.to_knx() == raw[6:]
         assert knxipframe.to_knx() == raw
 
@@ -63,7 +63,7 @@ class TestKNXIPRountingIndication:
         routing_indication = RoutingIndication(raw_cemi=raw_cemi)
         knxipframe2 = KNXIPFrame.init_from_body(routing_indication)
 
-        assert knxipframe2.header.to_knx() == raw[0:6]
+        assert knxipframe2.header.to_knx() == raw[:6]
         assert knxipframe2.body.to_knx() == raw[6:]
         assert knxipframe2.to_knx() == raw
 
