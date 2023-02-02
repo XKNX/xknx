@@ -50,16 +50,16 @@ class CEMIHandler:
         except (ConversionError, CommunicationError) as ex:
             logger.warning("Could not send CEMI frame: %s for %s", ex, cemi)
             raise ex
-        else:
-            try:
-                await asyncio.wait_for(
-                    self._l_data_confirmation_event.wait(),
-                    timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
-                )
-            except asyncio.TimeoutError:
-                raise ConfirmationError(
-                    f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
-                )
+
+        try:
+            await asyncio.wait_for(
+                self._l_data_confirmation_event.wait(),
+                timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            raise ConfirmationError(
+                f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
+            )
 
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Parse and handle incoming CEMI Frames."""
