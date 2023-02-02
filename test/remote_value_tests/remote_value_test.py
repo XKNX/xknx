@@ -112,7 +112,6 @@ class TestRemoteValue:
         with patch(
             "xknx.remote_value.RemoteValue.has_group_address", remote_value=True
         ):
-
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
                 payload=GroupValueWrite(DPTArray((0x01, 0x02))),
