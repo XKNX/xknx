@@ -87,8 +87,8 @@ class TestDataSecure:
         )
         secured_frame = data_secure.outgoing_cemi(test_cemi)
         assert isinstance(secured_frame.payload, apci.SecureAPDU)
-        print(secured_frame.payload.scf)
         secured_asdu = secured_frame.payload.secured_data
+
         assert int.from_bytes(secured_asdu.sequence_number_bytes, "big") == 160170101607
         assert secured_asdu.secured_apdu == bytes.fromhex("cd18")
         assert secured_asdu.message_authentication_code == bytes.fromhex("4afe5744")
@@ -121,3 +121,30 @@ class TestDataSecure:
             data_secure._individual_address_table[IndividualAddress("4.0.9")]
             == 155806854986
         )
+
+    def test_data_secure_individual_receive(self) -> None:
+        """Test incoming DataSecure point-to-point communication."""
+        # Property Value Write PID_GRP_KEY_TABLE connectionless
+        # Objet Idx = 5, PropId = 35h, Element Count = 1, Index = 1
+        # Data = 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+        # A+C
+        # from AN158 v07 KNX Data Security AS - Annex A example
+        xknx = XKNX()
+        xknx.current_address = IndividualAddress("15.15.0")
+        xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
+
+        test_cemi = CEMIFrame.from_knx(
+            bytes.fromhex(
+                "29 00 b0 60 ff 67 ff 00 22 03 f1 90 00 00 00 00"
+                "00 04 67 67 24 2a 23 08 ca 76 a1 17 74 21 4e e4"
+                "cf 5d 94 90 9f 74 3d 05 0d 8f c1 68"
+            )
+        )
+        assert isinstance(test_cemi.payload, apci.SecureAPDU)
+
+        with pytest.raises(
+            DataSecureError, match=r"System broadcast and tool access not supported.*"
+        ):
+            xknx.cemi_handler._data_secure.received_cemi(test_cemi)
+        # don't raise through handle_cemi_frame()
+        assert xknx.cemi_handler.handle_cemi_frame(test_cemi) is None
