@@ -125,12 +125,12 @@ class _Tunnel(Interface):
             raise CommunicationError(
                 "Tunnel connection could not be established"
             ) from ex
-        else:
-            self._tunnel_established()
-            await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
-            )
-            return True
+
+        self._tunnel_established()
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        return True
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
