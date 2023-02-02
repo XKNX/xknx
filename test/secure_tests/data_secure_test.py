@@ -224,6 +224,17 @@ class TestDataSecure:
         ):
             self.data_secure.received_cemi(test_group_response_cemi)
 
+    def test_data_secure_group_receive_wrong_mac(self, test_group_response_cemi):
+        """Test incoming DataSecure group communication with wrong MAC."""
+        test_group_response_cemi.payload.secured_data.message_authentication_code = (
+            bytes(4)
+        )
+        with pytest.raises(
+            DataSecureError,
+            match=r"Data Secure MAC verification failed.*",
+        ):
+            self.data_secure.received_cemi(test_group_response_cemi)
+
     def test_data_secure_group_receive_plain_frame(self):
         """Test incoming DataSecure group communication with plain frame."""
         src_addr = IndividualAddress("4.0.9")
