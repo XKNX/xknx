@@ -9,8 +9,11 @@ from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import DataSecureError
-
-# from xknx.secure.data_secure_asdu import DataSecureASDU
+from xknx.secure.data_secure_asdu import (
+    SecurityAlgorithmIdentifier,
+    SecurityALService,
+    SecurityControlField,
+)
 from xknx.secure.keyring import Keyring, _load_keyring
 from xknx.telegram import (
     GroupAddress,
@@ -331,3 +334,46 @@ class TestDataSecure:
         )
         assert dst_addr not in self.data_secure._individual_address_table
         assert self.data_secure.received_cemi(test_cemi) == test_cemi
+
+    def test_data_secure_authentication_only(self):
+        """Test frame de-/serialization for DataSecure authentication only."""
+        # This is currently not used from xknx and I also don't know if it is used
+        # in any ETS or runtime KNX communication. Therefore a very generic test.
+        dst_addr = GroupAddress("0/4/0")
+        test_telegram = Telegram(
+            destination_address=dst_addr,
+            direction=TelegramDirection.OUTGOING,
+            payload=apci.GroupValueWrite(DPTArray((1, 2))),
+        )
+        test_cemi = CEMIFrame.init_from_telegram(
+            telegram=test_telegram,
+            src_addr=self.xknx.current_address,
+            code=CEMIMessageCode.L_DATA_REQ,
+        )
+        scf = SecurityControlField(
+            algorithm=SecurityAlgorithmIdentifier.CCM_AUTHENTICATION,
+            service=SecurityALService.S_A_DATA,
+            system_broadcast=False,
+            tool_access=False,
+        )
+        key = self.data_secure.group_key_table[dst_addr]
+
+        outgoing_signed_cemi = self.data_secure._secure_data_cemi(
+            key=key, scf=scf, cemi=test_cemi
+        )
+        assert outgoing_signed_cemi.payload.secured_data is not None
+
+        # create new cemi to avoid mixed bytearray / byte parts
+        incoming_cemi = CEMIFrame.from_knx(outgoing_signed_cemi.to_knx())
+        # receive same cemi - fake individual address table entry
+        self.data_secure._individual_address_table[incoming_cemi.src_addr] = 1
+        assert self.data_secure.received_cemi(incoming_cemi) == test_cemi
+
+        # Test wrong MAC
+        self.data_secure._individual_address_table[incoming_cemi.src_addr] = 1
+        incoming_cemi.payload.secured_data.message_authentication_code = bytes(4)
+        with pytest.raises(
+            DataSecureError,
+            match=r"Data Secure MAC verification failed.*",
+        ):
+            self.data_secure.received_cemi(incoming_cemi)
