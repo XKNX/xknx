@@ -115,6 +115,14 @@ class TestDataSecure:
             mock_ds_received_cemi.assert_called_once()
             mock_telegram_received.assert_called_once()
 
+    def test_data_secure_init_invalid_system_time(self):
+        """Test DataSecure init with invalid system time."""
+        with (
+            patch("time.time", return_value=1515108203.0),  # 2018-01-04T23:23:23+00:00
+            pytest.raises(DataSecureError, match=r"Initial sequence number out of .*"),
+        ):
+            self.xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
+
     def test_data_secure_group_send(self):
         """Test outgoing DataSecure group communication."""
         self.data_secure._sequence_number_sending = 160170101607
@@ -285,7 +293,7 @@ class TestDataSecure:
             src_addr=self.xknx.current_address,
         )
         assert dst_addr not in self.data_secure.group_key_table
-        assert self.data_secure.received_cemi(test_cemi) == test_cemi
+        assert self.data_secure.outgoing_cemi(test_cemi) == test_cemi
 
     def test_non_secure_individual_receive_plain_frame(self):
         """Test incoming non-secure group communication with plain frame."""
@@ -333,7 +341,7 @@ class TestDataSecure:
             src_addr=self.xknx.current_address,
         )
         assert dst_addr not in self.data_secure._individual_address_table
-        assert self.data_secure.received_cemi(test_cemi) == test_cemi
+        assert self.data_secure.outgoing_cemi(test_cemi) == test_cemi
 
     def test_data_secure_authentication_only(self):
         """Test frame de-/serialization for DataSecure authentication only."""
