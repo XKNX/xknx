@@ -65,12 +65,12 @@ class DPTTime(DPTBase):
     @staticmethod
     def _test_range(weekday: int, hours: int, minutes: int, seconds: int) -> bool:
         """Test if values are in the correct value range."""
-        if weekday < 0 or weekday > 7:
+        if not 0 <= weekday <= 7:
             return False
-        if hours < 0 or hours > 23:
+        if not 0 <= hours <= 23:
             return False
-        if minutes < 0 or minutes > 59:
+        if not 0 <= minutes <= 59:
             return False
-        if seconds < 0 or seconds > 59:
+        if not 0 <= seconds <= 59:
             return False
         return True

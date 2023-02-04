@@ -36,7 +36,7 @@ class ConnectionConfig:
     * local_ip: Local ip of the interface though which KNXIPInterface should connect.
     * gateway_ip: IP of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
-    * route_back: For TUNNELING connection.
+    * route_back: For UDP TUNNELING connection.
         The KNXnet/IP Server shall use the IP address and port in the received IP package
         as the target IP address or port number for the response to the KNXnet/IP Client.
     * multicast_group: Multicast group for KNXnet/IP routing.

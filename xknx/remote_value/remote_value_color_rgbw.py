@@ -78,7 +78,7 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, tuple[int, int, int, int]]):
                 value=value,
                 type=type(value),
             )
-        if len(value) < 4 or len(value) > 6:
+        if not 4 <= len(value) <= 6:
             raise ConversionError(
                 "Could not serialize value to DPT 251.600 (wrong length, expecting list of 4-6 bytes)",
                 value=value,
