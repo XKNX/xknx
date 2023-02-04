@@ -15,6 +15,7 @@ from typing import ClassVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
+from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
 from xknx.telegram.address import IndividualAddress
 
 
@@ -94,6 +95,9 @@ class APCIExtendedService(Enum):
     INDIVIDUAL_ADDRESS_SERIAL_READ = 0x03DC
     INDIVIDUAL_ADDRESS_SERIAL_RESPONSE = 0x03DD
     INDIVIDUAL_ADDRESS_SERIAL_WRITE = 0x03DE
+
+    # DataSecure
+    APCI_SEC = 0x03F1
 
 
 class APCI(ABC):
@@ -205,6 +209,8 @@ class APCI(ABC):
                 return IndividualAddressSerialResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
                 return IndividualAddressSerialWrite.from_knx(raw)
+            if apci == APCIExtendedService.APCI_SEC.value:
+                return SecureAPDU.from_knx(raw)
 
         raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
@@ -516,9 +522,9 @@ class MemoryRead(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2**16:
+        if not 0 <= self.address <= 0xFFFF:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2**6:
+        if not 0 <= self.count <= 0x3F:
             raise ConversionError("Count out of range.")
 
         payload = struct.pack("!BH", self.count, self.address)
@@ -568,9 +574,9 @@ class MemoryWrite(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2**16:
+        if not 0 <= self.address <= 0xFFFF:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2**6:
+        if not 0 <= self.count <= 0x3F:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -621,9 +627,9 @@ class MemoryResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2**16:
+        if not 0 <= self.address <= 0xFFFF:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2**6:
+        if not 0 <= self.count <= 0x3F:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -662,7 +668,7 @@ class DeviceDescriptorRead(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.descriptor < 0 or self.descriptor >= 2**6:
+        if not 0 <= self.descriptor <= 0x3F:
             raise ConversionError("Descriptor out of range.")
 
         return encode_cmd_and_payload(self.CODE, encoded_payload=self.descriptor)
@@ -699,7 +705,7 @@ class DeviceDescriptorResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.descriptor < 0 or self.descriptor >= 2**6:
+        if not 0 <= self.descriptor <= 0x3F:
             raise ConversionError("Descriptor out of range.")
 
         payload = struct.pack("!H", self.value)
@@ -774,9 +780,9 @@ class UserMemoryRead(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2**20:
+        if not 0 <= self.address <= 0xFFFFF:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2**4:
+        if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
 
         byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
@@ -827,9 +833,9 @@ class UserMemoryWrite(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2**20:
+        if not 0 <= self.address <= 0xFFFFF:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2**4:
+        if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
 
         byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
@@ -881,9 +887,9 @@ class UserMemoryResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.address < 0 or self.address >= 2**20:
+        if not 0 <= self.address <= 0xFFFFF:
             raise ConversionError("Address out of range.")
-        if self.count < 0 or self.count >= 2**4:
+        if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
 
         byte0 = (((self.address & 0x0F0000) >> 16) << 4) | (self.count & 0x0F)
@@ -1203,7 +1209,7 @@ class PropertyValueRead(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.count < 0 or self.count > 2**4:
+        if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
 
         payload = struct.pack(
@@ -1258,7 +1264,7 @@ class PropertyValueWrite(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.count < 0 or self.count > 2**4:
+        if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -1355,7 +1361,7 @@ class PropertyValueResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.count < 0 or self.count > 2**4:
+        if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
 
         size = len(self.data)
@@ -1472,7 +1478,7 @@ class PropertyDescriptionResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if self.max_count < 0 or self.max_count >= 2**12:
+        if not 0 <= self.max_count <= 0x0FFF:
             raise ConversionError("Max count out of range.")
 
         payload = struct.pack(
@@ -1605,3 +1611,35 @@ class IndividualAddressSerialWrite(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<IndividualAddressSerialWrite serial="{self.serial.hex()}" address="{self.address}" />'
+
+
+class SecureAPDU(APCI):
+    """SecureAPDU service."""
+
+    CODE = APCIExtendedService.APCI_SEC
+
+    def __init__(self, scf: SecurityControlField, secured_data: SecureData) -> None:
+        """Initialize a new instance of AuthorizeRequest."""
+        self.scf = scf
+        self.secured_data = secured_data
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 2 + len(self.secured_data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> SecureAPDU:
+        """Parse/deserialize from KNX/IP raw data."""
+        return cls(
+            scf=SecurityControlField.from_knx(raw[2]),
+            secured_data=SecureData.from_knx(raw[3:]),
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = self.scf.to_knx() + self.secured_data.to_knx()
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<SecureAPDU scf="{self.scf}" secured_data={self.secured_data!r} />'

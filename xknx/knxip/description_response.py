@@ -39,10 +39,10 @@ class DescriptionResponse(KNXIPBody):
     @property
     def device_name(self) -> str:
         """Return name of device."""
-        for dib in self.dibs:
-            if isinstance(dib, DIBDeviceInformation):
-                return dib.name
-        return "UNKNOWN"
+        return next(
+            (dib.name for dib in self.dibs if isinstance(dib, DIBDeviceInformation)),
+            "UNKNOWN",
+        )
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""

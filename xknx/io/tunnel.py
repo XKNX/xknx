@@ -125,12 +125,12 @@ class _Tunnel(Interface):
             raise CommunicationError(
                 "Tunnel connection could not be established"
             ) from ex
-        else:
-            self._tunnel_established()
-            await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
-            )
-            return True
+
+        self._tunnel_established()
+        await self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        return True
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
@@ -192,9 +192,9 @@ class _Tunnel(Interface):
             self.communication_channel = connect.communication_channel
             # assign data_endpoint received from server
             self._data_endpoint_addr = (
-                connect.data_endpoint.addr_tuple
-                if not connect.data_endpoint.route_back
-                else None
+                None
+                if connect.data_endpoint.route_back
+                else connect.data_endpoint.addr_tuple
             )
             # Use the individual address provided by the tunnelling server
             self._src_address = IndividualAddress(connect.identifier)

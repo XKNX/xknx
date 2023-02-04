@@ -15,6 +15,7 @@ or monitored by other listeners - that triggers different events.
 Please join XKNX on Discord (https://discord.gg/EuAQDXU) and chat with JohanElmis for
 specific questions.
 """
+
 import asyncio
 import re
 import sys
@@ -32,8 +33,8 @@ try:
     # import pprint
 except ImportError as import_err:
     err_list = str(import_err).split(" ")
-    print("Unable to import module: " + err_list[3])
-    print("Please install the " + err_list[3] + " module for Python.")
+    print(f"Unable to import module: {err_list[3]}")
+    print(f"Please install the {err_list[3]} module for Python.")
     sys.exit()
 
 BROKER_ADDRESS = "127.0.0.1"
@@ -64,8 +65,8 @@ RE_FREQUENCY = re.compile("Frequency_")
 async def device_updated_cb(device):
     """Do something with the updated device."""
     # print(device.name + ' ' + str(device.resolve_state()) + ' ' + device.unit_of_measurement())
-    topic = None
     value = None
+    topic = None
     if re.search("^EL-T-O_", device.name):
         metric = str(device.name)[7:]
         value = device.resolve_state()
@@ -99,12 +100,7 @@ async def device_updated_cb(device):
             )
     else:
         print(
-            "Uncatched metric: "
-            + device.name
-            + " "
-            + str(device.resolve_state())
-            + " "
-            + device.unit_of_measurement()
+            f"Uncatched metric: {device.name} {str(device.resolve_state())} {device.unit_of_measurement()}"
         )
 
     if topic and value:
@@ -124,7 +120,7 @@ async def device_updated_cb(device):
         # My latest version of the library doesn't send the value after the MQTT Topic, but a JSON structure
         # that also contains time.
 
-        print(topic + " " + str(value))
+        print(f"{topic} {str(value)}")
         # ts = int(time.time() * 1000)
         mqttc.publish(topic, value)
 

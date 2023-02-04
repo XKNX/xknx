@@ -61,10 +61,7 @@ class Devices:
 
     def __contains__(self, key: str) -> bool:
         """Return if devices with name 'key' is within devices."""
-        for device in self.__devices:
-            if device.name == key:
-                return True
-        return False
+        return any(device.name == key for device in self.__devices)
 
     def add(self, device: Device) -> None:
         """Add device to devices vector."""

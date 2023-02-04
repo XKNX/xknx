@@ -164,6 +164,7 @@ class XMLGroupAddress(AttributeReader):
     """Group Address in a knxkeys file."""
 
     address: GroupAddress
+    decrypted_key: bytes | None = None
     key: str
 
     def parse_xml(self, node: Document) -> None:
@@ -171,6 +172,15 @@ class XMLGroupAddress(AttributeReader):
         attributes = node.attributes
         self.address = GroupAddress(self.get_attribute_value(attributes.get("Address")))
         self.key = self.get_attribute_value(attributes.get("Key"))
+
+    def decrypt_attributes(
+        self, password_hash: bytes, initialization_vector: bytes
+    ) -> None:
+        """Decrypt attribute data."""
+        if self.key:
+            self.decrypted_key = decrypt_aes128cbc(
+                base64.b64decode(self.key), password_hash, initialization_vector
+            )
 
 
 class XMLDevice(AttributeReader):
@@ -321,12 +331,6 @@ class Keyring(AttributeReader):
                 backbone: XMLBackbone = XMLBackbone()
                 backbone.parse_xml(sub_node)
                 self.backbone = backbone
-            if sub_node.nodeName == "GroupAddresses":
-                ga_doc: Document
-                for ga_doc in filter(lambda x: x.nodeType != 3, sub_node.childNodes):
-                    xml_ga: XMLGroupAddress = XMLGroupAddress()
-                    xml_ga.parse_xml(ga_doc)
-                    self.group_addresses.append(xml_ga)
             if sub_node.nodeName == "Devices":
                 device_doc: Document
                 for device_doc in filter(
@@ -335,6 +339,13 @@ class Keyring(AttributeReader):
                     device: XMLDevice = XMLDevice()
                     device.parse_xml(device_doc)
                     self.devices.append(device)
+
+            elif sub_node.nodeName == "GroupAddresses":
+                ga_doc: Document
+                for ga_doc in filter(lambda x: x.nodeType != 3, sub_node.childNodes):
+                    xml_ga: XMLGroupAddress = XMLGroupAddress()
+                    xml_ga.parse_xml(ga_doc)
+                    self.group_addresses.append(xml_ga)
 
     def decrypt(self, password: str) -> None:
         """Decrypt all data."""
@@ -363,11 +374,10 @@ async def load_keyring(
 def _load_keyring(path: str, password: str, validate_signature: bool = True) -> Keyring:
     """Load a .knxkeys file from the given path."""
 
-    if validate_signature:
-        if not verify_keyring_signature(path, password):
-            raise InvalidSecureConfiguration(
-                "Signature verification of keyring file failed. Invalid password or malformed file content."
-            )
+    if validate_signature and not verify_keyring_signature(path, password):
+        raise InvalidSecureConfiguration(
+            "Signature verification of keyring file failed. Invalid password or malformed file content."
+        )
 
     keyring: Keyring = Keyring()
     try:
@@ -414,12 +424,12 @@ class KeyringSAXContentHandler(ContentHandler):
 
     def append_string(self, value: str | bytes) -> None:
         """Append a string to a byte array for signature verification."""
-        self.output.append(len(value))
 
         if isinstance(value, str):
-            self.output.extend(value.encode("utf-8"))
-        if isinstance(value, bytes):
-            self.output.extend(value)
+            value = value.encode("utf-8")
+
+        self.output.append(len(value))
+        self.output.extend(value)
 
 
 def verify_keyring_signature(path: str, password: str) -> bool:

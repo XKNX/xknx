@@ -22,7 +22,6 @@ from typing import ClassVar, Optional, TypeVar, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
-# TODO: typing - remove need for Optional here
 GroupAddressableType = Optional[Union["GroupAddress", str, int]]
 IndividualAddressableType = Optional[Union["IndividualAddress", str, int]]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
@@ -242,9 +241,8 @@ class GroupAddress(BaseAddress):
                 raise CouldNotParseAddress(address)
             if sub > self.MAX_SUB_LONG:
                 raise CouldNotParseAddress(address)
-        else:
-            if sub > self.MAX_SUB_SHORT:
-                raise CouldNotParseAddress(address)
+        elif sub > self.MAX_SUB_SHORT:
+            raise CouldNotParseAddress(address)
         return (
             (main << 11) + (middle << 8) + sub
             if middle is not None
@@ -323,7 +321,7 @@ class InternalGroupAddress:
             raise CouldNotParseAddress(address)
 
         prefix_length = 1
-        if len(address) < 2 or not address[0].lower() == "i":
+        if len(address) < 2 or address[0].lower() != "i":
             raise CouldNotParseAddress(address)
         if address[1] in "-_":
             prefix_length = 2

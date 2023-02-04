@@ -171,9 +171,9 @@ class Fan(Device):
         """Return object as readable string."""
 
         str_oscillation = (
-            ""
-            if not self.supports_oscillation
-            else f" oscillation={self.oscillation.group_addr_str()}"
+            f" oscillation={self.oscillation.group_addr_str()}"
+            if self.supports_oscillation
+            else ""
         )
 
         return f'<Fan name="{self.name}" speed={self.speed.group_addr_str()}{str_oscillation} />'

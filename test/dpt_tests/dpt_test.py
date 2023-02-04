@@ -67,7 +67,7 @@ class TestDPT:
     def test_dpt_binary_assign_limit_exceeded(self):
         """Test initialization of DPTBinary objects with wrong value (value exceeded)."""
         with pytest.raises(ConversionError):
-            DPTBinary(DPTBinary.APCI_MAX_VALUE + 1)
+            DPTBinary(DPTBinary.APCI_BITMASK + 1)
 
     def test_dpt_init_with_string(self):
         """Teest initialization of DPTBinary object with wrong value (wrong type)."""
@@ -116,18 +116,20 @@ class TestDPTBase:
 
     def test_dpt_subclasses_no_duplicate_value_types(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
-        value_types = []
-        for dpt in DPTBase.dpt_class_tree():
-            if dpt.value_type is not None:
-                value_types.append(dpt.value_type)
+        value_types = [
+            dpt.value_type
+            for dpt in DPTBase.dpt_class_tree()
+            if dpt.value_type is not None
+        ]
         assert len(value_types) == len(set(value_types))
 
     def test_dpt_subclasses_no_duplicate_dpt_number(self):
         """Test for duplicate value_type values in subclasses of DPTBase."""
-        dpt_tuples = []
-        for dpt in DPTBase.dpt_class_tree():
-            if dpt.dpt_main_number is not None and dpt.dpt_sub_number is not None:
-                dpt_tuples.append((dpt.dpt_main_number, dpt.dpt_sub_number))
+        dpt_tuples = [
+            (dpt.dpt_main_number, dpt.dpt_sub_number)
+            for dpt in DPTBase.dpt_class_tree()
+            if dpt.dpt_main_number is not None and dpt.dpt_sub_number is not None
+        ]
         assert len(dpt_tuples) == len(set(dpt_tuples))
 
     def test_dpt_alternative_notations(self):

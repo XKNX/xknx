@@ -51,6 +51,28 @@ The constructor of the XKNX object takes several parameters:
 - if `daemon_mode` is set, start will only stop if Control-X is pressed. This function is useful for using XKNX as a daemon, e.g. for using the callback functions or using the internal action logic.
 - `connection_config` replaces a ConnectionConfig() that was read from a yaml config file.
 
+# [](#header-2)Connection configuration
+
+```python
+from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
+
+secure_config = SecureConfig(
+    knxkeys_file_path="/Users/me/xknx/Keyfile.knxkeys",
+    knxkeys_password="secret",
+)
+connection_config = ConnectionConfig(
+    connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+    gateway_ip="10.1.0.123",
+    individual_address="1.0.240",
+    secure_config=secure_config,
+)
+xknx = XKNX(connection_config=connection_config)
+```
+
+An explicit connection configuration can be used. In this case a `connection_type` other than `ConnectionType.AUTOMATIC` shall be passed.
+KNX Data Secure credentials are sourced from a keyfile exported from ETS.
+IP Secure keys can be configured directly or sourced from a keyfile.
+
 # [](#header-2)Starting
 
 ```python
