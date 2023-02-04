@@ -95,6 +95,7 @@ async def request_description(
 
 
 class _SelfDescriptionQuery(ABC):
+    """Base class for handling descriptions request-response cycles."""
 
     expected_response_class: type[DescriptionResponse] | type[SearchResponseExtended]
 
