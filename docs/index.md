@@ -16,12 +16,13 @@ XKNX...
 
 - ... does [cooperative multitasking via asyncio](https://github.com/XKNX/xknx/blob/main/examples/example_light_state.py) and is 100% thread safe.
 - ... provides support for KNX/IP [routing](https://github.com/XKNX/xknx/blob/main/xknx/io/routing.py) _and_ [tunneling](https://github.com/XKNX/xknx/blob/main/xknx/io/tunnel.py) devices.
+- ... supports KNX IP Secure - via tunneling or routing.
+- ... supports KNX Data Secure group communication.
 - ... has strong coverage with [unit tests](https://github.com/XKNX/xknx/tree/main/test).
 - ... automatically updates and synchronizes all devices in the background periodically.
 - ... listens for all updates of all devices on the KNX bus and updates the corresponding internal objects.
 - ... has a clear abstraction of data/network/logic-layer.
-- ... provides Heartbeat monitoring for Tunneling connections + clean reconnect if KNX/IP connection failed.
-- ... does clean [connect](https://github.com/XKNX/xknx/blob/main/xknx/io/connect.py) and [disconnect](https://github.com/XKNX/xknx/blob/main/xknx/io/disconnect.py) requests to the tunneling device.
+- ... does clean [connect](https://github.com/XKNX/xknx/blob/main/xknx/io/connect.py) and [disconnect](https://github.com/XKNX/xknx/blob/main/xknx/io/disconnect.py) requests to the tunneling device and reconnects if KNX/IP connection failed.
 - ... ships with [Home Assistant](https://home-assistant.io/).
 
 ## [](#header-2)Installation

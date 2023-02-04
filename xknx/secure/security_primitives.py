@@ -1,4 +1,4 @@
-"""Encryption and Decryption functions for KNX/IP Datagrams."""
+"""Encryption and Decryption functions for KNX Secure."""
 from __future__ import annotations
 
 from cryptography.hazmat.primitives import hashes, serialization

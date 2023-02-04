@@ -8,11 +8,16 @@ nav_order: 2
 
 # Unreleased changes
 
+### Data Secure
+
+- Support KNX Data Secure for group communication. Keys are read from an ETS keyring export.
+
 ### Internals
 
 - Return `bytes` from `BaseAddress.to_knx()` instead of `tuple[int, int]`. This is used in `IndividualAddress` and `GroupAddress`.
 - Add `BaseAddress.from_knx()` to instantiate from `bytes`, remove instantiation form `tuple[int, int]`.
 - Refactor APCI to return complete Subclass `APCI.from_knx()` and removed `APCI.resolve_apci()`.
+- Rename `xknx.secure.ip_secure` to `xknx.secure.security_primitives`.
 - Fix wrong string length in keyfile signature verification for multi-byte UTF-8 encoded attribute values.
 
 # 2.3.0 Routing security, DPTs and CEMI-Refactoring 2023-01-10
