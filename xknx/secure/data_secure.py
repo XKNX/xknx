@@ -46,13 +46,13 @@ class DataSecure:
         last_sequence_number_sending: int | None = None,
     ):
         """Initialize DataSecure class."""
-        self.group_key_table = group_key_table
+        self._group_key_table = group_key_table
+        self._individual_address_table = individual_address_table
         self._sequence_number_sending = (
             last_sequence_number_sending or _initial_sequence_number()
         )
         # Holds the last valid sequence number for each individual address.
         # Use sequence_number from keyfile as initial value or 0 from senders for all IAs ?
-        self._individual_address_table = individual_address_table
 
         if not 0 < self._sequence_number_sending < 0xFFFFFFFFFFFF:
             _local_time_info = (
@@ -66,13 +66,13 @@ class DataSecure:
             )
         _LOGGER.info(
             "Data Secure initialized for %s group addresses from %s individual addresses.",
-            len(self.group_key_table),
+            len(self._group_key_table),
             len(self._individual_address_table),
         )
         _LOGGER.debug(
             "Data Secure initial sequence number: %s, groups: %s, senders: %s",
             self._sequence_number_sending,
-            [str(ga) for ga in self.group_key_table],
+            [str(ga) for ga in self._group_key_table],
             [str(ia) for ia in self._individual_address_table],
         )
 
@@ -144,7 +144,7 @@ class DataSecure:
             return self._received_secure_cemi(cemi, cemi.payload)
         # Plain group communication frame
         if isinstance(cemi.dst_addr, GroupAddress):
-            if cemi.dst_addr in self.group_key_table:
+            if cemi.dst_addr in self._group_key_table:
                 raise DataSecureError(
                     f"Discarding frame with plain APDU for secure group address: {cemi}"
                 )
@@ -168,7 +168,7 @@ class DataSecure:
 
         # Secure group communication frame
         if isinstance(cemi.dst_addr, GroupAddress):
-            if not (key := self.group_key_table.get(cemi.dst_addr)):
+            if not (key := self._group_key_table.get(cemi.dst_addr)):
                 raise DataSecureError(
                     f"No key found for group address {cemi.dst_addr} from {cemi.src_addr}"
                 )
@@ -203,7 +203,7 @@ class DataSecure:
         """Handle outgoing CEMI frame. Pass through as plain frame or encrypt."""
         # Outgoing  group communication frame
         if isinstance(cemi.dst_addr, GroupAddress):
-            if key := self.group_key_table.get(cemi.dst_addr):
+            if key := self._group_key_table.get(cemi.dst_addr):
                 scf = SecurityControlField(
                     algorithm=SecurityAlgorithmIdentifier.CCM_ENCRYPTION,
                     service=SecurityALService.S_A_DATA,

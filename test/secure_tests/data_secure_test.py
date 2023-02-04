@@ -73,15 +73,15 @@ class TestDataSecure:
         self.xknx.current_address = IndividualAddress("5.0.1")
         self.xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
 
-        self.data_secure = self.xknx.cemi_handler._data_secure
+        self.data_secure = self.xknx.cemi_handler.data_secure
 
     async def test_data_secure_init(self):
         """Test DataSecure init and passing frames from CEMIHandler to DataSecure."""
         assert self.data_secure is not None
 
-        assert len(self.data_secure.group_key_table) == 4
+        assert len(self.data_secure._group_key_table) == 4
         for ga_raw in [1024, 1027, 1028, 1029]:
-            assert GroupAddress(ga_raw) in self.data_secure.group_key_table
+            assert GroupAddress(ga_raw) in self.data_secure._group_key_table
 
         assert len(self.data_secure._individual_address_table) == 3
         for ia_raw in ["4.0.0", "4.0.9", "5.0.0"]:
@@ -277,7 +277,7 @@ class TestDataSecure:
             code=CEMIMessageCode.L_DATA_IND,
             src_addr=IndividualAddress("4.0.9"),
         )
-        assert dst_addr not in self.data_secure.group_key_table
+        assert dst_addr not in self.data_secure._group_key_table
         assert self.data_secure.received_cemi(test_cemi) == test_cemi
 
     def test_non_secure_group_send_plain_frame(self):
@@ -292,7 +292,7 @@ class TestDataSecure:
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self.xknx.current_address,
         )
-        assert dst_addr not in self.data_secure.group_key_table
+        assert dst_addr not in self.data_secure._group_key_table
         assert self.data_secure.outgoing_cemi(test_cemi) == test_cemi
 
     def test_non_secure_individual_receive_plain_frame(self):
@@ -364,7 +364,7 @@ class TestDataSecure:
             system_broadcast=False,
             tool_access=False,
         )
-        key = self.data_secure.group_key_table[dst_addr]
+        key = self.data_secure._group_key_table[dst_addr]
 
         outgoing_signed_cemi = self.data_secure._secure_data_cemi(
             key=key, scf=scf, cemi=test_cemi

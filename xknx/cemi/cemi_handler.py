@@ -40,15 +40,15 @@ class CEMIHandler:
     def __init__(self, xknx: XKNX) -> None:
         """Initialize CEMIHandler class."""
         self.xknx = xknx
-        self._data_secure: DataSecure | None = None
+        self.data_secure: DataSecure | None = None
         self._l_data_confirmation_event = asyncio.Event()
 
     def data_secure_init(self, keyring: Keyring | None) -> None:
         """Initialize DataSecure."""
         if keyring is None:
-            self._data_secure = None
+            self.data_secure = None
         else:
-            self._data_secure = DataSecure.init_from_keyring(keyring)
+            self.data_secure = DataSecure.init_from_keyring(keyring)
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """Create a CEMIFrame from a Telegram and send it to the CEMI Server."""
@@ -60,8 +60,8 @@ class CEMIHandler:
             ),
         )
         logger.debug("Outgoing CEMI: %s", cemi)
-        if self._data_secure is not None:
-            cemi = self._data_secure.outgoing_cemi(cemi=cemi)
+        if self.data_secure is not None:
+            cemi = self.data_secure.outgoing_cemi(cemi=cemi)
 
         self._l_data_confirmation_event.clear()
         try:
@@ -94,9 +94,9 @@ class CEMIHandler:
             return
 
         # TODO: do we have to decrypt Data Secure L_DATA_CON?
-        if self._data_secure is not None:
+        if self.data_secure is not None:
             try:
-                cemi = self._data_secure.received_cemi(cemi=cemi)
+                cemi = self.data_secure.received_cemi(cemi=cemi)
             except DataSecureError as err:
                 data_secure_logger.warning("Could not decrypt CEMI frame: %s", err)
                 return
