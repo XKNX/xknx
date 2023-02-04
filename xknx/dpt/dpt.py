@@ -166,11 +166,9 @@ class DPTNumeric(DPTBase):
 
 
 class DPTBinary:
-    """The DPTBinary is a base class for all datatypes encoded directly into the last 6 bit of the APCI (mostly integer)."""
+    """The DPTBinary is a base class for all datatypes encoded directly into the last 6 bit of the APCI/data octet."""
 
-    # APCI (application layer control information)
-    APCI_BITMASK = 0x3F
-    APCI_MAX_VALUE = APCI_BITMASK
+    APCI_BITMASK = 0x3F  # APCI uses first 2 bits
 
     def __init__(self, value: int | tuple[int]) -> None:
         """Initialize DPTBinary class."""
@@ -178,7 +176,7 @@ class DPTBinary:
             value = value[0]
         if not isinstance(value, int):
             raise TypeError()
-        if value > DPTBinary.APCI_BITMASK or value < 0:
+        if not 0 <= value <= DPTBinary.APCI_BITMASK:
             raise ConversionError("Could not init DPTBinary", value=str(value))
 
         self.value = value

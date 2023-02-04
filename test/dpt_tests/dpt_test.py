@@ -67,7 +67,7 @@ class TestDPT:
     def test_dpt_binary_assign_limit_exceeded(self):
         """Test initialization of DPTBinary objects with wrong value (value exceeded)."""
         with pytest.raises(ConversionError):
-            DPTBinary(DPTBinary.APCI_MAX_VALUE + 1)
+            DPTBinary(DPTBinary.APCI_BITMASK + 1)
 
     def test_dpt_init_with_string(self):
         """Teest initialization of DPTBinary object with wrong value (wrong type)."""

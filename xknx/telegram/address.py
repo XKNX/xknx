@@ -22,7 +22,6 @@ from typing import ClassVar, Optional, TypeVar, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
-# TODO: typing - remove need for Optional here
 GroupAddressableType = Optional[Union["GroupAddress", str, int]]
 IndividualAddressableType = Optional[Union["IndividualAddress", str, int]]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]

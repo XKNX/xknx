@@ -55,10 +55,10 @@ class DPTDate(DPTBase):
     @staticmethod
     def _test_range(day: int, month: int, year: int) -> bool:
         """Test if the values are in the correct range."""
-        if day < 1 or day > 31:
+        if not 1 <= day <= 31:
             return False
-        if month < 1 or month > 12:
+        if not 1 <= month <= 12:
             return False
-        if year < 0 or year > 99:
+        if not 0 <= year <= 99:
             return False
         return True

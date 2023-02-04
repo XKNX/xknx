@@ -55,7 +55,7 @@ class DPT2ByteFloat(DPTNumeric):
 
             value = knx_value * 100
             exponent = 0
-            while value < -2048 or value > 2047:
+            while not -2048 <= value <= 2047:
                 exponent += 1
                 value /= 2
 
