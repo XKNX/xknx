@@ -441,7 +441,6 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
             secure_wrapper = knxipframe.body
             try:
                 knxipframe = self.decrypt_frame(knxipframe)
-                print(secure_wrapper)
             except KNXSecureValidationError as err:
                 ip_secure_logger.warning("Could not decrypt KNXIPFrame: %s", err)
                 # Frame shall be discarded
