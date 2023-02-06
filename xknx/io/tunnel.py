@@ -159,7 +159,7 @@ class _Tunnel(Interface):
             self.transport.stop()
         await asyncio.sleep(self.auto_reconnect_wait)
         if await self.connect():
-            logger.info("successfully reconnected to KNX bus.")
+            logger.info("Successfully reconnected to KNX bus.")
 
     def _stop_reconnect(self) -> None:
         """Stop reconnect task if running."""
