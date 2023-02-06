@@ -81,3 +81,8 @@ output-format = "colorized"
 [tool.pytest.ini_options]
 testpaths = "test"
 asyncio_mode = "auto"
+
+[tool.codespell]
+skip = '*.min.js,docs/config-converter/lib/*,*.lock'
+ignore-words-list = 'hass'
+quiet-level = 2
