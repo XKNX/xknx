@@ -34,7 +34,7 @@ asyncio.run(main())
 async def main():
 ```
 
-`main()` function. The `async` qualifier markes the function asy an asyncio function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) documentation for details.
+`main()` function. The `async` qualifier marks the function asy an asyncio function. See [asyncio](https://www.python.org/dev/peps/pep-3156/) documentation for details.
 
 
 ```python

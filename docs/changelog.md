@@ -113,7 +113,7 @@ nav_order: 2
 
 ### Management
 
-- Fix APCI service parsing for 10bit control fileds.
+- Fix APCI service parsing for 10bit control fields.
 - Set reasonable default count values for APCI classes.
 - Set xknx.current_address for routing connections so management frames received over Routing are handled properly.
 - Fix wrong length of AuthorizeRequest.
@@ -698,7 +698,7 @@ nav_order: 2
 
 - HA Switch entity: keep state without state_address
 - Cover: fix `set_position` without writable position / auto_stop_if_necessary
-- handle unsupported CEMI Messages without loosing tunnel connection
+- handle unsupported CEMI Messages without losing tunnel connection
 
 ## 0.15.2 Winter is coming
 
@@ -811,7 +811,7 @@ nav_order: 2
 
 - Climate: `setpoint_shift_step` renamed for `temperature_step`. This attribute can be applied to all temperature modes. Default is `0.1`
 - Removed significant_bit attribute in BinarySensor
-- DateTime devices are initialized with sting for broadcast_type: "time", "date" or "datetime" instead of an Enum value
+- DateTime devices are initialized with string for broadcast_type: "time", "date" or "datetime" instead of an Enum value
 - Removed `bind_to_multicast` option in ConnectionConfig and UDPClient
 
 ### New Features
@@ -853,7 +853,7 @@ nav_order: 2
 
 ### New Features
 
-- added a lot of DPTs now useable as sensor type (@eXtenZy #255)
+- added a lot of DPTs now usable as sensor type (@eXtenZy #255)
 
 ### Bugfixes
 
@@ -942,13 +942,13 @@ nav_order: 2
 ## 0.9.2 - Release 2018-12-22
 
 - Min and max values for Climate device
-- Splitted up Climate in Climate and ClimateMode
+- split up Climate in Climate and ClimateMode
 - added **contains** method for Devices class.
 - fixed KeyError when action refers to a non existing device.
 
 ## 0.9.1 - Release 2018-10-28
 
-- state_addresses of binary_sesor should return emty value if no
+- state_addresses of binary_sesor should return empty value if no
   state address is set.
 - state_address for notification device
 
@@ -984,7 +984,7 @@ nav_order: 2
 
 - Color support for HASS plugin
 - Bugfixes (esp problem with unhashable exceptions)
-- Refactoring: splitted up remote_value.py
+- Refactoring: split up remote_value.py
 - Better test coverage
 
 ## 0.8.1 - Release 2018-02-03
@@ -995,7 +995,7 @@ nav_order: 2
 ## 0.8.0 - Release 2018-01-27
 
 - New example for MQTT forwarder (thanks @JohanElmis)
-- Splitted up Address into GroupAddress and PhysicalAddress (thanks @encbladexp)
+- split up Address into GroupAddress and PhysicalAddress (thanks @encbladexp)
 - Time object was renamed to Datetime and does now support different broadcast types "time", "date" and "datetime" (thanks @Roemer)
 - Many new DTP datapoints esp for physical values (thanks @Straeng and @JohanElmis)
 - new asyncio `await` syntax
@@ -1036,7 +1036,7 @@ The naming of some device were changed in order to get the nomenclature closer t
 
 #### Climate
 
-Renamed class `Thermostat` to `Climate` . Plase rename the section within configuration:
+Renamed class `Thermostat` to `Climate` . Please rename the section within configuration:
 
 ```yaml
 groups:
@@ -1046,7 +1046,7 @@ groups:
 
 #### Cover
 
-Renamed class `Shutter` to `Cover`. Plase rename the section within configuration:
+Renamed class `Shutter` to `Cover`. Please rename the section within configuration:
 
 ```yaml
 groups:
@@ -1064,7 +1064,7 @@ groups:
 
 #### Binary Sensor
 
-Renamed class `Switch` to `BinarySensor`. Plase rename the section within configuration:
+Renamed class `Switch` to `BinarySensor`. Please rename the section within configuration:
 
 ```yaml
 groups:

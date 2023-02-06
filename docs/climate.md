@@ -20,7 +20,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_target_temperature_state` KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature. *DPT 9.001*
 - `group_address_setpoint_shift` KNX address to set setpoint_shift (base temperature deviation). *DPT 6.010* or *DPT 9.002*
 - `group_address_setpoint_shift_state` KNX address to read current setpoint_shift. *DPT 6.010* or *DPT 9.002*
-- `setpoint_shift_mode` SetpointShiftMode Enum for setpoint_shift payload encoding. When `None` it is infered from first incoming payload. Default: `None`
+- `setpoint_shift_mode` SetpointShiftMode Enum for setpoint_shift payload encoding. When `None` it is inferred from first incoming payload. Default: `None`
 - `setpoint_shift_max` Maximum value for setpoint_shift.
 - `setpoint_shift_min` Minimum value for setpoint_shift.
 - `temperature_step` Set the multiplier for setpoint_shift calculations when DPT 6.010 is used.
