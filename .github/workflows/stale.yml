@@ -3,7 +3,7 @@ name: Stale
 # yamllint disable-line rule:truthy
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 9 * * 5"
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       # - No PRs marked as no-stale
       # - No issues marked as no-stale or help-wanted
       - name: 90 days stale issues & PRs policy
-        uses: actions/stale@v4
+        uses: actions/stale@v7
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 90
