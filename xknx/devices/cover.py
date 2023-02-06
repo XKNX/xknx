@@ -210,7 +210,7 @@ class Cover(Device):
         await self._stop_position_update()
 
     async def set_position(self, position: int) -> None:
-        """Move cover to a desginated postion."""
+        """Move cover to a desginated position."""
         if self.position_target.writable:
             await self.position_target.set(position)
             return
@@ -296,14 +296,14 @@ class Cover(Device):
         await self.after_update()
 
     async def _target_position_from_rv(self) -> None:
-        """Update the target postion from RemoteValue (Callback)."""
+        """Update the target position from RemoteValue (Callback)."""
         if self.position_target.value is not None:
             await self._start_position_update(
                 target_position=self.position_target.value
             )
 
     async def _current_position_from_rv(self) -> None:
-        """Update the current postion from RemoteValue (Callback)."""
+        """Update the current position from RemoteValue (Callback)."""
         position_before_update = self.travelcalculator.current_position()
         new_position = self.position_current.value
         if new_position is None:

@@ -355,7 +355,7 @@ class TestGatewayScanner:
         gateway_scanner = GatewayScanner(xknx)
         timed_out_scan_task = asyncio.create_task(gateway_scanner.scan())
         await time_travel(gateway_scanner.timeout_in_seconds)
-        # Unsuccessfull scan() returns empty list
+        # Unsuccessful scan() returns empty list
         assert await timed_out_scan_task == []
 
     @patch("xknx.io.gateway_scanner.UDPTransport.connect")

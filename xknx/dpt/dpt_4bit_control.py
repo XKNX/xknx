@@ -64,7 +64,7 @@ class DPTControlStepCode(DPTBase, ABC):
         # TODO: use Tuple or Named Tuple instead of Dict[str, int] to account for bool control
         if not isinstance(value, dict):
             raise ConversionError(
-                f"Cant serialize {cls.__name__}; invalid value type", value=value
+                f"Can't serialize {cls.__name__}; invalid value type", value=value
             )
 
         try:
@@ -72,12 +72,12 @@ class DPTControlStepCode(DPTBase, ABC):
             step_code = value["step_code"]
         except KeyError:
             raise ConversionError(
-                f"Cant serialize {cls.__name__}; invalid keys", value=value
+                f"Can't serialize {cls.__name__}; invalid keys", value=value
             )
 
         if not cls._test_values(step_code):
             raise ConversionError(
-                f"Cant serialize {cls.__name__}; invalid values", value=value
+                f"Can't serialize {cls.__name__}; invalid values", value=value
             )
 
         return (cls._encode(control, step_code),)
@@ -86,7 +86,7 @@ class DPTControlStepCode(DPTBase, ABC):
     def from_knx(cls, raw: tuple[int, ...]) -> Any:
         """Parse/deserialize from KNX/IP raw data."""
         if not isinstance(raw, tuple) or not cls._test_boundaries(raw[0]):
-            raise ConversionError(f"Cant parse {cls.__name__}", raw=raw)
+            raise ConversionError(f"Can't parse {cls.__name__}", raw=raw)
 
         control, step_code = cls._decode(raw[0])
 
@@ -94,7 +94,7 @@ class DPTControlStepCode(DPTBase, ABC):
 
 
 class DPTControlStepwise(DPTControlStepCode):
-    """Abstraction for KNX DPT 3.xxx in stepwise mode with conversion to an incement value."""
+    """Abstraction for KNX DPT 3.xxx in stepwise mode with conversion to an increment value."""
 
     dpt_main_number = 3
     value_type = "stepwise"
@@ -139,7 +139,7 @@ class DPTControlStepwise(DPTControlStepCode):
     def to_knx(cls, value: int | dict[str, int]) -> tuple[int]:
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, int):
-            raise ConversionError(f"Cant serialize {cls.__name__}", value=value)
+            raise ConversionError(f"Can't serialize {cls.__name__}", value=value)
 
         return super().to_knx(cls._from_increment(value))
 
@@ -203,7 +203,7 @@ class DPTControlStartStop(DPTControlStepCode):
             control = 0
             step_code = 0
         else:
-            raise ConversionError(f"Cant serialize {cls.__name__}", value=value)
+            raise ConversionError(f"Can't serialize {cls.__name__}", value=value)
 
         values = {"control": control, "step_code": step_code}
         return super().to_knx(values)

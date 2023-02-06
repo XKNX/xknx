@@ -7,7 +7,7 @@ It provides functionality for
 * KNX devices may read local values via GROUP READ.
 
 (A typical example for using this class is the outside temperature
-read from e.g. an internet serviceand exposed to ths KNX bus.
+read from e.g. an internet serviceand exposed to the KNX bus.
 KNX devices may show this value within their display.)
 """
 from __future__ import annotations

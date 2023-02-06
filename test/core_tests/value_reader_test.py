@@ -15,7 +15,7 @@ class TestValueReader:
     """Test class for value reader."""
 
     async def test_value_reader_read_success(self):
-        """Test value reader: successfull read."""
+        """Test value reader: successful read."""
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/0")
         response_telegram = Telegram(
@@ -28,7 +28,7 @@ class TestValueReader:
         # receive the response
         await value_reader.telegram_received(response_telegram)
         # and yield the result
-        successfull_read = await value_reader.read()
+        successful_read = await value_reader.read()
 
         # GroupValueRead telegram is still in the queue because we are not actually processing it
         assert xknx.telegrams.qsize() == 1
@@ -36,8 +36,8 @@ class TestValueReader:
         assert not xknx.telegram_queue.telegram_received_cbs
         # Telegram was received
         assert value_reader.received_telegram == response_telegram
-        # Successfull read() returns the telegram
-        assert successfull_read == response_telegram
+        # successful read() returns the telegram
+        assert successful_read == response_telegram
 
     @patch("logging.Logger.warning")
     async def test_value_reader_read_timeout(self, logger_warning_mock):
@@ -62,7 +62,7 @@ class TestValueReader:
         assert not xknx.telegram_queue.telegram_received_cbs
         # No telegram was received
         assert value_reader.received_telegram is None
-        # Unsuccessfull read() returns None
+        # Unsuccessful read() returns None
         assert timed_out_read is None
 
     async def test_value_reader_read_cancelled(self):

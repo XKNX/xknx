@@ -47,7 +47,7 @@ DEFAULT_LATENCY_TOLERANCE_MS: Final = 1000
 
 class _RoutingFlowControl:
     """
-    Class for hanling KNXnet/IP routing flow control.
+    Class for handling KNXnet/IP routing flow control.
 
     See KNX Specifications 3.8.5 Routing §2.3.5 Flow control handling
     """

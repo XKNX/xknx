@@ -120,7 +120,7 @@ class TestRemoteValueRaw:
         assert rv_2.value == 4660
 
     async def test_to_process_error(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0, group_address="1/0/0")
         rv_1 = RemoteValueRaw(xknx, payload_length=1, group_address="1/1/1")

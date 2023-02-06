@@ -33,7 +33,7 @@ class TravelCalculator:
         self.travel_time_up = travel_time_up
 
         self._last_known_position: int | None = None
-        self._last_known_postion_timestamp: float = 0.0
+        self._last_known_position_timestamp: float = 0.0
         self._position_confirmed: bool = False
         self._travel_to_position: int | None = None
 
@@ -49,7 +49,7 @@ class TravelCalculator:
     def update_position(self, position: int) -> None:
         """Update known position of cover."""
         self._last_known_position = position
-        self._last_known_postion_timestamp = time.time()
+        self._last_known_position_timestamp = time.time()
         if position == self._travel_to_position:
             self._position_confirmed = True
 
@@ -69,7 +69,7 @@ class TravelCalculator:
             self.set_position(_travel_to_position)
             return
         self.stop()
-        self._last_known_postion_timestamp = time.time()
+        self._last_known_position_timestamp = time.time()
         self._travel_to_position = _travel_to_position
         self._position_confirmed = False
 
@@ -148,11 +148,11 @@ class TravelCalculator:
             from_position=self._last_known_position,
             to_position=self._travel_to_position,
         )
-        if time.time() > self._last_known_postion_timestamp + remaining_travel_time:
+        if time.time() > self._last_known_position_timestamp + remaining_travel_time:
             return self._travel_to_position
 
         progress = (
-            time.time() - self._last_known_postion_timestamp
+            time.time() - self._last_known_position_timestamp
         ) / remaining_travel_time
         return int(self._last_known_position + relative_position * progress)
 

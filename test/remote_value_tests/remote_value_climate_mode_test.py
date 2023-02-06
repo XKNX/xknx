@@ -278,7 +278,7 @@ class TestRemoteValueOperationMode:
         assert remote_value.value == HVACOperationMode.FROST_PROTECTION
 
     async def test_to_process_error_operation_mode(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
             xknx,
@@ -317,7 +317,7 @@ class TestRemoteValueOperationMode:
         assert await remote_value.process(telegram=invalid_telegram) is False
 
     async def test_to_process_error_controller_mode(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(
             xknx, group_address=GroupAddress("1/2/3")
@@ -338,7 +338,7 @@ class TestRemoteValueOperationMode:
         assert remote_value.value is None
 
     async def test_to_process_error_heat_cool(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
             xknx,

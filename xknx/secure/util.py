@@ -6,7 +6,7 @@ def bytes_xor(a: bytes, b: bytes) -> bytes:  # pylint: disable=invalid-name
     """
     XOR two bytes values.
 
-    Different lenghts raise ValueError.
+    Different lengths raise ValueError.
     """
     if len(a) != len(b):
         raise ValueError("Length of a and b must be equal.")

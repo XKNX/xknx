@@ -40,7 +40,7 @@ class DPTColorXYY(DPTBase):
 
         return XYYColor(
             color=(
-                # round to 5 digits for better readability but still preserving precicion
+                # round to 5 digits for better readability but still preserving precision
                 round(x_axis_int / 0xFFFF, 5),
                 round(y_axis_int / 0xFFFF, 5),
             )

@@ -61,7 +61,7 @@ class TestClimate:
         assert climate_mode.supports_operation_mode
 
     def test_support_operation_mode2(self):
-        """Test supports_supports_operation_mode flag. Splitted group addresses for each mode."""
+        """Test supports_supports_operation_mode flag. Split group addresses for each mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_operation_mode_protection="1/2/4"
@@ -342,7 +342,7 @@ class TestClimate:
             )
 
     async def test_set_operation_mode_with_separate_addresses(self):
-        """Test set_operation_mode with combined and separated group adddresses defined."""
+        """Test set_operation_mode with combined and separated group addresses defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
@@ -499,7 +499,7 @@ class TestClimate:
         )
 
     #
-    # TEST for unitialized target_temperature_min/target_temperature_max
+    # TEST for uninitialized target_temperature_min/target_temperature_max
     #
     def test_uninitalized_for_target_temperature_min_max(self):
         """Test if target_temperature_min/target_temperature_max return non if not initialized."""
@@ -509,7 +509,7 @@ class TestClimate:
         assert climate.target_temperature_max is None
 
     #
-    # TEST for unitialized target_temperature_min/target_temperature_max but with overridden max and min temperature
+    # TEST for uninitialized target_temperature_min/target_temperature_max but with overridden max and min temperature
     #
     def test_uninitalized_for_target_temperature_min_max_can_be_overridden(self):
         """Test if target_temperature_min/target_temperature_max return overridden value if specified."""
@@ -519,7 +519,7 @@ class TestClimate:
         assert climate.target_temperature_max == "35"
 
     #
-    # TEST for overriden max and min temp do have precedence over setpoint shift calculations
+    # TEST for overridden max and min temp do have precedence over setpoint shift calculations
     #
     async def test_overridden_max_min_temperature_has_priority(self):
         """Test that the overridden min and max temp always have precedence over setpoint shift calculations."""

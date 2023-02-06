@@ -25,13 +25,13 @@ class Devices:
         self.device_updated_cbs: list[DeviceCallbackType] = []
 
     def register_device_updated_cb(self, device_updated_cb: DeviceCallbackType) -> None:
-        """Register callback for devices beeing updated."""
+        """Register callback for devices being updated."""
         self.device_updated_cbs.append(device_updated_cb)
 
     def unregister_device_updated_cb(
         self, device_updated_cb: DeviceCallbackType
     ) -> None:
-        """Unregister callback for devices beeing updated."""
+        """Unregister callback for devices being updated."""
         self.device_updated_cbs.remove(device_updated_cb)
 
     def __iter__(self) -> Iterator[Device]:

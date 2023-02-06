@@ -68,7 +68,7 @@ class TestRemoteValueDptValue2Ucount:
         assert remote_value.value == 2571
 
     async def test_to_process_error(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueDpt2ByteUnsigned(
             xknx, group_address=GroupAddress("1/2/3")

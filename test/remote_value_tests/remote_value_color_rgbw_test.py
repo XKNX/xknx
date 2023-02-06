@@ -100,7 +100,7 @@ class TestRemoteValueColorRGBW:
         assert remote_value.value == (100, 101, 102, 103)
 
     async def test_to_process_error(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
 

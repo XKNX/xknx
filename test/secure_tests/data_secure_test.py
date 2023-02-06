@@ -39,7 +39,7 @@ def test_group_response_cemi():
 def test_point_to_point_cemi():
     """Return a CEMI frame for a group response telegram."""
     # Property Value Write PID_GRP_KEY_TABLE connectionless
-    # Objet Idx = 5, PropId = 35h, Element Count = 1, Index = 1
+    # Object Idx = 5, PropId = 35h, Element Count = 1, Index = 1
     # Data = 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
     # A+C
     # from AN158 v07 KNX Data Security AS - Annex A example
@@ -110,7 +110,7 @@ class TestDataSecure:
             self.data_secure, "received_cemi"
         ) as mock_ds_received_cemi, patch.object(
             self.xknx.cemi_handler, "telegram_received"
-        ) as mock_telegram_received:  # supress forwarding to telegras/management
+        ) as mock_telegram_received:  # suppress forwarding to telegras/management
             self.xknx.cemi_handler.handle_cemi_frame(test_cemi)
             mock_ds_received_cemi.assert_called_once()
             mock_telegram_received.assert_called_once()
@@ -160,7 +160,7 @@ class TestDataSecure:
 
         plain_frame = self.data_secure.received_cemi(test_group_response_cemi)
         assert plain_frame.payload == apci.GroupValueResponse(DPTArray((116, 41, 41)))
-        # individual_address_table sequnece number was updated
+        # individual_address_table sequence number was updated
         assert (
             self.data_secure._individual_address_table[IndividualAddress("4.0.9")]
             == 155806854986

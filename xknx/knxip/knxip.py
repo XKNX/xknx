@@ -2,7 +2,7 @@
 Module for serialization and deserialization of KNX/IP packets.
 
 It consists of a header and a body.
-Depending on the service_type_ident different types of body classes are instanciated.
+Depending on the service_type_ident different types of body classes are instantiated.
 """
 from __future__ import annotations
 

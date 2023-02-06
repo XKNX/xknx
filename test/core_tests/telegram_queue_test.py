@@ -220,7 +220,7 @@ class TestTelegramQueue:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-        # log a warning if there is no KNXIP interface instanciated
+        # log a warning if there is no KNXIP interface instantiated
         with pytest.raises(CommunicationError):
             await xknx.telegram_queue.process_telegram_outgoing(telegram)
 

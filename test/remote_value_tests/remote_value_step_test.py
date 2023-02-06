@@ -79,7 +79,7 @@ class TestRemoteValueStep:
         assert remote_value.value == RemoteValueStep.Direction.DECREASE
 
     async def test_to_process_error(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueStep(xknx, group_address=GroupAddress("1/2/3"))
 
