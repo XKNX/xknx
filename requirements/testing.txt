@@ -11,4 +11,3 @@ pytest-cov==4.0.0
 setuptools==67.1.0
 tox==4.4.4
 mypy==0.991
-codespell==2.2.2
