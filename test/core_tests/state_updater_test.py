@@ -125,7 +125,7 @@ class TestStateUpdater:
         assert _get_only_tracker().update_interval == 60 * 60
         remote_value_invalid.__del__()
         logging_warning_mock.reset_mock()
-        # intervall too long
+        # interval too long
         remote_value_long = RemoteValue(
             xknx, sync_state=1441, group_address_state=GroupAddress("1/1/1")
         )

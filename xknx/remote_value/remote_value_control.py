@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class RemoteValueControl(RemoteValue[DPTBinary, Any]):
-    """Abstraction for remote value used for controling."""
+    """Abstraction for remote value used for controlling."""
 
     def __init__(
         self,

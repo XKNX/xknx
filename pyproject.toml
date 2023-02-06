@@ -13,7 +13,7 @@ pretty = true
 python_version = "3.9"
 show_error_codes = true
 strict = true
-# addtitional flags to strict mode
+# additional flags to strict mode
 ignore_missing_imports = true
 implicit_reexport = true
 warn_unreachable = true
@@ -81,3 +81,8 @@ output-format = "colorized"
 [tool.pytest.ini_options]
 testpaths = "test"
 asyncio_mode = "auto"
+
+[tool.codespell]
+skip = '*.min.js,docs/config-converter/lib/*,*.lock'
+ignore-words-list = 'hass'
+quiet-level = 2

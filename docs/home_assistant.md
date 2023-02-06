@@ -23,7 +23,7 @@ Delete the automatically installed version of the library:
 rm [hass-dependency-directory]/lib/python[python-version]/site-packages/xknx*
 ```
 
-Note: `[hass-dependency-directory]` is platform dependend (e.g. `/usr/local` for Docker image, `~/.homeassistant/deps` for macOS or `/srv/homeassistant` for Debian).
+Note: `[hass-dependency-directory]` is platform dependent (e.g. `/usr/local` for Docker image, `~/.homeassistant/deps` for macOS or `/srv/homeassistant` for Debian).
 
 Ideally start HA from command line. Export the environment variable PYTHONPATH to your local `xknx` checkout:
 

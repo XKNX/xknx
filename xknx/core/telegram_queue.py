@@ -1,5 +1,5 @@
 """
-Module for queing telegrams addressed to group addresses.
+Module for queueing telegrams addressed to group addresses.
 
 When a device wants to send a telegram to the KNX bus, it has to queue it to the
 TelegramQueue within XKNX. The telegram will be forwarded to the local CEMIHandler and
@@ -96,7 +96,7 @@ class TelegramQueue:
     def unregister_telegram_received_cb(
         self, telegram_received_cb: TelegramQueue.Callback
     ) -> None:
-        """Unregister callback for a telegram beeing received from KNX bus."""
+        """Unregister callback for a telegram being received from KNX bus."""
         self.telegram_received_cbs.remove(telegram_received_cb)
 
     async def start(self) -> None:

@@ -28,13 +28,13 @@ class ConnectionManager:
     def register_connection_state_changed_cb(
         self, connection_state_changed_cb: AsyncConnectionStateCallback
     ) -> None:
-        """Register callback for connection state beeing updated."""
+        """Register callback for connection state being updated."""
         self._connection_state_changed_cbs.append(connection_state_changed_cb)
 
     def unregister_connection_state_changed_cb(
         self, connection_state_changed_cb: AsyncConnectionStateCallback
     ) -> None:
-        """Unregister callback for connection state beeing updated."""
+        """Unregister callback for connection state being updated."""
         if connection_state_changed_cb in self._connection_state_changed_cbs:
             self._connection_state_changed_cbs.remove(connection_state_changed_cb)
 

@@ -2,7 +2,7 @@
 Module for reading the value of a specific KNX group address from KNX bus.
 
 The module will
-* ... send a group_read to the selected gruop address.
+* ... send a group_read to the selected group address.
 * ... register a callback for receiving telegrams within telegram queue.
 * ... check if received telegrams have the correct group address.
 * ... store the received telegram for further processing.

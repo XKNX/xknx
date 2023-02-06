@@ -50,7 +50,7 @@ class KNXIPServiceType(Enum):
 
 
 class ConnectRequestType(Enum):
-    """Enum class for KNX/IP Connect Rquest Typess."""
+    """Enum class for KNX/IP Connect Request Typess."""
 
     # Data connection used to configure a KNXnet/IP device
     DEVICE_MGMT_CONNECTION = 0x03

@@ -64,7 +64,7 @@ class TestRemoteValueSceneNumber:
         assert remote_value.value == 11
 
     async def test_to_process_error(self):
-        """Test process errornous telegram."""
+        """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueSceneNumber(xknx, group_address=GroupAddress("1/2/3"))
 

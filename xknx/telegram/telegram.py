@@ -1,10 +1,10 @@
 """
 Module for KNX Telegrams.
 
-The telegram class is the leightweight interaction object between
+The telegram class is the lightweight interaction object between
 
 * business logic (Lights, Covers, etc) and
-* underlaying KNX/IP abstraction (KNX-Routing/KNX-Tunneling).
+* underlying KNX/IP abstraction (KNX-Routing/KNX-Tunneling).
 
 It contains
 

@@ -1,5 +1,5 @@
 """
-Module for handling KNX primitves.
+Module for handling KNX primitives.
 
 * KNX Addresses
 * KNX Telegrams

@@ -12,7 +12,7 @@ from .knxip_enum import KNXIPServiceType
 
 
 class DescriptionRequest(KNXIPBody):
-    """Representation of a KNX Descriptoin Request."""
+    """Representation of a KNX Description Request."""
 
     SERVICE_TYPE = KNXIPServiceType.DESCRIPTION_REQUEST
 

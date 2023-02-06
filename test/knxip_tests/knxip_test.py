@@ -24,7 +24,7 @@ class TestKNXIPFrame:
             "09 2d 01 00 80"
             "06 10 04 20 00 15 04 02 52 00 29 00 bc e0 10 1f"
             "08 2d 01 00 80"
-        )  # both frames have lenght 21
+        )  # both frames have length 21
         frame_1, rest_1 = KNXIPFrame.from_knx(raw)
         frame_2, rest_2 = KNXIPFrame.from_knx(rest_1)
         assert frame_1.header.total_length == 21

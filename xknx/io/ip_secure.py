@@ -339,7 +339,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         if self.initialized:
             knx_logger.debug("Encrypting frame: %s", knxipframe)
             knxipframe = self.encrypt_frame(plain_frame=knxipframe)
-            # keepalive timer is started with first and resetted with every other
+            # keepalive timer is started with first and reset with every other
             # SecureWrapper frame (including wrapped keepalive frames themselves)
             self.start_keepalive_task()
         # TODO: disallow sending unencrypted frames over non-initialized session with
