@@ -424,7 +424,6 @@ class DPTLength(DPT4ByteFloat):
     ha_device_class = "distance"
     
 
-
 class DPTLightQuantity(DPT4ByteFloat):
     """DPT 14.040 DPT_Value_Light_Quantity."""
 
