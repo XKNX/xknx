@@ -132,6 +132,7 @@ class DPTWsp(DPT2ByteFloat):
     dpt_sub_number = 5
     value_type = "wind_speed_ms"
     unit = "m/s"
+    ha_device_class = "wind_speed"
 
     value_min = 0
     value_max = 670760
@@ -294,6 +295,7 @@ class DPTWspKmh(DPT2ByteFloat):
     dpt_sub_number = 28
     value_type = "wind_speed_kmh"
     unit = "km/h"
+    ha_device_class = "wind_speed"
 
     value_min = 0
     value_max = 670760
