@@ -8,6 +8,6 @@ pylint==2.16.1
 pytest==7.2.1
 pytest-asyncio==0.20.3
 pytest-cov==4.0.0
-setuptools==67.1.0
+setuptools==67.2.0
 tox==4.4.4
 mypy==0.991
