@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Callable, cast
+from typing import Callable
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
@@ -103,13 +103,11 @@ class TCPTransport(KNXIPTransport):
             connection_lost_callback=self._connection_lost,
         )
         loop = asyncio.get_running_loop()
-        (transport, _) = await loop.create_connection(
+        (self.transport, _) = await loop.create_connection(
             lambda: tcp_transport_factory,
             host=self.remote_hpai.ip_addr,
             port=self.remote_hpai.port,
         )
-        # TODO: typing - remove cast - loop.create_connection should return a asyncio.Transport
-        self.transport = cast(asyncio.Transport, transport)
 
     def _connection_lost(self) -> None:
         """Call assigned callback. Callback for connection lost."""
