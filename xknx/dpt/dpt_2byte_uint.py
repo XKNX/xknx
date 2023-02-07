@@ -145,7 +145,6 @@ class DPTBrightness(DPT2ByteUnsigned):
     dpt_sub_number = 13
     value_type = "brightness"
     unit = "lx"
-    ha_device_class = "illuminance"
 
 
 class DPTColorTemperature(DPT2ByteUnsigned):
