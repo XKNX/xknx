@@ -83,20 +83,10 @@ class DataSecure:
 
         Return None if no Data Secure information is found in the Keyring.
         """
-        ga_key_table: dict[GroupAddress, bytes] = {}
-        ia_seq_table: dict[IndividualAddress, int] = {}
-
-        for xml_ga in keyring.group_addresses:
-            if xml_ga.decrypted_key is not None:
-                ga_key_table[xml_ga.address] = xml_ga.decrypted_key
-
-        for xml_ia in keyring.devices:
-            # TODO: check if this should default to 0 or if devices without a sequence number
-            #       in keyfile should be excluded from the table
-            ia_seq_table[xml_ia.individual_address] = xml_ia.sequence_number
+        ga_key_table = keyring.get_data_secure_group_keys()
+        ia_seq_table = keyring.get_data_secure_senders()
         # TODO: persist local individual_address_table and update from that file on start
         #       to have more fresh initial sequence numbers
-
         if not ga_key_table:
             return None
         return DataSecure(

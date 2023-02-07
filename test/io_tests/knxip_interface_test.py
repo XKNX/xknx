@@ -37,10 +37,18 @@ class TestKNXIPInterface:
         interface = knx_interface_factory(self.xknx, connection_config)
         with patch("xknx.io.KNXIPInterface._start_automatic") as start_automatic_mock:
             await interface.start()
-            start_automatic_mock.assert_called_once_with()
+            start_automatic_mock.assert_called_once_with(keyring=None)
             assert threading.active_count() == 1
 
         async def gateway_generator_mock(_):
+            secure_interface = GatewayDescriptor(
+                ip_addr="10.1.2.3",
+                port=3671,
+                supports_tunnelling_tcp=True,
+                supports_secure=True,
+            )
+            secure_interface.tunnelling_requires_secure = True
+            yield secure_interface
             yield GatewayDescriptor(
                 ip_addr="10.1.2.3", port=3671, supports_tunnelling_tcp=True
             )
@@ -55,6 +63,9 @@ class TestKNXIPInterface:
             "xknx.io.knxip_interface.GatewayScanner.async_scan",
             new=gateway_generator_mock,
         ), patch(
+            "xknx.io.KNXIPInterface._start_secure_tunnelling_tcp",
+            side_effect=InvalidSecureConfiguration("Error"),
+        ) as start_secure_tunnelling_tcp, patch(
             "xknx.io.KNXIPInterface._start_tunnelling_tcp",
             side_effect=CommunicationError("Error"),
         ) as start_tunnelling_tcp_mock, patch(
@@ -66,9 +77,48 @@ class TestKNXIPInterface:
         ) as start_routing_mock:
             with pytest.raises(CommunicationError):
                 await interface.start()
+            start_secure_tunnelling_tcp.assert_called_once()
             start_tunnelling_tcp_mock.assert_called_once()
             start_tunnelling_udp_mock.assert_called_once()
             start_routing_mock.assert_called_once()
+
+    async def test_start_automatic_with_keyring(self):
+        """Test starting with automatic mode and keyring."""
+        connection_config = ConnectionConfig(
+            secure_config=SecureConfig(
+                knxkeys_file_path=self.knxkeys_file,
+                knxkeys_password="password",
+            )
+        )
+        assert connection_config.connection_type == ConnectionType.AUTOMATIC
+        interface = knx_interface_factory(self.xknx, connection_config)
+
+        # in the test keyfile the only host is 1.0.0 - others shall be skipped
+        async def gateway_generator_mock(_):
+            yield GatewayDescriptor(
+                ip_addr="10.1.5.5",
+                port=3671,
+                supports_tunnelling_tcp=True,
+                individual_address=IndividualAddress("5.0.0"),
+            )
+            yield GatewayDescriptor(
+                ip_addr="10.1.0.0",
+                port=3671,
+                supports_tunnelling_tcp=True,
+                individual_address=IndividualAddress("1.0.0"),
+            )
+
+        with patch(
+            "xknx.io.knxip_interface.GatewayScanner.async_scan",
+            new=gateway_generator_mock,
+        ), patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+        ) as start_tunnelling_tcp_mock:
+            await interface.start()
+            start_tunnelling_tcp_mock.assert_called_once_with(
+                gateway_ip="10.1.0.0",
+                gateway_port=3671,
+            )
 
     async def test_start_udp_tunnel_connection(self):
         """Test starting UDP tunnel connection."""
@@ -171,7 +221,7 @@ class TestKNXIPInterface:
         ) as start_automatic_mock:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
-            start_automatic_mock.assert_called_once_with()
+            start_automatic_mock.assert_called_once_with(keyring=None)
 
     async def test_threaded_send_cemi(self):
         """Test sending cemi with threaded connection."""

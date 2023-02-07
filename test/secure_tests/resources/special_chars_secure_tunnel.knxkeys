@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Keyring Project="Project name with special chars äüöÄÜÖßáâéèê?()|{}" CreatedBy="ETS 5.7.7 (Build 1428)" Created="2023-02-06T21:10:09" Signature="t2dSfNq331qP/90hMT6/KQ==" xmlns="http://knx.org/xml/keyring/1">
+  <Interface IndividualAddress="1.0.2" Type="Tunneling" Host="1.0.1" UserID="2" Password="l6dgsbqEJIXIGRVwlCHIVFErkI0G4k6Z+AJ2fDTgync=" Authentication="0nclVWobmO62CYaaGpDBk9ZB3yr6Az3uQfKxwgOtPj4=" />
+  <Interface IndividualAddress="1.0.3" Type="Tunneling" Host="1.0.1" UserID="3" Password="27vW02U989lmx7Wx7/Y8dKu3kaGJqNUrm036G86GkWE=" Authentication="Ge+fgeIQUHwR+EqOY4QJnNJ+sDbnZFePCV+C3SmHgt8=" />
+  <Interface IndividualAddress="1.0.4" Type="Tunneling" Host="1.0.1" UserID="4" Password="mRFZ0pI4v9To9df61RZEi6DDDeqybRf/Hi/K5ioCo+M=" Authentication="sOebBH7nNSKFzbO5JNUmgacB9swH8MoR6DyMfA/IQyM=" />
+  <Interface IndividualAddress="1.0.5" Type="Tunneling" Host="1.0.1" UserID="5" Password="pPstJS+Nrn4K5yWgADJev31am6u2Uv8w7lgdbcNNGMM=" Authentication="hoxZzhaqZslMzdBkEDYO+ZHl2xwOUvTULjjWFD6NgkA=" />
+  <Interface IndividualAddress="1.0.6" Type="Tunneling" Host="1.0.1" UserID="6" Password="w/xgBR2Qa+esLjBpzoGTuxtCHjbHWHFlIUWXSPijQ7o=" Authentication="DCXk2BUsPDd1xK/OU0Hv/3HJCDjVQEYS83yDeLUb32s=" />
+  <Devices>
+    <Device IndividualAddress="1.0.1" ToolKey="DZu9XTOfcfgw3ku3by4p0Q==" ManagementPassword="MCoY1uZUTW7YD5u2WBnsIC82feoSfeFUS58ScVKnuPU=" Authentication="srLCgGq2b1GrFk3hBogXpKJSBc6kTyt5QpKVUBo/ei8=" />
+  </Devices>
+</Keyring>

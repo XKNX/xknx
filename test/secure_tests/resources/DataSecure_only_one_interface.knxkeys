@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Keyring Project="DataSecure_only" CreatedBy="ETS 5.7.7 (Build 1428)" Created="2023-02-06T21:17:09" Signature="FRVrpISVDd9IPYmEPHakqA==" xmlns="http://knx.org/xml/keyring/1">
+  <Interface IndividualAddress="1.0.4" Type="Tunneling" Host="1.0.3">
+    <Group Address="65535" Senders="" />
+    <Group Address="1" Senders="1.0.1 1.0.2" />
+    <Group Address="3" Senders="1.0.1 1.0.2" />
+  </Interface>
+  <GroupAddresses>
+    <Group Address="1" Key="gBIFuQX8V+WXe1rCpK4mZA==" />
+    <Group Address="3" Key="qZit1ss5dw6QP9JkX0mW3A==" />
+    <Group Address="65535" Key="JdtAoNfDRKQqkhnnRzw/hw==" />
+  </GroupAddresses>
+</Keyring>

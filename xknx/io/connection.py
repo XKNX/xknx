@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from enum import Enum, auto
+import os
+from typing import Any
 
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
@@ -111,7 +113,7 @@ class SecureConfig:
         user_id: int | None = None,
         device_authentication_password: str | None = None,
         user_password: str | None = None,
-        knxkeys_file_path: str | None = None,
+        knxkeys_file_path: str | os.PathLike[Any] | None = None,
         knxkeys_password: str | None = None,
     ):
         """Initialize SecureConfig class."""
