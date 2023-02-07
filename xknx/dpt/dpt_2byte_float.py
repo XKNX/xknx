@@ -212,6 +212,7 @@ class DPTVoltage(DPT2ByteFloat):
     dpt_sub_number = 20
     value_type = "voltage"
     unit = "mV"
+    ha_device_class = "voltage"
 
 
 class DPTCurrent(DPT2ByteFloat):
@@ -221,6 +222,7 @@ class DPTCurrent(DPT2ByteFloat):
     dpt_sub_number = 21
     value_type = "curr"
     unit = "mA"
+    ha_device_class = "current"
 
 
 class DPTPowerDensity(DPT2ByteFloat):
