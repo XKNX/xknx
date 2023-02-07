@@ -441,7 +441,6 @@ class DPTLuminance(DPT4ByteFloat):
     dpt_sub_number = 41
     value_type = "luminance"
     unit = "cd/m²"
-    ha_device_class = "illuminance"
 
 
 class DPTLuminousFlux(DPT4ByteFloat):
@@ -451,7 +450,6 @@ class DPTLuminousFlux(DPT4ByteFloat):
     dpt_sub_number = 42
     value_type = "luminous_flux"
     unit = "lm"
-    ha_device_class = "illuminance"
 
 
 class DPTLuminousIntensity(DPT4ByteFloat):
@@ -461,7 +459,6 @@ class DPTLuminousIntensity(DPT4ByteFloat):
     dpt_sub_number = 43
     value_type = "luminous_intensity"
     unit = "cd"
-    ha_device_class = "illuminance"
 
 
 class DPTMagneticFieldStrength(DPT4ByteFloat):
