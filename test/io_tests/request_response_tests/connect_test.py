@@ -7,7 +7,6 @@ from xknx.knxip import (
     HPAI,
     ConnectionStateRequest,
     ConnectRequest,
-    ConnectRequestType,
     ConnectResponse,
     ErrorCode,
     KNXIPFrame,
@@ -29,7 +28,6 @@ class TestConnect:
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
             ConnectRequest(
-                request_type=ConnectRequestType.TUNNEL_CONNECTION,
                 control_endpoint=local_hpai,
                 data_endpoint=local_hpai,
             )
@@ -83,9 +81,7 @@ class TestConnect:
         assert connect.awaited_response_class == ConnectResponse
 
         # Expected KNX/IP-Frame:
-        exp_knxipframe = KNXIPFrame.init_from_body(
-            ConnectRequest(request_type=ConnectRequestType.TUNNEL_CONNECTION)
-        )
+        exp_knxipframe = KNXIPFrame.init_from_body(ConnectRequest())
         with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
             "xknx.io.transport.UDPTransport.getsockname"
         ) as mock_udp_getsockname:

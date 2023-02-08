@@ -17,6 +17,10 @@ nav_order: 2
 - Parse Data Secure credentials form Keyring from non-IP-Secure interfaces.
 - Parse Data Secure credentials from Keyrings exported for specific interfaces.
 
+### Protocol
+
+- Support Extended Connection Request Information (CRI) for requesting a specific individual address on Tunnelling v2.
+
 ### Cleanups
 
 - Accept `str | os.PathLike` for Keyring path. Previously only `str`.

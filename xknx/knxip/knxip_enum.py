@@ -54,22 +54,29 @@ class ConnectRequestType(Enum):
 
     # Data connection used to configure a KNXnet/IP device
     DEVICE_MGMT_CONNECTION = 0x03
-
     # Data connection used to forward KNX telegrams between
     # two KNXnet/IP devices.
     TUNNEL_CONNECTION = 0x04
-
     # Data connection used for configuration and data transfer
     # with a remote logging server.
     REMLOG_CONNECTION = 0x06
-
     # Data connection used for data transfer with a remote
     # configuration server.
     REMCONF_CONNECTION = 0x07
-
     # Data connection used for configuration and data transfer
     # with an Object Server in a KNXnet/IP device.
     OBJSVR_CONNECTION = 0x08
+
+
+class TunnellingLayer(Enum):
+    """Enum class for KNX/IP Tunnelling Layer."""
+
+    # Data Link Layer tunnel
+    DATA_LINK_LAYER = 0x02
+    # Raw tunnel
+    RAW_LAYER = 0x04
+    # Busmonitor tunnel
+    BUSMONITOR_LAYER = 0x80
 
 
 class DIBTypeCode(Enum):
@@ -77,24 +84,18 @@ class DIBTypeCode(Enum):
 
     # Device information e.g. KNX medium.
     DEVICE_INFO = 0x01
-
     # Service families supported by the device.
     SUPP_SVC_FAMILIES = 0x02
-
     # IP configuration
     IP_CONFIG = 0x03
-
     # current configuration
     IP_CUR_CONFIG = 0x04
-
     # KNX addresses
     KNX_ADDRESSES = 0x05
-
     # KNX IP Secure
     SECURED_SERVICE_FAMILIES = 0x06
     TUNNELING_INFO = 0x07
     ADDITIONAL_DEVICE_INFO = 0x08
-
     # DIB structure for further data defined by device manufacturer.
     MFR_DATA = 0xFE
 
@@ -120,25 +121,18 @@ class DIBServiceFamily(Enum):
 
     #  Core
     CORE = 0x02
-
     # Device Management
     DEVICE_MANAGEMENT = 0x03
-
     # Tunnelling
     TUNNELING = 0x04
-
     # Routing
     ROUTING = 0x05
-
     # Remote Logging
     REMOTE_LOGGING = 0x06
-
     # Configuration and Diagnosis
     REMOTE_CONFIGURATION_DIAGNOSIS = 0x07
-
     # Object Server'.
     OBJECT_SERVER = 0x08
-
     # Security - Extended search response only
     SECURITY = 0x09
 
@@ -165,15 +159,11 @@ class SearchRequestParameterType(Enum):
 
     # Used to test behavior of the KNXnet/IP server for unknown SRPs. Don't use!
     INVALID = 0x00
-
     # Select only KNXnet/IP Servers that are currently in programming mode
     SELECT_BY_PROGRAMMING_MODE = 0x01
-
     # Select only KNXnet/IP Servers that have the given MAC address
     SELECT_BY_MAC_ADDRESS = 0x02
-
     # Select only KNXnet/IP Servers that support the given DIBServiceFamily in a given version
     SELECT_BY_SERVICE = 0x03
-
     # The Client shall include this SRP to indicate that it is interested in the listed DIBs
     REQUEST_DIBS = 0x04
