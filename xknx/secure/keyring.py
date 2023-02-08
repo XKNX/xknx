@@ -7,6 +7,7 @@ import base64
 import enum
 from itertools import chain
 import logging
+import os
 from typing import Any
 from xml.dom.minidom import Attr, Document, parse
 from xml.etree.ElementTree import Element, ElementTree
@@ -59,7 +60,7 @@ class XMLAssignedGroupAddress(AttributeReader):
     """Assigned Group Addresses to an interface in a knxkeys file."""
 
     address: GroupAddress
-    senders: list[str]
+    senders: list[IndividualAddress]
 
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
@@ -67,40 +68,46 @@ class XMLAssignedGroupAddress(AttributeReader):
         self.address = GroupAddress(
             self.get_attribute_value(attributes.get("Address", None))
         )
-        self.senders = str(
-            self.get_attribute_value(attributes.get("Senders", ""))
-        ).split(" ")
+        self.senders = [
+            IndividualAddress(sender)
+            for sender in (
+                self.get_attribute_value(attributes.get("Senders", ""))
+            ).split()
+        ]
 
 
 class XMLInterface(AttributeReader):
     """Interface in a knxkeys file."""
 
     type: InterfaceType
-    host: IndividualAddress
-    user_id: int
-    password: str
+    individual_address: IndividualAddress
+    host: IndividualAddress | None = None
+    user_id: int | None = None
+    password: str | None = None
     decrypted_password: str | None = None
     decrypted_authentication: str | None = None
-    individual_address: IndividualAddress
-    authentication: str
-    group_addresses: list[XMLAssignedGroupAddress] = []
+    authentication: str | None = None
+    group_addresses: dict[GroupAddress, list[IndividualAddress]]
 
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.type = InterfaceType(self.get_attribute_value(attributes.get("Type")))
-        self.host = IndividualAddress(self.get_attribute_value(attributes.get("Host")))
-        self.user_id = int(self.get_attribute_value(attributes.get("UserID")) or 2)
-        self.password = self.get_attribute_value(attributes.get("Password"))
         self.individual_address = IndividualAddress(
             self.get_attribute_value(attributes.get("IndividualAddress"))
         )
+        _host = self.get_attribute_value(attributes.get("Host"))
+        self.host = IndividualAddress(_host) if _host else None
+        _user_id = self.get_attribute_value(attributes.get("UserID"))
+        self.user_id = int(_user_id) if _user_id else None
+        self.password = self.get_attribute_value(attributes.get("Password"))
         self.authentication = self.get_attribute_value(attributes.get("Authentication"))
 
+        self.group_addresses = {}
         for assigned_ga in filter(lambda x: x.nodeType != 3, node.childNodes):
-            group_address: XMLAssignedGroupAddress = XMLAssignedGroupAddress()
-            group_address.parse_xml(assigned_ga)
-            self.group_addresses.append(group_address)
+            xml_group_address: XMLAssignedGroupAddress = XMLAssignedGroupAddress()
+            xml_group_address.parse_xml(assigned_ga)
+            self.group_addresses[xml_group_address.address] = xml_group_address.senders
 
     def decrypt_attributes(
         self, password_hash: bytes, initialization_vector: bytes
@@ -311,6 +318,64 @@ class Keyring(AttributeReader):
             None,
         )
 
+    def get_interface_by_individual_address(
+        self, individual_address: IndividualAddress
+    ) -> XMLInterface | None:
+        """Get the interface with the given individual address. Any interface type."""
+        return next(
+            (
+                interface
+                for interface in self.interfaces
+                if interface.individual_address == individual_address
+            ),
+            None,
+        )
+
+    def get_data_secure_group_keys(
+        self, receiver: IndividualAddress | None = None
+    ) -> dict[GroupAddress, bytes]:
+        """
+        Get data secure group keys.
+
+        If `receiver` is None, all data secure sending devices are returned.
+        Else the result is filtered by the given receiver.
+        """
+        ga_key_table = {
+            group_address.address: group_address.decrypted_key
+            for group_address in self.group_addresses
+            if group_address.decrypted_key is not None
+        }
+        if receiver is None:
+            return ga_key_table
+
+        rcv_interface = self.get_interface_by_individual_address(
+            individual_address=receiver
+        )
+        if rcv_interface is None:
+            return {}
+        return {
+            ga: key
+            for ga, key in ga_key_table.items()
+            if ga in rcv_interface.group_addresses
+        }
+
+    def get_data_secure_senders(self) -> dict[IndividualAddress, int]:
+        """
+        Get all data secure sending device addresses.
+
+        Sequence numbers are sourced from devices list or default to 0.
+        """
+        ia_seq_table: dict[IndividualAddress, int] = {}
+        for interface in self.interfaces:
+            for senders in interface.group_addresses.values():
+                ia_seq_table |= {sender: 0 for sender in senders}
+        # devices are only available if the full project was exported
+        for device in self.devices:
+            ia_seq_table[device.individual_address] = device.sequence_number
+        # TODO: check if this should default to 0 or if devices without a sequence number
+        # in keyfile should be excluded from the table (are there non-secure devices listed?)
+        return ia_seq_table
+
     def parse_xml(self, node: Document) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
@@ -325,8 +390,7 @@ class Keyring(AttributeReader):
             if sub_node.nodeName == "Interface":
                 interface: XMLInterface = XMLInterface()
                 interface.parse_xml(sub_node)
-                if interface.password is not None:
-                    self.interfaces.append(interface)
+                self.interfaces.append(interface)
             if sub_node.nodeName == "Backbone":
                 backbone: XMLBackbone = XMLBackbone()
                 backbone.parse_xml(sub_node)
@@ -360,18 +424,20 @@ class Keyring(AttributeReader):
 
 
 async def load_keyring(
-    path: str, password: str, validate_signature: bool = True
+    path: str | os.PathLike[Any], password: str, validate_signature: bool = True
 ) -> Keyring:
     """Load a .knxkeys file from the given path in an executor."""
     return await asyncio.to_thread(
-        _load_keyring,
+        sync_load_keyring,
         path,
         password,
         validate_signature=validate_signature,
     )
 
 
-def _load_keyring(path: str, password: str, validate_signature: bool = True) -> Keyring:
+def sync_load_keyring(
+    path: str | os.PathLike[Any], password: str, validate_signature: bool = True
+) -> Keyring:
     """Load a .knxkeys file from the given path."""
 
     if validate_signature and not verify_keyring_signature(path, password):
@@ -432,7 +498,7 @@ class KeyringSAXContentHandler(ContentHandler):
         self.output.extend(value)
 
 
-def verify_keyring_signature(path: str, password: str) -> bool:
+def verify_keyring_signature(path: str | os.PathLike[Any], password: str) -> bool:
     """Verify the signature of the given knxkeys file."""
     handler = KeyringSAXContentHandler(password)
     signature: bytes

@@ -14,7 +14,7 @@ from xknx.secure.data_secure_asdu import (
     SecurityALService,
     SecurityControlField,
 )
-from xknx.secure.keyring import Keyring, _load_keyring
+from xknx.secure.keyring import Keyring, sync_load_keyring
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,
@@ -63,7 +63,7 @@ class TestDataSecure:
         secure_test_keyfile = os.path.join(
             os.path.dirname(__file__), "resources/SecureTest.knxkeys"
         )
-        cls.secure_test_keyring = _load_keyring(secure_test_keyfile, "test")
+        cls.secure_test_keyring = sync_load_keyring(secure_test_keyfile, "test")
 
     def setup_method(self):
         """Setup test methods."""
@@ -83,8 +83,8 @@ class TestDataSecure:
         for ga_raw in [1024, 1027, 1028, 1029]:
             assert GroupAddress(ga_raw) in self.data_secure._group_key_table
 
-        assert len(self.data_secure._individual_address_table) == 3
-        for ia_raw in ["4.0.0", "4.0.9", "5.0.0"]:
+        assert len(self.data_secure._individual_address_table) == 5
+        for ia_raw in ["4.0.0", "4.0.1", "4.0.9", "5.0.0", "5.0.1"]:
             assert (
                 IndividualAddress(ia_raw) in self.data_secure._individual_address_table
             )

@@ -6,6 +6,23 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Connection
+
+- Use only Interfaces listed in Keyring when `ConnectionType.AUTOMATIC` is used and a Keyring is configured.
+
+### Bugfixes
+
+- Parse Data Secure credentials form Keyring from non-IP-Secure interfaces.
+- Parse Data Secure credentials from Keyrings exported for specific interfaces.
+
+### Cleanups
+
+- Accept `str | os.PathLike` for Keyring path. Previously only `str`.
+- Rename `_load_keyring` to `sync_load_keyring` to make it public e.g. when it should be used from an executor.
+- Update CI. Use `codespell` and `flake8-print`.
+
 # 2.4.0 Data Secure 2023-02-05
 
 ### Data Secure

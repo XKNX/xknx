@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Keyring Project="DataSecure_only" CreatedBy="ETS 5.7.7 (Build 1428)" Created="2023-02-07T15:07:21" Signature="3XSm3p3KJlIj428Ke26HNg==" xmlns="http://knx.org/xml/keyring/1">
+  <Interface IndividualAddress="1.0.12" Type="USB">
+    <Group Address="65535" Senders="1.0.4" />
+  </Interface>
+  <GroupAddresses>
+    <Group Address="65535" Key="71Mp7thP+Wac9vmynVke8Q==" />
+  </GroupAddresses>
+</Keyring>
