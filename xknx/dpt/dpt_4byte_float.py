@@ -239,6 +239,7 @@ class DPTElectricCurrent(DPT4ByteFloat):
     dpt_sub_number = 19
     value_type = "electric_current"
     unit = "A"
+    ha_device_class = "current"
 
 
 class DPTElectricCurrentDensity(DPT4ByteFloat):
@@ -365,6 +366,7 @@ class DPTFrequency(DPT4ByteFloat):
     dpt_sub_number = 33
     value_type = "frequency"
     unit = "Hz"
+    ha_device_class = "frequency"
 
 
 class DPTAngularFrequency(DPT4ByteFloat):
@@ -419,6 +421,7 @@ class DPTLength(DPT4ByteFloat):
     dpt_sub_number = 39
     value_type = "length"
     unit = "m"
+    ha_device_class = "distance"
 
 
 class DPTLightQuantity(DPT4ByteFloat):
@@ -437,7 +440,6 @@ class DPTLuminance(DPT4ByteFloat):
     dpt_sub_number = 41
     value_type = "luminance"
     unit = "cd/m²"
-    ha_device_class = "illuminance"
 
 
 class DPTLuminousFlux(DPT4ByteFloat):
@@ -447,7 +449,6 @@ class DPTLuminousFlux(DPT4ByteFloat):
     dpt_sub_number = 42
     value_type = "luminous_flux"
     unit = "lm"
-    ha_device_class = "illuminance"
 
 
 class DPTLuminousIntensity(DPT4ByteFloat):
@@ -457,7 +458,6 @@ class DPTLuminousIntensity(DPT4ByteFloat):
     dpt_sub_number = 43
     value_type = "luminous_intensity"
     unit = "cd"
-    ha_device_class = "illuminance"
 
 
 class DPTMagneticFieldStrength(DPT4ByteFloat):
@@ -530,6 +530,7 @@ class DPTMass(DPT4ByteFloat):
     dpt_sub_number = 51
     value_type = "mass"
     unit = "kg"
+    ha_device_class = "weight"
 
 
 class DPTMassFlux(DPT4ByteFloat):
@@ -658,6 +659,7 @@ class DPTSpeed(DPT4ByteFloat):
     dpt_sub_number = 65
     value_type = "speed"
     unit = "m/s"
+    ha_device_class = "speed"
 
 
 class DPTStress(DPT4ByteFloat):
@@ -793,3 +795,4 @@ class DPTApparentPower(DPT4ByteFloat):
     dpt_sub_number = 80
     value_type = "apparent_power"
     unit = "VA"
+    ha_device_class = "apparent_power"
