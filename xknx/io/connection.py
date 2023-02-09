@@ -34,6 +34,7 @@ class ConnectionConfig:
         * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
     * individual address:
         * ROUTING the individual address used as source address for routing
+        * TCP TUNNELING request a specific tunnel endpoint
         * SECURE TUNNELING use a specific tunnel endpoint from the knxkeys file
     * local_ip: Local ip of the interface though which KNXIPInterface should connect.
     * gateway_ip: IP of KNX/IP tunneling device.

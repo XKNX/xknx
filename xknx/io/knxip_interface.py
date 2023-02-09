@@ -184,15 +184,21 @@ class KNXIPInterface:
     ) -> None:
         """Start KNX/IP TCP tunnel."""
         util.validate_ip(gateway_ip, address_name="Gateway IP address")
+        tunnel_address = self.connection_config.individual_address
+
         logger.debug(
-            "Starting tunnel to %s:%s over TCP",
+            "Starting tunnel to %s:%s over TCP%s",
             gateway_ip,
             gateway_port,
+            f" requesting individual address {tunnel_address}"
+            if tunnel_address
+            else "",
         )
         self._interface = TCPTunnel(
             self.xknx,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
+            individual_address=tunnel_address,
             cemi_received_callback=self.cemi_received,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
