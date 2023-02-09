@@ -73,6 +73,8 @@ An explicit connection configuration can be used. In this case a `connection_typ
 KNX Data Secure credentials are sourced from a keyfile exported from ETS.
 IP Secure keys can be configured directly or sourced from a keyfile.
 
+For TCP tunnel connections a specific tunnel endpoint can be requested by setting `individual_address`. For SECURE tunnels this setting selects an interface from a given keyfile.
+
 # [](#header-2)Starting
 
 ```python

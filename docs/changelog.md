@@ -11,11 +11,17 @@ nav_order: 2
 ### Connection
 
 - Use only Interfaces listed in Keyring when `ConnectionType.AUTOMATIC` is used and a Keyring is configured.
+- Request specific tunnel by individual address for TCP connections when `ConnectionConfig.individual_address` is set.
 
 ### Bugfixes
 
 - Parse Data Secure credentials form Keyring from non-IP-Secure interfaces.
 - Parse Data Secure credentials from Keyrings exported for specific interfaces.
+
+### Protocol
+
+- Support Extended Connection Request Information (CRI) for requesting a specific individual address on Tunnelling v2.
+- Add Core v2 Error Code definitions.
 
 ### Cleanups
 

@@ -526,7 +526,7 @@ class TestStringRepresentations:
         assert (
             str(connect_request)
             == '<ConnectRequest control_endpoint="192.168.42.1:33941/udp" data_endpoint="192.168.42.2:33942/udp" '
-            'request_type="ConnectRequestType.TUNNEL_CONNECTION" flags="0x2" />'
+            'cri="<ConnectRequestInformation connection_type="TUNNEL_CONNECTION" knx_layer="DATA_LINK_LAYER" />" />'
         )
 
     def test_connect_response(self):

@@ -70,6 +70,7 @@ class _Tunnel(Interface):
         self._initial_connection = True
         self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
+        self._requested_address: IndividualAddress | None = None
         self._src_address = IndividualAddress(0)
         self._send_lock = asyncio.Lock()
         # self._tunnelling_request_confirmation_event = asyncio.Event()
@@ -186,7 +187,11 @@ class _Tunnel(Interface):
 
     async def _connect_request(self) -> bool:
         """Connect to tunnelling server. Set communication_channel and src_address."""
-        connect = Connect(transport=self.transport, local_hpai=self.local_hpai)
+        connect = Connect(
+            transport=self.transport,
+            local_hpai=self.local_hpai,
+            individual_address=self._requested_address,
+        )
         await connect.start()
         if connect.success:
             self.communication_channel = connect.communication_channel
@@ -557,6 +562,7 @@ class TCPTunnel(_Tunnel):
         cemi_received_callback: CEMICallbackType,
         gateway_ip: str,
         gateway_port: int,
+        individual_address: IndividualAddress | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
     ):
@@ -571,6 +577,7 @@ class TCPTunnel(_Tunnel):
         )
         # TCP always uses 0.0.0.0:0
         self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
+        self._requested_address = individual_address
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""

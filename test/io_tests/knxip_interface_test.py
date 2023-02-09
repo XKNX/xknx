@@ -181,6 +181,38 @@ class TestKNXIPInterface:
             )
             connect_tcp.assert_called_once_with()
 
+    async def test_start_tcp_tunnel_connection_with_ia(self):
+        """Test starting TCP tunnel connection requesting specific tunnel."""
+        # without gateway_ip automatic is called
+        gateway_ip = "127.0.0.2"
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.TUNNELING_TCP,
+            gateway_ip=gateway_ip,
+            individual_address="1.1.1",
+        )
+        with patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_tcp"
+        ) as start_tunnelling_tcp:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            start_tunnelling_tcp.assert_called_once_with(
+                gateway_ip=gateway_ip,
+                gateway_port=3671,
+            )
+        with patch("xknx.io.tunnel.TCPTunnel.connect") as connect_tcp:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, TCPTunnel)
+            assert interface._interface.gateway_ip == gateway_ip
+            assert interface._interface.gateway_port == 3671
+            assert interface._interface._requested_address == IndividualAddress("1.1.1")
+            assert interface._interface.auto_reconnect
+            assert interface._interface.auto_reconnect_wait == 3
+            assert (  # pylint: disable=comparison-with-callable
+                interface._interface.cemi_received_callback == interface.cemi_received
+            )
+            connect_tcp.assert_called_once_with()
+
     async def test_start_routing_connection(self):
         """Test starting routing connection."""
         local_ip = "127.0.0.1"

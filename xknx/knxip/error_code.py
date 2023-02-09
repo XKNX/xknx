@@ -17,6 +17,10 @@ class ErrorCode(Enum):
     # received sequence number is out of order.
     E_SEQUENCE_NUMBER = 0x04
 
+    # Any further undefined, possibly implementation specific error has occurred.
+    # Core v2
+    E_ERROR = 0x0F
+
     # The KNXnet/IP Server device cannot find an active data
     # connection with the specified ID.
     E_CONNECTION_ID = 0x21
@@ -44,6 +48,18 @@ class ErrorCode(Enum):
     # the KNX subnetwork connection with the specified ID.
     E_KNX_CONNECTION = 0x27
 
+    # The Client is not authorised to use the requested IA in the Extended CRI.
+    # Core v2
+    E_AUTHORISATION_ERROR = 0x28
+
     # The requested tunnelling layer is not supported by the
     # KNXnet/IP Server device.
     E_TUNNELLING_LAYER = 0x29
+
+    # The IA requested in the Extended CRI is not a Tunnelling IA.
+    # Core v2
+    E_NO_TUNNELLING_ADDRESS = 0x2D
+
+    # The IA requested for this connection is in use.
+    # Core v2
+    E_CONNECTION_IN_USE = 0x2E
