@@ -11,6 +11,7 @@ nav_order: 2
 ### Connection
 
 - Use only Interfaces listed in Keyring when `ConnectionType.AUTOMATIC` is used and a Keyring is configured.
+- Request specific tunnel by individual address for TCP connections when `ConnectionConfig.individual_address` is set.
 
 ### Bugfixes
 
