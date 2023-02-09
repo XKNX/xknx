@@ -134,7 +134,7 @@ class TestWeather:
 
         assert weather.wind_speed == 469237.76
         assert weather._wind_speed.unit_of_measurement == "m/s"
-        assert weather._wind_speed.ha_device_class is None
+        assert weather._wind_speed.ha_device_class == "wind_speed"
 
     async def test_wind_bearing(self):
         """Test wind bearing received."""
