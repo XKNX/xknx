@@ -21,6 +21,7 @@ nav_order: 2
 ### Protocol
 
 - Support Extended Connection Request Information (CRI) for requesting a specific individual address on Tunnelling v2.
+- Add Core v2 Error Code definitions.
 
 ### Cleanups
 
