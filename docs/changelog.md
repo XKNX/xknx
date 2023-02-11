@@ -17,6 +17,7 @@ nav_order: 2
 
 - Parse Data Secure credentials form Keyring from non-IP-Secure interfaces.
 - Parse Data Secure credentials from Keyrings exported for specific interfaces.
+- Fix Windows TCP transport bug when using IP Secure Tunnelling.
 
 ### Protocol
 
