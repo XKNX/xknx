@@ -360,7 +360,7 @@ class Cover(Device):
                 await self._stop_position_update()
 
         await self.position_current.process(telegram, always_callback=True)
-        await self.position_target.process(telegram)
+        await self.position_target.process(telegram, always_callback=True)
         await self.angle.process(telegram)
         await self.locked.process(telegram)
 
