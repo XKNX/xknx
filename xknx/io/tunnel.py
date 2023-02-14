@@ -142,7 +142,7 @@ class _Tunnel(Interface):
     def _tunnel_lost(self) -> None:
         """Prepare for reconnection or shutdown when the connection is lost. Callback."""
         self.stop_heartbeat()
-        asyncio.create_task(
+        self.xknx.task_registry.background(
             self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )

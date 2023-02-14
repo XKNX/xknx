@@ -19,6 +19,7 @@ nav_order: 2
 - Parse Data Secure credentials from Keyrings exported for specific interfaces.
 - Fix callback for Cover target position when called with same value consecutively.
 - Fix Windows TCP transport bug when using IP Secure Tunnelling.
+- Don't create unreferenced asyncio Tasks. `xknx.task_registry.background()` can now be used to create background tasks.
 
 ### Protocol
 

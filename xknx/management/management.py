@@ -41,7 +41,9 @@ class Management:
                 destination_address=telegram.source_address,
                 tpci=TAck(sequence_number=telegram.tpci.sequence_number),
             )
-            asyncio.create_task(self.xknx.cemi_handler.send_telegram(ack))
+            self.xknx.task_registry.background(
+                self.xknx.cemi_handler.send_telegram(ack)
+            )
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
             return
@@ -58,7 +60,9 @@ class Management:
             disconnect = Telegram(
                 destination_address=telegram.source_address, tpci=TDisconnect()
             )
-            asyncio.create_task(self.xknx.cemi_handler.send_telegram(disconnect))
+            self.xknx.task_registry.background(
+                self.xknx.cemi_handler.send_telegram(disconnect)
+            )
             return
         logger.warning("Unhandled management telegram: %r", telegram)
         return

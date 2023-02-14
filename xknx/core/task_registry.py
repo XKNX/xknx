@@ -75,6 +75,8 @@ class TaskRegistry:
         self.xknx = xknx
         self.tasks: list[Task] = []
 
+        self._background_task: set[asyncio.Task[None]] = set()
+
     def register(
         self,
         name: str,
@@ -132,3 +134,13 @@ class TaskRegistry:
                 task.reconnected()
             else:
                 task.connection_lost()
+
+    def background(self, async_func: Coroutine[Any, Any, None]) -> None:
+        """Run a task in the background. This task will not be tracked by the TaskRegistry."""
+        # Add task to the set. This creates a strong reference so it can't be garbage collected.
+        task = asyncio.create_task(async_func)
+        # To prevent keeping references to finished tasks forever,
+        self._background_task.add(task)
+        # make each task remove its own reference from the set after
+        # completion:
+        task.add_done_callback(self._background_task.discard)
