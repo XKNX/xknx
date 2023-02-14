@@ -323,7 +323,7 @@ class TestUDPTunnel:
                 raw_cemi=test_cemi.to_knx(),
             )
         )
-        asyncio.create_task(self.tunnel.send_cemi(test_cemi))
+        _send_task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
         await time_travel(0)
         self.tunnel.transport.send.assert_called_once_with(
             test_telegram_frame, addr=data_endpoint_addr
