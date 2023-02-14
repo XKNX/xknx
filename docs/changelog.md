@@ -17,7 +17,8 @@ nav_order: 2
 
 - Parse Data Secure credentials form Keyring from non-IP-Secure interfaces.
 - Parse Data Secure credentials from Keyrings exported for specific interfaces.
-- Added `always_callback=True` while processing telegrams for Cover’s target position to avoid some cases when callback was not triggered.
+- Fix callback for Cover target position when called with same value consecutively.
+- Fix Windows TCP transport bug when using IP Secure Tunnelling.
 
 ### Protocol
 
