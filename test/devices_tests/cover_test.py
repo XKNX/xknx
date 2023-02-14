@@ -830,6 +830,9 @@ class TestCover:
             ("1/2/1", DPTBinary(1), "long"),
             ("1/2/2", DPTBinary(1), "short"),
             ("1/2/4", DPTArray(42), "position"),
+            ("1/2/3", DPTBinary(1), "stop"),
+            # call position with same value again to make sure `always_callback` is set for target position
+            ("1/2/4", DPTArray(42), "position"),
             ("1/2/5", DPTArray(42), "position state"),
             ("1/2/6", DPTArray(42), "angle"),
             ("1/2/7", DPTArray(51), "angle state"),
