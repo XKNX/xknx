@@ -3,7 +3,7 @@ name: Pre-commit auto-update
 on:
   schedule:
     - cron: "0 8 15 * *"
-  # on demand  
+  # on demand
   workflow_dispatch:
 
 jobs:
@@ -11,11 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
-      - uses: actions/setup-python@v4
-      
-      - uses: browniebroke/pre-commit-autoupdate-action@v1.0.0
-      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements/production.txt
+            requirements/testing.txt
+            .pre-commit-config.yaml
+      - name: Install dependencies
+        # needed for the mypy hook
+        run: |
+          pip install -r requirements/testing.txt
+      - name: Pre-commit auto-update
+        uses: browniebroke/pre-commit-autoupdate-action@v1.0.0
       - uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
