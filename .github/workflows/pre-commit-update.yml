@@ -25,6 +25,9 @@ jobs:
         run: |
           pip install -r requirements/testing.txt
       - name: Pre-commit auto-update
+        env:
+          # new branch is created in create-pull-request step
+          SKIP: no-commit-to-branch
         uses: browniebroke/pre-commit-autoupdate-action@v1.0.0
       - uses: peter-evans/create-pull-request@v4
         with:
