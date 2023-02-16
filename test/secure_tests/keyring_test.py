@@ -154,6 +154,16 @@ class TestKeyRing:
         test_device = keyring.get_device_by_interface(interface=test_interface)
         assert test_device.individual_address == IndividualAddress("1.1.10")
 
+        test_host = keyring.get_tunnel_host_by_interface(
+            tunnelling_slot=IndividualAddress("1.1.8")
+        )
+        assert test_host == IndividualAddress("1.1.0")
+
+        test_host = keyring.get_tunnel_host_by_interface(
+            tunnelling_slot=IndividualAddress("1.1.10")
+        )
+        assert test_host is None
+
         test_interface = keyring.get_tunnel_interface_by_host_and_user_id(
             host=IndividualAddress("1.1.0"), user_id=4
         )

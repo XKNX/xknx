@@ -33,6 +33,7 @@ class ConnectionConfig:
         * TUNNELING connect to a specific KNX/IP tunneling device via UDP.
         * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
     * individual address:
+        * AUTOMATIC use a specific tunnel endpoint from a given knxkeys file
         * ROUTING the individual address used as source address for routing
         * TCP TUNNELING request a specific tunnel endpoint
         * SECURE TUNNELING use a specific tunnel endpoint from the knxkeys file

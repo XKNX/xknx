@@ -120,21 +120,34 @@ class KNXIPInterface:
 
     async def _start_automatic(self, keyring: Keyring | None) -> None:
         """Start GatewayScanner and connect to the found device."""
-        keyring_host_ias: set[IndividualAddress] | None = None
-        if keyring and keyring.interfaces:
-            keyring_host_ias = {
-                interface.host
-                for interface in keyring.interfaces
-                if interface.host is not None
-                and interface.type is InterfaceType.TUNNELING
-            }
+        keyring_host_filter: set[IndividualAddress] = set()
+        if keyring:
+            if required_addr := self.connection_config.individual_address:
+                _host_ia = keyring.get_tunnel_host_by_interface(
+                    tunnelling_slot=required_addr
+                )
+                if _host_ia is None:
+                    raise InvalidSecureConfiguration(
+                        f"No host for required address {required_addr} found in keyring file."
+                    )
+                keyring_host_filter.add(_host_ia)
+            else:
+                keyring_host_filter.update(
+                    interface.host
+                    for interface in keyring.interfaces
+                    if interface.host is not None
+                    and interface.type is InterfaceType.TUNNELING
+                )
 
         async for gateway in GatewayScanner(
             self.xknx,
             local_ip=self.connection_config.local_ip,
             scan_filter=self.connection_config.scan_filter,
         ).async_scan():
-            if keyring_host_ias and gateway.individual_address not in keyring_host_ias:
+            if (
+                keyring_host_filter
+                and gateway.individual_address not in keyring_host_filter
+            ):
                 logger.debug("Skipping %s. No match in keyring file", gateway)
                 continue
             try:
@@ -174,7 +187,7 @@ class KNXIPInterface:
                 break
         else:
             raise CommunicationError(
-                f"No usable KNX/IP device found{' in keyring file' if keyring_host_ias else ''}."
+                f"No usable KNX/IP device found{' in keyring file' if keyring_host_filter else ''}."
             )
 
     async def _start_tunnelling_tcp(
