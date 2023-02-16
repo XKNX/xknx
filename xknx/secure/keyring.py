@@ -281,6 +281,20 @@ class Keyring(AttributeReader):
 
         return None
 
+    def get_tunnel_host_by_interface(
+        self, tunnelling_slot: IndividualAddress
+    ) -> IndividualAddress | None:
+        """Get the tunnel host for a given interface."""
+        return next(
+            (
+                interface.host
+                for interface in self.interfaces
+                if interface.type is InterfaceType.TUNNELING
+                and interface.individual_address == tunnelling_slot
+            ),
+            None,
+        )
+
     def get_tunnel_interfaces_by_host(
         self, host: IndividualAddress
     ) -> list[XMLInterface]:

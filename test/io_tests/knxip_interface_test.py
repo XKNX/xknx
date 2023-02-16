@@ -120,6 +120,61 @@ class TestKNXIPInterface:
                 gateway_port=3671,
             )
 
+    async def test_start_automatic_with_keyring_and_ia(self):
+        """Test starting with automatic mode and keyring and individual address."""
+        connection_config = ConnectionConfig(
+            individual_address=IndividualAddress("1.0.12"),
+            secure_config=SecureConfig(
+                knxkeys_file_path=self.knxkeys_file,
+                knxkeys_password="password",
+            ),
+        )
+        assert connection_config.connection_type == ConnectionType.AUTOMATIC
+        interface = knx_interface_factory(self.xknx, connection_config)
+
+        # in the test keyfile the only host is 1.0.0 - others shall be skipped
+        async def gateway_generator_mock(_):
+            yield GatewayDescriptor(
+                ip_addr="10.1.5.5",
+                port=3671,
+                supports_tunnelling_tcp=True,
+                individual_address=IndividualAddress("5.0.0"),
+            )
+            yield GatewayDescriptor(
+                ip_addr="10.1.0.0",
+                port=3671,
+                supports_tunnelling_tcp=True,
+                individual_address=IndividualAddress("1.0.0"),
+            )
+
+        with patch(
+            "xknx.io.knxip_interface.GatewayScanner.async_scan",
+            new=gateway_generator_mock,
+        ), patch(
+            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+        ) as start_tunnelling_tcp_mock:
+            await interface.start()
+            start_tunnelling_tcp_mock.assert_called_once_with(
+                gateway_ip="10.1.0.0",
+                gateway_port=3671,
+            )
+
+        # IA not listed in keyring
+        invalid_config = ConnectionConfig(
+            individual_address=IndividualAddress("5.5.5"),
+            secure_config=SecureConfig(
+                knxkeys_file_path=self.knxkeys_file,
+                knxkeys_password="password",
+            ),
+        )
+        assert invalid_config.connection_type == ConnectionType.AUTOMATIC
+        interface = knx_interface_factory(self.xknx, invalid_config)
+        with patch(
+            "xknx.io.knxip_interface.GatewayScanner.async_scan",
+            new=gateway_generator_mock,
+        ), pytest.raises(InvalidSecureConfiguration):
+            await interface.start()
+
     async def test_start_udp_tunnel_connection(self):
         """Test starting UDP tunnel connection."""
         # without gateway_ip automatic is called
