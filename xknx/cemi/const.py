@@ -25,6 +25,19 @@ class CEMIMessageCode(Enum):
     # (does not indicate a successful receive though)
     L_RAW_CON = 0x2F
 
+    # Management Configuration message types
+    M_PROP_READ_REQ = 0xFC  # Read Property Request
+    M_PROP_READ_CON = 0xFB  # Read Property Confirmation
+    M_PROP_WRITE_REQ = 0xF6  # Write Property Request
+    M_PROP_WRITE_CON = 0xF5  # Write Property Confirmation
+    M_PROP_INFO_IND = 0xF7  # Property Indication
+    M_FUNC_PROP_COMMAND_REQ = 0xF8  # Call Property Function
+    M_FUNC_PROP_STATE_READ_REQ = 0xF9  # Read status of Property Function
+    M_FUNC_PROP_COMMAND_CON = 0xFA  # Property Function Confirmation
+    M_FUNC_PROP_STATE_READ_CON = 0xFA  # Read status of Property Function Confirmation
+    M_RESET_REQ = 0xF1  # Reset Request
+    M_RESET_IND = 0xF0  # Reset confirmation
+
 
 class CEMIFlags:
     """Enum class for CEMI Flags."""
