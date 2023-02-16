@@ -19,6 +19,7 @@ from xknx.exceptions import (
 )
 from xknx.knxip import (
     HPAI,
+    ConnectRequestInformation,
     DisconnectRequest,
     DisconnectResponse,
     HostProtocol,
@@ -190,7 +191,7 @@ class _Tunnel(Interface):
         connect = Connect(
             transport=self.transport,
             local_hpai=self.local_hpai,
-            individual_address=self._requested_address,
+            cri=ConnectRequestInformation(individual_address=self._requested_address),
         )
         await connect.start()
         if connect.success:
@@ -202,7 +203,7 @@ class _Tunnel(Interface):
                 else connect.data_endpoint.addr_tuple
             )
             # Use the individual address provided by the tunnelling server
-            self._src_address = IndividualAddress(connect.identifier)
+            self._src_address = connect.crd.individual_address or IndividualAddress(0)
             self.xknx.current_address = self._src_address
             logger.debug(
                 "Tunnel established. communication_channel=%s, address=%s",

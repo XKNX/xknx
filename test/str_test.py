@@ -35,6 +35,7 @@ from xknx.knxip import (
     ConnectRequest,
     ConnectRequestType,
     ConnectResponse,
+    ConnectResponseData,
     DIBDeviceInformation,
     DIBGeneric,
     DIBServiceFamily,
@@ -533,14 +534,16 @@ class TestStringRepresentations:
         """Test string representatoin of KNX/IP ConnectResponse."""
         connect_response = ConnectResponse()
         connect_response.communication_channel = 13
-        connect_response.request_type = ConnectRequestType.TUNNEL_CONNECTION
         connect_response.data_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
-        connect_response.identifier = 42
+        connect_response.crd = ConnectResponseData(
+            request_type=ConnectRequestType.TUNNEL_CONNECTION,
+            individual_address=IndividualAddress("1.2.3"),
+        )
         assert (
             str(connect_response)
             == '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" '
             'data_endpoint="192.168.42.1:33941/udp" '
-            'request_type="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />'
+            'crd="<ConnectResponseData request_type="ConnectRequestType.TUNNEL_CONNECTION" individual_address="1.2.3" />" />'
         )
 
     def test_disconnect_request(self):

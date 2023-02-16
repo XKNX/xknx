@@ -67,8 +67,9 @@ class ConnectRequestInformation:
     supported by Tunnelling v2 devices.
     """
 
-    CRI_BASIC_LENGTH = 4
-    CRI_EXTENDED_LENGTH = 6
+    CRI_LENGTH = 2
+    CRI_TUNNEL_LENGTH = 4
+    CRI_TUNNEL_EXT_LENGTH = 6
 
     def __init__(
         self,
@@ -81,29 +82,40 @@ class ConnectRequestInformation:
         self.knx_layer = knx_layer
         self.individual_address = individual_address
 
+    def _is_tunnel_cri(self) -> bool:
+        return self.connection_type == ConnectRequestType.TUNNEL_CONNECTION
+
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
-        return (
-            ConnectRequestInformation.CRI_EXTENDED_LENGTH
-            if self.individual_address
-            else ConnectRequestInformation.CRI_BASIC_LENGTH
-        )
+        if self._is_tunnel_cri():
+            return (
+                ConnectRequestInformation.CRI_TUNNEL_EXT_LENGTH
+                if self.individual_address
+                else ConnectRequestInformation.CRI_TUNNEL_LENGTH
+            )
+        return ConnectRequestInformation.CRI_LENGTH
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         cri_length = raw[0]
-        if cri_length == ConnectRequestInformation.CRI_BASIC_LENGTH:
-            extended = False
-        elif cri_length == ConnectRequestInformation.CRI_EXTENDED_LENGTH:
-            extended = True
-        else:
-            raise CouldNotParseKNXIP("CRI has wrong length")
         if len(raw) < cri_length:
             raise CouldNotParseKNXIP("CRI data has wrong length")
+        if cri_length < ConnectRequestInformation.CRI_LENGTH:
+            raise CouldNotParseKNXIP("CRI length too small")
         self.connection_type = ConnectRequestType(raw[1])
-        self.knx_layer = TunnellingLayer(raw[2])
-        if extended:
-            self.individual_address = IndividualAddress.from_knx(raw[4:6])
+        if self._is_tunnel_cri():
+            if cri_length == ConnectRequestInformation.CRI_TUNNEL_LENGTH:
+                extended = False
+            elif cri_length == ConnectRequestInformation.CRI_TUNNEL_EXT_LENGTH:
+                extended = True
+            else:
+                raise CouldNotParseKNXIP("CRI has wrong length")
+            self.knx_layer = TunnellingLayer(raw[2])
+            self.individual_address = (
+                IndividualAddress.from_knx(raw[4:6]) if extended else None
+            )
+        elif cri_length != ConnectRequestInformation.CRI_LENGTH:
+            raise CouldNotParseKNXIP("CRI has wrong length")
         return cri_length
 
     def to_knx(self) -> bytes:
@@ -112,13 +124,19 @@ class ConnectRequestInformation:
             (
                 self.calculated_length(),
                 self.connection_type.value,
-                self.knx_layer.value,
-                0x00,  # Reserved
             )
         )
-        if self.individual_address is None:
-            return _cri
-        return _cri + self.individual_address.to_knx()
+        if self._is_tunnel_cri():
+            _cri = _cri + bytes(
+                (
+                    self.knx_layer.value,
+                    0x00,  # Reserved
+                )
+            )
+            if self.individual_address:
+                _cri = _cri + self.individual_address.to_knx()
+
+        return _cri
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
@@ -126,14 +144,17 @@ class ConnectRequestInformation:
 
     def __repr__(self) -> str:
         """Return object as readable string."""
+        _tunnel_layer = (
+            f'knx_layer="{self.knx_layer.name}" ' if self._is_tunnel_cri() else ""
+        )
         _extended = (
             f'individual_address="{self.individual_address}" '
-            if self.individual_address
+            if self._is_tunnel_cri() and self.individual_address
             else ""
         )
         return (
             "<ConnectRequestInformation "
             f'connection_type="{self.connection_type.name}" '
-            f'knx_layer="{self.knx_layer.name}" '
+            f"{_tunnel_layer}"
             f"{_extended}/>"
         )

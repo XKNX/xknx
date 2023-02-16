@@ -2,7 +2,7 @@
 # flake8: noqa
 from .body import KNXIPBody, KNXIPBodyResponse
 from .connect_request import ConnectRequest, ConnectRequestInformation
-from .connect_response import ConnectResponse
+from .connect_response import ConnectResponse, ConnectResponseData
 from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
 from .description_request import DescriptionRequest
@@ -54,6 +54,7 @@ __all__ = [
     "ConnectRequest",
     "ConnectRequestInformation",
     "ConnectResponse",
+    "ConnectResponseData",
     "ConnectionStateRequest",
     "ConnectionStateResponse",
     "DescriptionRequest",
