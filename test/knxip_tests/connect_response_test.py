@@ -10,6 +10,7 @@ from xknx.knxip import (
     ErrorCode,
     KNXIPFrame,
 )
+from xknx.telegram import IndividualAddress
 
 
 class TestKNXIPConnectResponse:
@@ -26,7 +27,7 @@ class TestKNXIPConnectResponse:
         assert knxipframe.body.status_code == ErrorCode.E_NO_ERROR
         assert knxipframe.body.data_endpoint == HPAI(ip_addr="192.168.42.10", port=3671)
         assert knxipframe.body.crd.request_type == ConnectRequestType.TUNNEL_CONNECTION
-        assert knxipframe.body.crd.identifier == 4607
+        assert knxipframe.body.crd.individual_address.raw == 4607
 
         connect_response = ConnectResponse(
             communication_channel=1,
@@ -34,7 +35,7 @@ class TestKNXIPConnectResponse:
             data_endpoint=HPAI(ip_addr="192.168.42.10", port=3671),
             crd=ConnectResponseData(
                 request_type=ConnectRequestType.TUNNEL_CONNECTION,
-                identifier=4607,
+                individual_address=IndividualAddress(4607),
             ),
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_response)
@@ -75,7 +76,7 @@ class TestKNXIPConnectResponse:
             data_endpoint=HPAI(ip_addr="10.1.0.41", port=3671),
             crd=ConnectResponseData(
                 request_type=ConnectRequestType.TUNNEL_CONNECTION,
-                identifier=0,
+                individual_address=IndividualAddress(0),
             ),
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_response)

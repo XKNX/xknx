@@ -298,7 +298,7 @@ class TestUDPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=gateway_data_endpoint,
-                crd=ConnectResponseData(identifier=7),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_addr)
@@ -411,7 +411,7 @@ class TestTCPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
-                crd=ConnectResponseData(identifier=7),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
@@ -465,7 +465,7 @@ class TestTCPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
-                crd=ConnectResponseData(identifier=7),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
@@ -517,7 +517,7 @@ class TestTCPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
-                crd=ConnectResponseData(identifier=7),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)

@@ -12,6 +12,7 @@ from xknx.knxip import (
     ErrorCode,
     KNXIPFrame,
 )
+from xknx.telegram import IndividualAddress
 
 
 class TestConnect:
@@ -64,13 +65,13 @@ class TestConnect:
         res_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(
                 communication_channel=23,
-                crd=ConnectResponseData(identifier=7),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connect.success
         assert connect.communication_channel == 23
-        assert connect.identifier == 7
+        assert connect.crd.individual_address.raw == 7
 
     async def test_connect_route_back_true(self):
         """Test connecting from KNX bus."""
@@ -113,10 +114,10 @@ class TestConnect:
         res_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(
                 communication_channel=23,
-                crd=ConnectResponseData(identifier=7),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connect.success
         assert connect.communication_channel == 23
-        assert connect.identifier == 7
+        assert connect.crd.individual_address.raw == 7

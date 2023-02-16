@@ -537,13 +537,13 @@ class TestStringRepresentations:
         connect_response.data_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
         connect_response.crd = ConnectResponseData(
             request_type=ConnectRequestType.TUNNEL_CONNECTION,
-            identifier=42,
+            individual_address=IndividualAddress("1.2.3"),
         )
         assert (
             str(connect_response)
             == '<ConnectResponse communication_channel="13" status_code="ErrorCode.E_NO_ERROR" '
             'data_endpoint="192.168.42.1:33941/udp" '
-            'crd="<ConnectResponseData request_type="ConnectRequestType.TUNNEL_CONNECTION" identifier="42" />" />'
+            'crd="<ConnectResponseData request_type="ConnectRequestType.TUNNEL_CONNECTION" individual_address="1.2.3" />" />'
         )
 
     def test_disconnect_request(self):

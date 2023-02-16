@@ -8,6 +8,7 @@ from xknx.knxip import (
     ConnectRequest,
     ConnectRequestInformation,
     ConnectResponse,
+    ConnectResponseData,
     KNXIPFrame,
 )
 
@@ -34,9 +35,9 @@ class Connect(RequestResponse):
         super().__init__(transport, ConnectResponse)
         self.communication_channel = 0
         self.data_endpoint = HPAI()
-        self.identifier = 0
         self.local_hpai = local_hpai
         self.cri = cri or ConnectRequestInformation()
+        self.crd = ConnectResponseData()
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
@@ -53,4 +54,4 @@ class Connect(RequestResponse):
         assert isinstance(knxipframe.body, ConnectResponse)
         self.communication_channel = knxipframe.body.communication_channel
         self.data_endpoint = knxipframe.body.data_endpoint
-        self.identifier = knxipframe.body.crd.identifier
+        self.crd = knxipframe.body.crd

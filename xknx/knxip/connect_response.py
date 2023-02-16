@@ -8,6 +8,7 @@ assigns a communication channel and an individual address for the client.
 from __future__ import annotations
 
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.telegram import IndividualAddress
 
 from .body import KNXIPBodyResponse
 from .error_code import ErrorCode
@@ -81,11 +82,11 @@ class ConnectResponseData:
     def __init__(
         self,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
-        identifier: int = 0,
+        individual_address: IndividualAddress | None = None,
     ):
         """Initialize ConnectResponseData object."""
         self.request_type = request_type
-        self.identifier = identifier
+        self.individual_address = individual_address
 
     def _is_tunnel_crd(self) -> bool:
         return self.request_type == ConnectRequestType.TUNNEL_CONNECTION
@@ -109,7 +110,7 @@ class ConnectResponseData:
         if self._is_tunnel_crd():
             if crd_length != ConnectResponseData.CRD_TUNNEL_LENGTH:
                 raise CouldNotParseKNXIP("CRD has wrong length")
-            self.identifier = raw[2] * 256 + raw[3]
+            self.individual_address = IndividualAddress.from_knx(raw[2:4])
         elif crd_length != ConnectResponseData.CRD_LENGTH:
             raise CouldNotParseKNXIP("CRD has wrong length")
         return crd_length
@@ -123,8 +124,8 @@ class ConnectResponseData:
             )
         )
         if self._is_tunnel_crd():
-            assert self.identifier is not None
-            return _crd + self.identifier.to_bytes(2, "big")
+            assert self.individual_address is not None
+            return _crd + self.individual_address.to_knx()
 
         return _crd
 
@@ -134,11 +135,13 @@ class ConnectResponseData:
 
     def __repr__(self) -> str:
         """Return object as readable string."""
-        _identifier = (
-            f'identifier="{self.identifier}" ' if self._is_tunnel_crd() else ""
+        _address = (
+            f'individual_address="{self.individual_address}" '
+            if self._is_tunnel_crd() and self.individual_address
+            else ""
         )
         return (
             "<ConnectResponseData "
             f'request_type="{self.request_type}" '
-            f"{_identifier}/>"
+            f"{_address}/>"
         )
