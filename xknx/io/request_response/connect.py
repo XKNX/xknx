@@ -10,7 +10,6 @@ from xknx.knxip import (
     ConnectResponse,
     KNXIPFrame,
 )
-from xknx.telegram import IndividualAddress
 
 from .request_response import RequestResponse
 
@@ -29,24 +28,23 @@ class Connect(RequestResponse):
         self,
         transport: KNXIPTransport,
         local_hpai: HPAI,
-        individual_address: IndividualAddress | None = None,
+        cri: ConnectRequestInformation | None = None,
     ):
         """Initialize Connect class."""
         super().__init__(transport, ConnectResponse)
         self.communication_channel = 0
         self.data_endpoint = HPAI()
         self.identifier = 0
-        self.individual_address = individual_address
         self.local_hpai = local_hpai
+        self.cri = cri or ConnectRequestInformation()
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        cri = ConnectRequestInformation(individual_address=self.individual_address)
         # use the same HPAI for control_endpoint and data_endpoint
         connect_request = ConnectRequest(
             control_endpoint=self.local_hpai,
             data_endpoint=self.local_hpai,
-            cri=cri,
+            cri=self.cri,
         )
         return KNXIPFrame.init_from_body(connect_request)
 

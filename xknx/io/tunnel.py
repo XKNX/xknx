@@ -19,6 +19,7 @@ from xknx.exceptions import (
 )
 from xknx.knxip import (
     HPAI,
+    ConnectRequestInformation,
     DisconnectRequest,
     DisconnectResponse,
     HostProtocol,
@@ -190,7 +191,7 @@ class _Tunnel(Interface):
         connect = Connect(
             transport=self.transport,
             local_hpai=self.local_hpai,
-            individual_address=self._requested_address,
+            cri=ConnectRequestInformation(individual_address=self._requested_address),
         )
         await connect.start()
         if connect.success:
