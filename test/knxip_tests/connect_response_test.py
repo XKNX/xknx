@@ -2,7 +2,14 @@
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import HPAI, ConnectRequestType, ConnectResponse, ErrorCode, KNXIPFrame
+from xknx.knxip import (
+    HPAI,
+    ConnectRequestType,
+    ConnectResponse,
+    ConnectResponseData,
+    ErrorCode,
+    KNXIPFrame,
+)
 
 
 class TestKNXIPConnectResponse:
@@ -18,15 +25,17 @@ class TestKNXIPConnectResponse:
         assert knxipframe.body.communication_channel == 1
         assert knxipframe.body.status_code == ErrorCode.E_NO_ERROR
         assert knxipframe.body.data_endpoint == HPAI(ip_addr="192.168.42.10", port=3671)
-        assert knxipframe.body.request_type == ConnectRequestType.TUNNEL_CONNECTION
-        assert knxipframe.body.identifier == 4607
+        assert knxipframe.body.crd.request_type == ConnectRequestType.TUNNEL_CONNECTION
+        assert knxipframe.body.crd.identifier == 4607
 
         connect_response = ConnectResponse(
             communication_channel=1,
             status_code=ErrorCode.E_NO_ERROR,
-            request_type=ConnectRequestType.TUNNEL_CONNECTION,
             data_endpoint=HPAI(ip_addr="192.168.42.10", port=3671),
-            identifier=4607,
+            crd=ConnectResponseData(
+                request_type=ConnectRequestType.TUNNEL_CONNECTION,
+                identifier=4607,
+            ),
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_response)
 
@@ -63,9 +72,11 @@ class TestKNXIPConnectResponse:
         connect_response = ConnectResponse(
             communication_channel=192,
             status_code=ErrorCode.E_NO_MORE_CONNECTIONS,
-            request_type=ConnectRequestType.TUNNEL_CONNECTION,
             data_endpoint=HPAI(ip_addr="10.1.0.41", port=3671),
-            identifier=0,
+            crd=ConnectResponseData(
+                request_type=ConnectRequestType.TUNNEL_CONNECTION,
+                identifier=0,
+            ),
         )
         knxipframe2 = KNXIPFrame.init_from_body(connect_response)
 

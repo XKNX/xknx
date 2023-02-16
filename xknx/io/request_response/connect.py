@@ -55,4 +55,4 @@ class Connect(RequestResponse):
         assert isinstance(knxipframe.body, ConnectResponse)
         self.communication_channel = knxipframe.body.communication_channel
         self.data_endpoint = knxipframe.body.data_endpoint
-        self.identifier = knxipframe.body.identifier
+        self.identifier = knxipframe.body.crd.identifier

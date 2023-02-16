@@ -18,6 +18,7 @@ from xknx.knxip import (
     ConnectionStateResponse,
     ConnectRequest,
     ConnectResponse,
+    ConnectResponseData,
     DescriptionRequest,
     DescriptionResponse,
     DisconnectRequest,
@@ -297,7 +298,7 @@ class TestUDPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=gateway_data_endpoint,
-                identifier=7,
+                crd=ConnectResponseData(identifier=7),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_addr)
@@ -410,7 +411,7 @@ class TestTCPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
-                identifier=7,
+                crd=ConnectResponseData(identifier=7),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
@@ -464,7 +465,7 @@ class TestTCPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
-                identifier=7,
+                crd=ConnectResponseData(identifier=7),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
@@ -516,7 +517,7 @@ class TestTCPTunnel:
             ConnectResponse(
                 communication_channel=23,
                 data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
-                identifier=7,
+                crd=ConnectResponseData(identifier=7),
             )
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)

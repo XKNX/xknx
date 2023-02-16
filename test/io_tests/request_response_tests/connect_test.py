@@ -8,6 +8,7 @@ from xknx.knxip import (
     ConnectionStateRequest,
     ConnectRequest,
     ConnectResponse,
+    ConnectResponseData,
     ErrorCode,
     KNXIPFrame,
 )
@@ -63,7 +64,7 @@ class TestConnect:
         res_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(
                 communication_channel=23,
-                identifier=7,
+                crd=ConnectResponseData(identifier=7),
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
@@ -112,7 +113,7 @@ class TestConnect:
         res_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(
                 communication_channel=23,
-                identifier=7,
+                crd=ConnectResponseData(identifier=7),
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
