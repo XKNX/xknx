@@ -143,6 +143,9 @@ class Light(Device):
         group_address_tunable_white_state: GroupAddressesType | None = None,
         group_address_color_temperature: GroupAddressesType | None = None,
         group_address_color_temperature_state: GroupAddressesType | None = None,
+        group_address_color_temperature_brightness: GroupAddressesType | None = None,
+        group_address_color_temperature_brightness_state: GroupAddressesType
+        | None = None,
         group_address_switch_red: GroupAddressesType | None = None,
         group_address_switch_red_state: GroupAddressesType | None = None,
         group_address_brightness_red: GroupAddressesType | None = None,
@@ -261,6 +264,18 @@ class Light(Device):
             after_update_cb=self.after_update,
         )
 
+        self.color_temperature_brightness = RemoteValueScaling(
+            xknx,
+            group_address_color_temperature_brightness,
+            group_address_color_temperature_brightness_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Color temperature brightness",
+            after_update_cb=self.after_update,
+            range_from=0,
+            range_to=255,
+        )
+
         self.red = _SwitchAndBrightness(
             xknx,
             self.name,
@@ -335,6 +350,7 @@ class Light(Device):
         yield self.xyy_color
         yield self.tunable_white
         yield self.color_temperature
+        yield self.color_temperature_brightness
 
     def _iter_debounce_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
         """Iterate the devices RemoteValue classes debouncing after_update_cb."""
@@ -415,6 +431,11 @@ class Light(Device):
     def supports_color_temperature(self) -> bool:
         """Return if light supports absolute color temperature."""
         return self.color_temperature.initialized
+
+    @property
+    def supports_color_temperature_brightness(self) -> bool:
+        """Return if light supports color temperature brightness."""
+        return self.color_temperature_brightness.initialized
 
     @property
     def state(self) -> bool | None:
@@ -596,6 +617,21 @@ class Light(Device):
             return
         await self.color_temperature.set(color_temperature)
 
+    @property
+    def current_color_temperature_brightness(self) -> int | None:
+        """Return current color temperature brightness of light between 0..255."""
+        return self.color_temperature_brightness.value
+
+    async def set_color_temperature_brightness(self, brightness: int) -> None:
+        """Set color temperature brightness of light."""
+        if not self.supports_color_temperature_brightness:
+            logger.warning(
+                "Dimming the color temperature not supported for device %s",
+                self.get_name(),
+            )
+            return
+        await self.color_temperature_brightness.set(brightness)
+
     async def process_group_write(self, telegram: "Telegram") -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_instant_remote_values():
@@ -641,6 +677,12 @@ class Light(Device):
         str_color_temperature = (
             f" color_temperature={self.color_temperature.group_addr_str()}"
             if self.supports_color_temperature
+            else ""
+        )
+
+        str_color_temperature_brightness = (
+            f" color_temperature_brightness={self.color_temperature_brightness.group_addr_str()}"
+            if self.supports_color_temperature_brightness
             else ""
         )
 
@@ -699,6 +741,7 @@ class Light(Device):
             f"{str_xyy_color}"
             f"{str_tunable_white}"
             f"{str_color_temperature}"
+            f"{str_color_temperature_brightness}"
             f"{str_red_state}"
             f"{str_red_brightness}"
             f"{str_green_state}"

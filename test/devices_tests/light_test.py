@@ -275,6 +275,26 @@ class TestLight:
         assert not light.supports_color_temperature
 
     #
+    # TEST SUPPORT COLOR TEMPERATURE BRIGHTNESS
+    #
+    def test_supports_color_temperature_brightness_true(self):
+        """Test supports_color_temperature_brightness with a light with color temperature brightness function."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "Diningroom.Light_1",
+            group_address_switch="1/6/4",
+            group_address_color_temperature_brightness="1/6/6",
+        )
+        assert light.supports_color_temperature_brightness
+
+    def test_supports_color_temperature_brightness_false(self):
+        """Test supports_color_temperature_brightness attribute with a Light without color temperature brightness function."""
+        xknx = XKNX()
+        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        assert not light.supports_color_temperature_brightness
+
+    #
     # SYNC
     #
     async def test_sync(self):
@@ -290,9 +310,10 @@ class TestLight:
             group_address_xyy_color_state="1/2/4",
             group_address_tunable_white_state="1/2/7",
             group_address_color_temperature_state="1/2/8",
+            group_address_color_temperature_brightness_state="1/2/10",
             group_address_rgbw_state="1/2/9",
         )
-        expected_telegrams = 7
+        expected_telegrams = 8
 
         await light.sync()
         assert xknx.telegrams.qsize() == expected_telegrams
@@ -319,6 +340,9 @@ class TestLight:
             ),
             Telegram(
                 destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/10"), payload=GroupValueRead()
             ),
         ]
         assert len(set(telegrams)) == expected_telegrams
@@ -676,6 +700,34 @@ class TestLight:
             assert xknx.telegrams.qsize() == 0
             mock_warn.assert_called_with(
                 "Dimming not supported for device %s", "TestLight"
+            )
+
+    async def test_set_color_temperature_brightness(self):
+        """Test setting the color temperature brightness of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature_brightness="1/2/5",
+        )
+        await light.set_color_temperature_brightness(23)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(23)),
+        )
+
+    async def test_set_color_temperature_brightness_not_dimmable(self):
+        """Test setting the color temperature brightness of a non color temperature dimmable Light."""
+        xknx = XKNX()
+        light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
+        with patch("logging.Logger.warning") as mock_warn:
+            await light.set_color_temperature_brightness(23)
+            assert xknx.telegrams.qsize() == 0
+            mock_warn.assert_called_with(
+                "Dimming the color temperature not supported for device %s", "TestLight"
             )
 
     async def test_set_individual_color_with_gloabl_switch(self):
@@ -1310,6 +1362,64 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
+    async def test_process_ct_dimm(self):
+        """Test process / reading telegrams from telegram queue. Test if ct brightness is processed."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature_brightness="1/2/5",
+        )
+        assert light.current_color_temperature_brightness is None
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(23)),
+        )
+        await light.process(telegram)
+        assert light.current_color_temperature_brightness == 23
+
+    async def test_process_ct_dimm_wrong_payload(self):
+        """Test process wrong telegrams. (wrong payload type)."""
+        xknx = XKNX()
+        cb_mock = AsyncMock()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature_brightness="1/2/5",
+            device_updated_cb=cb_mock,
+        )
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        with patch("logging.Logger.warning") as log_mock:
+            await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
+
+    async def test_process_ct_dimm_payload_invalid_length(self):
+        """Test process wrong telegrams. (wrong payload length)."""
+        xknx = XKNX()
+        cb_mock = AsyncMock()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature_brightness="1/2/5",
+            device_updated_cb=cb_mock,
+        )
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((23, 24))),
+        )
+        with patch("logging.Logger.warning") as log_mock:
+            await light.process(telegram)
+            log_mock.assert_called_once()
+            cb_mock.assert_not_called()
+
     async def test_process_color(self):
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
@@ -1728,6 +1838,8 @@ class TestLight:
             group_address_tunable_white_state="1/7/8",
             group_address_color_temperature="1/7/9",
             group_address_color_temperature_state="1/7/10",
+            group_address_color_temperature_brightness="1/7/13",
+            group_address_color_temperature_brightness_state="1/7/14",
             group_address_rgbw="1/7/11",
             group_address_rgbw_state="1/7/12",
             group_address_hue="1/7/81",
@@ -1765,6 +1877,8 @@ class TestLight:
         assert light.has_group_address(GroupAddress("1/7/10"))
         assert light.has_group_address(GroupAddress("1/7/11"))
         assert light.has_group_address(GroupAddress("1/7/12"))
+        assert light.has_group_address(GroupAddress("1/7/13"))
+        assert light.has_group_address(GroupAddress("1/7/14"))
         # hue
         assert light.has_group_address(GroupAddress("1/7/81"))
         assert light.has_group_address(GroupAddress("1/7/82"))
