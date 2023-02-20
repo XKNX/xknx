@@ -33,6 +33,8 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_tunable_white_state` KNX group address for the current relative color temperature. *DPT 5.001*
 - `group_address_color_temperature` KNX group address to set absolute color temperature. *DPT 7.600*
 - `group_address_color_temperature_state` KNX group address for the current absolute color temperature. *DPT 7.600*
+- `group_address_color_temperature_brightness` KNX group address to set absolute color temperature brightness. *DPT 5.001*
+- `group_address_color_temperature_brightness_state` KNX group address for the current color temperature state. *DPT 5.001*
 
 - `group_address_switch_red` KNX group address to switch the red component. *DPT 1.001*
 - `group_address_switch_red_state` KNX group address for the state of the red component. *DPT 1.001*
@@ -71,7 +73,9 @@ light = Light(xknx,
               group_address_tunable_white='1/2/9',
               group_address_tunable_white_state='1/2/10',
               group_address_color_temperature='1/2/11',
-              group_address_color_temperature_state='1/2/12')
+              group_address_color_temperature_state='1/2/12',
+              group_address_color_temperature='1/2/13',
+              group_address_color_temperature_state='1/2/14')
 
 # Switching light on
 await light.set_on()
@@ -94,12 +98,16 @@ await set_tunable_white(25)
 # Set absolute color temperature (Kelvin)
 await set_color_temperature(3300)
 
+# Set color temperature brightness
+await light.set_color_temperature_brightness(23)
+
 # Accessing light via 'do'
 await light.do('on')
 await light.do('off')
 await light.do('brightness:80')
 await light.do('tunable_white:75')
 await light.do('color_temperature:5000')
+await light.do('color_temperature_brightness:80')
 
 # Update current state via KNX GroupValueRead
 await light.sync(wait_for_result=True)
@@ -115,6 +123,8 @@ print(light.supports_tunable_white)
 print(light.current_tunable_white)
 print(light.supports_color_temperature)
 print(light.current_color_temperature)
+print(light.supports_color_temperature_brightness)
+print(light.current_color_temperature_brightness)
 ```
 
 ## [](#header-2)Example: RGBW light with individual group addresses for red, green, blue and white
