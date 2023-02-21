@@ -155,7 +155,8 @@ class CEMIFrame:
         _apdu = bytes([_tpdu[0] & 0b11]) + _tpdu[1:]  # clear TPCI bits
         if len(_apdu) != (_npdu_len + 1):  # TCPI octet not included in NPDU length
             raise UnsupportedCEMIMessage(
-                f"APDU LEN should be {_npdu_len} but is {len(_apdu) - 1} in CEMI: {cemi.hex()}"
+                f"APDU LEN should be {_npdu_len} but is {len(_apdu) - 1} "
+                f"from {src_addr} in CEMI: {cemi.hex()}"
             )
 
         # TPCI (transport layer control information)
@@ -170,13 +171,15 @@ class CEMIFrame:
             )
         except ConversionError as err:
             raise UnsupportedCEMIMessage(
-                f"TPCI not supported: {_tpdu[0]:#10b}"
+                f"TPCI not supported: {_tpdu[0]:#10b} "
+                f"from {src_addr} in CEMI: {cemi.hex()}"
             ) from err
 
         if tpci.control:
             if _npdu_len:
                 raise UnsupportedCEMIMessage(
                     f"Invalid length for control TPDU {tpci}: {_npdu_len}"
+                    f" from {src_addr} in CEMI: {cemi.hex()}"
                 )
             return CEMIFrame(
                 code=code,
@@ -190,7 +193,10 @@ class CEMIFrame:
         try:
             payload = APCI.from_knx(_apdu)
         except ConversionError as err:
-            raise UnsupportedCEMIMessage("APDU not supported") from err
+            raise UnsupportedCEMIMessage(
+                f"APDU not supported from {src_addr} "
+                f"from {src_addr} in CEMI: {cemi.hex()}"
+            ) from err
 
         return CEMIFrame(
             code=code,

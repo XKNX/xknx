@@ -64,7 +64,7 @@ class TestRouting:
         ]
         await asyncio.sleep(0)  # await local L_Data.con
 
-    @patch("logging.Logger.warning")
+    @patch("logging.Logger.info")
     async def test_routing_indication_received_apci_unsupported(self, logging_mock):
         """Test Tunnel sending ACK for unsupported frames."""
         routing = Routing(

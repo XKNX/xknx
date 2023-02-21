@@ -64,7 +64,7 @@ class Management:
                 self.xknx.cemi_handler.send_telegram(disconnect)
             )
             return
-        logger.warning("Unhandled management telegram: %r", telegram)
+        logger.debug("Unhandled management telegram: %r", telegram)
         return
 
     async def connect(self, address: IndividualAddress) -> P2PConnection:
@@ -244,7 +244,7 @@ class P2PConnection:
             await self.xknx.cemi_handler.send_telegram(telegram)
             ack = await asyncio.wait_for(self._ack_waiter, MANAGAMENT_ACK_TIMEOUT)
         except asyncio.TimeoutError:
-            logger.debug(
+            logger.info(
                 "%s: timeout while waiting for ACK. Resending Telegram.", self.address
             )
             # resend once after 3 seconds without ACK
