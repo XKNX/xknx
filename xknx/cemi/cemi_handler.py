@@ -98,7 +98,11 @@ class CEMIHandler:
             try:
                 cemi = self.data_secure.received_cemi(cemi=cemi)
             except DataSecureError as err:
-                data_secure_logger.warning("Could not decrypt CEMI frame: %s", err)
+                data_secure_logger.log(
+                    err.log_level,
+                    "Could not decrypt CEMI frame: %s",
+                    err,
+                )
                 return
         # TODO: remove telegram init from CEMIFrame class and move it here?
         telegram = cemi.telegram

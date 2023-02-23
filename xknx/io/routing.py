@@ -260,7 +260,7 @@ class Routing(Interface):
         try:
             cemi = CEMIFrame.from_knx(routing_indication.raw_cemi)
         except UnsupportedCEMIMessage as unsupported_cemi_err:
-            logger.warning("CEMI not supported: %s", unsupported_cemi_err)
+            logger.info("CEMI not supported: %s", unsupported_cemi_err)
             return
         if cemi.src_addr == self.individual_address:
             logger.debug("Ignoring own packet %s", cemi)

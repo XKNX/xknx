@@ -1,6 +1,7 @@
 """Module for XKXN Exceptions."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 
@@ -157,6 +158,11 @@ class DeviceIllegalValue(XKNXException):
 
 class DataSecureError(XKNXException):
     """Exception class for KNX Data Secure handling."""
+
+    def __init__(self, message: str, log_level: int = logging.WARNING) -> None:
+        """Instantiate exception."""
+        super().__init__(message)
+        self.log_level = log_level
 
 
 class SecureException(XKNXException):

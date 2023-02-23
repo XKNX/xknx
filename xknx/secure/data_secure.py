@@ -114,13 +114,15 @@ class DataSecure:
             last_valid_sequence_number = self._individual_address_table[source_address]
         except KeyError:
             raise DataSecureError(
-                f"Source address not found in Security Individual Address Table: {source_address}"
+                f"Source address not found in Security Individual Address Table: {source_address}",
+                log_level=logging.INFO,
             )
         if not received_sequence_number > last_valid_sequence_number:
             # TODO: implement and increment Security Failure Log counter (not when equal)
             raise DataSecureError(
                 f"Sequence number too low for {source_address}: "
-                f"{received_sequence_number} received, {last_valid_sequence_number} last valid"
+                f"{received_sequence_number} received, {last_valid_sequence_number} last valid",
+                log_level=logging.WARNING,
             )
 
         yield
@@ -136,7 +138,8 @@ class DataSecure:
         if isinstance(cemi.dst_addr, GroupAddress):
             if cemi.dst_addr in self._group_key_table:
                 raise DataSecureError(
-                    f"Discarding frame with plain APDU for secure group address: {cemi}"
+                    f"Discarding frame with plain APDU for secure group address: {cemi}",
+                    log_level=logging.WARNING,
                 )
             return cemi
         # Plain point-to-point frame
@@ -148,25 +151,31 @@ class DataSecure:
     def _received_secure_cemi(self, cemi: CEMIFrame, s_apdu: SecureAPDU) -> CEMIFrame:
         """Handle received secured CEMI frame."""
         if s_apdu.scf.service is not SecurityALService.S_A_DATA:
-            raise DataSecureError(f"Only SecurityALService.S_A_DATA supported {cemi}")
+            raise DataSecureError(
+                f"Only SecurityALService.S_A_DATA supported {cemi}",
+                log_level=logging.DEBUG,
+            )
         if s_apdu.scf.system_broadcast or s_apdu.scf.tool_access:
             # TODO: handle incoming responses with tool key of sending device
             # when we can send with tool key
             raise DataSecureError(
-                f"System broadcast and tool access not supported {cemi}"
+                f"System broadcast and tool access not supported {cemi}",
+                log_level=logging.DEBUG,
             )
 
         # Secure group communication frame
         if isinstance(cemi.dst_addr, GroupAddress):
             if not (key := self._group_key_table.get(cemi.dst_addr)):
                 raise DataSecureError(
-                    f"No key found for group address {cemi.dst_addr} from {cemi.src_addr}"
+                    f"No key found for group address {cemi.dst_addr} from {cemi.src_addr}",
+                    log_level=logging.INFO,
                 )
         # Secure point-to-point frame
         else:
             # TODO: maybe possible to implement this over tool key
             raise DataSecureError(
-                f"Secure Point-to-Point communication not supported {cemi}"
+                f"Secure Point-to-Point communication not supported {cemi}",
+                log_level=logging.DEBUG,
             )
 
         with self.check_sequence_number(

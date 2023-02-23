@@ -12,6 +12,10 @@ nav_order: 2
 
 - When `ConnectionConfig.individual_address` is set and a Keyring is given `ConnectionType.AUTOMATIC` will try to connect to the host of this address. If not found (in keyfile or discovery) it will raise.
 
+### Internals
+
+- Lower log levels for unsupported Telegrams and add more information.
+
 # 2.5.0 Request IA 2023-02-14
 
 ### Connection
