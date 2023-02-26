@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
+from datetime import datetime
 from typing import Callable
 
 from xknx.core.connection_state import XknxConnectionState
@@ -20,6 +21,12 @@ class ConnectionManager:
         self.connected = asyncio.Event()
         self._state = XknxConnectionState.DISCONNECTED
         self._connection_state_changed_cbs: list[AsyncConnectionStateCallback] = []
+
+        self.cemi_count_incoming: int = 0
+        self.cemi_count_incoming_error: int = 0
+        self.cemi_count_outgoing: int = 0
+        self.cemi_count_outgoing_error: int = 0
+        self.connected_since: datetime | None = None
 
     async def register_loop(self) -> None:
         """Register main loop to enable thread-safe `connection_state_changed` calls."""
@@ -55,8 +62,10 @@ class ConnectionManager:
         self._state = state
         if state == XknxConnectionState.CONNECTED:
             self.connected.set()
+            self._reset_counters()
         else:
             self.connected.clear()
+            self.connected_since = None
 
         if tasks := [
             connection_state_change_cb(state)
@@ -68,3 +77,11 @@ class ConnectionManager:
     def state(self) -> XknxConnectionState:
         """Get current state."""
         return self._state
+
+    def _reset_counters(self) -> None:
+        """Reset counters."""
+        self.cemi_count_incoming = 0
+        self.cemi_count_incoming_error = 0
+        self.cemi_count_outgoing = 0
+        self.cemi_count_outgoing_error = 0
+        self.connected_since = datetime.now().astimezone()

@@ -11,6 +11,7 @@ nav_order: 2
 ### Connection
 
 - When `ConnectionConfig.individual_address` is set and a Keyring is given `ConnectionType.AUTOMATIC` will try to connect to the host of this address. If not found (in keyfile or discovery) it will raise.
+- Add CEMIFrame counters and timestamp of connection start.
 
 ### Internals
 

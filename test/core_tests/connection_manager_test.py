@@ -1,5 +1,6 @@
 """Unit test for connection manager."""
 import asyncio
+from datetime import datetime
 import threading
 from unittest.mock import AsyncMock, patch
 
@@ -109,3 +110,36 @@ class TestConnectionManager:
             # wait for side_effect to finish
             await asyncio.wait_for(xknx.connection_manager.connected.wait(), timeout=1)
             await xknx.stop()
+
+    async def test_cemi_counter(self):
+        """Test cemi counter."""
+        xknx = XKNX()
+
+        assert xknx.connection_manager.connected_since is None
+        xknx.connection_manager.cemi_count_incoming = 5
+        xknx.connection_manager.cemi_count_incoming_error = 5
+        xknx.connection_manager.cemi_count_outgoing = 5
+        xknx.connection_manager.cemi_count_outgoing_error = 5
+        # reset on new connection
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.CONNECTED
+        )
+        assert xknx.connection_manager.cemi_count_incoming == 0
+        assert xknx.connection_manager.cemi_count_incoming_error == 0
+        assert xknx.connection_manager.cemi_count_outgoing == 0
+        assert xknx.connection_manager.cemi_count_outgoing_error == 0
+        assert isinstance(xknx.connection_manager.connected_since, datetime)
+
+        xknx.connection_manager.cemi_count_incoming = 5
+        xknx.connection_manager.cemi_count_incoming_error = 5
+        xknx.connection_manager.cemi_count_outgoing = 5
+        xknx.connection_manager.cemi_count_outgoing_error = 5
+        # keep values until new connection; set connection timestamp to None
+        await xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+        assert xknx.connection_manager.cemi_count_incoming == 5
+        assert xknx.connection_manager.cemi_count_incoming_error == 5
+        assert xknx.connection_manager.cemi_count_outgoing == 5
+        assert xknx.connection_manager.cemi_count_outgoing_error == 5
+        assert xknx.connection_manager.connected_since is None
