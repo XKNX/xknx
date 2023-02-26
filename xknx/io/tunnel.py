@@ -12,11 +12,7 @@ from typing import TYPE_CHECKING
 
 from xknx.cemi import CEMIFrame
 from xknx.core import XknxConnectionState
-from xknx.exceptions import (
-    CommunicationError,
-    TunnellingAckError,
-    UnsupportedCEMIMessage,
-)
+from xknx.exceptions import CommunicationError, TunnellingAckError
 from xknx.knxip import (
     HPAI,
     ConnectRequestInformation,
@@ -313,12 +309,7 @@ class _Tunnel(Interface):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnel request."""
-        try:
-            cemi = CEMIFrame.from_knx(tunneling_request.raw_cemi)
-        except UnsupportedCEMIMessage as unsupported_cemi_err:
-            logger.info("CEMI not supported: %s", unsupported_cemi_err)
-            return
-        self.cemi_received_callback(cemi)
+        self.cemi_received_callback(tunneling_request.raw_cemi)
 
     def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest

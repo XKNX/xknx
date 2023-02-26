@@ -68,17 +68,20 @@ class TestUDPTunnel:
             # L_Data.ind T_Connect from 1.0.250 to 1.0.255 (xknx tunnel endpoint)
             # communication_channel_id: 0x02   sequence_counter: 0x21
             bytes.fromhex("0610 0420 0014 04 02 21 00 2900b06010fa10ff0080"),
+            # <UnsupportedCEMIMessage description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
+            # communication_channel_id: 0x02   sequence_counter: 0x21
+            bytes.fromhex("0610 0420 0013 04 02 21 00 2900b06010fa10ff00"),
         ],
     )
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     async def test_tunnel_request_received(self, send_ack_mock, raw):
-        """Test Tunnel for calling send_ack on normal frames."""
-        test_cemi = CEMIFrame.from_knx(raw[10:])
+        """Test Tunnel for calling send_ack on frames."""
+        raw_cemi = raw[10:]
         self.tunnel.expected_sequence_number = 0x21
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
-        self.cemi_received_mock.assert_called_once_with(test_cemi)
+        self.cemi_received_mock.assert_called_once_with(raw_cemi)
         send_ack_mock.assert_called_once_with(raw[7], raw[8])
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
@@ -166,31 +169,6 @@ class TestUDPTunnel:
         self.tunnel.transport.send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
-
-    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    def test_tunnel_request_received_cemi_too_small(self, send_ack_mock):
-        """Test Tunnel sending ACK for unsupported frames."""
-        # <UnsupportedCEMIMessage description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
-        # communication_channel_id: 0x02   sequence_counter: 0x81
-        raw = bytes.fromhex("0610 0420 0013 04 02 81 00 2900b06010fa10ff00")
-        self.tunnel.expected_sequence_number = 0x81
-
-        self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
-        self.cemi_received_mock.assert_not_called()
-        send_ack_mock.assert_called_once_with(0x02, 0x81)
-
-    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    def test_tunnel_request_received_apci_unsupported(self, send_ack_mock):
-        """Test Tunnel sending ACK for unsupported frames."""
-        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
-        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
-        # communication_channel_id: 0x02   sequence_counter: 0x4f
-        raw = bytes.fromhex("0610 0420 0015 04 02 4f 00 2900b0d0000100000103f8")
-        self.tunnel.expected_sequence_number = 0x4F
-
-        self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
-        self.cemi_received_mock.assert_not_called()
-        send_ack_mock.assert_called_once_with(0x02, 0x4F)
 
     async def test_tunnel_send_retry(self, time_travel):
         """Test tunnel resends the telegram when no ACK was received."""
