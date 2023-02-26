@@ -16,6 +16,7 @@ from xknx.exceptions import (
     ConfirmationError,
     ConversionError,
     DataSecureError,
+    UnsupportedCEMIMessage,
 )
 from xknx.secure.data_secure import DataSecure
 from xknx.secure.keyring import Keyring
@@ -80,20 +81,32 @@ class CEMIHandler:
                 f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
             )
 
-    def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
-        """Parse and handle incoming CEMI Frames."""
-        logger.debug("Incoming CEMI: %s", cemi)
+    def handle_raw_cemi(self, raw_cemi: bytes) -> None:
+        """Parse and handle incoming raw CEMI Frames."""
+        try:
+            cemi = CEMIFrame.from_knx(raw_cemi)
+        except UnsupportedCEMIMessage as unsupported_cemi_err:
+            logger.info("CEMI not supported: %s", unsupported_cemi_err)
+            return
+        self.handle_cemi_frame(cemi)
 
+    def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
+        """Handle incoming CEMI Frames."""
         if cemi.code is CEMIMessageCode.L_DATA_CON:
             # L_DATA_CON confirmation frame signals ready to send next telegram
             self._l_data_confirmation_event.set()
+            logger.debug("Incoming CEMI confirmation: %s", cemi)
             return
         if cemi.code is CEMIMessageCode.L_DATA_REQ:
             # L_DATA_REQ frames should only be outgoing.
             logger.warning("Received unexpected L_DATA_REQ frame: %s", cemi)
             return
+        if cemi.src_addr == self.xknx.current_address:
+            # L_DATA_IND frames from our own address should be ignored (may occur form routing)
+            logger.debug("Ignoring own CEMI: %s", cemi)
+            return
+        logger.debug("Incoming CEMI: %s", cemi)
 
-        # TODO: do we have to decrypt Data Secure L_DATA_CON?
         if self.data_secure is not None:
             try:
                 cemi = self.data_secure.received_cemi(cemi=cemi)

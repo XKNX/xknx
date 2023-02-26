@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Final
 
 from xknx.cemi import CEMIFrame, CEMIMessageCode
 from xknx.core import XknxConnectionState
-from xknx.exceptions import CommunicationError, UnsupportedCEMIMessage
+from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
     KNXIPFrame,
@@ -226,7 +226,7 @@ class Routing(Interface):
             self._send_knxipframe(KNXIPFrame.init_from_body(routing_indication))
 
         cemi.code = CEMIMessageCode.L_DATA_CON
-        self.cemi_received_callback(cemi)
+        self.cemi_received_callback(cemi.to_knx())
 
     def _send_knxipframe(self, knxipframe: KNXIPFrame) -> None:
         """Send KNXIPFrame to connected routing device."""
@@ -257,15 +257,7 @@ class Routing(Interface):
 
     def _handle_routing_indication(self, routing_indication: RoutingIndication) -> None:
         """Handle incoming RoutingIndication."""
-        try:
-            cemi = CEMIFrame.from_knx(routing_indication.raw_cemi)
-        except UnsupportedCEMIMessage as unsupported_cemi_err:
-            logger.info("CEMI not supported: %s", unsupported_cemi_err)
-            return
-        if cemi.src_addr == self.individual_address:
-            logger.debug("Ignoring own packet %s", cemi)
-            return
-        self.cemi_received_callback(cemi)
+        self.cemi_received_callback(routing_indication.raw_cemi)
 
 
 class SecureRouting(Routing):

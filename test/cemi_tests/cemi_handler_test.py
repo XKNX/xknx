@@ -111,3 +111,41 @@ def test_incoming_management_telegram(telegram):
         xknx.cemi_handler.handle_cemi_frame(test_cemi)
         mock_management_process.assert_called_once()
         assert xknx.telegrams.qsize() == 0
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
+        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
+        bytes.fromhex("2900b0d0000100000103f8"),
+        # <UnsupportedCEMIMessage description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
+        # communication_channel_id: 0x02   sequence_counter: 0x81
+        bytes.fromhex("2900b06010fa10ff00"),
+    ],
+)
+def test_invalid_cemi(raw):
+    """Test incoming invalid CEMI Frames."""
+    xknx = XKNX()
+
+    with patch("logging.Logger.info") as mock_info, patch.object(
+        xknx.cemi_handler, "handle_cemi_frame"
+    ) as mock_handle_cemi_frame:
+        xknx.cemi_handler.handle_raw_cemi(raw)
+        mock_info.assert_called_once()
+        mock_handle_cemi_frame.assert_not_called()
+
+
+def test_incoming_from_self():
+    """Test incoming CEMI from own IA."""
+    xknx = XKNX()
+    xknx.current_address = IndividualAddress("1.1.22")
+    # L_Data.ind GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
+    raw = bytes.fromhex("2900bcd011162916030080 0c 3f")
+
+    with patch("logging.Logger.debug") as mock_debug, patch.object(
+        xknx.cemi_handler, "telegram_received"
+    ) as mock_telegram_received:
+        xknx.cemi_handler.handle_raw_cemi(raw)
+        mock_debug.assert_called_once()
+        mock_telegram_received.assert_not_called()

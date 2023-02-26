@@ -15,6 +15,7 @@ nav_order: 2
 ### Internals
 
 - Lower log levels for unsupported Telegrams and add more information.
+- Move CEMIFrame parsing from Interface to CEMIHandler.
 
 # 2.5.0 Request IA 2023-02-14
 

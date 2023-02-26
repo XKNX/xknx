@@ -460,12 +460,14 @@ class KNXIPInterface:
             await self._interface.disconnect()
             self._interface = None
 
-    def cemi_received(self, cemi: CEMIFrame) -> None:
-        """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""
-        self.xknx.cemi_handler.handle_cemi_frame(cemi)
+    def cemi_received(self, raw_cemi: bytes) -> None:
+        """Pass raw CEMIFrame data to CEMIHandler. Callback for having received CEMIFrames."""
+        self.xknx.cemi_handler.handle_raw_cemi(raw_cemi)
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """Send CEMIFrame to connected device (either Tunneling or Routing)."""
+        # to ease converting L_Data.req CEMI frames to L_Data.ind and local confirmation
+        # in routing we pass `CEMIFrame` from the CEMIHandler here, instead of raw bytes
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
         return await self._interface.send_cemi(cemi)
@@ -539,9 +541,9 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
         self.connection_thread.join()
 
-    def cemi_received(self, cemi: CEMIFrame) -> None:
+    def cemi_received(self, raw_cemi: bytes) -> None:
         """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""
-        self._main_loop.call_soon_threadsafe(super().cemi_received, cemi)
+        self._main_loop.call_soon_threadsafe(super().cemi_received, raw_cemi)
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """Send CEMIFrame to connected device (either Tunneling or Routing)."""
