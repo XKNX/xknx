@@ -466,6 +466,8 @@ class KNXIPInterface:
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """Send CEMIFrame to connected device (either Tunneling or Routing)."""
+        # to ease converting L_Data.req CEMI frames to L_Data.ind and local confirmation
+        # in routing we pass `CEMIFrame` from the CEMIHandler here, instead of raw bytes
         if self._interface is None:
             raise CommunicationError("KNX/IP interface not connected")
         return await self._interface.send_cemi(cemi)
