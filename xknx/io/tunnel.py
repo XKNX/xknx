@@ -38,7 +38,6 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
-cemi_logger = logging.getLogger("xknx.cemi")
 
 
 class _Tunnel(Interface):
@@ -441,7 +440,6 @@ class UDPTunnel(_Tunnel):
         """
         raw_cemi = cemi.to_knx()
         async with self._send_lock:
-            cemi_logger.debug("Outgoing CEMI: %s", cemi)
             try:
                 try:
                     await self._tunnelling_request(raw_cemi)

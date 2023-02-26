@@ -34,7 +34,6 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
-cemi_logger = logging.getLogger("xknx.cemi")
 
 BUSY_DECREMENT_TIME: Final = 0.005  # 5 ms
 BUSY_INCREMENT_COOLDOWN: Final = 0.01  # 10 ms
