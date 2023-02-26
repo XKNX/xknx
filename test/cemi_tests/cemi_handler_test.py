@@ -134,3 +134,18 @@ def test_invalid_cemi(raw):
         xknx.cemi_handler.handle_raw_cemi(raw)
         mock_info.assert_called_once()
         mock_handle_cemi_frame.assert_not_called()
+
+
+def test_incoming_from_self():
+    """Test incoming CEMI from own IA."""
+    xknx = XKNX()
+    xknx.current_address = IndividualAddress("1.1.22")
+    # L_Data.ind GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
+    raw = bytes.fromhex("2900bcd011162916030080 0c 3f")
+
+    with patch("logging.Logger.debug") as mock_debug, patch.object(
+        xknx.cemi_handler, "telegram_received"
+    ) as mock_telegram_received:
+        xknx.cemi_handler.handle_raw_cemi(raw)
+        mock_debug.assert_called_once()
+        mock_telegram_received.assert_not_called()
