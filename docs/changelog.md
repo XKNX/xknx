@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.6.0 Connection information 2023-02-27
 
 ### Connection
 
