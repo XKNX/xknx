@@ -6,7 +6,7 @@ from collections.abc import Awaitable
 from datetime import datetime
 from typing import Callable
 
-from xknx.core.connection_state import XknxConnectionState
+from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 
 AsyncConnectionStateCallback = Callable[[XknxConnectionState], Awaitable[None]]
 
@@ -27,6 +27,7 @@ class ConnectionManager:
         self.cemi_count_outgoing: int = 0
         self.cemi_count_outgoing_error: int = 0
         self.connected_since: datetime | None = None
+        self.connection_type: XknxConnectionType = XknxConnectionType.NOT_CONNECTED
 
     async def register_loop(self) -> None:
         """Register main loop to enable thread-safe `connection_state_changed` calls."""
@@ -45,21 +46,28 @@ class ConnectionManager:
         if connection_state_changed_cb in self._connection_state_changed_cbs:
             self._connection_state_changed_cbs.remove(connection_state_changed_cb)
 
-    async def connection_state_changed(self, state: XknxConnectionState) -> None:
+    async def connection_state_changed(
+        self,
+        state: XknxConnectionState,
+        connection_type: XknxConnectionType = XknxConnectionType.NOT_CONNECTED,
+    ) -> None:
         """Run registered callbacks in main loop. Set internal state flag."""
         if self._main_loop:
             asyncio.run_coroutine_threadsafe(
-                self._connection_state_changed(state), self._main_loop
+                self._connection_state_changed(state, connection_type), self._main_loop
             )
         else:
-            await self._connection_state_changed(state)
+            await self._connection_state_changed(state, connection_type)
 
-    async def _connection_state_changed(self, state: XknxConnectionState) -> None:
+    async def _connection_state_changed(
+        self, state: XknxConnectionState, connection_type: XknxConnectionType
+    ) -> None:
         """Run registered callbacks. Set internal state flag."""
         if self._state == state:
             return
 
         self._state = state
+        self.connection_type = connection_type
         if state == XknxConnectionState.CONNECTED:
             self.connected.set()
             self._reset_counters()

@@ -5,7 +5,7 @@ import threading
 from unittest.mock import AsyncMock, patch
 
 from xknx import XKNX
-from xknx.core import XknxConnectionState
+from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.io import ConnectionConfig
 
 
@@ -24,7 +24,7 @@ class TestConnectionManager:
             async_connection_state_changed_cb
         )
         await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
+            XknxConnectionState.CONNECTED, XknxConnectionType.ROUTING_SECURE
         )
         async_connection_state_changed_cb.assert_called_once_with(
             XknxConnectionState.CONNECTED
@@ -111,24 +111,29 @@ class TestConnectionManager:
             await asyncio.wait_for(xknx.connection_manager.connected.wait(), timeout=1)
             await xknx.stop()
 
-    async def test_cemi_counter(self):
-        """Test cemi counter."""
+    async def test_connection_information(self):
+        """Test connection information."""
         xknx = XKNX()
 
         assert xknx.connection_manager.connected_since is None
+        assert (
+            xknx.connection_manager.connection_type is XknxConnectionType.NOT_CONNECTED
+        )
         xknx.connection_manager.cemi_count_incoming = 5
         xknx.connection_manager.cemi_count_incoming_error = 5
         xknx.connection_manager.cemi_count_outgoing = 5
         xknx.connection_manager.cemi_count_outgoing_error = 5
-        # reset on new connection
+
+        # reset counters on new connection
         await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
+            XknxConnectionState.CONNECTED, XknxConnectionType.TUNNEL_TCP
         )
         assert xknx.connection_manager.cemi_count_incoming == 0
         assert xknx.connection_manager.cemi_count_incoming_error == 0
         assert xknx.connection_manager.cemi_count_outgoing == 0
         assert xknx.connection_manager.cemi_count_outgoing_error == 0
         assert isinstance(xknx.connection_manager.connected_since, datetime)
+        assert xknx.connection_manager.connection_type is XknxConnectionType.TUNNEL_TCP
 
         xknx.connection_manager.cemi_count_incoming = 5
         xknx.connection_manager.cemi_count_incoming_error = 5
@@ -143,3 +148,6 @@ class TestConnectionManager:
         assert xknx.connection_manager.cemi_count_outgoing == 5
         assert xknx.connection_manager.cemi_count_outgoing_error == 5
         assert xknx.connection_manager.connected_since is None
+        assert (
+            xknx.connection_manager.connection_type is XknxConnectionType.NOT_CONNECTED
+        )
