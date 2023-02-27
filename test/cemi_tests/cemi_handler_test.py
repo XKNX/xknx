@@ -31,11 +31,15 @@ async def test_wait_for_l2_confirmation(time_travel):
     task = asyncio.create_task(xknx.cemi_handler.send_telegram(test_telegram))
     await time_travel(0)
     xknx.knxip_interface.send_cemi.assert_called_once_with(test_cemi)
+    assert xknx.connection_manager.cemi_count_outgoing == 0
+
     assert not task.done()
     xknx.cemi_handler.handle_cemi_frame(test_cemi_confirmation)
     await time_travel(0)
     assert task.done()
     await task
+    assert xknx.connection_manager.cemi_count_outgoing == 1
+    assert xknx.connection_manager.cemi_count_outgoing_error == 0
 
     # no L_DATA.con received -> raise ConfirmationError
     xknx.knxip_interface.send_cemi.reset_mock()
@@ -46,6 +50,8 @@ async def test_wait_for_l2_confirmation(time_travel):
         await time_travel(3)
         assert task.done()
         await task
+        assert xknx.connection_manager.cemi_count_outgoing == 1
+        assert xknx.connection_manager.cemi_count_outgoing_error == 1
 
 
 def test_incoming_cemi():
@@ -80,6 +86,7 @@ def test_incoming_cemi():
         )
         xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_req)
         mock_telegram_received.assert_not_called()
+        assert xknx.connection_manager.cemi_count_incoming == 1
 
 
 @pytest.mark.parametrize(
@@ -111,6 +118,7 @@ def test_incoming_management_telegram(telegram):
         xknx.cemi_handler.handle_cemi_frame(test_cemi)
         mock_management_process.assert_called_once()
         assert xknx.telegrams.qsize() == 0
+        assert xknx.connection_manager.cemi_count_incoming == 1
 
 
 @pytest.mark.parametrize(
@@ -134,6 +142,7 @@ def test_invalid_cemi(raw):
         xknx.cemi_handler.handle_raw_cemi(raw)
         mock_info.assert_called_once()
         mock_handle_cemi_frame.assert_not_called()
+        assert xknx.connection_manager.cemi_count_incoming_error == 1
 
 
 def test_incoming_from_self():
@@ -149,3 +158,4 @@ def test_incoming_from_self():
         xknx.cemi_handler.handle_raw_cemi(raw)
         mock_debug.assert_called_once()
         mock_telegram_received.assert_not_called()
+        assert xknx.connection_manager.cemi_count_incoming_error == 1

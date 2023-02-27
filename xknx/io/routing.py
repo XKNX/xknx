@@ -13,7 +13,7 @@ import random
 from typing import TYPE_CHECKING, Final
 
 from xknx.cemi import CEMIFrame, CEMIMessageCode
-from xknx.core import XknxConnectionState
+from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import CommunicationError
 from xknx.knxip import (
     HPAI,
@@ -132,6 +132,7 @@ class _RoutingFlowControl:
 class Routing(Interface):
     """Class for handling KNXnet/IP multicast communication."""
 
+    connection_type = XknxConnectionType.ROUTING
     transport: UDPTransport
 
     def __init__(
@@ -180,7 +181,7 @@ class Routing(Interface):
         """Start routing."""
         self.xknx.current_address = self.individual_address
         await self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTING
+            XknxConnectionState.CONNECTING, self.connection_type
         )
         try:
             await self.transport.connect()
@@ -197,7 +198,7 @@ class Routing(Interface):
             self.transport.stop()
             raise CommunicationError("Routing could not be started") from ex
         await self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
+            XknxConnectionState.CONNECTED, self.connection_type
         )
         return True
 
@@ -262,6 +263,7 @@ class Routing(Interface):
 class SecureRouting(Routing):
     """Class for handling KNXnet/IP secure multicast communication."""
 
+    connection_type = XknxConnectionType.ROUTING_SECURE
     transport: SecureGroup
 
     def __init__(

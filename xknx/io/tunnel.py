@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.cemi import CEMIFrame
-from xknx.core import XknxConnectionState
+from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import CommunicationError, TunnellingAckError
 from xknx.knxip import (
     HPAI,
@@ -43,6 +43,7 @@ logger = logging.getLogger("xknx.log")
 class _Tunnel(Interface):
     """Class for handling KNX/IP tunnels."""
 
+    connection_type: XknxConnectionType
     transport: KNXIPTransport
 
     def __init__(
@@ -99,7 +100,7 @@ class _Tunnel(Interface):
     async def connect(self) -> bool:
         """Connect to a KNX tunneling interface. Returns True on success."""
         await self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTING
+            XknxConnectionState.CONNECTING, self.connection_type
         )
         try:
             await self.transport.connect()
@@ -125,7 +126,7 @@ class _Tunnel(Interface):
 
         self._tunnel_established()
         await self.xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
+            XknxConnectionState.CONNECTED, self.connection_type
         )
         return True
 
@@ -373,6 +374,7 @@ class _Tunnel(Interface):
 class UDPTunnel(_Tunnel):
     """Class for handling KNX/IP UDP tunnels."""
 
+    connection_type = XknxConnectionType.TUNNEL_UDP
     transport: UDPTransport
 
     def __init__(
@@ -544,6 +546,7 @@ class UDPTunnel(_Tunnel):
 class TCPTunnel(_Tunnel):
     """Class for handling KNX/IP TCP tunnels."""
 
+    connection_type = XknxConnectionType.TUNNEL_TCP
     transport: TCPTransport
 
     def __init__(
@@ -587,6 +590,7 @@ class TCPTunnel(_Tunnel):
 class SecureTunnel(TCPTunnel):
     """Class for handling KNX/IP secure TCP tunnels."""
 
+    connection_type = XknxConnectionType.TUNNEL_SECURE
     transport: SecureSession
 
     def __init__(
