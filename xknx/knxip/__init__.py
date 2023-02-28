@@ -7,6 +7,8 @@ from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
 from .description_request import DescriptionRequest
 from .description_response import DescriptionResponse
+from .device_configuration_ack import DeviceConfigurationAck
+from .device_configuration_request import DeviceConfigurationRequest
 from .dib import (
     DIB,
     DIBDeviceInformation,
@@ -59,6 +61,8 @@ __all__ = [
     "ConnectionStateResponse",
     "DescriptionRequest",
     "DescriptionResponse",
+    "DeviceConfigurationAck",
+    "DeviceConfigurationRequest",
     "DIB",
     "DIBDeviceInformation",
     "DIBGeneric",

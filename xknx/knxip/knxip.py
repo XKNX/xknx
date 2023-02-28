@@ -15,6 +15,8 @@ from .connectionstate_request import ConnectionStateRequest
 from .connectionstate_response import ConnectionStateResponse
 from .description_request import DescriptionRequest
 from .description_response import DescriptionResponse
+from .device_configuration_ack import DeviceConfigurationAck
+from .device_configuration_request import DeviceConfigurationRequest
 from .disconnect_request import DisconnectRequest
 from .disconnect_response import DisconnectResponse
 from .header import KNXIPHeader
@@ -95,6 +97,11 @@ class KNXIPFrame:
             body = DisconnectRequest()
         elif header.service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
             body = DisconnectResponse()
+        # Device Management
+        elif header.service_type_ident == KNXIPServiceType.DEVICE_CONFIGURATION_REQUEST:
+            body = DeviceConfigurationRequest()
+        elif header.service_type_ident == KNXIPServiceType.DEVICE_CONFIGURATION_ACK:
+            body = DeviceConfigurationAck()
         # Tunneling
         elif header.service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
             body = TunnellingRequest()
