@@ -15,12 +15,18 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
+from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import TPCI, TDataBroadcast
 
-from .const import CEMIFlags, CEMIMessageCode
+from .const import (
+    CEMIErrorCode,
+    CEMIFlags,
+    CEMIMessageCode,
+    ResourceObjectType,
+    ResourcePropertyId,
+)
 
 
 class CEMIInfo:
@@ -244,6 +250,279 @@ class CEMILData(CEMIData):
         )
 
 
+class CEMIMPropInfo:
+    """Representation of CEMI Device Management Property."""
+
+    LENGTH = 6
+
+    def __init__(
+        self,
+        *,
+        object_type: ResourceObjectType,
+        object_instance: int = 1,
+        property_id: ResourcePropertyId | int,
+        number_of_elements: int = 1,
+        start_index: int = 1,
+    ):
+        """Initialize CEMIMProp object."""
+        self.object_type = object_type
+        self.object_instance = object_instance
+        self.property_id = (
+            property_id.value
+            if isinstance(property_id, ResourcePropertyId)
+            else property_id
+        )
+        self.number_of_elements = number_of_elements
+        self.start_index = start_index
+
+    def calculated_length(self) -> int:
+        """Get length of CEMI data."""
+        return CEMIMPropInfo.LENGTH
+
+    @staticmethod
+    def from_knx(raw: bytes) -> CEMIMPropInfo:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != CEMIMPropInfo.LENGTH:
+            raise CouldNotParseCEMI(
+                f"Invalid CEMI length: {len(raw)}; CEMI: {raw.hex()}"
+            )
+
+        try:
+            object_type = ResourceObjectType(int.from_bytes(raw[0:2], "big"))
+        except ValueError:
+            raise UnsupportedCEMIMessage(
+                f"CEMIMProp Object Type not supported: {raw[0:2].hex()} in CEMI: {raw.hex()}"
+            )
+
+        return CEMIMPropInfo(
+            object_type=object_type,
+            object_instance=raw[2],
+            property_id=raw[3],
+            number_of_elements=(raw[4] >> 4),
+            start_index=(int.from_bytes(raw[4:6], "big") % 0x1000),
+        )
+
+    def to_knx(self) -> bytes:
+        """Serialize to CEMI raw data."""
+        return (
+            self.object_type.value.to_bytes(2, "big")
+            + self.object_instance.to_bytes(1, "big")
+            + self.property_id.to_bytes(1, "big")
+            + ((self.number_of_elements << 12) + self.start_index).to_bytes(2, "big")
+        )
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'object_type="{self.object_type.value}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'number_of_elements="{self.number_of_elements}" '
+            f'start_index="{self.start_index}" '
+        )
+
+    def __eq__(self, other: object) -> bool:
+        """Equal operator."""
+        return self.__dict__ == other.__dict__
+
+
+class CEMIMPropReadRequest(CEMIData):
+    """Representation of CEMI Device Management Property Read Request."""
+
+    def __init__(self, *, property_info: CEMIMPropInfo):
+        """Initialize CEMIMPropReadRequest object."""
+        self.property_info = property_info
+
+    def calculated_length(self) -> int:
+        """Get length of CEMI data."""
+        return self.property_info.calculated_length()
+
+    def to_knx(self) -> bytes:
+        """Serialize to CEMI raw data."""
+        return self.property_info.to_knx()
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> CEMIData:
+        """Parse/deserialize from KNX/IP raw data."""
+        return cls(property_info=CEMIMPropInfo.from_knx(raw))
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return f"CEMIMPropReadRequest({self.property_info})"
+
+
+class CEMIMPropReadResponse(CEMIData):
+    """Representation of CEMI Device Management Property Read Response."""
+
+    def __init__(
+        self,
+        *,
+        property_info: CEMIMPropInfo,
+        data: bytes,
+    ):
+        """Initialize CEMIMPropReadResponse object."""
+        self.property_info = property_info
+        self.data = data
+
+    @property
+    def error_code(self) -> CEMIErrorCode | None:
+        """Return an optional CEMI error code."""
+        if self.property_info.number_of_elements == 0:
+            return CEMIErrorCode(self.data[0])
+
+        return None
+
+    def calculated_length(self) -> int:
+        """Get length of CEMI data."""
+        return CEMIMPropInfo.LENGTH + len(self.data)
+
+    def to_knx(self) -> bytes:
+        """Serialize to CEMI raw data."""
+        return self.property_info.to_knx() + self.data
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> CEMIData:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) <= CEMIMPropInfo.LENGTH:
+            raise CouldNotParseCEMI(
+                f"CEMI Property Read Response too small. Length: {len(raw)}; CEMI: {raw.hex()}"
+            )
+
+        property_info = CEMIMPropInfo.from_knx(raw[0 : CEMIMPropInfo.LENGTH])
+
+        # Did we get an error?
+        if property_info.number_of_elements == 0 and len(raw) != 7:
+            raise CouldNotParseCEMI(
+                f"Invalid CEMI error response length: {len(raw)}; CEMI: {raw.hex()}"
+            )
+
+        return cls(property_info=property_info, data=raw[CEMIMPropInfo.LENGTH :])
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        _data = (
+            f'data="{self.data.hex()}" '
+            if self.property_info.number_of_elements != 0
+            else ""
+        )
+        return (
+            f"CEMIMPropReadResponse("
+            f"{self.property_info}"
+            f'error_code="{self.error_code}" '
+            f"{_data})"
+        )
+
+
+class CEMIMPropWriteRequest(CEMIData):
+    """Representation of CEMI Device Management Property Write Request."""
+
+    def __init__(
+        self,
+        *,
+        property_info: CEMIMPropInfo,
+        data: bytes,
+    ):
+        """Initialize CEMIMPropWriteRequest object."""
+        self.property_info = property_info
+        self.data = data
+
+    def calculated_length(self) -> int:
+        """Get length of CEMI data."""
+        return CEMIMPropInfo.LENGTH + len(self.data)
+
+    def to_knx(self) -> bytes:
+        """Serialize to CEMI raw data."""
+        return self.property_info.to_knx() + self.data
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> CEMIData:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) <= CEMIMPropInfo.LENGTH:
+            raise CouldNotParseCEMI(
+                f"CEMI Property Write Request too small. Length: {len(raw)}; CEMI: {raw.hex()}"
+            )
+
+        property_info = CEMIMPropInfo.from_knx(raw[0 : CEMIMPropInfo.LENGTH])
+
+        return cls(property_info=property_info, data=raw[CEMIMPropInfo.LENGTH :])
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f"CEMIMPropWriteRequest("
+            f"{self.property_info}"
+            f'data="{self.data.hex()}" )'
+        )
+
+
+class CEMIMPropWriteResponse(CEMIData):
+    """Representation of CEMI Device Management Property Write Response."""
+
+    def __init__(
+        self,
+        *,
+        property_info: CEMIMPropInfo,
+        error_code: CEMIErrorCode | None = None,
+    ):
+        """Initialize CEMIMPropWriteResponse object."""
+        self.property_info = property_info
+        self._error_code = error_code
+
+    def calculated_length(self) -> int:
+        """Get length of CEMI data."""
+        return CEMIMPropInfo.LENGTH + (1 if self._error_code else 0)
+
+    def to_knx(self) -> bytes:
+        """Serialize to CEMI raw data."""
+        if self._error_code:
+            return self.property_info.to_knx() + self._error_code.value.to_bytes(
+                1, "big"
+            )
+
+        return self.property_info.to_knx()
+
+    @property
+    def error_code(self) -> CEMIErrorCode | None:
+        """Return an optional CEMI error code."""
+        return self._error_code
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> CEMIData:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < CEMIMPropInfo.LENGTH:
+            raise CouldNotParseCEMI(
+                f"CEMI Property Write Response too small. Length: {len(raw)}; CEMI: {raw.hex()}"
+            )
+
+        property_info = CEMIMPropInfo.from_knx(raw[0 : CEMIMPropInfo.LENGTH])
+
+        # Did we get an error?
+        if property_info.number_of_elements == 0:
+            if len(raw) != 7:
+                raise CouldNotParseCEMI(
+                    f"Invalid CEMI error response length: {len(raw)}; CEMI: {raw.hex()}"
+                )
+            return cls(
+                property_info=property_info,
+                error_code=CEMIErrorCode(raw[CEMIMPropInfo.LENGTH]),
+            )
+
+        if len(raw) != CEMIMPropInfo.LENGTH:
+            raise CouldNotParseCEMI(
+                f"Invalid CEMI response length: {len(raw)}; CEMI: {raw.hex()}"
+            )
+
+        return cls(property_info=property_info)
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f"CEMIMPropWriteResponse("
+            f"{self.property_info}"
+            f'error_code="{self.error_code}" )'
+        )
+
+
 class CEMIFrame:
     """Representation of a CEMI Frame."""
 
@@ -358,6 +637,14 @@ class CEMIFrame:
                 info=info,
                 data=CEMILData.from_knx(remainder),
             )
+        if code == CEMIMessageCode.M_PROP_READ_REQ:
+            return CEMIFrame(code=code, data=CEMIMPropReadRequest.from_knx(raw[1:]))
+        if code == CEMIMessageCode.M_PROP_READ_CON:
+            return CEMIFrame(code=code, data=CEMIMPropReadResponse.from_knx(raw[1:]))
+        if code == CEMIMessageCode.M_PROP_WRITE_REQ:
+            return CEMIFrame(code=code, data=CEMIMPropWriteRequest.from_knx(raw[1:]))
+        if code == CEMIMessageCode.M_PROP_WRITE_CON:
+            return CEMIFrame(code=code, data=CEMIMPropWriteResponse.from_knx(raw[1:]))
 
         raise UnsupportedCEMIMessage(
             f"Could not handle CEMIMessageCode: {code} / {raw[0]} in CEMI: {raw.hex()}"

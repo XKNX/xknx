@@ -1,5 +1,5 @@
 """Constants for CEMI."""
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class CEMIMessageCode(Enum):
@@ -84,7 +84,27 @@ class CEMIFlags:
     EXTENDED_FRAME_FORMAT = 0x0001
 
 
-class ResourceObjectType(Enum):
+class CEMIErrorCode(IntEnum):
+    """Enum class for CEMI Error Codes."""
+
+    CEMI_ERROR_UNSPECIFIED = 0x00
+    CEMI_ERROR_OUT_OF_RANGE = 0x01
+    CEMI_ERROR_OUT_OF_MAX_RANGE = 0x02
+    CEMI_ERROR_OUT_OF_MIN_RANGE = 0x03
+    CEMI_ERROR_MEMORY = 0x04
+    CEMI_ERROR_READ_ONLY = 0x05
+    CEMI_ERROR_ILLEGAL_COMMAND = 0x06
+    CEMI_ERROR_VOID_DP = 0x07
+    CEMI_ERROR_TYPE_CONFLICT = 0x08
+    CEMI_ERROR_PROP_INDEX_RANGE = 0x09
+    CEMI_ERROR_TEMPORARILY_READ_ONLY = 0x0A
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return str(self.value)
+
+
+class ResourceObjectType(IntEnum):
     """Enum class for Resource Object Types."""
 
     OBJECT_DEVICE = 0x0000
@@ -108,7 +128,10 @@ class ResourceObjectType(Enum):
     OBJECT_RF_MEDIUM_OBJECT = 0x0013
 
 
-class ResourcePropertyId(Enum):
+ResourcePropertyId = IntEnum
+
+
+class ResourceGenericPropertyId(ResourcePropertyId):
     """Enum base class for Property Ids."""
 
     PID_OBJECT_TYPE = 1  # PDT_UNSIGNED_INT
@@ -142,7 +165,7 @@ class ResourcePropertyId(Enum):
     PID_DOWNLOAD_COUNTER = 30  # PDT_UNSIGNED_INT
 
 
-class ResourceDevicePropertyId(Enum):
+class ResourceDevicePropertyId(ResourcePropertyId):
     """Extended class for Device Object (Type 0) Property Ids."""
 
     PID_ROUTING_COUNT = 51  # PDT_UNSIGNED_CHAR
@@ -216,13 +239,13 @@ class ResourceDevicePropertyId(Enum):
     PID_CHANNEL_32_PARAM = 132  # PDT_GENERIC_01[]
 
 
-class ResourceProgramPropertyId(Enum):
+class ResourceProgramPropertyId(ResourcePropertyId):
     """Extended class for Program Object (Type 3 & 4) Property Ids."""
 
     PID_OPERATION_MODE = 51  # PDT_FUNCTION/PDT_VARIABLE_LENGTH
 
 
-class ResourceRouterPropertyId(Enum):
+class ResourceRouterPropertyId(ResourcePropertyId):
     """Extended class for Router Object (Type 6) Property Ids."""
 
     PID_MEDIUM_STATUS = 51  # PDT_GENERIC_01
@@ -242,14 +265,14 @@ class ResourceRouterPropertyId(Enum):
     PID_IP_SBC_CONTROL = 120  # PDT_FUNCTION
 
 
-class ResourceLTERoutingTablePropertyId(Enum):
+class ResourceLTERoutingTablePropertyId(ResourcePropertyId):
     """Extended class for LTE Address Routing Table Object (Object Type 7) Property Ids."""
 
     PID_LTE_ROUTESELECT = 51
     PID_LTE_ROUTETABLE = 52  # PDT_GENERIC_05
 
 
-class ResourceCEMIServerPropertyId(Enum):
+class ResourceCEMIServerPropertyId(ResourcePropertyId):
     """Extended class for cEMI Server Object (Object Type 8) Property Ids."""
 
     PID_MEDIUM_TYPE = 51  # PDT_BITSET16
@@ -271,13 +294,13 @@ class ResourceCEMIServerPropertyId(Enum):
     PID_MAX_LOCAL_APDU_LENGTH = 69  # PDT_UNSIGNED_INT
 
 
-class ResourceGroupObjectTablePropertyId(Enum):
+class ResourceGroupObjectTablePropertyId(ResourcePropertyId):
     """Extended class for Group Object Table Object (Object Type 9) Property Ids."""
 
     PID_GO_DIAGNOSTICS = 66  # PDT_FUNCTION
 
 
-class ResourcePollingMasterInterfacePropertyId(Enum):
+class ResourcePollingMasterInterfacePropertyId(ResourcePropertyId):
     """Extended class for Polling Master Interface Object (Object Type 10) Property Ids."""
 
     PID_POLLING_STATE = 51
@@ -285,7 +308,7 @@ class ResourcePollingMasterInterfacePropertyId(Enum):
     PID_POLL_CYCLE = 53
 
 
-class ResourceKNXNETIPPropertyId(Enum):
+class ResourceKNXNETIPPropertyId(ResourcePropertyId):
     """Extended class for KNXNet/IP Object (Object Type 11) Property Ids."""
 
     PID_PROJECT_INSTALLATION_ID = 51  # PDT_UNSIGNED_INT
@@ -318,7 +341,7 @@ class ResourceKNXNETIPPropertyId(Enum):
     PID_TUNNELLING_ADDRESSES = 79  # PDT_UNSIGNED_CHAR[]
 
 
-class ResourceEModeChannelPropertyId(Enum):
+class ResourceEModeChannelPropertyId(ResourcePropertyId):
     """Extended class for E-Mode Channel Object (Object Type 14 & 15) Property Ids."""
 
     PID_CHAN_NUMBER = 51  # PDT_UNSIGNED_INT
@@ -341,7 +364,7 @@ class ResourceEModeChannelPropertyId(Enum):
     )
 
 
-class ResourceTextCataloguePropertyId(Enum):
+class ResourceTextCataloguePropertyId(ResourcePropertyId):
     """Extended class for Text Catalogue Object (Object Type 16) Property Ids."""
 
     PID_LOCALE_LIST = 51  # PDT_GENERIC_04[]
@@ -351,7 +374,7 @@ class ResourceTextCataloguePropertyId(Enum):
     PID_STRING_001 = 60  # PDT_UTF_8
 
 
-class ResourceSecureInterfacePropertyId(Enum):
+class ResourceSecureInterfacePropertyId(ResourcePropertyId):
     """Extended class for Secure Interface Object (Object Type 17) Property Ids."""
 
     PID_SECURITY_MODE = 51  # PDT_FUNCTION
@@ -367,7 +390,7 @@ class ResourceSecureInterfacePropertyId(Enum):
     PID_GO_SECURITY_FLAGS = 61  # PDT_GENERIC_01[]
 
 
-class ResourceEModeDevicePropertyId(Enum):
+class ResourceEModeDevicePropertyId(ResourcePropertyId):
     """Extended class for E-Mode Device Object (Object Type 18) Property Ids."""
 
     PID_LOCALISATION_MODE = 60  # PDT_BINARY_INFORMATION/PDT_UNSIGNED_CHAR
@@ -375,7 +398,7 @@ class ResourceEModeDevicePropertyId(Enum):
     PID_LOCALISATION_COMMAND = 62  # PDT_GENERIC_03
 
 
-class ResourceRFMediumPropertyId(Enum):
+class ResourceRFMediumPropertyId(ResourcePropertyId):
     """Extended class for RF Medium Object (Object Type 19) Property Ids."""
 
     PID_RF_MULTI_TYPE = 51  # PDT_BITSET8
