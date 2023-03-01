@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from copy import copy
+from copy import deepcopy
 from datetime import datetime, timezone
 import logging
 import time
@@ -194,7 +194,7 @@ class DataSecure:
             )
         decrypted_payload = APCI.from_knx(plain_apdu_raw)
         _LOGGER.debug("Unpacked APDU %s from %s", decrypted_payload, s_apdu)
-        plain_cemi = copy(cemi)
+        plain_cemi = deepcopy(cemi)
         plain_cemi.payload = decrypted_payload
         return plain_cemi
 
@@ -237,7 +237,7 @@ class DataSecure:
             frame_flags=cemi.flags,
             tpci=cemi.tpci,
         )
-        secure_cemi = copy(cemi)
+        secure_cemi = deepcopy(cemi)
         secure_cemi.payload = SecureAPDU(scf=scf, secured_data=secure_asdu)
         _LOGGER.debug("Secured APDU %s with %s", cemi.payload, secure_cemi.payload)
         return secure_cemi

@@ -653,8 +653,9 @@ class TestStringRepresentations:
         )
         assert (
             str(cemi_frame)
-            == '<CEMIFrame code="L_DATA_IND" src_addr="IndividualAddress("1.2.3")" dst_addr="GroupAddress("1/2/5")" '
-            'flags="1011110011100000" tpci="TDataGroup()" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
+            == '<CEMIFrame code="L_DATA_IND" info="CEMIInfo("")" data="CEMILData(src_addr="IndividualAddress("1.2.3")" '
+            'dst_addr="GroupAddress("1/2/5")" flags="1011110011100000" tpci="TDataGroup()" '
+            'payload="<GroupValueWrite value="<DPTBinary value="7" />" />")" />'
         )
 
     def test_knxip_frame(self):

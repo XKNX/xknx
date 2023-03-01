@@ -41,7 +41,7 @@ class TestKNXIPRountingIndication:
             telegram,
             src_addr=IndividualAddress("1.2.2"),
         )
-        cemi.set_hops(5)
+        cemi.hops = 5
         routing_indication = RoutingIndication(raw_cemi=cemi.to_knx())
         knxipframe = KNXIPFrame.init_from_body(routing_indication)
 

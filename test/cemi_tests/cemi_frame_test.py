@@ -1,7 +1,7 @@
 """Tests for the CEMIFrame object."""
 import pytest
 
-from xknx.cemi import CEMIFlags, CEMIFrame, CEMIMessageCode
+from xknx.cemi import CEMIFlags, CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
@@ -76,7 +76,7 @@ def test_valid_tpci_control():
 def test_invalid_tpci_apci(raw, err_msg):
     """Test for invalid APCIService."""
     with pytest.raises(UnsupportedCEMIMessage, match=err_msg):
-        CEMIFrame.from_knx_data_link_layer(raw, code=CEMIMessageCode.L_DATA_IND)
+        CEMIFrame.from_knx(raw)
 
 
 def test_invalid_apdu_len():
@@ -89,11 +89,13 @@ def test_invalid_payload():
     """Test for having wrong payload set."""
     frame = CEMIFrame(
         code=CEMIMessageCode.L_DATA_IND,
-        flags=0,
-        src_addr=IndividualAddress(0),
-        dst_addr=IndividualAddress(0),
-        tpci=TDataGroup(),
-        payload=None,
+        data=CEMILData(
+            flags=0,
+            src_addr=IndividualAddress(0),
+            dst_addr=IndividualAddress(0),
+            tpci=TDataGroup(),
+            payload=None,
+        ),
     )
 
     with pytest.raises(TypeError):
@@ -124,10 +126,7 @@ def test_from_knx_with_not_implemented_cemi():
 def test_invalid_invalid_len():
     """Test for invalid cemi len."""
     with pytest.raises(UnsupportedCEMIMessage, match=r".*CEMI too small.*"):
-        CEMIFrame.from_knx_data_link_layer(
-            get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5],
-            code=CEMIMessageCode.L_DATA_IND,
-        )
+        CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
 
 
 def test_from_knx_group_address():
