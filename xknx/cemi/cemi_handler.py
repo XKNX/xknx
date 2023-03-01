@@ -22,7 +22,7 @@ from xknx.secure.data_secure import DataSecure
 from xknx.secure.keyring import Keyring
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
 
-from .cemi_frame import CEMIFrame
+from .cemi_frame import CEMIFrame, CEMILData
 from .const import CEMIMessageCode
 
 if TYPE_CHECKING:
@@ -96,21 +96,25 @@ class CEMIHandler:
 
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming CEMI Frames."""
-        if cemi.code is CEMIMessageCode.L_DATA_CON:
-            # L_DATA_CON confirmation frame signals ready to send next telegram
-            self._l_data_confirmation_event.set()
-            logger.debug("Incoming CEMI confirmation: %s", cemi)
-            return
-        if cemi.code is CEMIMessageCode.L_DATA_REQ:
-            # L_DATA_REQ frames should only be outgoing.
-            logger.warning("Received unexpected L_DATA_REQ frame: %s", cemi)
-            self.xknx.connection_manager.cemi_count_incoming_error += 1
-            return
-        if cemi.src_addr == self.xknx.current_address:
-            # L_DATA_IND frames from our own address should be ignored (may occur form routing)
-            logger.debug("Ignoring own CEMI: %s", cemi)
-            self.xknx.connection_manager.cemi_count_incoming_error += 1
-            return
+        if isinstance(cemi.data, CEMILData):
+            if cemi.code is CEMIMessageCode.L_DATA_CON:
+                # L_DATA_CON confirmation frame signals ready to send next telegram
+                self._l_data_confirmation_event.set()
+                logger.debug("Incoming CEMI confirmation: %s", cemi)
+                return
+            if cemi.code is CEMIMessageCode.L_DATA_REQ:
+                # L_DATA_REQ frames should only be outgoing.
+                logger.warning("Received unexpected L_DATA_REQ frame: %s", cemi)
+                self.xknx.connection_manager.cemi_count_incoming_error += 1
+                return
+            if (
+                cemi.code is CEMIMessageCode.L_DATA_IND
+                and cemi.data.src_addr == self.xknx.current_address
+            ):
+                # L_DATA_IND frames from our own address should be ignored (may occur form routing)
+                logger.debug("Ignoring own CEMI: %s", cemi)
+                self.xknx.connection_manager.cemi_count_incoming_error += 1
+                return
         logger.debug("Incoming CEMI: %s", cemi)
 
         if self.data_secure is not None:

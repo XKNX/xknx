@@ -33,11 +33,12 @@ def test_valid_command():
     raw = get_data(0x29, 0, 0x0080, 1, 1, 1, 0, [])
     frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
-    assert frame.flags == 0x0080
-    assert frame.src_addr == IndividualAddress(1)
-    assert frame.dst_addr == GroupAddress(1)
-    assert frame.payload == GroupValueRead()
-    assert frame.tpci == TDataGroup()
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.flags == 0x0080
+    assert frame.data.src_addr == IndividualAddress(1)
+    assert frame.data.dst_addr == GroupAddress(1)
+    assert frame.data.payload == GroupValueRead()
+    assert frame.data.tpci == TDataGroup()
     assert frame.calculated_length() == 11
     assert frame.to_knx() == raw
 
@@ -47,11 +48,12 @@ def test_valid_tpci_control():
     raw = bytes((0x29, 0, 0, 0, 0, 0, 0, 0, 0, 0x80))
     frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.L_DATA_IND
-    assert frame.flags == 0
-    assert frame.payload is None
-    assert frame.src_addr == IndividualAddress(0)
-    assert frame.dst_addr == IndividualAddress(0)
-    assert frame.tpci == TConnect()
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.flags == 0
+    assert frame.data.payload is None
+    assert frame.data.src_addr == IndividualAddress(0)
+    assert frame.data.dst_addr == IndividualAddress(0)
+    assert frame.data.tpci == TConnect()
     assert frame.calculated_length() == 10
     assert frame.to_knx() == raw
 
@@ -132,21 +134,24 @@ def test_invalid_invalid_len():
 def test_from_knx_group_address():
     """Test conversion for a cemi with a group address as destination."""
     frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
-    assert frame.dst_addr == GroupAddress(0)
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.dst_addr == GroupAddress(0)
 
 
 def test_from_knx_individual_address():
     """Test conversion for a cemi with a individual address as destination."""
     frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
-    assert frame.dst_addr == IndividualAddress(0)
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.dst_addr == IndividualAddress(0)
 
 
 def test_telegram_group_address():
     """Test telegram conversion flags with a group address."""
     _telegram = Telegram(destination_address=GroupAddress(1))
     frame = CEMIFrame.init_from_telegram(_telegram)
-    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
-    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
+    assert frame.data.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
     # test CEMIFrame.telegram property
     assert frame.telegram == _telegram
 
@@ -155,9 +160,10 @@ def test_telegram_broadcast():
     """Test telegram conversion flags with a group address."""
     _telegram = Telegram(destination_address=GroupAddress(0))
     frame = CEMIFrame.init_from_telegram(_telegram)
-    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
-    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
-    assert frame.tpci == TDataBroadcast()
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
+    assert frame.data.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
+    assert frame.data.tpci == TDataBroadcast()
     # test CEMIFrame.telegram property
     assert frame.telegram == _telegram
 
@@ -166,9 +172,10 @@ def test_telegram_individual_address():
     """Test telegram conversion flags with a individual address."""
     _telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
     frame = CEMIFrame.init_from_telegram(_telegram)
-    assert frame.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
-    assert frame.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
-    assert frame.flags & 0x0200 == CEMIFlags.NO_ACK_REQUESTED
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
+    assert frame.data.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
+    assert frame.data.flags & 0x0200 == CEMIFlags.NO_ACK_REQUESTED
     # test CEMIFrame.telegram property
     assert frame.telegram == _telegram
 

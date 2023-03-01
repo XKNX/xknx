@@ -14,7 +14,6 @@ Documentation within:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from xknx.exceptions import ConversionError, UnsupportedCEMIMessage
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
@@ -87,15 +86,6 @@ class CEMIData(ABC):
 
 class CEMILData(CEMIData):
     """Representation of CEMI Link Layer Data."""
-
-    DELEGATES = {
-        "flags",
-        "hops",
-        "src_addr",
-        "dst_addr",
-        "tpci",
-        "payload",
-    }
 
     def __init__(
         self,
@@ -407,17 +397,3 @@ class CEMIFrame:
             raise TypeError()
 
         return self.data.telegram
-
-    def __getattr__(self, attr: str) -> Any:
-        """Attribute getter operator."""
-        if attr in CEMILData.DELEGATES and isinstance(self.data, CEMILData):
-            return getattr(self.data, attr)
-
-        raise AttributeError()
-
-    def __setattr__(self, attr: str, val: Any) -> None:
-        """Attribute setter operator."""
-        if attr in CEMILData.DELEGATES and isinstance(self.data, CEMILData):
-            setattr(self.data, attr, val)
-        else:
-            super().__setattr__(attr, val)
