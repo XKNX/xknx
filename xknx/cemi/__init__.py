@@ -10,23 +10,4 @@ from .cemi_frame import (
     CEMIMPropWriteResponse,
 )
 from .cemi_handler import CEMIHandler
-from .const import (
-    CEMIErrorCode,
-    CEMIFlags,
-    CEMIMessageCode,
-    ResourceDevicePropertyId,
-    ResourceEModeChannelPropertyId,
-    ResourceEModeDevicePropertyId,
-    ResourceGenericPropertyId,
-    ResourceGroupObjectTablePropertyId,
-    ResourceKNXNETIPPropertyId,
-    ResourceLTERoutingTablePropertyId,
-    ResourceObjectType,
-    ResourcePollingMasterInterfacePropertyId,
-    ResourceProgramPropertyId,
-    ResourcePropertyId,
-    ResourceRFMediumPropertyId,
-    ResourceRouterPropertyId,
-    ResourceSecureInterfacePropertyId,
-    ResourceTextCataloguePropertyId,
-)
+from .const import CEMIErrorCode, CEMIFlags, CEMIMessageCode

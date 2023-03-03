@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMIMessageCode, CEMIMPropInfo, CEMIMPropReadResponse
-from xknx.cemi.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 from xknx.devices import (
     BinarySensor,
     Climate,
@@ -55,6 +54,7 @@ from xknx.knxip import (
     TunnellingAck,
     TunnellingRequest,
 )
+from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite

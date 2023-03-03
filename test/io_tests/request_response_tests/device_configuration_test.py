@@ -2,11 +2,7 @@
 from unittest.mock import patch
 
 from xknx.cemi import CEMIFrame, CEMIMPropInfo, CEMIMPropReadRequest
-from xknx.cemi.const import (
-    CEMIMessageCode,
-    ResourceKNXNETIPPropertyId,
-    ResourceObjectType,
-)
+from xknx.cemi.const import CEMIMessageCode
 from xknx.io.request_response import DeviceConfiguration
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -17,6 +13,7 @@ from xknx.knxip import (
     ErrorCode,
     KNXIPFrame,
 )
+from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 
 
 class TestDeviceConfiguration:

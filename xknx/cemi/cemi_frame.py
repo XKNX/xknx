@@ -16,17 +16,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
+from xknx.profile.const import ResourceObjectType, ResourcePropertyId
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import TPCI, TDataBroadcast
 
-from .const import (
-    CEMIErrorCode,
-    CEMIFlags,
-    CEMIMessageCode,
-    ResourceObjectType,
-    ResourcePropertyId,
-)
+from .const import CEMIErrorCode, CEMIFlags, CEMIMessageCode
 
 
 class CEMIInfo:

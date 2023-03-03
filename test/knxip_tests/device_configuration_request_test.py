@@ -2,13 +2,10 @@
 import pytest
 
 from xknx.cemi import CEMIFrame, CEMIMessageCode, CEMIMPropInfo, CEMIMPropReadRequest
-from xknx.cemi.const import (
-    CEMIMessageCode,
-    ResourceKNXNETIPPropertyId,
-    ResourceObjectType,
-)
+from xknx.cemi.const import CEMIMessageCode
 from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import DeviceConfigurationRequest, KNXIPFrame
+from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 
 
 class TestKNXIPDeviceConfigurationRequest:

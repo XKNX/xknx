@@ -11,12 +11,9 @@ from xknx.cemi import (
     CEMIMPropWriteRequest,
     CEMIMPropWriteResponse,
 )
-from xknx.cemi.const import (
-    CEMIErrorCode,
-    ResourceKNXNETIPPropertyId,
-    ResourceObjectType,
-)
+from xknx.cemi.const import CEMIErrorCode
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
+from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueRead
 from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataGroup
