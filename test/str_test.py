@@ -2,7 +2,8 @@
 from unittest.mock import patch
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame
+from xknx.cemi import CEMIFrame, CEMIMessageCode, CEMIMPropInfo, CEMIMPropReadResponse
+from xknx.cemi.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 from xknx.devices import (
     BinarySensor,
     Climate,
@@ -642,7 +643,7 @@ class TestStringRepresentations:
             == '<TunnellingAck communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" />'
         )
 
-    def test_cemi_frame(self):
+    def test_cemi_ldata_frame(self):
         """Test string representation of KNX/IP CEMI Frame."""
         cemi_frame = CEMIFrame.init_from_telegram(
             Telegram(
@@ -656,6 +657,24 @@ class TestStringRepresentations:
             == '<CEMIFrame code="L_DATA_IND" info="CEMIInfo("")" data="CEMILData(src_addr="IndividualAddress("1.2.3")" '
             'dst_addr="GroupAddress("1/2/5")" flags="1011110011100000" tpci="TDataGroup()" '
             'payload="<GroupValueWrite value="<DPTBinary value="7" />" />")" />'
+        )
+
+    def test_cemi_mprop_frame(self):
+        """Test string representation of KNX/IP CEMI Frame."""
+        cemi_frame = CEMIFrame(
+            code=CEMIMessageCode.M_PROP_READ_REQ,
+            data=CEMIMPropReadResponse(
+                property_info=CEMIMPropInfo(
+                    object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                    property_id=ResourceKNXNETIPPropertyId.PID_KNX_INDIVIDUAL_ADDRESS,
+                ),
+                data=IndividualAddress("1.2.3").to_knx(),
+            ),
+        )
+        assert (
+            str(cemi_frame)
+            == '<CEMIFrame code="M_PROP_READ_REQ" data="CEMIMPropReadResponse(object_type="11" object_instance="1" '
+            'property_id="52" number_of_elements="1" start_index="1" error_code="None" data="1203" )" />'
         )
 
     def test_knxip_frame(self):
