@@ -1,2 +1,2 @@
-cryptography==39.0.1
+cryptography==39.0.2
 ifaddr==0.2.0
