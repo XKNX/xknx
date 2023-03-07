@@ -15,6 +15,7 @@ from xknx.exceptions import (
     CommunicationError,
     ConfirmationError,
     ConversionError,
+    CouldNotParseCEMI,
     DataSecureError,
     UnsupportedCEMIMessage,
 )
@@ -88,6 +89,10 @@ class CEMIHandler:
         """Parse and handle incoming raw CEMI Frames."""
         try:
             cemi = CEMIFrame.from_knx(raw_cemi)
+        except CouldNotParseCEMI as cemi_parse_err:
+            logger.warning("CEMI Frame failed to parse: %s", cemi_parse_err)
+            self.xknx.connection_manager.cemi_count_incoming_error += 1
+            return
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.info("CEMI not supported: %s", unsupported_cemi_err)
             self.xknx.connection_manager.cemi_count_incoming_error += 1
