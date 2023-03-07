@@ -162,7 +162,7 @@ class CEMILData(CEMIData):
     def from_knx(cls, raw: bytes) -> CEMILData:
         """Parse L_DATA_IND, CEMIMessageCode.L_DATA_REQ, CEMIMessageCode.L_DATA_CON."""
         if len(raw) < 8:
-            raise UnsupportedCEMIMessage(
+            raise CouldNotParseCEMI(
                 f"CEMI too small. Length: {len(raw)}; CEMI: {raw.hex()}"
             )
 
@@ -182,7 +182,7 @@ class CEMILData(CEMIData):
         _tpdu = raw[7:]
         _apdu = bytes([_tpdu[0] & 0b11]) + _tpdu[1:]  # clear TPCI bits
         if len(_apdu) != (_npdu_len + 1):  # TCPI octet not included in NPDU length
-            raise UnsupportedCEMIMessage(
+            raise CouldNotParseCEMI(
                 f"APDU LEN should be {_npdu_len} but is {len(_apdu) - 1} "
                 f"from {src_addr} in CEMI: {raw.hex()}"
             )
@@ -205,7 +205,7 @@ class CEMILData(CEMIData):
 
         if tpci.control:
             if _npdu_len:
-                raise UnsupportedCEMIMessage(
+                raise CouldNotParseCEMI(
                     f"Invalid length for control TPDU {tpci}: {_npdu_len}"
                     f" from {src_addr} in CEMI: {raw.hex()}"
                 )

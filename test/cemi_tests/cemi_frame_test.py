@@ -78,6 +78,17 @@ def test_valid_tpci_control():
             get_data(0x29, 0, 0, 0, 0, 1, 0xFFC0, []),
             r".*Invalid length for control TPDU.*",
         ),
+    ],
+)
+def test_invalid_tpci_apci(raw, err_msg):
+    """Test for invalid APCIService."""
+    with pytest.raises(CouldNotParseCEMI, match=err_msg):
+        CEMIFrame.from_knx(raw)
+
+
+@pytest.mark.parametrize(
+    "raw,err_msg",
+    [
         (
             get_data(0x29, 0, 0, 0, 0, 1, 0x08C0, []),
             r".*TPCI not supported.*",
@@ -88,7 +99,7 @@ def test_valid_tpci_control():
         ),
     ],
 )
-def test_invalid_tpci_apci(raw, err_msg):
+def test_unsupported_tpci_apci(raw, err_msg):
     """Test for invalid APCIService."""
     with pytest.raises(UnsupportedCEMIMessage, match=err_msg):
         CEMIFrame.from_knx(raw)
@@ -96,7 +107,7 @@ def test_invalid_tpci_apci(raw, err_msg):
 
 def test_invalid_apdu_len():
     """Test for invalid apdu len."""
-    with pytest.raises(UnsupportedCEMIMessage, match=r".*APDU LEN should be .*"):
+    with pytest.raises(CouldNotParseCEMI, match=r".*APDU LEN should be .*"):
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 
@@ -154,7 +165,7 @@ def test_from_knx_with_not_implemented_cemi():
 
 def test_invalid_invalid_len():
     """Test for invalid cemi len."""
-    with pytest.raises(UnsupportedCEMIMessage, match=r".*CEMI too small.*"):
+    with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
 
 
