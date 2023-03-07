@@ -6,6 +6,13 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased Changes
+
+### Protocol
+
+- Add support for Device Management Configuration service.
+- Support CEMI M_Prop messages.
+
 # 2.6.0 Connection information 2023-02-27
 
 ### Connection
