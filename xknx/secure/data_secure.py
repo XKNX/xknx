@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from copy import copy
+from copy import deepcopy
 from datetime import datetime, timezone
 import logging
 import time
 
-from xknx.cemi import CEMIFrame
-from xknx.exceptions import DataSecureError
+from xknx.cemi import CEMIFrame, CEMILData
+from xknx.exceptions import DataSecureError, UnsupportedCEMIMessage
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, SecureAPDU
 
@@ -131,12 +131,15 @@ class DataSecure:
 
     def received_cemi(self, cemi: CEMIFrame) -> CEMIFrame:
         """Handle received CEMI frame."""
+        # No data frame
+        if not isinstance(cemi.data, CEMILData):
+            return cemi
         # Data Secure frame
-        if isinstance(cemi.payload, SecureAPDU):
-            return self._received_secure_cemi(cemi, cemi.payload)
+        if isinstance(cemi.data.payload, SecureAPDU):
+            return self._received_secure_cemi(cemi, cemi.data.payload)
         # Plain group communication frame
-        if isinstance(cemi.dst_addr, GroupAddress):
-            if cemi.dst_addr in self._group_key_table:
+        if isinstance(cemi.data.dst_addr, GroupAddress):
+            if cemi.data.dst_addr in self._group_key_table:
                 raise DataSecureError(
                     f"Discarding frame with plain APDU for secure group address: {cemi}",
                     log_level=logging.WARNING,
@@ -163,11 +166,15 @@ class DataSecure:
                 log_level=logging.DEBUG,
             )
 
+        # Sanity check for Link Layer Data frame
+        if not isinstance(cemi.data, CEMILData):
+            raise UnsupportedCEMIMessage(f"Secure CEMI data frames only {cemi}")
+
         # Secure group communication frame
-        if isinstance(cemi.dst_addr, GroupAddress):
-            if not (key := self._group_key_table.get(cemi.dst_addr)):
+        if isinstance(cemi.data.dst_addr, GroupAddress):
+            if not (key := self._group_key_table.get(cemi.data.dst_addr)):
                 raise DataSecureError(
-                    f"No key found for group address {cemi.dst_addr} from {cemi.src_addr}",
+                    f"No key found for group address {cemi.data.dst_addr} from {cemi.data.src_addr}",
                     log_level=logging.INFO,
                 )
         # Secure point-to-point frame
@@ -179,30 +186,39 @@ class DataSecure:
             )
 
         with self.check_sequence_number(
-            source_address=cemi.src_addr,
+            source_address=cemi.data.src_addr,
             received_sequence_number=int.from_bytes(
                 s_apdu.secured_data.sequence_number_bytes, "big"
             ),
         ):
-            _address_fields_raw = cemi.src_addr.to_knx() + cemi.dst_addr.to_knx()
+            _address_fields_raw = (
+                cemi.data.src_addr.to_knx() + cemi.data.dst_addr.to_knx()
+            )
             plain_apdu_raw = s_apdu.secured_data.get_plain_apdu(
                 key=key,
                 scf=s_apdu.scf,
                 address_fields_raw=_address_fields_raw,
-                frame_flags=cemi.flags,
-                tpci=cemi.tpci,
+                frame_flags=cemi.data.flags,
+                tpci=cemi.data.tpci,
             )
         decrypted_payload = APCI.from_knx(plain_apdu_raw)
         _LOGGER.debug("Unpacked APDU %s from %s", decrypted_payload, s_apdu)
-        plain_cemi = copy(cemi)
-        plain_cemi.payload = decrypted_payload
+        plain_cemi = deepcopy(cemi)
+
+        # Sanity check for Link Layer Data frame
+        if not isinstance(plain_cemi.data, CEMILData):
+            raise UnsupportedCEMIMessage(f"Secure CEMI data frames only {plain_cemi}")
+
+        plain_cemi.data.payload = decrypted_payload
         return plain_cemi
 
     def outgoing_cemi(self, cemi: CEMIFrame) -> CEMIFrame:
         """Handle outgoing CEMI frame. Pass through as plain frame or encrypt."""
         # Outgoing  group communication frame
-        if isinstance(cemi.dst_addr, GroupAddress):
-            if key := self._group_key_table.get(cemi.dst_addr):
+        if isinstance(cemi.data, CEMILData) and isinstance(
+            cemi.data.dst_addr, GroupAddress
+        ):
+            if key := self._group_key_table.get(cemi.data.dst_addr):
                 scf = SecurityControlField(
                     algorithm=SecurityAlgorithmIdentifier.CCM_ENCRYPTION,
                     service=SecurityALService.S_A_DATA,
@@ -223,8 +239,11 @@ class DataSecure:
     ) -> CEMIFrame:
         """Wrap encrypted payload of a plain CEMIFrame in a SecureAPDU."""
         plain_apdu_raw: bytes | bytearray
-        if cemi.payload is not None:
-            plain_apdu_raw = cemi.payload.to_knx()
+        if not isinstance(cemi.data, CEMILData):
+            raise UnsupportedCEMIMessage(f"CEMI L_Data frame required {cemi}.")
+
+        if cemi.data.payload is not None:
+            plain_apdu_raw = cemi.data.payload.to_knx()
         else:
             # TODO: test if this is correct
             plain_apdu_raw = b""  # used ein point-to-point eg. TConnect
@@ -233,11 +252,18 @@ class DataSecure:
             apdu=plain_apdu_raw,
             scf=scf,
             sequence_number=self.get_sequence_number(),
-            address_fields_raw=cemi.src_addr.to_knx() + cemi.dst_addr.to_knx(),
-            frame_flags=cemi.flags,
-            tpci=cemi.tpci,
+            address_fields_raw=cemi.data.src_addr.to_knx()
+            + cemi.data.dst_addr.to_knx(),
+            frame_flags=cemi.data.flags,
+            tpci=cemi.data.tpci,
         )
-        secure_cemi = copy(cemi)
-        secure_cemi.payload = SecureAPDU(scf=scf, secured_data=secure_asdu)
-        _LOGGER.debug("Secured APDU %s with %s", cemi.payload, secure_cemi.payload)
+        secure_cemi = deepcopy(cemi)
+
+        if not isinstance(secure_cemi.data, CEMILData):
+            raise UnsupportedCEMIMessage(f"CEMI L_Data frame required {secure_cemi}.")
+
+        secure_cemi.data.payload = SecureAPDU(scf=scf, secured_data=secure_asdu)
+        _LOGGER.debug(
+            "Secured APDU %s with %s", cemi.data.payload, secure_cemi.data.payload
+        )
         return secure_cemi

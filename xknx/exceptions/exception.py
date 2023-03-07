@@ -95,6 +95,19 @@ class IncompleteKNXIPFrame(CouldNotParseKNXIP):
         return f'<IncompleteKNXIPFrame description="{self.description}" />'
 
 
+class CouldNotParseCEMI(XKNXException):
+    """Exception class for wrong CEMI data."""
+
+    def __init__(self, description: str = "") -> None:
+        """Initialize CouldNotParseCEMI class."""
+        super().__init__()
+        self.description = description
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<CouldNotParseCEMI description="{self.description}" />'
+
+
 class UnsupportedCEMIMessage(XKNXException):
     """Exception class for unsupported CEMI Messages."""
 

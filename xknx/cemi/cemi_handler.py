@@ -15,6 +15,7 @@ from xknx.exceptions import (
     CommunicationError,
     ConfirmationError,
     ConversionError,
+    CouldNotParseCEMI,
     DataSecureError,
     UnsupportedCEMIMessage,
 )
@@ -22,7 +23,7 @@ from xknx.secure.data_secure import DataSecure
 from xknx.secure.keyring import Keyring
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
 
-from .cemi_frame import CEMIFrame
+from .cemi_frame import CEMIFrame, CEMILData
 from .const import CEMIMessageCode
 
 if TYPE_CHECKING:
@@ -88,6 +89,10 @@ class CEMIHandler:
         """Parse and handle incoming raw CEMI Frames."""
         try:
             cemi = CEMIFrame.from_knx(raw_cemi)
+        except CouldNotParseCEMI as cemi_parse_err:
+            logger.warning("CEMI Frame failed to parse: %s", cemi_parse_err)
+            self.xknx.connection_manager.cemi_count_incoming_error += 1
+            return
         except UnsupportedCEMIMessage as unsupported_cemi_err:
             logger.info("CEMI not supported: %s", unsupported_cemi_err)
             self.xknx.connection_manager.cemi_count_incoming_error += 1
@@ -96,6 +101,9 @@ class CEMIHandler:
 
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming CEMI Frames."""
+        if not isinstance(cemi.data, CEMILData):
+            return
+
         if cemi.code is CEMIMessageCode.L_DATA_CON:
             # L_DATA_CON confirmation frame signals ready to send next telegram
             self._l_data_confirmation_event.set()
@@ -106,7 +114,10 @@ class CEMIHandler:
             logger.warning("Received unexpected L_DATA_REQ frame: %s", cemi)
             self.xknx.connection_manager.cemi_count_incoming_error += 1
             return
-        if cemi.src_addr == self.xknx.current_address:
+        if (
+            cemi.code is CEMIMessageCode.L_DATA_IND
+            and cemi.data.src_addr == self.xknx.current_address
+        ):
             # L_DATA_IND frames from our own address should be ignored (may occur form routing)
             logger.debug("Ignoring own CEMI: %s", cemi)
             self.xknx.connection_manager.cemi_count_incoming_error += 1

@@ -6,6 +6,7 @@ of specific KNX/IP Packets used for tunnelling connections.
 from .authenticate import Authenticate
 from .connect import Connect
 from .connectionstate import ConnectionState
+from .device_configuration import DeviceConfiguration
 from .disconnect import Disconnect
 from .request_response import RequestResponse
 from .session import Session

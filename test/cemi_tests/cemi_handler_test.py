@@ -124,16 +124,34 @@ def test_incoming_management_telegram(telegram):
 @pytest.mark.parametrize(
     "raw",
     [
-        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
-        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
-        bytes.fromhex("2900b0d0000100000103f8"),
-        # <UnsupportedCEMIMessage description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
+        # <CouldNotParseCEMI description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
         # communication_channel_id: 0x02   sequence_counter: 0x81
         bytes.fromhex("2900b06010fa10ff00"),
     ],
 )
 def test_invalid_cemi(raw):
     """Test incoming invalid CEMI Frames."""
+    xknx = XKNX()
+
+    with patch("logging.Logger.warning") as mock_info, patch.object(
+        xknx.cemi_handler, "handle_cemi_frame"
+    ) as mock_handle_cemi_frame:
+        xknx.cemi_handler.handle_raw_cemi(raw)
+        mock_info.assert_called_once()
+        mock_handle_cemi_frame.assert_not_called()
+        assert xknx.connection_manager.cemi_count_incoming_error == 1
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # LDataInd Unsupported Extended APCI from 0.0.1 to 0/0/0 broadcast
+        # <UnsupportedCEMIMessage description="APCI not supported: 0b1111111000 in CEMI: 2900b0d0000100000103f8" />
+        bytes.fromhex("2900b0d0000100000103f8"),
+    ],
+)
+def test_unsupported_cemi(raw):
+    """Test incoming unsupported CEMI Frames."""
     xknx = XKNX()
 
     with patch("logging.Logger.info") as mock_info, patch.object(
