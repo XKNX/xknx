@@ -61,10 +61,13 @@ class CEMIHandler:
                 self.xknx.current_address if telegram.source_address.raw == 0 else None
             ),
         )
+        if not isinstance(cemi.data, CEMILData):
+            logger.warning("Invalid CEMI data from Telegram: %s", cemi)
+            return
+
         logger.debug("Outgoing CEMI: %s", cemi)
         if self.data_secure is not None:
-            cemi = self.data_secure.outgoing_cemi(cemi=cemi)
-
+            cemi.data = self.data_secure.outgoing_cemi(cemi_data=cemi.data)
         self._l_data_confirmation_event.clear()
         try:
             await self.xknx.knxip_interface.send_cemi(cemi)
@@ -102,6 +105,7 @@ class CEMIHandler:
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming CEMI Frames."""
         if not isinstance(cemi.data, CEMILData):
+            logger.debug("Ignoring incoming non-link-layer CEMI: %s", cemi)
             return
 
         if cemi.code is CEMIMessageCode.L_DATA_CON:
@@ -126,7 +130,7 @@ class CEMIHandler:
 
         if self.data_secure is not None:
             try:
-                cemi = self.data_secure.received_cemi(cemi=cemi)
+                cemi.data = self.data_secure.received_cemi(cemi_data=cemi.data)
             except DataSecureError as err:
                 data_secure_logger.log(
                     err.log_level,

@@ -13,6 +13,10 @@ nav_order: 2
 - Add support for Device Management Configuration service.
 - Support CEMI M_Prop messages.
 
+### Internals
+
+- Use CEMILData instead of CEMIFrame in DataSecure.
+
 # 2.6.0 Connection information 2023-02-27
 
 ### Connection
