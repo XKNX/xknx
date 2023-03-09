@@ -107,7 +107,9 @@ class TestDataSecure:
 
         test_cemi = CEMIFrame.init_from_telegram(test_telegram)
         with patch.object(
-            self.data_secure, "received_cemi"
+            self.data_secure,
+            "received_cemi",
+            return_value=test_cemi.data,  # Reuse incoming plain APDU. Decryption is not tested here
         ) as mock_ds_received_cemi, patch.object(
             self.xknx.cemi_handler, "telegram_received"
         ) as mock_telegram_received:  # suppress forwarding to telegras/management
@@ -135,10 +137,10 @@ class TestDataSecure:
             code=CEMIMessageCode.L_DATA_REQ,
             src_addr=self.xknx.current_address,
         )
-        secured_frame = self.data_secure.outgoing_cemi(test_cemi)
-        assert isinstance(secured_frame.data, CEMILData)
-        assert isinstance(secured_frame.data.payload, apci.SecureAPDU)
-        secured_asdu = secured_frame.data.payload.secured_data
+        secured_frame_data = self.data_secure.outgoing_cemi(test_cemi.data)
+        assert isinstance(secured_frame_data, CEMILData)
+        assert isinstance(secured_frame_data.payload, apci.SecureAPDU)
+        secured_asdu = secured_frame_data.payload.secured_data
 
         assert int.from_bytes(secured_asdu.sequence_number_bytes, "big") == 160170101607
         assert secured_asdu.secured_apdu == bytes.fromhex("cd18")
@@ -146,8 +148,8 @@ class TestDataSecure:
         # sequence number sending was incremented
         assert self.data_secure._sequence_number_sending == 160170101608
 
-        assert secured_frame.to_knx() == bytes.fromhex(
-            "1100bce0500104000e03f11000254ae1cb67cd184afe5744"
+        assert secured_frame_data.to_knx() == bytes.fromhex(
+            "bce0500104000e03f11000254ae1cb67cd184afe5744"
         )
 
     def test_data_secure_group_receive(self, test_group_response_cemi):
@@ -160,9 +162,9 @@ class TestDataSecure:
         assert test_group_response_cemi.data.src_addr == IndividualAddress("4.0.9")
         assert isinstance(test_group_response_cemi.data.payload, apci.SecureAPDU)
 
-        plain_frame = self.data_secure.received_cemi(test_group_response_cemi)
-        assert isinstance(plain_frame.data, CEMILData)
-        assert plain_frame.data.payload == apci.GroupValueResponse(
+        plain_frame_data = self.data_secure.received_cemi(test_group_response_cemi.data)
+        assert isinstance(plain_frame_data, CEMILData)
+        assert plain_frame_data.payload == apci.GroupValueResponse(
             DPTArray((116, 41, 41))
         )
         # individual_address_table sequence number was updated
@@ -179,7 +181,7 @@ class TestDataSecure:
         with pytest.raises(
             DataSecureError, match=r"System broadcast and tool access not supported.*"
         ):
-            self.data_secure.received_cemi(test_point_to_point_cemi)
+            self.data_secure.received_cemi(test_point_to_point_cemi.data)
         # don't raise through handle_cemi_frame()
         assert (
             self.xknx.cemi_handler.handle_cemi_frame(test_point_to_point_cemi) is None
@@ -197,7 +199,7 @@ class TestDataSecure:
             DataSecureError,
             match=r"Secure Point-to-Point communication not supported.*",
         ):
-            self.data_secure.received_cemi(test_point_to_point_cemi)
+            self.data_secure.received_cemi(test_point_to_point_cemi.data)
         # don't raise through handle_cemi_frame()
         assert (
             self.xknx.cemi_handler.handle_cemi_frame(test_point_to_point_cemi) is None
@@ -210,7 +212,7 @@ class TestDataSecure:
             DataSecureError,
             match=r"Source address not found in Security Individual Address Table.*",
         ):
-            self.data_secure.received_cemi(test_group_response_cemi)
+            self.data_secure.received_cemi(test_group_response_cemi.data)
 
     def test_data_secure_group_receive_unknown_destination(
         self, test_group_response_cemi
@@ -221,7 +223,7 @@ class TestDataSecure:
             DataSecureError,
             match=r"No key found for group address.*",
         ):
-            self.data_secure.received_cemi(test_group_response_cemi)
+            self.data_secure.received_cemi(test_group_response_cemi.data)
 
     def test_data_secure_group_receive_wrong_sequence_number(
         self, test_group_response_cemi
@@ -238,7 +240,7 @@ class TestDataSecure:
             DataSecureError,
             match=r"Sequence number too low.*",
         ):
-            self.data_secure.received_cemi(test_group_response_cemi)
+            self.data_secure.received_cemi(test_group_response_cemi.data)
 
     def test_data_secure_group_receive_wrong_mac(self, test_group_response_cemi):
         """Test incoming DataSecure group communication with wrong MAC."""
@@ -249,7 +251,7 @@ class TestDataSecure:
             DataSecureError,
             match=r"Data Secure MAC verification failed.*",
         ):
-            self.data_secure.received_cemi(test_group_response_cemi)
+            self.data_secure.received_cemi(test_group_response_cemi.data)
 
     def test_data_secure_group_receive_plain_frame(self):
         """Test incoming DataSecure group communication with plain frame."""
@@ -268,7 +270,7 @@ class TestDataSecure:
             DataSecureError,
             match=r"Discarding frame with plain APDU for secure group address.*",
         ):
-            self.data_secure.received_cemi(test_cemi)
+            self.data_secure.received_cemi(test_cemi.data)
 
     def test_non_secure_group_receive_plain_frame(self):
         """Test incoming non-secure group communication with plain frame."""
@@ -283,7 +285,7 @@ class TestDataSecure:
             src_addr=IndividualAddress("4.0.9"),
         )
         assert dst_addr not in self.data_secure._group_key_table
-        assert self.data_secure.received_cemi(test_cemi) == test_cemi
+        assert self.data_secure.received_cemi(test_cemi.data) == test_cemi.data
 
     def test_non_secure_group_send_plain_frame(self):
         """Test outgoing non-secure group communication with plain frame."""
@@ -298,7 +300,7 @@ class TestDataSecure:
             src_addr=self.xknx.current_address,
         )
         assert dst_addr not in self.data_secure._group_key_table
-        assert self.data_secure.outgoing_cemi(test_cemi) == test_cemi
+        assert self.data_secure.outgoing_cemi(test_cemi.data) == test_cemi.data
 
     def test_non_secure_individual_receive_plain_frame(self):
         """Test incoming non-secure group communication with plain frame."""
@@ -322,7 +324,7 @@ class TestDataSecure:
             src_addr=IndividualAddress("4.0.9"),
         )
         assert src_addr not in self.data_secure._individual_address_table
-        assert self.data_secure.received_cemi(test_cemi) == test_cemi
+        assert self.data_secure.received_cemi(test_cemi.data) == test_cemi.data
 
     def test_non_secure_individual_send_plain_frame(self):
         """Test outgoing non-secure group communication with plain frame."""
@@ -346,7 +348,7 @@ class TestDataSecure:
             src_addr=self.xknx.current_address,
         )
         assert dst_addr not in self.data_secure._individual_address_table
-        assert self.data_secure.outgoing_cemi(test_cemi) == test_cemi
+        assert self.data_secure.outgoing_cemi(test_cemi.data) == test_cemi.data
 
     def test_data_secure_authentication_only(self):
         """Test frame de-/serialization for DataSecure authentication only."""
@@ -371,18 +373,19 @@ class TestDataSecure:
         )
         key = self.data_secure._group_key_table[dst_addr]
 
-        outgoing_signed_cemi = self.data_secure._secure_data_cemi(
-            key=key, scf=scf, cemi=test_cemi
+        outgoing_signed_cemi_data = self.data_secure._secure_data_cemi(
+            key=key, scf=scf, cemi_data=test_cemi.data
         )
-        assert isinstance(outgoing_signed_cemi.data, CEMILData)
-        assert outgoing_signed_cemi.data.payload.secured_data is not None
+        assert outgoing_signed_cemi_data.payload.secured_data is not None
 
         # create new cemi to avoid mixed bytearray / byte parts
-        incoming_cemi = CEMIFrame.from_knx(outgoing_signed_cemi.to_knx())
+        incoming_cemi = CEMIFrame.from_knx(
+            b"\x11\x00" + outgoing_signed_cemi_data.to_knx()
+        )
         assert isinstance(incoming_cemi.data, CEMILData)
         # receive same cemi - fake individual address table entry
         self.data_secure._individual_address_table[incoming_cemi.data.src_addr] = 1
-        assert self.data_secure.received_cemi(incoming_cemi) == test_cemi
+        assert self.data_secure.received_cemi(incoming_cemi.data) == test_cemi.data
 
         # Test wrong MAC
         self.data_secure._individual_address_table[incoming_cemi.data.src_addr] = 1
@@ -391,4 +394,4 @@ class TestDataSecure:
             DataSecureError,
             match=r"Data Secure MAC verification failed.*",
         ):
-            self.data_secure.received_cemi(incoming_cemi)
+            self.data_secure.received_cemi(incoming_cemi.data)
