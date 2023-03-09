@@ -1,11 +1,11 @@
 """Unit test for KNX/IP RountingIndication objects."""
 import time
 
-from xknx.cemi import CEMIFrame, CEMILData
-from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTTime
-from xknx.knxip import KNXIPFrame, KNXIPServiceType, RoutingIndication
+from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
+from xknx.dpt import DPTArray, DPTTime
+from xknx.knxip import KNXIPFrame, RoutingIndication
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestKNXIPRountingIndication:
@@ -37,9 +37,12 @@ class TestKNXIPRountingIndication:
                 DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S")))
             ),
         )
-        cemi = CEMIFrame.init_from_telegram(
-            telegram,
-            src_addr=IndividualAddress("1.2.2"),
+        cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(
+                telegram,
+                src_addr=IndividualAddress("1.2.2"),
+            ),
         )
         assert isinstance(cemi.data, CEMILData)
         cemi.data.hops = 5

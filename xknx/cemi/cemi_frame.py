@@ -125,6 +125,51 @@ class CEMILData(CEMIData):
             return 8
         raise TypeError("Data TPDU must have a payload; control TPDU must not.")
 
+    @staticmethod
+    def init_from_telegram(
+        telegram: Telegram,
+        src_addr: IndividualAddress | None = None,
+    ) -> CEMILData:
+        """Return CEMILData from a Telegram."""
+        flags = (
+            CEMIFlags.FRAME_TYPE_STANDARD
+            | CEMIFlags.DO_NOT_REPEAT
+            | CEMIFlags.BROADCAST
+            | CEMIFlags.NO_ACK_REQUESTED
+            | CEMIFlags.CONFIRM_NO_ERROR
+            | CEMIFlags.HOP_COUNT_1ST
+        )
+        if isinstance(telegram.destination_address, GroupAddress):
+            flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
+            if isinstance(telegram.tpci, TDataBroadcast):
+                flags |= CEMIFlags.PRIORITY_SYSTEM
+            else:
+                flags |= CEMIFlags.PRIORITY_LOW
+        elif isinstance(telegram.destination_address, IndividualAddress):
+            flags |= (
+                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
+            )
+        else:
+            raise TypeError()
+
+        return CEMILData(
+            flags=flags,
+            src_addr=src_addr or telegram.source_address,
+            dst_addr=telegram.destination_address,
+            tpci=telegram.tpci,
+            payload=telegram.payload,
+        )
+
+    def telegram(self) -> Telegram:
+        """Return Telegram from a CEMILData."""
+
+        return Telegram(
+            destination_address=self.dst_addr,
+            payload=self.payload,
+            source_address=self.src_addr,
+            tpci=self.tpci,
+        )
+
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
         if self.tpci.control:
@@ -145,17 +190,6 @@ class CEMILData(CEMIData):
             + self.dst_addr.to_knx()
             + npdu_len.to_bytes(1, "big")
             + tpdu
-        )
-
-    @property
-    def telegram(self) -> Telegram:
-        """Return telegram."""
-
-        return Telegram(
-            destination_address=self.dst_addr,
-            payload=self.payload,
-            source_address=self.src_addr,
-            tpci=self.tpci,
         )
 
     @classmethod
@@ -556,45 +590,6 @@ class CEMIFrame:
             CEMIMessageCode.M_RESET_IND,
         )
 
-    @staticmethod
-    def init_from_telegram(
-        telegram: Telegram,
-        code: CEMIMessageCode = CEMIMessageCode.L_DATA_IND,
-        src_addr: IndividualAddress | None = None,
-    ) -> CEMIFrame:
-        """Return CEMIFrame from a Telegram."""
-        flags = (
-            CEMIFlags.FRAME_TYPE_STANDARD
-            | CEMIFlags.DO_NOT_REPEAT
-            | CEMIFlags.BROADCAST
-            | CEMIFlags.NO_ACK_REQUESTED
-            | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.HOP_COUNT_1ST
-        )
-        if isinstance(telegram.destination_address, GroupAddress):
-            flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
-            if isinstance(telegram.tpci, TDataBroadcast):
-                flags |= CEMIFlags.PRIORITY_SYSTEM
-            else:
-                flags |= CEMIFlags.PRIORITY_LOW
-        elif isinstance(telegram.destination_address, IndividualAddress):
-            flags |= (
-                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
-            )
-        else:
-            raise TypeError()
-
-        return CEMIFrame(
-            code=code,
-            data=CEMILData(
-                flags=flags,
-                src_addr=src_addr or telegram.source_address,
-                dst_addr=telegram.destination_address,
-                tpci=telegram.tpci,
-                payload=telegram.payload,
-            ),
-        )
-
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
         length = 1
@@ -671,11 +666,3 @@ class CEMIFrame:
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
         return self.__dict__ == other.__dict__
-
-    @property
-    def telegram(self) -> Telegram:
-        """Return telegram."""
-        if not isinstance(self.data, CEMILData):
-            raise TypeError()
-
-        return self.data.telegram

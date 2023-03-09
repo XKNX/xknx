@@ -186,42 +186,54 @@ def test_from_knx_individual_address():
 def test_telegram_group_address():
     """Test telegram conversion flags with a group address."""
     _telegram = Telegram(destination_address=GroupAddress(1))
-    frame = CEMIFrame.init_from_telegram(_telegram)
+    frame = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(_telegram),
+    )
     assert isinstance(frame.data, CEMILData)
     assert frame.data.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
     assert frame.data.flags & 0x0C00 == CEMIFlags.PRIORITY_LOW
     # test CEMIFrame.telegram property
-    assert frame.telegram == _telegram
+    assert frame.data.telegram() == _telegram
 
 
 def test_telegram_broadcast():
     """Test telegram conversion flags with a group address."""
     _telegram = Telegram(destination_address=GroupAddress(0))
-    frame = CEMIFrame.init_from_telegram(_telegram)
+    frame = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(_telegram),
+    )
     assert isinstance(frame.data, CEMILData)
     assert frame.data.flags & 0x0080 == CEMIFlags.DESTINATION_GROUP_ADDRESS
     assert frame.data.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
     assert frame.data.tpci == TDataBroadcast()
     # test CEMIFrame.telegram property
-    assert frame.telegram == _telegram
+    assert frame.data.telegram() == _telegram
 
 
 def test_telegram_individual_address():
     """Test telegram conversion flags with a individual address."""
     _telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
-    frame = CEMIFrame.init_from_telegram(_telegram)
+    frame = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(_telegram),
+    )
     assert isinstance(frame.data, CEMILData)
     assert frame.data.flags & 0x0080 == CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS
     assert frame.data.flags & 0x0C00 == CEMIFlags.PRIORITY_SYSTEM
     assert frame.data.flags & 0x0200 == CEMIFlags.NO_ACK_REQUESTED
     # test CEMIFrame.telegram property
-    assert frame.telegram == _telegram
+    assert frame.data.telegram() == _telegram
 
 
 def test_telegram_unsupported_address():
     """Test telegram conversion flags with an unsupported address."""
     with pytest.raises(TypeError):
-        CEMIFrame.init_from_telegram(Telegram(destination_address=object()))
+        CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(Telegram(destination_address=object())),
+        )
 
 
 def get_prop(code, obj_id, obj_inst, prop_id, num, six, payload):
@@ -259,8 +271,8 @@ def test_valid_read_req():
     assert frame.data.property_info.start_index == 1
     assert frame.calculated_length() == 7
     assert frame.to_knx() == raw
-    with pytest.raises(TypeError):
-        frame.telegram
+    with pytest.raises(AttributeError):
+        frame.data.telegram()
 
 
 def test_valid_read_con():
@@ -284,8 +296,6 @@ def test_valid_read_con():
     assert IndividualAddress.from_knx(frame.data.data) == IndividualAddress("1.2.3")
     assert frame.calculated_length() == 9
     assert frame.to_knx() == raw
-    with pytest.raises(TypeError):
-        frame.telegram
 
 
 def test_valid_error_read_con():
@@ -308,8 +318,6 @@ def test_valid_error_read_con():
     assert frame.data.error_code == CEMIErrorCode.CEMI_ERROR_VOID_DP
     assert frame.calculated_length() == 8
     assert frame.to_knx() == raw
-    with pytest.raises(TypeError):
-        frame.telegram
 
 
 def test_valid_write_req():
@@ -332,8 +340,6 @@ def test_valid_write_req():
     assert IndividualAddress.from_knx(frame.data.data) == IndividualAddress("1.2.3")
     assert frame.calculated_length() == 9
     assert frame.to_knx() == raw
-    with pytest.raises(TypeError):
-        frame.telegram
 
 
 def test_valid_empty_write_con():
@@ -356,8 +362,6 @@ def test_valid_empty_write_con():
     assert frame.data.error_code == None
     assert frame.calculated_length() == 7
     assert frame.to_knx() == raw
-    with pytest.raises(TypeError):
-        frame.telegram
 
 
 def test_valid_error_write_con():
@@ -380,8 +384,6 @@ def test_valid_error_write_con():
     assert frame.data.error_code == CEMIErrorCode.CEMI_ERROR_VOID_DP
     assert frame.calculated_length() == 8
     assert frame.to_knx() == raw
-    with pytest.raises(TypeError):
-        frame.telegram
 
 
 @pytest.mark.parametrize(

@@ -54,20 +54,20 @@ class CEMIHandler:
 
     async def send_telegram(self, telegram: Telegram) -> None:
         """Create a CEMIFrame from a Telegram and send it to the CEMI Server."""
-        cemi = CEMIFrame.init_from_telegram(
+        cemi_data = CEMILData.init_from_telegram(
             telegram=telegram,
-            code=CEMIMessageCode.L_DATA_REQ,
             src_addr=(
                 self.xknx.current_address if telegram.source_address.raw == 0 else None
             ),
         )
-        if not isinstance(cemi.data, CEMILData):
-            logger.warning("Invalid CEMI data from Telegram: %s", cemi)
-            return
+        cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=cemi_data,
+        )
 
         logger.debug("Outgoing CEMI: %s", cemi)
         if self.data_secure is not None:
-            cemi.data = self.data_secure.outgoing_cemi(cemi_data=cemi.data)
+            cemi.data = self.data_secure.outgoing_cemi(cemi_data=cemi_data)
         self._l_data_confirmation_event.clear()
         try:
             await self.xknx.knxip_interface.send_cemi(cemi)
@@ -139,8 +139,7 @@ class CEMIHandler:
                 )
                 return
         self.xknx.connection_manager.cemi_count_incoming += 1
-        # TODO: remove telegram init from CEMIFrame class and move it here?
-        telegram = cemi.telegram
+        telegram = cemi.data.telegram()
         telegram.direction = TelegramDirection.INCOMING
         self.telegram_received(telegram)
 

@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMIMessageCode
+from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.io import Routing
 from xknx.io.const import DEFAULT_INDIVIDUAL_ADDRESS
 from xknx.io.routing import (
@@ -42,16 +42,19 @@ class TestRouting:
         # communication_channel_id: 0x02   sequence_counter: 0x81
         raw_ind = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
         _cemi = CEMIFrame.from_knx(raw_ind[6:])
-        test_telegram = _cemi.telegram
+        test_telegram = _cemi.data.telegram()
         test_telegram.direction = TelegramDirection.INCOMING
 
         response_telegram = Telegram(
             destination_address=IndividualAddress(test_telegram.source_address),
             tpci=tpci.TDisconnect(),
         )
-        response_cemi = CEMIFrame.init_from_telegram(
-            telegram=response_telegram,
-            src_addr=IndividualAddress("1.0.255"),
+        response_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(
+                telegram=response_telegram,
+                src_addr=IndividualAddress("1.0.255"),
+            ),
         )
         response_frame = KNXIPFrame.init_from_body(
             RoutingIndication(raw_cemi=response_cemi.to_knx())

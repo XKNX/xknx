@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMIMessageCode
+from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConfirmationError
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, apci, tpci
@@ -20,13 +20,15 @@ async def test_wait_for_l2_confirmation(time_travel):
         destination_address=GroupAddress(1),
         payload=apci.GroupValueWrite(DPTArray((1,))),
     )
-    test_cemi = CEMIFrame.init_from_telegram(
-        test_telegram,
+    test_cemi = CEMIFrame(
         code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(test_telegram),
     )
-    test_cemi_confirmation = CEMIFrame.init_from_telegram(
-        test_telegram,
+    test_cemi_confirmation = CEMIFrame(
         code=CEMIMessageCode.L_DATA_CON,
+        data=CEMILData.init_from_telegram(
+            test_telegram,
+        ),
     )
     task = asyncio.create_task(xknx.cemi_handler.send_telegram(test_telegram))
     await time_travel(0)
@@ -64,25 +66,25 @@ def test_incoming_cemi():
         destination_address=GroupAddress(1),
         payload=apci.GroupValueWrite(DPTArray((1,))),
     )
-    test_group_cemi = CEMIFrame.init_from_telegram(
-        test_telegram,
+    test_group_cemi = CEMIFrame(
         code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(test_telegram),
     )
     xknx.cemi_handler.handle_cemi_frame(test_group_cemi)
     assert xknx.telegrams.qsize() == 1
 
     # L_DATA_CON and L_DATA_REQ should not be forwarded to the telegram queue or management
     with patch.object(xknx.cemi_handler, "telegram_received") as mock_telegram_received:
-        test_incoming_l_data_con = CEMIFrame.init_from_telegram(
-            test_telegram,
+        test_incoming_l_data_con = CEMIFrame(
             code=CEMIMessageCode.L_DATA_CON,
+            data=CEMILData.init_from_telegram(test_telegram),
         )
         xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_con)
         mock_telegram_received.assert_not_called()
 
-        test_incoming_l_data_req = CEMIFrame.init_from_telegram(
-            test_telegram,
+        test_incoming_l_data_req = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(test_telegram),
         )
         xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_req)
         mock_telegram_received.assert_not_called()
@@ -112,8 +114,9 @@ def test_incoming_management_telegram(telegram):
     xknx.current_address = IndividualAddress("1.1.1")
 
     with patch.object(xknx.management, "process") as mock_management_process:
-        test_cemi = CEMIFrame.init_from_telegram(
-            telegram, code=CEMIMessageCode.L_DATA_IND
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(telegram),
         )
         xknx.cemi_handler.handle_cemi_frame(test_cemi)
         mock_management_process.assert_called_once()

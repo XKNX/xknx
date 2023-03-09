@@ -233,7 +233,7 @@ class DataSecure:
             plain_apdu_raw = cemi_data.payload.to_knx()
         else:
             # TODO: test if this is correct
-            plain_apdu_raw = b""  # used ein point-to-point eg. TConnect
+            plain_apdu_raw = b""  # used in point-to-point eg. TConnect
         secure_asdu = SecureData.init_from_plain_apdu(
             key=key,
             apdu=plain_apdu_raw,
