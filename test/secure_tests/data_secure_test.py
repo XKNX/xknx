@@ -105,7 +105,10 @@ class TestDataSecure:
             self.xknx.cemi_handler._l_data_confirmation_event.set()
             await task
 
-        test_cemi = CEMIFrame.init_from_telegram(test_telegram)
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(test_telegram),
+        )
         with patch.object(
             self.data_secure,
             "received_cemi",
@@ -129,13 +132,15 @@ class TestDataSecure:
         """Test outgoing DataSecure group communication."""
         self.data_secure._sequence_number_sending = 160170101607
 
-        test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=GroupAddress("0/4/0"),
-                payload=apci.GroupValueRead(),
-            ),
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.xknx.current_address,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("0/4/0"),
+                    payload=apci.GroupValueRead(),
+                ),
+                src_addr=self.xknx.current_address,
+            ),
         )
         secured_frame_data = self.data_secure.outgoing_cemi(test_cemi.data)
         assert isinstance(secured_frame_data, CEMILData)
@@ -256,14 +261,16 @@ class TestDataSecure:
     def test_data_secure_group_receive_plain_frame(self):
         """Test incoming DataSecure group communication with plain frame."""
         src_addr = IndividualAddress("4.0.9")
-        test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=GroupAddress("0/4/0"),
-                direction=TelegramDirection.INCOMING,
-                payload=apci.GroupValueResponse(DPTArray((116, 41, 41))),
-            ),
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_IND,
-            src_addr=src_addr,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("0/4/0"),
+                    direction=TelegramDirection.INCOMING,
+                    payload=apci.GroupValueResponse(DPTArray((116, 41, 41))),
+                ),
+                src_addr=src_addr,
+            ),
         )
         assert src_addr in self.data_secure._individual_address_table
         with pytest.raises(
@@ -275,14 +282,16 @@ class TestDataSecure:
     def test_non_secure_group_receive_plain_frame(self):
         """Test incoming non-secure group communication with plain frame."""
         dst_addr = GroupAddress("1/2/3")
-        test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=dst_addr,
-                direction=TelegramDirection.INCOMING,
-                payload=apci.GroupValueResponse(DPTArray((116, 41, 41))),
-            ),
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_IND,
-            src_addr=IndividualAddress("4.0.9"),
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=dst_addr,
+                    direction=TelegramDirection.INCOMING,
+                    payload=apci.GroupValueResponse(DPTArray((116, 41, 41))),
+                ),
+                src_addr=IndividualAddress("4.0.9"),
+            ),
         )
         assert dst_addr not in self.data_secure._group_key_table
         assert self.data_secure.received_cemi(test_cemi.data) == test_cemi.data
@@ -290,14 +299,16 @@ class TestDataSecure:
     def test_non_secure_group_send_plain_frame(self):
         """Test outgoing non-secure group communication with plain frame."""
         dst_addr = GroupAddress("1/2/3")
-        test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=dst_addr,
-                direction=TelegramDirection.OUTGOING,
-                payload=apci.GroupValueResponse(DPTArray((116, 41, 41))),
-            ),
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.xknx.current_address,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=dst_addr,
+                    direction=TelegramDirection.OUTGOING,
+                    payload=apci.GroupValueResponse(DPTArray((116, 41, 41))),
+                ),
+                src_addr=self.xknx.current_address,
+            ),
         )
         assert dst_addr not in self.data_secure._group_key_table
         assert self.data_secure.outgoing_cemi(test_cemi.data) == test_cemi.data
@@ -305,23 +316,25 @@ class TestDataSecure:
     def test_non_secure_individual_receive_plain_frame(self):
         """Test incoming non-secure group communication with plain frame."""
         src_addr = IndividualAddress("1.2.3")
-        test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=self.xknx.current_address,
-                direction=TelegramDirection.INCOMING,
-                payload=apci.PropertyValueWrite(
-                    object_index=5,
-                    property_id=0x35,
-                    count=1,
-                    start_index=1,
-                    data=bytes.fromhex(
-                        "20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F"
-                    ),
-                ),
-                tpci=tpci.TDataIndividual(),
-            ),
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_IND,
-            src_addr=IndividualAddress("4.0.9"),
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=self.xknx.current_address,
+                    direction=TelegramDirection.INCOMING,
+                    payload=apci.PropertyValueWrite(
+                        object_index=5,
+                        property_id=0x35,
+                        count=1,
+                        start_index=1,
+                        data=bytes.fromhex(
+                            "20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F"
+                        ),
+                    ),
+                    tpci=tpci.TDataIndividual(),
+                ),
+                src_addr=IndividualAddress("4.0.9"),
+            ),
         )
         assert src_addr not in self.data_secure._individual_address_table
         assert self.data_secure.received_cemi(test_cemi.data) == test_cemi.data
@@ -329,23 +342,25 @@ class TestDataSecure:
     def test_non_secure_individual_send_plain_frame(self):
         """Test outgoing non-secure group communication with plain frame."""
         dst_addr = IndividualAddress("1.2.3")
-        test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=dst_addr,
-                direction=TelegramDirection.INCOMING,
-                payload=apci.PropertyValueWrite(
-                    object_index=5,
-                    property_id=0x35,
-                    count=1,
-                    start_index=1,
-                    data=bytes.fromhex(
-                        "20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F"
-                    ),
-                ),
-                tpci=tpci.TDataIndividual(),
-            ),
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.xknx.current_address,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=dst_addr,
+                    direction=TelegramDirection.INCOMING,
+                    payload=apci.PropertyValueWrite(
+                        object_index=5,
+                        property_id=0x35,
+                        count=1,
+                        start_index=1,
+                        data=bytes.fromhex(
+                            "20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F"
+                        ),
+                    ),
+                    tpci=tpci.TDataIndividual(),
+                ),
+                src_addr=self.xknx.current_address,
+            ),
         )
         assert dst_addr not in self.data_secure._individual_address_table
         assert self.data_secure.outgoing_cemi(test_cemi.data) == test_cemi.data
@@ -360,10 +375,12 @@ class TestDataSecure:
             direction=TelegramDirection.OUTGOING,
             payload=apci.GroupValueWrite(DPTArray((1, 2))),
         )
-        test_cemi = CEMIFrame.init_from_telegram(
-            telegram=test_telegram,
-            src_addr=self.xknx.current_address,
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(
+                telegram=test_telegram,
+                src_addr=self.xknx.current_address,
+            ),
         )
         scf = SecurityControlField(
             algorithm=SecurityAlgorithmIdentifier.CCM_AUTHENTICATION,

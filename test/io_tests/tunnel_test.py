@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMIMessageCode
+from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import CommunicationError
 from xknx.io import TCPTunnel, UDPTunnel
@@ -101,7 +101,7 @@ class TestUDPTunnel:
         raw_ind = bytes.fromhex("0610 0420 0014 04 02 81 00 2900b06010fa10ff0080")
 
         test_cemi = CEMIFrame.from_knx(raw_ind[10:])
-        test_telegram = test_cemi.telegram
+        test_telegram = test_cemi.data.telegram()
         test_telegram.direction = TelegramDirection.INCOMING
         self.tunnel.expected_sequence_number = 0x81
 
@@ -112,10 +112,12 @@ class TestUDPTunnel:
 
         self.tunnel.transport.data_received_callback(raw_ind, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
-        response_cemi = CEMIFrame.init_from_telegram(
-            response_telegram,
+        response_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=IndividualAddress("1.0.255"),
+            data=CEMILData.init_from_telegram(
+                response_telegram,
+                src_addr=IndividualAddress("1.0.255"),
+            ),
         )
         assert send_cemi_mock.call_args_list == [
             call(response_cemi),
@@ -132,8 +134,9 @@ class TestUDPTunnel:
             destination_address=GroupAddress(1),
             payload=GroupValueWrite(DPTArray((1,))),
         )
-        cemi = CEMIFrame.init_from_telegram(
-            test_telegram, code=CEMIMessageCode.L_DATA_IND
+        cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(test_telegram),
         )
         test_frame = KNXIPFrame.init_from_body(
             TunnellingRequest(
@@ -181,10 +184,12 @@ class TestUDPTunnel:
             destination_address=GroupAddress(1),
             payload=GroupValueWrite(DPTArray((1,))),
         )
-        test_cemi = CEMIFrame.init_from_telegram(
-            test_telegram,
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=self.tunnel._src_address,
+            data=CEMILData.init_from_telegram(
+                test_telegram,
+                src_addr=self.tunnel._src_address,
+            ),
         )
         request = KNXIPFrame.init_from_body(
             TunnellingRequest(
@@ -196,8 +201,9 @@ class TestUDPTunnel:
         test_ack = KNXIPFrame.init_from_body(
             TunnellingAck(sequence_counter=self.tunnel.sequence_number)
         )
-        confirmation_cemi = CEMIFrame.init_from_telegram(
-            test_telegram, code=CEMIMessageCode.L_DATA_CON
+        confirmation_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_CON,
+            data=CEMILData.init_from_telegram(test_telegram),
         )
         confirmation = KNXIPFrame.init_from_body(
             TunnellingRequest(
@@ -290,10 +296,12 @@ class TestUDPTunnel:
             destination_address=GroupAddress(1),
             payload=GroupValueWrite(DPTArray((1,))),
         )
-        test_cemi = CEMIFrame.init_from_telegram(
-            test_telegram,
+        test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_REQ,
-            src_addr=IndividualAddress(7),
+            data=CEMILData.init_from_telegram(
+                test_telegram,
+                src_addr=IndividualAddress(7),
+            ),
         )
         test_telegram_frame = KNXIPFrame.init_from_body(
             TunnellingRequest(

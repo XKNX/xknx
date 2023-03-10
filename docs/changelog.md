@@ -16,6 +16,7 @@ nav_order: 2
 ### Internals
 
 - Use CEMILData instead of CEMIFrame in DataSecure.
+- Move `init_from_telegram()` from CEMIFrame to CEMILData. `telegram()` is now a method of CEMILData instead of a property of CEMIFrame.
 
 # 2.6.0 Connection information 2023-02-27
 

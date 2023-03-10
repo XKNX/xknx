@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import Mock, patch
 
-from xknx.cemi import CEMIFrame
+from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
@@ -442,11 +442,14 @@ class TestSecureGroup:
         secure_timer = secure_group.secure_timer
         secure_timer.timer_authenticated = True
 
-        raw_test_cemi = CEMIFrame.init_from_telegram(
-            Telegram(
-                destination_address=GroupAddress("1/2/3"),
-                payload=apci.GroupValueRead(),
-            )
+        raw_test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("1/2/3"),
+                    payload=apci.GroupValueRead(),
+                )
+            ),
         ).to_knx()
 
         with patch.object(
