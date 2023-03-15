@@ -12,6 +12,7 @@ nav_order: 2
 
 - Add support for Device Management Configuration service.
 - Support CEMI M_Prop messages.
+- Don't ignore CEMIFrames with source address equal to `xknx.current_address`.
 
 ### Internals
 
