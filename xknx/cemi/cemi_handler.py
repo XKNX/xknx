@@ -118,14 +118,6 @@ class CEMIHandler:
             logger.warning("Received unexpected L_DATA_REQ frame: %s", cemi)
             self.xknx.connection_manager.cemi_count_incoming_error += 1
             return
-        if (
-            cemi.code is CEMIMessageCode.L_DATA_IND
-            and cemi.data.src_addr == self.xknx.current_address
-        ):
-            # L_DATA_IND frames from our own address should be ignored (may occur form routing)
-            logger.debug("Ignoring own CEMI: %s", cemi)
-            self.xknx.connection_manager.cemi_count_incoming_error += 1
-            return
         logger.debug("Incoming CEMI: %s", cemi)
 
         if self.data_secure is not None:

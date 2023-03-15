@@ -166,7 +166,7 @@ def test_unsupported_cemi(raw):
         assert xknx.connection_manager.cemi_count_incoming_error == 1
 
 
-def test_incoming_from_self():
+def test_incoming_from_own_ia():
     """Test incoming CEMI from own IA."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.22")
@@ -178,5 +178,6 @@ def test_incoming_from_self():
     ) as mock_telegram_received:
         xknx.cemi_handler.handle_raw_cemi(raw)
         mock_debug.assert_called_once()
-        mock_telegram_received.assert_not_called()
-        assert xknx.connection_manager.cemi_count_incoming_error == 1
+        mock_telegram_received.assert_called_once()
+        assert xknx.connection_manager.cemi_count_incoming == 1
+        assert xknx.connection_manager.cemi_count_incoming_error == 0
