@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased Changes
+# 2.7.0 IP Device Management 2023-03-15
 
 ### Protocol
 
