@@ -56,7 +56,7 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
             addresses: GroupAddressesType | None,
         ) -> DeviceGroupAddress | None:
             """Parse group addresses and assign passive addresses when given."""
-            if addresses is None:
+            if not addresses:  # None or empty list
                 return None
             if not isinstance(addresses, list):
                 return parse_device_group_address(addresses)
