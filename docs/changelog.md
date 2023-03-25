@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Bugfixes
+
+- Handle empty list for group addresses in RemoteValue.
+
 # 2.7.0 IP Device Management 2023-03-15
 
 ### Protocol

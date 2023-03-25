@@ -223,6 +223,9 @@ class TestRemoteValue:
         assert remote_value_3.has_group_address(GroupAddress("2/2/2"))
         assert remote_value_3.has_group_address(GroupAddress("2/2/20"))
         assert not remote_value_3.has_group_address(GroupAddress("0/0/0"))
+        # test empty list
+        remote_value_4 = RemoteValue(xknx, group_address=[])
+        assert remote_value_4.group_address is None
 
     async def test_process_passive_address(self):
         """Test if passive group addresses are processed."""
