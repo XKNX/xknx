@@ -43,7 +43,7 @@ class TestRemoteValueSensor:
         """Test payload_valid method."""
         xknx = XKNX()
         remote_value = RemoteValueSensor(xknx=xknx, value_type="pulse")
-        valid_payload = DPTArray(DPTValue1Ucount.to_knx(1))
+        valid_payload = DPTValue1Ucount.to_knx(1)
 
         assert remote_value.dpt_class == DPTValue1Ucount
         with pytest.raises(CouldNotParseTelegram):

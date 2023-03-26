@@ -58,7 +58,7 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
 
     def to_knx(self, value: Any) -> DPTBinary:
         """Convert value to payload."""
-        return DPTBinary(self.dpt_class.to_knx(value))
+        return self.dpt_class.to_knx(value)
 
     def from_knx(self, payload: DPTBinary) -> Any:
         """Convert current payload to value."""

@@ -71,7 +71,7 @@ class _RemoteValueGeneric(RemoteValue[DPTArray, ValueT]):
 
     def to_knx(self, value: ValueT) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(self.dpt_class.to_knx(value))
+        return self.dpt_class.to_knx(value)  # type: ignore[return-value]
 
     @abstractmethod
     def from_knx(self, payload: DPTArray) -> ValueT:

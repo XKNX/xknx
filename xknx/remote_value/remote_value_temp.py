@@ -22,7 +22,7 @@ class RemoteValueTemp(RemoteValue[DPTArray, float]):
 
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(DPTTemperature.to_knx(value))
+        return DPTTemperature.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> float:
         """Convert current payload to value."""

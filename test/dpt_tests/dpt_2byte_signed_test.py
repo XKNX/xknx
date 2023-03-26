@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from xknx.dpt import DPT2ByteSigned
+from xknx.dpt import DPT2ByteSigned, DPTArray
 from xknx.exceptions import ConversionError
 
 
@@ -28,17 +28,17 @@ class TestDPT2ByteSigned:
 
     def test_signed_value_max_value(self):
         """Test DPT2ByteSigned parsing and streaming."""
-        assert DPT2ByteSigned.to_knx(32767) == (0x7F, 0xFF)
+        assert DPT2ByteSigned.to_knx(32767) == DPTArray((0x7F, 0xFF))
         assert DPT2ByteSigned.from_knx((0x7F, 0xFF)) == 32767
 
     def test_signed_value_min_value(self):
         """Test DPT2ByteSigned parsing and streaming with null values."""
-        assert DPT2ByteSigned.to_knx(-20480) == (0xB0, 0x00)
+        assert DPT2ByteSigned.to_knx(-20480) == DPTArray((0xB0, 0x00))
         assert DPT2ByteSigned.from_knx((0xB0, 0x00)) == -20480
 
     def test_signed_value_0123(self):
         """Test DPT2ByteSigned parsing and streaming."""
-        assert DPT2ByteSigned.to_knx(291) == (0x01, 0x23)
+        assert DPT2ByteSigned.to_knx(291) == DPTArray((0x01, 0x23))
         assert DPT2ByteSigned.from_knx((0x01, 0x23)) == 291
 
     def test_signed_wrong_value_from_knx(self):

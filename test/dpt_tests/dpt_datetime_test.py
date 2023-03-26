@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from xknx.dpt import DPTDateTime
+from xknx.dpt import DPTArray, DPTDateTime
 from xknx.exceptions import ConversionError
 
 
@@ -24,7 +24,7 @@ class TestDPTDateTime:
         raw = DPTDateTime.to_knx(
             time.strptime("2017-11-28 23:7:24", "%Y-%m-%d %H:%M:%S")
         )
-        assert raw == (0x75, 0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80)
+        assert raw == DPTArray((0x75, 0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
 
     #
     # TEST EARLIEST DATE POSSIBLE
@@ -40,7 +40,7 @@ class TestDPTDateTime:
         raw = DPTDateTime.to_knx(
             time.strptime("1900-1-1 1 0:0:0", "%Y-%m-%d %w %H:%M:%S")
         )
-        assert raw == (0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x20, 0x80)
+        assert raw == DPTArray((0x00, 0x1, 0x1, 0x20, 0x00, 0x00, 0x20, 0x80))
 
     #
     # TEST LATEST DATE IN THE FUTURE
@@ -56,7 +56,7 @@ class TestDPTDateTime:
         raw = DPTDateTime.to_knx(
             time.strptime("2155-12-31 0 23:59:59", "%Y-%m-%d %w %H:%M:%S")
         )
-        assert raw == (0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80)
+        assert raw == DPTArray((0xFF, 0x0C, 0x1F, 0xF7, 0x3B, 0x3B, 0x20, 0x80))
 
     #
     # TEST WRONG KNX

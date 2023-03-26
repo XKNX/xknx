@@ -6,6 +6,7 @@ from typing import NamedTuple
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
+from .payload import DPTArray
 
 
 class XYYColor(NamedTuple):
@@ -52,7 +53,7 @@ class DPTColorXYY(DPTBase):
     @classmethod
     def to_knx(
         cls, value: XYYColor | tuple[tuple[float, float] | None, int | None]
-    ) -> tuple[int, int, int, int, int, int]:
+    ) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
             if not isinstance(value, XYYColor):
@@ -73,13 +74,15 @@ class DPTColorXYY(DPTBase):
                 brightness_valid = True
                 brightness = int(value.brightness)
 
-            return (
-                x_axis >> 8,
-                x_axis & 0xFF,
-                y_axis >> 8,
-                y_axis & 0xFF,
-                brightness,
-                color_valid << 1 | brightness_valid,
+            return DPTArray(
+                (
+                    x_axis >> 8,
+                    x_axis & 0xFF,
+                    y_axis >> 8,
+                    y_axis & 0xFF,
+                    brightness,
+                    color_valid << 1 | brightness_valid,
+                )
             )
         except (ValueError, TypeError):
             raise ConversionError(f"Could not serialize {cls.__name__}", value=value)

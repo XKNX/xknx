@@ -7,6 +7,7 @@ from typing import Generic, TypeVar
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
+from .payload import DPTArray
 
 HVACModeT = TypeVar("HVACModeT", "HVACControllerMode", "HVACOperationMode")
 
@@ -57,11 +58,11 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeT]):
             raise ConversionError(f"Payload not supported for {cls.__name__}", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: HVACModeT) -> tuple[int]:
+    def to_knx(cls, value: HVACModeT) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         for knx_value, mode in cls.SUPPORTED_MODES.items():
             if mode == value:
-                return (knx_value,)
+                return DPTArray(knx_value)
         raise ConversionError(f"Value not supported for {cls.__name__}", value=value)
 
 

@@ -34,7 +34,7 @@ class TestKNXIPRountingIndication:
         telegram = Telegram(
             destination_address=GroupAddress(337),
             payload=GroupValueWrite(
-                DPTArray(DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S")))
+                DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S"))
             ),
         )
         cemi = CEMIFrame(

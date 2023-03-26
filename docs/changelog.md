@@ -12,6 +12,10 @@ nav_order: 2
 
 - Handle empty list for group addresses in RemoteValue.
 
+### Internals
+
+- Return `DPTArray` or `DPTBinary` from `DPTBase.to_knx()` instead of `tuple[int, ...]`.
+
 # 2.7.0 IP Device Management 2023-03-15
 
 ### Protocol

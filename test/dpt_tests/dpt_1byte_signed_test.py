@@ -1,7 +1,7 @@
 """Unit test for KNX DPT 1 byte relative value  objects."""
 import pytest
 
-from xknx.dpt import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
+from xknx.dpt import DPTArray, DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 from xknx.exceptions import ConversionError
 
 
@@ -25,18 +25,36 @@ class TestDPTRelativeValue:
 
     def test_to_knx_positive(self):
         """Test positive value to KNX."""
-        assert DPTSignedRelativeValue.to_knx(0) == (0x00,)
-        assert DPTSignedRelativeValue.to_knx(1) == (0x01,)
-        assert DPTSignedRelativeValue.to_knx(2) == (0x02,)
-        assert DPTSignedRelativeValue.to_knx(100) == (0x64,)
-        assert DPTSignedRelativeValue.to_knx(127) == (0x7F,)
+        assert DPTSignedRelativeValue.to_knx(0) == DPTArray(
+            0x00,
+        )
+        assert DPTSignedRelativeValue.to_knx(1) == DPTArray(
+            0x01,
+        )
+        assert DPTSignedRelativeValue.to_knx(2) == DPTArray(
+            0x02,
+        )
+        assert DPTSignedRelativeValue.to_knx(100) == DPTArray(
+            0x64,
+        )
+        assert DPTSignedRelativeValue.to_knx(127) == DPTArray(
+            0x7F,
+        )
 
     def test_to_knx_negative(self):
         """Test negative value to KNX."""
-        assert DPTSignedRelativeValue.to_knx(-128) == (0x80,)
-        assert DPTSignedRelativeValue.to_knx(-100) == (0x9C,)
-        assert DPTSignedRelativeValue.to_knx(-2) == (0xFE,)
-        assert DPTSignedRelativeValue.to_knx(-1) == (0xFF,)
+        assert DPTSignedRelativeValue.to_knx(-128) == DPTArray(
+            0x80,
+        )
+        assert DPTSignedRelativeValue.to_knx(-100) == DPTArray(
+            0x9C,
+        )
+        assert DPTSignedRelativeValue.to_knx(-2) == DPTArray(
+            0xFE,
+        )
+        assert DPTSignedRelativeValue.to_knx(-1) == DPTArray(
+            0xFF,
+        )
 
     def test_assert_min_exceeded(self):
         """Test initialization with wrong value (Underflow)."""

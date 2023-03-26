@@ -51,7 +51,7 @@ class RemoteValueColorXYY(RemoteValue[DPTArray, XYYColor]):
 
     def to_knx(self, value: XYYColor) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(DPTColorXYY.to_knx(value))
+        return DPTColorXYY.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> XYYColor:
         """Convert current payload to value."""

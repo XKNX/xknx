@@ -1,7 +1,7 @@
 """Unit test for KNX string object."""
 import pytest
 
-from xknx.dpt import DPTLatin1, DPTString
+from xknx.dpt import DPTArray, DPTLatin1, DPTString
 from xknx.exceptions import ConversionError
 
 
@@ -32,7 +32,7 @@ class TestDPTString:
     @pytest.mark.parametrize("test_dpt", [DPTString, DPTLatin1])
     def test_values(self, string, raw, test_dpt):
         """Test parsing and streaming strings."""
-        assert test_dpt.to_knx(string) == raw
+        assert test_dpt.to_knx(string) == DPTArray(raw)
         assert test_dpt.from_knx(raw) == string
 
     @pytest.mark.parametrize(
@@ -52,7 +52,7 @@ class TestDPTString:
     )
     def test_to_knx_ascii_invalid_chars(self, string, knx_string, raw):
         """Test streaming ASCII string with invalid chars."""
-        assert DPTString.to_knx(string) == raw
+        assert DPTString.to_knx(string) == DPTArray(raw)
         assert DPTString.from_knx(raw) == knx_string
 
     @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ class TestDPTString:
     )
     def test_to_knx_latin_1(self, string, raw):
         """Test streaming Latin-1 strings."""
-        assert DPTLatin1.to_knx(string) == raw
+        assert DPTLatin1.to_knx(string) == DPTArray(raw)
         assert DPTLatin1.from_knx(raw) == string
 
     def test_to_knx_too_long(self):

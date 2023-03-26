@@ -4,6 +4,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTNumeric
+from .payload import DPTArray
 
 
 class DPTScaling(DPTNumeric):
@@ -40,7 +41,7 @@ class DPTScaling(DPTNumeric):
         return value
 
     @classmethod
-    def to_knx(cls, value: float) -> tuple[int]:
+    def to_knx(cls, value: float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
             percent_value = float(value)
@@ -49,7 +50,7 @@ class DPTScaling(DPTNumeric):
             delta = cls.value_max - cls.value_min
             knx_value = round((percent_value - cls.value_min) / delta * 255)
 
-            return (knx_value,)
+            return DPTArray(knx_value)
         except ValueError:
             raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 

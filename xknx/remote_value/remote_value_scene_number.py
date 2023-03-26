@@ -22,7 +22,7 @@ class RemoteValueSceneNumber(RemoteValue[DPTArray, int]):
 
     def to_knx(self, value: int) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(DPTSceneNumber.to_knx(value))
+        return DPTSceneNumber.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> int:
         """Convert current payload to value."""

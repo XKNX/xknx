@@ -36,14 +36,14 @@ class TestNotification:
         notification = Notification(xknx, "Warning", group_address="1/2/3")
         telegram_set = Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray(DPTString().to_knx("Ein Prosit!"))),
+            payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
         )
         await notification.process(telegram_set)
         assert notification.message == "Ein Prosit!"
 
         telegram_unset = Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray(DPTString().to_knx(""))),
+            payload=GroupValueWrite(DPTString().to_knx("")),
         )
         await notification.process(telegram_unset)
         assert notification.message == ""
@@ -58,7 +58,7 @@ class TestNotification:
 
         telegram_set = Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray(DPTString().to_knx("Ein Prosit!"))),
+            payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
         )
         await notification.process(telegram_set)
         after_update_callback.assert_called_with(notification)
@@ -166,7 +166,7 @@ class TestNotification:
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray(DPTString().to_knx("Ein Prosit!"))),
+            payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
         )
         # test if message longer than 14 chars gets cropped
         await notification.set("This is too long.")
@@ -175,7 +175,7 @@ class TestNotification:
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray(DPTString().to_knx("This is too lo"))),
+            payload=GroupValueWrite(DPTString().to_knx("This is too lo")),
         )
 
     #

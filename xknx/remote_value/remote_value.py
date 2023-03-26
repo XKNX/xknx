@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Iterator
 import logging
 from typing import TYPE_CHECKING, Callable, Generic, TypeVar, Union
 
-from xknx.dpt.dpt import DPTArray, DPTBinary
+from xknx.dpt import DPTArray, DPTBinary, DPTPayloadT
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
-DPTPayloadT = TypeVar("DPTPayloadT", DPTArray, DPTBinary, Union[DPTArray, DPTBinary])
 GroupAddressesType = Union["DeviceAddressableType", list["DeviceAddressableType"]]
 ValueT = TypeVar("ValueT")
 
@@ -61,7 +60,7 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
             if not isinstance(addresses, list):
                 return parse_device_group_address(addresses)
             active, *passive = map(parse_device_group_address, addresses)
-            self.passive_group_addresses.extend(passive)  # type: ignore
+            self.passive_group_addresses.extend(passive)
             return active
 
         self.group_address = unpack_group_addresses(group_address)

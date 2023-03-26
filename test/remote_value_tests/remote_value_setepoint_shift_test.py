@@ -17,8 +17,8 @@ class TestRemoteValueSetpointShift:
         """Test if setpoint_shift_mode is assigned properly by payload length."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(xknx=xknx)
-        dpt_6_payload = DPTArray(DPTValue1Count.to_knx(1))
-        dpt_9_payload = DPTArray(DPTTemperature.to_knx(1))
+        dpt_6_payload = DPTValue1Count.to_knx(1)
+        dpt_9_payload = DPTTemperature.to_knx(1)
 
         with pytest.raises(CouldNotParseTelegram):
             remote_value.payload_valid(DPTBinary(0))
@@ -50,8 +50,8 @@ class TestRemoteValueSetpointShift:
         remote_value_9 = RemoteValueSetpointShift(
             xknx=xknx, setpoint_shift_mode=SetpointShiftMode.DPT9002
         )
-        dpt_6_payload = DPTArray(DPTValue1Count.to_knx(1))
-        dpt_9_payload = DPTArray(DPTTemperature.to_knx(1))
+        dpt_6_payload = DPTValue1Count.to_knx(1)
+        dpt_9_payload = DPTTemperature.to_knx(1)
 
         assert remote_value_6.dpt_class == DPTValue1Count
         with pytest.raises(CouldNotParseTelegram):

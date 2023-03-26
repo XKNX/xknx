@@ -20,6 +20,7 @@ from typing import Any
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
+from .payload import DPTBinary
 
 
 class DPTControlStepCode(DPTBase, ABC):
@@ -59,7 +60,7 @@ class DPTControlStepCode(DPTBase, ABC):
         return False
 
     @classmethod
-    def to_knx(cls, value: Any) -> tuple[int]:
+    def to_knx(cls, value: Any) -> DPTBinary:
         """Serialize to KNX/IP raw data."""
         # TODO: use Tuple or Named Tuple instead of Dict[str, int] to account for bool control
         if not isinstance(value, dict):
@@ -80,7 +81,7 @@ class DPTControlStepCode(DPTBase, ABC):
                 f"Can't serialize {cls.__name__}; invalid values", value=value
             )
 
-        return (cls._encode(control, step_code),)
+        return DPTBinary(cls._encode(control, step_code))
 
     @classmethod
     def from_knx(cls, raw: tuple[int, ...]) -> Any:
@@ -136,7 +137,7 @@ class DPTControlStepwise(DPTControlStepCode):
         return inc if value["control"] == 1 else -inc
 
     @classmethod
-    def to_knx(cls, value: int | dict[str, int]) -> tuple[int]:
+    def to_knx(cls, value: int | dict[str, int]) -> DPTBinary:
         """Serialize to KNX/IP raw data."""
         if not isinstance(value, int):
             raise ConversionError(f"Can't serialize {cls.__name__}", value=value)
@@ -189,7 +190,7 @@ class DPTControlStartStop(DPTControlStepCode):
         STOP = 2
 
     @classmethod
-    def to_knx(cls, value: Direction) -> tuple[int]:
+    def to_knx(cls, value: Direction) -> DPTBinary:
         """Convert value to payload."""
         control = 0
         step_code = 0
