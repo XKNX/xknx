@@ -4,6 +4,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
+from .payload import DPTArray
 
 
 class DPTString(DPTBase):
@@ -30,7 +31,7 @@ class DPTString(DPTBase):
         )
 
     @classmethod
-    def to_knx(cls, value: str) -> tuple[int, ...]:
+    def to_knx(cls, value: str) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = str(value)
@@ -41,7 +42,7 @@ class DPTString(DPTBase):
         # replace invalid characters with question marks
         raw_bytes = knx_value.encode(cls._encoding, errors="replace")
         padding = bytes(cls.payload_length - len(raw_bytes))
-        return tuple(raw_bytes + padding)
+        return DPTArray(raw_bytes + padding)
 
     @classmethod
     def _test_boundaries(cls, value: str) -> bool:

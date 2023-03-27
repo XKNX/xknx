@@ -1,7 +1,7 @@
 """Unit test for KNX scene number."""
 import pytest
 
-from xknx.dpt import DPTSceneNumber
+from xknx.dpt import DPTArray, DPTSceneNumber
 from xknx.exceptions import ConversionError
 
 
@@ -10,17 +10,17 @@ class TestDPTSceneNumber:
 
     def test_value_50(self):
         """Test parsing and streaming of DPTSceneNumber 50."""
-        assert DPTSceneNumber.to_knx(50) == (0x31,)
+        assert DPTSceneNumber.to_knx(50) == DPTArray((0x31,))
         assert DPTSceneNumber.from_knx((0x31,)) == 50
 
     def test_value_max(self):
         """Test parsing and streaming of DPTSceneNumber 64."""
-        assert DPTSceneNumber.to_knx(64) == (0x3F,)
+        assert DPTSceneNumber.to_knx(64) == DPTArray((0x3F,))
         assert DPTSceneNumber.from_knx((0x3F,)) == 64
 
     def test_value_min(self):
         """Test parsing and streaming of DPTSceneNumber 0."""
-        assert DPTSceneNumber.to_knx(1) == (0x00,)
+        assert DPTSceneNumber.to_knx(1) == DPTArray((0x00,))
         assert DPTSceneNumber.from_knx((0x00,)) == 1
 
     def test_to_knx_min_exceeded(self):

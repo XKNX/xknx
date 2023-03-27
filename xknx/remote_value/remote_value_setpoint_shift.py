@@ -77,8 +77,8 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
             )
         if self.dpt_class == DPTValue1Count:
             converted_value = int(value / self.setpoint_shift_step)
-            return DPTArray(DPTValue1Count.to_knx(converted_value))
-        return DPTArray(DPTTemperature.to_knx(value))
+            return DPTValue1Count.to_knx(converted_value)
+        return DPTTemperature.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> float:
         """Convert current payload to value."""

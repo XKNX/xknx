@@ -4,6 +4,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTNumeric
+from .payload import DPTArray
 
 
 class DPTSignedRelativeValue(DPTNumeric):
@@ -31,7 +32,7 @@ class DPTSignedRelativeValue(DPTNumeric):
         return raw[0]
 
     @classmethod
-    def to_knx(cls, value: int | float) -> tuple[int]:
+    def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(value)
@@ -39,7 +40,7 @@ class DPTSignedRelativeValue(DPTNumeric):
                 raise ValueError
             if knx_value < 0:
                 knx_value += 0x100
-            return (knx_value & 0xFF,)
+            return DPTArray(knx_value & 0xFF)
         except ValueError:
             raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
 

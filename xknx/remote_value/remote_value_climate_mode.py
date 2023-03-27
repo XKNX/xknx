@@ -15,16 +15,12 @@ from xknx.dpt import (
     DPTControllerStatus,
     DPTHVACContrMode,
     DPTHVACMode,
+    DPTPayloadT,
 )
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACModeT, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
-from .remote_value import (
-    AsyncCallbackType,
-    DPTPayloadT,
-    GroupAddressesType,
-    RemoteValue,
-)
+from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -93,7 +89,7 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[DPTArray, HVACOperatio
 
     def to_knx(self, value: Any) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(self._climate_mode_transcoder.to_knx(value))
+        return self._climate_mode_transcoder.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> HVACOperationMode | None:
         """Convert current payload to value."""
@@ -138,7 +134,7 @@ class RemoteValueControllerMode(
 
     def to_knx(self, value: Any) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(DPTHVACContrMode.to_knx(value))
+        return DPTHVACContrMode.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> HVACControllerMode | None:
         """Convert current payload to value."""

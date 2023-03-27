@@ -1,7 +1,7 @@
 """Unit test for KNX 2 byte objects."""
 import pytest
 
-from xknx.dpt import DPTUElCurrentmA
+from xknx.dpt import DPTArray, DPTUElCurrentmA
 from xknx.exceptions import ConversionError
 
 
@@ -30,27 +30,27 @@ class TestDPT2byte:
 
     def test_current_value_max_value(self):
         """Test DPTUElCurrentmA parsing and streaming."""
-        assert DPTUElCurrentmA.to_knx(65535) == (0xFF, 0xFF)
+        assert DPTUElCurrentmA.to_knx(65535) == DPTArray((0xFF, 0xFF))
         assert DPTUElCurrentmA.from_knx((0xFF, 0xFF)) == 65535
 
     def test_current_value_min_value(self):
         """Test DPTUElCurrentmA parsing and streaming with null values."""
-        assert DPTUElCurrentmA.to_knx(0) == (0x00, 0x00)
+        assert DPTUElCurrentmA.to_knx(0) == DPTArray((0x00, 0x00))
         assert DPTUElCurrentmA.from_knx((0x00, 0x00)) == 0
 
     def test_current_value_38(self):
         """Test DPTUElCurrentmA parsing and streaming 38mA."""
-        assert DPTUElCurrentmA.to_knx(38) == (0x00, 0x26)
+        assert DPTUElCurrentmA.to_knx(38) == DPTArray((0x00, 0x26))
         assert DPTUElCurrentmA.from_knx((0x00, 0x26)) == 38
 
     def test_current_value_78(self):
         """Test DPTUElCurrentmA parsing and streaming 78mA."""
-        assert DPTUElCurrentmA.to_knx(78) == (0x00, 0x4E)
+        assert DPTUElCurrentmA.to_knx(78) == DPTArray((0x00, 0x4E))
         assert DPTUElCurrentmA.from_knx((0x00, 0x4E)) == 78
 
     def test_current_value_1234(self):
         """Test DPTUElCurrentmA parsing and streaming 4660mA."""
-        assert DPTUElCurrentmA.to_knx(4660) == (0x12, 0x34)
+        assert DPTUElCurrentmA.to_knx(4660) == DPTArray((0x12, 0x34))
         assert DPTUElCurrentmA.from_knx((0x12, 0x34)) == 4660
 
     def test_current_wrong_value_from_knx(self):

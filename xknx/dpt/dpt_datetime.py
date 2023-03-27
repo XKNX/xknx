@@ -6,6 +6,7 @@ import time
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
+from .payload import DPTArray
 
 
 class DPTDateTime(DPTBase):
@@ -67,7 +68,7 @@ class DPTDateTime(DPTBase):
             raise ConversionError("Could not parse DPTDateTime", raw=raw)
 
     @classmethod
-    def to_knx(cls, value: time.struct_time) -> tuple[int, ...]:
+    def to_knx(cls, value: time.struct_time) -> DPTArray:
         """Serialize to KNX/IP raw data from time.struct_time."""
         if not isinstance(value, time.struct_time):
             raise ConversionError("Could not serialize DPTDateTime", value=value)
@@ -81,13 +82,15 @@ class DPTDateTime(DPTBase):
         seconds = value.tm_sec
         dst = value.tm_isdst == 1  # tm_isdst can be -1
 
-        return (
-            knx_year,
-            month,
-            day,
-            weekday << 5 | hours,
-            minutes,
-            seconds,
-            0x20 | dst,  # 0x20 working day not valid
-            0x80,  # assume clock with ext. sync signal
+        return DPTArray(
+            (
+                knx_year,
+                month,
+                day,
+                weekday << 5 | hours,
+                minutes,
+                seconds,
+                0x20 | dst,  # 0x20 working day not valid
+                0x80,  # assume clock with ext. sync signal
+            )
         )

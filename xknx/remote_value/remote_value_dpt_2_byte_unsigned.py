@@ -48,7 +48,7 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue[DPTArray, int]):
 
     def to_knx(self, value: int) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(DPT2ByteUnsigned.to_knx(value))
+        return DPT2ByteUnsigned.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> int:
         """Convert current payload to value."""

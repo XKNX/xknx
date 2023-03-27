@@ -1,7 +1,7 @@
 """Unit test for KNX color objects."""
 import pytest
 
-from xknx.dpt.dpt_color import DPTColorXYY, XYYColor
+from xknx.dpt.dpt_color import DPTArray, DPTColorXYY, XYYColor
 from xknx.exceptions import ConversionError
 
 
@@ -24,7 +24,9 @@ class TestDPTColorXYY:
 
     def test_xyycolor_value_max_value(self):
         """Test DPTColorXYY parsing and streaming."""
-        assert DPTColorXYY.to_knx(((1, 1), 255)) == (0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x03)
+        assert DPTColorXYY.to_knx(((1, 1), 255)) == DPTArray(
+            (0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x03)
+        )
         assert DPTColorXYY.from_knx((0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x03)) == (
             (1, 1),
             255,
@@ -32,28 +34,29 @@ class TestDPTColorXYY:
 
     def test_xyycolor_value_min_value(self):
         """Test DPTColorXYY parsing and streaming with null values."""
-        assert DPTColorXYY.to_knx(((0, 0), 0)) == (0x00, 0x00, 0x00, 0x00, 0x00, 0x03)
+        assert DPTColorXYY.to_knx(((0, 0), 0)) == DPTArray(
+            (0x00, 0x00, 0x00, 0x00, 0x00, 0x03)
+        )
         assert DPTColorXYY.from_knx((0x00, 0x00, 0x00, 0x00, 0x00, 0x03)) == ((0, 0), 0)
 
     def test_xyycolor_value_none_value(self):
         """Test DPTColorXYY parsing and streaming with null values."""
-        assert DPTColorXYY.to_knx((None, 0)) == (0x00, 0x00, 0x00, 0x00, 0x00, 0x01)
+        assert DPTColorXYY.to_knx((None, 0)) == DPTArray(
+            (0x00, 0x00, 0x00, 0x00, 0x00, 0x01)
+        )
         assert DPTColorXYY.from_knx((0x00, 0x00, 0x00, 0x00, 0x00, 0x01)) == (None, 0)
 
-        assert DPTColorXYY.to_knx(((0, 0), None)) == (
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x00,
-            0x02,
+        assert DPTColorXYY.to_knx(((0, 0), None)) == DPTArray(
+            (0x00, 0x00, 0x00, 0x00, 0x00, 0x02)
         )
         assert DPTColorXYY.from_knx((0x00, 0x00, 0x00, 0x00, 0x00, 0x02)) == (
             (0, 0),
             None,
         )
 
-        assert DPTColorXYY.to_knx((None, None)) == (0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        assert DPTColorXYY.to_knx((None, None)) == DPTArray(
+            (0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        )
         assert DPTColorXYY.from_knx((0x00, 0x00, 0x00, 0x00, 0x00, 0x00)) == (
             None,
             None,
@@ -61,26 +64,16 @@ class TestDPTColorXYY:
 
     def test_xyycolor_value(self):
         """Test DPTColorXYY parsing and streaming with valid value."""
-        assert DPTColorXYY.to_knx(((0.2, 0.2), 128)) == (
-            0x33,
-            0x33,
-            0x33,
-            0x33,
-            0x80,
-            0x03,
+        assert DPTColorXYY.to_knx(((0.2, 0.2), 128)) == DPTArray(
+            (0x33, 0x33, 0x33, 0x33, 0x80, 0x03)
         )
         assert DPTColorXYY.from_knx((0x33, 0x33, 0x33, 0x33, 0x80, 0x03)) == (
             (0.2, 0.2),
             128,
         )
-        assert DPTColorXYY.to_knx(XYYColor(color=(0.8, 0.8), brightness=204)) == (
-            0xCC,
-            0xCC,
-            0xCC,
-            0xCC,
-            0xCC,
-            0x03,
-        )
+        assert DPTColorXYY.to_knx(
+            XYYColor(color=(0.8, 0.8), brightness=204)
+        ) == DPTArray((0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x03))
         assert DPTColorXYY.from_knx((0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x03)) == XYYColor(
             color=(0.8, 0.8), brightness=204
         )

@@ -1,7 +1,7 @@
 """Unit test for KNX DPT 5.010 value."""
 import pytest
 
-from xknx.dpt import DPTTariff, DPTValue1Ucount
+from xknx.dpt import DPTArray, DPTTariff, DPTValue1Ucount
 from xknx.exceptions import ConversionError
 
 
@@ -10,17 +10,17 @@ class TestDPTValue1Ucount:
 
     def test_value_50(self):
         """Test parsing and streaming of DPTValue1Ucount 50."""
-        assert DPTValue1Ucount.to_knx(50) == (0x32,)
+        assert DPTValue1Ucount.to_knx(50) == DPTArray(0x32)
         assert DPTValue1Ucount.from_knx((0x32,)) == 50
 
     def test_value_max(self):
         """Test parsing and streaming of DPTValue1Ucount 255."""
-        assert DPTValue1Ucount.to_knx(255) == (0xFF,)
+        assert DPTValue1Ucount.to_knx(255) == DPTArray(0xFF)
         assert DPTValue1Ucount.from_knx((0xFF,)) == 255
 
     def test_value_min(self):
         """Test parsing and streaming of DPTValue1Ucount 0."""
-        assert DPTValue1Ucount.to_knx(0) == (0x00,)
+        assert DPTValue1Ucount.to_knx(0) == DPTArray(0x00)
         assert DPTValue1Ucount.from_knx((0x00,)) == 0
 
     def test_to_knx_min_exceeded(self):

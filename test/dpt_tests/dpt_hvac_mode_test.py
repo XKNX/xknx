@@ -1,7 +1,7 @@
 """Unit test for KNX DPT HVAC Operation modes."""
 import pytest
 
-from xknx.dpt import DPTControllerStatus, DPTHVACMode
+from xknx.dpt import DPTArray, DPTControllerStatus, DPTHVACMode
 from xknx.dpt.dpt_hvac_mode import HVACOperationMode
 from xknx.exceptions import ConversionError
 
@@ -11,11 +11,13 @@ class TestDPTControllerStatus:
 
     def test_mode_to_knx(self):
         """Test parsing DPTHVACMode to KNX."""
-        assert DPTHVACMode.to_knx(HVACOperationMode.AUTO) == (0x00,)
-        assert DPTHVACMode.to_knx(HVACOperationMode.COMFORT) == (0x01,)
-        assert DPTHVACMode.to_knx(HVACOperationMode.STANDBY) == (0x02,)
-        assert DPTHVACMode.to_knx(HVACOperationMode.NIGHT) == (0x03,)
-        assert DPTHVACMode.to_knx(HVACOperationMode.FROST_PROTECTION) == (0x04,)
+        assert DPTHVACMode.to_knx(HVACOperationMode.AUTO) == DPTArray((0x00,))
+        assert DPTHVACMode.to_knx(HVACOperationMode.COMFORT) == DPTArray((0x01,))
+        assert DPTHVACMode.to_knx(HVACOperationMode.STANDBY) == DPTArray((0x02,))
+        assert DPTHVACMode.to_knx(HVACOperationMode.NIGHT) == DPTArray((0x03,))
+        assert DPTHVACMode.to_knx(HVACOperationMode.FROST_PROTECTION) == DPTArray(
+            (0x04,)
+        )
 
     def test_mode_to_knx_wrong_value(self):
         """Test serializing DPTHVACMode to KNX with wrong value."""
@@ -34,10 +36,16 @@ class TestDPTControllerStatus:
         """Test serializing DPTControllerStatus to KNX."""
         with pytest.raises(ConversionError):
             DPTControllerStatus.to_knx(HVACOperationMode.AUTO)
-        assert DPTControllerStatus.to_knx(HVACOperationMode.COMFORT) == (0x21,)
-        assert DPTControllerStatus.to_knx(HVACOperationMode.STANDBY) == (0x22,)
-        assert DPTControllerStatus.to_knx(HVACOperationMode.NIGHT) == (0x24,)
-        assert DPTControllerStatus.to_knx(HVACOperationMode.FROST_PROTECTION) == (0x28,)
+        assert DPTControllerStatus.to_knx(HVACOperationMode.COMFORT) == DPTArray(
+            (0x21,)
+        )
+        assert DPTControllerStatus.to_knx(HVACOperationMode.STANDBY) == DPTArray(
+            (0x22,)
+        )
+        assert DPTControllerStatus.to_knx(HVACOperationMode.NIGHT) == DPTArray((0x24,))
+        assert DPTControllerStatus.to_knx(
+            HVACOperationMode.FROST_PROTECTION
+        ) == DPTArray((0x28,))
 
     def test_controller_status_to_knx_wrong_value(self):
         """Test serializing DPTControllerStatus to KNX with wrong value."""

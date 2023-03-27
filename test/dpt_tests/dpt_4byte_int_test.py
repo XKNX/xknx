@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned
+from xknx.dpt import DPT4ByteSigned, DPT4ByteUnsigned, DPTArray
 from xknx.exceptions import ConversionError
 
 
@@ -31,17 +31,17 @@ class TestDPT4Byte:
 
     def test_unsigned_value_max_value(self):
         """Test DPT4ByteUnsigned parsing and streaming."""
-        assert DPT4ByteUnsigned.to_knx(4294967295) == (0xFF, 0xFF, 0xFF, 0xFF)
+        assert DPT4ByteUnsigned.to_knx(4294967295) == DPTArray((0xFF, 0xFF, 0xFF, 0xFF))
         assert DPT4ByteUnsigned.from_knx((0xFF, 0xFF, 0xFF, 0xFF)) == 4294967295
 
     def test_unsigned_value_min_value(self):
         """Test parsing and streaming with null values."""
-        assert DPT4ByteUnsigned.to_knx(0) == (0x00, 0x00, 0x00, 0x00)
+        assert DPT4ByteUnsigned.to_knx(0) == DPTArray((0x00, 0x00, 0x00, 0x00))
         assert DPT4ByteUnsigned.from_knx((0x00, 0x00, 0x00, 0x00)) == 0
 
     def test_unsigned_value_01234567(self):
         """Test DPT4ByteUnsigned parsing and streaming."""
-        assert DPT4ByteUnsigned.to_knx(19088743) == (0x01, 0x23, 0x45, 0x67)
+        assert DPT4ByteUnsigned.to_knx(19088743) == DPTArray((0x01, 0x23, 0x45, 0x67))
         assert DPT4ByteUnsigned.from_knx((0x01, 0x23, 0x45, 0x67)) == 19088743
 
     def test_unsigned_wrong_value_from_knx(self):
@@ -69,17 +69,17 @@ class TestDPT4Byte:
 
     def test_signed_value_max_value(self):
         """Test DPT4ByteSigned parsing and streaming."""
-        assert DPT4ByteSigned.to_knx(2147483647) == (0x7F, 0xFF, 0xFF, 0xFF)
+        assert DPT4ByteSigned.to_knx(2147483647) == DPTArray((0x7F, 0xFF, 0xFF, 0xFF))
         assert DPT4ByteSigned.from_knx((0x7F, 0xFF, 0xFF, 0xFF)) == 2147483647
 
     def test_signed_value_min_value(self):
         """Test DPT4ByteSigned parsing and streaming with null values."""
-        assert DPT4ByteSigned.to_knx(-2147483648) == (0x80, 0x00, 0x00, 0x00)
+        assert DPT4ByteSigned.to_knx(-2147483648) == DPTArray((0x80, 0x00, 0x00, 0x00))
         assert DPT4ByteSigned.from_knx((0x80, 0x00, 0x00, 0x00)) == -2147483648
 
     def test_signed_value_01234567(self):
         """Test DPT4ByteSigned parsing and streaming."""
-        assert DPT4ByteSigned.to_knx(19088743) == (0x01, 0x23, 0x45, 0x67)
+        assert DPT4ByteSigned.to_knx(19088743) == DPTArray((0x01, 0x23, 0x45, 0x67))
         assert DPT4ByteSigned.from_knx((0x01, 0x23, 0x45, 0x67)) == 19088743
 
     def test_signed_wrong_value_from_knx(self):

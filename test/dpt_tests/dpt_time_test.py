@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from xknx.dpt import DPTTime
+from xknx.dpt import DPTArray, DPTTime
 from xknx.exceptions import ConversionError
 
 
@@ -22,7 +22,7 @@ class TestDPTTime:
     def test_to_knx(self):
         """Testing KNX/Byte representation of DPTTime object."""
         raw = DPTTime.to_knx(time.strptime("13 23 42 2", "%H %M %S %w"))
-        assert raw == (0x4D, 0x17, 0x2A)
+        assert raw == DPTArray((0x4D, 0x17, 0x2A))
 
     #
     # TEST MAXIMUM TIME
@@ -30,7 +30,7 @@ class TestDPTTime:
     def test_to_knx_max(self):
         """Testing KNX/Byte representation of DPTTime object. Maximum values."""
         raw = DPTTime.to_knx(time.strptime("23 59 59 0", "%H %M %S %w"))
-        assert raw == (0xF7, 0x3B, 0x3B)
+        assert raw == DPTArray((0xF7, 0x3B, 0x3B))
 
     def test_from_knx_max(self):
         """Test parsing of DPTTime object from binary values. Example 2."""
@@ -44,7 +44,7 @@ class TestDPTTime:
     def test_to_knx_min(self):
         """Testing KNX/Byte representation of DPTTime object. Minimum values."""
         raw = DPTTime.to_knx(time.strptime("0 0 0", "%H %M %S"))
-        assert raw == (0x0, 0x0, 0x0)
+        assert raw == DPTArray((0x0, 0x0, 0x0))
 
     def test_from_knx_min(self):
         """Test parsing of DPTTime object from binary values. Example 3."""
@@ -55,7 +55,7 @@ class TestDPTTime:
     #
     def test_to_knx_default(self):
         """Testing default initialization of DPTTime object."""
-        assert DPTTime.to_knx(time.strptime("", "")) == (0x0, 0x0, 0x0)
+        assert DPTTime.to_knx(time.strptime("", "")) == DPTArray((0x0, 0x0, 0x0))
 
     def test_from_knx_wrong_size(self):
         """Test parsing from DPTTime object from wrong binary values (wrong size)."""

@@ -73,7 +73,7 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
 
     def to_knx(self, value: time.struct_time) -> DPTArray:
         """Convert value to payload."""
-        return DPTArray(self.dpt_class.to_knx(value))
+        return self.dpt_class.to_knx(value)
 
     def from_knx(self, payload: DPTArray) -> time.struct_time:
         """Convert current payload to value."""
