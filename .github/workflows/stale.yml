@@ -24,7 +24,7 @@ jobs:
           operations-per-run: 150
           remove-stale-when-updated: true
           stale-issue-label: "stale"
-          exempt-issue-labels: "no-stale,help-wanted"
+          exempt-issue-labels: "no-stale,💡 feature request,🙋‍♂️ help wanted,🏗 in progress,👩‍💻 needs testing,🐜 bug"
           stale-issue-message: >
             This issue has been automatically marked as stale because it has not had
             recent activity. It will be closed if no further activity occurs.
@@ -34,7 +34,7 @@ jobs:
             This issue has now been marked as stale and will be closed if no
             further activity occurs. Thank you for your contributions.
           stale-pr-label: "stale"
-          exempt-pr-labels: "no-stale"
+          exempt-pr-labels: "no-stale,🙋‍♂️ help wanted,🏗 in progress,👩‍💻 needs testing,🐜 bug"
           stale-pr-message: >
             There hasn't been any activity on this pull request recently. This
             pull request has been automatically marked as stale because of that
