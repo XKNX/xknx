@@ -8,7 +8,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTNumeric
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class DPT2ByteFloat(DPTNumeric):
@@ -28,9 +28,9 @@ class DPT2ByteFloat(DPTNumeric):
     resolution = 0.01
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> float:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> float:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
         data = (raw[0] * 256) + raw[1]
         exponent = (data >> 11) & 0x0F
         significand = data & 0x7FF

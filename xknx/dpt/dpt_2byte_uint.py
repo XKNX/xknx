@@ -4,7 +4,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTNumeric
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class DPT2ByteUnsigned(DPTNumeric):
@@ -26,9 +26,9 @@ class DPT2ByteUnsigned(DPTNumeric):
     resolution = 1
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> int:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
         return (raw[0] * 256) + raw[1]
 
     @classmethod

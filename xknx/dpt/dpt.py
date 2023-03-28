@@ -50,7 +50,8 @@ class DPTBase(ABC):
 
     """
 
-    payload_length: int = cast(int, None)
+    payload_type: type[DPTArray | DPTBinary]
+    payload_length: int = cast(int, None)  # only used for DPTArray
     dpt_main_number: int | None = None
     dpt_sub_number: int | None = None
     value_type: str | None = None
@@ -59,27 +60,37 @@ class DPTBase(ABC):
 
     @classmethod
     @abstractmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> Any:
-        """Parse/deserialize from KNX/IP raw data (big endian)."""
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> Any:
+        """Parse/deserialize from KNX/IP payload data."""
+        # raw = cls.validate_payload(payload)
+
+    @classmethod
+    def validate_payload(cls, payload: DPTArray | DPTBinary) -> tuple[int, ...]:
+        """Test if payload has the correct length and type for given DPT. Retrun tuple of raw values."""
+        if cls.payload_type is DPTArray and isinstance(payload, DPTArray):
+            if cls.payload_length == len(payload.value):
+                return payload.value
+
+            raise ConversionError(
+                f"Invalid payload length for {cls.__name__}",
+                payload=payload,
+                expected_length=cls.payload_length,
+            )
+
+        if cls.payload_type is DPTBinary and isinstance(payload, DPTBinary):
+            # wrap in tuple for consistent return signature
+            return (payload.value,)
+
+        raise ConversionError(
+            f"Invalid payload type for {cls.__name__}",
+            payload=payload,
+            expected_type=cls.payload_type,
+        )
 
     @classmethod
     @abstractmethod
     def to_knx(cls, value: Any) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
-
-    @classmethod
-    def test_bytesarray(cls, raw: tuple[int, ...]) -> None:
-        """Test if array of raw bytes has the correct length and values of correct type."""
-        if cls.payload_length is None:
-            raise NotImplementedError(f"payload_length has to be defined for: {cls}")
-        if (
-            not isinstance(raw, (tuple, list))
-            or len(raw) != cls.payload_length
-            or any(not isinstance(byte, int) for byte in raw)
-            or any(byte < 0 for byte in raw)
-            or any(byte > 255 for byte in raw)
-        ):
-            raise ConversionError("Invalid raw bytes", raw=raw)
 
     @classmethod
     def __recursive_subclasses__(cls: T) -> Iterator[T]:
@@ -152,14 +163,15 @@ class DPTBase(ABC):
 class DPTNumeric(DPTBase):
     """Base class for KNX data point types decoding numeric values."""
 
+    payload_type = DPTArray
     value_min: int | float
     value_max: int | float
     resolution: int | float
 
     @classmethod
     @abstractmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> int | float:
-        """Parse/deserialize from KNX/IP raw data (big endian)."""
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int | float:
+        """Parse/deserialize from KNX/IP payload data."""
 
     @classmethod
     @abstractmethod

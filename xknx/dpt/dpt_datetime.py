@@ -6,18 +6,19 @@ import time
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class DPTDateTime(DPTBase):
     """Abstraction for KNX 8 octet datetime (DPT 19.001)."""
 
+    payload_type = DPTArray
     payload_length = 8
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> time.struct_time:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
 
         year = raw[0] + 1900
         month = raw[1] & 0x0F

@@ -4,7 +4,7 @@ from __future__ import annotations
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class DPTString(DPTBase):
@@ -14,6 +14,7 @@ class DPTString(DPTBase):
     DPT 16.000
     """
 
+    payload_type = DPTArray
     payload_length = 14
     dpt_main_number = 16
     dpt_sub_number = 0
@@ -23,9 +24,9 @@ class DPTString(DPTBase):
     _encoding = "ascii"
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> str:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> str:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
         return bytes(byte for byte in raw if byte != 0x00).decode(
             cls._encoding, errors="replace"
         )

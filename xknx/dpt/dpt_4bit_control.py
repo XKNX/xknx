@@ -20,7 +20,7 @@ from typing import Any
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-from .payload import DPTBinary
+from .payload import DPTArray, DPTBinary
 
 
 class DPTControlStepCode(DPTBase, ABC):
@@ -31,6 +31,7 @@ class DPTControlStepCode(DPTBase, ABC):
     APCI_STEPCODEMASK = 0x07
     APCI_MAX_VALUE = APCI_CONTROLMASK | APCI_STEPCODEMASK
 
+    payload_type = DPTBinary
     payload_length = 1
 
     @classmethod
@@ -45,12 +46,6 @@ class DPTControlStepCode(DPTBase, ABC):
         control = bool(value & cls.APCI_CONTROLMASK)
         step_code = value & cls.APCI_STEPCODEMASK
         return control, step_code
-
-    @classmethod
-    def _test_boundaries(cls, raw: int) -> bool:
-        """Test if raw KNX data is within defined range for this object."""
-        if isinstance(raw, int):
-            return 0 <= raw <= cls.APCI_MAX_VALUE
 
     @classmethod
     def _test_values(cls, step_code: int) -> bool:
@@ -84,12 +79,10 @@ class DPTControlStepCode(DPTBase, ABC):
         return DPTBinary(cls._encode(control, step_code))
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> Any:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> Any:
         """Parse/deserialize from KNX/IP raw data."""
-        if not isinstance(raw, tuple) or not cls._test_boundaries(raw[0]):
-            raise ConversionError(f"Can't parse {cls.__name__}", raw=raw)
-
-        control, step_code = cls._decode(raw[0])
+        raw = cls.validate_payload(payload)[0]
+        control, step_code = cls._decode(raw)
 
         return {"control": control, "step_code": step_code}
 
@@ -145,9 +138,9 @@ class DPTControlStepwise(DPTControlStepCode):
         return super().to_knx(cls._from_increment(value))
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> int:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        return cls._to_increment(super().from_knx(raw))
+        return cls._to_increment(super().from_knx(payload))
 
 
 class DPTControlStepwiseDimming(DPTControlStepwise):
@@ -210,9 +203,9 @@ class DPTControlStartStop(DPTControlStepCode):
         return super().to_knx(values)
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> Direction:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> Direction:
         """Convert current payload to value."""
-        values = super().from_knx(raw)
+        values = super().from_knx(payload)
         if values["step_code"] == 0:
             return cls.Direction(2)  # STOP
         if values["control"] == 0:

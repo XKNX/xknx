@@ -7,7 +7,7 @@ from typing import Generic, TypeVar
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 HVACModeT = TypeVar("HVACModeT", "HVACControllerMode", "HVACOperationMode")
 
@@ -46,12 +46,13 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeT]):
 
     SUPPORTED_MODES: dict[int, HVACModeT] = {}
 
+    payload_type = DPTArray
     payload_length = 1
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> HVACModeT:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> HVACModeT:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
         try:
             return cls.SUPPORTED_MODES[raw[0]]
         except KeyError:
@@ -126,9 +127,9 @@ class DPTControllerStatus(_DPTClimateMode[HVACOperationMode]):
     }
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> HVACOperationMode:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> HVACOperationMode:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
         if raw[0] & 8 > 0:
             return HVACOperationMode.FROST_PROTECTION
         if raw[0] & 4 > 0:

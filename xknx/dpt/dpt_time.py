@@ -6,7 +6,7 @@ import time
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class DPTTime(DPTBase):
@@ -16,12 +16,13 @@ class DPTTime(DPTBase):
     DPT 10.001
     """
 
+    payload_type = DPTArray
     payload_length = 3
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> time.struct_time:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> time.struct_time:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
 
         weekday = (raw[0] & 0xE0) >> 5
         hours = raw[0] & 0x1F
