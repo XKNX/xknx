@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueColorRGB(RemoteValue[DPTArray, tuple[int, int, int]]):
+class RemoteValueColorRGB(RemoteValue[tuple[int, int, int]]):
     """Abstraction for remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
 
     def __init__(
@@ -40,12 +40,6 @@ class RemoteValueColorRGB(RemoteValue[DPTArray, tuple[int, int, int]]):
             feature_name=feature_name,
             after_update_cb=after_update_cb,
         )
-
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTArray) and len(payload.value) == 3:
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: Sequence[int]) -> DPTArray:
         """Convert value to payload."""
@@ -72,6 +66,9 @@ class RemoteValueColorRGB(RemoteValue[DPTArray, tuple[int, int, int]]):
 
         return DPTArray(list(value))
 
-    def from_knx(self, payload: DPTArray) -> tuple[int, int, int]:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> tuple[int, int, int]:
         """Convert current payload to value."""
+        if not (isinstance(payload, DPTArray) and len(payload.value) == 3):
+            raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
+
         return payload.value[0], payload.value[1], payload.value[2]

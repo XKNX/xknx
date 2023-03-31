@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPT2ByteUnsigned, DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueDpt2ByteUnsigned(RemoteValue[DPTArray, int]):
+class RemoteValueDpt2ByteUnsigned(RemoteValue[int]):
     """Abstraction for remote value of KNX DPT 7.001."""
 
     def __init__(
@@ -40,16 +39,10 @@ class RemoteValueDpt2ByteUnsigned(RemoteValue[DPTArray, int]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTArray) and len(payload.value) == 2:
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: int) -> DPTArray:
         """Convert value to payload."""
         return DPT2ByteUnsigned.to_knx(value)
 
-    def from_knx(self, payload: DPTArray) -> int:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> int:
         """Convert current payload to value."""
-        return DPT2ByteUnsigned.from_knx(payload.value)
+        return DPT2ByteUnsigned.from_knx(payload)

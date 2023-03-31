@@ -17,6 +17,7 @@ nav_order: 2
 - Refactor DPTBase transcoder classes
   - Accept `DPTArray` or `DPTBinary` in `DPTBase.from_knx()` instead of raw `tuple[int]`.
   - Return `DPTArray` or `DPTBinary` from `DPTBase.to_knx()` instead of `tuple[int, ...]`.
+  - Remove payload_valid() from RemoteValue and remove payload type form its generics parameters.
 
 # 2.7.0 IP Device Management 2023-03-15
 

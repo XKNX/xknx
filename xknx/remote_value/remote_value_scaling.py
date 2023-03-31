@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueScaling(RemoteValue[DPTArray, int]):
+class RemoteValueScaling(RemoteValue[int]):
     """Abstraction for remote value of KNX DPT 5.001 (DPT_Scaling)."""
 
     def __init__(
@@ -44,20 +44,16 @@ class RemoteValueScaling(RemoteValue[DPTArray, int]):
         self.range_from = range_from
         self.range_to = range_to
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTArray) and len(payload.value) == 1:
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
         knx_value = self._calc_to_knx(self.range_from, self.range_to, value)
         return DPTArray(knx_value)
 
-    def from_knx(self, payload: DPTArray) -> int:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> int:
         """Convert current payload to value."""
-        return self._calc_from_knx(self.range_from, self.range_to, payload.value[0])
+        if isinstance(payload, DPTArray) and len(payload.value) == 1:
+            return self._calc_from_knx(self.range_from, self.range_to, payload.value[0])
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     @property
     def unit_of_measurement(self) -> str | None:

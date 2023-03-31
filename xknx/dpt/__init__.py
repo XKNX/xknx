@@ -189,4 +189,4 @@ from .dpt_hvac_mode import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
 from .dpt_scaling import DPTAngle, DPTScaling
 from .dpt_string import DPTLatin1, DPTString
 from .dpt_time import DPTTime
-from .payload import DPTArray, DPTBinary, DPTPayloadT
+from .payload import DPTArray, DPTBinary

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from xknx.dpt import DPTArray, DPTBinary, DPTControlStepCode
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueControl(RemoteValue[DPTBinary, Any]):
+class RemoteValueControl(RemoteValue[Any]):
     """Abstraction for remote value used for controlling."""
 
     def __init__(
@@ -50,20 +50,13 @@ class RemoteValueControl(RemoteValue[DPTBinary, Any]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTBinary):
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: Any) -> DPTBinary:
         """Convert value to payload."""
         return self.dpt_class.to_knx(value)
 
-    def from_knx(self, payload: DPTBinary) -> Any:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> Any:
         """Convert current payload to value."""
-        # TODO: DPTBinary.value is int - DPTBase.from_knx requires Tuple[int, ...] - maybe use bytes
-        return self.dpt_class.from_knx((payload.value,))
+        return self.dpt_class.from_knx(payload)
 
     @property
     def unit_of_measurement(self) -> str | None:

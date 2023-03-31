@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
+class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
     """Abstraction for remote value of KNX DPT 1.008 / DPT_UpDown."""
 
     class Direction(Enum):
@@ -47,12 +47,6 @@ class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
         )
         self.invert = invert
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTBinary:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTBinary):
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: RemoteValueUpDown.Direction) -> DPTBinary:
         """Convert value to payload."""
         if value == self.Direction.UP:
@@ -66,14 +60,14 @@ class RemoteValueUpDown(RemoteValue[DPTBinary, "RemoteValueUpDown.Direction"]):
             feature_name=self.feature_name,
         )
 
-    def from_knx(self, payload: DPTBinary) -> RemoteValueUpDown.Direction:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> RemoteValueUpDown.Direction:
         """Convert current payload to value."""
-        if payload == DPTBinary(0):
+        if payload.value == 0:
             return self.Direction.DOWN if self.invert else self.Direction.UP
-        if payload == DPTBinary(1):
+        if payload.value == 1:
             return self.Direction.UP if self.invert else self.Direction.DOWN
         raise CouldNotParseTelegram(
-            "payload invalid",
+            "Payload invalid",
             payload=payload,
             device_name=self.device_name,
             feature_name=self.feature_name,

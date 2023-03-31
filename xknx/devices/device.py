@@ -62,7 +62,7 @@ class Device(ABC):
                 self.xknx.task_registry.unregister(task.name)
 
     @abstractmethod
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
         # yield from (<list all used RemoteValue instances>)

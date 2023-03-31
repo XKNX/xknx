@@ -6,7 +6,7 @@ for serialization and deserialization of the KNX value.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
+class RemoteValueRaw(RemoteValue[int]):
     """Abstraction for raw values."""
 
     def __init__(
@@ -43,16 +43,6 @@ class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(
-        self, payload: DPTArray | DPTBinary | None
-    ) -> DPTArray | DPTBinary:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTBinary) and self.payload_length == 0:
-            return payload
-        if isinstance(payload, DPTArray) and len(payload.value) == self.payload_length:
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: int) -> DPTArray | DPTBinary:
         """Convert value to payload."""
         if self.payload_length == 0:
@@ -69,9 +59,13 @@ class RemoteValueRaw(RemoteValue[Union[DPTArray, DPTBinary], int]):
 
     def from_knx(self, payload: DPTArray | DPTBinary) -> int:
         """Convert current payload to value."""
-        if isinstance(payload, DPTBinary):
+        if isinstance(payload, DPTBinary) and self.payload_length == 0:
             return payload.value
-        try:
-            return int.from_bytes(payload.value, byteorder="big")
-        except ValueError as err:
-            raise ConversionError("Could not parse payload", payload=payload) from err
+        if isinstance(payload, DPTArray) and len(payload.value) == self.payload_length:
+            try:
+                return int.from_bytes(payload.value, byteorder="big")
+            except ValueError as err:
+                raise ConversionError(
+                    "Could not parse payload", payload=payload
+                ) from err
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))

@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from inspect import isabstract
 from typing import Any, TypeVar, cast
 
-from xknx.exceptions import ConversionError
+from xknx.exceptions import CouldNotParseTelegram
 
 from .payload import DPTArray, DPTBinary
 
@@ -61,17 +61,27 @@ class DPTBase(ABC):
     @classmethod
     @abstractmethod
     def from_knx(cls, payload: DPTArray | DPTBinary) -> Any:
-        """Parse/deserialize from KNX/IP payload data."""
+        """
+        Parse/deserialize from KNX/IP payload data.
+
+        Raise `CouldNotParseTelegram` for wrong payload
+        or `ConversionError` for unparsable value.
+        """
         # raw = cls.validate_payload(payload)
 
     @classmethod
     def validate_payload(cls, payload: DPTArray | DPTBinary) -> tuple[int, ...]:
-        """Test if payload has the correct length and type for given DPT. Retrun tuple of raw values."""
+        """
+        Test if payload has the correct length and type for given DPT.
+
+        Return tuple of raw values.
+        Raise CouldNotParseTelegram if payload type or length is invalid for DPT.
+        """
         if cls.payload_type is DPTArray and isinstance(payload, DPTArray):
             if cls.payload_length == len(payload.value):
                 return payload.value
 
-            raise ConversionError(
+            raise CouldNotParseTelegram(
                 f"Invalid payload length for {cls.__name__}",
                 payload=payload,
                 expected_length=cls.payload_length,
@@ -81,7 +91,7 @@ class DPTBase(ABC):
             # wrap in tuple for consistent return signature
             return (payload.value,)
 
-        raise ConversionError(
+        raise CouldNotParseTelegram(
             f"Invalid payload type for {cls.__name__}",
             payload=payload,
             expected_type=cls.payload_type,
@@ -90,7 +100,11 @@ class DPTBase(ABC):
     @classmethod
     @abstractmethod
     def to_knx(cls, value: Any) -> DPTArray | DPTBinary:
-        """Serialize to KNX/IP raw data."""
+        """
+        Serialize to KNX/IP raw data.
+
+        Raise `ConversionError` for unparsable value.
+        """
 
     @classmethod
     def __recursive_subclasses__(cls: T) -> Iterator[T]:
