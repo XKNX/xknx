@@ -75,7 +75,7 @@ async def read_group_value(
     xknx: XKNX,
     group_address: DeviceAddressableType,
     value_type: int | str | type[DPTBase] | None = None,
-) -> DPTArray | DPTBinary | Any | None:
+) -> int | tuple[int, ...] | Any | None:
     """Read a value from a KNX group address."""
     transcoder = _parse_dpt(value_type)
     value_reader = ValueReader(xknx, parse_device_group_address(group_address))
@@ -83,7 +83,7 @@ async def read_group_value(
     if response is not None:
         assert isinstance(response.payload, (GroupValueWrite, GroupValueResponse))
         if transcoder is not None:
-            return transcoder.from_knx(response.payload.value.value)  # type: ignore[arg-type]
+            return transcoder.from_knx(response.payload.value)
         return response.payload.value.value
     return None
 
