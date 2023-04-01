@@ -2,26 +2,24 @@
 import pytest
 
 from xknx.dpt import DPTArray, DPTSceneNumber
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
 class TestDPTSceneNumber:
     """Test class for KNX scaling value."""
 
-    def test_value_50(self):
-        """Test parsing and streaming of DPTSceneNumber 50."""
-        assert DPTSceneNumber.to_knx(50) == DPTArray((0x31,))
-        assert DPTSceneNumber.from_knx((0x31,)) == 50
-
-    def test_value_max(self):
-        """Test parsing and streaming of DPTSceneNumber 64."""
-        assert DPTSceneNumber.to_knx(64) == DPTArray((0x3F,))
-        assert DPTSceneNumber.from_knx((0x3F,)) == 64
-
-    def test_value_min(self):
-        """Test parsing and streaming of DPTSceneNumber 0."""
-        assert DPTSceneNumber.to_knx(1) == DPTArray((0x00,))
-        assert DPTSceneNumber.from_knx((0x00,)) == 1
+    @pytest.mark.parametrize(
+        ("raw", "value"),
+        [
+            ((0x31,), 50),
+            ((0x3F,), 64),
+            ((0x00,), 1),
+        ],
+    )
+    def test_transcoder(self, raw, value):
+        """Test parsing and streaming of DPTSceneNumber."""
+        assert DPTSceneNumber.to_knx(value) == DPTArray(raw)
+        assert DPTSceneNumber.from_knx(DPTArray(raw)) == value
 
     def test_to_knx_min_exceeded(self):
         """Test parsing of DPTSceneNumber with wrong value (underflow)."""
@@ -40,15 +38,10 @@ class TestDPTSceneNumber:
 
     def test_from_knx_wrong_parameter(self):
         """Test parsing of DPTSceneNumber with wrong value (3 byte array)."""
-        with pytest.raises(ConversionError):
-            DPTSceneNumber.from_knx((0x01, 0x02, 0x03))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTSceneNumber.from_knx(DPTArray((0x01, 0x02, 0x03)))
 
     def test_from_knx_wrong_value(self):
         """Test parsing of DPTSceneNumber with value which exceeds limits."""
         with pytest.raises(ConversionError):
-            DPTSceneNumber.from_knx((0x64,))
-
-    def test_from_knx_wrong_parameter2(self):
-        """Test parsing of DPTSceneNumber with wrong value (array containing string)."""
-        with pytest.raises(ConversionError):
-            DPTSceneNumber.from_knx("0x23")
+            DPTSceneNumber.from_knx(DPTArray((0x64,)))

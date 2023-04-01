@@ -2,7 +2,7 @@
 import pytest
 
 from xknx.dpt import DPTArray, DPTLatin1, DPTString
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
 class TestDPTString:
@@ -33,7 +33,7 @@ class TestDPTString:
     def test_values(self, string, raw, test_dpt):
         """Test parsing and streaming strings."""
         assert test_dpt.to_knx(string) == DPTArray(raw)
-        assert test_dpt.from_knx(raw) == string
+        assert test_dpt.from_knx(DPTArray(raw)) == string
 
     @pytest.mark.parametrize(
         "string,knx_string,raw",
@@ -53,7 +53,7 @@ class TestDPTString:
     def test_to_knx_ascii_invalid_chars(self, string, knx_string, raw):
         """Test streaming ASCII string with invalid chars."""
         assert DPTString.to_knx(string) == DPTArray(raw)
-        assert DPTString.from_knx(raw) == knx_string
+        assert DPTString.from_knx(DPTArray(raw)) == knx_string
 
     @pytest.mark.parametrize(
         "string,raw",
@@ -71,7 +71,7 @@ class TestDPTString:
     def test_to_knx_latin_1(self, string, raw):
         """Test streaming Latin-1 strings."""
         assert DPTLatin1.to_knx(string) == DPTArray(raw)
-        assert DPTLatin1.from_knx(raw) == string
+        assert DPTLatin1.from_knx(DPTArray(raw)) == string
 
     def test_to_knx_too_long(self):
         """Test serializing DPTString to KNX with wrong value (to long)."""
@@ -87,8 +87,8 @@ class TestDPTString:
     )
     def test_from_knx_wrong_parameter_length(self, raw):
         """Test parsing of KNX string with wrong elements length."""
-        with pytest.raises(ConversionError):
-            DPTString.from_knx(raw)
+        with pytest.raises(CouldNotParseTelegram):
+            DPTString.from_knx(DPTArray(raw))
 
     def test_no_unit_of_measurement(self):
         """Test for no unit set for DPT 16"""
