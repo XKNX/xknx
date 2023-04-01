@@ -21,25 +21,26 @@ class TestRemoteValueSetpointShift:
         dpt_9_payload = DPTTemperature.to_knx(1)
 
         with pytest.raises(CouldNotParseTelegram):
-            remote_value.payload_valid(DPTBinary(0))
+            remote_value.from_knx(DPTBinary(0))
         with pytest.raises(CouldNotParseTelegram):
-            remote_value.payload_valid(DPTArray((0, 1, 2)))
+            remote_value.from_knx(DPTArray((0, 1, 2)))
 
         # DPT 6 - payload_length 1
         assert remote_value.dpt_class is None
-        assert remote_value.payload_valid(dpt_6_payload) == dpt_6_payload
+        # default setpoint_shift_step = 0.1
+        assert remote_value.from_knx(dpt_6_payload) == 0.1
         assert remote_value.dpt_class == SetpointShiftMode.DPT6010.value
         with pytest.raises(CouldNotParseTelegram):
             # DPT 9 is invalid now
-            remote_value.payload_valid(dpt_9_payload)
+            remote_value.from_knx(dpt_9_payload)
 
         remote_value.dpt_class = None
         # DPT 9 - payload_length 2
-        assert remote_value.payload_valid(dpt_9_payload) == dpt_9_payload
+        assert remote_value.from_knx(dpt_9_payload) == 1
         assert remote_value.dpt_class == SetpointShiftMode.DPT9002.value
         with pytest.raises(CouldNotParseTelegram):
             # DPT 6 is invalid now
-            remote_value.payload_valid(dpt_6_payload)
+            remote_value.from_knx(dpt_6_payload)
 
     def test_payload_valid_preassigned_mode(self):
         """Test if setpoint_shift_mode is assigned properly by payload length."""
@@ -55,25 +56,25 @@ class TestRemoteValueSetpointShift:
 
         assert remote_value_6.dpt_class == DPTValue1Count
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_6.payload_valid(None)
+            remote_value_6.from_knx(None)
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_6.payload_valid(dpt_9_payload)
+            remote_value_6.from_knx(dpt_9_payload)
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_6.payload_valid(DPTArray((1, 2, 3, 4)))
+            remote_value_6.from_knx(DPTArray((1, 2, 3, 4)))
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_6.payload_valid(DPTBinary(1))
-        assert remote_value_6.payload_valid(dpt_6_payload) == dpt_6_payload
+            remote_value_6.from_knx(DPTBinary(1))
+        assert remote_value_6.from_knx(dpt_6_payload) == 0.1
 
         assert remote_value_9.dpt_class == DPTTemperature
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_9.payload_valid(None)
+            remote_value_9.from_knx(None)
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_9.payload_valid(dpt_6_payload)
+            remote_value_9.from_knx(dpt_6_payload)
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_9.payload_valid(DPTArray((1, 2, 3)))
+            remote_value_9.from_knx(DPTArray((1, 2, 3)))
         with pytest.raises(CouldNotParseTelegram):
-            remote_value_9.payload_valid(DPTBinary(1))
-        assert remote_value_9.payload_valid(dpt_9_payload) == dpt_9_payload
+            remote_value_9.from_knx(DPTBinary(1))
+        assert remote_value_9.from_knx(dpt_9_payload) == 1
 
     def test_to_knx_uninitialized(self):
         """Test to_knx raising ConversionError."""
@@ -105,13 +106,13 @@ class TestRemoteValueSetpointShift:
         """Test from_knx for uninitialized setpoint_shift_mode."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(xknx=xknx)
-        with pytest.raises(AssertionError):
+        with pytest.raises(CouldNotParseTelegram):
             remote_value.from_knx(1)
         # assign DPT 9.002 mode
-        remote_value.payload_valid(DPTArray((0x00, 0x64)))
+        assert remote_value.from_knx(DPTArray((0x00, 0x64))) == 1
         assert remote_value.from_knx(DPTArray((0x07, 0xD0))) == 20
         # wrong payload length raises, once assigned
-        with pytest.raises(ConversionError):
+        with pytest.raises(CouldNotParseTelegram):
             remote_value.from_knx(DPTArray((10,)))
 
     def test_from_knx_dpt_6(self):

@@ -35,19 +35,9 @@ class TestRemoteValueDateTime:
         )
         assert array.value == (0x75, 0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80)
 
-    def test_payload_valid(self):
-        """Testing KNX/Byte representation of DPTDateTime object."""
-        xknx = XKNX()
-        rv_datetime = RemoteValueDateTime(xknx, value_type="datetime")
-        assert rv_datetime.payload_valid(
-            DPTArray((0x75, 0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
-        )
-
     def test_payload_invalid(self):
         """Testing KNX/Byte representation of DPTDateTime object."""
         xknx = XKNX()
         rv_datetime = RemoteValueDateTime(xknx, value_type="datetime")
         with pytest.raises(CouldNotParseTelegram):
-            rv_datetime.payload_valid(
-                DPTArray((0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80))
-            )
+            rv_datetime.from_knx(DPTArray((0x0B, 0x1C, 0x57, 0x07, 0x18, 0x20, 0x80)))
