@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- Resolve IP addresses from hostname or adapter name for `gateway_ip` or `local_ip`.
+
 ### Bugfixes
 
 - Handle empty list for group addresses in RemoteValue.
