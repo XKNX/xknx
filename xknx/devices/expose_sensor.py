@@ -75,7 +75,7 @@ class ExposeSensor(Device):
         self._cooldown_latest_value = self.sensor_value.value
         await super().after_update()
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 

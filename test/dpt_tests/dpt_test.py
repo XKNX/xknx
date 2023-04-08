@@ -11,78 +11,7 @@ from xknx.dpt import (
     DPTString,
     DPTTemperature,
 )
-from xknx.exceptions import ConversionError
-
-
-class TestDPT:
-    """Test class for KNX binary/integer objects."""
-
-    def test_compare_binary(self):
-        """Test comparison of DPTBinary objects."""
-        assert DPTBinary(0) == DPTBinary(0)
-        assert DPTBinary(0) == DPTBinary(False)
-        assert DPTBinary(1) == DPTBinary(True)
-        assert DPTBinary(2) == DPTBinary(2)
-        assert DPTBinary(1) != DPTBinary(4)
-        assert DPTBinary(2) != DPTBinary(0)
-        assert DPTBinary(0) != DPTBinary(2)
-
-    def test_compare_array(self):
-        """Test comparison of DPTArray objects."""
-        assert DPTArray(()) == DPTArray(())
-        assert DPTArray([1]) == DPTArray((1,))
-        assert DPTArray([1, 2, 3]) == DPTArray([1, 2, 3])
-        assert DPTArray([1, 2, 3]) == DPTArray((1, 2, 3))
-        assert DPTArray((1, 2, 3)) == DPTArray([1, 2, 3])
-        assert DPTArray((1, 2, 3)) != DPTArray([1, 2, 3, 4])
-        assert DPTArray((1, 2, 3, 4)) != DPTArray([1, 2, 3])
-        assert DPTArray((1, 2, 3)) != DPTArray([1, 2, 4])
-
-    def test_compare_none(self):
-        """Test comparison DPTArray objects with None."""
-        assert DPTArray(()) is not None
-        assert None is not DPTArray(())
-        assert DPTBinary(0) is not None
-        assert None is not DPTBinary(0)
-        assert DPTArray((1, 2, 3)) is not None
-        assert None is not DPTArray((1, 2, 3))
-        assert DPTBinary(1) is not None
-        assert None is not DPTBinary(1)
-
-    def test_compare_array_binary(self):
-        """Test comparison of empty DPTArray objects with DPTBinary objects."""
-        assert DPTArray(()) != DPTBinary(0)
-        assert DPTBinary(0) != DPTArray(())
-        assert DPTBinary(0) != DPTArray(0)
-        assert DPTBinary(1) != DPTArray(1)
-        assert DPTArray((1, 2, 3)) != DPTBinary(2)
-        assert DPTBinary(2) != DPTArray((1, 2, 3))
-        assert DPTArray((2,)) != DPTBinary(2)
-        assert DPTBinary(2) != DPTArray((2,))
-
-    def test_dpt_binary_assign(self):
-        """Test initialization of DPTBinary objects."""
-        assert DPTBinary(8).value == 8
-
-    def test_dpt_binary_assign_limit_exceeded(self):
-        """Test initialization of DPTBinary objects with wrong value (value exceeded)."""
-        with pytest.raises(ConversionError):
-            DPTBinary(DPTBinary.APCI_BITMASK + 1)
-
-    def test_dpt_init_with_string(self):
-        """Teest initialization of DPTBinary object with wrong value (wrong type)."""
-        with pytest.raises(TypeError):
-            DPTBinary("bla")
-
-    def test_dpt_array_init_with_string(self):
-        """Test initialization of DPTArray object with wrong value (wrong type)."""
-        with pytest.raises(TypeError):
-            DPTArray("bla")
-
-    def test_dpt_representation(self):
-        """Test representation of DPTBinary and DPTArray."""
-        assert DPTBinary(True).__repr__() == "DPTBinary(0x1)"
-        assert DPTArray((5, 15)).__repr__() == "DPTArray((0x5, 0xf))"
+from xknx.exceptions import CouldNotParseTelegram
 
 
 class TestDPTBase:
@@ -159,6 +88,50 @@ class TestDPTBase:
         assert DPTBase.parse_transcoder("temperature") == DPTTemperature
         assert DPTNumeric.parse_transcoder("temperature") == DPTTemperature
         assert DPT2ByteFloat.parse_transcoder("temperature") == DPTTemperature
+
+
+class TestDPTBaseSubclass:
+    """Test subclass of transcoder base object."""
+
+    @pytest.mark.parametrize("dpt_class", DPTBase.dpt_class_tree())
+    def test_required_values(self, dpt_class):
+        """Test required class variables are set for definitions."""
+        assert dpt_class.payload_type in (DPTArray, DPTBinary)
+        assert dpt_class.payload_length is not None
+
+    def test_validate_payload_array(self):
+        """Test validate_payload method."""
+
+        class DPTArrayTest(DPTBase):
+            payload_type = DPTArray
+            payload_length = 2
+
+        with pytest.raises(CouldNotParseTelegram):
+            DPTArrayTest.validate_payload(DPTArray((1,)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTArrayTest.validate_payload(DPTArray((1, 1, 1)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTArrayTest.validate_payload(DPTBinary(1))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTArrayTest.validate_payload("why?")
+
+        assert DPTArrayTest.validate_payload(DPTArray((1, 1))) == (1, 1)
+
+    def test_validate_payload_binary(self):
+        """Test validate_payload method."""
+
+        class DPTBinaryTest(DPTBase):
+            payload_type = DPTBinary
+            payload_length = 1
+
+        with pytest.raises(CouldNotParseTelegram):
+            DPTBinaryTest.validate_payload(DPTArray(1))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTBinaryTest.validate_payload(DPTArray((1, 1)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTBinaryTest.validate_payload("why?")
+
+        assert DPTBinaryTest.validate_payload(DPTBinary(1)) == (1,)
 
 
 class TestDPTNumeric:

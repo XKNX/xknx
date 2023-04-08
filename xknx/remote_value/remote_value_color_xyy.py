@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.dpt.dpt_color import DPTColorXYY, XYYColor
-from xknx.exceptions import CouldNotParseTelegram
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -17,10 +16,8 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueColorXYY(RemoteValue[DPTArray, XYYColor]):
+class RemoteValueColorXYY(RemoteValue[XYYColor]):
     """Abstraction for remote value of KNX DPT 242.600 (DPT_Colour_xyY)."""
-
-    PAYLOAD_LENGTH = 6
 
     def __init__(
         self,
@@ -43,16 +40,10 @@ class RemoteValueColorXYY(RemoteValue[DPTArray, XYYColor]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTArray) and len(payload.value) == self.PAYLOAD_LENGTH:
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: XYYColor) -> DPTArray:
         """Convert value to payload."""
         return DPTColorXYY.to_knx(value)
 
-    def from_knx(self, payload: DPTArray) -> XYYColor:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> XYYColor:
         """Convert current payload to value."""
-        return DPTColorXYY.from_knx(payload.value)
+        return DPTColorXYY.from_knx(payload)

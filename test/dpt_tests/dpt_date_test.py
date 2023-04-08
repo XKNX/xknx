@@ -4,7 +4,7 @@ import time
 import pytest
 
 from xknx.dpt import DPTArray, DPTDate
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
 class TestDPTDate:
@@ -12,19 +12,19 @@ class TestDPTDate:
 
     def test_from_knx(self):
         """Test parsing of DPTDate object from binary values. Example 1."""
-        assert DPTDate.from_knx((0x04, 0x01, 0x02)) == time.strptime(
+        assert DPTDate.from_knx(DPTArray((0x04, 0x01, 0x02))) == time.strptime(
             "2002-01-04", "%Y-%m-%d"
         )
 
     def test_from_knx_old_date(self):
         """Test parsing of DPTDate object from binary values. Example 2."""
-        assert DPTDate.from_knx((0x1F, 0x01, 0x5A)) == time.strptime(
+        assert DPTDate.from_knx(DPTArray((0x1F, 0x01, 0x5A))) == time.strptime(
             "1990-01-31", "%Y-%m-%d"
         )
 
     def test_from_knx_future_date(self):
         """Test parsing of DPTDate object from binary values. Example 3."""
-        assert DPTDate.from_knx((0x04, 0x0C, 0x59)) == time.strptime(
+        assert DPTDate.from_knx(DPTArray((0x04, 0x0C, 0x59))) == time.strptime(
             "2089-12-4", "%Y-%m-%d"
         )
 
@@ -45,8 +45,8 @@ class TestDPTDate:
 
     def test_from_knx_wrong_parameter(self):
         """Test parsing from DPTDate object from wrong binary values."""
-        with pytest.raises(ConversionError):
-            DPTDate.from_knx((0xF8, 0x23))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTDate.from_knx(DPTArray((0xF8, 0x23)))
 
     def test_to_knx_wrong_parameter(self):
         """Test parsing from DPTDate object from wrong string value."""
@@ -56,9 +56,9 @@ class TestDPTDate:
     def test_from_knx_wrong_range_month(self):
         """Test Exception when parsing DPTDAte from KNX with wrong month."""
         with pytest.raises(ConversionError):
-            DPTDate.from_knx((0x04, 0x00, 0x59))
+            DPTDate.from_knx(DPTArray((0x04, 0x00, 0x59)))
 
     def test_from_knx_wrong_range_year(self):
         """Test Exception when parsing DPTDate from KNX with wrong year."""
         with pytest.raises(ConversionError):
-            DPTDate.from_knx((0x04, 0x01, 0x64))
+            DPTDate.from_knx(DPTArray((0x04, 0x01, 0x64)))

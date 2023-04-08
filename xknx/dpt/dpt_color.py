@@ -6,7 +6,7 @@ from typing import NamedTuple
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTBase
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class XYYColor(NamedTuple):
@@ -25,12 +25,13 @@ class XYYColor(NamedTuple):
 class DPTColorXYY(DPTBase):
     """Abstraction for KNX 6 octet color xyY (DPT 242.600)."""
 
+    payload_type = DPTArray
     payload_length = 6
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> XYYColor:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> XYYColor:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
 
         x_axis_int = raw[0] << 8 | raw[1]
         y_axis_int = raw[2] << 8 | raw[3]

@@ -143,7 +143,7 @@ class Cover(Device):
         self._periodic_update_task: Task | None = None
         self._travel_direction_tilt: TravelStatus | None = None
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.updown
         yield self.step

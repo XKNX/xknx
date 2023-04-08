@@ -8,53 +8,24 @@ from xknx.exceptions import ConversionError
 class TestDPTRelativeValue:
     """Test class for KNX DPT Relative Value."""
 
-    def test_from_knx_positive(self):
-        """Test positive value from KNX."""
-        assert DPTSignedRelativeValue.from_knx((0x00,)) == 0
-        assert DPTSignedRelativeValue.from_knx((0x01,)) == 1
-        assert DPTSignedRelativeValue.from_knx((0x02,)) == 2
-        assert DPTSignedRelativeValue.from_knx((0x64,)) == 100
-        assert DPTSignedRelativeValue.from_knx((0x7F,)) == 127
-
-    def test_from_knx_negative(self):
-        """Test negative value from KNX."""
-        assert DPTSignedRelativeValue.from_knx((0x80,)) == -128
-        assert DPTSignedRelativeValue.from_knx((0x9C,)) == -100
-        assert DPTSignedRelativeValue.from_knx((0xFE,)) == -2
-        assert DPTSignedRelativeValue.from_knx((0xFF,)) == -1
-
-    def test_to_knx_positive(self):
-        """Test positive value to KNX."""
-        assert DPTSignedRelativeValue.to_knx(0) == DPTArray(
-            0x00,
-        )
-        assert DPTSignedRelativeValue.to_knx(1) == DPTArray(
-            0x01,
-        )
-        assert DPTSignedRelativeValue.to_knx(2) == DPTArray(
-            0x02,
-        )
-        assert DPTSignedRelativeValue.to_knx(100) == DPTArray(
-            0x64,
-        )
-        assert DPTSignedRelativeValue.to_knx(127) == DPTArray(
-            0x7F,
-        )
-
-    def test_to_knx_negative(self):
-        """Test negative value to KNX."""
-        assert DPTSignedRelativeValue.to_knx(-128) == DPTArray(
-            0x80,
-        )
-        assert DPTSignedRelativeValue.to_knx(-100) == DPTArray(
-            0x9C,
-        )
-        assert DPTSignedRelativeValue.to_knx(-2) == DPTArray(
-            0xFE,
-        )
-        assert DPTSignedRelativeValue.to_knx(-1) == DPTArray(
-            0xFF,
-        )
+    @pytest.mark.parametrize(
+        ("raw", "value"),
+        [
+            ((0x00,), 0),
+            ((0x01,), 1),
+            ((0x02,), 2),
+            ((0x64,), 100),
+            ((0x7F,), 127),
+            ((0x80,), -128),
+            ((0x9C,), -100),
+            ((0xFE,), -2),
+            ((0xFF,), -1),
+        ],
+    )
+    def test_transcoder(self, raw, value):
+        """Test value from and to KNX."""
+        assert DPTSignedRelativeValue.from_knx(DPTArray(raw)) == value
+        assert DPTSignedRelativeValue.to_knx(value) == DPTArray(raw)
 
     def test_assert_min_exceeded(self):
         """Test initialization with wrong value (Underflow)."""

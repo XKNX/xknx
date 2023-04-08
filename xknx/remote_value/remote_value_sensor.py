@@ -10,7 +10,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, TypeVar, Union
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric, DPTString
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 ValueT = TypeVar("ValueT")
 
 
-class _RemoteValueGeneric(RemoteValue[DPTArray, ValueT]):
+class _RemoteValueGeneric(RemoteValue[ValueT]):
     """Abstraction for generic DPT types."""
 
     dpt_base_class: type[DPTBase]
@@ -60,21 +60,12 @@ class _RemoteValueGeneric(RemoteValue[DPTArray, ValueT]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if (
-            isinstance(payload, DPTArray)
-            and len(payload.value) == self.dpt_class.payload_length
-        ):
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: ValueT) -> DPTArray:
         """Convert value to payload."""
         return self.dpt_class.to_knx(value)  # type: ignore[return-value]
 
     @abstractmethod
-    def from_knx(self, payload: DPTArray) -> ValueT:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> ValueT:
         """Convert current payload to value."""
 
     @property
@@ -94,9 +85,9 @@ class RemoteValueSensor(_RemoteValueGeneric[Union[int, float, str]]):
     dpt_base_class = DPTBase
     dpt_class: type[DPTBase]
 
-    def from_knx(self, payload: DPTArray) -> int | float | str:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> int | float | str:
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value)  # type: ignore
+        return self.dpt_class.from_knx(payload)  # type: ignore[no-any-return]
 
 
 class RemoteValueNumeric(_RemoteValueGeneric[Union[int, float]]):
@@ -105,9 +96,9 @@ class RemoteValueNumeric(_RemoteValueGeneric[Union[int, float]]):
     dpt_base_class = DPTNumeric
     dpt_class: type[DPTNumeric]
 
-    def from_knx(self, payload: DPTArray) -> int | float:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> int | float:
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value)
+        return self.dpt_class.from_knx(payload)
 
 
 class RemoteValueString(_RemoteValueGeneric[str]):
@@ -117,6 +108,6 @@ class RemoteValueString(_RemoteValueGeneric[str]):
     dpt_class: type[DPTString]
     _default_dpt_class = DPTString
 
-    def from_knx(self, payload: DPTArray) -> str:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> str:
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value)
+        return self.dpt_class.from_knx(payload)

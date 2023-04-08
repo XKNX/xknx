@@ -24,7 +24,7 @@ class SetpointShiftMode(Enum):
     DPT9002 = DPTTemperature
 
 
-class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
+class RemoteValueSetpointShift(RemoteValue[float]):
     """Abstraction for remote value of KNX DPT 6.010."""
 
     def __init__(
@@ -54,21 +54,6 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
         )
         self.setpoint_shift_step = setpoint_shift_step
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTArray):
-            payload_length = len(payload.value)
-            if self.dpt_class is None:
-                if payload_length == DPTTemperature.payload_length:
-                    self.dpt_class = DPTTemperature
-                    return payload
-                if payload_length == DPTValue1Count.payload_length:
-                    self.dpt_class = DPTValue1Count
-                    return payload
-            elif payload_length == self.dpt_class.payload_length:
-                return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
         if self.dpt_class is None:
@@ -80,10 +65,24 @@ class RemoteValueSetpointShift(RemoteValue[DPTArray, float]):
             return DPTValue1Count.to_knx(converted_value)
         return DPTTemperature.to_knx(value)
 
-    def from_knx(self, payload: DPTArray) -> float:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> float:
         """Convert current payload to value."""
-        assert self.dpt_class is not None  # checked by payload_valid() from process()
-        payload_value = self.dpt_class.from_knx(payload.value)
+        if self.dpt_class is None:
+            self.dpt_class = self._determine_dpt_class(payload)
+
+        payload_value = self.dpt_class.from_knx(payload)
         if self.dpt_class == DPTValue1Count:
             return payload_value * self.setpoint_shift_step
         return payload_value
+
+    def _determine_dpt_class(
+        self, payload: DPTArray | DPTBinary
+    ) -> type[DPTValue1Count | DPTTemperature]:
+        """Test if telegram payload may be parsed."""
+        if isinstance(payload, DPTArray):
+            payload_length = len(payload.value)
+            if payload_length == DPTTemperature.payload_length:
+                return DPTTemperature
+            if payload_length == DPTValue1Count.payload_length:
+                return DPTValue1Count
+        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))

@@ -1,8 +1,6 @@
 """Implementation of KNX raw payload abstractions."""
 from __future__ import annotations
 
-from typing import TypeVar, Union
-
 from xknx.exceptions import ConversionError
 
 
@@ -65,6 +63,3 @@ class DPTArray:
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DPTArray value="[{",".join(hex(b) for b in self.value)}]" />'
-
-
-DPTPayloadT = TypeVar("DPTPayloadT", bound=Union[DPTArray, DPTBinary])

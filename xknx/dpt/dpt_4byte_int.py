@@ -12,7 +12,7 @@ import struct
 from xknx.exceptions import ConversionError
 
 from .dpt import DPTNumeric
-from .payload import DPTArray
+from .payload import DPTArray, DPTBinary
 
 
 class DPT4ByteUnsigned(DPTNumeric):
@@ -34,12 +34,12 @@ class DPT4ByteUnsigned(DPTNumeric):
     _struct_format = ">I"
 
     @classmethod
-    def from_knx(cls, raw: tuple[int, ...]) -> int:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        cls.test_bytesarray(raw)
+        raw = cls.validate_payload(payload)
 
         try:
-            return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore
+            return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore[no-any-return]
         except struct.error:
             raise ConversionError(f"Could not parse {cls.__name__}", raw=raw)
 

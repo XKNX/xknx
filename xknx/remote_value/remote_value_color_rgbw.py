@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueColorRGBW(RemoteValue[DPTArray, tuple[int, int, int, int]]):
+class RemoteValueColorRGBW(RemoteValue[tuple[int, int, int, int]]):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
     def __init__(
@@ -41,12 +41,6 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, tuple[int, int, int, int]]):
             after_update_cb=after_update_cb,
         )
         self.previous_value: tuple[int, int, int, int] = (0, 0, 0, 0)
-
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if isinstance(payload, DPTArray) and len(payload.value) == 6:
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
 
     def to_knx(self, value: Sequence[int]) -> DPTArray:
         """
@@ -99,13 +93,16 @@ class RemoteValueColorRGBW(RemoteValue[DPTArray, tuple[int, int, int, int]]):
             return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
         return DPTArray(value)
 
-    def from_knx(self, payload: DPTArray) -> tuple[int, int, int, int]:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> tuple[int, int, int, int]:
         """
         Convert current payload to value. Always 4 byte (RGBW).
 
         If one element is invalid, use the previous value. All previous element
         values are initialized to 0.
         """
+        if not (isinstance(payload, DPTArray) and len(payload.value) == 6):
+            raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
+
         _result = list(self.previous_value)
         for i in range(len(payload.value) - 2):
             if payload.value[5] & (0x08 >> i):  # R,G,B,W value valid?

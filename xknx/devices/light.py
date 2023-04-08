@@ -317,14 +317,14 @@ class Light(Device):
         self._individual_color_debounce_telegram_counter: int
         self._reset_individual_color_debounce_telegrams()
 
-    def _iter_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         return chain(
             self._iter_instant_remote_values(),
             self._iter_debounce_remote_values(),
         )
 
-    def _iter_instant_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+    def _iter_instant_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes calling after_update_cb immediately."""
         yield self.switch
         yield self.brightness
@@ -336,7 +336,7 @@ class Light(Device):
         yield self.tunable_white
         yield self.color_temperature
 
-    def _iter_debounce_remote_values(self) -> Iterator[RemoteValue[Any, Any]]:
+    def _iter_debounce_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes debouncing after_update_cb."""
         for color in self._iter_individual_colors():
             yield color.switch

@@ -13,7 +13,7 @@ from collections.abc import Awaitable, Iterator
 import logging
 from typing import TYPE_CHECKING, Callable, Generic, TypeVar, Union
 
-from xknx.dpt import DPTArray, DPTBinary, DPTPayloadT
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
@@ -34,7 +34,7 @@ GroupAddressesType = Union["DeviceAddressableType", list["DeviceAddressableType"
 ValueT = TypeVar("ValueT")
 
 
-class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
+class RemoteValue(ABC, Generic[ValueT]):
     """Class for managing remote knx value."""
 
     def __init__(
@@ -138,16 +138,11 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
         return group_address in remote_value_addresses()
 
     @abstractmethod
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTPayloadT:
-        """Return payload if telegram payload may be parsed - to be implemented in derived class."""
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
-    @abstractmethod
-    def from_knx(self, payload: DPTPayloadT) -> ValueT:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> ValueT:
         """Convert current payload to value - to be implemented in derived class."""
 
     @abstractmethod
-    def to_knx(self, value: ValueT) -> DPTPayloadT:
+    def to_knx(self, value: ValueT) -> DPTArray | DPTBinary:
         """Convert value to payload - to be implemented in derived class."""
 
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
@@ -173,8 +168,7 @@ class RemoteValue(ABC, Generic[DPTPayloadT, ValueT]):
             )
 
         try:
-            _new_payload = self.payload_valid(telegram.payload.value)
-            decoded_payload = self.from_knx(_new_payload)
+            decoded_payload = self.from_knx(telegram.payload.value)
         except (ConversionError, CouldNotParseTelegram) as err:
             logger.warning(
                 "Can not process %s for %s - %s: %s",

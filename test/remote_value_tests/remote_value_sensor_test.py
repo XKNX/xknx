@@ -39,20 +39,18 @@ class TestRemoteValueSensor:
         for dpt_class in DPTBase.__recursive_subclasses__():
             assert isinstance(dpt_class.payload_length, int)
 
-    def test_payload_valid(self):
-        """Test payload_valid method."""
+    def test_payload_invalid(self):
+        """Test invalid payloads."""
         xknx = XKNX()
         remote_value = RemoteValueSensor(xknx=xknx, value_type="pulse")
-        valid_payload = DPTValue1Ucount.to_knx(1)
 
         assert remote_value.dpt_class == DPTValue1Ucount
         with pytest.raises(CouldNotParseTelegram):
-            remote_value.payload_valid(None)
+            remote_value.from_knx(None)
         with pytest.raises(CouldNotParseTelegram):
-            remote_value.payload_valid(DPTArray((1, 2, 3, 4)))
+            remote_value.from_knx(DPTArray((1, 2, 3, 4)))
         with pytest.raises(CouldNotParseTelegram):
-            remote_value.payload_valid(DPTBinary(1))
-        assert remote_value.payload_valid(valid_payload) == valid_payload
+            remote_value.from_knx(DPTBinary(1))
 
 
 class TestRemoteValueNumeric:

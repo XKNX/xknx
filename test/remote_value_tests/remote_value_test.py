@@ -90,10 +90,9 @@ class TestRemoteValue:
         """Test if exception is raised when processing telegram with unsupported payload type."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
+        with patch(
             "xknx.remote_value.RemoteValue.has_group_address"
         ) as patch_has_group_address:
-            patch_valid.return_value = False
             patch_has_group_address.return_value = True
 
             telegram = Telegram(
@@ -105,19 +104,6 @@ class TestRemoteValue:
             ):
                 await remote_value.process(telegram)
 
-    async def test_process_invalid_payload(self):
-        """Test if exception is raised when processing telegram with invalid payload."""
-        xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch(
-            "xknx.remote_value.RemoteValue.has_group_address", remote_value=True
-        ):
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/1"),
-                payload=GroupValueWrite(DPTArray((0x01, 0x02))),
-            )
-            assert await remote_value.process(telegram) is False
-
     async def test_process_unsupported_payload(self):
         """Test warning is logged when processing telegram with unsupported payload."""
         xknx = XKNX()
@@ -126,14 +112,13 @@ class TestRemoteValue:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
+        with patch(
             "xknx.remote_value.RemoteValue.has_group_address"
         ) as patch_has_group_address, patch(
             "xknx.remote_value.RemoteValue.from_knx"
         ) as patch_from, patch(
             "logging.Logger.warning"
         ) as mock_warning:
-            patch_valid.return_value = telegram.payload.value
             patch_has_group_address.return_value = True
             patch_from.side_effect = ConversionError("TestError")
 
@@ -151,10 +136,7 @@ class TestRemoteValue:
         xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
-            "xknx.core.ValueReader.read", new_callable=AsyncMock
-        ) as patch_read:
-            patch_valid.return_value = True
+        with patch("xknx.core.ValueReader.read", new_callable=AsyncMock) as patch_read:
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTBinary(1)),
@@ -171,10 +153,9 @@ class TestRemoteValue:
         xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_valid, patch(
+        with patch(
             "xknx.core.ValueReader.read", new_callable=AsyncMock
         ) as patch_read, patch("logging.Logger.warning") as mock_warning:
-            patch_valid.return_value = False
             patch_read.return_value = None
 
             await remote_value.read_state(wait_for_result=True)
@@ -235,15 +216,14 @@ class TestRemoteValue:
         assert not remote_value.readable
         # RemoteValue is initialized with only passive group address
         assert remote_value.initialized
-        with patch("xknx.remote_value.RemoteValue.payload_valid") as patch_always_valid:
-            patch_always_valid.side_effect = lambda payload: payload
-            test_payload = DPTArray((0x01, 0x02))
-            telegram = Telegram(
-                destination_address=GroupAddress("1/1/1"),
-                payload=GroupValueWrite(test_payload),
-            )
-            assert await remote_value.process(telegram)
-            assert remote_value.telegram.payload.value == test_payload
+
+        test_payload = DPTArray((0x01, 0x02))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueWrite(test_payload),
+        )
+        assert await remote_value.process(telegram)
+        assert remote_value.telegram.payload.value == test_payload
 
     def test_eq(self):
         """Test __eq__ operator."""

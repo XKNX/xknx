@@ -10,7 +10,7 @@ import time
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTDate, DPTDateTime, DPTTime
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
 
@@ -26,7 +26,7 @@ class DateTimeType(Enum):
     TIME = DPTTime
 
 
-class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
+class RemoteValueDateTime(RemoteValue[time.struct_time]):
     """Abstraction for remote value of KNX 10.001, 11.001 and 19.001 time and date objects."""
 
     def __init__(
@@ -62,19 +62,10 @@ class RemoteValueDateTime(RemoteValue[DPTArray, time.struct_time]):
             after_update_cb=after_update_cb,
         )
 
-    def payload_valid(self, payload: DPTArray | DPTBinary | None) -> DPTArray:
-        """Test if telegram payload may be parsed."""
-        if (
-            isinstance(payload, DPTArray)
-            and len(payload.value) == self.dpt_class.payload_length
-        ):
-            return payload
-        raise CouldNotParseTelegram("Payload invalid", payload=str(payload))
-
     def to_knx(self, value: time.struct_time) -> DPTArray:
         """Convert value to payload."""
         return self.dpt_class.to_knx(value)
 
-    def from_knx(self, payload: DPTArray) -> time.struct_time:
+    def from_knx(self, payload: DPTArray | DPTBinary) -> time.struct_time:
         """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload.value)
+        return self.dpt_class.from_knx(payload)

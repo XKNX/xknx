@@ -3,7 +3,7 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTControllerStatus, DPTHVACMode
 from xknx.dpt.dpt_hvac_mode import HVACOperationMode
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
 class TestDPTControllerStatus:
@@ -26,11 +26,14 @@ class TestDPTControllerStatus:
 
     def test_mode_from_knx(self):
         """Test parsing DPTHVACMode from KNX."""
-        assert DPTHVACMode.from_knx((0x00,)) == HVACOperationMode.AUTO
-        assert DPTHVACMode.from_knx((0x01,)) == HVACOperationMode.COMFORT
-        assert DPTHVACMode.from_knx((0x02,)) == HVACOperationMode.STANDBY
-        assert DPTHVACMode.from_knx((0x03,)) == HVACOperationMode.NIGHT
-        assert DPTHVACMode.from_knx((0x04,)) == HVACOperationMode.FROST_PROTECTION
+        assert DPTHVACMode.from_knx(DPTArray((0x00,))) == HVACOperationMode.AUTO
+        assert DPTHVACMode.from_knx(DPTArray((0x01,))) == HVACOperationMode.COMFORT
+        assert DPTHVACMode.from_knx(DPTArray((0x02,))) == HVACOperationMode.STANDBY
+        assert DPTHVACMode.from_knx(DPTArray((0x03,))) == HVACOperationMode.NIGHT
+        assert (
+            DPTHVACMode.from_knx(DPTArray((0x04,)))
+            == HVACOperationMode.FROST_PROTECTION
+        )
 
     def test_controller_status_to_knx(self):
         """Test serializing DPTControllerStatus to KNX."""
@@ -54,38 +57,52 @@ class TestDPTControllerStatus:
 
     def test_controller_status_from_knx(self):
         """Test parsing DPTControllerStatus from KNX."""
-        assert DPTControllerStatus.from_knx((0x21,)) == HVACOperationMode.COMFORT
-        assert DPTControllerStatus.from_knx((0x22,)) == HVACOperationMode.STANDBY
-        assert DPTControllerStatus.from_knx((0x24,)) == HVACOperationMode.NIGHT
         assert (
-            DPTControllerStatus.from_knx((0x28,)) == HVACOperationMode.FROST_PROTECTION
+            DPTControllerStatus.from_knx(DPTArray((0x21,))) == HVACOperationMode.COMFORT
+        )
+        assert (
+            DPTControllerStatus.from_knx(DPTArray((0x22,))) == HVACOperationMode.STANDBY
+        )
+        assert (
+            DPTControllerStatus.from_knx(DPTArray((0x24,))) == HVACOperationMode.NIGHT
+        )
+        assert (
+            DPTControllerStatus.from_knx(DPTArray((0x28,)))
+            == HVACOperationMode.FROST_PROTECTION
         )
 
     def test_controller_status_from_knx_other_bits_set(self):
         """Test parsing DPTControllerStatus from KNX."""
-        assert DPTControllerStatus.from_knx((0x21,)) == HVACOperationMode.COMFORT
-        assert DPTControllerStatus.from_knx((0x23,)) == HVACOperationMode.STANDBY
-        assert DPTControllerStatus.from_knx((0x27,)) == HVACOperationMode.NIGHT
         assert (
-            DPTControllerStatus.from_knx((0x2F,)) == HVACOperationMode.FROST_PROTECTION
+            DPTControllerStatus.from_knx(DPTArray((0x21,))) == HVACOperationMode.COMFORT
+        )
+        assert (
+            DPTControllerStatus.from_knx(DPTArray((0x23,))) == HVACOperationMode.STANDBY
+        )
+        assert (
+            DPTControllerStatus.from_knx(DPTArray((0x27,))) == HVACOperationMode.NIGHT
+        )
+        assert (
+            DPTControllerStatus.from_knx(DPTArray((0x2F,)))
+            == HVACOperationMode.FROST_PROTECTION
         )
 
     def test_mode_from_knx_wrong_value(self):
         """Test parsing of DPTControllerStatus with wrong value)."""
-        with pytest.raises(ConversionError):
-            DPTHVACMode.from_knx((1, 2))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTHVACMode.from_knx(DPTArray((1, 2)))
 
     def test_mode_from_knx_wrong_code(self):
         """Test parsing of DPTHVACMode with wrong code."""
         with pytest.raises(ConversionError):
-            DPTHVACMode.from_knx((0x05,))
+            DPTHVACMode.from_knx(DPTArray((0x05,)))
 
     def test_controller_status_from_knx_wrong_value(self):
         """Test parsing of DPTControllerStatus with wrong value)."""
-        with pytest.raises(ConversionError):
-            DPTControllerStatus.from_knx((1, 2))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTControllerStatus.from_knx(DPTArray((1, 2)))
 
     def test_controller_status_from_knx_wrong_code(self):
         """Test parsing of DPTControllerStatus with wrong code."""
         with pytest.raises(ConversionError):
-            DPTControllerStatus.from_knx((0x00,))
+            DPTControllerStatus.from_knx(DPTArray((0x00,)))
