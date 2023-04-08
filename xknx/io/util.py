@@ -25,7 +25,7 @@ async def get_default_local_ip(remote_ip: str = DEFAULT_MCAST_GRP) -> str | None
             await loop.sock_connect(sock, (remote_ip, DEFAULT_MCAST_PORT))
             local_ip = sock.getsockname()[0]
             logger.debug("Using local ip: %s", local_ip)
-            return cast(str, local_ip)
+            return local_ip  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             logger.warning(
                 "The system could not auto detect the source ip for %s on your operating system",
@@ -44,6 +44,20 @@ def get_local_interface_name(local_ip: str) -> str:
     return next((link.nice_name for link in get_local_ips() if link.ip == local_ip), "")
 
 
+def get_ip_for_adapter_name(name: str) -> str | None:
+    """Return the ip for the given interface name."""
+    return next(
+        (
+            ip.ip  # type: ignore[misc] # IPv6 would return tuple
+            for iface in ifaddr.get_adapters()
+            if name in (iface.name, iface.nice_name)
+            for ip in iface.ips
+            if ip.is_IPv4
+        ),
+        None,
+    )
+
+
 def find_local_ip(gateway_ip: str) -> str | None:
     """Find local IP address on same subnet as gateway."""
     gateway = ipaddress.IPv4Address(gateway_ip)
@@ -56,9 +70,26 @@ def find_local_ip(gateway_ip: str) -> str | None:
     return None
 
 
-def validate_ip(address: str, address_name: str = "IP address") -> None:
-    """Raise an exception if address cannot be parsed as IPv4 address."""
+async def validate_ip(address: str, address_name: str = "IP address") -> str:
+    """
+    Return IPv4 address parsed or resolved as a string.
+
+    Valid addresses are IPv4 strings, adapter names or hostnames.
+    Raises XKNXException if address is not a valid IPv4 address or cannot be resolved.
+    """
     try:
         ipaddress.IPv4Address(address)
+        return address
     except ipaddress.AddressValueError as ex:
-        raise XKNXException(f"{address_name} is not a valid IPv4 address.") from ex
+        logger.debug(
+            "%s is not a valid IPv4 address: %s. Trying to resolve %s...",
+            address,
+            ex,
+            address_name,
+        )
+    if adapter_ip := get_ip_for_adapter_name(address):
+        return adapter_ip
+    try:
+        return await asyncio.to_thread(socket.gethostbyname, address)
+    except socket.gaierror as ex:
+        raise XKNXException(f"Could not resolve {address_name}: {address}") from ex

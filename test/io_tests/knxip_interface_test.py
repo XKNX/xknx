@@ -37,7 +37,7 @@ class TestKNXIPInterface:
         interface = knx_interface_factory(self.xknx, connection_config)
         with patch("xknx.io.KNXIPInterface._start_automatic") as start_automatic_mock:
             await interface.start()
-            start_automatic_mock.assert_called_once_with(keyring=None)
+            start_automatic_mock.assert_called_once_with(local_ip=None, keyring=None)
             assert threading.active_count() == 1
 
         async def gateway_generator_mock(_):
@@ -180,7 +180,8 @@ class TestKNXIPInterface:
         # without gateway_ip automatic is called
         gateway_ip = "127.0.0.2"
         connection_config = ConnectionConfig(
-            connection_type=ConnectionType.TUNNELING, gateway_ip=gateway_ip
+            connection_type=ConnectionType.TUNNELING,
+            gateway_ip=gateway_ip,
         )
         with patch(
             "xknx.io.KNXIPInterface._start_tunnelling_udp"
@@ -190,6 +191,7 @@ class TestKNXIPInterface:
             start_tunnelling_udp.assert_called_once_with(
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
+                local_ip=None,
             )
         with patch("xknx.io.tunnel.UDPTunnel.connect") as connect_udp:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -278,7 +280,7 @@ class TestKNXIPInterface:
         with patch("xknx.io.KNXIPInterface._start_routing") as start_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
-            start_routing.assert_called_once_with()
+            start_routing.assert_called_once_with(local_ip=local_ip)
 
         with patch("xknx.io.routing.Routing.connect") as connect_routing:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -308,7 +310,7 @@ class TestKNXIPInterface:
         ) as start_automatic_mock:
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
-            start_automatic_mock.assert_called_once_with(keyring=None)
+            start_automatic_mock.assert_called_once_with(local_ip=None, keyring=None)
 
     async def test_threaded_send_cemi(self):
         """Test sending cemi with threaded connection."""
