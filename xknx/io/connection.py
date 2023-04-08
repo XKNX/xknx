@@ -37,8 +37,8 @@ class ConnectionConfig:
         * ROUTING the individual address used as source address for routing
         * TCP TUNNELING request a specific tunnel endpoint
         * SECURE TUNNELING use a specific tunnel endpoint from the knxkeys file
-    * local_ip: Local ip of the interface though which KNXIPInterface should connect.
-    * gateway_ip: IP of KNX/IP tunneling device.
+    * local_ip: Local ip or interface name though which xknx should connect.
+    * gateway_ip: IP or hostname of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
     * route_back: For UDP TUNNELING connection.
         The KNXnet/IP Server shall use the IP address and port in the received IP package
