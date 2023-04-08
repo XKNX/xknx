@@ -73,12 +73,10 @@ class KNXIPInterface:
 
     async def _start(self) -> None:
         """Start interface. Connecting KNX/IP device with the selected method."""
-        if local_ip := self.connection_config.local_ip:
-            local_ip = await util.validate_ip(local_ip, address_name="Local IP address")
         if gateway_ip := self.connection_config.gateway_ip:
-            gateway_ip = await util.validate_ip(
-                gateway_ip, address_name="Gateway IP address"
-            )
+            gateway_ip = await util.validate_ip(gateway_ip, address_name="Gateway IP")
+        if local_ip := self.connection_config.local_ip:
+            local_ip = await util.validate_ip(local_ip, address_name="Local IP")
         keyring: Keyring | None = None
         if secure_config := self.connection_config.secure_config:
             if (

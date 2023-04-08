@@ -82,10 +82,9 @@ async def validate_ip(address: str, address_name: str = "IP address") -> str:
         return address
     except ipaddress.AddressValueError as ex:
         logger.debug(
-            "%s is not a valid IPv4 address: %s. Trying to resolve %s...",
-            address,
-            ex,
+            "%s is not a valid IPv4 address: %s. Trying to resolve...",
             address_name,
+            ex,
         )
     if adapter_ip := get_ip_for_adapter_name(address):
         return adapter_ip
