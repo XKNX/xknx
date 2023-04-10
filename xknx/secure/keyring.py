@@ -9,8 +9,8 @@ from itertools import chain
 import logging
 import os
 from typing import Any
-from xml.dom.minidom import Attr, Document, parse
-from xml.etree.ElementTree import Element, ElementTree
+from xml.dom.minidom import Attr, Document, Element, parse
+from xml.etree.ElementTree import ElementTree
 import xml.sax
 from xml.sax.handler import ContentHandler
 from xml.sax.xmlreader import AttributesImpl
@@ -39,7 +39,7 @@ class AttributeReader(ABC):
     """Abstract base class for modelling attribute reader capabilities."""
 
     @abstractmethod
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
 
     def decrypt_attributes(
@@ -62,7 +62,7 @@ class XMLAssignedGroupAddress(AttributeReader):
     address: GroupAddress
     senders: list[IndividualAddress]
 
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.address = GroupAddress(
@@ -89,7 +89,7 @@ class XMLInterface(AttributeReader):
     authentication: str | None = None
     group_addresses: dict[GroupAddress, list[IndividualAddress]]
 
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.type = InterfaceType(self.get_attribute_value(attributes.get("Type")))
@@ -147,7 +147,7 @@ class XMLBackbone(AttributeReader):
     latency: int | None = None
     multicast_address: str | None = None
 
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.key = self.get_attribute_value(attributes.get("Key"))
@@ -174,7 +174,7 @@ class XMLGroupAddress(AttributeReader):
     decrypted_key: bytes | None = None
     key: str
 
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.address = GroupAddress(self.get_attribute_value(attributes.get("Address")))
@@ -202,7 +202,7 @@ class XMLDevice(AttributeReader):
     authentication: str
     sequence_number: int
 
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.individual_address = IndividualAddress(
@@ -390,7 +390,7 @@ class Keyring(AttributeReader):
         # in keyfile should be excluded from the table (are there non-secure devices listed?)
         return ia_seq_table
 
-    def parse_xml(self, node: Document) -> None:
+    def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
         self.created_by = self.get_attribute_value(attributes.get("CreatedBy"))
@@ -410,7 +410,7 @@ class Keyring(AttributeReader):
                 backbone.parse_xml(sub_node)
                 self.backbone = backbone
             if sub_node.nodeName == "Devices":
-                device_doc: Document
+                device_doc: Element
                 for device_doc in filter(
                     lambda x: x.nodeType != 3, sub_node.childNodes
                 ):
@@ -419,7 +419,7 @@ class Keyring(AttributeReader):
                     self.devices.append(device)
 
             elif sub_node.nodeName == "GroupAddresses":
-                ga_doc: Document
+                ga_doc: Element
                 for ga_doc in filter(lambda x: x.nodeType != 3, sub_node.childNodes):
                     xml_ga: XMLGroupAddress = XMLGroupAddress()
                     xml_ga.parse_xml(ga_doc)
@@ -463,7 +463,7 @@ def sync_load_keyring(
     try:
         with open(path, encoding="utf-8") as file:
             dom: Document = parse(file)
-            keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])
+            keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])  # type: ignore[arg-type]
 
         keyring.decrypt(password)
 
@@ -517,7 +517,7 @@ def verify_keyring_signature(path: str | os.PathLike[Any], password: str) -> boo
     handler = KeyringSAXContentHandler(password)
     signature: bytes
     with open(path, encoding="utf-8") as file:
-        element: Element = ElementTree().parse(file)
+        element = ElementTree().parse(file)
         signature = base64.b64decode(element.attrib.get("Signature", ""))
 
     with open(path, encoding="utf-8") as file:
