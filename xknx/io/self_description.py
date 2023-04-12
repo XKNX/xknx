@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Final
 
-from xknx.exceptions import CommunicationError
+from xknx.exceptions import CommunicationError, XKNXException
 from xknx.io import util
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
@@ -48,6 +48,11 @@ async def request_description(
                 f"No network interface found to request gateway info from {gateway_ip}:{gateway_port}"
             )
         route_back = True
+    try:
+        local_ip = await util.validate_ip(local_ip, address_name="Local IP")
+        gateway_ip = await util.validate_ip(gateway_ip, address_name="Gateway IP")
+    except XKNXException as err:
+        raise CommunicationError("Invalid address") from err
 
     transport = UDPTransport(
         local_addr=(local_ip, local_port),
