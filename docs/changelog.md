@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.8.0 Hostnames 2023-04-12
 
 ### Connection
 
