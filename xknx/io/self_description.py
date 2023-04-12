@@ -52,7 +52,7 @@ async def request_description(
         local_ip = await util.validate_ip(local_ip, address_name="Local IP")
         gateway_ip = await util.validate_ip(gateway_ip, address_name="Gateway IP")
     except XKNXException as err:
-        raise CommunicationError("Invalid address found") from err
+        raise CommunicationError("Invalid address") from err
 
     transport = UDPTransport(
         local_addr=(local_ip, local_port),
