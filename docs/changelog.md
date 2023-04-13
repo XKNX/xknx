@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Internals
 
-- Replace `asyncio.wait_for` with `asyncio.timeout`. For Python <3.11 a backport package is imported.
+- Replace `asyncio.wait_for` with `asyncio.timeout`. For Python <3.11 a backport package is used.
 
 # 2.8.0 Hostnames 2023-04-12
 
