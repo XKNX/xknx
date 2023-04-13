@@ -29,8 +29,8 @@ class SessionAuthenticate(KNXIPBody):
         """Initialize SessionAuthenticate object."""
         # 00h: Reserved, shall not be used
         # 01h: Management level access
-        # 02h – 7Fh: User level access
-        # 80h – FFh: Reserved, shall not be used
+        # 02h - 7Fh: User level access
+        # 80h - FFh: Reserved, shall not be used
         # TODO: maybe use an Enum instead of int or raise an error in
         #   to_knx() and handle in RequestResponse class
         self.user_id = user_id

@@ -51,7 +51,8 @@ class DPTSignedRelativeValue(DPTNumeric):
 
 
 class DPTPercentV8(DPTSignedRelativeValue):
-    """Abstraction for KNX DPT_Percent_V8.
+    """
+    Abstraction for KNX DPT_Percent_V8.
 
     DPT 6.001
     """
@@ -63,7 +64,8 @@ class DPTPercentV8(DPTSignedRelativeValue):
 
 
 class DPTValue1Count(DPTSignedRelativeValue):
-    """Abstraction for KNX DPT_Value_1_Count.
+    """
+    Abstraction for KNX DPT_Value_1_Count.
 
     DPT 6.010
     """

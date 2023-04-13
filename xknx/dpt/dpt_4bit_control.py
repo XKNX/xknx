@@ -1,4 +1,5 @@
-"""Implementation of Basic KNX DPT B1U3 Values (DPT 3.007/3.008).
+"""
+Implementation of Basic KNX DPT B1U3 Values (DPT 3.007/3.008).
 
 There are two separate dimming modes sharing the same DPT class:
 
@@ -162,7 +163,8 @@ class DPTControlStepwiseBlinds(DPTControlStepwise):
 
 
 class TitleEnum(Enum):
-    """Enum with a descriptive string representation.
+    """
+    Enum with a descriptive string representation.
 
     Ensures values are rendered nicely, e.g. in home assistant.
     """

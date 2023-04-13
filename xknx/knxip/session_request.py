@@ -19,7 +19,7 @@ class SessionRequest(KNXIPBody):
     """Representation of a KNX Session Request."""
 
     SERVICE_TYPE = KNXIPServiceType.SESSION_REQUEST
-    # 8 octets for the UDP/TCP HPAI and 32 octets for the client’s ECDH public value
+    # 8 octets for the UDP/TCP HPAI and 32 octets for the clients ECDH public value
     LENGTH: Final = 40
 
     def __init__(

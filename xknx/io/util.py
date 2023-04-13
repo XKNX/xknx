@@ -1,4 +1,4 @@
-"""Helper functions for XKNX."""
+"""Helper functions for XKNX io module."""
 from __future__ import annotations
 
 import asyncio

@@ -1,5 +1,4 @@
-"""This package contains all methods for serialization and deserialization of KNX/IP packets."""
-# flake8: noqa
+"""Package containing all methods for serialization and deserialization of KNX/IP packets."""
 from .body import KNXIPBody, KNXIPBodyResponse
 from .connect_request import ConnectRequest, ConnectRequestInformation
 from .connect_response import ConnectResponse, ConnectResponseData
