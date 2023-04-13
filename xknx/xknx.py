@@ -98,7 +98,7 @@ class XKNX:
             except RuntimeError as exp:
                 logger.warning("Could not close loop, reason: %s", exp)
 
-    async def __aenter__(self) -> "XKNX":
+    async def __aenter__(self) -> XKNX:
         """Start XKNX from context manager."""
         await self.start()
         return self

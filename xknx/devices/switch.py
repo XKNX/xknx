@@ -84,7 +84,7 @@ class Switch(Device):
         """Switch off switch."""
         await self.switch.off()
 
-    async def process_group_write(self, telegram: "Telegram") -> None:
+    async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if await self.switch.process(telegram):
             if self.reset_after is not None and self.switch.value:
@@ -94,7 +94,7 @@ class Switch(Device):
                     track_task=True,
                 ).start()
 
-    async def process_group_read(self, telegram: "Telegram") -> None:
+    async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
         if (
             self.respond_to_read
