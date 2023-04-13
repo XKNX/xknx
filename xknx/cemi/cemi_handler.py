@@ -22,6 +22,7 @@ from xknx.exceptions import (
 from xknx.secure.data_secure import DataSecure
 from xknx.secure.keyring import Keyring
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
+from xknx.util import asyncio_timeout
 
 from .cemi_frame import CEMIFrame, CEMILData
 from .const import CEMIMessageCode
@@ -77,10 +78,8 @@ class CEMIHandler:
             raise ex
 
         try:
-            await asyncio.wait_for(
-                self._l_data_confirmation_event.wait(),
-                timeout=REQUEST_TO_CONFIRMATION_TIMEOUT,
-            )
+            async with asyncio_timeout(REQUEST_TO_CONFIRMATION_TIMEOUT):
+                await self._l_data_confirmation_event.wait()
         except asyncio.TimeoutError:
             self.xknx.connection_manager.cemi_count_outgoing_error += 1
             raise ConfirmationError(

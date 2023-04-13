@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from xknx.telegram import Telegram
 from xknx.telegram.address import GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.util import asyncio_timeout
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -49,10 +50,8 @@ class ValueReader:
         await self.send_group_read()
 
         try:
-            await asyncio.wait_for(
-                self.response_received_event.wait(),
-                timeout=self.timeout_in_seconds,
-            )
+            async with asyncio_timeout(self.timeout_in_seconds):
+                await self.response_received_event.wait()
         except asyncio.TimeoutError:
             logger.warning(
                 "Error: KNX bus did not respond in time (%s secs) to GroupValueRead request for: %s",

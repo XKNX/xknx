@@ -11,6 +11,7 @@ import logging
 from xknx.exceptions import CommunicationError
 from xknx.io.transport import KNXIPTransport
 from xknx.knxip import HPAI, ErrorCode, KNXIPBody, KNXIPBodyResponse, KNXIPFrame
+from xknx.util import asyncio_timeout
 
 logger = logging.getLogger("xknx.log")
 
@@ -44,10 +45,8 @@ class RequestResponse:
         )
         try:
             await self.send_request()
-            await asyncio.wait_for(
-                self.response_received_event.wait(),
-                timeout=self.timeout_in_seconds,
-            )
+            async with asyncio_timeout(self.timeout_in_seconds):
+                await self.response_received_event.wait()
         except asyncio.TimeoutError:
             logger.debug(
                 "Error: KNX bus did not respond in time (%s secs) to request of type '%s'",
