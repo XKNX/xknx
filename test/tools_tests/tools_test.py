@@ -1,5 +1,5 @@
 """Test xknx tools package."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -116,9 +116,9 @@ async def test_read_group_value(value_reader_read_mock, value, value_type, expec
 
 async def test_tools_with_internal_addresses():
     """Test tools using internal addresses."""
-    xknx = XKNX()
-    xknx.knxip_interface = AsyncMock()
-    await xknx.start()
+    with patch("xknx.io.knxip_interface.KNXIPInterface.start"):
+        xknx = XKNX()
+        await xknx.start()
 
     internal_address = "i-test"
     test_type = "1byte_unsigned"
