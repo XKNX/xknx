@@ -6,6 +6,7 @@ build/
 dist/
 xknx.egg-info/
 .cache
+.ruff_cache
 .tox
 .DS_Store
 .coverage
