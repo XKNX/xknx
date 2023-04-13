@@ -59,14 +59,14 @@ class TestDataSecure:
 
     @classmethod
     def setup_class(cls):
-        """Setup any state specific to the execution of the given class."""
+        """Set up any state specific to the execution of the given class."""
         secure_test_keyfile = os.path.join(
             os.path.dirname(__file__), "resources/SecureTest.knxkeys"
         )
         cls.secure_test_keyring = sync_load_keyring(secure_test_keyfile, "test")
 
     def setup_method(self):
-        """Setup test methods."""
+        """Set up test methods."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
         self.xknx.knxip_interface = AsyncMock()

@@ -21,10 +21,10 @@ class TestRemoteValueColorRGBW:
         expected = DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x0F))
         assert remote_value.to_knx(input_tuple) == expected
         assert remote_value.to_knx(input_list) == expected
-        assert remote_value.to_knx(input_tuple + (15,)) == expected
-        assert remote_value.to_knx(input_list + [15]) == expected
-        assert remote_value.to_knx(input_tuple + (0, 15)) == expected
-        assert remote_value.to_knx(input_list + [0, 15]) == expected
+        assert remote_value.to_knx((*input_tuple, 15)) == expected
+        assert remote_value.to_knx([*input_list, 15]) == expected
+        assert remote_value.to_knx((*input_tuple, 0, 15)) == expected
+        assert remote_value.to_knx([*input_list, 0, 15]) == expected
 
     def test_from_knx(self):
         """Test from_knx function with normal operation."""

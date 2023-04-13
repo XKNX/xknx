@@ -1,5 +1,4 @@
 """Unit test for connection manager."""
-import asyncio
 from datetime import datetime
 import threading
 from unittest.mock import AsyncMock, patch

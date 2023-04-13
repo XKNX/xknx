@@ -153,7 +153,7 @@ class TestFan:
             payload=GroupValueWrite(DPTArray(140)),
         )
         await fan.process(telegram)
-        assert fan.is_on == True
+        assert fan.is_on is True
 
         # A speed of 0 will turn off the fan implicitly if there is no
         # dedicated switch GA
@@ -166,7 +166,7 @@ class TestFan:
             payload=GroupValueWrite(DPTArray(0)),
         )
         await fan.process(telegram)
-        assert fan.is_on == False
+        assert fan.is_on is False
 
         fan_with_switch = Fan(
             xknx,
@@ -182,7 +182,7 @@ class TestFan:
             payload=GroupValueWrite(DPTBinary(1)),
         )
         await fan_with_switch.process(telegram)
-        assert fan_with_switch.is_on == True
+        assert fan_with_switch.is_on is True
 
         # A speed of 0 will not turn off the fan implicitly if there is a
         # dedicated switch GA defined. So we only expect a speed change telegram,
@@ -195,7 +195,7 @@ class TestFan:
             payload=GroupValueWrite(DPTArray(0)),
         )
         await fan_with_switch.process(telegram)
-        assert fan_with_switch.is_on == True
+        assert fan_with_switch.is_on is True
 
     #
     # TEST SET SPEED STEP

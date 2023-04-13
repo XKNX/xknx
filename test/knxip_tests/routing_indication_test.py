@@ -2,7 +2,7 @@
 import time
 
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
-from xknx.dpt import DPTArray, DPTTime
+from xknx.dpt import DPTTime
 from xknx.knxip import KNXIPFrame, RoutingIndication
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite

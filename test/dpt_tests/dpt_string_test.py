@@ -91,5 +91,5 @@ class TestDPTString:
             DPTString.from_knx(DPTArray(raw))
 
     def test_no_unit_of_measurement(self):
-        """Test for no unit set for DPT 16"""
+        """Test for no unit set for DPT 16."""
         assert DPTString.unit is None
