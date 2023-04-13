@@ -19,6 +19,7 @@ from xknx.knxip import (
     SearchRequestExtended,
     SearchResponseExtended,
 )
+from xknx.util import asyncio_timeout
 
 from .const import DEFAULT_MCAST_PORT
 from .transport import UDPTransport
@@ -128,10 +129,8 @@ class _SelfDescriptionQuery(ABC):
         frame = self.create_knxipframe()
         try:
             self.transport.send(frame)
-            await asyncio.wait_for(
-                self.response_received_event.wait(),
-                timeout=DESCRIPTION_TIMEOUT,
-            )
+            async with asyncio_timeout(DESCRIPTION_TIMEOUT):
+                await self.response_received_event.wait()
         except asyncio.TimeoutError:
             logger.debug(
                 "Error: KNX bus did not respond in time (%s secs) to request of type '%s'",

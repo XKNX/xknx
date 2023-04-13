@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internals
+
+- Replace `asyncio.wait_for` with `asyncio.timeout`. For Python <3.11 a backport package is imported.
+
 # 2.8.0 Hostnames 2023-04-12
 
 ### Connection

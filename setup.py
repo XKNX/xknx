@@ -12,7 +12,11 @@ VERSION = {}
 with open(path.join(THIS_DIRECTORY, "xknx/__version__.py"), encoding="utf-8") as fp:
     exec(fp.read(), VERSION)
 
-REQUIRES = ["cryptography>=35.0.0", "ifaddr>=0.1.7"]
+REQUIRES = [
+    "async_timeout>=4.0.0;python_version<'3.11'",
+    "cryptography>=35.0.0",
+    "ifaddr>=0.1.7",
+]
 
 setup(
     name="xknx",

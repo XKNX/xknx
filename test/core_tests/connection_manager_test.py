@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.io import ConnectionConfig
+from xknx.util import asyncio_timeout
 
 
 class TestConnectionManager:
@@ -108,7 +109,8 @@ class TestConnectionManager:
         with patch("xknx.io.KNXIPInterface._start", side_effect=set_connected):
             await xknx.start()
             # wait for side_effect to finish
-            await asyncio.wait_for(xknx.connection_manager.connected.wait(), timeout=1)
+            async with asyncio_timeout(1):
+                await xknx.connection_manager.connected.wait()
             await xknx.stop()
 
     async def test_connection_information(self):
