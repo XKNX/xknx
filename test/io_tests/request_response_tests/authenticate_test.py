@@ -6,7 +6,6 @@ from xknx.knxip import (
     HPAI,
     ConnectionStateRequest,
     KNXIPFrame,
-    KNXIPServiceType,
     SessionAuthenticate,
     SessionStatus,
 )

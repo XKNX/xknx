@@ -19,7 +19,7 @@ class SessionResponse(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SESSION_RESPONSE
     # 2 octets secure session identifier
-    # 32 octets for the servers’s ECDH public value
+    # 32 octets for the servers ECDH public value
     # 16 octets for the message authentication code
     LENGTH: Final = 50
 

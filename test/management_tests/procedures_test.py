@@ -1,6 +1,6 @@
 """Test management procedures."""
 import asyncio
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, call
 
 from xknx import XKNX
 from xknx.management import procedures

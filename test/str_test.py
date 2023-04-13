@@ -51,7 +51,6 @@ from xknx.knxip import (
     HostProtocol,
     KNXIPFrame,
     KNXIPHeader,
-    KNXIPServiceType,
     KNXMedium,
     RoutingIndication,
     SearchRequest,

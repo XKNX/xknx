@@ -54,7 +54,7 @@ class TestKNXIPConnectResponse:
             knxipframe.body.crd.request_type
             == ConnectRequestType.DEVICE_MGMT_CONNECTION
         )
-        assert knxipframe.body.crd.individual_address == None
+        assert knxipframe.body.crd.individual_address is None
 
         connect_response = ConnectResponse(
             communication_channel=1,

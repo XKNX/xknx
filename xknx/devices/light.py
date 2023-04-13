@@ -515,7 +515,8 @@ class Light(Device):
 
     @property
     def current_hs_color(self) -> tuple[float, float] | None:
-        """Return current HS-color of the light.
+        """
+        Return current HS-color of the light.
 
         Hue is scaled 0-360 (265 possible values from KNX)
         Sat is scaled 0-100
@@ -596,7 +597,7 @@ class Light(Device):
             return
         await self.color_temperature.set(color_temperature)
 
-    async def process_group_write(self, telegram: "Telegram") -> None:
+    async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_instant_remote_values():
             await remote_value.process(telegram)

@@ -132,7 +132,8 @@ class GatewayDescriptor:
 
 
 class GatewayScanFilter:
-    """Filter to limit gateway scan results.
+    """
+    Filter to limit gateway scan results.
 
     If `name` doesn't match the gateway name, the gateway will be ignored.
 

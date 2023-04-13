@@ -292,7 +292,7 @@ def test_valid_read_con():
     )
     assert frame.data.property_info.number_of_elements == 1
     assert frame.data.property_info.start_index == 1
-    assert frame.data.error_code == None
+    assert frame.data.error_code is None
     assert IndividualAddress.from_knx(frame.data.data) == IndividualAddress("1.2.3")
     assert frame.calculated_length() == 9
     assert frame.to_knx() == raw
@@ -359,7 +359,7 @@ def test_valid_empty_write_con():
     )
     assert frame.data.property_info.number_of_elements == 1
     assert frame.data.property_info.start_index == 1
-    assert frame.data.error_code == None
+    assert frame.data.error_code is None
     assert frame.calculated_length() == 7
     assert frame.to_knx() == raw
 

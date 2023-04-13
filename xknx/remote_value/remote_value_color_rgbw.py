@@ -87,10 +87,10 @@ class RemoteValueColorRGBW(RemoteValue[tuple[int, int, int, int]]):
             raise ConversionError(
                 "Could not serialize DPT 251.600 (wrong RGBW values)", value=value
             )
-        if len(value) < 5:
-            return DPTArray(list(rgbw) + [0x00, 0x0F])
-        if len(value) < 6:
-            return DPTArray(list(rgbw) + [0x00] + list(value[4:]))
+        if len(value) == 4:
+            return DPTArray([*rgbw, 0x00, 0x0F])
+        if len(value) == 5:
+            return DPTArray([*rgbw, 0x00, value[4]])
         return DPTArray(value)
 
     def from_knx(self, payload: DPTArray | DPTBinary) -> tuple[int, int, int, int]:

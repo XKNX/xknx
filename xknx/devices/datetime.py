@@ -59,7 +59,7 @@ class DateTime(Device):
     def _create_broadcast_task(self, minutes: int = 60) -> Task | None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
 
-        async def broadcast_loop(self: "DateTime", minutes: int) -> None:
+        async def broadcast_loop(self: DateTime, minutes: int) -> None:
             """Endless loop for broadcasting local time."""
             while True:
                 await self.broadcast_localtime()
@@ -81,7 +81,7 @@ class DateTime(Device):
         """Set time and send to KNX bus."""
         await self._remote_value.set(struct_time)
 
-    async def process_group_read(self, telegram: "Telegram") -> None:
+    async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""
         if self.localtime:
             await self.broadcast_localtime(True)

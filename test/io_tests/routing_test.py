@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.io import Routing
-from xknx.io.const import DEFAULT_INDIVIDUAL_ADDRESS
 from xknx.io.routing import (
     BUSY_DECREMENT_TIME,
     BUSY_INCREMENT_COOLDOWN,
