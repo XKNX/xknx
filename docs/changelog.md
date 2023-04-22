@@ -6,13 +6,17 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.9.0 Spring cleanup 2023-04-22
+
+### Dependencies
+
+- For Python <3.11 dependency `async_timeout` is added as backport for `asyncio.timeout`.
 
 ### Internals
 
-- Use pyproject.toml for specifying project metadata.
-- Replace `asyncio.wait_for` with `asyncio.timeout`. For Python <3.11 a backport package is used.
+- Replace `asyncio.wait_for` with `asyncio.timeout`.
 - Add Ruff to pre-commit and tox.
+- Use pyproject.toml for specifying project metadata.
 
 # 2.8.0 Hostnames 2023-04-12
 
