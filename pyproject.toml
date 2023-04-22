@@ -1,3 +1,46 @@
+[build-system]
+requires = ["setuptools~=62.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name         = "xknx"
+authors      = [
+    {name = "Julius Mittenzwei", email = "julius@mittenzwei.com"},
+    {name = "Matthias Alphart", email = "farmio@alphart.net"},
+    {name = "Marvin Wichmann", email = "me@marvin-wichmann.de"},
+]
+classifiers  = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+dependencies = [
+    "async_timeout>=4.0.0; python_version<'3.11'",
+    "cryptography>=35.0.0",
+    "ifaddr>=0.1.7",
+]
+description  = "An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/"
+dynamic      = ["version"]
+keywords     = ["KNX", "EIB", "Home Assistant", "home automation"]
+license      = {text = "MIT License"}
+readme       = "README.md"
+requires-python = ">=3.9.0"
+
+[project.urls]
+homepage = "https://xknx.io/"
+repository = "https://github.com/XKNX/xknx.git"
+
+
+[tool.setuptools.dynamic]
+version = {attr = "xknx.__version__.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["xknx*"]
+
 [tool.black]
 target-version = ["py39", "py310", "py311"]
 exclude = "generated"

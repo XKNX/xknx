@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Internals
 
+- Use pyproject.toml for specifying project metadata.
 - Replace `asyncio.wait_for` with `asyncio.timeout`. For Python <3.11 a backport package is used.
 - Add Ruff to pre-commit and tox.
 
