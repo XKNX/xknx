@@ -167,3 +167,24 @@ class SearchRequestParameterType(Enum):
     SELECT_BY_SERVICE = 0x03
     # The Client shall include this SRP to indicate that it is interested in the listed DIBs
     REQUEST_DIBS = 0x04
+
+
+class TunnellingFeatureType(Enum):
+    """Enum class for KNX/IP Tunnel Features services."""
+
+    # Getting the supported EMI type(s) (only cEMI allowed)
+    SUPPORTED_EMI_TYPE = 0x01
+    # Getting the local Device Descriptor Type 0 for possible local device management
+    DEVICE_DESCRIPTOR_TYPE_0 = 0x02
+    # Getting and informing on the bus connection status
+    BUS_CONNECTION_STATUS = 0x03
+    # Getting the manufacturer code of the Bus Access Server
+    MANUFACTURER_CODE = 0x04
+    # Getting and Setting the EMI type to use
+    ACTIVE_EMI_TYPE = 0x05
+    # Getting, Setting and informing on the Interface Individual Address
+    INTERFACE_INDIVIDUAL_ADDRESS = 0x06
+    # Getting and informing on the maximum APDU length
+    MAX_APDU_LENGTH = 0x07
+    # Getting and Setting the Interface Feature Info service Enable
+    INTERFACE_FEATURE_INFO_ENABLE = 0x08

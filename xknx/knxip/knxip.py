@@ -35,6 +35,12 @@ from .session_response import SessionResponse
 from .session_status import SessionStatus
 from .timer_notify import TimerNotify
 from .tunnelling_ack import TunnellingAck
+from .tunnelling_feature import (
+    TunnellingFeatureGet,
+    TunnellingFeatureInfo,
+    TunnellingFeatureResponse,
+    TunnellingFeatureSet,
+)
 from .tunnelling_request import TunnellingRequest
 
 
@@ -102,11 +108,19 @@ class KNXIPFrame:
             body = DeviceConfigurationRequest()
         elif header.service_type_ident == KNXIPServiceType.DEVICE_CONFIGURATION_ACK:
             body = DeviceConfigurationAck()
-        # Tunneling
+        # Tunnelling
         elif header.service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
             body = TunnellingRequest()
         elif header.service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
             body = TunnellingAck()
+        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_GET:
+            body = TunnellingFeatureGet()
+        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_INFO:
+            body = TunnellingFeatureInfo()
+        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_RESPONSE:
+            body = TunnellingFeatureResponse()
+        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_SET:
+            body = TunnellingFeatureSet()
         # Routing
         elif header.service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
             body = RoutingIndication()
