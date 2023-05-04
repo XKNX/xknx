@@ -57,6 +57,11 @@ from xknx.knxip import (
     SearchResponse,
     SearchResponseExtended,
     TunnellingAck,
+    TunnellingFeatureGet,
+    TunnellingFeatureInfo,
+    TunnellingFeatureResponse,
+    TunnellingFeatureSet,
+    TunnellingFeatureType,
     TunnellingRequest,
 )
 from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
@@ -646,6 +651,59 @@ class TestStringRepresentations:
         assert (
             str(tunnelling_ack)
             == '<TunnellingAck communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" />'
+        )
+
+    def test_tunnelling_feature_get(self):
+        """Test string representation of KNX/IP TunnellingFeatureGet."""
+        tunnelling_feature = TunnellingFeatureGet()
+        tunnelling_feature.communication_channel_id = 23
+        tunnelling_feature.sequence_counter = 42
+        tunnelling_feature.feature_type = TunnellingFeatureType.BUS_CONNECTION_STATUS
+        assert (
+            str(tunnelling_feature)
+            == '<TunnellingFeatureGet communication_channel_id="23" sequence_counter="42" '
+            'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" />'
+        )
+
+    def test_tunnelling_feature_info(self):
+        """Test string representation of KNX/IP TunnellingFeatureInfo."""
+        tunnelling_feature = TunnellingFeatureInfo()
+        tunnelling_feature.communication_channel_id = 23
+        tunnelling_feature.sequence_counter = 42
+        tunnelling_feature.feature_type = TunnellingFeatureType.BUS_CONNECTION_STATUS
+        tunnelling_feature.data = b"\x01\x00"
+        assert (
+            str(tunnelling_feature)
+            == '<TunnellingFeatureInfo communication_channel_id="23" sequence_counter="42" '
+            'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" data="0100" />'
+        )
+
+    def test_tunnelling_feature_response(self):
+        """Test string representation of KNX/IP TunnellingFeatureResponse."""
+        tunnelling_feature = TunnellingFeatureResponse()
+        tunnelling_feature.communication_channel_id = 23
+        tunnelling_feature.sequence_counter = 42
+        tunnelling_feature.feature_type = TunnellingFeatureType.BUS_CONNECTION_STATUS
+        tunnelling_feature.data = b"\x01\x00"
+        assert (
+            str(tunnelling_feature)
+            == '<TunnellingFeatureResponse communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" '
+            'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" data="0100" />'
+        )
+
+    def test_tunnelling_feature_set(self):
+        """Test string representation of KNX/IP TunnellingFeatureSet."""
+        tunnelling_feature = TunnellingFeatureSet()
+        tunnelling_feature.communication_channel_id = 23
+        tunnelling_feature.sequence_counter = 42
+        tunnelling_feature.feature_type = (
+            TunnellingFeatureType.INTERFACE_FEATURE_INFO_ENABLE
+        )
+        tunnelling_feature.data = b"\x01\x00"
+        assert (
+            str(tunnelling_feature)
+            == '<TunnellingFeatureSet communication_channel_id="23" sequence_counter="42" '
+            'feature_type="TunnellingFeatureType.INTERFACE_FEATURE_INFO_ENABLE" data="0100" />'
         )
 
     def test_cemi_ldata_frame(self):
