@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Protocol
+
+- Support Tunnelling Feature service messages.
+
 # 2.9.0 Spring cleanup 2023-04-22
 
 ### Dependencies
