@@ -13,12 +13,12 @@ import struct
 
 from xknx.exceptions import CouldNotParseKNXIP
 
-from .body import KNXIPBody
+from .body import KNXIPBody, KNXIPBodyResponse
 from .error_code import ErrorCode
 from .knxip_enum import KNXIPServiceType, TunnellingFeatureType
 
 
-class _TunnellingFeature(KNXIPBody):
+class _TunnellingFeature:
     """Base representation of a KNX Tunnelling Feature interface request."""
 
     HEADER_LENGTH = 4
@@ -92,7 +92,7 @@ class _TunnellingFeature(KNXIPBody):
         )
 
 
-class TunnellingFeatureGet(_TunnellingFeature):
+class TunnellingFeatureGet(_TunnellingFeature, KNXIPBody):
     """Representation of a KNX Tunnelling Feature Get request."""
 
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_FEATURE_GET
@@ -114,7 +114,7 @@ class TunnellingFeatureGet(_TunnellingFeature):
         return False
 
 
-class TunnellingFeatureSet(_TunnellingFeature):
+class TunnellingFeatureSet(_TunnellingFeature, KNXIPBody):
     """Representation of a KNX Tunnelling Feature Set request."""
 
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_FEATURE_SET
@@ -135,7 +135,7 @@ class TunnellingFeatureSet(_TunnellingFeature):
         )
 
 
-class TunnellingFeatureInfo(_TunnellingFeature):
+class TunnellingFeatureInfo(_TunnellingFeature, KNXIPBody):
     """Representation of a KNX Tunnelling Feature Info indication."""
 
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_FEATURE_INFO
@@ -156,7 +156,7 @@ class TunnellingFeatureInfo(_TunnellingFeature):
         )
 
 
-class TunnellingFeatureResponse(_TunnellingFeature):
+class TunnellingFeatureResponse(_TunnellingFeature, KNXIPBodyResponse):
     """Representation of a KNX Tunnelling Feature response."""
 
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_FEATURE_RESPONSE
