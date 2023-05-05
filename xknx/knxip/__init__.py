@@ -30,6 +30,7 @@ from .knxip_enum import (
     KNXIPServiceType,
     KNXMedium,
     SearchRequestParameterType,
+    TunnellingFeatureType,
     TunnellingLayer,
 )
 from .routing_busy import RoutingBusy
@@ -47,6 +48,12 @@ from .session_status import SessionStatus
 from .srp import SRP
 from .timer_notify import TimerNotify
 from .tunnelling_ack import TunnellingAck
+from .tunnelling_feature import (
+    TunnellingFeatureGet,
+    TunnellingFeatureInfo,
+    TunnellingFeatureResponse,
+    TunnellingFeatureSet,
+)
 from .tunnelling_request import TunnellingRequest
 
 __all__ = [
@@ -96,6 +103,11 @@ __all__ = [
     "SRP",
     "TimerNotify",
     "TunnellingAck",
+    "TunnellingFeatureGet",
+    "TunnellingFeatureInfo",
+    "TunnellingFeatureResponse",
+    "TunnellingFeatureSet",
+    "TunnellingFeatureType",
     "TunnellingLayer",
     "TunnellingRequest",
 ]
