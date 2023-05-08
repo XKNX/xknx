@@ -28,11 +28,14 @@ jobs:
         env:
           # new branch is created in create-pull-request step
           SKIP: no-commit-to-branch
-        uses: browniebroke/pre-commit-autoupdate-action@v1.0.0
+        run: |
+          pre-commit autoupdate
       - uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: update/pre-commit-hooks
           title: Update pre-commit hooks
           commit-message: "update pre-commit hooks"
-          body: Update versions of pre-commit hooks to latest version.
+          body: |
+            Update versions of pre-commit hooks to latest version.
+            Run tests locally to check for conficts since PRs from GitHub Actions don't trigger workflows.
