@@ -94,7 +94,7 @@ class DPTBase(ABC):
         raise CouldNotParseTelegram(
             f"Invalid payload type for {cls.__name__}",
             payload=payload,
-            expected_type=cls.payload_type,
+            expected_type=cls.payload_type.__name__,
         )
 
     @classmethod
