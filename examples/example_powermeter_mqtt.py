@@ -100,7 +100,7 @@ async def device_updated_cb(device):
             )
     else:
         print(
-            f"Uncatched metric: {device.name} {str(device.resolve_state())} {device.unit_of_measurement()}"
+            f"Uncatched metric: {device.name} {device.resolve_state()!s} {device.unit_of_measurement()}"
         )
 
     if topic and value:
@@ -120,7 +120,7 @@ async def device_updated_cb(device):
         # My latest version of the library doesn't send the value after the MQTT Topic, but a JSON structure
         # that also contains time.
 
-        print(f"{topic} {str(value)}")
+        print(f"{topic} {value!s}")
         # ts = int(time.time() * 1000)
         mqttc.publish(topic, value)
 
