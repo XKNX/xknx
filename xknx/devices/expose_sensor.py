@@ -129,6 +129,6 @@ class ExposeSensor(Device):
         return (
             f'<ExposeSensor name="{self.name}" '
             f"sensor={self.sensor_value.group_addr_str()} "
-            f"value={repr(self.sensor_value.value)} "
+            f"value={self.sensor_value.value!r} "
             f'unit="{self.unit_of_measurement()}"/>'
         )
