@@ -2,30 +2,60 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
-from xknx.exceptions import ConversionError
-
-from .dpt import DPTBase
+from .dpt import DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
 
-class XYYColor(NamedTuple):
+@dataclass
+class XYYColor(DPTComplexData):
     """
     Representation of XY color with brightness.
 
     `color`: tuple(x-axis, y-axis) each 0..1; None if invalid.
     `brightness`: int 0..255; None if invalid.
-    tuple(tuple(float, float) | None, int | None)
     """
 
     color: tuple[float, float] | None = None
     brightness: int | None = None
 
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> XYYColor:
+        """Init from a dictionary."""
+        color = None
+        brightness = None
 
-class DPTColorXYY(DPTBase):
+        if (x_axis := data.get("x_axis")) is not None and (
+            (y_axis := data.get("y_axis")) is not None
+        ):
+            try:
+                color = (float(x_axis), float(y_axis))
+            except ValueError as err:
+                raise ValueError(f"Invalid value for color axis: {err}") from err
+        if (brightness := data.get("brightness")) is not None:
+            try:
+                brightness = int(brightness)
+            except ValueError as err:
+                raise ValueError(f"Invalid value for brightness: {err}") from err
+
+        return cls(color=color, brightness=brightness)
+
+    def as_dict(self) -> dict[str, str | int | float | bool | None]:
+        """Create a JSON serializable dictionary."""
+        return {
+            "x_axis": self.color[0] if self.color is not None else None,
+            "y_axis": self.color[1] if self.color is not None else None,
+            "brightness": self.brightness,
+        }
+
+
+class DPTColorXYY(DPTComplex[XYYColor]):
     """Abstraction for KNX 6 octet color xyY (DPT 242.600)."""
 
+    data_type = XYYColor
     payload_type = DPTArray
     payload_length = 6
 
@@ -53,40 +83,34 @@ class DPTColorXYY(DPTBase):
         )
 
     @classmethod
-    def to_knx(
-        cls, value: XYYColor | tuple[tuple[float, float] | None, int | None]
-    ) -> DPTArray:
+    def _to_knx(cls, value: XYYColor) -> DPTArray:
         """Serialize to KNX/IP raw data."""
-        try:
-            if not isinstance(value, XYYColor):
-                value = XYYColor(*value)
-            color_valid = False
-            brightness_valid = False
-            x_axis, y_axis, brightness = 0, 0, 0
+        x_axis, y_axis, brightness = 0, 0, 0
+        color_valid = False
+        brightness_valid = False
 
-            if value.color is not None:
-                for _ in (axis for axis in value.color if not 0 <= axis <= 1):
-                    raise ValueError("Color out of range")
-                color_valid = True
-                x_axis, y_axis = (round(axis * 0xFFFF) for axis in value.color)
+        if value.color is not None:
+            for axis in value.color:
+                if not 0 <= axis <= 1:
+                    raise ValueError(
+                        f"Color axis value out of range 0..1: {value.color}"
+                    )
+            x_axis, y_axis = (round(axis * 0xFFFF) for axis in value.color)
+            color_valid = True
 
-            if value.brightness is not None:
-                if not 0 <= value.brightness <= 255:
-                    raise ValueError("Brightness out of range")
-                brightness_valid = True
-                brightness = int(value.brightness)
+        if value.brightness is not None:
+            brightness = value.brightness
+            if not 0 <= brightness <= 255:
+                raise ValueError(f"Brightness out of range 0..255: {brightness}")
+            brightness_valid = True
 
-            return DPTArray(
-                (
-                    x_axis >> 8,
-                    x_axis & 0xFF,
-                    y_axis >> 8,
-                    y_axis & 0xFF,
-                    brightness,
-                    color_valid << 1 | brightness_valid,
-                )
+        return DPTArray(
+            (
+                x_axis >> 8,
+                x_axis & 0xFF,
+                y_axis >> 8,
+                y_axis & 0xFF,
+                brightness,
+                color_valid << 1 | brightness_valid,
             )
-        except (ValueError, TypeError) as err:
-            raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
-            ) from err
+        )

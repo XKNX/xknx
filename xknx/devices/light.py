@@ -552,7 +552,8 @@ class Light(Device):
         if new_xyy is None or self._xyy_color_valid is None:
             self._xyy_color_valid = new_xyy
         else:
-            new_color, new_brightness = new_xyy
+            new_color = new_xyy.color
+            new_brightness = new_xyy.brightness
             if new_color is None:
                 new_color = self._xyy_color_valid.color
             if new_brightness is None:

@@ -4,6 +4,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
+from xknx.dpt.dpt_color import XYYColor
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueColorXYY
 from xknx.telegram import GroupAddress, Telegram
@@ -17,10 +18,10 @@ class TestRemoteValueColorXYY:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx)
-        assert remote_value.to_knx(((1, 0.9), 102)) == DPTArray(
+        assert remote_value.to_knx(XYYColor((1, 0.9), 102)) == DPTArray(
             (0xFF, 0xFF, 0xE6, 0x66, 0x66, 0x03)
         )
-        assert remote_value.to_knx(((1, 0), 102)) == DPTArray(
+        assert remote_value.to_knx(XYYColor((1, 0), 102)) == DPTArray(
             (0xFF, 0xFF, 0x00, 0x00, 0x66, 0x03)
         )
 
@@ -30,37 +31,37 @@ class TestRemoteValueColorXYY:
         remote_value = RemoteValueColorXYY(xknx)
         assert remote_value.from_knx(
             DPTArray((0x99, 0x99, 0x99, 0x99, 0x66, 0x03))
-        ) == ((0.6, 0.6), 102)
+        ) == XYYColor((0.6, 0.6), 102)
 
     def test_to_knx_error(self):
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx)
         with pytest.raises(ConversionError):
-            remote_value.to_knx(((2, 1), 1))
+            remote_value.to_knx(XYYColor((2, 1), 1))
         with pytest.raises(ConversionError):
-            remote_value.to_knx(((-1, 1), 2))
+            remote_value.to_knx(XYYColor((-1, 1), 2))
         with pytest.raises(ConversionError):
-            remote_value.to_knx(((0.3, 0.5), 256))
+            remote_value.to_knx(XYYColor((0.3, 0.5), 256))
         with pytest.raises(ConversionError):
-            remote_value.to_knx((("0.4", 0), 102))
+            remote_value.to_knx(XYYColor(("0.4", 0), 102))
         with pytest.raises(ConversionError):
-            remote_value.to_knx(((1, 1), "102"))
+            remote_value.to_knx(XYYColor((1, 1), "102"))
         with pytest.raises(ConversionError):
-            remote_value.to_knx(((1,), 1))
+            remote_value.to_knx(XYYColor((1,), 1))
 
     async def test_set(self):
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx, group_address=GroupAddress("1/2/3"))
-        await remote_value.set(((1, 0.9), 102))
+        await remote_value.set(XYYColor((1, 0.9), 102))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0xFF, 0xFF, 0xE6, 0x66, 0x66, 0x03))),
         )
-        await remote_value.set(((1, 0.9), 255))
+        await remote_value.set(XYYColor((1, 0.9), 255))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -77,7 +78,7 @@ class TestRemoteValueColorXYY:
             payload=GroupValueWrite(DPTArray((0xFF, 0xFF, 0x66, 0x66, 0xFA, 0x03))),
         )
         await remote_value.process(telegram)
-        assert remote_value.value == ((1, 0.4), 250)
+        assert remote_value.value == XYYColor((1, 0.4), 250)
 
     async def test_to_process_error(self):
         """Test process erroneous telegram."""
