@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from inspect import isabstract
-from typing import Any, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 from xknx.exceptions import CouldNotParseTelegram
 
 from .payload import DPTArray, DPTBinary
 
 T = TypeVar("T", bound=type["DPTBase"])  # pylint: disable=invalid-name
+TDict = TypeVar("TDict", bound=Mapping[str, Any])  # pylint: disable=invalid-name
 
 
 class DPTBase(ABC):
@@ -191,4 +192,18 @@ class DPTNumeric(DPTBase):
     @classmethod
     @abstractmethod
     def to_knx(cls, value: int | float) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+
+
+class DPTDict(DPTBase, Generic[TDict]):
+    """Base class for KNX data point types decoding multiple values in a combined payload."""
+
+    @classmethod
+    @abstractmethod
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> TDict:
+        """Parse/deserialize from KNX/IP raw data."""
+
+    @classmethod
+    @abstractmethod
+    def to_knx(cls, value: TDict) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""

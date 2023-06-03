@@ -2,28 +2,28 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import TypedDict
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTDict
 from .payload import DPTArray, DPTBinary
 
 
-class XYYColor(NamedTuple):
+class XYYColor(TypedDict, total=False):
     """
     Representation of XY color with brightness.
 
-    `color`: tuple(x-axis, y-axis) each 0..1; None if invalid.
+    `x_axis`, `y-axis`: each float 0..1; None if invalid.
     `brightness`: int 0..255; None if invalid.
-    tuple(tuple(float, float) | None, int | None)
     """
 
-    color: tuple[float, float] | None = None
-    brightness: int | None = None
+    x_axis: float | None
+    y_axis: float | None
+    brightness: int | None
 
 
-class DPTColorXYY(DPTBase):
+class DPTColorXYY(DPTDict[XYYColor]):
     """Abstraction for KNX 6 octet color xyY (DPT 242.600)."""
 
     payload_type = DPTArray
@@ -42,39 +42,39 @@ class DPTColorXYY(DPTBase):
         brightness_valid = raw[5] & 0b1
 
         return XYYColor(
-            color=(
-                # round to 5 digits for better readability but still preserving precision
-                round(x_axis_int / 0xFFFF, 5),
-                round(y_axis_int / 0xFFFF, 5),
-            )
-            if color_valid
-            else None,
+            # round to 5 digits for better readability but still preserving precision
+            x_axis=round(x_axis_int / 0xFFFF, 5) if color_valid else None,
+            y_axis=round(y_axis_int / 0xFFFF, 5) if color_valid else None,
             brightness=brightness if brightness_valid else None,
         )
 
     @classmethod
-    def to_knx(
-        cls, value: XYYColor | tuple[tuple[float, float] | None, int | None]
-    ) -> DPTArray:
+    # def to_knx(
+    #     cls, value: XYYColor | tuple[tuple[float, float] | None, int | None]
+    # ) -> DPTArray:
+    def to_knx(cls, value: XYYColor) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            if not isinstance(value, XYYColor):
-                value = XYYColor(*value)
             color_valid = False
             brightness_valid = False
             x_axis, y_axis, brightness = 0, 0, 0
 
-            if value.color is not None:
-                for _ in (axis for axis in value.color if not 0 <= axis <= 1):
+            _x = value.get("x_axis")
+            _y = value.get("y_axis")
+            _brightness = value.get("brightness")
+
+            if _x is not None and _y is not None:
+                if (not 0 <= _x <= 1) or (not 0 <= _y <= 1):
                     raise ValueError("Color out of range")
                 color_valid = True
-                x_axis, y_axis = (round(axis * 0xFFFF) for axis in value.color)
+                x_axis = round(_x * 0xFFFF)
+                y_axis = round(_y * 0xFFFF)
 
-            if value.brightness is not None:
-                if not 0 <= value.brightness <= 255:
+            if _brightness is not None:
+                if not 0 <= _brightness <= 255:
                     raise ValueError("Brightness out of range")
                 brightness_valid = True
-                brightness = int(value.brightness)
+                brightness = int(_brightness)
 
             return DPTArray(
                 (
@@ -86,7 +86,7 @@ class DPTColorXYY(DPTBase):
                     color_valid << 1 | brightness_valid,
                 )
             )
-        except (ValueError, TypeError) as err:
+        except (KeyError, ValueError, TypeError) as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.__name__}", value=value, error=err
             ) from err

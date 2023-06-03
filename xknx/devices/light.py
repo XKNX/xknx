@@ -552,12 +552,13 @@ class Light(Device):
         if new_xyy is None or self._xyy_color_valid is None:
             self._xyy_color_valid = new_xyy
         else:
-            new_color, new_brightness = new_xyy
-            if new_color is None:
-                new_color = self._xyy_color_valid.color
-            if new_brightness is None:
-                new_brightness = self._xyy_color_valid.brightness
-            self._xyy_color_valid = XYYColor(color=new_color, brightness=new_brightness)
+            if (x_axis := new_xyy.get("x_axis")) is not None and (
+                y_axis := new_xyy.get("y_axis")
+            ) is not None:
+                self._xyy_color_valid["x_axis"] = x_axis
+                self._xyy_color_valid["y_axis"] = y_axis
+            if (new_brightness := new_xyy.get("brightness")) is not None:
+                self._xyy_color_valid["brightness"] = new_brightness
         await self.after_update()
 
     @property
