@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internals
+
+- Remove pydocstyle and flake8 plugins, add pytest-icdiff to testing requirements.
+
 # 2.10.0 Tunnelling Feature 2023-05-08
 
 ### Protocol
