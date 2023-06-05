@@ -49,9 +49,6 @@ class DPTColorXYY(DPTDict[XYYColor]):
         )
 
     @classmethod
-    # def to_knx(
-    #     cls, value: XYYColor | tuple[tuple[float, float] | None, int | None]
-    # ) -> DPTArray:
     def to_knx(cls, value: XYYColor) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
@@ -65,16 +62,18 @@ class DPTColorXYY(DPTDict[XYYColor]):
 
             if _x is not None and _y is not None:
                 if (not 0 <= _x <= 1) or (not 0 <= _y <= 1):
-                    raise ValueError("Color out of range")
+                    raise ValueError("Color out of range. Expected float 0..1")
                 color_valid = True
                 x_axis = round(_x * 0xFFFF)
                 y_axis = round(_y * 0xFFFF)
+            elif _x or _y:
+                raise ValueError("`x_axis` and `y_axis` must both be set or omitted")
 
             if _brightness is not None:
-                if not 0 <= _brightness <= 255:
-                    raise ValueError("Brightness out of range")
-                brightness_valid = True
                 brightness = int(_brightness)
+                if not 0 <= brightness <= 255:
+                    raise ValueError("Brightness out of range. Expected integer 0..255")
+                brightness_valid = True
 
             return DPTArray(
                 (
@@ -86,7 +85,7 @@ class DPTColorXYY(DPTDict[XYYColor]):
                     color_valid << 1 | brightness_valid,
                 )
             )
-        except (KeyError, ValueError, TypeError) as err:
+        except (AttributeError, KeyError, ValueError, TypeError) as err:
             raise ConversionError(
                 f"Could not serialize {cls.__name__}", value=value, error=err
             ) from err
