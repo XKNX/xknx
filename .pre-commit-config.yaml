@@ -1,14 +1,14 @@
 ---
 repos:
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.2.5
     hooks:
       - id: codespell
         additional_dependencies:
           - tomli
         exclude_types: [csv, json]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.6.0
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
@@ -33,7 +33,7 @@ repos:
           - --resolve-all-configs
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     # Ruff version.
-    rev: 'v0.0.267'
+    rev: 'v0.0.272'
     hooks:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix ]
