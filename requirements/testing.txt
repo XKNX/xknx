@@ -1,5 +1,5 @@
 -r production.txt
-pre-commit==3.3.2
+pre-commit==3.3.3
 isort==5.12.0
 flake8==6.0.0
 pylint==2.17.4
