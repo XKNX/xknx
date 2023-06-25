@@ -13,7 +13,6 @@ from .remote_value_color_rgbw import RemoteValueColorRGBW
 from .remote_value_color_xyy import RemoteValueColorXYY
 from .remote_value_control import RemoteValueControl
 from .remote_value_datetime import RemoteValueDateTime
-from .remote_value_dpt_2_byte_unsigned import RemoteValueDpt2ByteUnsigned
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 from .remote_value_raw import RemoteValueRaw
 from .remote_value_scaling import RemoteValueScaling
@@ -41,7 +40,6 @@ __all__ = [
     "RemoteValueControl",
     "RemoteValueControllerMode",
     "RemoteValueDateTime",
-    "RemoteValueDpt2ByteUnsigned",
     "RemoteValueDptValue1Ucount",
     "RemoteValueNumeric",
     "RemoteValueOperationMode",

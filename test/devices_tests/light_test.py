@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from xknx import XKNX
 from xknx.devices import Light
+from xknx.devices.light import ColorTemperatureType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
@@ -1153,6 +1154,31 @@ class TestLight:
                     (
                         0x0F,
                         0xA0,
+                    )
+                )
+            ),
+        )
+
+    async def test_set_color_temp_float(self):
+        """Test setting the float color temperature value of a Light."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_color_temperature="1/2/5",
+            color_temperature_type=ColorTemperatureType.FLOAT_2_BYTE,
+        )
+        await light.set_color_temperature(4000)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(
+                DPTArray(
+                    (
+                        0x46,
+                        0x1A,
                     )
                 )
             ),
