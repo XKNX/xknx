@@ -37,10 +37,6 @@ await switch.set_on()
 # Switching switch off
 await switch.set_off()
 
-# Accessing switch via 'do'
-await switch.do('on')
-await switch.do('off')
-
 # Accessing state
 print(switch.state)
 

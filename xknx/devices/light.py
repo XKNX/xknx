@@ -26,7 +26,6 @@ from xknx.remote_value import (
     RemoteValueColorRGB,
     RemoteValueColorRGBW,
     RemoteValueColorXYY,
-    RemoteValueDpt2ByteUnsigned,
     RemoteValueNumeric,
     RemoteValueScaling,
     RemoteValueSwitch,
@@ -43,11 +42,11 @@ AsyncCallback = Callable[[], Awaitable[None]]
 logger = logging.getLogger("xknx.log")
 
 
-class ColorTempModes(Enum):
-    """Color temperature modes for config validation."""
+class ColorTemperatureType(Enum):
+    """DPT used for absolute color temperature."""
 
-    ABSOLUTE = "DPT-7.600"
-    RELATIVE = "DPT-5.001"
+    UINT_2_BYTE = "color_temperature"  # DPTColorTemperature 7.600
+    FLOAT_2_BYTE = "2byte_float"  # DPT2ByteFloat generic 9
 
 
 class _SwitchAndBrightness:
@@ -159,6 +158,7 @@ class Light(Device):
         group_address_switch_white_state: GroupAddressesType | None = None,
         group_address_brightness_white: GroupAddressesType | None = None,
         group_address_brightness_white_state: GroupAddressesType | None = None,
+        color_temperature_type: ColorTemperatureType = ColorTemperatureType.UINT_2_BYTE,
         sync_state: bool | int | float | str = True,
         min_kelvin: int | None = None,
         max_kelvin: int | None = None,
@@ -251,11 +251,12 @@ class Light(Device):
             range_to=255,
         )
 
-        self.color_temperature = RemoteValueDpt2ByteUnsigned(
+        self.color_temperature = RemoteValueNumeric(
             xknx,
             group_address_color_temperature,
             group_address_color_temperature_state,
             sync_state=sync_state,
+            value_type=color_temperature_type.value,
             device_name=self.name,
             feature_name="Color temperature",
             after_update_cb=self.after_update,
@@ -583,7 +584,7 @@ class Light(Device):
         await self.tunable_white.set(tunable_white)
 
     @property
-    def current_color_temperature(self) -> int | None:
+    def current_color_temperature(self) -> int | float | None:
         """Return current absolute color temperature of light."""
         return self.color_temperature.value
 
