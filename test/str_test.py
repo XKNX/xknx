@@ -386,7 +386,7 @@ class TestStringRepresentations:
         date_time = DateTime(xknx, name="Zeit", group_address="1/2/3", localtime=False)
         assert (
             str(date_time)
-            == '<DateTime name="Zeit" _remote_value=<1/2/3, None, [], None /> broadcast_type="TIME" />'
+            == '<DateTime name="Zeit" remote_value=<1/2/3, None, [], None /> broadcast_type="TIME" />'
         )
 
     def test_could_not_parse_telegramn_exception(self):
