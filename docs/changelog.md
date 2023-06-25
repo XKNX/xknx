@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- Add group_address_state, respond_to_read and sync_state arguments to DateTime devices.
+
 ### Internals
 
 - Remove pydocstyle and flake8 plugins, add pytest-icdiff to testing requirements.
