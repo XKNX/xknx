@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import DateTime
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
-from xknx.telegram.apci import GroupValueRead, GroupValueResponse
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestDateTime:
@@ -16,6 +16,26 @@ class TestDateTime:
     def teardown_method(self):
         """Cancel broadcast_task."""
         self.datetime.__del__()
+
+    #
+    # SET Time
+    #
+    async def test_process_set_custom_time(self):
+        """Test setting a new time."""
+        xknx = XKNX()
+        self.datetime = DateTime(
+            xknx,
+            "TestDateTime",
+            group_address="1/2/3",
+            broadcast_type="TIME",
+            localtime=False,
+        )
+        await self.datetime.set(time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0]))
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0xE9, 0xD, 0xE))),
+        )
 
     #
     # SYNC DateTime
@@ -68,13 +88,15 @@ class TestDateTime:
     #
     # SYNC Time
     #
-    async def test_sync_time(self):
+    async def test_sync_time_local(self):
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         self.datetime = DateTime(
-            xknx, "TestDateTime", group_address="1/2/3", broadcast_type="TIME"
+            xknx,
+            "TestDateTime",
+            group_address="1/2/3",
+            broadcast_type="TIME",
         )
-
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
             await self.datetime.sync()
@@ -84,13 +106,31 @@ class TestDateTime:
         assert len(telegram.payload.value.value) == 3
         assert telegram.payload.value.value == (0xE9, 0x0D, 0x0E)
 
+    async def test_sync_time_custom(self):
+        """Test sync function / sending group reads to KNX bus."""
+        xknx = XKNX()
+        self.datetime = DateTime(
+            xknx,
+            "TestDateTime",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            broadcast_type="TIME",
+            localtime=False,
+        )
+        assert self.datetime.has_group_address(GroupAddress("1/2/4"))
+        await self.datetime.sync()
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram.destination_address == GroupAddress("1/2/4")
+        assert isinstance(telegram.payload, GroupValueRead)
+
     #
     # PROCESS
     #
     #
     # TEST PROCESS
     #
-    async def test_process_read(self):
+    async def test_process_read_localtime(self):
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
         self.datetime = DateTime(
@@ -110,14 +150,58 @@ class TestDateTime:
             payload=GroupValueResponse(DPTArray((0xE9, 0xD, 0xE))),
         )
 
+    async def test_process_read_custom_time(self):
+        """Test test process a read telegram from KNX bus."""
+        xknx = XKNX()
+        self.datetime = DateTime(
+            xknx,
+            "TestDateTime",
+            group_address="1/2/3",
+            broadcast_type="TIME",
+            localtime=False,
+            respond_to_read=True,
+        )
+
+        self.datetime.remote_value.value = time.struct_time(
+            [2017, 1, 7, 9, 13, 14, 6, 0, 0]
+        )
+        telegram_read = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
+        )
+        await self.datetime.process(telegram_read)
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTArray((0xE9, 0xD, 0xE))),
+        )
+
     #
     # TEST HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    async def test_has_group_address_localtime(self):
         """Test if has_group_address function works."""
         xknx = XKNX()
         self.datetime = DateTime(
-            xknx, "TestDateTime", group_address="1/2/3", localtime=False
+            xknx,
+            "TestDateTime",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            localtime=True,
         )
         assert self.datetime.has_group_address(GroupAddress("1/2/3"))
+        # group_address_state ignored when using localtime
         assert not self.datetime.has_group_address(GroupAddress("1/2/4"))
+
+    async def test_has_group_address_custom_time(self):
+        """Test if has_group_address function works."""
+        xknx = XKNX()
+        self.datetime = DateTime(
+            xknx,
+            "TestDateTime",
+            group_address="1/2/3",
+            group_address_state="1/2/4",
+            localtime=False,
+        )
+        assert self.datetime.has_group_address(GroupAddress("1/2/3"))
+        assert self.datetime.has_group_address(GroupAddress("1/2/4"))
