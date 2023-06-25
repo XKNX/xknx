@@ -12,6 +12,7 @@ from .payload import DPTArray, DPTBinary
 HVACModeT = TypeVar("HVACModeT", "HVACControllerMode", "HVACOperationMode")
 
 
+# ruff: noqa: RUF012  # Mutable class attributes should be annotated with `typing.ClassVar`
 class HVACOperationMode(Enum):
     """Enum for the different KNX HVAC operation modes."""
 
