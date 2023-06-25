@@ -95,13 +95,6 @@ await set_tunable_white(25)
 # Set absolute color temperature (Kelvin)
 await set_color_temperature(3300)
 
-# Accessing light via 'do'
-await light.do('on')
-await light.do('off')
-await light.do('brightness:80')
-await light.do('tunable_white:75')
-await light.do('color_temperature:5000')
-
 # Update current state via KNX GroupValueRead
 await light.sync(wait_for_result=True)
 
@@ -151,12 +144,6 @@ await light.set_color((20, 70,200))
 
 # Set rgbw color
 await light.set_color((20,70,200), 30)
-
-
-# Accessing light via 'do'
-await light.do('on')
-await light.do('off')
-await light.do('brightness:80')
 
 # Accessing state
 print(light.state)

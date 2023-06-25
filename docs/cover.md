@@ -89,12 +89,6 @@ is_opening = cover.is_opening()
 is_closing = cover.is_closing()
 is_locked = cover.is_locked()
 
-# Accessing cover via 'do'
-await cover.do('up')
-await cover.do('short_up')
-await cover.do('down')
-await cover.do('short_down')
-
 # Requesting state via KNX GroupValueRead
 await cover.sync()
 ```
