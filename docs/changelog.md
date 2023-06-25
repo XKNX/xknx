@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.11.0 DateTime state 2023-06-25
 
 ### Devices
 
