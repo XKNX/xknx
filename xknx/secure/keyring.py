@@ -476,7 +476,7 @@ def sync_load_keyring(
 class KeyringSAXContentHandler(ContentHandler):
     """SAX parser for keyring signature verification."""
 
-    _attribute_blacklist = ["xmlns", "Signature"]
+    _attribute_blacklist = ("xmlns", "Signature")
 
     def __init__(self, keyring_password: str):
         """Initialize."""
