@@ -11,6 +11,7 @@ nav_order: 2
 ### Devices
 
 - Add group_address_state, respond_to_read and sync_state arguments to DateTime devices.
+- Add DPT 9 support for Light color temperature.
 
 ### Internals
 
