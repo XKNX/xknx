@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# 2.11.1 DateTime fix 2023-06-26
+
+### Bugfixes
+
+- Fix processing custom time data in DateTime devices.
+
 # 2.11.0 DateTime state 2023-06-25
 
 ### Devices
