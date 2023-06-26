@@ -30,12 +30,17 @@ class TestDateTime:
             broadcast_type="TIME",
             localtime=False,
         )
-        await self.datetime.set(time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0]))
+        assert self.datetime.remote_value.value is None
+
+        test_time = time.strptime("9:13:14", "%H:%M:%S")
+        await self.datetime.set(test_time)
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray((0xE9, 0xD, 0xE))),
+            payload=GroupValueWrite(DPTArray((0x9, 0xD, 0xE))),
         )
+        await self.datetime.process(telegram)
+        assert self.datetime.remote_value.value == test_time
 
     #
     # SYNC DateTime
