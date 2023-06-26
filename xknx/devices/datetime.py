@@ -96,6 +96,10 @@ class DateTime(Device):
         """Set time and send to KNX bus."""
         await self.remote_value.set(struct_time)
 
+    async def process_group_write(self, telegram: Telegram) -> None:
+        """Process incoming and outgoing GROUP WRITE telegram."""
+        await self.remote_value.process(telegram)
+
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""
         if self.localtime:
