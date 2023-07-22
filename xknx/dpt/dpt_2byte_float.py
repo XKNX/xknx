@@ -50,19 +50,27 @@ class DPT2ByteFloat(DPTNumeric):
     def to_knx(cls, value: float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = float(value)
-            if not cls._test_boundaries(knx_value):
+            value = float(value)
+            if not cls._test_boundaries(value):
                 raise ValueError
 
-            value = knx_value * 100
-            exponent = 0
-            while not -2048 <= value <= 2047:
-                exponent += 1
-                value /= 2
+            knx_value = value * 100
+            if round(knx_value) == 0:
+                # ETS converts values near 0 like this
+                # -0.0051 -> 0x87FF
+                # -0.005 -> 0x8000  ... we don't want this since its equivalent to -20.48
+                # 0.005 -> 0x0000
+                # 0.0051 -> 0x0001
+                return DPTArray((0x00, 0x00))
 
-            mantisse = int(round(value)) & 0x7FF
+            exponent = 0
+            while not -2048 <= knx_value <= 2047:
+                exponent += 1
+                knx_value /= 2
+
+            mantisse = int(round(knx_value)) & 0x7FF
             msb = exponent << 3 | mantisse >> 8
-            if value < 0:
+            if knx_value < 0:
                 msb |= 0x80
 
             return DPTArray((msb, mantisse & 0xFF))
