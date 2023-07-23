@@ -46,6 +46,24 @@ class TestDPTFloat:
         assert DPT2ByteFloat.to_knx(0.00) == DPTArray((0x00, 0x00))
         assert DPT2ByteFloat.from_knx(DPTArray((0x00, 0x00))) == 0.00
 
+    def test_near_zero_value(self):
+        """Test parsing and streaming of DPT2ByteFloat near zero value."""
+        assert DPT2ByteFloat.to_knx(0.0002) == DPTArray((0x00, 0x00))
+        assert DPT2ByteFloat.to_knx(0.005) == DPTArray((0x00, 0x00))
+        assert DPT2ByteFloat.to_knx(0.00501) == DPTArray((0x00, 0x01))
+
+        assert DPT2ByteFloat.to_knx(-0.0) == DPTArray((0x00, 0x00))
+        # ETS would convert values < 0 and >= -0.005 to 0x8000
+        # which is equivalent to -20.48 so we handle this differently
+        assert DPT2ByteFloat.to_knx(-0.0002) == DPTArray((0x00, 0x00))
+        assert DPT2ByteFloat.to_knx(-0.005) == DPTArray((0x00, 0x00))
+        assert DPT2ByteFloat.to_knx(-0.00501) == DPTArray(
+            (0x87, 0xFF)
+        )  # this is ETS-conform again
+
+        assert DPT2ByteFloat.from_knx(DPTArray((0x00, 0x01))) == 0.01
+        assert DPT2ByteFloat.from_knx(DPTArray((0x87, 0xFF))) == -0.01
+
     def test_room_temperature(self):
         """Test parsing and streaming of DPT2ByteFloat 21.00. Room temperature."""
         assert DPT2ByteFloat.to_knx(21.00) == DPTArray((0x0C, 0x1A))

@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Bugfixes
+
+- Fix DPT 9 handling of values < `0` and >= `-0.005`. These are now rounded to `0` instead of being sent as `-20.48`.
+
 # 2.11.1 DateTime fix 2023-06-26
 
 ### Bugfixes
