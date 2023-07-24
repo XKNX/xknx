@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.11.2 DPT 9 small negative fix 2023-07-24
 
 ### Bugfixes
 
