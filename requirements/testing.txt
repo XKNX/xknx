@@ -7,7 +7,7 @@ pytest==7.4.0
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 pytest-icdiff==0.6
-ruff==0.0.280
+ruff==0.0.282
 setuptools==68.0.0
 tox==4.6.4
 mypy==1.4.1
