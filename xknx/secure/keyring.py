@@ -262,6 +262,7 @@ class Keyring(AttributeReader):
     interfaces: list[XMLInterface]
     group_addresses: list[XMLGroupAddress]
     devices: list[XMLDevice]
+    project_name: str
     created_by: str
     created: str
     signature: bytes
@@ -393,6 +394,7 @@ class Keyring(AttributeReader):
     def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
+        self.project_name = self.get_attribute_value(attributes.get("Project"))
         self.created_by = self.get_attribute_value(attributes.get("CreatedBy"))
         self.created = self.get_attribute_value(attributes.get("Created"))
         self.signature = base64.b64decode(
