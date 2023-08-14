@@ -213,3 +213,11 @@ class TestKeyRing:
             IndividualAddress("1.0.1"): 0,
             IndividualAddress("1.0.2"): 0,
         }
+
+    def test_keyring_metadata(self):
+        """Test keyring metadata parsing."""
+        keyring = sync_load_keyring(self.data_secure_ip, "test")
+        assert keyring.project_name == "DataSecure_only"
+        assert keyring.created_by == "ETS 5.7.7 (Build 1428)"
+        assert keyring.created == "2023-02-06T21:17:09"
+        assert keyring.xmlns == "http://knx.org/xml/keyring/1"
