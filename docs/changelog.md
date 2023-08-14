@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Secure
+
+- Parse `project_name` from an ETS Keyring.
+
 # 2.11.2 DPT 9 small negative fix 2023-07-24
 
 ### Bugfixes
