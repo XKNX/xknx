@@ -36,6 +36,8 @@ jobs:
           branch: update/pre-commit-hooks
           title: Update pre-commit hooks
           commit-message: "update pre-commit hooks"
+          labels: |
+            dependencies
           body: |
             Update versions of pre-commit hooks to latest version.
             Run tests locally to check for conflicts since PRs from GitHub Actions don't trigger workflows.
