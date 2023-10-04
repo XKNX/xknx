@@ -77,7 +77,7 @@ class TestRouting:
         )
         raw = bytes((0x06, 0x10, 0x05, 0x31, 0x00, 0x0A, 0x04, 0x00, 0x00, 0x05))
         routing.transport.data_received_callback(raw, ("192.168.1.2", 3671))
-        assert logging_mock.called_once_with(
+        logging_mock.assert_called_once_with(
             "RoutingLostMessage received from %s - %s lost messages.",
             "192.168.1.2",
             5,
