@@ -245,7 +245,7 @@ class TestBinarySensor:
         async_after_update_callback.assert_called_once_with(switch)
 
     async def test_process_group_value_response(self):
-        """Test precess of GroupValueResponse telegrams."""
+        """Test process of GroupValueResponse telegrams."""
         xknx = XKNX()
         switch = BinarySensor(
             xknx,

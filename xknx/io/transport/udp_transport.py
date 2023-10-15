@@ -133,7 +133,7 @@ class UDPTransport(KNXIPTransport):
         return sock
 
     async def connect(self) -> None:
-        """Connect UDP socket. Open UDP port and build mulitcast socket if necessary."""
+        """Connect UDP socket. Open UDP port and build multicast socket if necessary."""
         udp_transport_factory = UDPTransport.UDPTransportFactory(
             data_received_callback=self.data_received_callback,
         )
