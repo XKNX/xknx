@@ -84,7 +84,7 @@ For SECURE tunnels this setting selects an interface from a given keyfile.
 await xknx.start()
 ```
 
-`xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a mulitcast KNX/IP-Routing connection. `start()` will not take any parameters.
+`xknx.start()` will search for KNX/IP devices in the network and either build a KNX/IP-Tunnel or open a multicast KNX/IP-Routing connection. `start()` will not take any parameters.
 
 # [](#header-2)Stopping
 

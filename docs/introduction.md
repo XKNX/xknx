@@ -47,7 +47,7 @@ Initialization of XKNX object. Constructor may take several arguments like a ref
     await xknx.start()
 ```
 
-Asynchronous start of the XKNX object. `xknx.start()` will connect to a KNX/IP device and either build a tunnel or connect through Mulitcast UDP.
+Asynchronous start of the XKNX object. `xknx.start()` will connect to a KNX/IP device and either build a tunnel or connect through Multicast UDP.
 
 ```python
     await xknx.stop()
