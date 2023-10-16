@@ -10,4 +10,4 @@ pytest-icdiff==0.8
 ruff==0.0.292
 setuptools==68.2.2
 tox==4.11.3
-mypy==1.5.1
+mypy==1.6.0
