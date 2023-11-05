@@ -12,6 +12,10 @@ nav_order: 2
 
 - Parse `project_name` from an ETS Keyring.
 
+### Internal
+
+- Use ruff isort plugin, remove isort from requirements.
+
 # 2.11.2 DPT 9 small negative fix 2023-07-24
 
 ### Bugfixes
