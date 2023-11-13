@@ -495,7 +495,7 @@ class KeyringSAXContentHandler(ContentHandler):
         self.output.append(1)
         self.append_string(name)
 
-        for attr_name, attr_value in sorted(attrs.items()):  # type: ignore[no-untyped-call]
+        for attr_name, attr_value in sorted(attrs.items()):
             if attr_name not in self._attribute_blacklist:
                 self.append_string(attr_name)
                 self.append_string(attr_value)
@@ -524,7 +524,7 @@ def verify_keyring_signature(path: str | os.PathLike[Any], password: str) -> boo
 
     with open(path, encoding="utf-8") as file:
         parser = xml.sax.make_parser()
-        parser.setContentHandler(handler)  # type: ignore[no-untyped-call]
+        parser.setContentHandler(handler)
         parser.parse(file)  # type: ignore[no-untyped-call]
 
     return sha256_hash(handler.output)[:16] == signature
