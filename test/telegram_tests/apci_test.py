@@ -24,6 +24,10 @@ from xknx.telegram.apci import (
     IndividualAddressSerialResponse,
     IndividualAddressSerialWrite,
     IndividualAddressWrite,
+    MemoryExtendedRead,
+    MemoryExtendedReadResponse,
+    MemoryExtendedWrite,
+    MemoryExtendedWriteResponse,
     MemoryRead,
     MemoryResponse,
     MemoryWrite,
@@ -296,6 +300,241 @@ class TestADCResponse:
         payload = ADCResponse(channel=1, count=3, value=456)
 
         assert str(payload) == '<ADCResponse channel="1" count="3" value="456" />'
+
+
+class TestMemoryExtendedWrite:
+    """Test class for MemoryExtendedWrite objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = MemoryExtendedWrite(
+            address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+        assert payload.calculated_length() == 9
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = APCI.from_knx(
+            bytes([0x01, 0xFB, 0x03, 0x12, 0x34, 0x56, 0xAA, 0xBB, 0xCC])
+        )
+
+        assert payload == MemoryExtendedWrite(
+            address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = MemoryExtendedWrite(
+            address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        assert payload.to_knx() == bytes(
+            [0x01, 0xFB, 0x03, 0x12, 0x34, 0x56, 0xAA, 0xBB, 0xCC]
+        )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryExtendedWrite(
+            address=0xAABBCCDD, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+        payload = MemoryExtendedWrite(
+            address=0x123456, count=256, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Count.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = MemoryExtendedWrite(
+            address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        assert (
+            str(payload)
+            == '<MemoryExtendedWrite address="0x123456" count="3" data="aabbcc" />'
+        )
+
+
+class TestMemoryExtendedWriteResponse:
+    """Test class for MemoryExtendedWrite objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = MemoryExtendedWriteResponse(return_code=0, address=0x123456)
+        assert payload.calculated_length() == 6
+
+    def test_calculated_lengt_with_confirmation_data(self):
+        """Test the test_calculated_length method."""
+        payload = MemoryExtendedWriteResponse(
+            return_code=0, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
+        )
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes([0x01, 0xFC, 0x00, 0x12, 0x34, 0x56]))
+
+        assert payload == MemoryExtendedWriteResponse(
+            return_code=0, address=0x123456, confirmation_data=b""
+        )
+
+    def test_from_knx_with_confirmation_data(self):
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes([0x01, 0xFC, 0x01, 0x12, 0x34, 0x56, 0xAA, 0xBB]))
+
+        assert payload == MemoryExtendedWriteResponse(
+            return_code=1, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
+        )
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = MemoryExtendedWriteResponse(return_code=0, address=0x123456)
+
+        assert payload.to_knx() == bytes([0x01, 0xFC, 0x00, 0x12, 0x34, 0x56])
+
+    def test_to_knx_with_confirmation_data(self):
+        """Test the to_knx method."""
+        payload = MemoryExtendedWriteResponse(
+            return_code=1, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
+        )
+
+        assert payload.to_knx() == bytes(
+            [0x01, 0xFC, 0x01, 0x12, 0x34, 0x56, 0xAA, 0xBB]
+        )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryExtendedWriteResponse(return_code=0, address=0xAABBCCDD)
+
+        with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+        payload = MemoryExtendedWriteResponse(return_code=0x100, address=0x123456)
+
+        with pytest.raises(ConversionError, match=r".*Return code.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = MemoryExtendedWriteResponse(return_code=0, address=0x123456)
+
+        assert (
+            str(payload)
+            == '<MemoryExtendedWriteResponse return_code="0" address="0x123456" confirmation_data="" />'
+        )
+
+    def test_str_with_confirmation_data(self):
+        """Test the __str__ method."""
+        payload = MemoryExtendedWriteResponse(
+            return_code=1, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
+        )
+
+        assert (
+            str(payload)
+            == '<MemoryExtendedWriteResponse return_code="1" address="0x123456" confirmation_data="aabb" />'
+        )
+
+
+class TestMemoryExtendedRead:
+    """Test class for MemoryExtendedRead objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = MemoryExtendedRead(address=0x123456, count=3)
+        assert payload.calculated_length() == 6
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes([0x01, 0xFD, 0x03, 0x12, 0x34, 0x56]))
+
+        assert payload == MemoryExtendedRead(address=0x123456, count=3)
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = MemoryExtendedRead(address=0x123456, count=3)
+
+        assert payload.to_knx() == bytes([0x01, 0xFD, 0x03, 0x12, 0x34, 0x56])
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryExtendedRead(address=0xAABBCCDD, count=3)
+
+        with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+        payload = MemoryExtendedRead(address=0x123456, count=256)
+
+        with pytest.raises(ConversionError, match=r".*Count.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = MemoryExtendedRead(address=0x123456, count=3)
+
+        assert str(payload) == '<MemoryExtendedRead count="3" address="0x123456" />'
+
+
+class TestMemoryExtendedReadResponse:
+    """Test class for MemoryExtendedReadResponse objects."""
+
+    def test_calculated_length(self):
+        """Test the test_calculated_length method."""
+        payload = MemoryExtendedReadResponse(
+            return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+        assert payload.calculated_length() == 9
+
+    def test_from_knx(self):
+        """Test the from_knx method."""
+        payload = APCI.from_knx(
+            bytes([0x01, 0xFE, 0x00, 0x12, 0x34, 0x56, 0xAA, 0xBB, 0xCC])
+        )
+
+        assert payload == MemoryExtendedReadResponse(
+            return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+    def test_to_knx(self):
+        """Test the to_knx method."""
+        payload = MemoryExtendedReadResponse(
+            return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        assert payload.to_knx() == bytes(
+            [0x01, 0xFE, 0x00, 0x12, 0x34, 0x56, 0xAA, 0xBB, 0xCC]
+        )
+
+    def test_to_knx_conversion_error(self):
+        """Test the to_knx method for conversion errors."""
+        payload = MemoryExtendedReadResponse(
+            return_code=0, address=0xAABBCCDD, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+        payload = MemoryExtendedReadResponse(
+            return_code=0x100, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Return code.*"):
+            payload.to_knx()
+
+    def test_str(self):
+        """Test the __str__ method."""
+        payload = MemoryExtendedReadResponse(
+            return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
+        )
+
+        assert (
+            str(payload)
+            == '<MemoryExtendedReadResponse return_code="0" address="0x123456" data="aabbcc" />'
+        )
 
 
 class TestMemoryRead:
