@@ -524,12 +524,12 @@ class MemoryExtendedWrite(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 6 + len(self.data)
+        return 5 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        size = len(raw) - 6
+        size = len(raw) - 5
 
         # inject [0x00] before 3 bytes address to enable unsigned int unpack
         count, address, data = struct.unpack(
@@ -579,7 +579,7 @@ class MemoryExtendedWriteResponse(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 6 + len(self.confirmation_data)
+        return 5 + len(self.confirmation_data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWriteResponse:
@@ -633,7 +633,7 @@ class MemoryExtendedRead(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 6
+        return 5
 
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedRead:
@@ -682,7 +682,7 @@ class MemoryExtendedReadResponse(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 6 + len(self.data)
+        return 5 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedReadResponse:

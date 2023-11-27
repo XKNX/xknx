@@ -310,7 +310,7 @@ class TestMemoryExtendedWrite:
         payload = MemoryExtendedWrite(
             address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
-        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == 8
 
     def test_from_knx(self):
         """Test the from_knx method."""
@@ -366,14 +366,14 @@ class TestMemoryExtendedWriteResponse:
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
         payload = MemoryExtendedWriteResponse(return_code=0, address=0x123456)
-        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == 5
 
     def test_calculated_lengt_with_confirmation_data(self):
         """Test the test_calculated_length method."""
         payload = MemoryExtendedWriteResponse(
             return_code=0, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
         )
-        assert payload.calculated_length() == 8
+        assert payload.calculated_length() == 7
 
     def test_from_knx(self):
         """Test the from_knx method."""
@@ -446,7 +446,7 @@ class TestMemoryExtendedRead:
     def test_calculated_length(self):
         """Test the test_calculated_length method."""
         payload = MemoryExtendedRead(address=0x123456, count=3)
-        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == 5
 
     def test_from_knx(self):
         """Test the from_knx method."""
@@ -487,7 +487,7 @@ class TestMemoryExtendedReadResponse:
         payload = MemoryExtendedReadResponse(
             return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
         )
-        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == 8
 
     def test_from_knx(self):
         """Test the from_knx method."""
