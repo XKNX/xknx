@@ -529,7 +529,7 @@ class MemoryExtendedWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        size = len(raw) - 5
+        size = len(raw) - 6
 
         # inject [0x00] before 3 bytes address to enable unsigned int unpack
         count, address, data = struct.unpack(
