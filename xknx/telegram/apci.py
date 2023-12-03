@@ -529,8 +529,6 @@ class MemoryExtendedWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        size = len(raw) - 6
-
         count = raw[2]
         address = int.from_bytes(raw[3:6], "big")
         data = raw[6:]
@@ -584,8 +582,6 @@ class MemoryExtendedWriteResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWriteResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        size = len(raw) - 6
-
         return_code = raw[2]
         address = int.from_bytes(raw[3:6], "big")
         confirmation_data = raw[6:]
@@ -688,8 +684,6 @@ class MemoryExtendedReadResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedReadResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        size = len(raw) - 6
-
         return_code = raw[2]
         address = int.from_bytes(raw[3:6], "big")
         data = raw[6:]
