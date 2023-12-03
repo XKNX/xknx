@@ -638,8 +638,9 @@ class MemoryExtendedRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedRead:
         """Parse/deserialize from KNX/IP raw data."""
-        # inject [0x00] before 3 bytes address to enable unsigned int unpack
-        count, address = struct.unpack("!BI", bytes([raw[2], 0x00]) + raw[3:])
+        count = raw[2]
+        address = int.from_bytes(raw[3:6], "big")
+
         return cls(
             count=count,
             address=address,
@@ -689,10 +690,10 @@ class MemoryExtendedReadResponse(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         size = len(raw) - 6
 
-        # inject [0x00] before 3 bytes address to enable unsigned int unpack
-        return_code, address, data = struct.unpack(
-            f"!BI{size}s", bytes([raw[2], 0x00]) + raw[3:]
-        )
+        return_code = raw[2]
+        address = int.from_bytes(raw[3:6], "big")
+        data = raw[6:]
+
         return cls(
             return_code=return_code,
             address=address,
