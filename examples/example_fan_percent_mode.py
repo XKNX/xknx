@@ -3,6 +3,7 @@ import asyncio
 from xknx import XKNX
 from xknx.devices import Fan
 
+
 async def main():
     """Connect to KNX/IP bus, control a fan, and turn it off afterwards."""
     xknx = XKNX()
@@ -11,9 +12,9 @@ async def main():
     fan = Fan(
         xknx,
         name="TestFan",
-        group_address_switch="1/0/12",  
-        group_address_speed="1/0/14",   
-        max_step=3,                    
+        group_address_switch="1/0/12",
+        group_address_speed="1/0/14",
+        max_step=3,
     )
 
     # Turn on the fan
@@ -29,5 +30,5 @@ async def main():
 
     await xknx.stop()
 
-asyncio.run(main())
 
+asyncio.run(main())

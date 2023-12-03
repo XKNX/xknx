@@ -30,4 +30,5 @@ async def main():
 
     await xknx.stop()
 
+
 asyncio.run(main())
