@@ -50,6 +50,11 @@ class APCIService(Enum):
     ADC_READ = 0x0180
     ADC_RESPONSE = 0x1C0
 
+    MEMORY_EXTENDED_WRITE = 0x1FB
+    MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
+    MEMORY_EXTENDED_READ = 0x1FD
+    MEMORY_EXTENDED_READ_RESPONSE = 0x1FE
+
     MEMORY_READ = 0x0200
     MEMORY_RESPONSE = 0x0240
     MEMORY_WRITE = 0x0280
@@ -158,6 +163,14 @@ class APCI(ABC):
         if service == APCIService.ADC_READ.value:
             return ADCRead.from_knx(raw)
         if service == APCIService.ADC_RESPONSE.value:
+            if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
+                return MemoryExtendedWrite.from_knx(raw)
+            if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
+                return MemoryExtendedWriteResponse.from_knx(raw)
+            if apci == APCIService.MEMORY_EXTENDED_READ.value:
+                return MemoryExtendedRead.from_knx(raw)
+            if apci == APCIService.MEMORY_EXTENDED_READ_RESPONSE.value:
+                return MemoryExtendedReadResponse.from_knx(raw)
             return ADCResponse.from_knx(raw)
         if service == APCIService.MEMORY_READ.value:
             return MemoryRead.from_knx(raw)
@@ -490,6 +503,215 @@ class ADCResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<ADCResponse channel="{self.channel}" count="{self.count}" value="{self.value}" />'
+
+
+class MemoryExtendedWrite(APCI):
+    """
+    MemoryExtendedWrite service.
+
+    Payload indicates address (16 MiB), count (1-255 bytes) and data.
+    """
+
+    CODE = APCIService.MEMORY_EXTENDED_WRITE
+
+    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
+        """Initialize a new instance of MemoryExtendedWrite."""
+        if count is None:
+            count = len(data)
+        self.address = address
+        self.count = count
+        self.data = data
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryExtendedWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        count = raw[2]
+        address = int.from_bytes(raw[3:6], "big")
+        data = raw[6:]
+
+        return cls(
+            count=count,
+            address=address,
+            data=data,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.address <= 0xFFFFFF:
+            raise ConversionError("Address out of range.")
+        if not 0 <= self.count <= 250:
+            raise ConversionError("Count out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(f"!BI{size}s", self.count, self.address, self.data)
+        # suppress first byte of address
+        payload = payload[:1] + payload[2:]
+
+        return encode_cmd_and_payload(self.CODE, 0, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<MemoryExtendedWrite address="{hex(self.address)}" count="{self.count}" data="{self.data.hex()}" />'
+
+
+class MemoryExtendedWriteResponse(APCI):
+    """
+    MemoryExtendedWriteResponse service.
+
+    Payload indicates return code, address (16 MiB) and confirmation data.
+    """
+
+    CODE = APCIService.MEMORY_EXTENDED_WRITE_RESPONSE
+
+    def __init__(
+        self, return_code: int, address: int, confirmation_data: bytes = b""
+    ) -> None:
+        """Initialize a new instance of MemoryExtendedWriteResponse."""
+        self.return_code = return_code
+        self.address = address
+        self.confirmation_data = confirmation_data
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.confirmation_data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryExtendedWriteResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        return_code = raw[2]
+        address = int.from_bytes(raw[3:6], "big")
+        confirmation_data = raw[6:]
+
+        return cls(
+            return_code=return_code,
+            address=address,
+            confirmation_data=confirmation_data,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.address <= 0xFFFFFF:
+            raise ConversionError("Address out of range.")
+        if not 0 <= self.return_code <= 255:
+            raise ConversionError("Return code out of range.")
+
+        size = len(self.confirmation_data)
+        payload = struct.pack(
+            f"!BI{size}s", self.return_code, self.address, self.confirmation_data
+        )
+        # suppress first byte of address
+        payload = payload[:1] + payload[2:]
+
+        return encode_cmd_and_payload(self.CODE, 0, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<MemoryExtendedWriteResponse return_code="{self.return_code}" address="{hex(self.address)}" confirmation_data="{self.confirmation_data.hex()}" />'
+
+
+class MemoryExtendedRead(APCI):
+    """
+    MemoryExtendedRead service.
+
+    Payload indicates count and address (16 MiB).
+    """
+
+    CODE = APCIService.MEMORY_EXTENDED_READ
+
+    def __init__(self, count: int, address: int) -> None:
+        """Initialize a new instance of MemoryExtendedRead."""
+        self.count = count
+        self.address = address
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryExtendedRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        count = raw[2]
+        address = int.from_bytes(raw[3:6], "big")
+
+        return cls(
+            count=count,
+            address=address,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.address <= 0xFFFFFF:
+            raise ConversionError("Address out of range.")
+        if not 0 <= self.count <= 250:
+            raise ConversionError("Count out of range.")
+
+        payload = struct.pack("!BI", self.count, self.address)
+        # suppress first byte of address
+        payload = payload[:1] + payload[2:]
+
+        return encode_cmd_and_payload(self.CODE, 0, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<MemoryExtendedRead count="{self.count}" address="{hex(self.address)}" />'
+        )
+
+
+class MemoryExtendedReadResponse(APCI):
+    """
+    MemoryExtendedReadResponse service.
+
+    Payload indicates return code, address (16 MiB) and data.
+    """
+
+    CODE = APCIService.MEMORY_EXTENDED_READ_RESPONSE
+
+    def __init__(self, return_code: int, address: int, data: bytes = b"") -> None:
+        """Initialize a new instance of MemoryExtendedReadResponse."""
+        self.return_code = return_code
+        self.address = address
+        self.data = data
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryExtendedReadResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        return_code = raw[2]
+        address = int.from_bytes(raw[3:6], "big")
+        data = raw[6:]
+
+        return cls(
+            return_code=return_code,
+            address=address,
+            data=data,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.address <= 0xFFFFFF:
+            raise ConversionError("Address out of range.")
+
+        if not 0 <= self.return_code <= 255:
+            raise ConversionError("Return code out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(f"!BI{size}s", self.return_code, self.address, self.data)
+        # suppress first byte of address
+        payload = payload[:1] + payload[2:]
+
+        return encode_cmd_and_payload(self.CODE, 0, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<MemoryExtendedReadResponse return_code="{self.return_code}" address="{hex(self.address)}" data="{self.data.hex()}" />'
 
 
 class MemoryRead(APCI):
