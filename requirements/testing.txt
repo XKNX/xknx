@@ -5,7 +5,7 @@ pylint==3.0.2
 pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
-pytest-icdiff==0.8
+pytest-icdiff==0.9
 ruff==0.1.6
 setuptools==69.0.2
 tox==4.11.4
