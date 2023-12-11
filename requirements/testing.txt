@@ -1,5 +1,5 @@
 -r production.txt
-pre-commit==3.5.0
+pre-commit==3.6.0
 flake8==6.1.0
 pylint==3.0.2
 pytest==7.4.3
