@@ -6,7 +6,7 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 pytest-icdiff==0.9
-ruff==0.1.7
+ruff==0.1.8
 setuptools==69.0.2
 tox==4.11.4
 tox-gh-actions==3.1.3
