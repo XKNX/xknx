@@ -41,7 +41,7 @@ class Management:
         """Initialize Management class."""
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
-        self._rx_broadcast: list[Telegram] = []
+        self._rx_broadcast_cb: list[Callable[[Telegram], None]] = []
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
@@ -74,7 +74,8 @@ class Management:
             )
             return
         if isinstance(telegram.tpci, TDataBroadcast):
-            self._rx_broadcast.append(telegram)
+            for callback in self._rx_broadcast_cb:
+                callback(telegram)
             return
         logger.debug("Unhandled management telegram: %r", telegram)
         return
@@ -127,17 +128,25 @@ class Management:
         finally:
             await self.disconnect(address)
 
+    def register_rx_broadcast_cb(self, callback: Callable[[Telegram], None]) -> None:
+        """
+        Add broadcast message handler/callback.
+
+        :param callback should be a function that takes one argument: the received telegram.
+        """
+        if callback not in self._rx_broadcast_cb:
+            self._rx_broadcast_cb.append(callback)
+
+    def remove_rx_broadcast_cb(self, callback: Callable[[Telegram], None]) -> None:
+        """Remove broadcast message handler."""
+        if callback in self._rx_broadcast_cb:
+            self._rx_broadcast_cb.remove(callback)
+
     async def send_broadcast(self, telegram: Telegram) -> None:
         """Send a broadcast message."""
 
-        # TODO: check if the message is really a broadcast messages
-        await self.xknx.cemi_handler.send_telegram(telegram)
-
-    def collect_broadcast_messages(self) -> list[Telegram]:
-        """Return the received broadcast message buffer and clears it."""
-        rx_messages = list(self._rx_broadcast)
-        self._rx_broadcast = []
-        return rx_messages
+        if isinstance(telegram.tpci, TDataBroadcast):
+            await self.xknx.cemi_handler.send_telegram(telegram)
 
 
 class P2PConnection:
