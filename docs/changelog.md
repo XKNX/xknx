@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- Add new management routines for device management: `nm_invididual_address_write` and `nm_individual_address_read`.
+- Add handling mechanism for broadcast telegrams in the management class.
+
 ### Secure
 
 - Parse `project_name` from an ETS Keyring.
