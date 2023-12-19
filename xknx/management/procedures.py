@@ -139,7 +139,7 @@ async def nm_invididual_address_write(
                 f"A device was found with {individual_address}, cannot continue with programming."
             )
         # device in programming mode's address matches address that we want to write, so we can abort the operation safely
-        logger.debug("Device already has requested address, aborting write operation.")
+        logger.debug("Device already has requested address, no write operation needed.")
     else:
         await xknx.management.send_broadcast(
             Telegram(
@@ -149,29 +149,37 @@ async def nm_invididual_address_write(
         )
         logger.debug("Wrote new address %s to device.", individual_address)
 
-    # this step is not required by the KNX spec, but is executed by ETS
-    dev_pgm_mode = await nm_individual_address_read(xknx)
-    if dev_pgm_mode[0] != individual_address:
+    async with xknx.management.connection(
+        address=IndividualAddress(individual_address)
+    ) as connection:
         logger.debug(
-            "Address of device is programming mode does not match newly writing address."
-        )
-        raise ManagementConnectionWriteAddressError(
-            f"Failed to write new individual address ({individual_address}) to the device."
+            "Checking if device exists at %s and restarting it.", individual_address
         )
 
-    # check if the address exists now
-    address_found = await nm_individual_address_check(
-        xknx, individual_address=individual_address
-    )
+        try:
+            response = await connection.request(
+                payload=apci.DeviceDescriptorRead(descriptor=0),
+                expected=apci.DeviceDescriptorResponse,
+            )
+        except ManagementConnectionTimeout as ex:
+            # if nothing is received (-> timeout) IA is free
+            logger.debug("No device answered to connection attempt. %s", ex)
+            response = None
+        if response and isinstance(response.payload, apci.DeviceDescriptorResponse):
+            # if response is received IA is occupied
+            logger.debug("Device found at %s", individual_address)
+        else:
+            raise ManagementConnectionWriteAddressError(
+                f"Failed to detect individual address ({individual_address}) after write address operation."
+            )
 
-    if not address_found:
-        logger.debug(
-            "Address of device is programming mode does not match newly writing address."
+        logger.debug("Restating device, exiting programming mode.")
+        # A_Restart will not be ACKed by the device, so it is manually sent to avoid timeout and retry
+        seq_num = next(connection.sequence_number)
+        telegram = Telegram(
+            destination_address=connection.address,
+            source_address=xknx.current_address,
+            payload=apci.Restart(),
+            tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
-        raise ManagementConnectionWriteAddressError(
-            f"Failed to detect individual address ({individual_address}) after write address operation."
-        )
-
-    # restart the device (ends programming mode)
-    logger.debug("Restating device, exiting programming mode.")
-    await dm_restart(xknx, individual_address=individual_address)
+        await xknx.cemi_handler.send_telegram(telegram)
