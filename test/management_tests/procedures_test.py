@@ -4,7 +4,14 @@ from unittest.mock import AsyncMock, call
 
 from xknx import XKNX
 from xknx.management import procedures
-from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+from xknx.telegram import (
+    GroupAddress,
+    IndividualAddress,
+    Telegram,
+    TelegramDirection,
+    apci,
+    tpci,
+)
 
 
 async def test_dm_restart():
@@ -104,4 +111,41 @@ async def test_nm_individual_address_check_refused():
     ]
     xknx.management.process(disconnect)
     xknx.management.process(ack)
+    assert await task
+
+
+async def test_nm_individual_address_read():
+    """Test nm_individual_address_read."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address_1 = IndividualAddress("1.1.4")
+    individual_address_2 = IndividualAddress("15.15.255")
+
+    task = asyncio.create_task(
+        procedures.nm_individual_address_read(xknx=xknx, timeout=0.01)
+    )
+    address_broadcast = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+
+    address_reply_message_1 = Telegram(
+        source_address=individual_address_1,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.OUTGOING,
+        payload=apci.IndividualAddressResponse(),
+    )
+
+    address_reply_message_2 = Telegram(
+        source_address=individual_address_2,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.OUTGOING,
+        payload=apci.IndividualAddressResponse(),
+    )
+
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(address_broadcast),
+    ]
+    xknx.management.process(address_reply_message_1)
+    xknx.management.process(address_reply_message_2)
     assert await task
