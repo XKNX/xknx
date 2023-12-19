@@ -16,7 +16,14 @@ from xknx.exceptions import (
 )
 from xknx.telegram import IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
-from xknx.telegram.tpci import TAck, TConnect, TDataConnected, TDisconnect, TNak
+from xknx.telegram.tpci import (
+    TAck,
+    TConnect,
+    TDataBroadcast,
+    TDataConnected,
+    TDisconnect,
+    TNak,
+)
 from xknx.util import asyncio_timeout
 
 if TYPE_CHECKING:
@@ -34,6 +41,7 @@ class Management:
         """Initialize Management class."""
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
+        self._rx_broadcast: list[Telegram] = []
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
@@ -64,6 +72,9 @@ class Management:
             self.xknx.task_registry.background(
                 self.xknx.cemi_handler.send_telegram(disconnect)
             )
+            return
+        if isinstance(telegram.tpci, TDataBroadcast):
+            self._rx_broadcast.append(telegram)
             return
         logger.debug("Unhandled management telegram: %r", telegram)
         return
@@ -115,6 +126,18 @@ class Management:
             yield conn
         finally:
             await self.disconnect(address)
+
+    async def send_broadcast(self, telegram: Telegram) -> None:
+        """Send a broadcast message."""
+
+        # TODO: check if the message is really a broadcast messages
+        await self.xknx.cemi_handler.send_telegram(telegram)
+
+    def collect_broadcast_messages(self) -> list[Telegram]:
+        """Return the received broadcast message buffer and clears it."""
+        rx_messages = list(self._rx_broadcast)
+        self._rx_broadcast = []
+        return rx_messages
 
 
 class P2PConnection:

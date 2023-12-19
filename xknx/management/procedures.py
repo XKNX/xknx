@@ -1,12 +1,21 @@
 """Package for management procedures as described in KNX-Standard 3.5.2."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from xknx.exceptions import ManagementConnectionRefused, ManagementConnectionTimeout
+from xknx.exceptions import (
+    ManagementConnectionRefused,
+    ManagementConnectionTimeout,
+    ManagementConnectionWriteAddressError,
+)
 from xknx.telegram import Telegram, apci, tpci
-from xknx.telegram.address import IndividualAddress, IndividualAddressableType
+from xknx.telegram.address import (
+    GroupAddress,
+    IndividualAddress,
+    IndividualAddressableType,
+)
 
 if TYPE_CHECKING:
     from xknx import XKNX
@@ -58,3 +67,111 @@ async def nm_individual_address_check(
         # if Disconnect is received immediately, IA is occupied
         logger.debug("Device does not support transport layer connections. %s", ex)
         return True
+
+
+async def nm_individual_address_read(
+    xknx: XKNX, timeout: int = 3
+) -> list[IndividualAddress]:
+    """
+    Request individual addresses of all devices that are in programming mode.
+
+    :param: timeout specifies the timeout in seconds, the KNX specification requires a timeout of 3s.
+    """
+
+    # clear broadcast buffer
+    xknx.management.collect_broadcast_messages()
+
+    # request address
+    await xknx.management.send_broadcast(
+        Telegram(GroupAddress("0/0/0"), payload=apci.IndividualAddressRead())
+    )
+    await asyncio.sleep(timeout)
+
+    # collect responses
+    telegrams = xknx.management.collect_broadcast_messages()
+    return [
+        i.source_address
+        for i in telegrams
+        if isinstance(i.payload, apci.IndividualAddressResponse)
+    ]
+
+
+async def nm_invididual_address_write(
+    xknx: XKNX, individual_address: IndividualAddressableType
+) -> None:
+    """
+    Write the individual address of a single device in programming mode.
+
+    TODO: detail exceptions if this failed.
+    """
+    logger.debug("Writing individual address %s to device.", individual_address)
+
+    # check if the address is already occupied on the network
+    individual_address = IndividualAddress(individual_address)
+    address_found = await nm_individual_address_check(xknx, individual_address)
+
+    if address_found:
+        logger.debug(
+            "Individual address %s already present on the bus", individual_address
+        )
+
+    # check which devices are in programming mode
+    dev_pgm_mode = await nm_individual_address_read(xknx)
+    if len(dev_pgm_mode) > 1:
+        logger.debug("More than one device in programming mode detected.")
+        raise ManagementConnectionWriteAddressError(
+            "More than one device is programming mode."
+        )
+    if len(dev_pgm_mode) == 0:
+        logger.debug("No device in programming mode detected.")
+        raise ManagementConnectionWriteAddressError(
+            "No device in programming mode detected."
+        )
+
+    # check if new and received addresses match
+    if address_found:
+        if individual_address != dev_pgm_mode[0]:
+            logger.debug(
+                "Device with address %s found and it is not in programming mode. Exiting to prevent address conflict.",
+                individual_address,
+            )
+            raise ManagementConnectionWriteAddressError(
+                f"A device was found with {individual_address}, cannot continue with programming."
+            )
+        # device in programming mode's address matches address that we want to write, so we can abort the operation safely
+        logger.debug("Device already has requested address, aborting write operation.")
+    else:
+        await xknx.management.send_broadcast(
+            Telegram(
+                GroupAddress("0/0/0"),
+                payload=apci.IndividualAddressWrite(address=individual_address),
+            )
+        )
+        logger.debug("Wrote new address %s to device.", individual_address)
+
+    # this step is not required by the KNX spec, but is executed by ETS
+    dev_pgm_mode = await nm_individual_address_read(xknx)
+    if dev_pgm_mode[0] != individual_address:
+        logger.debug(
+            "Address of device is programming mode does not match newly writing address."
+        )
+        raise ManagementConnectionWriteAddressError(
+            f"Failed to write new individual address ({individual_address}) to the device."
+        )
+
+    # check if the address exists now
+    address_found = await nm_individual_address_check(
+        xknx, individual_address=individual_address
+    )
+
+    if not address_found:
+        logger.debug(
+            "Address of device is programming mode does not match newly writing address."
+        )
+        raise ManagementConnectionWriteAddressError(
+            f"Failed to detect individual address ({individual_address}) after write address operation."
+        )
+
+    # restart the device (ends programming mode)
+    logger.debug("Restating device, exiting programming mode.")
+    await dm_restart(xknx, individual_address=individual_address)
