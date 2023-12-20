@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Generator
+from collections.abc import AsyncGenerator, AsyncIterator, Generator
 from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Callable
@@ -42,6 +42,7 @@ class Management:
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
         self._rx_broadcast_cb: list[Callable[[Telegram], None]] = []
+        self._broadcast_contexts: set[BroadcastContext] = set()
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
@@ -76,6 +77,8 @@ class Management:
         if isinstance(telegram.tpci, TDataBroadcast):
             for callback in self._rx_broadcast_cb:
                 callback(telegram)
+            for context in self._broadcast_contexts:
+                context.queue.put_nowait(telegram)
             return
         logger.debug("Unhandled management telegram: %r", telegram)
         return
@@ -147,6 +150,38 @@ class Management:
 
         if isinstance(telegram.tpci, TDataBroadcast):
             await self.xknx.cemi_handler.send_telegram(telegram)
+
+    @asynccontextmanager
+    async def broadcast(self) -> AsyncIterator[BroadcastContext]:
+        """Provide a broadcast context."""
+        context = BroadcastContext()
+        self._broadcast_contexts.add(context)
+        try:
+            yield context
+        finally:
+            self._broadcast_contexts.remove(context)
+
+
+class BroadcastContext:
+    """Class providing broadcast contexts."""
+
+    def __init__(self) -> None:
+        """Initialize BroadcastContext class."""
+        self.queue: asyncio.Queue[Telegram] = asyncio.Queue()
+
+    async def receive(
+        self, timeout: float | None = 3
+    ) -> AsyncGenerator[Telegram, None]:
+        """Receive telegrams from the broadcast context."""
+        try:
+            async with asyncio_timeout(timeout):
+                while True:
+                    try:
+                        yield await self.queue.get()
+                    except GeneratorExit:
+                        return
+        except asyncio.TimeoutError:
+            return
 
 
 class P2PConnection:
