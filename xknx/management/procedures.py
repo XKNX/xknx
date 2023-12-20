@@ -22,23 +22,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.management.procedures")
 
 
-class AsyncAddressResponseHandler:
-    """Class to handle responses to IndividualAddressRead broadcast telegrams."""
-
-    def __init__(self) -> None:
-        """Initialise AsyncAddressResponseHandler."""
-        self.queue: list[Telegram] = []
-
-    def process(self, telegram: Telegram) -> None:
-        """Handle incoming telegram."""
-        if isinstance(telegram.payload, apci.IndividualAddressResponse):
-            self.queue.append(telegram)
-
-    def clear(self) -> None:
-        """Empty telegram buffer."""
-        self.queue.clear()
-
-
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
     """Restart the device."""
     async with xknx.management.connection(
