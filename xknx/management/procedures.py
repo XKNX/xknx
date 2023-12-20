@@ -86,7 +86,7 @@ async def nm_individual_address_check(
 
 
 async def nm_individual_address_read(
-    xknx: XKNX, timeout: int = 3
+    xknx: XKNX, timeout: float | None = 3
 ) -> list[IndividualAddress]:
     """
     Request individual addresses of all devices that are in programming mode.
