@@ -14,10 +14,7 @@ async def main():
     """
     async with XKNX() as xknx:
         individual_address = IndividualAddress("1.1.3")
-        task = asyncio.create_task(
-            procedures.nm_invididual_address_write(xknx, individual_address)
-        )
-        await task
+        await procedures.nm_invididual_address_write(xknx, individual_address)
 
 
 if __name__ == "__main__":
