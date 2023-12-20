@@ -69,10 +69,10 @@ async def nm_individual_address_check(
 
 
 async def nm_individual_address_read(
-    xknx: XKNX, timeout: float | None = 3
+    xknx: XKNX, timeout: float | None = 3, raise_if_multiple: bool = False
 ) -> list[IndividualAddress]:
     """
-    Request individual addresses of all devices that are in programming mode.
+    Request individual addresses of all devices that are in programming mode. If multiple devices are in programming mode, a ManagementConnectionError is raised.
 
     :param: timeout specifies the timeout in seconds, the KNX specification requires a timeout of 3s.
     """
@@ -87,12 +87,16 @@ async def nm_individual_address_read(
         async for result in bc_context.receive(timeout=timeout):
             if isinstance(result.payload, apci.IndividualAddressResponse):
                 addresses.append(result.source_address)
+                if raise_if_multiple and (len(addresses) > 1):
+                    raise ManagementConnectionError(
+                        "More than one KNX device is in programming mode."
+                    )
     return addresses
 
 
 async def nm_invididual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
-) -> None:
+) -> bool:
     """
     Write the individual address of a single device in programming mode.
 
@@ -110,12 +114,9 @@ async def nm_invididual_address_write(
         )
 
     # check which devices are in programming mode
-    dev_pgm_mode = await nm_individual_address_read(xknx)
-    if len(dev_pgm_mode) > 1:
-        logger.debug("More than one device in programming mode detected.")
-        raise ManagementConnectionError(
-            "Multiple devices in programming mode detected."
-        )
+    dev_pgm_mode = await nm_individual_address_read(
+        xknx, raise_if_multiple=True
+    )  # raises exception if more than one device in programming mode
     if len(dev_pgm_mode) == 0:
         logger.debug("No device in programming mode detected.")
         raise ManagementConnectionError("No device in programming mode detected.")
@@ -175,3 +176,5 @@ async def nm_invididual_address_write(
             tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
         await xknx.cemi_handler.send_telegram(telegram)
+
+    return True
