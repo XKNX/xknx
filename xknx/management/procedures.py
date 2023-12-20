@@ -69,7 +69,7 @@ async def nm_individual_address_check(
 
 
 async def nm_individual_address_read(
-    xknx: XKNX, timeout: int = 3
+    xknx: XKNX, timeout: float | None = 3
 ) -> list[IndividualAddress]:
     """
     Request individual addresses of all devices that are in programming mode.
@@ -84,7 +84,7 @@ async def nm_individual_address_read(
             GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
         )
         await xknx.management.send_broadcast(broadcast_telegram)
-        async for result in bc_context.receive(timeout=3):
+        async for result in bc_context.receive(timeout=timeout):
             if isinstance(result.payload, apci.IndividualAddressResponse):
                 addresses.append(result.source_address)
     return addresses
@@ -113,7 +113,7 @@ async def nm_invididual_address_write(
     dev_pgm_mode = await nm_individual_address_read(xknx)
     if len(dev_pgm_mode) > 1:
         logger.debug("More than one device in programming mode detected.")
-        raise ManagementConnectionError("More than one device is programming mode.")
+        raise ManagementConnectionError("Multiple devices in programming mode detected.")
     if len(dev_pgm_mode) == 0:
         logger.debug("No device in programming mode detected.")
         raise ManagementConnectionError("No device in programming mode detected.")
