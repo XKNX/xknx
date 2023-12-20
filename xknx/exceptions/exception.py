@@ -196,7 +196,3 @@ class ManagementConnectionRefused(ManagementConnectionError):
 
 class ManagementConnectionTimeout(ManagementConnectionError):
     """Exception class used when a management connection timed out."""
-
-
-class ManagementConnectionWriteAddressError(ManagementConnectionError):
-    """Exception class used when xknx was unable to write a nice individual address to the device."""

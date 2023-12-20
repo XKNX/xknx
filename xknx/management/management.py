@@ -41,7 +41,6 @@ class Management:
         """Initialize Management class."""
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
-        self._rx_broadcast_cb: list[Callable[[Telegram], None]] = []
         self._broadcast_contexts: set[BroadcastContext] = set()
 
     def process(self, telegram: Telegram) -> None:
@@ -75,8 +74,6 @@ class Management:
             )
             return
         if isinstance(telegram.tpci, TDataBroadcast):
-            for callback in self._rx_broadcast_cb:
-                callback(telegram)
             for context in self._broadcast_contexts:
                 context.queue.put_nowait(telegram)
             return
@@ -130,20 +127,6 @@ class Management:
             yield conn
         finally:
             await self.disconnect(address)
-
-    def register_rx_broadcast_cb(self, callback: Callable[[Telegram], None]) -> None:
-        """
-        Add broadcast message handler/callback.
-
-        :param callback should be a function that takes one argument: the received telegram.
-        """
-        if callback not in self._rx_broadcast_cb:
-            self._rx_broadcast_cb.append(callback)
-
-    def remove_rx_broadcast_cb(self, callback: Callable[[Telegram], None]) -> None:
-        """Remove broadcast message handler."""
-        if callback in self._rx_broadcast_cb:
-            self._rx_broadcast_cb.remove(callback)
 
     async def send_broadcast(self, telegram: Telegram) -> None:
         """Send a broadcast message."""

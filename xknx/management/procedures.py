@@ -1,14 +1,13 @@
 """Package for management procedures as described in KNX-Standard 3.5.2."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING
 
 from xknx.exceptions import (
+    ManagementConnectionError,
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
-    ManagementConnectionWriteAddressError,
 )
 from xknx.telegram import Telegram, apci, tpci
 from xknx.telegram.address import (
@@ -95,24 +94,16 @@ async def nm_individual_address_read(
     :param: timeout specifies the timeout in seconds, the KNX specification requires a timeout of 3s.
     """
 
-    # clear broadcast buffer
-    handler = AsyncAddressResponseHandler()
-    xknx.management.register_rx_broadcast_cb(handler.process)
-
-    # request address
-    await xknx.management.send_broadcast(
-        Telegram(GroupAddress("0/0/0"), payload=apci.IndividualAddressRead())
-    )
-    await asyncio.sleep(timeout)
-
-    # collect responses
-    addresses = [
-        i.source_address
-        for i in handler.queue
-        if isinstance(i.payload, apci.IndividualAddressResponse)
-    ]
-    handler.clear()
-    xknx.management.remove_rx_broadcast_cb(handler.process)
+    addresses = []
+    # initialize queue or event handler gathering broadcasts
+    async with xknx.management.broadcast() as bc_context:
+        broadcast_telegram = Telegram(
+            GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+        )
+        await xknx.management.send_broadcast(broadcast_telegram)
+        async for result in bc_context.receive(timeout=3):
+            if isinstance(result.payload, apci.IndividualAddressResponse):
+                addresses.append(result.source_address)
     return addresses
 
 
@@ -139,14 +130,10 @@ async def nm_invididual_address_write(
     dev_pgm_mode = await nm_individual_address_read(xknx)
     if len(dev_pgm_mode) > 1:
         logger.debug("More than one device in programming mode detected.")
-        raise ManagementConnectionWriteAddressError(
-            "More than one device is programming mode."
-        )
+        raise ManagementConnectionError("More than one device is programming mode.")
     if len(dev_pgm_mode) == 0:
         logger.debug("No device in programming mode detected.")
-        raise ManagementConnectionWriteAddressError(
-            "No device in programming mode detected."
-        )
+        raise ManagementConnectionError("No device in programming mode detected.")
 
     # check if new and received addresses match
     if address_found:
@@ -155,7 +142,7 @@ async def nm_invididual_address_write(
                 "Device with address %s found and it is not in programming mode. Exiting to prevent address conflict.",
                 individual_address,
             )
-            raise ManagementConnectionWriteAddressError(
+            raise ManagementConnectionError(
                 f"A device was found with {individual_address}, cannot continue with programming."
             )
         # device in programming mode's address matches address that we want to write, so we can abort the operation safely
@@ -189,7 +176,7 @@ async def nm_invididual_address_write(
             # if response is received IA is occupied
             logger.debug("Device found at %s", individual_address)
         else:
-            raise ManagementConnectionWriteAddressError(
+            raise ManagementConnectionError(
                 f"Failed to detect individual address ({individual_address}) after write address operation."
             )
 
