@@ -101,7 +101,7 @@ async def nm_individual_address_read(
             GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
         )
         await xknx.management.send_broadcast(broadcast_telegram)
-        async for result in bc_context.receive(timeout=3):
+        async for result in bc_context.receive(timeout=timeout):
             if isinstance(result.payload, apci.IndividualAddressResponse):
                 addresses.append(result.source_address)
     return addresses
