@@ -133,6 +133,10 @@ class Management:
 
         if isinstance(telegram.tpci, TDataBroadcast):
             await self.xknx.cemi_handler.send_telegram(telegram)
+        else:
+            raise TypeError(
+                f"Can only send broadcast telegrams, not {type(telegram.tpci)}."
+            )
 
     @asynccontextmanager
     async def broadcast(self) -> AsyncIterator[BroadcastContext]:
