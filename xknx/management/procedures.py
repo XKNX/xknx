@@ -117,7 +117,7 @@ async def nm_invididual_address_write(
     dev_pgm_mode = await nm_individual_address_read(
         xknx, raise_if_multiple=True
     )  # raises exception if more than one device in programming mode
-    if len(dev_pgm_mode) == 0:
+    if not dev_pgm_mode:
         logger.debug("No device in programming mode detected.")
         raise ManagementConnectionError("No device in programming mode detected.")
 
