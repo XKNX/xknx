@@ -237,7 +237,7 @@ async def test_nm_individual_address_write(time_travel):
         call(ack2),
     ]
 
-    assert await task
+    await task
 
 
 async def test_nm_individual_address_write_two_devices_in_programming_mode(time_travel):

@@ -96,7 +96,7 @@ async def nm_individual_address_read(
 
 async def nm_invididual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
-) -> bool:
+) -> None:
     """
     Write the individual address of a single device in programming mode.
 
@@ -117,7 +117,7 @@ async def nm_invididual_address_write(
     dev_pgm_mode = await nm_individual_address_read(
         xknx, raise_if_multiple=True
     )  # raises exception if more than one device in programming mode
-    if len(dev_pgm_mode) == 0:
+    if not dev_pgm_mode:
         logger.debug("No device in programming mode detected.")
         raise ManagementConnectionError("No device in programming mode detected.")
 
@@ -176,5 +176,3 @@ async def nm_invididual_address_write(
             tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
         await xknx.cemi_handler.send_telegram(telegram)
-
-    return True
