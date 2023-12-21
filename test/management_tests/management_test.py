@@ -207,3 +207,18 @@ async def test_incoming_wrong_address():
         xknx.cemi_handler.telegram_received(disconnect)
         await asyncio.sleep(0)
         send_telegram.assert_not_called()
+
+
+async def test_boardcast_message():
+    """Test broadcast message sending."""
+    xknx = XKNX()
+
+    connect = Telegram(
+        source_address=IndividualAddress("4.0.10"),
+        destination_address=IndividualAddress("4.0.11"),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TConnect(),
+    )
+
+    with pytest.raises(TypeError):
+        await xknx.management.broadcast(connect)
