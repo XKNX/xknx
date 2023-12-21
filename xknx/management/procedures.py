@@ -164,7 +164,7 @@ async def nm_invididual_address_write(
         )
 
         try:
-            response = await connection.request(
+            await connection.request(
                 payload=apci.DeviceDescriptorRead(descriptor=0),
                 expected=apci.DeviceDescriptorResponse,
             )
@@ -172,12 +172,6 @@ async def nm_invididual_address_write(
             # if nothing is received (-> timeout) IA is free
             raise ManagementConnectionError(
                 f"No device answered to connection attempt after write address operation. {ex}"
-            )
-
-        if not isinstance(response.payload, apci.DeviceDescriptorResponse):
-            # if response is received IA is occupied
-            raise ManagementConnectionError(
-                f"Failed to detect individual address ({individual_address}) after write address operation."
             )
 
         logger.debug("Restating device, exiting programming mode.")
