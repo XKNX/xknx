@@ -97,11 +97,7 @@ async def nm_individual_address_read(
 async def nm_invididual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> bool:
-    """
-    Write the individual address of a single device in programming mode.
-
-    TODO: detail exceptions if this failed.
-    """
+    """Write the individual address of a single device in programming mode."""
     logger.debug("Writing individual address %s to device.", individual_address)
 
     # check if the address is already occupied on the network
