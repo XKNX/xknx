@@ -372,3 +372,122 @@ async def test_nm_individual_address_write_no_device_programming_mode(time_trave
 
     with pytest.raises(ManagementConnectionError):
         await task
+
+
+async def test_nm_individual_address_write_address_found(time_travel):
+    """Test nm_individual_address_write."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("1.1.4")
+
+    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    ack = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(0),
+    )
+    ack2 = Telegram(
+        source_address=IndividualAddress(0),
+        destination_address=individual_address,
+        tpci=tpci.TAck(0),
+    )
+    device_desc_resp = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorResponse(),
+    )
+
+    task = asyncio.create_task(
+        procedures.nm_invididual_address_write(
+            xknx=xknx, individual_address=individual_address
+        )
+    )
+
+    # make sure first request (address check) times out
+    await time_travel(0)
+    xknx.management.process(ack)
+    xknx.management.process(device_desc_resp)
+
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+        call(ack2),
+    ]
+
+    with pytest.raises(ManagementConnectionError):
+        await task
+
+
+async def test_nm_individual_address_write_programming_failed(time_travel):
+    """Test nm_individual_address_write."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address_old = IndividualAddress("15.15.255")
+    individual_address_new = IndividualAddress("1.1.4")
+
+    connect = Telegram(destination_address=individual_address_new, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDataConnected(0),
+        direction=TelegramDirection.OUTGOING,
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+
+    address_reply_message = Telegram(
+        source_address=individual_address_old,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.INCOMING,
+        payload=apci.IndividualAddressResponse(),
+    )
+    disconnect = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDisconnect(),
+    )
+    individual_address_read = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+    individual_address_write = Telegram(
+        GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressWrite(address=individual_address_new),
+    )
+    task = asyncio.create_task(
+        procedures.nm_invididual_address_write(
+            xknx=xknx, individual_address=individual_address_new
+        )
+    )
+
+    # make sure first request (address check) times out
+    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+
+    # send response to device in programming mode
+    xknx.management.process(address_reply_message)
+
+    # device experienced error, so set connection request timeout
+    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+        call(device_desc_read),  # due to retransmit
+        call(disconnect),
+        call(individual_address_read),
+        call(individual_address_write),
+        call(connect),
+        call(device_desc_read),
+        call(device_desc_read),
+        call(disconnect),
+    ]
+
+    with pytest.raises(ManagementConnectionError):
+        await task
