@@ -209,7 +209,7 @@ async def test_incoming_wrong_address():
         send_telegram.assert_not_called()
 
 
-async def test_boardcast_message():
+async def test_broadcast_message():
     """Test broadcast message sending."""
     xknx = XKNX()
 
