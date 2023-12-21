@@ -23,7 +23,12 @@ logger = logging.getLogger("xknx.management.procedures")
 
 
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
-    """Restart the device."""
+    """
+    Restart the device.
+
+    :param xknx: XKNX object
+    :param individual_address: address of device to reset
+    """
     async with xknx.management.connection(
         address=IndividualAddress(individual_address)
     ) as connection:
@@ -42,7 +47,12 @@ async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) 
 async def nm_individual_address_check(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> bool:
-    """Check if the individual address is occupied on the network."""
+    """
+    Check if the individual address is occupied on the network.
+
+    :param xknx: XKNX object
+    :param individual_address: address to check
+    """
     try:
         async with xknx.management.connection(
             address=IndividualAddress(individual_address)
@@ -72,9 +82,12 @@ async def nm_individual_address_read(
     xknx: XKNX, timeout: float | None = 3, raise_if_multiple: bool = False
 ) -> list[IndividualAddress]:
     """
-    Request individual addresses of all devices that are in programming mode. If multiple devices are in programming mode, a ManagementConnectionError is raised.
+    Request individual addresses of all devices that are in programming mode.
 
-    :param: timeout specifies the timeout in seconds, the KNX specification requires a timeout of 3s.
+    :param xknx: XKNX object
+    :param timeout: specifies the timeout in seconds, the KNX specification requires a timeout of 3s
+    :param raise_if_multiple: if true, ManagementConnectionError is raised when multiple devices are in programming mode
+    :returns: list of individual address of devices in programming mode
     """
 
     addresses = []
@@ -97,7 +110,12 @@ async def nm_individual_address_read(
 async def nm_invididual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> None:
-    """Write the individual address of a single device in programming mode."""
+    """
+    Write the individual address of a single device in programming mode.
+
+    :param xknx: XKNX object
+    :param individual_address: address to be written to KNX device
+    """
     logger.debug("Writing individual address %s to device.", individual_address)
 
     # check if the address is already occupied on the network
@@ -153,8 +171,7 @@ async def nm_invididual_address_write(
         except ManagementConnectionTimeout as ex:
             # if nothing is received (-> timeout) IA is free
             raise ManagementConnectionError(
-                "No device answered to connection attempt after write address operation. %s",
-                ex,
+                f"No device answered to connection attempt after write address operation. {ex}"
             )
 
         if not isinstance(response.payload, apci.DeviceDescriptorResponse):
