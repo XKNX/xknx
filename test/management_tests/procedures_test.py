@@ -135,14 +135,12 @@ async def test_nm_individual_address_read():
     address_reply_message_1 = Telegram(
         source_address=individual_address_1,
         destination_address=GroupAddress("0/0/0"),
-        direction=TelegramDirection.OUTGOING,
         payload=apci.IndividualAddressResponse(),
     )
 
     address_reply_message_2 = Telegram(
         source_address=individual_address_2,
         destination_address=GroupAddress("0/0/0"),
-        direction=TelegramDirection.OUTGOING,
         payload=apci.IndividualAddressResponse(),
     )
 
@@ -153,6 +151,44 @@ async def test_nm_individual_address_read():
     xknx.management.process(address_reply_message_1)
     xknx.management.process(address_reply_message_2)
     assert await task
+
+
+async def test_nm_individual_address_read_multiple():
+    """Test nm_individual_address_read."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address_1 = IndividualAddress("1.1.4")
+    individual_address_2 = IndividualAddress("15.15.255")
+
+    task = asyncio.create_task(
+        procedures.nm_individual_address_read(
+            xknx=xknx, timeout=0.01, raise_if_multiple=True
+        )
+    )
+    address_broadcast = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+
+    address_reply_message_1 = Telegram(
+        source_address=individual_address_1,
+        destination_address=GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressResponse(),
+    )
+
+    address_reply_message_2 = Telegram(
+        source_address=individual_address_2,
+        destination_address=GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressResponse(),
+    )
+
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(address_broadcast),
+    ]
+    xknx.management.process(address_reply_message_1)
+    xknx.management.process(address_reply_message_2)
+    with pytest.raises(ManagementConnectionError):
+        await task
 
 
 async def test_nm_individual_address_write(time_travel):
@@ -251,7 +287,6 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(time_
     device_desc_read = Telegram(
         destination_address=individual_address_new,
         tpci=tpci.TDataConnected(0),
-        direction=TelegramDirection.OUTGOING,
         payload=apci.DeviceDescriptorRead(descriptor=0),
     )
     address_reply_message = Telegram(
@@ -306,7 +341,6 @@ async def test_nm_individual_address_write_no_device_programming_mode(time_trave
     device_desc_read = Telegram(
         destination_address=individual_address_new,
         tpci=tpci.TDataConnected(0),
-        direction=TelegramDirection.OUTGOING,
         payload=apci.DeviceDescriptorRead(descriptor=0),
     )
     disconnect = Telegram(
