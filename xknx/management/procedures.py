@@ -97,11 +97,7 @@ async def nm_individual_address_read(
 async def nm_invididual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> None:
-    """
-    Write the individual address of a single device in programming mode.
-
-    TODO: detail exceptions if this failed.
-    """
+    """Write the individual address of a single device in programming mode."""
     logger.debug("Writing individual address %s to device.", individual_address)
 
     # check if the address is already occupied on the network
@@ -156,12 +152,13 @@ async def nm_invididual_address_write(
             )
         except ManagementConnectionTimeout as ex:
             # if nothing is received (-> timeout) IA is free
-            logger.debug("No device answered to connection attempt. %s", ex)
-            response = None
-        if response and isinstance(response.payload, apci.DeviceDescriptorResponse):
+            raise ManagementConnectionError(
+                "No device answered to connection attempt after write address operation. %s",
+                ex,
+            )
+
+        if not isinstance(response.payload, apci.DeviceDescriptorResponse):
             # if response is received IA is occupied
-            logger.debug("Device found at %s", individual_address)
-        else:
             raise ManagementConnectionError(
                 f"Failed to detect individual address ({individual_address}) after write address operation."
             )
