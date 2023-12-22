@@ -184,3 +184,54 @@ async def nm_invididual_address_write(
             tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
         await xknx.cemi_handler.send_telegram(telegram)
+
+
+async def nm_individual_address_serial_number_read(
+    xknx: XKNX, serial: bytes, timeout: float = 3
+) -> IndividualAddress | None:
+    """Read individual address from device with specified serial number."""
+
+    # initialize queue or event handler gathering broadcasts
+    async with xknx.management.broadcast() as bc_context:
+        broadcast_telegram = Telegram(
+            destination_address=GroupAddress("0/0/0"),
+            payload=apci.IndividualAddressSerialRead(serial=serial),
+        )
+        await xknx.management.send_broadcast(broadcast_telegram)
+        async for result in bc_context.receive(timeout=timeout):
+            if isinstance(result.payload, apci.IndividualAddressSerialResponse):
+                return result.source_address
+
+    return None
+
+
+async def nm_individual_address_serial_number_write(
+    xknx: XKNX, serial: bytes, individual_address: IndividualAddress
+) -> None:
+    """Write individual address to device with specified serial number."""
+    await xknx.management.send_broadcast(
+        Telegram(
+            destination_address=GroupAddress("0/0/0"),
+            payload=apci.IndividualAddressSerialWrite(
+                address=individual_address, serial=serial
+            ),
+        )
+    )
+    logger.debug(
+        "Wrote new address %s to device with serial number %s.",
+        individual_address,
+        serial,
+    )
+
+    address = await nm_individual_address_serial_number_read(xknx=xknx, serial=serial)
+
+    if address != individual_address:
+        raise ManagementConnectionError(
+            f"Failed to write serial address {individual_address} to device with serial {serial!r}"
+        )
+
+    logger.debug(
+        "New address %s validated on device with serial number %s.",
+        individual_address,
+        serial,
+    )
