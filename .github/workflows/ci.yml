@@ -59,7 +59,7 @@ jobs:
       run: |
         pip install -r requirements/testing.txt
     - name: Download all coverage artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     - name: Create coverage report
       run: |
         coverage combine coverage*/.coverage*
