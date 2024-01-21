@@ -3,31 +3,31 @@ requires = ["setuptools>=62.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name         = "xknx"
-authors      = [
-    {name = "Julius Mittenzwei", email = "julius@mittenzwei.com"},
-    {name = "Matthias Alphart", email = "farmio@alphart.net"},
-    {name = "Marvin Wichmann", email = "me@marvin-wichmann.de"},
+name = "xknx"
+authors = [
+  { name = "Julius Mittenzwei", email = "julius@mittenzwei.com" },
+  { name = "Matthias Alphart", email = "farmio@alphart.net" },
+  { name = "Marvin Wichmann", email = "me@marvin-wichmann.de" },
 ]
-classifiers  = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: System :: Hardware :: Hardware Drivers",
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: System :: Hardware :: Hardware Drivers",
 ]
 dependencies = [
-    "async_timeout>=4.0.0; python_version<'3.11'",
-    "cryptography>=35.0.0",
-    "ifaddr>=0.1.7",
+  "async_timeout>=4.0.0; python_version<'3.11'",
+  "cryptography>=35.0.0",
+  "ifaddr>=0.1.7",
 ]
-description  = "An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/"
-dynamic      = ["version"]
-keywords     = ["KNX", "EIB", "Home Assistant", "home automation"]
-license      = {text = "MIT License"}
-readme       = "README.md"
+description = "An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/"
+dynamic = ["version"]
+keywords = ["KNX", "EIB", "Home Assistant", "home automation"]
+license = { text = "MIT License" }
+readme = "README.md"
 requires-python = ">=3.9.0"
 
 [project.urls]
@@ -36,14 +36,10 @@ repository = "https://github.com/XKNX/xknx.git"
 
 
 [tool.setuptools.dynamic]
-version = {attr = "xknx.__version__.__version__"}
+version = { attr = "xknx.__version__.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["xknx*"]
-
-[tool.black]
-exclude = "generated"
-
 
 [tool.codespell]
 skip = '*.min.js,docs/config-converter/lib/*,*.lock'
@@ -69,7 +65,7 @@ reports = "no"
 
 [tool.pylint.message_control]
 # Reasons disabled:
-# format - handled by black
+# format - handled by ruff
 # locally-disabled - it spams too much
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
@@ -106,13 +102,11 @@ disable = [
   "too-many-boolean-expressions",
   "unused-argument",
   "wrong-import-order",
-  ]
+]
 # disabled for tests via command line options in tox.ini:
 #   - protected-access
 #   - abstract-class-instantiated
-enable = [
-  "use-symbolic-message-instead",
-]
+enable = ["use-symbolic-message-instead"]
 
 [tool.pylint.format]
 expected-line-ending-format = "LF"
@@ -146,14 +140,14 @@ ignore = [
   "D212",
   "E501", # line too long
 ]
-extend-exclude = [
-  "script",
-]
+extend-exclude = ["script"]
 
 [tool.ruff.isort]
 force-sort-within-sections = true
 combine-as-imports = true
 
 [tool.ruff.per-file-ignores]
-"examples/*" = ["T20"]  # print-used
-"test/*" = ["RUF012"]  # Mutable class attributes should be annotated with `typing.ClassVar`
+"examples/*" = ["T20"] # print-used
+"test/*" = [
+  "RUF012",
+] # Mutable class attributes should be annotated with `typing.ClassVar`

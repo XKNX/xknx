@@ -12,14 +12,6 @@ repos:
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
-  - repo: https://github.com/psf/black
-    rev: 23.12.0
-    hooks:
-      - id: black
-        args:
-          - --safe
-          - --quiet
-        files: ^((xknx|test|examples|docs)/.+)?[^/]+\.py$
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
     hooks:
@@ -32,6 +24,10 @@ repos:
         # in CI it is directly run by tox to allow dependency upgrade checks
         stages: [pre-commit]
         args: [ --fix, --exit-non-zero-on-fix ]
+      - id: ruff-format
+        files: ^((xknx|test|examples|docs)/.+)?[^/]+\.py$
+        # in CI it is directly run by tox to allow dependency upgrade checks
+        stages: [pre-commit]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
