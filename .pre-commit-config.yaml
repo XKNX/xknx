@@ -18,7 +18,7 @@ repos:
       - id: flake8
         files: ^(xknx|examples|docs)/.+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.8'
+    rev: 'v0.1.13'
     hooks:
       - id: ruff
         # in CI it is directly run by tox to allow dependency upgrade checks
