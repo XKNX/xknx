@@ -91,7 +91,8 @@ class TestSecureSession:
             SessionRequest(ecdh_client_public_key=self.mock_public_key)
         )
         mock_super_send.assert_called_once_with(
-            session_request_frame, None  # None for addr in TCP transport
+            session_request_frame,
+            None,  # None for addr in TCP transport
         )
         mock_super_send.reset_mock()
         # incoming
@@ -124,7 +125,8 @@ class TestSecureSession:
             )
         )
         mock_super_send.assert_called_once_with(
-            encrypted_authenticate_frame, None  # None for addr in TCP transport
+            encrypted_authenticate_frame,
+            None,  # None for addr in TCP transport
         )
         mock_super_send.reset_mock()
         # incoming
@@ -350,7 +352,8 @@ class TestSecureSession:
             )
         )
         mock_super_send.assert_called_once_with(
-            encrypted_authenticate_frame, None  # None for addr in TCP transport
+            encrypted_authenticate_frame,
+            None,  # None for addr in TCP transport
         )
         # incoming
         encrypted_session_status_frame = KNXIPFrame.init_from_body(
