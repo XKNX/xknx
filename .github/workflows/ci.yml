@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}
-          path: .coverage.${{ matrix.python-version }}
+          path: .coverage
 
   coverage:
     name: Process test coverage
@@ -62,7 +62,7 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Create coverage report
         run: |
-          coverage combine coverage-*/.coverage.*
+          coverage combine coverage-*/.coverage
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
