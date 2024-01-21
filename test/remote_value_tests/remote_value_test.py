@@ -116,9 +116,7 @@ class TestRemoteValue:
             "xknx.remote_value.RemoteValue.has_group_address"
         ) as patch_has_group_address, patch(
             "xknx.remote_value.RemoteValue.from_knx"
-        ) as patch_from, patch(
-            "logging.Logger.warning"
-        ) as mock_warning:
+        ) as patch_from, patch("logging.Logger.warning") as mock_warning:
             patch_has_group_address.return_value = True
             patch_from.side_effect = ConversionError("TestError")
 
