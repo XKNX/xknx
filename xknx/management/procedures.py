@@ -235,3 +235,39 @@ async def nm_individual_address_serial_number_write(
         individual_address,
         serial,
     )
+
+
+async def dm_mem_read(xknx: XKNX, individual_address: IndividualAddress, mem_start: int, mem_stop: int) -> bytes:
+    """
+    Check if the individual address is occupied on the network.
+
+    :param xknx: XKNX object
+    :param individual_address: address to check
+    """
+    data = b""
+    size = 1
+    try:
+        async with xknx.management.connection(
+            address=IndividualAddress(individual_address)
+        ) as connection:
+            try:
+                response = await connection.request(
+                    payload=apci.MemoryRead(address=mem_start, count=size),
+                    expected=apci.MemoryResponse,
+                )
+
+            except ManagementConnectionTimeout as ex:
+                # if nothing is received (-> timeout) IA is free
+                logger.debug("No device answered to connection attempt. %s", ex)
+                return data
+            
+            if not isinstance(response.payload, apci.MemoryResponse):
+                raise ValueError
+
+            data += response.payload.data
+
+            return data
+    except ManagementConnectionRefused as ex:
+        # if Disconnect is received immediately, IA is occupied
+        logger.debug("Device does not support transport layer connections. %s", ex)
+        return data
