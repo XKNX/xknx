@@ -206,9 +206,10 @@ async def nm_individual_address_serial_number_read(
 
 
 async def nm_individual_address_serial_number_write(
-    xknx: XKNX, serial: bytes, individual_address: IndividualAddress
+    xknx: XKNX, serial: bytes, individual_address: IndividualAddressableType
 ) -> None:
     """Write individual address to device with specified serial number."""
+    individual_address = IndividualAddress(individual_address)
     await xknx.management.send_broadcast(
         Telegram(
             destination_address=GroupAddress("0/0/0"),
@@ -227,7 +228,7 @@ async def nm_individual_address_serial_number_write(
 
     if address != individual_address:
         raise ManagementConnectionError(
-            f"Failed to write serial address {individual_address} to device with serial {serial!r}"
+            f"Failed to write serial address {individual_address} to device with serial {serial!r}. Detected {address}"
         )
 
     logger.debug(
