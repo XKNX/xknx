@@ -17,15 +17,15 @@ logging.getLogger("xknx.knx").level = logging.DEBUG
 
 timeout_in_seconds = 5
 
+
 async def main2():
     async with XKNX(
-            log_directory="log/",
-            connection_config=ConnectionConfig(
-                connection_type=ConnectionType.TUNNELING,
-                gateway_ip="172.149.20.28",
-                gateway_port=3671,
-            ),
-
+        log_directory="log/",
+        connection_config=ConnectionConfig(
+            connection_type=ConnectionType.TUNNELING,
+            gateway_ip="172.149.20.28",
+            gateway_port=3671,
+        ),
     ) as xknx:
         individual_address = IndividualAddress("1.1.20")
         task = asyncio.create_task(
@@ -34,7 +34,6 @@ async def main2():
 
         result = await task
         print(result)
-
 
 
 if __name__ == "__main__":
