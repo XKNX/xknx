@@ -21,6 +21,8 @@ async def main(argv: list[str]) -> int:
     serial = bytes([int(i, 16) for i in argv[1].split(':')])
     address = IndividualAddress(argv[2])
 
+    print(f"Setting address {address} to device with serial {serial}")
+
     async with XKNX() as xknx:
         individual_address = IndividualAddress(address)
         await procedures.nm_individual_address_serial_number_write(xknx, serial, individual_address)
