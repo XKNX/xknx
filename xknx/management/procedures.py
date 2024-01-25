@@ -239,7 +239,12 @@ async def nm_individual_address_serial_number_write(
     )
 
 
-async def dm_mem_read(xknx: XKNX, individual_address: IndividualAddressableType, mem_start: int, mem_stop: int) -> bytes:
+async def dm_mem_read(
+    xknx: XKNX,
+    individual_address: IndividualAddressableType,
+    mem_start: int,
+    mem_stop: int,
+) -> bytes:
     """
     Check if the individual address is occupied on the network.
 
@@ -262,7 +267,7 @@ async def dm_mem_read(xknx: XKNX, individual_address: IndividualAddressableType,
                 # if nothing is received (-> timeout) IA is free
                 logger.debug("No device answered to connection attempt. %s", ex)
                 return data
-            
+
             if not isinstance(response.payload, apci.MemoryResponse):
                 raise ValueError
 
