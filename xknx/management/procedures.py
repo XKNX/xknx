@@ -195,6 +195,7 @@ async def nm_individual_address_serial_number_read(
     async with xknx.management.broadcast() as bc_context:
         broadcast_telegram = Telegram(
             destination_address=GroupAddress("0/0/0"),
+            source_address=xknx.current_address,
             payload=apci.IndividualAddressSerialRead(serial=serial),
         )
         await xknx.management.send_broadcast(broadcast_telegram)
@@ -238,7 +239,7 @@ async def nm_individual_address_serial_number_write(
     )
 
 
-async def dm_mem_read(xknx: XKNX, individual_address: IndividualAddress, mem_start: int, mem_stop: int) -> bytes:
+async def dm_mem_read(xknx: XKNX, individual_address: IndividualAddressableType, mem_start: int, mem_stop: int) -> bytes:
     """
     Check if the individual address is occupied on the network.
 
