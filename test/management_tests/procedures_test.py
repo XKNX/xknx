@@ -639,8 +639,8 @@ async def test_nm_individual_address_serial_number_write(time_travel):
     individual_address = IndividualAddress("1.1.5")
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_read(
-            xknx=xknx, serial=serial_number
+        procedures.nm_individual_address_serial_number_write(
+            xknx=xknx, serial=serial_number, individual_address=individual_address
         )
     )
 
@@ -665,7 +665,7 @@ async def test_nm_individual_address_serial_number_write(time_travel):
 
     await time_travel(0)
 
-    await time_travel(0.5 * management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(0.5 * management.management.MANAGAMENT_ACK_TIMEOUT)
     xknx.management.process(address_reply)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
@@ -687,8 +687,8 @@ async def test_nm_individual_address_serial_number_write_fail(time_travel):
     individual_address = IndividualAddress("1.1.5")
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_read(
-            xknx=xknx, serial=serial_number
+        procedures.nm_individual_address_serial_number_write(
+            xknx=xknx, serial=serial_number, individual_address=individual_address
         )
     )
 
