@@ -237,4 +237,3 @@ async def nm_individual_address_serial_number_write(
         individual_address,
         serial,
     )
-
