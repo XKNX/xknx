@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Connection
 
-- Add new management routines for device management: `nm_invididual_address_write` and `nm_individual_address_read`.
+- Add new management routines for device management: `nm_invididual_address_write`,  `nm_individual_address_read`, `nm_individual_address_serial_number_read` and `nm_individual_address_serial_number_write`.
 - Add handling mechanism for broadcast telegrams in the management class.
 
 ### Secure
