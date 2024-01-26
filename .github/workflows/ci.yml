@@ -6,36 +6,36 @@ on:
       - main
   pull_request:
     branches:
-      - '**' # run on all branches
+      - "**" # run on all branches
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: |
-          requirements/production.txt
-          requirements/testing.txt
-          .pre-commit-config.yaml
-    - name: Install dependencies
-      run: |
-        pip install -r requirements/testing.txt
-    - name: CI
-      run: |
-        tox
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-${{ matrix.python-version }}
-        path: .coverage
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: |
+            requirements/production.txt
+            requirements/testing.txt
+            .pre-commit-config.yaml
+      - name: Install dependencies
+        run: |
+          pip install -r requirements/testing.txt
+      - name: CI
+        run: |
+          tox
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: .coverage
 
   coverage:
     name: Process test coverage
@@ -43,27 +43,27 @@ jobs:
     needs: ["build"]
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.12"]
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: |
-          requirements/production.txt
-          requirements/testing.txt
-          .pre-commit-config.yaml
-    - name: Install dependencies
-      run: |
-        pip install -r requirements/testing.txt
-    - name: Download all coverage artifacts
-      uses: actions/download-artifact@v3
-    - name: Create coverage report
-      run: |
-        coverage combine coverage*/.coverage*
-        coverage report --fail-under=94
-        coverage xml
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: |
+            requirements/production.txt
+            requirements/testing.txt
+            .pre-commit-config.yaml
+      - name: Install dependencies
+        run: |
+          pip install -r requirements/testing.txt
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4
+      - name: Create coverage report
+        run: |
+          coverage combine coverage-*/.coverage
+          coverage report --fail-under=94
+          coverage xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
