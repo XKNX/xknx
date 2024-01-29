@@ -228,9 +228,10 @@ async def nm_individual_address_serial_number_write(
 
     address = await nm_individual_address_serial_number_read(xknx=xknx, serial=serial)
 
+    if address is None:
+        raise ManagementConnectionError(f"No reply received from {serial!r}.")
+        
     if address != individual_address:
-        if address is None:
-            raise ManagementConnectionError(f"No reply received from {serial!r}.")
         raise ManagementConnectionError(
             f"Failed to write serial address {individual_address} to device with serial {serial!r}. Detected {address}"
         )
