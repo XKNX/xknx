@@ -8,7 +8,7 @@ from xknx.telegram import IndividualAddress
 
 
 async def main(argv: list[str]) -> int:
-    """Write the individual address to a device in programming mode."""
+    """Write the individual address to a device."""
 
     if len(argv) != 3:
         print(
