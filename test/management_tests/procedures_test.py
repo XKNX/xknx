@@ -659,6 +659,47 @@ async def test_nm_individual_address_serial_number_read_fail(time_travel):
     assert await task is None
 
 
+async def test_nm_individual_address_serial_number_read_collision(time_travel):
+    """Test nm_individual_address_serial_number_read."""
+
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    serial_number_tx = b"aabbccddeeff"
+    serial_number_rx = b"ffeeddccbbaa"
+    individual_address = IndividualAddress("1.1.5")
+
+    task = asyncio.create_task(
+        procedures.nm_individual_address_serial_number_read(
+            xknx=xknx, serial=serial_number_tx
+        )
+    )
+
+    read_address = Telegram(
+        destination_address=GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressSerialRead(serial=serial_number_tx),
+    )
+
+    address_reply = Telegram(
+        source_address=individual_address,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.INCOMING,
+        payload=apci.IndividualAddressSerialResponse(
+            address=individual_address, serial=serial_number_rx
+        ),
+    )
+
+    await time_travel(0)
+    xknx.management.process(address_reply)
+    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(read_address),
+    ]
+
+    with pytest.raises(ManagementConnectionError):
+        await task
+
+
 async def test_nm_individual_address_serial_number_write(time_travel):
     """Test nm_individual_address_serial_number_write."""
 
