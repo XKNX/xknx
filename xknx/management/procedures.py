@@ -201,8 +201,10 @@ async def nm_individual_address_serial_number_read(
         await xknx.management.send_broadcast(broadcast_telegram)
         async for result in bc_context.receive(timeout=timeout):
             if isinstance(result.payload, apci.IndividualAddressSerialResponse):
-                if result.serial != serial:
-                    raise ManagementConnectionError("Transmitted and received serial numbers do not match.")
+                if result.payload.serial != serial:
+                    raise ManagementConnectionError(
+                        "Transmitted and received serial numbers do not match."
+                    )
                 return result.source_address
 
     return None
