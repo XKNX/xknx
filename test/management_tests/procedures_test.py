@@ -650,11 +650,11 @@ async def test_nm_individual_address_serial_number_read_fail(time_travel):
         payload=apci.IndividualAddressSerialRead(serial=serial_number),
     )
 
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-
+    await time_travel(0)
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(read_address),
     ]
+    await time_travel(3)
 
     assert await task is None
 
