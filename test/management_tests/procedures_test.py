@@ -766,12 +766,10 @@ async def test_nm_individual_address_serial_number_write_fail(time_travel):
     )
 
     await time_travel(0)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(write_address),
         call(read_address),
     ]
-
+    await time_travel(3)
     with pytest.raises(ManagementConnectionError):
         await task
