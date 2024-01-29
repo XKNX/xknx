@@ -8,11 +8,7 @@ from xknx.telegram import IndividualAddress
 
 
 async def main(argv: list[str]) -> int:
-    """
-    Write the individual address to a device in programming mode.
-
-    This fails if multiple devices are in programming mode and/or when there is no device found in programming mode.
-    """
+    """Write the individual address to a device in programming mode."""
 
     if len(argv) != 3:
         print(
