@@ -20,7 +20,7 @@ async def main(argv: list[str]) -> int:
         )
         return 1
 
-    serial = bytes([int(i, 16) for i in argv[1].split(":")])
+    serial = bytes.fromhex(argv[1].replace(":", ""))
     address = IndividualAddress(argv[2])
 
     print(f"Setting address {address} to device with serial {serial}")
