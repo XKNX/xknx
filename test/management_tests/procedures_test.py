@@ -656,7 +656,7 @@ async def test_nm_individual_address_serial_number_read_fail(time_travel):
         call(read_address),
     ]
 
-    assert not await task
+    assert await task is None
 
 
 async def test_nm_individual_address_serial_number_write(time_travel):
