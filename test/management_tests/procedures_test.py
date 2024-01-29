@@ -690,8 +690,6 @@ async def test_nm_individual_address_serial_number_read_collision(time_travel):
 
     await time_travel(0)
     xknx.management.process(address_reply)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(read_address),
     ]
