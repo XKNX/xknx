@@ -200,9 +200,11 @@ async def nm_individual_address_serial_number_read(
         )
         await xknx.management.send_broadcast(broadcast_telegram)
         async for result in bc_context.receive(timeout=timeout):
-            if isinstance(result.payload, apci.IndividualAddressSerialResponse):
-                if result.payload.serial == serial:
-                    return result.source_address
+            if (
+                isinstance(result.payload, apci.IndividualAddressSerialResponse)
+                and result.payload.serial == serial
+            ):
+                return result.source_address
 
     return None
 
