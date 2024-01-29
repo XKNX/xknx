@@ -693,17 +693,11 @@ async def test_nm_individual_address_serial_number_write(time_travel):
     )
 
     await time_travel(0)
-
-    await time_travel(0.5 * management.management.MANAGAMENT_ACK_TIMEOUT)
-    xknx.management.process(address_reply)
-
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(write_address),
         call(read_address),
     ]
-
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-
+    xknx.management.process(address_reply)
     await task
 
 
