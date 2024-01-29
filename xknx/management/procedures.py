@@ -201,11 +201,8 @@ async def nm_individual_address_serial_number_read(
         await xknx.management.send_broadcast(broadcast_telegram)
         async for result in bc_context.receive(timeout=timeout):
             if isinstance(result.payload, apci.IndividualAddressSerialResponse):
-                if result.payload.serial != serial:
-                    raise ManagementConnectionError(
-                        "Transmitted and received serial numbers do not match."
-                    )
-                return result.source_address
+                if result.payload.serial == serial:
+                    return result.source_address
 
     return None
 
@@ -232,6 +229,8 @@ async def nm_individual_address_serial_number_write(
     address = await nm_individual_address_serial_number_read(xknx=xknx, serial=serial)
 
     if address != individual_address:
+        if address is None:
+            raise ManagementConnectionError(f"No reply received from {serial!r}.")
         raise ManagementConnectionError(
             f"Failed to write serial address {individual_address} to device with serial {serial!r}. Detected {address}"
         )
