@@ -24,6 +24,13 @@ Setting up your local environment:
 1. Install requirements: `pip install -r requirements/testing.txt`
 2. Install pre-commit hook: `pre-commit install`
 
+## Testing
+
+To run all tests, linters, formatters and type checker call `tox`
+
+Running only unit tests is possible with `pytest`
+Running specific unit tests can be invoked by: `pytest -vv test/management_tests/procedures_test.py -k test_nm_individual_address_serial_number_write_fail`
+
 ## Home-Assistant
 
 XKNX is the underlying library for the KNX integration in [Home Assistant](https://home-assistant.io/).
