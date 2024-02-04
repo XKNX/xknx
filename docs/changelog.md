@@ -8,10 +8,14 @@ nav_order: 2
 
 # Unreleased changes
 
-### Connection
+### Management
 
 - Add new management routines for device management: `nm_invididual_address_write`,  `nm_individual_address_read`, `nm_individual_address_serial_number_read` and `nm_individual_address_serial_number_write`.
 - Add handling mechanism for broadcast telegrams in the management class.
+
+### Bugfixes
+
+- `None` in a RemoteValue (or Device) group address list is now ignored instead of parsed as broadcast address.
 
 ### Secure
 

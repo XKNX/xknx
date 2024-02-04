@@ -55,13 +55,17 @@ class RemoteValue(ABC, Generic[ValueT]):
             addresses: GroupAddressesType | None,
         ) -> DeviceGroupAddress | None:
             """Parse group addresses and assign passive addresses when given."""
-            if not addresses:  # None or empty list
+            if not addresses:  # None, 0 (broadcast) or empty list
                 return None
             if not isinstance(addresses, list):
                 return parse_device_group_address(addresses)
-            active, *passive = map(parse_device_group_address, addresses)
+            # ignore None and 0 (broadcast) addresses
+            active = addresses[0]
+            passive = [
+                parse_device_group_address(addr) for addr in addresses[1:] if addr
+            ]
             self.passive_group_addresses.extend(passive)
-            return active
+            return parse_device_group_address(active) if active else None
 
         self.group_address = unpack_group_addresses(group_address)
         self.group_address_state = unpack_group_addresses(group_address_state)
