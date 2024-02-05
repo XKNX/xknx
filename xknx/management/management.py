@@ -14,7 +14,7 @@ from xknx.exceptions import (
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
 )
-from xknx.telegram import IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import (
     TAck,
@@ -128,15 +128,15 @@ class Management:
         finally:
             await self.disconnect(address)
 
-    async def send_broadcast(self, telegram: Telegram) -> None:
+    async def send_broadcast(self, payload: APCI) -> None:
         """Send a broadcast message."""
-
-        if isinstance(telegram.tpci, TDataBroadcast):
-            await self.xknx.cemi_handler.send_telegram(telegram)
-        else:
-            raise TypeError(
-                f"Can only send broadcast telegrams, not {type(telegram.tpci)}."
+        await self.xknx.cemi_handler.send_telegram(
+            Telegram(
+                GroupAddress("0/0/0"),
+                tpci=TDataBroadcast(),
+                payload=payload,
             )
+        )
 
     @asynccontextmanager
     async def broadcast(self) -> AsyncIterator[BroadcastContext]:
