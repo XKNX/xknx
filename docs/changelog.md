@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Bugfixes
 
+- `None` is not a valid address parameter for GroupAddress and IndividualAddress anymore. It raises `CouldNotParseAddress`.
 - `None` in a RemoteValue or Device group address list is now ignored instead of parsed as broadcast address.
 - Broadcast address ("0/0/0") is now invalid for RemoteValue and Device group addresses and raises `CouldNotParseAddress`.
 
@@ -25,7 +26,6 @@ nav_order: 2
 ### Internal
 
 - Use ruff isort plugin, remove isort from requirements.
-- `None` is not a valid address parameter for GroupAddress and IndividualAddress anymore. It raises `CouldNotParseAddress`.
 
 # 2.11.2 DPT 9 small negative fix 2023-07-24
 
