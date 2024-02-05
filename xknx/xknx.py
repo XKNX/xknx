@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Awaitable
 import logging
 from logging.handlers import TimedRotatingFileHandler
-import os
+from pathlib import Path
 import signal
 from sys import platform
 from types import TracebackType
@@ -160,12 +160,13 @@ class XKNX:
     @staticmethod
     def setup_logging(log_directory: str) -> None:
         """Configure logging to file."""
-        if not os.path.isdir(log_directory):
+        log_path = Path(log_directory)
+        if not log_path.is_dir():
             logger.warning("The provided log directory does not exist.")
             return
 
         _handler = TimedRotatingFileHandler(
-            filename=f"{log_directory}{os.sep}xknx.log",
+            filename=log_path / "xknx.log",
             when="midnight",
             backupCount=7,
             encoding="utf-8",

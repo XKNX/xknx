@@ -1,5 +1,4 @@
 """Unit test for keyring reader."""
-import os
 from pathlib import Path
 
 import pytest
@@ -20,9 +19,7 @@ class TestKeyRing:
     """Test class for keyring."""
 
     keyring_test_file = Path(__file__).parent / "resources/keyring.knxkeys"
-    testcase_file: str = os.path.join(
-        os.path.dirname(__file__), "resources/testcase.knxkeys"
-    )
+    testcase_file: str = Path(__file__).parent / "resources/testcase.knxkeys"
     special_chars_file = (
         Path(__file__).parent / "resources/special_chars_secure_tunnel.knxkeys"
     )

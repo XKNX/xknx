@@ -1,6 +1,6 @@
 """Tests for KNX Data Secure."""
 import asyncio
-import os
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -60,9 +60,7 @@ class TestDataSecure:
     @classmethod
     def setup_class(cls):
         """Set up any state specific to the execution of the given class."""
-        secure_test_keyfile = os.path.join(
-            os.path.dirname(__file__), "resources/SecureTest.knxkeys"
-        )
+        secure_test_keyfile = Path(__file__).parent / "resources/SecureTest.knxkeys"
         cls.secure_test_keyring = sync_load_keyring(secure_test_keyfile, "test")
 
     def setup_method(self):

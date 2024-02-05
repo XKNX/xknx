@@ -8,6 +8,7 @@ import enum
 from itertools import chain
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from xml.dom.minidom import Attr, Document, Element, parse
 from xml.etree.ElementTree import ElementTree
@@ -456,15 +457,15 @@ def sync_load_keyring(
     path: str | os.PathLike[Any], password: str, validate_signature: bool = True
 ) -> Keyring:
     """Load a .knxkeys file from the given path."""
-
-    if validate_signature and not verify_keyring_signature(path, password):
+    _path = Path(path)
+    if validate_signature and not verify_keyring_signature(_path, password):
         raise InvalidSecureConfiguration(
             "Signature verification of keyring file failed. Invalid password or malformed file content."
         )
 
     keyring: Keyring = Keyring()
     try:
-        with open(path, encoding="utf-8") as file:
+        with _path.open(encoding="utf-8") as file:
             dom: Document = parse(file)
             keyring.parse_xml(dom.getElementsByTagName("Keyring")[0])
 
@@ -519,11 +520,12 @@ def verify_keyring_signature(path: str | os.PathLike[Any], password: str) -> boo
     """Verify the signature of the given knxkeys file."""
     handler = KeyringSAXContentHandler(password)
     signature: bytes
-    with open(path, encoding="utf-8") as file:
+    _path = Path(path)
+    with _path.open(encoding="utf-8") as file:
         element = ElementTree().parse(file)
         signature = base64.b64decode(element.attrib.get("Signature", ""))
 
-    with open(path, encoding="utf-8") as file:
+    with _path.open(encoding="utf-8") as file:
         parser = xml.sax.make_parser()
         parser.setContentHandler(handler)
         parser.parse(file)  # type: ignore[no-untyped-call]
