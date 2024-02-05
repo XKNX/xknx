@@ -133,6 +133,7 @@ lint.select = [
   "I",     # isort
   "RUF",   # ruff specific
   "SLF",   # private member access
+  "SIM",   # simplify
   "T20",   # print
   "UP",    # pyupgrade
   "W",     # pydocstyle warning
@@ -141,7 +142,9 @@ lint.ignore = [
   "D202",
   "D203",
   "D212",
-  "E501", # line too long
+  "E501",   # line too long
+  "SIM102", # collapsible-if
+  "SIM105", #suppressible-exception
 ]
 extend-exclude = ["script"]
 

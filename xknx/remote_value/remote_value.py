@@ -295,7 +295,7 @@ class RemoteValue(ABC, Generic[ValueT]):
                 return False
             if other.__dict__[key] != value:
                 return False
-        for key in other.__dict__.keys():
+        for key in other.__dict__:
             if key == "after_update_cb":
                 continue
             if key not in self.__dict__:
