@@ -112,6 +112,7 @@ class Device(ABC):
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueRead telegrams."""
         # The default is, that devices don't answer to group reads
+        return
 
     async def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
@@ -121,6 +122,7 @@ class Device(ABC):
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming GroupValueWrite telegrams."""
         # The default is, that devices don't process group writes
+        return
 
     def get_name(self) -> str:
         """Return name of device."""

@@ -207,7 +207,7 @@ class TestSecureGroup:
             )
             secure_group.handle_knxipframe(timer_newer, HPAI(*self.mock_addr))
             mock_reschedule.assert_called_once()
-            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert secure_timer.current_timer_value() == ONE_HOUR_MS
             assert not secure_timer.timekeeper
             assert not secure_timer.sched_update
             mock_reschedule.reset_mock()
@@ -224,7 +224,7 @@ class TestSecureGroup:
             )
             secure_group.handle_knxipframe(timer_exact, HPAI(*self.mock_addr))
             mock_reschedule.assert_called_once()
-            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert secure_timer.current_timer_value() == ONE_HOUR_MS
             assert not secure_timer.timekeeper
             assert not secure_timer.sched_update
             mock_reschedule.reset_mock()
@@ -243,7 +243,7 @@ class TestSecureGroup:
             )
             secure_group.handle_knxipframe(timer_valid, HPAI(*self.mock_addr))
             mock_reschedule.assert_called_once()
-            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert secure_timer.current_timer_value() == ONE_HOUR_MS
             assert not secure_timer.timekeeper
             assert not secure_timer.sched_update
             mock_reschedule.reset_mock()
@@ -335,7 +335,7 @@ class TestSecureGroup:
             mock_super_handle_knxipframe.assert_called_once()
             mock_super_handle_knxipframe.reset_mock()
             mock_reschedule.assert_called_once()
-            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert secure_timer.current_timer_value() == ONE_HOUR_MS
             assert not secure_timer.sched_update
             mock_reschedule.reset_mock()
             # E6
@@ -347,7 +347,7 @@ class TestSecureGroup:
             mock_super_handle_knxipframe.assert_called_once()
             mock_super_handle_knxipframe.reset_mock()
             mock_reschedule.assert_called_once()
-            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert secure_timer.current_timer_value() == ONE_HOUR_MS
             assert not secure_timer.timekeeper
             assert not secure_timer.sched_update
             mock_reschedule.reset_mock()
@@ -364,7 +364,7 @@ class TestSecureGroup:
             mock_super_handle_knxipframe.assert_called_once()
             mock_super_handle_knxipframe.reset_mock()
             mock_reschedule.assert_called_once()
-            assert ONE_HOUR_MS == secure_timer.current_timer_value()
+            assert secure_timer.current_timer_value() == ONE_HOUR_MS
             assert not secure_timer.timekeeper
             assert not secure_timer.sched_update
             mock_reschedule.reset_mock()

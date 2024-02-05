@@ -35,8 +35,8 @@ class DPTDate(DPTBase):
         try:
             # strptime conversion used for catching exceptions; filled with default values
             return time.strptime(f"{year} {month} {day}", "%Y %m %d")
-        except ValueError:
-            raise ConversionError("Could not parse DPTDate", raw=raw)
+        except ValueError as err:
+            raise ConversionError("Could not parse DPTDate", raw=raw) from err
 
     @classmethod
     def to_knx(cls, value: time.struct_time) -> DPTArray:

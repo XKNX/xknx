@@ -5,7 +5,7 @@ import logging
 from xknx import XKNX
 from xknx.devices import Weather
 
-logging.basicConfig(level=logging.WARN)
+logging.basicConfig(level=logging.WARNING)
 
 
 async def main():

@@ -105,7 +105,7 @@ class DIBGeneric(DIB):
             try:
                 self.dtc = DIBTypeCode(self.dtc)
             except ValueError:
-                raise CouldNotParseKNXIP("DTC invalid")
+                raise CouldNotParseKNXIP("DTC invalid") from None
         return (
             bytes((self.calculated_length(), self.dtc.value))
             + self.data

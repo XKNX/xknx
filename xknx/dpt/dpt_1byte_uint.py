@@ -41,10 +41,12 @@ class DPTValue1ByteUnsigned(DPTNumeric):
         try:
             knx_value = int(value)
             if not cls._test_boundaries(knx_value):
-                raise ValueError
+                raise ValueError("Value out of range")
             return DPTArray(knx_value)
-        except ValueError:
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        except ValueError as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
 
     @classmethod
     def _test_boundaries(cls, value: int) -> bool:
@@ -135,7 +137,9 @@ class DPTSceneNumber(DPTValue1ByteUnsigned):
         try:
             knx_value = int(value) - 1
             if not cls._test_boundaries(knx_value + 1):
-                raise ValueError
+                raise ValueError("Value out of range")
             return DPTArray(knx_value)
-        except ValueError:
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        except ValueError as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err

@@ -40,8 +40,8 @@ class DPT4ByteUnsigned(DPTNumeric):
 
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore[no-any-return]
-        except struct.error:
-            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw)
+        except struct.error as err:
+            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
 
     @classmethod
     def to_knx(cls, value: int | float) -> DPTArray:
@@ -51,8 +51,10 @@ class DPT4ByteUnsigned(DPTNumeric):
             if not cls._test_boundaries(knx_value):
                 raise ValueError
             return DPTArray(struct.pack(cls._struct_format, knx_value))
-        except (ValueError, struct.error):
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        except (ValueError, struct.error) as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
 
     @classmethod
     def _test_boundaries(cls, value: int) -> bool:

@@ -321,7 +321,7 @@ class CEMIMPropInfo:
         except ValueError:
             raise UnsupportedCEMIMessage(
                 f"CEMIMProp Object Type not supported: {raw[0:2].hex()} in CEMI: {raw.hex()}"
-            )
+            ) from None
 
         return CEMIMPropInfo(
             object_type=object_type,
@@ -614,7 +614,7 @@ class CEMIFrame:
         except ValueError:
             raise UnsupportedCEMIMessage(
                 f"CEMIMessageCode not implemented: {raw[0]} in CEMI: {raw.hex()}"
-            )
+            ) from None
 
         if code in (
             CEMIMessageCode.L_DATA_IND,

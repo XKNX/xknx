@@ -1,5 +1,5 @@
 """Unit test for KNX/IP Interface."""
-import os
+from pathlib import Path
 import threading
 from unittest.mock import DEFAULT, Mock, patch
 
@@ -23,7 +23,7 @@ from xknx.telegram import IndividualAddress
 class TestKNXIPInterface:
     """Test class for KNX interface objects."""
 
-    knxkeys_file = os.path.join(os.path.dirname(__file__), "resources/testcase.knxkeys")
+    knxkeys_file = Path(__file__).parent / "resources/testcase.knxkeys"
 
     def setup_method(self):
         """Set up test class."""

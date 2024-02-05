@@ -1,5 +1,5 @@
 """Unit test for XKNX Module."""
-import os
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,13 +15,14 @@ class TestXknxModule:
     def test_log_to_file(self):
         """Test logging enable."""
         XKNX(log_directory="/tmp/")
-        assert os.path.isfile("/tmp/xknx.log")
-        os.remove("/tmp/xknx.log")
+        _path = Path("/tmp/xknx.log")
+        assert _path.is_file()
+        _path.unlink()
 
     def test_log_to_file_when_dir_does_not_exist(self):
         """Test logging enable with non existent directory."""
         XKNX(log_directory="/xknx/is/fun")
-        assert not os.path.isfile("/xknx/is/fun/xknx.log")
+        assert not Path("/xknx/is/fun/xknx.log").is_file()
 
     def test_register_telegram_cb(self):
         """Test register telegram callback."""

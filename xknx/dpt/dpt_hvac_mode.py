@@ -57,7 +57,9 @@ class _DPTClimateMode(DPTBase, Generic[HVACModeT]):
         try:
             return cls.SUPPORTED_MODES[raw[0]]
         except KeyError:
-            raise ConversionError(f"Payload not supported for {cls.__name__}", raw=raw)
+            raise ConversionError(
+                f"Payload not supported for {cls.__name__}", raw=raw
+            ) from None
 
     @classmethod
     def to_knx(cls, value: HVACModeT) -> DPTArray:

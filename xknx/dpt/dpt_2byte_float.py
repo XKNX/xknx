@@ -52,7 +52,7 @@ class DPT2ByteFloat(DPTNumeric):
         try:
             value = float(value)
             if not cls._test_boundaries(value):
-                raise ValueError
+                raise ValueError("Value out of range")
 
             knx_value = value * 100
             if round(knx_value) == 0:
@@ -74,8 +74,10 @@ class DPT2ByteFloat(DPTNumeric):
                 msb |= 0x80
 
             return DPTArray((msb, mantisse & 0xFF))
-        except ValueError:
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        except ValueError as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
 
     @classmethod
     def _test_boundaries(cls, value: float) -> bool:

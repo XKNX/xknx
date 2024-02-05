@@ -43,8 +43,8 @@ class DPTTime(DPTBase):
             return time.strptime(
                 f"{hours} {minutes} {seconds} {weekday}", "%H %M %S %w"
             )
-        except ValueError:
-            raise ConversionError("Could not parse DPTTime", raw=raw)
+        except ValueError as err:
+            raise ConversionError("Could not parse DPTTime", raw=raw) from err
 
     @classmethod
     def to_knx(cls, value: time.struct_time) -> DPTArray:

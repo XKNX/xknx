@@ -84,7 +84,7 @@ class CEMIHandler:
             self.xknx.connection_manager.cemi_count_outgoing_error += 1
             raise ConfirmationError(
                 f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
-            )
+            ) from None
         self.xknx.connection_manager.cemi_count_outgoing += 1
 
     def handle_raw_cemi(self, raw_cemi: bytes) -> None:

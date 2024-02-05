@@ -67,10 +67,10 @@ class DPTControlStepCode(DPTBase, ABC):
         try:
             control = bool(value["control"])
             step_code = value["step_code"]
-        except KeyError:
+        except KeyError as err:
             raise ConversionError(
                 f"Can't serialize {cls.__name__}; invalid keys", value=value
-            )
+            ) from err
 
         if not cls._test_values(step_code):
             raise ConversionError(
