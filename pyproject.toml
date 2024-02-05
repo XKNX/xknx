@@ -123,6 +123,7 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 lint.select = [
+  "A",     # builtins shadowing
   "ASYNC", # async
   "B",     # bugbear
   "C4",    # comprehensions
@@ -131,6 +132,7 @@ lint.select = [
   "F",     # pyflakes
   "I",     # isort
   "RUF",   # ruff specific
+  "SLF",   # private member access
   "T20",   # print
   "UP",    # pyupgrade
   "W",     # pydocstyle warning
@@ -151,4 +153,5 @@ combine-as-imports = true
 "examples/*" = ["T20"] # print-used
 "test/*" = [
   "RUF012",
+  "SLF",    # private member access
 ] # Mutable class attributes should be annotated with `typing.ClassVar`
