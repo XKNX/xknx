@@ -11,7 +11,6 @@ from xknx.exceptions import (
 )
 from xknx.telegram import Telegram, apci, tpci
 from xknx.telegram.address import (
-    GroupAddress,
     IndividualAddress,
     IndividualAddressableType,
 )
@@ -93,10 +92,7 @@ async def nm_individual_address_read(
     addresses = []
     # initialize queue or event handler gathering broadcasts
     async with xknx.management.broadcast() as bc_context:
-        broadcast_telegram = Telegram(
-            GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
-        )
-        await xknx.management.send_broadcast(broadcast_telegram)
+        await xknx.management.send_broadcast(apci.IndividualAddressRead())
         async for result in bc_context.receive(timeout=timeout):
             if isinstance(result.payload, apci.IndividualAddressResponse):
                 addresses.append(result.source_address)
@@ -149,10 +145,7 @@ async def nm_invididual_address_write(
         logger.debug("Device already has requested address, no write operation needed.")
     else:
         await xknx.management.send_broadcast(
-            Telegram(
-                GroupAddress("0/0/0"),
-                payload=apci.IndividualAddressWrite(address=individual_address),
-            )
+            payload=apci.IndividualAddressWrite(address=individual_address),
         )
         logger.debug("Wrote new address %s to device.", individual_address)
 
@@ -193,12 +186,9 @@ async def nm_individual_address_serial_number_read(
 
     # initialize queue or event handler gathering broadcasts
     async with xknx.management.broadcast() as bc_context:
-        broadcast_telegram = Telegram(
-            destination_address=GroupAddress("0/0/0"),
-            source_address=xknx.current_address,
-            payload=apci.IndividualAddressSerialRead(serial=serial),
+        await xknx.management.send_broadcast(
+            payload=apci.IndividualAddressSerialRead(serial=serial)
         )
-        await xknx.management.send_broadcast(broadcast_telegram)
         async for result in bc_context.receive(timeout=timeout):
             if (
                 isinstance(result.payload, apci.IndividualAddressSerialResponse)
@@ -215,11 +205,9 @@ async def nm_individual_address_serial_number_write(
     """Write individual address to device with specified serial number."""
     individual_address = IndividualAddress(individual_address)
     await xknx.management.send_broadcast(
-        Telegram(
-            destination_address=GroupAddress("0/0/0"),
-            payload=apci.IndividualAddressSerialWrite(
-                address=individual_address, serial=serial
-            ),
+        payload=apci.IndividualAddressSerialWrite(
+            address=individual_address,
+            serial=serial,
         )
     )
     logger.debug(
