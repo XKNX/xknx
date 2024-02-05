@@ -38,7 +38,7 @@ class ExposeSensor(Device):
         self,
         xknx: XKNX,
         name: str,
-        group_address: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
         respond_to_read: bool = True,
         value_type: int | str | None = None,
         cooldown: float = 0,

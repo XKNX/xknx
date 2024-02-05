@@ -32,7 +32,7 @@ class Sensor(Device):
         self,
         xknx: XKNX,
         name: str,
-        group_address_state: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         always_callback: bool = False,
         value_type: int | str | None = None,
