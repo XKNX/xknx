@@ -237,14 +237,14 @@ class GroupAddress(BaseAddress):
         )
         sub = int(match.group("sub"))
         if main > self.MAX_MAIN:
-            raise CouldNotParseAddress(address, message="Main out of range")
+            raise CouldNotParseAddress(address, message="Main group out of range")
         if middle is not None:
             if middle > self.MAX_MIDDLE:
-                raise CouldNotParseAddress(address, message="Middle out of range")
+                raise CouldNotParseAddress(address, message="Middle group out of range")
             if sub > self.MAX_SUB_LONG:
-                raise CouldNotParseAddress(address, message="Sub out of range")
+                raise CouldNotParseAddress(address, message="Sub group out of range")
         elif sub > self.MAX_SUB_SHORT:
-            raise CouldNotParseAddress(address, message="Sub out of range")
+            raise CouldNotParseAddress(address, message="Sub group out of range")
         return (
             (main << 11) + (middle << 8) + sub
             if middle is not None
