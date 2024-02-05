@@ -8,7 +8,13 @@ nav_order: 2
 
 # Unreleased changes
 
-### Connection
+### Bugfixes
+
+- `None` is not a valid address parameter for GroupAddress and IndividualAddress anymore. It raises `CouldNotParseAddress`.
+- `None` in a RemoteValue or Device group address list is now ignored instead of parsed as broadcast address.
+- Broadcast address ("0/0/0") is now invalid for RemoteValue and Device group addresses and raises `CouldNotParseAddress`.
+
+### Management
 
 - Add new management routines for device management: `nm_invididual_address_write`,  `nm_individual_address_read`, `nm_individual_address_serial_number_read` and `nm_individual_address_serial_number_write`.
 - Add handling mechanism for broadcast telegrams in the management class.

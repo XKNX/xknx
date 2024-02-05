@@ -33,7 +33,7 @@ class BinarySensor(Device):
         self,
         xknx: XKNX,
         name: str,
-        group_address_state: GroupAddressesType | None = None,
+        group_address_state: GroupAddressesType = None,
         invert: bool = False,
         sync_state: bool | int | float | str = True,
         ignore_internal_state: bool = False,

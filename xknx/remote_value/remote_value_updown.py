@@ -29,8 +29,8 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddressesType | None = None,
-        group_address_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
         device_name: str | None = None,
         feature_name: str = "Up/Down",
         after_update_cb: AsyncCallbackType | None = None,

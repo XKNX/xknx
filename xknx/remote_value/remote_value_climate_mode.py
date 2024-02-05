@@ -47,8 +47,8 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddressesType | None = None,
-        group_address_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Climate mode",
@@ -95,8 +95,8 @@ class RemoteValueControllerMode(RemoteValueClimateModeBase[HVACControllerMode]):
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddressesType | None = None,
-        group_address_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Controller Mode",
@@ -132,8 +132,8 @@ class RemoteValueBinaryOperationMode(RemoteValueClimateModeBase[HVACOperationMod
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddressesType | None = None,
-        group_address_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Climate mode binary",
@@ -207,8 +207,8 @@ class RemoteValueBinaryHeatCool(RemoteValueClimateModeBase[HVACControllerMode]):
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddressesType | None = None,
-        group_address_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Controller mode Heat/Cool",

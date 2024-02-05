@@ -29,8 +29,8 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
     def __init__(
         self,
         xknx: XKNX,
-        group_address: GroupAddressesType | None = None,
-        group_address_state: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         value_type: int | str | None = None,
         device_name: str | None = None,

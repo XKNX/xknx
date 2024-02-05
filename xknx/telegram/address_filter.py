@@ -55,9 +55,9 @@ class AddressFilter:
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
 
-    def match(self, address: str | GroupAddress | InternalGroupAddress) -> bool:
+    def match(self, address: str | int | GroupAddress | InternalGroupAddress) -> bool:
         """Test if provided address matches Addressfilter."""
-        if isinstance(address, str):
+        if isinstance(address, (str, int)):
             address = parse_device_group_address(address)
 
         if isinstance(address, GroupAddress) and self.level_filters:

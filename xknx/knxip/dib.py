@@ -127,7 +127,7 @@ class DIBDeviceInformation(DIB):
         """Initialize DIBDeviceInformation class."""
         self.knx_medium: KNXMedium = KNXMedium.TP1
         self.programming_mode: bool = False
-        self.individual_address: IndividualAddress = IndividualAddress(None)
+        self.individual_address: IndividualAddress = IndividualAddress(0)
         self.installation_number: int = 0
         self.project_number: int = 0
         self.serial_number: str = ""

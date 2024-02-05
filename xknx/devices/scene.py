@@ -22,7 +22,7 @@ class Scene(Device):
         self,
         xknx: XKNX,
         name: str,
-        group_address: GroupAddressesType | None = None,
+        group_address: GroupAddressesType = None,
         scene_number: int = 1,
         device_updated_cb: DeviceCallbackType[Scene] | None = None,
     ):
