@@ -172,7 +172,7 @@ async def nm_invididual_address_write(
             # if nothing is received (-> timeout) IA is free
             raise ManagementConnectionError(
                 f"No device answered to connection attempt after write address operation. {ex}"
-            )
+            ) from None
 
         logger.debug("Restating device, exiting programming mode.")
         # A_Restart will not be ACKed by the device, so it is manually sent to avoid timeout and retry

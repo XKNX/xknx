@@ -37,9 +37,11 @@ class DPTString(DPTBase):
         try:
             knx_value = str(value)
             if not cls._test_boundaries(knx_value):
-                raise ValueError
-        except ValueError:
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+                raise ValueError("Value out of range")
+        except ValueError as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
         # replace invalid characters with question marks
         raw_bytes = knx_value.encode(cls._encoding, errors="replace")
         padding = bytes(cls.payload_length - len(raw_bytes))

@@ -123,6 +123,7 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 lint.select = [
+  "B",   # bugbear
   "C4",  # comprehensions
   "D",   # pydocstyle
   "E",   # pycodestyle

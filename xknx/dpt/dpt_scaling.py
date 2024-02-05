@@ -43,13 +43,15 @@ class DPTScaling(DPTNumeric):
         try:
             percent_value = float(value)
             if not cls._test_boundaries(percent_value):
-                raise ValueError
+                raise ValueError("Value out of range")
             delta = cls.value_max - cls.value_min
             knx_value = round((percent_value - cls.value_min) / delta * 255)
 
             return DPTArray(knx_value)
-        except ValueError:
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        except ValueError as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
 
     @classmethod
     def _test_boundaries(cls, value: float) -> bool:

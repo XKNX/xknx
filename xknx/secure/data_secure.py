@@ -116,7 +116,7 @@ class DataSecure:
             raise DataSecureError(
                 f"Source address not found in Security Individual Address Table: {source_address}",
                 log_level=logging.INFO,
-            )
+            ) from None
         if not received_sequence_number > last_valid_sequence_number:
             # TODO: implement and increment Security Failure Log counter (not when equal)
             raise DataSecureError(

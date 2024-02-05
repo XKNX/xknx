@@ -465,7 +465,7 @@ class UDPTunnel(_Tunnel):
                 except TunnellingAckError as err:
                     raise CommunicationError(
                         f"Resending the telegram repeatedly failed. {err}", True
-                    )
+                    ) from None
 
             finally:
                 self._increase_sequence_number()

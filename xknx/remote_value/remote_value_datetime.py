@@ -51,7 +51,7 @@ class RemoteValueDateTime(RemoteValue[time.struct_time]):
                 value_type=value_type,
                 device_name=device_name,
                 feature_name=feature_name,
-            )
+            ) from None
         super().__init__(
             xknx,
             group_address,

@@ -46,6 +46,7 @@ class AttributeReader(ABC):
         self, password_hash: bytes, initialization_vector: bytes
     ) -> None:
         """Decrypt attribute data."""
+        return
 
     @staticmethod
     def get_attribute_value(attribute: Attr | Any) -> Any:

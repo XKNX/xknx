@@ -65,13 +65,13 @@ class DPTColorXYY(DPTBase):
 
             if value.color is not None:
                 for _ in (axis for axis in value.color if not 0 <= axis <= 1):
-                    raise ValueError
+                    raise ValueError("Color out of range")
                 color_valid = True
                 x_axis, y_axis = (round(axis * 0xFFFF) for axis in value.color)
 
             if value.brightness is not None:
                 if not 0 <= value.brightness <= 255:
-                    raise ValueError
+                    raise ValueError("Brightness out of range")
                 brightness_valid = True
                 brightness = int(value.brightness)
 
@@ -85,5 +85,7 @@ class DPTColorXYY(DPTBase):
                     color_valid << 1 | brightness_valid,
                 )
             )
-        except (ValueError, TypeError):
-            raise ConversionError(f"Could not serialize {cls.__name__}", value=value)
+        except (ValueError, TypeError) as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
