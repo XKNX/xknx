@@ -30,7 +30,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 AsyncCallbackType = Callable[[], Awaitable[None]]
-GroupAddressesType = Union["DeviceAddressableType", list["DeviceAddressableType"]]
+GroupAddressesType = Union[
+    "DeviceAddressableType", list[Union["DeviceAddressableType", None]], None
+]
 ValueT = TypeVar("ValueT")
 
 
@@ -52,20 +54,23 @@ class RemoteValue(ABC, Generic[ValueT]):
         self.passive_group_addresses: list[DeviceGroupAddress] = []
 
         def unpack_group_addresses(
-            addresses: GroupAddressesType | None,
+            addresses: GroupAddressesType,
         ) -> DeviceGroupAddress | None:
             """Parse group addresses and assign passive addresses when given."""
-            if not addresses:  # None, 0 (broadcast) or empty list
+            if addresses is None:
                 return None
             if not isinstance(addresses, list):
                 return parse_device_group_address(addresses)
-            # ignore None and 0 (broadcast) addresses
+            if not addresses:  # empty list
+                return None
             active = addresses[0]
             passive = [
-                parse_device_group_address(addr) for addr in addresses[1:] if addr
+                parse_device_group_address(addr)
+                for addr in addresses[1:]
+                if addr is not None
             ]
             self.passive_group_addresses.extend(passive)
-            return parse_device_group_address(active) if active else None
+            return parse_device_group_address(active) if active is not None else None
 
         self.group_address = unpack_group_addresses(group_address)
         self.group_address_state = unpack_group_addresses(group_address_state)

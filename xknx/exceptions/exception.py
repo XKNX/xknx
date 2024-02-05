@@ -143,16 +143,15 @@ class ConversionError(XKNXException):
 class CouldNotParseAddress(XKNXException):
     """Exception class for wrong address format."""
 
-    def __init__(
-        self, address: object | str | tuple[Any, ...] | int | None = None
-    ) -> None:
+    def __init__(self, address: Any = None, message: str = "") -> None:
         """Initialize CouldNotParseAddress class."""
         super().__init__()
         self.address = address
+        self.message = f'message="{message}" ' if message else ""
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<CouldNotParseAddress address="{self.address}" />'
+        return f'<CouldNotParseAddress address="{self.address}" {self.message}/>'
 
 
 class DeviceIllegalValue(XKNXException):

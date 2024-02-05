@@ -18,12 +18,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 from re import compile as re_compile
-from typing import ClassVar, Optional, TypeVar, Union
+from typing import ClassVar, TypeVar, Union
 
 from xknx.exceptions import CouldNotParseAddress
 
-GroupAddressableType = Optional[Union["GroupAddress", str, int]]
-IndividualAddressableType = Optional[Union["IndividualAddress", str, int]]
+GroupAddressableType = Union["GroupAddress", str, int]
+IndividualAddressableType = Union["IndividualAddress", str, int]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
 DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
 DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
@@ -35,14 +35,16 @@ def parse_device_group_address(
     address: DeviceAddressableType,
 ) -> DeviceGroupAddress:
     """Parse an Addressable type to GroupAddress or InternalGroupAddress."""
-    if isinstance(address, (GroupAddress, InternalGroupAddress)):
-        return address
     try:
-        return GroupAddress(address)
+        group_address = GroupAddress(address)  # type: ignore[arg-type]  # InternalGroupAddress will raise
     except CouldNotParseAddress as ex:
-        if isinstance(address, str):
+        if isinstance(address, (str, InternalGroupAddress)):
             return InternalGroupAddress(address)
         raise ex
+
+    if group_address.raw == 0:
+        raise CouldNotParseAddress(address, "Broadcast address invalid for devices")
+    return group_address
 
 
 class BaseAddress(ABC):
@@ -104,13 +106,11 @@ class IndividualAddress(BaseAddress):
                 self.raw = int(address)
             else:
                 self.raw = self.__string_to_int(address)
-        elif address is None:
-            self.raw = 0
         else:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Invalid type")
 
         if not 0 <= self.raw <= 65535:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Address out of range")
 
     def __string_to_int(self, address: str) -> int:
         """
@@ -124,12 +124,16 @@ class IndividualAddress(BaseAddress):
         """
         match = self.ADDRESS_RE.match(address)
         if not match:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Invalid format")
         area = int(match.group("area"))
         main = int(match.group("main"))
         line = int(match.group("line"))
-        if area > self.MAX_AREA or main > self.MAX_MAIN or line > self.MAX_LINE:
-            raise CouldNotParseAddress(address)
+        if area > self.MAX_AREA:
+            raise CouldNotParseAddress(address, message="Area part out of range")
+        if main > self.MAX_MAIN:
+            raise CouldNotParseAddress(address, message="Line part out of range")
+        if line > self.MAX_LINE:
+            raise CouldNotParseAddress(address, message="Device part out of range")
         return (area << 12) + (main << 8) + line
 
     @property
@@ -208,13 +212,11 @@ class GroupAddress(BaseAddress):
                 self.raw = int(address)
             else:
                 self.raw = self.__string_to_int(address)
-        elif address is None:
-            self.raw = 0
         else:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Invalid type")
 
         if not 0 <= self.raw <= 65535:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Address out of range")
 
     def __string_to_int(self, address: str) -> int:
         """
@@ -228,21 +230,21 @@ class GroupAddress(BaseAddress):
         """
         match = self.ADDRESS_RE.match(address)
         if not match:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Invalid format")
         main = int(match.group("main"))
         middle = (
             int(match.group("middle")) if match.group("middle") is not None else None
         )
         sub = int(match.group("sub"))
         if main > self.MAX_MAIN:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Main out of range")
         if middle is not None:
             if middle > self.MAX_MIDDLE:
-                raise CouldNotParseAddress(address)
+                raise CouldNotParseAddress(address, message="Middle out of range")
             if sub > self.MAX_SUB_LONG:
-                raise CouldNotParseAddress(address)
+                raise CouldNotParseAddress(address, message="Sub out of range")
         elif sub > self.MAX_SUB_SHORT:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Sub out of range")
         return (
             (main << 11) + (middle << 8) + sub
             if middle is not None
@@ -318,17 +320,17 @@ class InternalGroupAddress:
             self.address = address.address
             return
         if not isinstance(address, str):
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Invalid type")
 
         prefix_length = 1
         if len(address) < 2 or address[0].lower() != "i":
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="Invalid prefix")
         if address[1] in "-_":
             prefix_length = 2
 
         self.address = address[prefix_length:].strip()
         if not self.address:
-            raise CouldNotParseAddress(address)
+            raise CouldNotParseAddress(address, message="No chars after prefix")
 
     def __str__(self) -> str:
         """Return object as readable string (e.g. 'i-123')."""

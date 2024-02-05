@@ -10,14 +10,14 @@ from xknx.telegram.address import (
     parse_device_group_address,
 )
 
-group_addresses_valid = {
-    "0/0": 0,
+_broadcast_group_addresses = ["0/0/0", "0/0", "0", 0]
+
+device_group_addresses_valid = {
     "0/1": 1,
     "0/11": 11,
     "0/111": 111,
     "0/1111": 1111,
     "0/2047": 2047,
-    "0/0/0": 0,
     "0/0/1": 1,
     "0/0/11": 11,
     "0/0/111": 111,
@@ -31,11 +31,13 @@ group_addresses_valid = {
     "1/7/255": 4095,
     "31/7/255": 65535,
     "1": 1,
-    0: 0,
     65535: 65535,
     GroupAddress("1/1/111"): 2415,
-    None: 0,
 }
+
+group_addresses_valid = {
+    bc_addr: 0 for bc_addr in _broadcast_group_addresses
+} | device_group_addresses_valid
 
 group_addresses_invalid = [
     "0/2049",
@@ -52,7 +54,10 @@ group_addresses_invalid = [
     (0xAB, 0xCD),
     -1,
     [],
+    None,
 ]
+
+device_group_addresses_invalid = group_addresses_invalid + _broadcast_group_addresses
 
 individual_addresses_valid = {
     "0.0.0": 0,
@@ -84,6 +89,7 @@ individual_addresses_invalid = [
     (0xAB, 0xCD),
     -1,
     [],
+    None,
 ]
 
 internal_group_addresses_valid = {
@@ -111,6 +117,7 @@ internal_group_addresses_invalid = [
     "i  ",
     "i- ",
     "a",
+    None,
 ]
 
 
@@ -140,10 +147,6 @@ class TestIndividualAddress:
         """Test initialization with Bytes."""
         ia = IndividualAddress.from_knx(bytes((0x12, 0x34)))
         assert ia.raw == 0x1234
-
-    def test_with_none(self):
-        """Test initialization with None object."""
-        assert IndividualAddress(None).raw == 0
 
     def test_is_line(self):
         """Test if `IndividualAddress.is_line` works like excepted."""
@@ -347,7 +350,7 @@ class TestInternalGroupAddress:
 class TestParseDestinationAddress:
     """Test class for parsing destination addresses."""
 
-    @pytest.mark.parametrize("address_test", group_addresses_valid)
+    @pytest.mark.parametrize("address_test", device_group_addresses_valid)
     def test_parse_group_address(self, address_test):
         """Test if the function returns GroupAddress objects."""
         assert isinstance(parse_device_group_address(address_test), GroupAddress)

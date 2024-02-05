@@ -201,7 +201,7 @@ class TestRemoteValue:
         assert remote_value_3.has_group_address(GroupAddress("2/3/4"))
         assert remote_value_3.has_group_address(GroupAddress("2/2/2"))
         assert remote_value_3.has_group_address(GroupAddress("2/2/20"))
-        assert not remote_value_3.has_group_address(GroupAddress("0/0/0"))
+        assert not remote_value_3.has_group_address(GroupAddress("0/0/1"))
         # test empty list
         remote_value_4 = RemoteValue(xknx, group_address=[])
         assert remote_value_4.group_address is None
@@ -219,11 +219,10 @@ class TestRemoteValue:
             GroupAddress("2/2/2"),
             GroupAddress("2/2/20"),
         ]
-        # test 0 (broadcast address is invalid as group address in RemoteValue)
         remote_value_6 = RemoteValue(
             xknx,
-            group_address=0,
-            group_address_state=["1/1/1", None, 0, "2/2/2", "2/2/20"],
+            group_address=None,
+            group_address_state=["1/1/1", None, "2/2/2", "2/2/20"],
         )
         assert remote_value_6.group_address is None
         assert remote_value_6.group_address_state == GroupAddress("1/1/1")
