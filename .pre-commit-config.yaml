@@ -7,16 +7,6 @@ repos:
         additional_dependencies:
           - tomli
         exclude_types: [csv, json]
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
-    hooks:
-      - id: pyupgrade
-        args: [--py39-plus]
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        files: ^(xknx|examples|docs)/.+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: 'v0.1.13'
     hooks:
