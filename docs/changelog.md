@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 2.12.0 Broadcasts 2024-02-05
 
 ### Bugfixes
 
@@ -16,8 +16,8 @@ nav_order: 2
 
 ### Management
 
-- Add new management routines for device management: `nm_invididual_address_write`,  `nm_individual_address_read`, `nm_individual_address_serial_number_read` and `nm_individual_address_serial_number_write`.
-- Add handling mechanism for broadcast telegrams in the management class.
+- Add handling mechanism and sending method for broadcast telegrams in the management class.
+- Add new management procedures for device management: `nm_invididual_address_write`,  `nm_individual_address_read`, `nm_individual_address_serial_number_read` and `nm_individual_address_serial_number_write`.
 
 ### Secure
 
@@ -25,7 +25,7 @@ nav_order: 2
 
 ### Internal
 
-- Use ruff isort plugin, remove isort from requirements.
+- Use ruff format and more ruff linters. Remove black, isort, flake8 and pyupgrade from requirements.
 
 # 2.11.2 DPT 9 small negative fix 2023-07-24
 
