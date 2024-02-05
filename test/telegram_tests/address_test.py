@@ -57,7 +57,10 @@ group_addresses_invalid = [
     None,
 ]
 
-device_group_addresses_invalid = group_addresses_invalid + _broadcast_group_addresses
+device_group_addresses_invalid = [
+    *group_addresses_invalid,
+    *_broadcast_group_addresses,
+]
 
 individual_addresses_valid = {
     "0.0.0": 0,
@@ -351,12 +354,12 @@ class TestParseDestinationAddress:
     """Test class for parsing destination addresses."""
 
     @pytest.mark.parametrize("address_test", device_group_addresses_valid)
-    def test_parse_group_address(self, address_test):
+    def test_parse_device_group_address(self, address_test):
         """Test if the function returns GroupAddress objects."""
         assert isinstance(parse_device_group_address(address_test), GroupAddress)
 
     @pytest.mark.parametrize("address_test", internal_group_addresses_valid)
-    def test_parse_internal_group_address(self, address_test):
+    def test_parse_device_internal_group_address(self, address_test):
         """Test if the function returns InternalGroupAddress objects."""
         assert isinstance(
             parse_device_group_address(address_test), InternalGroupAddress
@@ -366,10 +369,10 @@ class TestParseDestinationAddress:
         "address_test",
         [
             *internal_group_addresses_invalid,
-            *group_addresses_invalid,
+            *device_group_addresses_invalid,
         ],
     )
-    def test_parse_invalid(self, address_test):
+    def test_parse_device_invalid(self, address_test):
         """Test if the function raises CouldNotParseAddress on invalid values."""
         with pytest.raises(CouldNotParseAddress):
             parse_device_group_address(address_test)
