@@ -31,6 +31,9 @@ DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
 Self = TypeVar("Self", bound="BaseAddress")
 
 
+INVALID_PREFIX_MESSAGE = "Invalid prefix for internal group address"
+
+
 def parse_device_group_address(
     address: DeviceAddressableType,
 ) -> DeviceGroupAddress:
@@ -39,7 +42,12 @@ def parse_device_group_address(
         group_address = GroupAddress(address)  # type: ignore[arg-type]  # InternalGroupAddress will raise
     except CouldNotParseAddress as ex:
         if isinstance(address, (str, InternalGroupAddress)):
-            return InternalGroupAddress(address)
+            try:
+                return InternalGroupAddress(address)
+            except CouldNotParseAddress as internal_ex:
+                # prefer to raise original exception from GroupAddress
+                if not internal_ex.message == INVALID_PREFIX_MESSAGE:
+                    raise internal_ex
         raise ex
 
     if group_address.raw == 0:
@@ -110,7 +118,9 @@ class IndividualAddress(BaseAddress):
             raise CouldNotParseAddress(address, message="Invalid type")
 
         if not 0 <= self.raw <= 65535:
-            raise CouldNotParseAddress(address, message="Address out of range")
+            raise CouldNotParseAddress(
+                address, message="Address out of range (0..65535)"
+            )
 
     def __string_to_int(self, address: str) -> int:
         """
@@ -129,11 +139,17 @@ class IndividualAddress(BaseAddress):
         main = int(match.group("main"))
         line = int(match.group("line"))
         if area > self.MAX_AREA:
-            raise CouldNotParseAddress(address, message="Area part out of range")
+            raise CouldNotParseAddress(
+                address, message=f"Area part out of range (0..{self.MAX_AREA})"
+            )
         if main > self.MAX_MAIN:
-            raise CouldNotParseAddress(address, message="Line part out of range")
+            raise CouldNotParseAddress(
+                address, message=f"Line part out of range (0..{self.MAX_MAIN})"
+            )
         if line > self.MAX_LINE:
-            raise CouldNotParseAddress(address, message="Device part out of range")
+            raise CouldNotParseAddress(
+                address, message=f"Device part out of range (0..{self.MAX_LINE})"
+            )
         return (area << 12) + (main << 8) + line
 
     @property
@@ -216,7 +232,9 @@ class GroupAddress(BaseAddress):
             raise CouldNotParseAddress(address, message="Invalid type")
 
         if not 0 <= self.raw <= 65535:
-            raise CouldNotParseAddress(address, message="Address out of range")
+            raise CouldNotParseAddress(
+                address, message="Address out of range (0..65535)"
+            )
 
     def __string_to_int(self, address: str) -> int:
         """
@@ -237,14 +255,22 @@ class GroupAddress(BaseAddress):
         )
         sub = int(match.group("sub"))
         if main > self.MAX_MAIN:
-            raise CouldNotParseAddress(address, message="Main group out of range")
+            raise CouldNotParseAddress(
+                address, message=f"Main group out of range (0..{self.MAX_MAIN})"
+            )
         if middle is not None:
             if middle > self.MAX_MIDDLE:
-                raise CouldNotParseAddress(address, message="Middle group out of range")
+                raise CouldNotParseAddress(
+                    address, message=f"Middle group out of range (0..{self.MAX_MIDDLE})"
+                )
             if sub > self.MAX_SUB_LONG:
-                raise CouldNotParseAddress(address, message="Sub group out of range")
+                raise CouldNotParseAddress(
+                    address, message=f"Sub group out of range (0..{self.MAX_SUB_LONG})"
+                )
         elif sub > self.MAX_SUB_SHORT:
-            raise CouldNotParseAddress(address, message="Sub group out of range")
+            raise CouldNotParseAddress(
+                address, message=f"Sub group out of range (0..{self.MAX_SUB_SHORT})"
+            )
         return (
             (main << 11) + (middle << 8) + sub
             if middle is not None
@@ -324,7 +350,7 @@ class InternalGroupAddress:
 
         prefix_length = 1
         if len(address) < 2 or address[0].lower() != "i":
-            raise CouldNotParseAddress(address, message="Invalid prefix")
+            raise CouldNotParseAddress(address, message=INVALID_PREFIX_MESSAGE)
         if address[1] in "-_":
             prefix_length = 2
 
