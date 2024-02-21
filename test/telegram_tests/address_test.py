@@ -376,3 +376,8 @@ class TestParseDestinationAddress:
         """Test if the function raises CouldNotParseAddress on invalid values."""
         with pytest.raises(CouldNotParseAddress):
             parse_device_group_address(address_test)
+
+    def test_parse_device_invalid_group_address_message(self):
+        """Test if the error message is from GroupAddress, not InternalGroupAddress for strings."""
+        with pytest.raises(CouldNotParseAddress, match=r".*Sub group out of range.*"):
+            parse_device_group_address("0/0/700")
