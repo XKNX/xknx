@@ -46,7 +46,7 @@ def parse_device_group_address(
                 return InternalGroupAddress(address)
             except CouldNotParseAddress as internal_ex:
                 # prefer to raise original exception from GroupAddress
-                if not internal_ex.message == INVALID_PREFIX_MESSAGE:
+                if internal_ex.message != INVALID_PREFIX_MESSAGE:
                     raise internal_ex
         raise ex
 
