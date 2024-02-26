@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# 2.12.1 Address error messages 2024-02-26
+
+### Internal
+
+- More detailed address parsing error messages.
+
 # 2.12.0 Broadcasts 2024-02-05
 
 ### Bugfixes
