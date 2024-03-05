@@ -312,6 +312,10 @@ class TestKNXIPInterface:
             await interface.start()
             start_automatic_mock.assert_called_once_with(local_ip=None, keyring=None)
 
+            with pytest.raises(CommunicationError):
+                # interface can only be started once
+                await interface.start()
+
     async def test_threaded_send_cemi(self):
         """Test sending cemi with threaded connection."""
         # pylint: disable=attribute-defined-outside-init
@@ -345,6 +349,20 @@ class TestKNXIPInterface:
             await interface.stop()
             disconnect_routing_mock.assert_called_once_with()
             assert interface._interface is None
+
+    async def test_threaded_connection_unsuccessful_start(self):
+        """Test cleanup when unsuccessful initial connection."""
+        connection_config = ConnectionConfig(threaded=True)
+        assert connection_config.connection_type == ConnectionType.AUTOMATIC
+        with patch(
+            "xknx.io.KNXIPInterface._start", side_effect=CommunicationError("Error")
+        ):
+            interface = knx_interface_factory(self.xknx, connection_config)
+            with pytest.raises(CommunicationError):
+                await interface.start()
+            # thread and loop are cleaned up after unsuccessful start
+            assert interface._connection_thread is None
+            assert interface._thread_loop is None
 
     async def test_start_secure_connection_knx_keys_user_id(self):
         """Test starting a secure connection from a knxkeys file with user_id."""
