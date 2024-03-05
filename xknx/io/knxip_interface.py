@@ -499,16 +499,19 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         """Initialize KNXIPInterface class."""
         super().__init__(xknx, connection_config)
         self._main_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._thread_loop: asyncio.AbstractEventLoop
+        self._connection_thread: threading.Thread | None = None
+        self._thread_loop: asyncio.AbstractEventLoop | None = None
 
+    def _init_connection_thread(self) -> None:
+        """Start KNX/IP interface in its own thread."""
         loop_loaded = threading.Event()
-        self.connection_thread = threading.Thread(
+        self._connection_thread = threading.Thread(
             target=self._init_connection_loop,
             args=[loop_loaded],
             name="KNX Interface",
             daemon=True,
         )
-        self.connection_thread.start()
+        self._connection_thread.start()
         loop_loaded.wait()  # wait for the thread to initialize its loop
 
     def _init_connection_loop(self, loop_loaded: threading.Event) -> None:
@@ -520,6 +523,9 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     async def _await_from_connection_thread(self, coro: Awaitable[T]) -> T:
         """Await coroutine in different thread."""
+        if self._thread_loop is None:
+            raise CommunicationError("KNX connection thread not initialized.")
+
         fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
         finished = threading.Event()
 
@@ -534,19 +540,23 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
-        return await self._await_from_connection_thread(self._start())
+        await self._main_loop.run_in_executor(None, self._init_connection_thread)
+        try:
+            return await self._await_from_connection_thread(self._start())
+        except CommunicationError:
+            await self.stop()
+            raise
 
     async def stop(self) -> None:
-        """
-        Stop connected interface (either Tunneling or Routing).
-
-        Can not be restarted, create a new instance instead.
-        """
+        """Stop connected interface (either Tunneling or Routing)."""
         if self._interface is not None:
             await self._await_from_connection_thread(self._interface.disconnect())
             self._interface = None
-        self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
-        self.connection_thread.join()
+        if self._thread_loop is not None:
+            self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
+            self._thread_loop = None
+        if self._connection_thread is not None:
+            self._connection_thread.join()
 
     def cemi_received(self, raw_cemi: bytes) -> None:
         """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""

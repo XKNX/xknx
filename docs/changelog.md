@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# 2.12.2 Fix thread leak 2024-03-05
+
+### Bugfixes
+
+- Fix thread leak when initial connection attempt fails (on threaded connection mode).
+
 # 2.12.1 Address error messages 2024-02-26
 
 ### Internal
