@@ -540,6 +540,8 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
+        if self._connection_thread is not None or self._thread_loop is not None:
+            raise CommunicationError("KNX threaded interface already initialized.")
         await self._main_loop.run_in_executor(None, self._init_connection_thread)
         try:
             return await self._await_from_connection_thread(self._start())
@@ -557,6 +559,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             self._thread_loop = None
         if self._connection_thread is not None:
             self._connection_thread.join()
+            self._connection_thread = None
 
     def cemi_received(self, raw_cemi: bytes) -> None:
         """Pass CEMIFrame to CEMIHandler. Callback for having received CEMIFrames."""
