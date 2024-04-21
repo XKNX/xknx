@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("xknx.management.procedures")
 
+
 class RestartEraseCode(Enum):
     """Enum class for Confirmed Restart Erase Code."""
     CONFIRMED_RESTART = b'\x01'
@@ -31,7 +32,7 @@ class RestartEraseCode(Enum):
     FACTORY_RESET_WITHOUT_IA = b'\x07'
 
 
-RestartRsponseError = ['No Error','Access denied', 'Unsupported Erase Code', 'Invalid Channel Number']
+RestartResponseError = ['No Error', 'Access denied', 'Unsupported Erase Code', 'Invalid Channel Number']
 
 
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
@@ -55,8 +56,9 @@ async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) 
         )
         await xknx.cemi_handler.send_telegram(telegram)
 
+
 async def dm_confirmed_restart(
-    xknx: XKNX, individual_address: IndividualAddressableType, erase_code: RestartEraseCode, channel: bytes =b'\00'
+    xknx: XKNX, individual_address: IndividualAddressableType, erase_code: RestartEraseCode, channel: bytes = b'\00'
 ) -> bool:
 
     """Restart the device.
@@ -84,9 +86,7 @@ async def dm_confirmed_restart(
                 return False
 
             if isinstance(response.payload, apci.RestartResponse):
-                errortext = RestartRsponseError[response.payload.erasecode]
-                print(f"Device {individual_address} Erase Code:'{erase_code}' Result: '{errortext}' time to Device Restart: {response.payload.time}s")
-
+                errortext = RestartResponseError[int(response.payload.error_code)]
                 logger.debug("Device %s Erase Code:'%s' Result: '%s' time to Device Restart: %ss", individual_address, erase_code, errortext, response.payload.time)
 
                 return True
@@ -100,7 +100,6 @@ async def dm_confirmed_restart(
         logger.debug("Device does not support transport layer connections. %s", ex)
 
         return True
-
 
 
 async def nm_individual_address_check(
@@ -163,7 +162,7 @@ async def nm_individual_address_read(
     return addresses
 
 
-async def nm_invididual_address_write(
+async def nm_individual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> None:
     """
@@ -201,7 +200,8 @@ async def nm_invididual_address_write(
             raise ManagementConnectionError(
                 f"A device was found with {individual_address}, cannot continue with programming."
             )
-        # device in programming mode's address matches address that we want to write, so we can abort the operation safely
+        # device in programming mode's address matches address that we want to write, so we can abort the operation
+        # safely
         logger.debug("Device already has requested address, no write operation needed.")
     else:
         await xknx.management.send_broadcast(

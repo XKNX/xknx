@@ -13,7 +13,7 @@ from enum import Enum
 import struct
 from typing import ClassVar, cast
 
-from xknx.dpt import DPTArray, DPTBinary, DPTTime, DPT2ByteUnsigned, DPTTimePeriodSec
+from xknx.dpt import DPTArray, DPTBinary, DPTTimePeriodSec
 from xknx.exceptions import ConversionError
 from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
 from xknx.telegram.address import IndividualAddress
@@ -207,7 +207,6 @@ class APCI(ABC):
             if apci == APCIService.CONFIRMED_RESTART_RESPONSE.value:
                 return RestartResponse.from_knx(raw)
             return Restart.from_knx(raw)
-            return ConfirmedRestart.from_knx(raw)
         if service == APCIService.ESCAPE.value:
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
                 return AuthorizeRequest.from_knx(raw)
@@ -978,6 +977,7 @@ class Restart(APCI):
         """Return object as readable string."""
         return "<Restart />"
 
+
 class ConfirmedRestart(APCI):
     """
     Restart service.
@@ -996,26 +996,24 @@ class ConfirmedRestart(APCI):
         """Get length of APCI payload."""
         return 3
 
-
     @classmethod
     def from_knx(cls, raw: bytes) -> ConfirmedRestart:
         """Parse/deserialize from KNX/IP raw data."""
         print("from knx", raw)
         erasecode, channel = struct.unpack("!cc", raw[2:])
         return cls(erase_code=erasecode, channel=channel)
+
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        size = self.calculated_length()
         payload = struct.pack(
-            f"!cc", self.erase_code,self.channel
+            f"!cc", self.erase_code, self.channel
         )
-
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
-
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<Confirmed Restart />"
+
 
 class RestartResponse(APCI):
     """
@@ -1027,10 +1025,10 @@ class RestartResponse(APCI):
     CODE = APCIService.CONFIRMED_RESTART_RESPONSE
 
     def __init__(
-            self, erasecode: bytes, time: DPTTimePeriodSec
+            self, error_code: bytes, time: DPTTimePeriodSec
     ) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
-        self.erasecode = erasecode
+        self.error_code = error_code
         self.time = time
 
     def calculated_length(self) -> int:
@@ -1040,24 +1038,20 @@ class RestartResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> RestartResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        try:
-            erasecode, time = struct.unpack("!BH", raw[2:])
-            return cls(erasecode=erasecode, time=time)
-        except:
-            pass
+        error_code, time = struct.unpack("!BH", raw[2:])
+        return cls(error_code=error_code, time=time)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        size = len(self.data)
-        self.payload = struct.pack(
-            f"!{size}s", self.data
+        payload = struct.pack(
+            f"!cc", self.error_code, self.time
         )
 
-        return encode_cmd_and_payload(self.CODE, appended_payload=self.payload)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<Confirmed Restart Response="Errorcode={self.erasecode} Time={self.time}" />'
+        return f'<Confirmed Restart Response="Errorcode={self.error_code} Time={self.time}" />'
 
 
 class UserMemoryRead(APCI):
