@@ -40,7 +40,7 @@ class TCPTransport(KNXIPTransport):
             # cryptography (eg. X25519PublicKey.from_public_bytes() in IP Secure handshake)
             # https://github.com/python/cpython/issues/99941
             try:
-                if isinstance(asyncio.get_event_loop(), asyncio.ProactorEventLoop):  # type: ignore[attr-defined]
+                if isinstance(asyncio.get_event_loop(), asyncio.ProactorEventLoop):  # type: ignore[attr-defined, unused-ignore] # unused-ignore for Windows
                     self.data_received_callback = lambda data: data_received_callback(
                         bytes(data)
                     )

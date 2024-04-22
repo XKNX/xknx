@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import socket
-from sys import platform
+import sys
 from typing import Callable
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
@@ -114,10 +114,10 @@ class UDPTransport(KNXIPTransport):
         )
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
-        if platform == "win32":
+        if sys.platform == "win32":
             # '' represents INADDR_ANY
             sock.bind(("", remote_addr[1]))
-        elif platform == "darwin":
+        elif sys.platform == "darwin":
             # allows multiple sockets to the same port by multiple processes
             # behaves like SO_REUSEADDR for bind for INADDR_ANY
             # (GatewayScanner opens multiple sockets)
