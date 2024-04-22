@@ -295,7 +295,7 @@ async def test_nm_individual_address_write(time_travel):
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        procedures.nm_invididual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -355,7 +355,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(time_
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        procedures.nm_invididual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -404,7 +404,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(time_trave
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        procedures.nm_invididual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -474,7 +474,7 @@ async def test_nm_individual_address_write_address_found(time_travel):
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        procedures.nm_invididual_address_write(
             xknx=xknx, individual_address=individual_address
         )
     )
@@ -536,7 +536,7 @@ async def test_nm_individual_address_write_programming_failed(time_travel):
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        procedures.nm_invididual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -618,7 +618,7 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        procedures.nm_invididual_address_write(
             xknx=xknx, individual_address=individual_address
         )
     )
