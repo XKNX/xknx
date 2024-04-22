@@ -6,6 +6,7 @@ APCI stands for Application Layer Protocol Control Information.
 An APCI payload contains a service and payload. For example, a GroupValueWrite
 is a service that takes a DPT as a value.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -13,7 +14,7 @@ from enum import Enum
 import struct
 from typing import ClassVar, cast
 
-from xknx.dpt import DPTArray, DPTBinary, DPTTimePeriodSec
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
 from xknx.telegram.address import IndividualAddress
@@ -979,15 +980,11 @@ class Restart(APCI):
 
 
 class ConfirmedRestart(APCI):
-    """
-    Restart service.
-    """
+    """Restart service."""
 
     CODE = APCIService.CONFIRMED_RESTART
 
-    def __init__(
-        self, erase_code: bytes, channel: bytes
-    ) -> None:
+    def __init__(self, erase_code: bytes, channel: bytes) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
         self.erase_code = erase_code
         self.channel = channel
@@ -999,15 +996,12 @@ class ConfirmedRestart(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> ConfirmedRestart:
         """Parse/deserialize from KNX/IP raw data."""
-        print("from knx", raw)
         erasecode, channel = struct.unpack("!cc", raw[2:])
         return cls(erase_code=erasecode, channel=channel)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        payload = struct.pack(
-            f"!cc", self.erase_code, self.channel
-        )
+        payload = struct.pack("!cc", self.erase_code, self.channel)
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
@@ -1024,9 +1018,7 @@ class RestartResponse(APCI):
 
     CODE = APCIService.CONFIRMED_RESTART_RESPONSE
 
-    def __init__(
-            self, error_code: bytes, time: DPTTimePeriodSec
-    ) -> None:
+    def __init__(self, error_code: bytes, time: bytes) -> None:
         """Initialize a new instance of FunctionPropertyCommand."""
         self.error_code = error_code
         self.time = time
@@ -1043,15 +1035,15 @@ class RestartResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        payload = struct.pack(
-            f"!cc", self.error_code, self.time
-        )
+        payload = struct.pack("!cc", self.error_code, self.time)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<Confirmed Restart Response="Errorcode={self.error_code} Time={self.time}" />'
+        return (
+            f'<RestartResponse error_code="{self.error_code!r}" time="{self.time!r}" />'
+        )
 
 
 class UserMemoryRead(APCI):

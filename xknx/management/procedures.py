@@ -1,9 +1,11 @@
 """Package for management procedures as described in KNX-Standard 3.5.2."""
+
 from __future__ import annotations
 
+from enum import Enum
 import logging
 from typing import TYPE_CHECKING
-from enum import Enum
+
 from xknx.exceptions import (
     ManagementConnectionError,
     ManagementConnectionRefused,
@@ -23,16 +25,22 @@ logger = logging.getLogger("xknx.management.procedures")
 
 class RestartEraseCode(Enum):
     """Enum class for Confirmed Restart Erase Code."""
-    CONFIRMED_RESTART = b'\x01'
-    FACTORY_RESET = b'\x02'
-    RESET_IA = b'\x03'
-    RESET_AP = b'\x04'
-    RESET_PARAM = b'\x05'
-    RESET_LINKS = b'\x06'
-    FACTORY_RESET_WITHOUT_IA = b'\x07'
+
+    CONFIRMED_RESTART = b"\x01"
+    FACTORY_RESET = b"\x02"
+    RESET_IA = b"\x03"
+    RESET_AP = b"\x04"
+    RESET_PARAM = b"\x05"
+    RESET_LINKS = b"\x06"
+    FACTORY_RESET_WITHOUT_IA = b"\x07"
 
 
-RestartResponseError = ['No Error', 'Access denied', 'Unsupported Erase Code', 'Invalid Channel Number']
+RestartResponseError = [
+    "No Error",
+    "Access denied",
+    "Unsupported Erase Code",
+    "Invalid Channel Number",
+]
 
 
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
@@ -58,10 +66,13 @@ async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) 
 
 
 async def dm_confirmed_restart(
-    xknx: XKNX, individual_address: IndividualAddressableType, erase_code: RestartEraseCode, channel: bytes = b'\00'
+    xknx: XKNX,
+    individual_address: IndividualAddressableType,
+    erase_code: RestartEraseCode,
+    channel: bytes = b"\00",
 ) -> bool:
-
-    """Restart the device.
+    r"""
+    Restart the device (Confirmed Restart).
 
     :param xknx: XKNX object
     :param individual_address: address of device to reset
@@ -76,7 +87,9 @@ async def dm_confirmed_restart(
         ) as connection:
             try:
                 response = await connection.request(
-                    payload=apci.ConfirmedRestart(erase_code=erase_code.value,  channel=channel),
+                    payload=apci.ConfirmedRestart(
+                        erase_code=erase_code.value, channel=channel
+                    ),
                     expected=apci.RestartResponse,
                 )
 
@@ -86,15 +99,22 @@ async def dm_confirmed_restart(
                 return False
 
             if isinstance(response.payload, apci.RestartResponse):
-                errortext = RestartResponseError[int(response.payload.error_code)]
-                logger.debug("Device %s Erase Code:'%s' Result: '%s' time to Device Restart: %ss", individual_address, erase_code, errortext, response.payload.time)
+                errortext = RestartResponseError[
+                    int.from_bytes(response.payload.error_code, "big")
+                ]
+                logger.debug(
+                    "Device %s Erase Code:'%s' Result: '%s' time to Device Restart: %ss",
+                    individual_address,
+                    erase_code,
+                    errortext,
+                    response.payload.time,
+                )
 
                 return True
 
             return False
 
     except ManagementConnectionRefused as ex:
-
         # if Disconnect is received immediately, IA is occupied
 
         logger.debug("Device does not support transport layer connections. %s", ex)
