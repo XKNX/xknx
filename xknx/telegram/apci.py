@@ -6,6 +6,7 @@ APCI stands for Application Layer Protocol Control Information.
 An APCI payload contains a service and payload. For example, a GroupValueWrite
 is a service that takes a DPT as a value.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -65,6 +66,8 @@ class APCIService(Enum):
     DEVICE_DESCRIPTOR_RESPONSE = 0x0340
 
     RESTART = 0x0380
+    CONFIRMED_RESTART = 0x0381
+    CONFIRMED_RESTART_RESPONSE = 0x03A1
 
     ESCAPE = 0x03C0
 
@@ -200,6 +203,10 @@ class APCI(ABC):
         if service == APCIService.DEVICE_DESCRIPTOR_RESPONSE.value:
             return DeviceDescriptorResponse.from_knx(raw)
         if service == APCIService.RESTART.value:
+            if apci == APCIService.CONFIRMED_RESTART.value:
+                return ConfirmedRestart.from_knx(raw)
+            if apci == APCIService.CONFIRMED_RESTART_RESPONSE.value:
+                return RestartResponse.from_knx(raw)
             return Restart.from_knx(raw)
         if service == APCIService.ESCAPE.value:
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
@@ -970,6 +977,73 @@ class Restart(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<Restart />"
+
+
+class ConfirmedRestart(APCI):
+    """Restart service."""
+
+    CODE = APCIService.CONFIRMED_RESTART
+
+    def __init__(self, erase_code: bytes, channel: bytes) -> None:
+        """Initialize a new instance of FunctionPropertyCommand."""
+        self.erase_code = erase_code
+        self.channel = channel
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 3
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> ConfirmedRestart:
+        """Parse/deserialize from KNX/IP raw data."""
+        erasecode, channel = struct.unpack("!cc", raw[2:])
+        return cls(erase_code=erasecode, channel=channel)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!cc", self.erase_code, self.channel)
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<Confirmed Restart />"
+
+
+class RestartResponse(APCI):
+    """
+    RestartResponse service.
+
+    Payload contains the Errorcode and DPTTimePeriodSec.
+    """
+
+    CODE = APCIService.CONFIRMED_RESTART_RESPONSE
+
+    def __init__(self, error_code: bytes, time: bytes) -> None:
+        """Initialize a new instance of FunctionPropertyCommand."""
+        self.error_code = error_code
+        self.time = time
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 3
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RestartResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        error_code, time = struct.unpack("!BH", raw[2:])
+        return cls(error_code=error_code, time=time)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!cc", self.error_code, self.time)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<RestartResponse error_code="{self.error_code!r}" time="{self.time!r}" />'
+        )
 
 
 class UserMemoryRead(APCI):

@@ -1,4 +1,5 @@
 """Test management procedures."""
+
 import asyncio
 from unittest.mock import AsyncMock, call
 
@@ -18,6 +19,51 @@ from xknx.telegram import (
 )
 
 
+async def test_dm_confirmed_restart():
+    """Test dm_confirmed_restart."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("4.0.10")
+
+    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
+    restart = Telegram(
+        destination_address=individual_address,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.ConfirmedRestart(b"\x01", b"\x00"),
+    )
+
+    ack = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(0),
+        payload=apci.ConfirmedRestart(b"\x01", b"\x00"),
+    )
+
+    restart_response = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        tpci=tpci.TDataConnected(0),
+        payload=apci.RestartResponse(error_code=b"\x00", time=b"\x01"),
+    )
+    task = asyncio.create_task(
+        procedures.dm_confirmed_restart(
+            xknx,
+            individual_address,
+            procedures.RestartEraseCode.CONFIRMED_RESTART,
+            channel=b"\x00",
+        )
+    )
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(restart),
+    ]
+    xknx.management.process(ack)
+    xknx.management.process(restart_response)
+    assert await task
+
+
 async def test_dm_restart():
     """Test dm_restart."""
     xknx = XKNX()
@@ -30,6 +76,7 @@ async def test_dm_restart():
         tpci=tpci.TDataConnected(0),
         payload=apci.Restart(),
     )
+
     disconnect = Telegram(
         destination_address=individual_address,
         tpci=tpci.TDisconnect(),

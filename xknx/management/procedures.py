@@ -1,6 +1,8 @@
 """Package for management procedures as described in KNX-Standard 3.5.2."""
+
 from __future__ import annotations
 
+from enum import Enum
 import logging
 from typing import TYPE_CHECKING
 
@@ -19,6 +21,26 @@ if TYPE_CHECKING:
     from xknx import XKNX
 
 logger = logging.getLogger("xknx.management.procedures")
+
+
+class RestartEraseCode(Enum):
+    """Enum class for Confirmed Restart Erase Code."""
+
+    CONFIRMED_RESTART = b"\x01"
+    FACTORY_RESET = b"\x02"
+    RESET_IA = b"\x03"
+    RESET_AP = b"\x04"
+    RESET_PARAM = b"\x05"
+    RESET_LINKS = b"\x06"
+    FACTORY_RESET_WITHOUT_IA = b"\x07"
+
+
+RestartResponseError = [
+    "No Error",
+    "Access denied",
+    "Unsupported Erase Code",
+    "Invalid Channel Number",
+]
 
 
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
@@ -41,6 +63,63 @@ async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) 
             tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
         await xknx.cemi_handler.send_telegram(telegram)
+
+
+async def dm_confirmed_restart(
+    xknx: XKNX,
+    individual_address: IndividualAddressableType,
+    erase_code: RestartEraseCode,
+    channel: bytes = b"\00",
+) -> bool:
+    r"""
+    Restart the device (Confirmed Restart).
+
+    :param xknx: XKNX object
+    :param individual_address: address of device to reset
+    :param erase_code: RestartEraseCode
+    :param channel: = b'\00': The application parameters of all Channels shall be reset.
+                      ≠ b'\00': The application parameters of only this given Channel shall be reset.
+    """
+
+    try:
+        async with xknx.management.connection(
+            address=IndividualAddress(individual_address)
+        ) as connection:
+            try:
+                response = await connection.request(
+                    payload=apci.ConfirmedRestart(
+                        erase_code=erase_code.value, channel=channel
+                    ),
+                    expected=apci.RestartResponse,
+                )
+
+            except ManagementConnectionTimeout as ex:
+                logger.debug("No device answered to connection attempt. %s", ex)
+
+                return False
+
+            if isinstance(response.payload, apci.RestartResponse):
+                errortext = RestartResponseError[
+                    int.from_bytes(response.payload.error_code, "big")
+                ]
+                logger.debug(
+                    "Device %s Erase Code:'%s' Result: '%s' time to Device Restart: %ss",
+                    individual_address,
+                    erase_code,
+                    errortext,
+                    response.payload.time,
+                )
+
+                return True
+
+            return False
+
+    except ManagementConnectionRefused as ex:
+        # if Disconnect is received immediately, IA is occupied
+
+        logger.debug("Device does not support transport layer connections. %s", ex)
+
+        return True
 
 
 async def nm_individual_address_check(
@@ -141,7 +220,8 @@ async def nm_invididual_address_write(
             raise ManagementConnectionError(
                 f"A device was found with {individual_address}, cannot continue with programming."
             )
-        # device in programming mode's address matches address that we want to write, so we can abort the operation safely
+        # device in programming mode's address matches address that we want to write, so we can abort the operation
+        # safely
         logger.debug("Device already has requested address, no write operation needed.")
     else:
         await xknx.management.send_broadcast(
