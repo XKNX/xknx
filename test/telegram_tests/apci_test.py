@@ -1,4 +1,5 @@
 """Unit test for APCI objects."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTBinary

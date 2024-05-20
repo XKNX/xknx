@@ -1,4 +1,5 @@
 """KNX Constants used within io."""
+
 from typing import Final
 
 from xknx.telegram.address import IndividualAddress

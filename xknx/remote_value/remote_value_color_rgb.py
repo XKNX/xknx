@@ -3,6 +3,7 @@ Module for managing an RGB remote value.
 
 DPT 232.600.
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence

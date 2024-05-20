@@ -1,4 +1,5 @@
 """Unit test for Telegram objects."""
+
 from xknx.dpt import DPTBinary
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite

@@ -4,6 +4,7 @@ GatewayScanner is an abstraction for searching for KNX/IP devices on the local n
 It walks through all network interfaces and sends UDP multicast
 SearchRequest and SearchRequestExtended frames.
 """
+
 from __future__ import annotations
 
 import asyncio

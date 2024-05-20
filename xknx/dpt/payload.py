@@ -1,4 +1,5 @@
 """Implementation of KNX raw payload abstractions."""
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError

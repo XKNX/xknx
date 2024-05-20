@@ -6,6 +6,7 @@ Remote value can be :
 - a group address for reading a KNX value,
 - or a group of both representing the same value.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

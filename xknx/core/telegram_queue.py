@@ -8,6 +8,7 @@ You may register callbacks to be notified if a telegram was pushed to the queue.
 
 Telegrams addressed to IndividualAddresses are not processed by this queue.
 """
+
 from __future__ import annotations
 
 import asyncio

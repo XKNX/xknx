@@ -4,6 +4,7 @@ Module for encoding and decoding KNX datatypes.
 * KNX Values like Int, Float, String, Time
 * Derived KNX Values like Scaling, Temperature
 """
+
 # flake8: noqa
 from .dpt import DPTBase, DPTNumeric
 from .dpt_1byte_signed import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count

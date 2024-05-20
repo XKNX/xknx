@@ -3,6 +3,7 @@ Module for managing an DPT Up/Down remote value.
 
 DPT 1.008.
 """
+
 from __future__ import annotations
 
 from enum import Enum

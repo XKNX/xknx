@@ -1,4 +1,5 @@
 """Unit test for KNX/IP gateway scanner."""
+
 import asyncio
 from unittest.mock import Mock, create_autospec, patch
 
@@ -376,12 +377,15 @@ class TestGatewayScanner:
                 return True
 
         # timeout
-        with patch(
-            "xknx.io.util.get_default_local_ip",
-            return_value="10.1.1.2",
-        ), patch(
-            "xknx.io.gateway_scanner.UDPTransport.getsockname",
-            return_value=("10.1.1.2", 56789),
+        with (
+            patch(
+                "xknx.io.util.get_default_local_ip",
+                return_value="10.1.1.2",
+            ),
+            patch(
+                "xknx.io.gateway_scanner.UDPTransport.getsockname",
+                return_value=("10.1.1.2", 56789),
+            ),
         ):
             timed_out_scan_task = asyncio.create_task(test())
             await time_travel(3)
@@ -418,12 +422,15 @@ class TestGatewayScanner:
                 return True
             return False
 
-        with patch(
-            "xknx.io.gateway_scanner.UDPTransport.getsockname",
-            return_value=("10.1.1.2", 56789),
-        ), patch(
-            "xknx.io.gateway_scanner.UDPTransport.register_callback"
-        ) as register_callback_mock:
+        with (
+            patch(
+                "xknx.io.gateway_scanner.UDPTransport.getsockname",
+                return_value=("10.1.1.2", 56789),
+            ),
+            patch(
+                "xknx.io.gateway_scanner.UDPTransport.register_callback"
+            ) as register_callback_mock,
+        ):
             scan_task = asyncio.create_task(test())
             await time_travel(0)
             _fished_response_rec_callback = register_callback_mock.call_args.args[0]
@@ -445,15 +452,19 @@ class TestGatewayScanner:
         """Test if both search requests are sent per interface."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
-        with patch(
-            "xknx.io.util.get_default_local_ip",
-            return_value="10.1.1.2",
-        ), patch(
-            "xknx.io.util.get_local_interface_name",
-            return_value="en_0123",
-        ), patch(
-            "xknx.io.gateway_scanner.UDPTransport.getsockname",
-            return_value=("10.1.1.2", 56789),
+        with (
+            patch(
+                "xknx.io.util.get_default_local_ip",
+                return_value="10.1.1.2",
+            ),
+            patch(
+                "xknx.io.util.get_local_interface_name",
+                return_value="en_0123",
+            ),
+            patch(
+                "xknx.io.gateway_scanner.UDPTransport.getsockname",
+                return_value=("10.1.1.2", 56789),
+            ),
         ):
             await gateway_scanner.scan()
 

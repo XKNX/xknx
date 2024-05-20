@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Authenticate Request/Response."""
+
 from unittest.mock import Mock, patch
 
 from xknx.io.request_response import Authenticate

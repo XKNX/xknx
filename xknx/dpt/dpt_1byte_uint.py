@@ -1,4 +1,5 @@
 """Implementation of Basic KNX DPT_1_Ucount Values."""
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError

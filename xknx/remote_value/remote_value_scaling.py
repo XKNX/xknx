@@ -3,6 +3,7 @@ Module for managing a Scaling remote value.
 
 DPT 5.001.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

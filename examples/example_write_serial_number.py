@@ -1,4 +1,5 @@
 """Example for writing an individual address to a KNX device."""
+
 import asyncio
 import sys
 

@@ -1,4 +1,5 @@
 """Unit test for RemoteValue1Count objects."""
+
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.remote_value import RemoteValue1Count

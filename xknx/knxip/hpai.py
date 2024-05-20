@@ -3,6 +3,7 @@ Module for serialization and deserialization of KNX HPAI (Host Protocol Address 
 
 A HPAI contains an IP address and a port.
 """
+
 from __future__ import annotations
 
 import socket

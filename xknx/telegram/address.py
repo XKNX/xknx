@@ -13,6 +13,7 @@ The module supports all different writings of group addresses:
 * 2nd level: "1/2"
 * Free format: "123"
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -1,4 +1,5 @@
 """Implementation of Basic KNX Time."""
+
 from __future__ import annotations
 
 import time

@@ -1,4 +1,5 @@
 """Abstraction to send a DeviceConfigurationRequest and wait for DeviceConfigurationAck."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

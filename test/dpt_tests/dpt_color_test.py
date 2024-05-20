@@ -1,4 +1,5 @@
 """Unit test for KNX color objects."""
+
 import pytest
 
 from xknx.dpt.dpt_color import DPTArray, DPTColorXYY, XYYColor

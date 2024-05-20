@@ -1,4 +1,5 @@
 """Implementation of Basic KNX 2-Byte/octet values."""
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError

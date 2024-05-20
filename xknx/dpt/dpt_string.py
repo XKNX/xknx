@@ -1,4 +1,5 @@
 """Implementation of 3.17 Datapoint Types String."""
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError

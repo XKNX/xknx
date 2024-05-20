@@ -11,6 +11,7 @@ Documentation within:
     KNX IP Communication Medium
     File: AN117 v02.01 KNX IP Communication Medium DV.pdf
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

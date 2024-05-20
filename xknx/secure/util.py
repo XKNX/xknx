@@ -1,4 +1,5 @@
 """Utilities for KNX Secure."""
+
 from cryptography.hazmat.primitives import hashes
 
 

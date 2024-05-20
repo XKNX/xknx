@@ -3,6 +3,7 @@ Abstraction for handling KNXnet/IP routing.
 
 Routing uses UDP Multicast to send and receive KNXnet/IP messages.
 """
+
 from __future__ import annotations
 
 import asyncio

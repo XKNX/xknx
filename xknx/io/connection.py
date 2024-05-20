@@ -1,4 +1,5 @@
 """Manages a connection to the KNX bus."""
+
 from __future__ import annotations
 
 from enum import Enum, auto

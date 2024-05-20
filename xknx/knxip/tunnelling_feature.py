@@ -7,6 +7,7 @@ interface and the Tunnelling host device.
 The Tunnelling Server shall use the service TUNNELLING_FEATURE_INFO to spontaneously report
 Tunnelling Clients about relevant changes in the state of itself or the Tunnelling connection.
 """
+
 from __future__ import annotations
 
 import struct

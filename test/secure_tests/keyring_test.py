@@ -1,4 +1,5 @@
 """Unit test for keyring reader."""
+
 from pathlib import Path
 
 import pytest

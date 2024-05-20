@@ -1,4 +1,5 @@
 """Tests for the CEMIFrame object."""
+
 import pytest
 
 from xknx.cemi import (

@@ -1,4 +1,5 @@
 """Example for connecting to a specific KNX interface."""
+
 import asyncio
 import logging
 import time

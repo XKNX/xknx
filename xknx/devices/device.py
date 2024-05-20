@@ -3,6 +3,7 @@ Device is the base class for all implemented devices (e.g. Lights/Switches/Senso
 
 It provides basis functionality for reading the state from the KNX bus.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

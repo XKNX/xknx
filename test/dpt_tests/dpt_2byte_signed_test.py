@@ -1,4 +1,5 @@
 """Unit test for KNX 2 byte signed objects."""
+
 import struct
 from unittest.mock import patch
 

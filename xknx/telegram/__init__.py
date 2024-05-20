@@ -5,6 +5,7 @@ Module for handling KNX primitives.
 * KNX Telegrams
 
 """
+
 # flake8: noqa
 from .address import GroupAddress, GroupAddressType, IndividualAddress
 from .address_filter import AddressFilter

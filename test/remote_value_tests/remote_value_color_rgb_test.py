@@ -1,4 +1,5 @@
 """Unit test for RemoteValueColorRGB objects."""
+
 import pytest
 
 from xknx import XKNX

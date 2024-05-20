@@ -1,4 +1,5 @@
 """Unit test for Cover objects."""
+
 from unittest.mock import AsyncMock, patch
 
 from xknx import XKNX

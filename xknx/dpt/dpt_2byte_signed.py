@@ -4,6 +4,7 @@ Implementation of Basic KNX 2-Byte Signed Values.
 They correspond the following KNX DPTs:
     8.*** 2-byte/octet signed (2's complement), i.e. percentV16, delta time
 """
+
 from __future__ import annotations
 
 import struct

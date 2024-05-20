@@ -1,4 +1,5 @@
 """Unit test for RemoteValueRaw objects."""
+
 import pytest
 
 from xknx import XKNX

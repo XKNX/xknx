@@ -12,6 +12,7 @@ There are two separate dimming modes sharing the same DPT class:
 
 As the same payload in these cases in interpreted completely different it is reasonable to make separate DPT classes.
 """
+
 from __future__ import annotations
 
 from abc import ABC

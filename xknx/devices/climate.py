@@ -4,6 +4,7 @@ Module for managing the climate within a room.
 * It reads/listens to a temperature address from KNX bus.
 * Manages and sends the desired setpoint to KNX bus.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterator

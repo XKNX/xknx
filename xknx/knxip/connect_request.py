@@ -3,6 +3,7 @@ Module for Serialization and Deserialization of a KNX Connect Request informatio
 
 Connect requests are used to start a new tunnel connection on a KNX/IP device.
 """
+
 from __future__ import annotations
 
 from xknx.exceptions import CouldNotParseKNXIP

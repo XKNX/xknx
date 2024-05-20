@@ -6,6 +6,7 @@ the KNXnet/IP header shall be completely encapsulated as encrypted payload insid
 SECURE_WRAPPER frame that adds some extra information needed to decrypt the frame and
 for ensuring data integrity and freshness.
 """
+
 from __future__ import annotations
 
 from typing import Final

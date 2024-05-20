@@ -7,6 +7,7 @@ The module will
 * ... check if received telegrams have the correct group address.
 * ... store the received telegram for further processing.
 """
+
 from __future__ import annotations
 
 import asyncio

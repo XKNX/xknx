@@ -3,6 +3,7 @@ Module for managing an DPT Step remote value.
 
 DPT 1.007.
 """
+
 from __future__ import annotations
 
 from enum import Enum

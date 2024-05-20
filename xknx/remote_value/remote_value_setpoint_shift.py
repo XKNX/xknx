@@ -3,6 +3,7 @@ Module for managing setpoint shifting.
 
 DPT 6.010.
 """
+
 from __future__ import annotations
 
 from enum import Enum

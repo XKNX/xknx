@@ -3,6 +3,7 @@ Implementation of KNX 4 byte Float-values.
 
 They correspond to the the following KDN DPT 14 class.
 """
+
 from __future__ import annotations
 
 from math import ceil, log10

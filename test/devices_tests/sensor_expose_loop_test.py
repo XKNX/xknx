@@ -1,4 +1,5 @@
 """Unit test for Sensor and ExposeSensor objects."""
+
 from unittest.mock import AsyncMock, call
 
 import pytest

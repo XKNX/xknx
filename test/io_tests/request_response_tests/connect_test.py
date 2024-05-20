@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Connect Request/Response."""
+
 from unittest.mock import patch
 
 from xknx.io.request_response import Connect
@@ -35,9 +36,10 @@ class TestConnect:
             )
         )
 
-        with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
-            "xknx.io.transport.UDPTransport.getsockname"
-        ) as mock_udp_getsockname:
+        with (
+            patch("xknx.io.transport.UDPTransport.send") as mock_udp_send,
+            patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
+        ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await connect.start()
             mock_udp_send.assert_called_with(exp_knxipframe)
@@ -84,9 +86,10 @@ class TestConnect:
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(ConnectRequest())
-        with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
-            "xknx.io.transport.UDPTransport.getsockname"
-        ) as mock_udp_getsockname:
+        with (
+            patch("xknx.io.transport.UDPTransport.send") as mock_udp_send,
+            patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
+        ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await connect.start()
             mock_udp_send.assert_called_with(exp_knxipframe)

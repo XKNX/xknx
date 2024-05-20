@@ -1,4 +1,5 @@
 """Unit test for task registry."""
+
 import asyncio
 import sys
 

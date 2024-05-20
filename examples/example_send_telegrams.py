@@ -1,4 +1,5 @@
 """Example for sending generic telegrams to the KNX bus."""
+
 import asyncio
 import logging
 

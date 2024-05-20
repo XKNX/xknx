@@ -3,6 +3,7 @@ Module for Serialization and Deserialization of KNX RoutingBusy frames.
 
 RoutingBusy frames are used for flow control.
 """
+
 from __future__ import annotations
 
 from xknx.exceptions import CouldNotParseKNXIP

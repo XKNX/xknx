@@ -1,4 +1,5 @@
 """Unit test for KNX DPT 5.010 value."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTTariff, DPTValue1Ucount

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP DeviceConfiguration Request/Response."""
+
 from unittest.mock import patch
 
 from xknx.cemi import CEMIFrame, CEMIMPropInfo, CEMIMPropReadRequest
@@ -48,9 +49,10 @@ class TestDeviceConfiguration:
         assert device_configuration.awaited_response_class == DeviceConfigurationAck
 
         exp_knxipframe = KNXIPFrame.init_from_body(device_configuration_request)
-        with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
-            "xknx.io.transport.UDPTransport.getsockname"
-        ) as mock_udp_getsockname:
+        with (
+            patch("xknx.io.transport.UDPTransport.send") as mock_udp_send,
+            patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
+        ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await device_configuration.start()
             mock_udp_send.assert_called_with(exp_knxipframe, addr=data_endpoint)

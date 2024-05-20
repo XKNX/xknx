@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Disconnect Request/Response."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 

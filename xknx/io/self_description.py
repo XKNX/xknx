@@ -1,4 +1,5 @@
 """Abstraction to send DescriptionRequest and wait for DescriptionResponse."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

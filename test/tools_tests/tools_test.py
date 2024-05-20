@@ -1,4 +1,5 @@
 """Test xknx tools package."""
+
 from unittest.mock import patch
 
 import pytest

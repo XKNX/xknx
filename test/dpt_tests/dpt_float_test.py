@@ -1,4 +1,5 @@
 """Unit test for KNX 2 and 4 byte float objects."""
+
 import math
 import struct
 from unittest.mock import patch

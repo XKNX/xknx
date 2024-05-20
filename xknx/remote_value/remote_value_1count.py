@@ -3,6 +3,7 @@ Module for managing an 1 count remote value.
 
 DPT 6.010.
 """
+
 from __future__ import annotations
 
 from xknx.dpt import DPTArray, DPTBinary, DPTValue1Count

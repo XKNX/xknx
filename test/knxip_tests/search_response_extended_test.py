@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SearchResponseExtended objects."""
+
 from xknx.knxip import (
     HPAI,
     DIBDeviceInformation,

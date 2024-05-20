@@ -6,6 +6,7 @@ A search response contains all information of a found device (Name, serial numbe
 It supports an array-style access to the DIBs (use classname as index). Every KNXnet/ip server shall send
 a search response and one device supporting multiple KNX connections may send multiple search responses.
 """
+
 from __future__ import annotations
 
 from .body import KNXIPBody

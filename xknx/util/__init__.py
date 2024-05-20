@@ -1,4 +1,5 @@
 """Helper functions for XKNX."""
+
 import sys
 
 # Backport of `asyncio.timeout` to be able to replace `asyncio.wait_for`

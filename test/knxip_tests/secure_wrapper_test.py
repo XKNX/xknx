@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SecureWrapper objects."""
+
 from xknx.knxip import KNXIPFrame, SecureWrapper
 
 

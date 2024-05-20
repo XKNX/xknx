@@ -1,4 +1,5 @@
 """Abstraction to send SessionRequest and wait for SessionResponse."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

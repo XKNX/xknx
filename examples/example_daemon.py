@@ -1,4 +1,5 @@
 """Example for daemon mode within XKNX."""
+
 import asyncio
 
 from xknx import XKNX

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SessionRequest objects."""
+
 from xknx.knxip import HPAI, KNXIPFrame, SessionRequest
 from xknx.knxip.knxip_enum import HostProtocol
 

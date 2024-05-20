@@ -5,6 +5,7 @@ A SESSION_STATUS may be sent by the KNXnet/IP secure server to the KNXnet/IP sec
 or by the KNXnet/IP secure client to the KNXnet/IP secure server in any stage of the
 secure session handshake to indicate an error condition or status information.
 """
+
 from __future__ import annotations
 
 from typing import Final

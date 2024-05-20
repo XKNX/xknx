@@ -1,4 +1,5 @@
 """Module for Profile and resource management ."""
+
 # flake8: noqa
 from .const import (
     ResourceDevicePropertyId,

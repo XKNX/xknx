@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of KNX Session Responses.
 The SESSION_RESPONSE shall be sent by the KNXnet/IP secure server to the secure
 client's control endpoint in response to a received secure session request frame.
 """
+
 from __future__ import annotations
 
 from typing import Final

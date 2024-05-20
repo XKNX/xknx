@@ -5,6 +5,7 @@ Extended Search Requests are used to search for KNX/IP devices within the networ
 
 See AN184 in version 03 from the KNX specifications.
 """
+
 from __future__ import annotations
 
 from .body import KNXIPBody

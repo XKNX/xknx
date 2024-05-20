@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Session Request/Response."""
+
 from unittest.mock import Mock, patch
 
 from xknx.io.request_response import Session

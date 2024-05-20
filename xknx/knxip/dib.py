@@ -10,6 +10,7 @@ A KNX/IP Search Response may contain several DIBs of different types:
 * DIBGeneric:           General Information
                         (fallback for unknown dib type codes)
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

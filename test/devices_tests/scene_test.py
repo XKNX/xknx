@@ -1,4 +1,5 @@
 """Unit test for Scene objects."""
+
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray

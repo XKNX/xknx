@@ -6,6 +6,7 @@ APCI stands for Application Layer Protocol Control Information.
 An APCI payload contains a service and payload. For example, a GroupValueWrite
 is a service that takes a DPT as a value.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

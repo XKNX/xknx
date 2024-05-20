@@ -1,4 +1,5 @@
 """Unit test for KNX/IP DescriptionRequest objects."""
+
 from xknx.knxip import HPAI, DescriptionRequest, KNXIPFrame
 
 

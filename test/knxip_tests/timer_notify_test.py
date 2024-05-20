@@ -1,4 +1,5 @@
 """Unit test for KNX/IP TimerNotify objects."""
+
 from xknx.knxip import KNXIPFrame, TimerNotify
 
 

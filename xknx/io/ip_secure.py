@@ -1,4 +1,5 @@
 """IPSecure is an abstraction for handling a KNXnet/IP Secure layer."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -501,9 +502,10 @@ class SecureSequenceTimer:
         """Initialize SecureSequenceTimer class."""
         self._backbone_key = backbone_key
         self._clock_difference: int = 0
-        self._expected_notify_handler: tuple[
-            bytes, asyncio.Future[int]  # message_tag, synchronization future
-        ] | None = None
+        self._expected_notify_handler: (
+            tuple[bytes, asyncio.Future[int]]  # message_tag, synchronization future
+            | None
+        ) = None
         self._loop = asyncio.get_running_loop()
         self._notify_timer_handle: asyncio.TimerHandle | None = None
         self._transport_send = transport_send

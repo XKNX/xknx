@@ -1,4 +1,5 @@
 """Module for KNX/IP Enum classes."""
+
 from enum import Enum
 
 

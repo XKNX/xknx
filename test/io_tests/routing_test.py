@@ -1,4 +1,5 @@
 """Tests for KNX/IP routing connections."""
+
 import asyncio
 from unittest.mock import AsyncMock, Mock, call, patch
 

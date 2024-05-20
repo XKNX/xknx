@@ -1,4 +1,5 @@
 """Unit test for RemoveValue objects."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -112,11 +113,13 @@ class TestRemoteValue:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
-        with patch(
-            "xknx.remote_value.RemoteValue.has_group_address"
-        ) as patch_has_group_address, patch(
-            "xknx.remote_value.RemoteValue.from_knx"
-        ) as patch_from, patch("logging.Logger.warning") as mock_warning:
+        with (
+            patch(
+                "xknx.remote_value.RemoteValue.has_group_address"
+            ) as patch_has_group_address,
+            patch("xknx.remote_value.RemoteValue.from_knx") as patch_from,
+            patch("logging.Logger.warning") as mock_warning,
+        ):
             patch_has_group_address.return_value = True
             patch_from.side_effect = ConversionError("TestError")
 
@@ -151,9 +154,10 @@ class TestRemoteValue:
         xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
 
-        with patch(
-            "xknx.core.ValueReader.read", new_callable=AsyncMock
-        ) as patch_read, patch("logging.Logger.warning") as mock_warning:
+        with (
+            patch("xknx.core.ValueReader.read", new_callable=AsyncMock) as patch_read,
+            patch("logging.Logger.warning") as mock_warning,
+        ):
             patch_read.return_value = None
 
             await remote_value.read_state(wait_for_result=True)

@@ -1,4 +1,5 @@
 """Example for reading the state from the KNX bus."""
+
 import asyncio
 
 from xknx import XKNX

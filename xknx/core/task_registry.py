@@ -1,4 +1,5 @@
 """Manages global tasks."""
+
 from __future__ import annotations
 
 import asyncio

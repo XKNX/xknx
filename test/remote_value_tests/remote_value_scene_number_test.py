@@ -1,4 +1,5 @@
 """Unit test for RemoteValueSceneNumber objects."""
+
 import pytest
 
 from xknx import XKNX

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SearchRequest Extended objects."""
+
 from xknx.knxip import HPAI, KNXIPFrame, SearchRequestExtended
 from xknx.knxip.srp import SRP
 

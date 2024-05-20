@@ -7,6 +7,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 * Cover will also predict the current position.
 """
+
 from __future__ import annotations
 
 import asyncio

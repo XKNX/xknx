@@ -4,6 +4,7 @@ Module for managing operation and controller modes.
 Operation modes can be 'auto', 'comfort', 'standby', 'economy', 'protection' and use either a binary DPT or DPT 20.102.
 Controller modes use DPT 20.105.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterator

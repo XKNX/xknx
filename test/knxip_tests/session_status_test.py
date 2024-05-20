@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SessionStatus objects."""
+
 from xknx.knxip import KNXIPFrame, SessionStatus
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 

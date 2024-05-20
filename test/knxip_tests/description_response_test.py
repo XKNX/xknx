@@ -1,4 +1,5 @@
 """Unit test for KNX/IP DescriptionResponse objects."""
+
 from xknx.knxip import (
     DescriptionResponse,
     DIBDeviceInformation,

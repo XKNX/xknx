@@ -1,4 +1,5 @@
 """Unit test for KNX/IP DeviceConfigurationRequest objects."""
+
 import pytest
 
 from xknx.cemi import CEMIFrame, CEMIMessageCode, CEMIMPropInfo, CEMIMPropReadRequest

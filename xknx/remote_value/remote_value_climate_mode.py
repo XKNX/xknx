@@ -3,6 +3,7 @@ Module for managing an climate mode remote values.
 
 DPT .
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -72,9 +73,9 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
                 device_name=str(device_name),
                 feature_name=feature_name,
             )
-        self._climate_mode_transcoder: (
-            DPTControllerStatus | DPTHVACMode
-        ) = climate_mode_type.value
+        self._climate_mode_transcoder: DPTControllerStatus | DPTHVACMode = (
+            climate_mode_type.value
+        )
 
     def supported_operation_modes(self) -> list[HVACOperationMode]:
         """Return a list of all supported operation modes."""

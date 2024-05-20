@@ -1,4 +1,5 @@
 """Module for KNX Data Secure."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator

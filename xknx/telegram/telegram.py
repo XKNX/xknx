@@ -13,6 +13,7 @@ It contains
 * and the payload (e.g. GroupValueWrite("12%")).
 
 """
+
 from __future__ import annotations
 
 from enum import Enum

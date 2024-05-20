@@ -1,4 +1,5 @@
 """Unit test for devices container within XKNX."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

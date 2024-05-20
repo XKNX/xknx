@@ -1,4 +1,5 @@
 """Implementation of the KNX date data point."""
+
 from __future__ import annotations
 
 from typing import NamedTuple

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Interface."""
+
 from pathlib import Path
 import threading
 from unittest.mock import DEFAULT, Mock, patch
@@ -59,22 +60,28 @@ class TestKNXIPInterface:
                 ip_addr="10.1.2.3", port=3671, supports_routing=True
             )
 
-        with patch(
-            "xknx.io.knxip_interface.GatewayScanner.async_scan",
-            new=gateway_generator_mock,
-        ), patch(
-            "xknx.io.KNXIPInterface._start_secure_tunnelling_tcp",
-            side_effect=InvalidSecureConfiguration("Error"),
-        ) as start_secure_tunnelling_tcp, patch(
-            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
-            side_effect=CommunicationError("Error"),
-        ) as start_tunnelling_tcp_mock, patch(
-            "xknx.io.KNXIPInterface._start_tunnelling_udp",
-            side_effect=CommunicationError("Error"),
-        ) as start_tunnelling_udp_mock, patch(
-            "xknx.io.KNXIPInterface._start_routing",
-            side_effect=CommunicationError("Error"),
-        ) as start_routing_mock:
+        with (
+            patch(
+                "xknx.io.knxip_interface.GatewayScanner.async_scan",
+                new=gateway_generator_mock,
+            ),
+            patch(
+                "xknx.io.KNXIPInterface._start_secure_tunnelling_tcp",
+                side_effect=InvalidSecureConfiguration("Error"),
+            ) as start_secure_tunnelling_tcp,
+            patch(
+                "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+                side_effect=CommunicationError("Error"),
+            ) as start_tunnelling_tcp_mock,
+            patch(
+                "xknx.io.KNXIPInterface._start_tunnelling_udp",
+                side_effect=CommunicationError("Error"),
+            ) as start_tunnelling_udp_mock,
+            patch(
+                "xknx.io.KNXIPInterface._start_routing",
+                side_effect=CommunicationError("Error"),
+            ) as start_routing_mock,
+        ):
             with pytest.raises(CommunicationError):
                 await interface.start()
             start_secure_tunnelling_tcp.assert_called_once()
@@ -108,12 +115,15 @@ class TestKNXIPInterface:
                 individual_address=IndividualAddress("1.0.0"),
             )
 
-        with patch(
-            "xknx.io.knxip_interface.GatewayScanner.async_scan",
-            new=gateway_generator_mock,
-        ), patch(
-            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
-        ) as start_tunnelling_tcp_mock:
+        with (
+            patch(
+                "xknx.io.knxip_interface.GatewayScanner.async_scan",
+                new=gateway_generator_mock,
+            ),
+            patch(
+                "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+            ) as start_tunnelling_tcp_mock,
+        ):
             await interface.start()
             start_tunnelling_tcp_mock.assert_called_once_with(
                 gateway_ip="10.1.0.0",
@@ -147,12 +157,15 @@ class TestKNXIPInterface:
                 individual_address=IndividualAddress("1.0.0"),
             )
 
-        with patch(
-            "xknx.io.knxip_interface.GatewayScanner.async_scan",
-            new=gateway_generator_mock,
-        ), patch(
-            "xknx.io.KNXIPInterface._start_tunnelling_tcp",
-        ) as start_tunnelling_tcp_mock:
+        with (
+            patch(
+                "xknx.io.knxip_interface.GatewayScanner.async_scan",
+                new=gateway_generator_mock,
+            ),
+            patch(
+                "xknx.io.KNXIPInterface._start_tunnelling_tcp",
+            ) as start_tunnelling_tcp_mock,
+        ):
             await interface.start()
             start_tunnelling_tcp_mock.assert_called_once_with(
                 gateway_ip="10.1.0.0",
@@ -169,10 +182,13 @@ class TestKNXIPInterface:
         )
         assert invalid_config.connection_type == ConnectionType.AUTOMATIC
         interface = knx_interface_factory(self.xknx, invalid_config)
-        with patch(
-            "xknx.io.knxip_interface.GatewayScanner.async_scan",
-            new=gateway_generator_mock,
-        ), pytest.raises(InvalidSecureConfiguration):
+        with (
+            patch(
+                "xknx.io.knxip_interface.GatewayScanner.async_scan",
+                new=gateway_generator_mock,
+            ),
+            pytest.raises(InvalidSecureConfiguration),
+        ):
             await interface.start()
 
     async def test_start_udp_tunnel_connection(self):
@@ -332,15 +348,19 @@ class TestKNXIPInterface:
             connection_type=ConnectionType.ROUTING, local_ip=local_ip, threaded=True
         )
         cemi_mock = Mock()
-        with patch(
-            "xknx.io.routing.Routing.connect", side_effect=assert_thread
-        ) as connect_routing_mock, patch(
-            "xknx.io.routing.Routing.send_cemi",
-            side_effect=assert_thread,
-            return_value="test",
-        ) as send_cemi_mock, patch(
-            "xknx.io.routing.Routing.disconnect", side_effect=assert_thread
-        ) as disconnect_routing_mock:
+        with (
+            patch(
+                "xknx.io.routing.Routing.connect", side_effect=assert_thread
+            ) as connect_routing_mock,
+            patch(
+                "xknx.io.routing.Routing.send_cemi",
+                side_effect=assert_thread,
+                return_value="test",
+            ) as send_cemi_mock,
+            patch(
+                "xknx.io.routing.Routing.disconnect", side_effect=assert_thread
+            ) as disconnect_routing_mock,
+        ):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             connect_routing_mock.assert_called_once_with()
@@ -384,10 +404,13 @@ class TestKNXIPInterface:
             individual_address=IndividualAddress("1.0.0"),
         )
         gateway_description.tunnelling_requires_secure = True
-        with patch(
-            "xknx.io.knxip_interface.request_description",
-            return_value=gateway_description,
-        ), patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
+        with (
+            patch(
+                "xknx.io.knxip_interface.request_description",
+                return_value=gateway_description,
+            ),
+            patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure,
+        ):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             assert isinstance(interface._interface, SecureTunnel)
@@ -418,9 +441,12 @@ class TestKNXIPInterface:
             ),
         )
         # result of request_description is currently not used when IA is defined
-        with patch(
-            "xknx.io.knxip_interface.request_description",
-        ), patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
+        with (
+            patch(
+                "xknx.io.knxip_interface.request_description",
+            ),
+            patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure,
+        ):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             assert isinstance(interface._interface, SecureTunnel)
@@ -471,10 +497,13 @@ class TestKNXIPInterface:
                 usable=True, authorized=False, free=True
             ),
         }
-        with patch(
-            "xknx.io.knxip_interface.request_description",
-            return_value=gateway_description,
-        ), patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
+        with (
+            patch(
+                "xknx.io.knxip_interface.request_description",
+                return_value=gateway_description,
+            ),
+            patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure,
+        ):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
             assert isinstance(interface._interface, SecureTunnel)
@@ -571,10 +600,13 @@ class TestKNXIPInterface:
             individual_address=IndividualAddress("1.0.0"),
         )
         gateway_description.tunnelling_requires_secure = True
-        with patch(
-            "xknx.io.knxip_interface.request_description",
-            return_value=gateway_description,
-        ), pytest.raises(InvalidSecureConfiguration):
+        with (
+            patch(
+                "xknx.io.knxip_interface.request_description",
+                return_value=gateway_description,
+            ),
+            pytest.raises(InvalidSecureConfiguration),
+        ):
             interface = knx_interface_factory(self.xknx, connection_config)
             await interface.start()
 

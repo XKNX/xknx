@@ -1,4 +1,5 @@
 """Class for Data Secure Application layer service data units (ASDUs)."""
+
 from __future__ import annotations
 
 from enum import IntEnum

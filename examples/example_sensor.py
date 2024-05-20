@@ -1,4 +1,5 @@
 """Example for Sensor device. See docs/sensor.md and docs/binary_sensor.md for a detailed explanation."""
+
 import asyncio
 
 from xknx import XKNX

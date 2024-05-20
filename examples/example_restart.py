@@ -1,4 +1,5 @@
 """Example on how to connect to restart a KNX device."""
+
 import asyncio
 import sys
 

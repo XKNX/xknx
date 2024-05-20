@@ -1,4 +1,5 @@
 """Implementation of Basic KNX 1-Byte signed integer values."""
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError

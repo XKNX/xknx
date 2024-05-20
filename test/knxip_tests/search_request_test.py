@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SearchRequest objects."""
+
 from xknx.knxip import HPAI, KNXIPFrame, SearchRequest
 
 

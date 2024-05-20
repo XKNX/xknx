@@ -1,4 +1,5 @@
 """Unit test for connection manager."""
+
 from datetime import datetime
 import threading
 from unittest.mock import AsyncMock, patch

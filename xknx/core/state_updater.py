@@ -1,4 +1,5 @@
 """Module for keeping the value of a RemoteValue from KNX bus up to date."""
+
 from __future__ import annotations
 
 import asyncio

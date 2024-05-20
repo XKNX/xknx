@@ -1,4 +1,5 @@
 """Unit test for KNX payload objects."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTBinary

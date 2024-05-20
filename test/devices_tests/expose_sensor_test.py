@@ -1,4 +1,5 @@
 """Unit test for Sensor objects."""
+
 from unittest.mock import AsyncMock, call
 
 from xknx import XKNX

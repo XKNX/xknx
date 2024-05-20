@@ -10,6 +10,7 @@ It provides functionality for
 read from e.g. an internet serviceand exposed to the KNX bus.
 KNX devices may show this value within their display.)
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -4,6 +4,7 @@ Module for broadcasting date/time to the KNX bus.
 DateTime is a virtual/pseudo device, optionally
 broadcasting localtime periodically.
 """
+
 from __future__ import annotations
 
 import asyncio

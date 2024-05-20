@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SRP objects."""
+
 import pytest
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP

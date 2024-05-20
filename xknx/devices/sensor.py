@@ -6,6 +6,7 @@ It provides functionality for
 * reading the current state from KNX bus.
 * watching for state updates from KNX bus.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterator

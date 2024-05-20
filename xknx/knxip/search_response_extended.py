@@ -9,6 +9,7 @@ a search response extended and one device supporting multiple KNX connections ma
 If there were any SRPs (Search Request Parameters) in the Search Request Extended and those were marked as mandatory
 the server shall only reply to those requests if it can fulfill the requirements in the SRP.
 """
+
 from __future__ import annotations
 
 from .knxip_enum import KNXIPServiceType

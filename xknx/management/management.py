@@ -1,4 +1,5 @@
 """Package for management communication."""
+
 from __future__ import annotations
 
 import asyncio
@@ -185,9 +186,9 @@ class P2PConnection:
         self._connected = False
 
         self._ack_waiter: asyncio.Future[TAck | TNak] | None = None
-        self._response_waiter: asyncio.Future[
-            Telegram
-        ] = asyncio.get_event_loop().create_future()
+        self._response_waiter: asyncio.Future[Telegram] = (
+            asyncio.get_event_loop().create_future()
+        )
 
     @staticmethod
     def _sequence_number_generator() -> Generator[int, None, None]:

@@ -1,4 +1,5 @@
 """Example for Climate device."""
+
 import asyncio
 
 from xknx import XKNX

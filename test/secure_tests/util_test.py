@@ -1,4 +1,5 @@
 """Tests for secure util primitives."""
+
 import pytest
 
 from xknx.secure.util import byte_pad, bytes_xor, sha256_hash

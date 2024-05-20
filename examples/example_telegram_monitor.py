@@ -1,4 +1,5 @@
 """Example for the telegram monitor callback."""
+
 import asyncio
 import getopt
 import sys

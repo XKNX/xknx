@@ -1,4 +1,5 @@
 """Cryptographical calculations of KNX specification example frames."""
+
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,

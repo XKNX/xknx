@@ -5,6 +5,7 @@ The SESSION_AUTHENTICATE shall be sent by the KNXnet/IP secure client to the
 control endpoint of the KNXnet/IP secure server after the Diffie-Hellman handshake
 to authenticate the user against the server device.
 """
+
 from __future__ import annotations
 
 from typing import Final

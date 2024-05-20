@@ -6,6 +6,7 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 * provides callbacks after having received a telegram from the network.
 
 """
+
 from __future__ import annotations
 
 import asyncio

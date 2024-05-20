@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of KNX Timer Notify.
 This frame shall be sent during secure KNXnet/IP multicast group communication
 to keep the multicast group member's timer values synchronized.
 """
+
 from __future__ import annotations
 
 from typing import Final

@@ -1,4 +1,5 @@
 """Connection States from XKNX."""
+
 from enum import Enum
 
 

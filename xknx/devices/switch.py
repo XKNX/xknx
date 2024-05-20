@@ -6,6 +6,7 @@ It provides functionality for
 * switching 'on' and 'off'.
 * reading the current state from KNX bus.
 """
+
 from __future__ import annotations
 
 import asyncio

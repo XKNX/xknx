@@ -6,6 +6,7 @@ It provides functionality for
 * setting fan to specific speed / step
 * reading the current speed from KNX bus.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterator

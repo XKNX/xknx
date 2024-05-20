@@ -1,4 +1,5 @@
 """Unit test for Weather objects."""
+
 import datetime
 
 from xknx import XKNX

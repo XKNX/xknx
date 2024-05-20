@@ -1,4 +1,5 @@
 """Example for setting different colors on a RGBW remote value."""
+
 import asyncio
 
 from xknx import XKNX

@@ -1,4 +1,5 @@
 """Unit test for KNX/IP RountingIndication objects."""
+
 import time
 
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode

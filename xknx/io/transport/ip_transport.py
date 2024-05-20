@@ -4,6 +4,7 @@ Abstract base for a specific IP transports (TCP or UDP).
 * It starts and stops a socket
 * It handles callbacks for incoming frame service types
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

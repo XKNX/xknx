@@ -5,6 +5,7 @@ They correspond the following KNX DPTs:
     12.yyy 4-byte/octet unsigned value, i.e. pulse counter
     13.yyy 4-byte/octet signed (2's complement), i.e. flow, energy
 """
+
 from __future__ import annotations
 
 import struct

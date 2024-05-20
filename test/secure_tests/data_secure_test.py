@@ -1,4 +1,5 @@
 """Tests for KNX Data Secure."""
+
 import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -107,13 +108,16 @@ class TestDataSecure:
             code=CEMIMessageCode.L_DATA_IND,
             data=CEMILData.init_from_telegram(test_telegram),
         )
-        with patch.object(
-            self.data_secure,
-            "received_cemi",
-            return_value=test_cemi.data,  # Reuse incoming plain APDU. Decryption is not tested here
-        ) as mock_ds_received_cemi, patch.object(
-            self.xknx.cemi_handler, "telegram_received"
-        ) as mock_telegram_received:  # suppress forwarding to telegras/management
+        with (
+            patch.object(
+                self.data_secure,
+                "received_cemi",
+                return_value=test_cemi.data,  # Reuse incoming plain APDU. Decryption is not tested here
+            ) as mock_ds_received_cemi,
+            patch.object(
+                self.xknx.cemi_handler, "telegram_received"
+            ) as mock_telegram_received,
+        ):  # suppress forwarding to telegras/management
             self.xknx.cemi_handler.handle_cemi_frame(test_cemi)
             mock_ds_received_cemi.assert_called_once()
             mock_telegram_received.assert_called_once()

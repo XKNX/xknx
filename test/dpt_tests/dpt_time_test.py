@@ -1,4 +1,5 @@
 """Unit test for KNX time objects."""
+
 import time
 
 import pytest

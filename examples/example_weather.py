@@ -1,4 +1,5 @@
 """Example for Weather device. See docs/weather.md for a detailed explanation."""
+
 import asyncio
 import logging
 

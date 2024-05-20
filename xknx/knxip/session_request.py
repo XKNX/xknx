@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of KNX Session Requests.
 The SESSION_REQUEST is used to initiate the secure connection setup
 handshake for a new secure communication session.
 """
+
 from __future__ import annotations
 
 from typing import Final

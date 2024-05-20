@@ -9,6 +9,7 @@ E.g.:
 * At time 20 TravelCalculator will return position 70 (final position not reached).
 * At time 30 TravelCalculator will return position 60 (final position reached).
 """
+
 from __future__ import annotations
 
 from enum import Enum

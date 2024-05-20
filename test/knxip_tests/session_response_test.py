@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SessionResponse objects."""
+
 from xknx.knxip import KNXIPFrame, SessionResponse
 
 

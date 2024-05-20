@@ -3,6 +3,7 @@ Module for Serialization and Deserialization of KNX RoutingLostMessage frames.
 
 RoutingLostMessage frames are used for system supervision.
 """
+
 from __future__ import annotations
 
 from xknx.exceptions import CouldNotParseKNXIP

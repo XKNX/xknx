@@ -3,6 +3,7 @@ Implementation of KNX 2 byte Float-values.
 
 They correspond to the the following KDN DPT 9 class.
 """
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError

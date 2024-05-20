@@ -1,4 +1,5 @@
 """Example on how to disconnect/reset all available tunneling channels."""
+
 import asyncio
 
 from xknx import XKNX

@@ -4,6 +4,7 @@ Module for managing a control remote value.
 Examples are switching commands with priority control, relative dimming or blinds control commands.
 DPT 2.yyy and DPT 3.yyy
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

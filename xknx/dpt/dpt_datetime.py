@@ -1,4 +1,5 @@
 """Implementation of the KNX datetime data point."""
+
 from __future__ import annotations
 
 import time

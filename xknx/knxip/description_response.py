@@ -7,6 +7,7 @@ control endpoint using the HPAI included in the received DESCRIPTION_REQUEST fra
 The size of the KNXnet/IP body varies depending on the number of DIB structures sent
 by the KNXnet/IP Server in response to the KNXnet/IP Clients DESCRIPTION_REQUEST.
 """
+
 from __future__ import annotations
 
 from .body import KNXIPBody

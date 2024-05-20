@@ -1,4 +1,5 @@
 """Example for DateTime device."""
+
 import asyncio
 
 from xknx import XKNX

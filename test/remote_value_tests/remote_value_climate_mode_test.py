@@ -1,4 +1,5 @@
 """Unit test for RemoteValueClimateMode objects."""
+
 import pytest
 
 from xknx import XKNX

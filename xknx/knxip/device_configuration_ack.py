@@ -1,4 +1,5 @@
 """Module for Serialization and Deserialization of a KNX Device Configuration ACK."""
+
 from __future__ import annotations
 
 from xknx.exceptions import CouldNotParseKNXIP

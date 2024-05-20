@@ -1,4 +1,5 @@
 """Example for running a callback when a devices state changed."""
+
 import asyncio
 
 from xknx import XKNX

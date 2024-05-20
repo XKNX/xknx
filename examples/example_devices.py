@@ -1,4 +1,5 @@
 """Example for internal devices storage."""
+
 import asyncio
 
 from xknx import XKNX

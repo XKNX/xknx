@@ -27,6 +27,7 @@ Patterns can be
         AddressFilter("i-t?st")
         AddressFilter("i-t*t")
 """
+
 from __future__ import annotations
 
 from fnmatch import fnmatch

@@ -1,4 +1,5 @@
 """Conftest for XKNX."""
+
 import asyncio
 
 import pytest

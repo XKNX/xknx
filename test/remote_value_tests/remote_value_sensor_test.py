@@ -1,4 +1,5 @@
 """Unit test for RemoteValueSensor objects."""
+
 import pytest
 
 from xknx import XKNX

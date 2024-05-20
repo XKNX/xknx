@@ -1,4 +1,5 @@
 """Unit test for RemoteValueScaling objects."""
+
 from xknx import XKNX
 from xknx.remote_value import RemoteValueScaling
 

@@ -1,4 +1,5 @@
 """Unit test for KNX DPT 1 byte relative value  objects."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count

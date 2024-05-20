@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of a KNX Disconnect Response inform
 Disconnect requests are used to disconnect a tunnel from a KNX/IP device.
 With a Disconnect Response the receiving party acknowledges the valid processing of the request.
 """
+
 from __future__ import annotations
 
 from xknx.exceptions import CouldNotParseKNXIP

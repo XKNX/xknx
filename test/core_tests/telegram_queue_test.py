@@ -1,4 +1,5 @@
 """Unit test for telegram received callback."""
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, call, patch
 

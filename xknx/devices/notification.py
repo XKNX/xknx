@@ -1,4 +1,5 @@
 """Module for managing a text via KNX."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator

@@ -1,4 +1,5 @@
 """Abstraction to send ConnectRequest and wait for ConnectResponse."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

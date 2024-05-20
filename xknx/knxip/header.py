@@ -1,4 +1,5 @@
 """Module for serialization and deserialization of KNX/IP Header."""
+
 from __future__ import annotations
 
 from typing import Final

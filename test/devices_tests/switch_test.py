@@ -1,4 +1,5 @@
 """Unit test for Switch objects."""
+
 from unittest.mock import AsyncMock, Mock
 
 from xknx import XKNX

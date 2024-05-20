@@ -7,6 +7,7 @@ which the client is interested in.
 If the M (Mandatory) bit is set, the server shall only respond to the search request if the complete SRP block
 is satisfied.
 """
+
 from __future__ import annotations
 
 from xknx.exceptions import ConversionError, CouldNotParseKNXIP

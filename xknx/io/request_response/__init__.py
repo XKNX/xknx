@@ -2,6 +2,7 @@
 This package contains all objects for sending Requests and waiting for the corresponding Response
 of specific KNX/IP Packets used for tunnelling connections.
 """
+
 # flake8: noqa
 from .authenticate import Authenticate
 from .connect import Connect

@@ -1,4 +1,5 @@
 """XKNX is an Asynchronous Python module for reading and writing KNX/IP packets."""
+
 from __future__ import annotations
 
 import asyncio

@@ -10,6 +10,7 @@ It provides functionality for
 * setting the absolute color temperature.
 * reading the current state from KNX bus.
 """
+
 from __future__ import annotations
 
 import asyncio

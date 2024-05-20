@@ -1,4 +1,5 @@
 """Example for Switch device."""
+
 import asyncio
 
 from xknx import XKNX

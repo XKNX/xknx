@@ -1,4 +1,5 @@
 """Unit test for KNX 2 byte objects."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTUElCurrentmA

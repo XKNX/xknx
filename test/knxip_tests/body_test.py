@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Body base class."""
+
 from unittest.mock import patch
 
 from xknx.knxip import KNXIPBody, KNXIPBodyResponse

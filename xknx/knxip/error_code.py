@@ -1,4 +1,5 @@
 """Module for KNX/IP Error codes."""
+
 from enum import Enum
 
 

@@ -1,4 +1,5 @@
 """Unit test for KNX string object."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTLatin1, DPTString

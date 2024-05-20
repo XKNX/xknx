@@ -3,6 +3,7 @@ Module for managing a DTP Scene Number remote value.
 
 DPT 17.001.
 """
+
 from __future__ import annotations
 
 from xknx.dpt import DPTArray, DPTBinary, DPTSceneNumber

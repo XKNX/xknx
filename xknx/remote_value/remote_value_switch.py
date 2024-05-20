@@ -3,6 +3,7 @@ Module for managing an DPT Switch remote value.
 
 DPT 1.001.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

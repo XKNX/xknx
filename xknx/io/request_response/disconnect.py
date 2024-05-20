@@ -1,4 +1,5 @@
 """Abstraction to send DisconnectRequest and wait for DisconnectResponse."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

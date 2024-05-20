@@ -3,6 +3,7 @@ Module for Serialization and Deserialization of KNX Search Requests.
 
 Search Requests are used to search for KNX/IP devices within the network.
 """
+
 from __future__ import annotations
 
 from .body import KNXIPBody

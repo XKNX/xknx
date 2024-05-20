@@ -1,4 +1,5 @@
 """Unit test for KNX/IP transport base class."""
+
 from unittest.mock import Mock, patch
 
 from xknx.io.transport import KNXIPTransport

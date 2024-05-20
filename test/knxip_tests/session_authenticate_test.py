@@ -1,4 +1,5 @@
 """Unit test for KNX/IP SessionAuthenticate objects."""
+
 from xknx.knxip import KNXIPFrame, SessionAuthenticate
 
 

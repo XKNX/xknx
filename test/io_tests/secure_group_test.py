@@ -1,4 +1,5 @@
 """Test Secure Group."""
+
 import asyncio
 from unittest.mock import Mock, patch
 
@@ -318,11 +319,12 @@ class TestSecureGroup:
         secure_timer = secure_group.secure_timer
         secure_timer.timer_authenticated = True
 
-        with patch.object(
-            secure_timer, "reschedule", wraps=secure_timer.reschedule
-        ) as mock_reschedule, patch.object(
-            secure_group, "decrypt_frame"
-        ) as mock_decrypt:
+        with (
+            patch.object(
+                secure_timer, "reschedule", wraps=secure_timer.reschedule
+            ) as mock_reschedule,
+            patch.object(secure_group, "decrypt_frame") as mock_decrypt,
+        ):
             mock_decrypt.return_value = True  # we are only interested in timer value
             # E5
             wrapper_newer = KNXIPFrame.init_from_body(

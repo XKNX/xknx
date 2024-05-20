@@ -4,6 +4,7 @@ Module for Serialization and Deserialization of KNX Description Requests.
 The DESCRIPTION_REQUEST frame shall be sent by the KNXnet/IP Client to the control endpoint
 of the KNXnet/IP Server to obtain a self-description of the KNXnet/IP Server device.
 """
+
 from __future__ import annotations
 
 from .body import KNXIPBody

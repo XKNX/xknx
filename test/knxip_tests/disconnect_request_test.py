@@ -1,4 +1,5 @@
 """Unit test for KNX/IP DisconnectRequest objects."""
+
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP

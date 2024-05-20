@@ -1,4 +1,5 @@
 """Unit test for KNX scene number."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTSceneNumber

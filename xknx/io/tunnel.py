@@ -3,6 +3,7 @@ Abstraction for handling KNX/IP tunnels.
 
 Tunnels connect to KNX/IP devices directly via UDP or TCP and build a static connection.
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod

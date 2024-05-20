@@ -1,4 +1,5 @@
 """Unit test for String representations."""
+
 from unittest.mock import patch
 
 from xknx import XKNX

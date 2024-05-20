@@ -3,6 +3,7 @@ Module for managing an xyY-color remote value.
 
 DPT 242.600.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

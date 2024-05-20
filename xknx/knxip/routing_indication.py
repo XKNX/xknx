@@ -3,6 +3,7 @@ Module for Serialization and Deserialization of KNX RoutingIndication frames.
 
 Routing indications are used to transport CEMI Messages.
 """
+
 from __future__ import annotations
 
 from .body import KNXIPBody

@@ -1,4 +1,5 @@
 """Test Secure Session."""
+
 import asyncio
 from unittest.mock import Mock, patch
 
@@ -166,9 +167,10 @@ class TestSecureSession:
         mock_super_send.reset_mock()
 
         # SessionStatus CLOSE sent on graceful disconnect
-        with patch.object(
-            self.session, "send", wraps=self.session.send
-        ) as mock_send, patch.object(self.session, "transport") as mock_transport:
+        with (
+            patch.object(self.session, "send", wraps=self.session.send) as mock_send,
+            patch.object(self.session, "transport") as mock_transport,
+        ):
             self.session.stop()
             mock_send.assert_called_once_with(session_status_close_frame)
             mock_super_send.assert_called_once()

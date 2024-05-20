@@ -1,4 +1,5 @@
 """Unit test for KNX/IP RoutingLostMessage objects."""
+
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP

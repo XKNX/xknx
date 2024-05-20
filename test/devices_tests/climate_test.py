@@ -1,4 +1,5 @@
 """Unit test for Climate objects."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

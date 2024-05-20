@@ -1,4 +1,5 @@
 """Unit test for TravelCalculator objects."""
+
 from unittest.mock import patch
 
 from xknx.devices import TravelCalculator, TravelStatus

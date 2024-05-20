@@ -1,4 +1,5 @@
 """Constants for CEMI."""
+
 from enum import Enum, IntEnum
 
 

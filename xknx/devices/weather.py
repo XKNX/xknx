@@ -12,6 +12,7 @@ It provides functionality for
 * reading current humidity (DPT 9.007)
 
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterator

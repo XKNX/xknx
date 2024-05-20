@@ -1,4 +1,5 @@
 """Constants for Profile resources."""
+
 from enum import IntEnum
 
 

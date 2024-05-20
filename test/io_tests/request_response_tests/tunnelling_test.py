@@ -1,4 +1,5 @@
 """Unit test for KNX/IP Tunnelling Request/Response."""
+
 from unittest.mock import patch
 
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
@@ -44,9 +45,10 @@ class TestTunnelling:
         assert tunnelling.awaited_response_class == TunnellingAck
 
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
-        with patch("xknx.io.transport.UDPTransport.send") as mock_udp_send, patch(
-            "xknx.io.transport.UDPTransport.getsockname"
-        ) as mock_udp_getsockname:
+        with (
+            patch("xknx.io.transport.UDPTransport.send") as mock_udp_send,
+            patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
+        ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
             await tunnelling.start()
             mock_udp_send.assert_called_with(exp_knxipframe, addr=data_endpoint)

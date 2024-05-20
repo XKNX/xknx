@@ -1,4 +1,5 @@
 """Module for handling devices like Lights, Switches or Covers."""
+
 # flake8: noqa
 from .binary_sensor import BinarySensor
 from .climate import Climate

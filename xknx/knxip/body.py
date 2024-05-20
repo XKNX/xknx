@@ -1,4 +1,5 @@
 """Basis class for all KNX/IP bodies."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -1,4 +1,5 @@
 """Unit test for Address class."""
+
 import pytest
 
 from xknx.exceptions import ConversionError

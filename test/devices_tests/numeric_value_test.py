@@ -1,4 +1,5 @@
 """Unit test for NumericValue objects."""
+
 from unittest.mock import AsyncMock
 
 import pytest

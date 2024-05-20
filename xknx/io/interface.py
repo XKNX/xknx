@@ -5,6 +5,7 @@ Abstract base for a specific KNX/IP connection (Tunneling or Routing).
 * It starts and stops a udp transport
 * It packs Telegrams into KNX Frames and passes them to a udp transport
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

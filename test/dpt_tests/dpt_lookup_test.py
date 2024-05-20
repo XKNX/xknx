@@ -1,4 +1,5 @@
 """Test DPT lookup."""
+
 # flake8: noqa
 import pytest
 

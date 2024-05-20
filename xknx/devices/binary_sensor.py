@@ -8,6 +8,7 @@ A binary sensor can be:
 
 A BinarySensor may also have Actions attached which are executed after state was changed.
 """
+
 from __future__ import annotations
 
 import asyncio

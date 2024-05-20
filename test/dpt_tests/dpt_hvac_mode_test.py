@@ -1,4 +1,5 @@
 """Unit test for KNX DPT HVAC Operation modes."""
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTControllerStatus, DPTHVACMode
