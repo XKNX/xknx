@@ -35,6 +35,9 @@ class XYYColor(DPTComplexData):
                 color = (float(x_axis), float(y_axis))
             except ValueError as err:
                 raise ValueError(f"Invalid value for color axis: {err}") from err
+        elif ("x_axis" in data) or ("y_axis" in data):
+            raise ValueError("Both x_axis and y_axis must be provided")
+
         if (brightness := data.get("brightness")) is not None:
             try:
                 brightness = int(brightness)
