@@ -17,6 +17,10 @@ class TestXYYColor:
             {"x_axis": 0.9, "y_axis": 0.8},
             {"brightness": 50},
             {},
+            {"x_axis": None, "y_axis": None, "brightness": 255},
+            {"x_axis": 0.5, "y_axis": 0.5, "brightness": None},
+            {"x_axis": None, "brightness": 255},
+            {"y_axis": None, "brightness": 255},
         ],
     )
     def test_dict(self, data):

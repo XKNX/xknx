@@ -26,19 +26,19 @@ class XYYColor(DPTComplexData):
     def from_dict(cls, data: Mapping[str, Any]) -> XYYColor:
         """Init from a dictionary."""
         color = None
-        brightness = None
+        brightness = data.get("brightness")
+        x_axis = data.get("x_axis")
+        y_axis = data.get("y_axis")
 
-        if (x_axis := data.get("x_axis")) is not None and (
-            (y_axis := data.get("y_axis")) is not None
-        ):
+        if x_axis is not None and y_axis is not None:
             try:
                 color = (float(x_axis), float(y_axis))
             except ValueError as err:
                 raise ValueError(f"Invalid value for color axis: {err}") from err
-        elif ("x_axis" in data) or ("y_axis" in data):
+        elif x_axis is not None or y_axis is not None:
             raise ValueError("Both x_axis and y_axis must be provided")
 
-        if (brightness := data.get("brightness")) is not None:
+        if brightness is not None:
             try:
                 brightness = int(brightness)
             except ValueError as err:
