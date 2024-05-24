@@ -61,6 +61,9 @@ class DPTColorXYY(DPTComplex[XYYColor]):
     data_type = XYYColor
     payload_type = DPTArray
     payload_length = 6
+    dpt_main_number = 242
+    dpt_sub_number = 600
+    value_type = "color_xyy"
 
     @classmethod
     def from_knx(cls, payload: DPTArray | DPTBinary) -> XYYColor:
