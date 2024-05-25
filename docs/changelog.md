@@ -11,6 +11,9 @@ nav_order: 2
 ### DPT
 
 - DPTComplex: Common interface for DPT transcoders with multi-value data. Resulting dataclasses can be converted to and from a dict with DPT specific properties to be JSON compatible.
+- Added or refactored DPTs and dataclasses:
+  - 232.600 - DPTColorRGB - RGBColor
+  - 242.600 - DPTColorXYY - XYYColor
 
 # 2.12.2 Fix thread leak 2024-03-05
 

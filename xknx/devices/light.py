@@ -20,7 +20,7 @@ from itertools import chain
 import logging
 from typing import TYPE_CHECKING, Any, Callable, cast
 
-from xknx.dpt.dpt_color import XYYColor
+from xknx.dpt.dpt_color import RGBColor, XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -467,7 +467,13 @@ class Light(Device):
                 return None, None
             return self.rgbw.value[:3], self.rgbw.value[3]
         if self.color.initialized:
-            return self.color.value, None
+            if self.color.value is None:
+                return None, None
+            return (
+                self.color.value.red,
+                self.color.value.green,
+                self.color.value.blue,
+            ), None
         # individual RGB addresses - white will return None when it is not initialized
         colors = (
             self.red.brightness.value,
@@ -504,7 +510,7 @@ class Light(Device):
         else:
             if self.supports_color:
                 if self.color.initialized:
-                    await self.color.set(color)
+                    await self.color.set(RGBColor(*color))
                     return
                 if all(
                     c.brightness.initialized for c in (self.red, self.green, self.blue)

@@ -6,7 +6,7 @@ Module for encoding and decoding KNX datatypes.
 """
 
 # flake8: noqa
-from .dpt import DPTBase, DPTNumeric
+from .dpt import DPTBase, DPTNumeric, DPTComplexData, DPTComplex
 from .dpt_1byte_signed import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
 from .dpt_1byte_uint import (
     DPTDecimalFactor,
@@ -183,7 +183,7 @@ from .dpt_4byte_int import (
     DPTVolumeLiquidLitre,
     DPTVolumeM3,
 )
-from .dpt_color import DPTColorXYY
+from .dpt_color import DPTColorXYY, DPTColorRGB, RGBColor, XYYColor
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_hvac_mode import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
