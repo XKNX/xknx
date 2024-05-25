@@ -209,7 +209,7 @@ class DPTComplexData(ABC):
         """Init from a dictionary."""
 
     @abstractmethod
-    def as_dict(self) -> dict[str, str | int | float | bool | None]:
+    def as_dict(self) -> dict[str, Any]:
         """Create a JSON serializable dictionary."""
 
 
