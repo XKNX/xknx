@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass
 from inspect import isabstract
-from typing import Any, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .payload import DPTArray, DPTBinary
 
 T = TypeVar("T", bound=type["DPTBase"])  # pylint: disable=invalid-name
+TComplexData = TypeVar("TComplexData", bound="DPTComplexData")  # pylint: disable=invalid-name
 
 
 class DPTBase(ABC):
@@ -191,4 +193,49 @@ class DPTNumeric(DPTBase):
     @classmethod
     @abstractmethod
     def to_knx(cls, value: int | float) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+
+
+# py3.10 use @dataclass(slots=True) here and for the subclasses
+@dataclass
+class DPTComplexData(ABC):
+    """Base class for KNX data point types decoding complex values."""
+
+    @classmethod
+    @abstractmethod
+    def from_dict(
+        cls, data: Mapping[str, Any]
+    ) -> DPTComplexData:  # py3.10: use typing.Self
+        """Init from a dictionary."""
+
+    @abstractmethod
+    def as_dict(self) -> dict[str, str | int | float | bool | None]:
+        """Create a JSON serializable dictionary."""
+
+
+class DPTComplex(DPTBase, Generic[TComplexData]):
+    """Base class for KNX data point types decoding complex values."""
+
+    data_type: type[TComplexData]
+
+    @classmethod
+    @abstractmethod
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> TComplexData:
+        """Parse/deserialize from KNX/IP payload data."""
+
+    @classmethod
+    def to_knx(cls, value: TComplexData | Mapping[str, Any]) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+        try:
+            if isinstance(value, cls.data_type):
+                return cls._to_knx(value)
+            return cls._to_knx(cls.data_type.from_dict(value))
+        except (ValueError, TypeError, AttributeError, ConversionError) as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}: {err}", value=value
+            ) from err
+
+    @classmethod
+    @abstractmethod
+    def _to_knx(cls, value: TComplexData) -> DPTArray:
         """Serialize to KNX/IP raw data."""
