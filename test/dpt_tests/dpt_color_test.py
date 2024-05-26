@@ -2,7 +2,15 @@
 
 import pytest
 
-from xknx.dpt.dpt_color import DPTArray, DPTColorRGB, DPTColorXYY, RGBColor, XYYColor
+from xknx.dpt.dpt_color import (
+    DPTArray,
+    DPTColorRGB,
+    DPTColorRGBW,
+    DPTColorXYY,
+    RGBColor,
+    RGBWColor,
+    XYYColor,
+)
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -120,6 +128,165 @@ class TestDPTColorRGB:
             DPTColorRGB.from_knx(DPTArray((0xFF, 0x4E)))
 
 
+class TestRGBWColor:
+    """Test RGBWColor class."""
+
+    @pytest.mark.parametrize(
+        ("data", "value"),
+        [
+            (
+                {"red": 128, "green": 128, "blue": 128, "white": 128},
+                RGBWColor(128, 128, 128, 128),
+            ),
+            (
+                {"red": 255, "green": 255, "blue": 255, "white": 255},
+                RGBWColor(255, 255, 255, 255),
+            ),
+            ({"red": 128, "green": 128, "blue": 128}, RGBWColor(128, 128, 128)),
+            ({"white": 50}, RGBWColor(None, None, None, 50)),
+            ({}, RGBWColor()),
+            (
+                {"red": None, "green": None, "blue": None, "white": 255},
+                RGBWColor(None, None, None, 255),
+            ),
+            (
+                {"red": 128, "green": 128, "blue": 128, "white": None},
+                RGBWColor(128, 128, 128, None),
+            ),
+            ({"red": None, "white": 255}, RGBWColor(None, None, None, 255)),
+            ({"green": None, "white": 255}, RGBWColor(None, None, None, 255)),
+            ({"red": 128}, RGBWColor(128, None, None, None)),
+            ({"green": 128}, RGBWColor(None, 128, None, None)),
+            ({"blue": 128}, RGBWColor(None, None, 128, None)),
+            ({"red": 128, "white": 128}, RGBWColor(128, None, None, 128)),
+            ({"green": 128, "white": 128}, RGBWColor(None, 128, None, 128)),
+            ({"blue": 128, "white": 128}, RGBWColor(None, None, 128, 128)),
+        ],
+    )
+    def test_dict(self, data, value):
+        """Test from_dict and as_dict methods."""
+        test_value = RGBWColor.from_dict(data)
+        assert test_value == value
+        # fields default to `None`
+        default_dict = {"red": None, "green": None, "blue": None, "white": None}
+        assert value.as_dict() == default_dict | data
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            # invalid data
+            {"red": "a", "green": 128, "blue": 128, "white": 128},
+            {"red": 128, "green": "a", "blue": 128, "white": 128},
+            {"red": 128, "green": 128, "blue": "a", "white": 128},
+            {"red": 128, "green": 128, "blue": 128, "white": "a"},
+        ],
+    )
+    def test_dict_invalid(self, data):
+        """Test from_dict and as_dict methods."""
+        with pytest.raises(ValueError):
+            RGBWColor.from_dict(data)
+
+    def test_merge(self):
+        """Test merging two RGBWColor objects."""
+        color1 = RGBWColor(1, 1, 1, None)
+        color2 = RGBWColor(None, None, None, 2)
+        color3 = RGBWColor(3, None, None, 3)
+        assert color1 | color2 == RGBWColor(1, 1, 1, 2)
+        assert color2 | color1 == RGBWColor(1, 1, 1, 2)
+        assert color1 | color3 == RGBWColor(3, 1, 1, 3)
+        assert color3 | color1 == RGBWColor(1, 1, 1, 3)
+        assert color2 | color3 == RGBWColor(3, None, None, 3)
+        assert color3 | color2 == RGBWColor(3, None, None, 2)
+
+
+class TestDPTColorRGBW:
+    """Test class for KNX RGBW-color objects."""
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (RGBWColor(0, 0, 0, 0), (0x00, 0x00, 0x00, 0x00, 0, 0xF)),  # min values
+            (RGBWColor(255, 255, 255, 255), (0xFF, 0xFF, 0xFF, 0xFF, 0, 0xF)),  # max
+            (RGBWColor(None, 0, 0, 0), (0x00, 0x00, 0x00, 0x00, 0, 0x7)),  # red None
+            (RGBWColor(0, 0, 0, None), (0x00, 0x00, 0x00, 0x00, 0, 0xE)),  # white None
+            (RGBWColor(None, None, None, None), (0x00, 0x00, 0x00, 0x00, 0, 0)),
+            (RGBWColor(128, 128, 128, 128), (0x80, 0x80, 0x80, 0x80, 0, 0b1111)),
+            (RGBWColor(204, 204, 204, 204), (0xCC, 0xCC, 0xCC, 0xCC, 0, 0b1111)),
+        ],
+    )
+    def test_rgbwcolor_value(self, value, raw):
+        """Test DPTColorRGBW parsing and streaming."""
+        knx_value = DPTColorRGBW.to_knx(value)
+        assert knx_value == DPTArray(raw)
+        assert DPTColorRGBW.from_knx(knx_value) == value
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (
+                {"red": 128, "green": 128, "blue": 128, "white": 128},
+                (0x80, 0x80, 0x80, 0x80, 0, 0xF),
+            ),
+            (
+                {"red": 204, "green": 204, "blue": 204, "white": 204},
+                (0xCC, 0xCC, 0xCC, 0xCC, 0, 0xF),
+            ),
+            (
+                {"red": 204, "green": 204, "blue": 204},
+                (0xCC, 0xCC, 0xCC, 0x00, 0, 0xE),
+            ),
+        ],
+    )
+    def test_rgbwcolor_to_knx_from_dict(self, value, raw):
+        """Test DPTColorRGBW parsing from a dict."""
+        knx_value = DPTColorRGBW.to_knx(value)
+        assert knx_value == DPTArray(raw)
+
+    @pytest.mark.parametrize(
+        ("red", "green", "blue", "white"),
+        [
+            (-1, 0, 0, 0),
+            (0, -1, 0, 0),
+            (0, 0, -1, 0),
+            (0, 0, 0, -1),
+            (256, 0, 0, 0),
+            (0, 256, 0, 0),
+            (0, 0, 256, 0),
+            (0, 0, 0, 256),
+        ],
+    )
+    def test_rgbwcolor_to_knx_limits(self, red, green, blue, white):
+        """Test initialization of DPTColorRGBW with wrong value."""
+        value = RGBWColor(red=red, green=green, blue=blue, white=white)
+        with pytest.raises(ConversionError):
+            DPTColorRGBW.to_knx(value)
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            None,
+            (0xFF, 0x4E, 0x12),
+            1,
+            ((0x00, 0xFF, 0x4E), 0x12),
+            ((0xFF, 0x4E), (0x12, 0x00)),
+            ((0, 0), "a"),
+            ((0, 0), 0.4),
+            RGBWColor(red=0, green=0, blue=0, white="a"),
+            RGBWColor(red=4, green=4, blue="a", white=4),
+            RGBWColor(red="a", green=0, blue=0, white=1),
+        ],
+    )
+    def test_rgbwcolor_wrong_value_to_knx(self, value):
+        """Test DPTColorRGBW parsing with wrong value."""
+        with pytest.raises(ConversionError):
+            DPTColorRGBW.to_knx(value)
+
+    def test_rgbwcolor_wrong_value_from_knx(self):
+        """Test DPTColorRGBW parsing with wrong value."""
+        with pytest.raises(CouldNotParseTelegram):
+            DPTColorRGBW.from_knx(DPTArray((0xFF, 0x4E, 0x12)))
+
+
 class TestXYYColor:
     """Test XYYColor class."""
 
@@ -190,6 +357,18 @@ class TestXYYColor:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             XYYColor.from_dict(data)
+
+    def test_merge(self):
+        """Test merging two XYYColor objects."""
+        color1 = XYYColor((1, 1), None)
+        color2 = XYYColor(None, 2)
+        color3 = XYYColor((3, 3), 3)
+        assert color1 | color2 == XYYColor((1, 1), 2)
+        assert color2 | color1 == XYYColor((1, 1), 2)
+        assert color1 | color3 == XYYColor((3, 3), 3)
+        assert color3 | color1 == XYYColor((1, 1), 3)
+        assert color2 | color3 == XYYColor((3, 3), 3)
+        assert color3 | color2 == XYYColor((3, 3), 2)
 
 
 class TestDPTColorXYY:

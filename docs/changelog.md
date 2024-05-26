@@ -14,6 +14,7 @@ nav_order: 2
 - Added or refactored DPTs and dataclasses:
   - 232.600 - DPTColorRGB - RGBColor
   - 242.600 - DPTColorXYY - XYYColor
+  - 251.600 - DPTColorRGBW - RGBWColor
 
 # 2.12.2 Fix thread leak 2024-03-05
 

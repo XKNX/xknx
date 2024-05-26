@@ -20,7 +20,7 @@ from itertools import chain
 import logging
 from typing import TYPE_CHECKING, Any, Callable, cast
 
-from xknx.dpt.dpt_color import RGBColor, XYYColor
+from xknx.dpt.dpt_color import RGBColor, RGBWColor, XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -465,7 +465,16 @@ class Light(Device):
         if self.supports_rgbw and self.rgbw.initialized:
             if not self.rgbw.value:
                 return None, None
-            return self.rgbw.value[:3], self.rgbw.value[3]
+            if (
+                self.rgbw.value.red is not None
+                and self.rgbw.value.green is not None
+                and self.rgbw.value.blue is not None
+            ):
+                return (
+                    (self.rgbw.value.red, self.rgbw.value.green, self.rgbw.value.blue),
+                    self.rgbw.value.white,
+                )
+            return None, self.rgbw.value.white
         if self.color.initialized:
             if self.color.value is None:
                 return None, None
@@ -496,7 +505,7 @@ class Light(Device):
         if white is not None:
             if self.supports_rgbw:
                 if self.rgbw.initialized:
-                    await self.rgbw.set((*color, white))
+                    await self.rgbw.set(RGBWColor(*color, white))
                     return
                 if all(
                     c.brightness.initialized for c in self._iter_individual_colors()
@@ -555,16 +564,10 @@ class Light(Device):
     async def _xyy_color_from_rv(self) -> None:
         """Update the current xyY-color from RemoteValue (Callback)."""
         new_xyy = self.xyy_color.value
-        if new_xyy is None or self._xyy_color_valid is None:
-            self._xyy_color_valid = new_xyy
+        if self._xyy_color_valid is not None and new_xyy is not None:
+            self._xyy_color_valid = self._xyy_color_valid | new_xyy
         else:
-            new_color = new_xyy.color
-            new_brightness = new_xyy.brightness
-            if new_color is None:
-                new_color = self._xyy_color_valid.color
-            if new_brightness is None:
-                new_brightness = self._xyy_color_valid.brightness
-            self._xyy_color_valid = XYYColor(color=new_color, brightness=new_brightness)
+            self._xyy_color_valid = new_xyy
         await self.after_update()
 
     @property
