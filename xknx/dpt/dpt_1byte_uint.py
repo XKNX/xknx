@@ -42,7 +42,7 @@ class DPTValue1ByteUnsigned(DPTNumeric):
         try:
             knx_value = int(value)
             if not cls._test_boundaries(knx_value):
-                raise ValueError("Value out of range")
+                raise ValueError(f"Value out of range {cls.value_min}..{cls.value_max}")
             return DPTArray(knx_value)
         except ValueError as err:
             raise ConversionError(
