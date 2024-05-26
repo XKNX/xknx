@@ -1,4 +1,4 @@
-"""Implementation of the KNX date data point."""
+"""Implementation of KNX color data point types."""
 
 from __future__ import annotations
 

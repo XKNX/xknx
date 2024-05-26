@@ -16,6 +16,7 @@ from .dpt_1byte_uint import (
     DPTValue1ByteUnsigned,
     DPTValue1Ucount,
 )
+from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
 from .dpt_2byte_float import (
     DPT2ByteFloat,
     DPTAbsoluteHumidity,
