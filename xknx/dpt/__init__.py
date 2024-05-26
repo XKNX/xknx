@@ -183,7 +183,14 @@ from .dpt_4byte_int import (
     DPTVolumeLiquidLitre,
     DPTVolumeM3,
 )
-from .dpt_color import DPTColorXYY, DPTColorRGB, RGBColor, XYYColor
+from .dpt_color import (
+    DPTColorXYY,
+    DPTColorRGB,
+    RGBColor,
+    XYYColor,
+    RGBWColor,
+    DPTColorRGBW,
+)
 from .dpt_date import DPTDate
 from .dpt_datetime import DPTDateTime
 from .dpt_hvac_mode import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
