@@ -26,10 +26,6 @@ nav_order: 2
 
 - `InternalGroupAddress` attribute `address` is renamed to `raw` to be in line with `GroupAddress` (although still str). Its value has an "i-" prefix.
 
-### Internal
-
-- Add Python 3.13 test runner to CI
-
 # 2.12.2 Fix thread leak 2024-03-05
 
 ### Bugfixes
