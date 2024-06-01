@@ -59,7 +59,7 @@ class TelegramQueue:
             if self._match_all:
                 return True
             if isinstance(
-                telegram.destination_address, (GroupAddress, InternalGroupAddress)
+                telegram.destination_address, GroupAddress | InternalGroupAddress
             ):
                 for address_filter in self.address_filters:
                     if address_filter.match(telegram.destination_address):

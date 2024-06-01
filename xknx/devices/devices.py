@@ -82,7 +82,7 @@ class Devices:
     async def process(self, telegram: Telegram) -> None:
         """Process telegram."""
         if isinstance(
-            telegram.destination_address, (GroupAddress, InternalGroupAddress)
+            telegram.destination_address, GroupAddress | InternalGroupAddress
         ):
             for device in self.devices_by_group_address(telegram.destination_address):
                 await device.process(telegram)

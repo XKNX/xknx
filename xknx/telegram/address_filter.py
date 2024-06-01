@@ -58,7 +58,7 @@ class AddressFilter:
 
     def match(self, address: str | int | GroupAddress | InternalGroupAddress) -> bool:
         """Test if provided address matches Addressfilter."""
-        if isinstance(address, (str, int)):
+        if isinstance(address, str | int):
             address = parse_device_group_address(address)
 
         if isinstance(address, GroupAddress) and self.level_filters:

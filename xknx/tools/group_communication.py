@@ -82,7 +82,7 @@ async def read_group_value(
     value_reader = ValueReader(xknx, parse_device_group_address(group_address))
     response = await value_reader.read()
     if response is not None:
-        assert isinstance(response.payload, (GroupValueWrite, GroupValueResponse))
+        assert isinstance(response.payload, GroupValueWrite | GroupValueResponse)
         if transcoder is not None:
             return transcoder.from_knx(response.payload.value)
         return response.payload.value.value
@@ -92,7 +92,7 @@ async def read_group_value(
 def _parse_dpt(value_type: int | str | type[DPTBase] | None) -> type[DPTBase] | None:
     if value_type is None:
         return None
-    if isinstance(value_type, (int, str)):
+    if isinstance(value_type, int | str):
         if transcoder := DPTBase.parse_transcoder(value_type):
             return transcoder
     else:
@@ -108,7 +108,7 @@ def _parse_payload(
     value: Any,
     value_type: int | str | type[DPTBase] | None = None,
 ) -> DPTBinary | DPTArray:
-    if isinstance(value, (DPTArray, DPTBinary)):
+    if isinstance(value, DPTArray | DPTBinary):
         return value
     if transcoder := _parse_dpt(value_type):
         return transcoder.to_knx(value)

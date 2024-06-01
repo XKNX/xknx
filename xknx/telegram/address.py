@@ -42,7 +42,7 @@ def parse_device_group_address(
     try:
         group_address = GroupAddress(address)  # type: ignore[arg-type]  # InternalGroupAddress will raise
     except CouldNotParseAddress as ex:
-        if isinstance(address, (str, InternalGroupAddress)):
+        if isinstance(address, str | InternalGroupAddress):
             try:
                 return InternalGroupAddress(address)
             except CouldNotParseAddress as internal_ex:

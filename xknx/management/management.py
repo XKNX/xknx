@@ -255,7 +255,7 @@ class P2PConnection:
             if not self._response_waiter.done():
                 self._response_waiter.set_exception(ManagementConnectionRefused())
             return
-        if isinstance(telegram.tpci, (TAck, TNak)):
+        if isinstance(telegram.tpci, TAck | TNak):
             if not self._ack_waiter:
                 logger.warning("Received unexpected ACK/NAK: %s", telegram)
                 return

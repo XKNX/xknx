@@ -313,7 +313,7 @@ class GatewayScanner:
         queue: asyncio.Queue[GatewayDescriptor | None] | None = None,
     ) -> None:
         """Verify and handle knxipframe. Callback from internal udp_transport."""
-        if not isinstance(knx_ip_frame.body, (SearchResponse, SearchResponseExtended)):
+        if not isinstance(knx_ip_frame.body, SearchResponse | SearchResponseExtended):
             logger.warning("Could not understand knxipframe")
             return
 

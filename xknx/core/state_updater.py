@@ -98,7 +98,7 @@ class StateUpdater:
         tracker_type = self._default_tracker_option.tracker_type
         update_interval: int | float = self._default_tracker_option.update_interval_min
 
-        if isinstance(tracker_options, (int, float)):
+        if isinstance(tracker_options, int | float):
             update_interval = check_update_interval(tracker_options)
         elif isinstance(tracker_options, str):
             _options = tracker_options.split()

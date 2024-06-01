@@ -158,16 +158,10 @@ class RemoteValue(ABC, Generic[ValueT]):
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
         if not isinstance(
-            telegram.destination_address, (GroupAddress, InternalGroupAddress)
+            telegram.destination_address, GroupAddress | InternalGroupAddress
         ) or not self.has_group_address(telegram.destination_address):
             return False
-        if not isinstance(
-            telegram.payload,
-            (
-                GroupValueWrite,
-                GroupValueResponse,
-            ),
-        ):
+        if not isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
             raise CouldNotParseTelegram(
                 "payload not a GroupValueWrite or GroupValueResponse",
                 payload=str(telegram.payload),
