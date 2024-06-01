@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Callable
 import logging
 import random
-from typing import Callable, Final
+from typing import Final
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,

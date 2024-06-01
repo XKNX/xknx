@@ -12,9 +12,9 @@ Telegrams addressed to IndividualAddresses are not processed by this queue.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection

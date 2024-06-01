@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Generator
+from collections.abc import Callable, Coroutine, Generator
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from xknx.core import XknxConnectionState
 

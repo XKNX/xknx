@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Callable, cast
+from typing import cast
 
 from xknx.exceptions import CommunicationError
 from xknx.knxip import HPAI, KNXIPFrame, KNXIPServiceType

@@ -10,9 +10,9 @@ Remote value can be :
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Iterator
+from collections.abc import Awaitable, Callable, Iterator
 import logging
-from typing import TYPE_CHECKING, Callable, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram

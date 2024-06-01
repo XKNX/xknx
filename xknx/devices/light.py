@@ -14,11 +14,11 @@ It provides functionality for
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Iterator
+from collections.abc import Awaitable, Callable, Iterator
 from enum import Enum
 from itertools import chain
 import logging
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from xknx.dpt.dpt_color import RGBColor, RGBWColor, XYYColor
 from xknx.remote_value import (

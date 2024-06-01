@@ -15,10 +15,10 @@ It provides functionality for
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import date, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from xknx.remote_value import (
     GroupAddressesType,

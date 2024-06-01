@@ -6,8 +6,7 @@ More or less an array with devices. Adds some search functionality to find devic
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Iterator
-from typing import Callable
+from collections.abc import Awaitable, Callable, Iterator
 
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
