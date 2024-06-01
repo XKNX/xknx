@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from inspect import isabstract
 from typing import Any, Generic, TypeVar, cast
@@ -155,8 +155,17 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def parse_transcoder(cls: T, value_type: int | str) -> T | None:
-        """Return Class reference of DPTBase subclass from value_type or DPT number."""
+    def parse_transcoder(
+        cls: T, value_type: int | str | Sequence[int | None]
+    ) -> T | None:
+        """
+        Return Class reference of DPTBase subclass from value_type or DPT number.
+
+        `value_type` accepts
+        - integer: DPT main number
+        - string: value_type or "." separated dpt main and sub numbers (eg. "9.001")
+        - sequence of integers: first item DPT main number, second item (optional) DPT sub number or None
+        """
         if isinstance(value_type, int):
             return cls.transcoder_by_dpt(value_type)
         if isinstance(value_type, str):
@@ -175,6 +184,18 @@ class DPTBase(ABC):
                     except (ValueError, IndexError):
                         pass
             return transcoder
+        if isinstance(value_type, Sequence):  # str is a Sequence so check it later
+            try:
+                main = int(value_type[0])  # type: ignore[arg-type]  # None raises TypeError
+                try:
+                    _sub = value_type[1]
+                except IndexError:
+                    _sub = None
+                else:
+                    _sub = int(_sub) if _sub is not None else None
+            except (ValueError, IndexError, TypeError):
+                return None
+            return cls.transcoder_by_dpt(dpt_main=main, dpt_sub=_sub)
 
 
 class DPTNumeric(DPTBase):
