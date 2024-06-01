@@ -13,10 +13,10 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: System :: Hardware :: Hardware Drivers",
 ]
 dependencies = [
@@ -29,7 +29,7 @@ dynamic = ["version"]
 keywords = ["KNX", "EIB", "Home Assistant", "home automation"]
 license = { text = "MIT License" }
 readme = "README.md"
-requires-python = ">=3.9.0"
+requires-python = ">=3.10.0"
 
 [project.urls]
 homepage = "https://xknx.io/"
@@ -50,7 +50,7 @@ quiet-level = 2
 
 [tool.mypy]
 pretty = true
-python_version = "3.9"
+python_version = "3.10"
 show_error_codes = true
 strict = true
 # additional flags to strict mode

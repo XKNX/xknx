@@ -17,7 +17,7 @@ We need your help for testing and improving XKNX. For questions, feature request
 
 ## Development
 
-You will need at least Python 3.9 in order to use XKNX.
+You will need at least Python 3.10 in order to use XKNX.
 
 Setting up your local environment:
 

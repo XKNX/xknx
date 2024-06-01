@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### General
+
+- Drop support for Python 3.9
+
 ### DPT
 
 - DPTComplex: Common interface for DPT transcoders with multi-value data. Resulting dataclasses can be converted to and from a dict with DPT specific properties to be JSON compatible.
@@ -21,6 +25,10 @@ nav_order: 2
 ### Address
 
 - `InternalGroupAddress` attribute `address` is renamed to `raw` to be in line with `GroupAddress` (although still str). Its value has an "i-" prefix.
+
+### Internal
+
+- Add Python 3.13 test runner to CI
 
 # 2.12.2 Fix thread leak 2024-03-05
 

@@ -229,7 +229,7 @@ class DPTComplexData(ABC):
     @abstractmethod
     def from_dict(
         cls, data: Mapping[str, Any]
-    ) -> DPTComplexData:  # py3.10: use typing.Self
+    ) -> DPTComplexData:  # py3.11: use typing.Self
         """Init from a dictionary."""
 
     @abstractmethod
