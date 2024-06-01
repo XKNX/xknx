@@ -1,5 +1,7 @@
 """Unit test for KNX binary/integer objects."""
 
+from typing import Any
+
 import pytest
 
 from xknx.dpt import (
@@ -62,19 +64,20 @@ class TestDPTBase:
         ]
         assert len(dpt_tuples) == len(set(dpt_tuples))
 
-    def test_dpt_alternative_notations(self):
-        """Test the parser for accepting alternateive notations for the same DPT class."""
-        dpt1 = DPTBase.parse_transcoder("2byte_unsigned")
-        dpt2 = DPTBase.parse_transcoder(7)
-        dpt3 = DPTBase.parse_transcoder("DPT-7")
-        assert dpt1 == dpt2
-        assert dpt2 == dpt3
-        dpt4 = DPTBase.parse_transcoder("temperature")
-        dpt5 = DPTBase.parse_transcoder("9.001")
-        assert dpt4 == dpt5
-        dpt7 = DPTBase.parse_transcoder("active_energy")
-        dpt8 = DPTBase.parse_transcoder("13.010")
-        assert dpt7 == dpt8
+    @pytest.mark.parametrize(
+        "equal_dpts",
+        [
+            # strings in dictionaries would fail type checking, but should work nevertheless
+            ["2byte_unsigned", 7, "DPT-7", {"main": 7}, {"main": "7", "sub": None}],
+            ["temperature", "9.001", {"main": 9, "sub": 1}, {"main": "9", "sub": "1"}],
+            ["active_energy", "13.010", {"main": 13, "sub": 10}],
+        ],
+    )
+    def test_dpt_alternative_notations(self, equal_dpts: list[Any]):
+        """Test the parser for accepting alternative notations for the same DPT class."""
+        parsed = [DPTBase.parse_transcoder(dpt) for dpt in equal_dpts]
+        assert issubclass(parsed[0], DPTBase)
+        assert all(parsed[0] == dpt for dpt in parsed)
 
     def test_parse_transcoder_from_subclass(self):
         """Test parsing only subclasses of a DPT class."""
@@ -89,6 +92,26 @@ class TestDPTBase:
         assert DPTBase.parse_transcoder("temperature") == DPTTemperature
         assert DPTNumeric.parse_transcoder("temperature") == DPTTemperature
         assert DPT2ByteFloat.parse_transcoder("temperature") == DPTTemperature
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            None,
+            0,
+            999999999,
+            9.001,  # float is not valid
+            "invalid_string",
+            {"sub": 1},
+            {"main": None, "sub": None},
+            {"main": "invalid"},
+            {"main": 9, "sub": "invalid"},
+            [9, 1],
+            (9,),
+        ],
+    )
+    def test_parse_transcoder_invalid_data(self, value: Any):
+        """Test parsing invalid data."""
+        assert DPTBase.parse_transcoder(value) is None
 
 
 class TestDPTBaseSubclass:

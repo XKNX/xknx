@@ -16,6 +16,7 @@ nav_order: 2
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
+- Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
 # 2.12.2 Fix thread leak 2024-03-05
 
