@@ -67,10 +67,10 @@ class TestDPTBase:
     @pytest.mark.parametrize(
         "equal_dpts",
         [
-            # strings in sequences would fail type checking, but should work nevertheless
-            ["2byte_unsigned", 7, "DPT-7", [7], ["7", None], (7,), (7, None)],
-            ["temperature", "9.001", [9, 1], (9, 1), ("9", "1")],
-            ["active_energy", "13.010", [13, 10], (13, 10), ["13", "10"]],
+            # strings in dictionaries would fail type checking, but should work nevertheless
+            ["2byte_unsigned", 7, "DPT-7", {"main": 7}, {"main": "7", "sub": None}],
+            ["temperature", "9.001", {"main": 9, "sub": 1}, {"main": "9", "sub": "1"}],
+            ["active_energy", "13.010", {"main": 13, "sub": 10}],
         ],
     )
     def test_dpt_alternative_notations(self, equal_dpts: list[Any]):
@@ -92,6 +92,26 @@ class TestDPTBase:
         assert DPTBase.parse_transcoder("temperature") == DPTTemperature
         assert DPTNumeric.parse_transcoder("temperature") == DPTTemperature
         assert DPT2ByteFloat.parse_transcoder("temperature") == DPTTemperature
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            None,
+            0,
+            999999999,
+            9.001,  # float is not valid
+            "invalid_string",
+            {"sub": 1},
+            {"main": None, "sub": None},
+            {"main": "invalid"},
+            {"main": 9, "sub": "invalid"},
+            [9, 1],
+            (9,),
+        ],
+    )
+    def test_parse_transcoder_invalid_data(self, value: Any):
+        """Test parsing invalid data."""
+        assert DPTBase.parse_transcoder(value) is None
 
 
 class TestDPTBaseSubclass:

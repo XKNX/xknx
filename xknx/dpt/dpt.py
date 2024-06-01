@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from inspect import isabstract
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, Generic, TypedDict, TypeVar, cast
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -14,6 +14,13 @@ from .payload import DPTArray, DPTBinary
 
 T = TypeVar("T", bound=type["DPTBase"])  # pylint: disable=invalid-name
 TComplexData = TypeVar("TComplexData", bound="DPTComplexData")  # pylint: disable=invalid-name
+
+
+class _DPTMainSubDict(TypedDict):
+    """DPT type dictionary in accordance to xknxproject DPTType data."""
+
+    main: int
+    sub: int | None
 
 
 class DPTBase(ABC):
@@ -155,16 +162,14 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def parse_transcoder(
-        cls: T, value_type: int | str | Sequence[int | None]
-    ) -> T | None:
+    def parse_transcoder(cls: T, value_type: int | str | _DPTMainSubDict) -> T | None:
         """
         Return Class reference of DPTBase subclass from value_type or DPT number.
 
         `value_type` accepts
-        - integer: DPT main number
-        - string: value_type or "." separated dpt main and sub numbers (eg. "9.001")
-        - sequence of integers: first item DPT main number, second item (optional) DPT sub number or None
+        - Integer: DPT main number
+        - String: value_type or "." separated dpt main and sub numbers (eg. "9.001")
+        - Mapping: "main" and "sub" keys with DPT main and sub numbers (in accordance to xknxproject data)
         """
         if isinstance(value_type, int):
             return cls.transcoder_by_dpt(value_type)
@@ -184,16 +189,14 @@ class DPTBase(ABC):
                     except (ValueError, IndexError):
                         pass
             return transcoder
-        if isinstance(value_type, Sequence):  # str is a Sequence so check it later
+        if isinstance(value_type, Mapping):
             try:
-                main = int(value_type[0])  # type: ignore[arg-type]  # None raises TypeError
-                try:
-                    _sub = value_type[1]
-                except IndexError:
-                    _sub = None
+                main = int(value_type["main"])
+                if (_sub := value_type.get("sub")) is not None:
+                    _sub = int(_sub)
                 else:
-                    _sub = int(_sub) if _sub is not None else None
-            except (ValueError, IndexError, TypeError):
+                    _sub = None
+            except (KeyError, TypeError, ValueError):
                 return None
             return cls.transcoder_by_dpt(dpt_main=main, dpt_sub=_sub)
 
