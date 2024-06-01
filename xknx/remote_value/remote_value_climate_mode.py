@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from xknx.dpt import (
     DPTArray,
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 
-class RemoteValueClimateModeBase(RemoteValue[Optional[HVACModeT]]):
+class RemoteValueClimateModeBase(RemoteValue[HVACModeT | None]):
     """Base class for binary climate mode remote values."""
 
     @abstractmethod

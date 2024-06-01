@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, Union
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from xknx.core import XknxConnectionState
 from xknx.remote_value import RemoteValue
@@ -28,7 +28,7 @@ class TrackerOptions(NamedTuple):
     update_interval_min: int | float
 
 
-TrackerOptionType = Union[bool, int, float, str, TrackerOptions]
+TrackerOptionType = bool | int | float | str | TrackerOptions
 
 
 class StateUpdater:

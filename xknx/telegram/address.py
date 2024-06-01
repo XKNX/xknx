@@ -26,7 +26,7 @@ from xknx.exceptions import CouldNotParseAddress
 GroupAddressableType = Union["GroupAddress", str, int]
 IndividualAddressableType = Union["IndividualAddress", str, int]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
-DeviceAddressableType = Union[GroupAddressableType, InternalGroupAddressableType]
+DeviceAddressableType = GroupAddressableType | InternalGroupAddressableType
 DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
 # py3.10 backwards compatibility - in py3.11 typing.Self is available
 Self = TypeVar("Self", bound="BaseAddress")
