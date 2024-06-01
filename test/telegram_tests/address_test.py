@@ -97,21 +97,21 @@ individual_addresses_invalid = [
 ]
 
 internal_group_addresses_valid = {
-    "i 123": "123",
-    "i-123": "123",
-    "i_123": "123",
-    "I 123": "123",
-    "i abc": "abc",
-    "i-abc": "abc",
-    "i_abc": "abc",
-    "I-abc": "abc",
-    "i123": "123",
-    "iabc": "abc",
-    "IABC": "ABC",
-    "i   abc  ": "abc",
-    "i asdf 123 adsf ": "asdf 123 adsf",
-    "i-1/2/3": "1/2/3",
-    InternalGroupAddress("i-123"): "123",
+    "i 123": "i-123",
+    "i-123": "i-123",
+    "i_123": "i-123",
+    "I 123": "i-123",
+    "i abc": "i-abc",
+    "i-abc": "i-abc",
+    "i_abc": "i-abc",
+    "I-abc": "i-abc",
+    "i123": "i-123",
+    "iabc": "i-abc",
+    "IABC": "i-ABC",
+    "i   abc  ": "i-abc",
+    "i asdf 123 adsf ": "i-asdf 123 adsf",
+    "i-1/2/3": "i-1/2/3",
+    InternalGroupAddress("i-123"): "i-123",
 }
 
 internal_group_addresses_invalid = [
@@ -314,7 +314,7 @@ class TestInternalGroupAddress:
     def test_with_valid(self, address_test, address_raw):
         """Test if the class constructor generates valid raw values."""
 
-        assert InternalGroupAddress(address_test).address == address_raw
+        assert InternalGroupAddress(address_test).raw == address_raw
 
     @pytest.mark.parametrize(
         "address_test",
