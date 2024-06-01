@@ -18,6 +18,10 @@ nav_order: 2
   - 251.600 - DPTColorRGBW - RGBWColor
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
+### Address
+
+- `InternalGroupAddress` attribute `address` is renamed to `raw` to be in line with `GroupAddress` (although still str). Its value has an "i-" prefix.
+
 # 2.12.2 Fix thread leak 2024-03-05
 
 ### Bugfixes

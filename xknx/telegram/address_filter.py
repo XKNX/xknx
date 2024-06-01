@@ -48,7 +48,7 @@ class AddressFilter:
 
     def _parse_pattern(self, pattern: str) -> None:
         if pattern.startswith("i"):
-            self.internal_group_address_pattern = InternalGroupAddress(pattern).address
+            self.internal_group_address_pattern = InternalGroupAddress(pattern).raw
             return
 
         for part in pattern.split("/"):
@@ -72,7 +72,7 @@ class AddressFilter:
             isinstance(address, InternalGroupAddress)
             and self.internal_group_address_pattern
         ):
-            return fnmatch(address.address, self.internal_group_address_pattern)
+            return fnmatch(address.raw, self.internal_group_address_pattern)
 
         return False
 

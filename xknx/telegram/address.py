@@ -87,7 +87,7 @@ class BaseAddress(ABC):
         Returns `True` if we check against the same subclass and the
         raw Value matches.
         """
-        return self.__hash__() == other.__hash__()
+        return isinstance(other, self.__class__) and self.raw == other.raw
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
@@ -341,10 +341,10 @@ class InternalGroupAddress:
 
     def __init__(self, address: str | InternalGroupAddress) -> None:
         """Initialize InternalGroupAddress class."""
-        self.address: str
+        self.raw: str
 
         if isinstance(address, InternalGroupAddress):
-            self.address = address.address
+            self.raw = address.raw
             return
         if not isinstance(address, str):
             raise CouldNotParseAddress(address, message="Invalid type")
@@ -355,17 +355,18 @@ class InternalGroupAddress:
         if address[1] in "-_":
             prefix_length = 2
 
-        self.address = address[prefix_length:].strip()
-        if not self.address:
+        _raw = address[prefix_length:].strip()
+        if not _raw:
             raise CouldNotParseAddress(address, message="No chars after prefix")
+        self.raw = f"i-{_raw}"
 
     def __str__(self) -> str:
         """Return object as readable string (e.g. 'i-123')."""
-        return f"i-{self.address}"
+        return self.raw
 
     def __repr__(self) -> str:
         """Return object as parsable string."""
-        return f'InternalGroupAddress("{self}")'
+        return f'InternalGroupAddress("{self.raw}")'
 
     def __eq__(self, other: object | None) -> bool:
         """
@@ -374,8 +375,8 @@ class InternalGroupAddress:
         Returns `True` if we check against the same subclass and the
         raw Value matches.
         """
-        return self.__hash__() == other.__hash__()
+        return isinstance(other, self.__class__) and self.raw == other.raw
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
-        return hash((self.__class__, self.address))
+        return hash((self.__class__, self.raw))
