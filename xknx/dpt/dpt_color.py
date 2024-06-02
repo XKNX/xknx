@@ -10,7 +10,7 @@ from .dpt import DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
 
-@dataclass
+@dataclass(slots=True)
 class RGBColor(DPTComplexData):
     """
     Representation of RGB color.
@@ -77,7 +77,7 @@ class DPTColorRGB(DPTComplex[RGBColor]):
         return DPTArray(colors)
 
 
-@dataclass
+@dataclass(slots=True)
 class RGBWColor(DPTComplexData):
     """
     Representation of RGBW color.
@@ -176,7 +176,7 @@ class DPTColorRGBW(DPTComplex[RGBWColor]):
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class XYYColor(DPTComplexData):
     """
     Representation of XY color with brightness.
