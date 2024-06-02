@@ -1,21 +1,23 @@
 """
 Module for KNX Telegrams.
 
-The telegram class is the lightweight interaction object between
+The telegram class is the lightweight data transfer object between
 
 * business logic (Lights, Covers, etc) and
-* underlying KNX/IP abstraction (KNX-Routing/KNX-Tunneling).
+* underlying KNX/IP abstraction (CEMIHandler).
 
 It contains
 
-* the direction (incoming or outgoing)
-* the group address (e.g. 1/2/3)
-* and the payload (e.g. GroupValueWrite("12%")).
-
+* the group address (e.g. GroupAddress("1/2/3"))
+* the direction (Incoming or Outgoing)
+* and the payload (e.g. GroupValueWrite(DPTBinary(False)))
+* the source address (e.g. IndividualAddress("1.2.3"))
+* the TPCI (Transport Layer Control Information) (e.g. TDataGroup())
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from enum import Enum
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
@@ -30,35 +32,30 @@ class TelegramDirection(Enum):
     OUTGOING = "Outgoing"
 
 
+@dataclass(slots=True)
 class Telegram:
     """Class for KNX telegrams."""
 
-    def __init__(
-        self,
-        destination_address: GroupAddress | IndividualAddress | InternalGroupAddress,
-        direction: TelegramDirection = TelegramDirection.OUTGOING,
-        payload: APCI | None = None,
-        source_address: IndividualAddress | None = None,
-        tpci: TPCI | None = None,
-    ) -> None:
+    destination_address: GroupAddress | IndividualAddress | InternalGroupAddress
+    direction: TelegramDirection = TelegramDirection.OUTGOING
+    payload: APCI | None = None
+    source_address: IndividualAddress = field(
+        default_factory=lambda: IndividualAddress(0)
+    )
+    tpci: TPCI = None  # type: ignore[assignment]  # set in __post_init__
+
+    def __post_init__(self) -> None:
         """Initialize Telegram class."""
-        self.destination_address = destination_address
-        self.direction = direction
-        self.payload = payload
-        self.source_address = source_address or IndividualAddress(0)
-        self.tpci: TPCI
-        if tpci is None:
-            if isinstance(destination_address, GroupAddress):
-                if destination_address.raw == 0:
+        if self.tpci is None:
+            if isinstance(self.destination_address, GroupAddress):  # type: ignore[unreachable]
+                if self.destination_address.raw == 0:
                     self.tpci = TDataBroadcast()
                 else:
                     self.tpci = TDataGroup()
-            elif isinstance(destination_address, IndividualAddress):
+            elif isinstance(self.destination_address, IndividualAddress):
                 self.tpci = TDataIndividual()
             else:  # InternalGroupAddress
                 self.tpci = TDataGroup()
-        else:
-            self.tpci = tpci
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -70,24 +67,3 @@ class Telegram:
             f'destination_address="{self.destination_address}" '
             f"{data} />"
         )
-
-    def __repr__(self) -> str:
-        """Return object as string representation."""
-        return (
-            "Telegram("
-            f"destination_address={self.destination_address}, "
-            f"direction={self.direction}, "
-            f"payload={self.payload}, "
-            f"source_address={self.source_address}, "
-            f"tpci={self.tpci}"
-            ")"
-        )
-
-    def __eq__(self, other: object) -> bool:
-        """Equal operator."""
-        return self.__dict__ == other.__dict__
-
-    def __hash__(self) -> int:
-        """Hash function."""
-        # used to turn lists of Telegram into sets in unittests
-        return hash(repr(self))
