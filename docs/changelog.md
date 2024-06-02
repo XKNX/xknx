@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### General
+
+- Drop support for Python 3.9
+
 ### DPT
 
 - DPTComplex: Common interface for DPT transcoders with multi-value data. Resulting dataclasses can be converted to and from a dict with DPT specific properties to be JSON compatible.

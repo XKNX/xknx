@@ -8,10 +8,10 @@ Due to lame support of UDP multicast within asyncio some special treatment for m
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 import socket
 import sys
-from typing import Callable
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
 from xknx.knxip import HPAI, KNXIPFrame

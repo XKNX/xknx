@@ -10,9 +10,9 @@ Remote value can be :
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Iterator
+from collections.abc import Awaitable, Callable, Iterator
 import logging
-from typing import TYPE_CHECKING, Callable, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -158,16 +158,10 @@ class RemoteValue(ABC, Generic[ValueT]):
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
         if not isinstance(
-            telegram.destination_address, (GroupAddress, InternalGroupAddress)
+            telegram.destination_address, GroupAddress | InternalGroupAddress
         ) or not self.has_group_address(telegram.destination_address):
             return False
-        if not isinstance(
-            telegram.payload,
-            (
-                GroupValueWrite,
-                GroupValueResponse,
-            ),
-        ):
+        if not isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
             raise CouldNotParseTelegram(
                 "payload not a GroupValueWrite or GroupValueResponse",
                 payload=str(telegram.payload),

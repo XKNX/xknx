@@ -7,8 +7,8 @@ The module is build upon asyncio stream socket functions.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame

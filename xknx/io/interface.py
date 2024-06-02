@@ -9,7 +9,7 @@ Abstract base for a specific KNX/IP connection (Tunneling or Routing).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Callable
+from collections.abc import Callable
 
 from xknx.cemi import CEMIFrame
 

@@ -8,7 +8,7 @@ for serialization and deserialization of the KNX value.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, TypeVar, Union
+from typing import TYPE_CHECKING, TypeVar
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
@@ -80,7 +80,7 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         return getattr(self.dpt_class, "ha_device_class", None)
 
 
-class RemoteValueSensor(_RemoteValueGeneric[Union[int, float, str]]):
+class RemoteValueSensor(_RemoteValueGeneric[int | float | str]):
     """Abstraction for sensor DPT types."""
 
     dpt_base_class = DPTBase
@@ -91,7 +91,7 @@ class RemoteValueSensor(_RemoteValueGeneric[Union[int, float, str]]):
         return self.dpt_class.from_knx(payload)  # type: ignore[no-any-return]
 
 
-class RemoteValueNumeric(_RemoteValueGeneric[Union[int, float]]):
+class RemoteValueNumeric(_RemoteValueGeneric[int | float]):
     """Abstraction for numeric DPT types."""
 
     dpt_base_class = DPTNumeric

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
-from typing import Callable
 
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 

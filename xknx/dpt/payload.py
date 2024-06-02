@@ -44,7 +44,7 @@ class DPTArray:
         self.value: tuple[int, ...]
         if isinstance(value, int):
             self.value = (value,)
-        elif isinstance(value, (list, bytes)):
+        elif isinstance(value, list | bytes):
             self.value = tuple(value)
         elif isinstance(value, tuple):
             self.value = value

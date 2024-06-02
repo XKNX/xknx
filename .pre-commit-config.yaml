@@ -37,7 +37,7 @@ repos:
       - id: python-typing-update
         stages: [manual]
         args:
-          - --py39-plus
+          - --py310-plus
           - --force
           - --keep-updates
         files: ^(xknx)/.+\.py$

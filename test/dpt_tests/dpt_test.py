@@ -165,6 +165,6 @@ class TestDPTNumeric:
     def test_values(self, dpt_class):
         """Test boundary values are set for numeric definitions (because mypy doesn't)."""
 
-        assert isinstance(dpt_class.value_min, (int, float))
-        assert isinstance(dpt_class.value_max, (int, float))
-        assert isinstance(dpt_class.resolution, (int, float))
+        assert isinstance(dpt_class.value_min, int | float)
+        assert isinstance(dpt_class.value_max, int | float)
+        assert isinstance(dpt_class.resolution, int | float)

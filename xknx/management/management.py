@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, AsyncIterator, Generator
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import (
     CommunicationError,
@@ -255,7 +255,7 @@ class P2PConnection:
             if not self._response_waiter.done():
                 self._response_waiter.set_exception(ManagementConnectionRefused())
             return
-        if isinstance(telegram.tpci, (TAck, TNak)):
+        if isinstance(telegram.tpci, TAck | TNak):
             if not self._ack_waiter:
                 logger.warning("Received unexpected ACK/NAK: %s", telegram)
                 return
