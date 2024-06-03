@@ -10,6 +10,7 @@ is a service that takes a DPT as a value.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum
 import struct
 from typing import ClassVar, cast
@@ -106,6 +107,7 @@ class APCIExtendedService(Enum):
     APCI_SEC = 0x03F1
 
 
+@dataclass(slots=True)
 class APCI(ABC):
     """
     Base class for ACPI services.
@@ -125,13 +127,7 @@ class APCI(ABC):
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data - to be implemented in derived class."""
         # shall return bytearray instead of bytes so TPCI can be
-        # added to first 6 bits of first byte later
-
-    def __eq__(self, other: object) -> bool:
-        """Equal operator."""
-        if self.__class__ != other.__class__:
-            return False
-        return self.__dict__ == other.__dict__
+        # added to first 6 bits of first byte in-place later
 
     @classmethod
     @abstractmethod
@@ -229,6 +225,7 @@ class APCI(ABC):
         raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
 
+@dataclass(slots=True)
 class GroupValueRead(APCI):
     """
     GroupValueRead service.
@@ -236,7 +233,7 @@ class GroupValueRead(APCI):
     Does not have any payload.
     """
 
-    CODE = APCIService.GROUP_READ
+    CODE: ClassVar = APCIService.GROUP_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -257,6 +254,7 @@ class GroupValueRead(APCI):
         return "<GroupValueRead />"
 
 
+@dataclass(slots=True)
 class GroupValueWrite(APCI):
     """
     GroupValueRead service.
@@ -264,11 +262,9 @@ class GroupValueWrite(APCI):
     Takes a value (DPT) as payload.
     """
 
-    CODE = APCIService.GROUP_WRITE
+    CODE: ClassVar = APCIService.GROUP_WRITE
 
-    def __init__(self, value: DPTBinary | DPTArray) -> None:
-        """Initialize a new instance of GroupValueWrite."""
-        self.value = value
+    value: DPTBinary | DPTArray
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -298,6 +294,7 @@ class GroupValueWrite(APCI):
         return f'<GroupValueWrite value="{self.value}" />'
 
 
+@dataclass(slots=True)
 class GroupValueResponse(APCI):
     """
     GroupValueResponse service.
@@ -305,11 +302,9 @@ class GroupValueResponse(APCI):
     Takes a value (DPT) as payload.
     """
 
-    CODE = APCIService.GROUP_RESPONSE
+    CODE: ClassVar = APCIService.GROUP_RESPONSE
 
-    def __init__(self, value: DPTBinary | DPTArray) -> None:
-        """Initialize a new instance of GroupValueResponse."""
-        self.value = value
+    value: DPTBinary | DPTArray
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -337,6 +332,7 @@ class GroupValueResponse(APCI):
         return f'<GroupValueResponse value="{self.value}" />'
 
 
+@dataclass(slots=True)
 class IndividualAddressWrite(APCI):
     """
     IndividualAddressWrite service.
@@ -344,11 +340,9 @@ class IndividualAddressWrite(APCI):
     Payload contains the serial number and (new) address of the device.
     """
 
-    CODE = APCIService.INDIVIDUAL_ADDRESS_WRITE
+    CODE: ClassVar = APCIService.INDIVIDUAL_ADDRESS_WRITE
 
-    def __init__(self, address: IndividualAddress) -> None:
-        """Initialize a new instance of IndividualAddressWrite."""
-        self.address = address
+    address: IndividualAddress
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -369,10 +363,11 @@ class IndividualAddressWrite(APCI):
         return f'<IndividualAddressWrite address="{self.address}" />'
 
 
+@dataclass(slots=True)
 class IndividualAddressRead(APCI):
     """IndividualAddressRead service."""
 
-    CODE = APCIService.INDIVIDUAL_ADDRESS_READ
+    CODE: ClassVar = APCIService.INDIVIDUAL_ADDRESS_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -393,6 +388,7 @@ class IndividualAddressRead(APCI):
         return "<IndividualAddressRead />"
 
 
+@dataclass(slots=True)
 class IndividualAddressResponse(APCI):
     """
     IndividualAddressResponse service.
@@ -401,7 +397,7 @@ class IndividualAddressResponse(APCI):
     response address.
     """
 
-    CODE = APCIService.INDIVIDUAL_ADDRESS_RESPONSE
+    CODE: ClassVar = APCIService.INDIVIDUAL_ADDRESS_RESPONSE
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -422,6 +418,7 @@ class IndividualAddressResponse(APCI):
         return "<IndividualAddressResponse />"
 
 
+@dataclass(slots=True)
 class ADCRead(APCI):
     """
     ADCRead service.
@@ -429,12 +426,10 @@ class ADCRead(APCI):
     Payload contains the channel and number of samples to take.
     """
 
-    CODE = APCIService.ADC_READ
+    CODE: ClassVar = APCIService.ADC_READ
 
-    def __init__(self, channel: int, count: int = 1) -> None:
-        """Initialize a new instance of ADCRead."""
-        self.channel = channel
-        self.count = count
+    channel: int
+    count: int = 1
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -463,6 +458,7 @@ class ADCRead(APCI):
         return f'<ADCRead channel="{self.channel}" count="{self.count}" />'
 
 
+@dataclass(slots=True)
 class ADCResponse(APCI):
     """
     ADCResponse service.
@@ -470,13 +466,11 @@ class ADCResponse(APCI):
     Payload contains the channel, number of samples and value.
     """
 
-    CODE = APCIService.ADC_RESPONSE
+    CODE: ClassVar = APCIService.ADC_RESPONSE
 
-    def __init__(self, channel: int, count: int = 1, value: int = 0) -> None:
-        """Initialize a new instance of ADCResponse."""
-        self.channel = channel
-        self.count = count
-        self.value = value
+    channel: int
+    count: int = 1
+    value: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -506,6 +500,7 @@ class ADCResponse(APCI):
         return f'<ADCResponse channel="{self.channel}" count="{self.count}" value="{self.value}" />'
 
 
+@dataclass(slots=True)
 class MemoryExtendedWrite(APCI):
     """
     MemoryExtendedWrite service.
@@ -513,15 +508,16 @@ class MemoryExtendedWrite(APCI):
     Payload indicates address (16 MiB), count (1-255 bytes) and data.
     """
 
-    CODE = APCIService.MEMORY_EXTENDED_WRITE
+    CODE: ClassVar = APCIService.MEMORY_EXTENDED_WRITE
 
-    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
-        """Initialize a new instance of MemoryExtendedWrite."""
-        if count is None:
-            count = len(data)
-        self.address = address
-        self.count = count
-        self.data = data
+    address: int
+    data: bytes
+    count: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.count is None:
+            self.count = len(self.data)  # type: ignore[unreachable]
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -559,6 +555,7 @@ class MemoryExtendedWrite(APCI):
         return f'<MemoryExtendedWrite address="{hex(self.address)}" count="{self.count}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class MemoryExtendedWriteResponse(APCI):
     """
     MemoryExtendedWriteResponse service.
@@ -566,15 +563,11 @@ class MemoryExtendedWriteResponse(APCI):
     Payload indicates return code, address (16 MiB) and confirmation data.
     """
 
-    CODE = APCIService.MEMORY_EXTENDED_WRITE_RESPONSE
+    CODE: ClassVar = APCIService.MEMORY_EXTENDED_WRITE_RESPONSE
 
-    def __init__(
-        self, return_code: int, address: int, confirmation_data: bytes = b""
-    ) -> None:
-        """Initialize a new instance of MemoryExtendedWriteResponse."""
-        self.return_code = return_code
-        self.address = address
-        self.confirmation_data = confirmation_data
+    return_code: int
+    address: int
+    confirmation_data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -614,6 +607,7 @@ class MemoryExtendedWriteResponse(APCI):
         return f'<MemoryExtendedWriteResponse return_code="{self.return_code}" address="{hex(self.address)}" confirmation_data="{self.confirmation_data.hex()}" />'
 
 
+@dataclass(slots=True)
 class MemoryExtendedRead(APCI):
     """
     MemoryExtendedRead service.
@@ -621,12 +615,10 @@ class MemoryExtendedRead(APCI):
     Payload indicates count and address (16 MiB).
     """
 
-    CODE = APCIService.MEMORY_EXTENDED_READ
+    CODE: ClassVar = APCIService.MEMORY_EXTENDED_READ
 
-    def __init__(self, count: int, address: int) -> None:
-        """Initialize a new instance of MemoryExtendedRead."""
-        self.count = count
-        self.address = address
+    count: int
+    address: int
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -663,6 +655,7 @@ class MemoryExtendedRead(APCI):
         )
 
 
+@dataclass(slots=True)
 class MemoryExtendedReadResponse(APCI):
     """
     MemoryExtendedReadResponse service.
@@ -670,13 +663,11 @@ class MemoryExtendedReadResponse(APCI):
     Payload indicates return code, address (16 MiB) and data.
     """
 
-    CODE = APCIService.MEMORY_EXTENDED_READ_RESPONSE
+    CODE: ClassVar = APCIService.MEMORY_EXTENDED_READ_RESPONSE
 
-    def __init__(self, return_code: int, address: int, data: bytes = b"") -> None:
-        """Initialize a new instance of MemoryExtendedReadResponse."""
-        self.return_code = return_code
-        self.address = address
-        self.data = data
+    return_code: int
+    address: int
+    data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -715,6 +706,7 @@ class MemoryExtendedReadResponse(APCI):
         return f'<MemoryExtendedReadResponse return_code="{self.return_code}" address="{hex(self.address)}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class MemoryRead(APCI):
     """
     MemoryRead service.
@@ -722,12 +714,10 @@ class MemoryRead(APCI):
     Payload indicates address (64 KiB) and count (1-63 bytes).
     """
 
-    CODE = APCIService.MEMORY_READ
+    CODE: ClassVar = APCIService.MEMORY_READ
 
-    def __init__(self, address: int, count: int = 1) -> None:
-        """Initialize a new instance of MemoryRead."""
-        self.address = address
-        self.count = count
+    address: int
+    count: int = 1
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -761,6 +751,7 @@ class MemoryRead(APCI):
         return f'<MemoryRead address="{hex(self.address)}" count="{self.count}" />'
 
 
+@dataclass(slots=True)
 class MemoryWrite(APCI):
     """
     MemoryWrite service.
@@ -768,15 +759,16 @@ class MemoryWrite(APCI):
     Payload indicates address (64 KiB), count (1-63 bytes) and data.
     """
 
-    CODE = APCIService.MEMORY_WRITE
+    CODE: ClassVar = APCIService.MEMORY_WRITE
 
-    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
-        """Initialize a new instance of MemoryWrite."""
-        if count is None:
-            count = len(data)
-        self.address = address
-        self.count = count
-        self.data = data
+    address: int
+    data: bytes
+    count: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.count is None:
+            self.count = len(self.data)  # type: ignore[unreachable]
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -814,6 +806,7 @@ class MemoryWrite(APCI):
         return f'<MemoryWrite address="{hex(self.address)}" count="{self.count}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class MemoryResponse(APCI):
     """
     MemoryResponse service.
@@ -821,15 +814,16 @@ class MemoryResponse(APCI):
     Payload indicates address (64 KiB), count (1-63 bytes) and data.
     """
 
-    CODE = APCIService.MEMORY_RESPONSE
+    CODE: ClassVar = APCIService.MEMORY_RESPONSE
 
-    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
-        """Initialize a new instance of MemoryResponse."""
-        if count is None:
-            count = len(data)
-        self.address = address
-        self.count = count
-        self.data = data
+    address: int
+    data: bytes
+    count: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.count is None:
+            self.count = len(self.data)  # type: ignore[unreachable]
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -867,6 +861,7 @@ class MemoryResponse(APCI):
         return f'<MemoryResponse address="{hex(self.address)}" count="{self.count}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class DeviceDescriptorRead(APCI):
     """
     DeviceDescriptorRead service.
@@ -874,11 +869,9 @@ class DeviceDescriptorRead(APCI):
     Payload contains the descriptor.
     """
 
-    CODE = APCIService.DEVICE_DESCRIPTOR_READ
+    CODE: ClassVar = APCIService.DEVICE_DESCRIPTOR_READ
 
-    def __init__(self, descriptor: int = 0) -> None:
-        """Initialize a new instance of DeviceDescriptorRead."""
-        self.descriptor = descriptor
+    descriptor: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -901,6 +894,7 @@ class DeviceDescriptorRead(APCI):
         return f'<DeviceDescriptorRead descriptor="{self.descriptor}" />'
 
 
+@dataclass(slots=True)
 class DeviceDescriptorResponse(APCI):
     """
     DeviceDescriptorResponse service.
@@ -908,12 +902,10 @@ class DeviceDescriptorResponse(APCI):
     Payload contains the descriptor and value.
     """
 
-    CODE = APCIService.DEVICE_DESCRIPTOR_RESPONSE
+    CODE: ClassVar = APCIService.DEVICE_DESCRIPTOR_RESPONSE
 
-    def __init__(self, descriptor: int = 0, value: int = 0) -> None:
-        """Initialize a new instance of DeviceDescriptorResponse."""
-        self.descriptor = descriptor
-        self.value = value
+    descriptor: int = 0
+    value: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -942,6 +934,7 @@ class DeviceDescriptorResponse(APCI):
         return f'<DeviceDescriptorResponse descriptor="{self.descriptor}" value="{self.value}" />'
 
 
+@dataclass(slots=True)
 class Restart(APCI):
     """
     Restart service.
@@ -952,7 +945,7 @@ class Restart(APCI):
     # Requests a Basic Restart of the communication partner.
     # Master reset is not implemented yet.
 
-    CODE = APCIService.RESTART
+    CODE: ClassVar = APCIService.RESTART
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -973,6 +966,7 @@ class Restart(APCI):
         return "<Restart />"
 
 
+@dataclass(slots=True)
 class UserMemoryRead(APCI):
     """
     UserMemoryRead service.
@@ -980,12 +974,10 @@ class UserMemoryRead(APCI):
     Payload indicates address (1 MiB) and count (1-15 bytes).
     """
 
-    CODE = APCIUserService.USER_MEMORY_READ
+    CODE: ClassVar = APCIUserService.USER_MEMORY_READ
 
-    def __init__(self, address: int = 0, count: int = 1) -> None:
-        """Initialize a new instance of UserMemoryRead."""
-        self.address = address
-        self.count = count
+    address: int = 0
+    count: int = 1
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1020,6 +1012,7 @@ class UserMemoryRead(APCI):
         return f'<UserMemoryRead address="{hex(self.address)}" count="{self.count}" />'
 
 
+@dataclass(slots=True)
 class UserMemoryWrite(APCI):
     """
     UserMemoryWrite service.
@@ -1027,15 +1020,16 @@ class UserMemoryWrite(APCI):
     Payload indicates address (1 MiB), count and data.
     """
 
-    CODE = APCIUserService.USER_MEMORY_WRITE
+    CODE: ClassVar = APCIUserService.USER_MEMORY_WRITE
 
-    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
-        """Initialize a new instance of UserMemoryWrite."""
-        if count is None:
-            count = len(data)
-        self.address = address
-        self.count = count
-        self.data = data
+    address: int
+    data: bytes
+    count: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.count is None:
+            self.count = len(self.data)  # type: ignore[unreachable]
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1074,6 +1068,7 @@ class UserMemoryWrite(APCI):
         return f'<UserMemoryWrite address="{hex(self.address)}" count="{self.count}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class UserMemoryResponse(APCI):
     """
     UserMemoryResponse service.
@@ -1081,15 +1076,16 @@ class UserMemoryResponse(APCI):
     Payload indicates address (1 MiB), count and data.
     """
 
-    CODE = APCIUserService.USER_MEMORY_RESPONSE
+    CODE: ClassVar = APCIUserService.USER_MEMORY_RESPONSE
 
-    def __init__(self, address: int, data: bytes, count: int | None = None) -> None:
-        """Initialize a new instance of UserMemoryResponse."""
-        if count is None:
-            count = len(data)
-        self.address = address
-        self.count = count
-        self.data = data
+    address: int
+    data: bytes
+    count: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.count is None:
+            self.count = len(self.data)  # type: ignore[unreachable]
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1128,10 +1124,11 @@ class UserMemoryResponse(APCI):
         return f'<UserMemoryResponse address="{hex(self.address)}" count="{self.count}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class UserManufacturerInfoRead(APCI):
     """UserManufacturerInfoRead service."""
 
-    CODE = APCIUserService.USER_MANUFACTURER_INFO_READ
+    CODE: ClassVar = APCIUserService.USER_MANUFACTURER_INFO_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1153,18 +1150,14 @@ class UserManufacturerInfoRead(APCI):
         return "<UserManufacturerInfoRead />"
 
 
+@dataclass(slots=True)
 class UserManufacturerInfoResponse(APCI):
     """UserManufacturerInfoResponse service."""
 
-    CODE = APCIUserService.USER_MANUFACTURER_INFO_RESPONSE
+    CODE: ClassVar = APCIUserService.USER_MANUFACTURER_INFO_RESPONSE
 
-    def __init__(self, manufacturer_id: int = 0, data: bytes | None = None) -> None:
-        """Initialize a new instance of UserManufacturerInfoResponse."""
-        if data is None:
-            data = bytes([0x00, 0x00])
-
-        self.manufacturer_id = manufacturer_id
-        self.data = data
+    manufacturer_id: int = 0
+    data: bytes = b"\x00\x00"
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1187,18 +1180,15 @@ class UserManufacturerInfoResponse(APCI):
         return f'<UserManufacturerInfoResponse manufacturer_id="{self.manufacturer_id}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class FunctionPropertyCommand(APCI):
     """FunctionPropertyCommand service."""
 
-    CODE = APCIUserService.FUNCTION_PROPERTY_COMMAND
+    CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
-    def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: bytes = b""
-    ) -> None:
-        """Initialize a new instance of FunctionPropertyCommand."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.data = data
+    object_index: int = 0
+    property_id: int = 0
+    data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1229,18 +1219,15 @@ class FunctionPropertyCommand(APCI):
         return f'<FunctionPropertyCommand object_index="{self.object_index}" property_id="{self.property_id}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class FunctionPropertyStateRead(APCI):
     """FunctionPropertyStateRead service."""
 
-    CODE = APCIUserService.FUNCTION_PROPERTY_STATE_READ
+    CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_READ
 
-    def __init__(
-        self, object_index: int = 0, property_id: int = 0, data: bytes = b""
-    ) -> None:
-        """Initialize a new instance of FunctionPropertyStateRead."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.data = data
+    object_index: int = 0
+    property_id: int = 0
+    data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1271,23 +1258,16 @@ class FunctionPropertyStateRead(APCI):
         return f'<FunctionPropertyStateRead object_index="{self.object_index}" property_id="{self.property_id}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class FunctionPropertyStateResponse(APCI):
     """FunctionPropertyStateResponse service."""
 
-    CODE = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
+    CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
 
-    def __init__(
-        self,
-        object_index: int = 0,
-        property_id: int = 0,
-        return_code: int = 0,
-        data: bytes = b"",
-    ) -> None:
-        """Initialize a new instance of FunctionPropertyStateResponse."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.return_code = return_code
-        self.data = data
+    object_index: int = 0
+    property_id: int = 0
+    return_code: int = 0
+    data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1328,14 +1308,13 @@ class FunctionPropertyStateResponse(APCI):
         return f'<FunctionPropertyStateResponse object_index="{self.object_index}" property_id="{self.property_id}" return_code="{self.return_code}" data="{self.data.hex()}" />'
 
 
+@dataclass(slots=True)
 class AuthorizeRequest(APCI):
     """AuthorizeRequest service."""
 
-    CODE = APCIExtendedService.AUTHORIZE_REQUEST
+    CODE: ClassVar = APCIExtendedService.AUTHORIZE_REQUEST
 
-    def __init__(self, key: int = 0) -> None:
-        """Initialize a new instance of AuthorizeRequest."""
-        self.key = key
+    key: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1358,14 +1337,13 @@ class AuthorizeRequest(APCI):
         return f'<AuthorizeRequest key="{self.key}" />'
 
 
+@dataclass(slots=True)
 class AuthorizeResponse(APCI):
     """AuthorizeResponse service."""
 
-    CODE = APCIExtendedService.AUTHORIZE_RESPONSE
+    CODE: ClassVar = APCIExtendedService.AUTHORIZE_RESPONSE
 
-    def __init__(self, level: int = 0) -> None:
-        """Initialize a new instance of AuthorizeResponse."""
-        self.level = level
+    level: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1388,6 +1366,7 @@ class AuthorizeResponse(APCI):
         return f'<AuthorizeResponse level="{self.level}"/>'
 
 
+@dataclass(slots=True)
 class PropertyValueRead(APCI):
     """
     PropertyValueRead service.
@@ -1395,20 +1374,12 @@ class PropertyValueRead(APCI):
     Payload indicates object, property, count and start.
     """
 
-    CODE = APCIExtendedService.PROPERTY_VALUE_READ
+    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_READ
 
-    def __init__(
-        self,
-        object_index: int = 0,
-        property_id: int = 0,
-        count: int = 1,
-        start_index: int = 1,
-    ) -> None:
-        """Initialize a new instance of PropertyValueRead."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.count = count
-        self.start_index = start_index
+    object_index: int = 0
+    property_id: int = 0
+    count: int = 1
+    start_index: int = 1
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1457,6 +1428,7 @@ class PropertyValueRead(APCI):
         )
 
 
+@dataclass(slots=True)
 class PropertyValueWrite(APCI):
     """
     PropertyValueWrite service.
@@ -1464,22 +1436,13 @@ class PropertyValueWrite(APCI):
     Payload indicates object, property, count, start and data itself.
     """
 
-    CODE = APCIExtendedService.PROPERTY_VALUE_WRITE
+    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_WRITE
 
-    def __init__(
-        self,
-        object_index: int = 0,
-        property_id: int = 0,
-        count: int = 1,
-        start_index: int = 0,
-        data: bytes = b"",
-    ) -> None:
-        """Initialize a new instance of PropertyValueWrite."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.count = count
-        self.start_index = start_index
-        self.data = data
+    object_index: int = 0
+    property_id: int = 0
+    count: int = 1
+    start_index: int = 0
+    data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1534,6 +1497,7 @@ class PropertyValueWrite(APCI):
         )
 
 
+@dataclass(slots=True)
 class PropertyValueResponse(APCI):
     """
     PropertyValueResponse service.
@@ -1542,22 +1506,13 @@ class PropertyValueResponse(APCI):
     the payload depends on the data.
     """
 
-    CODE = APCIExtendedService.PROPERTY_VALUE_RESPONSE
+    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_RESPONSE
 
-    def __init__(
-        self,
-        object_index: int = 0,
-        property_id: int = 0,
-        count: int = 1,
-        start_index: int = 0,
-        data: bytes = b"",
-    ) -> None:
-        """Initialize a new instance of PropertyValueResponse."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.count = count
-        self.start_index = start_index
-        self.data = data
+    object_index: int = 0
+    property_id: int = 0
+    count: int = 1
+    start_index: int = 0
+    data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1612,18 +1567,15 @@ class PropertyValueResponse(APCI):
         )
 
 
+@dataclass(slots=True)
 class PropertyDescriptionRead(APCI):
     """PropertyDescriptionRead service."""
 
-    CODE = APCIExtendedService.PROPERTY_DESCRIPTION_READ
+    CODE: ClassVar = APCIExtendedService.PROPERTY_DESCRIPTION_READ
 
-    def __init__(
-        self, object_index: int = 0, property_id: int = 0, property_index: int = 0
-    ) -> None:
-        """Initialize a new instance of PropertyDescriptionRead."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.property_index = property_index
+    object_index: int = 0
+    property_id: int = 0
+    property_index: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1652,27 +1604,18 @@ class PropertyDescriptionRead(APCI):
         return f'<PropertyDescriptionRead object_index="{self.object_index}" property_id="{self.property_id}" property_index="{self.property_index}" />'
 
 
+@dataclass(slots=True)
 class PropertyDescriptionResponse(APCI):
     """PropertyDescriptionResponse service."""
 
-    CODE = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
+    CODE: ClassVar = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
 
-    def __init__(
-        self,
-        object_index: int = 0,
-        property_id: int = 0,
-        property_index: int = 0,
-        type_: int = 0,
-        max_count: int = 1,
-        access: int = 0,
-    ) -> None:
-        """Initialize a new instance of PropertyDescriptionRead."""
-        self.object_index = object_index
-        self.property_id = property_id
-        self.property_index = property_index
-        self.type = type_
-        self.max_count = max_count
-        self.access = access
+    object_index: int = 0
+    property_id: int = 0
+    property_index: int = 0
+    type_: int = 0
+    max_count: int = 1
+    access: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1709,7 +1652,7 @@ class PropertyDescriptionResponse(APCI):
             self.object_index,
             self.property_id,
             self.property_index,
-            self.type,
+            self.type_,
             self.max_count & 0x0FFF,
             self.access,
         )
@@ -1718,17 +1661,16 @@ class PropertyDescriptionResponse(APCI):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<PropertyDescriptionResponse object_index="{self.object_index}" property_id="{self.property_id}" property_index="{self.property_index}" type="{self.type}" max_count="{self.max_count}" access="{self.access}" />'
+        return f'<PropertyDescriptionResponse object_index="{self.object_index}" property_id="{self.property_id}" property_index="{self.property_index}" type="{self.type_}" max_count="{self.max_count}" access="{self.access}" />'
 
 
+@dataclass(slots=True)
 class IndividualAddressSerialRead(APCI):
     """IndividualAddressSerialRead service."""
 
-    CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
+    CODE: ClassVar = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
 
-    def __init__(self, serial: bytes) -> None:
-        """Initialize a new instance of PropertyDescriptionRead."""
-        self.serial = serial
+    serial: bytes
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1754,19 +1696,14 @@ class IndividualAddressSerialRead(APCI):
         return f'<IndividualAddressSerialRead serial="{self.serial.hex()}" />'
 
 
+@dataclass(slots=True)
 class IndividualAddressSerialResponse(APCI):
     """IndividualAddressSerialResponse service."""
 
-    CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE
+    CODE: ClassVar = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE
 
-    def __init__(
-        self,
-        serial: bytes,
-        address: IndividualAddress,
-    ) -> None:
-        """Initialize a new instance of IndividualAddressSerialResponse."""
-        self.serial = serial
-        self.address = address
+    serial: bytes
+    address: IndividualAddress
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1795,19 +1732,14 @@ class IndividualAddressSerialResponse(APCI):
         return f'<IndividualAddressSerialResponse serial="{self.serial.hex()}" address="{self.address}" />'
 
 
+@dataclass(slots=True)
 class IndividualAddressSerialWrite(APCI):
     """IndividualAddressSerialWrite service."""
 
-    CODE = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE
+    CODE: ClassVar = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE
 
-    def __init__(
-        self,
-        serial: bytes,
-        address: IndividualAddress,
-    ) -> None:
-        """Initialize a new instance of IndividualAddressSerialWrite."""
-        self.serial = serial
-        self.address = address
+    serial: bytes
+    address: IndividualAddress
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1836,15 +1768,14 @@ class IndividualAddressSerialWrite(APCI):
         return f'<IndividualAddressSerialWrite serial="{self.serial.hex()}" address="{self.address}" />'
 
 
+@dataclass(slots=True)
 class SecureAPDU(APCI):
     """SecureAPDU service."""
 
-    CODE = APCIExtendedService.APCI_SEC
+    CODE: ClassVar = APCIExtendedService.APCI_SEC
 
-    def __init__(self, scf: SecurityControlField, secured_data: SecureData) -> None:
-        """Initialize a new instance of AuthorizeRequest."""
-        self.scf = scf
-        self.secured_data = secured_data
+    scf: SecurityControlField
+    secured_data: SecureData
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
