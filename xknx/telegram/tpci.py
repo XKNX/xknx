@@ -2,9 +2,6 @@
 Module for serialization and deserialization of TPCI payloads.
 
 TPCI stands for Transport Layer Protocol Control Information.
-
-An APCI payload contains a service and payload. For example, a GroupValueWrite
-is a service that takes a DPT as a value.
 """
 
 from __future__ import annotations
@@ -25,6 +22,8 @@ class TPCI(ABC):
     This base class is only the interface for the derived classes.
     """
 
+    __slots__ = ()
+
     control: ClassVar[bool]
     numbered: ClassVar[bool]
     sequence_number: int = 0
@@ -41,9 +40,10 @@ class TPCI(ABC):
 
     def __eq__(self, other: object) -> bool:
         """Equal operator."""
-        if self.__class__ != other.__class__:
-            return False
-        return self.__dict__ == other.__dict__
+        return (
+            isinstance(other, self.__class__)
+            and self.sequence_number == other.sequence_number
+        )
 
     def __repr__(self) -> str:
         """Return object as readable string."""
@@ -101,6 +101,8 @@ class TPCI(ABC):
 class TDataGroup(TPCI):
     """T_Data_Group class."""
 
+    __slots__ = ()
+
     control = False
     numbered = False
 
@@ -111,6 +113,8 @@ class TDataGroup(TPCI):
 
 class TDataBroadcast(TPCI):
     """T_Data_Broadcast class."""
+
+    __slots__ = ()
 
     control = False
     numbered = False
@@ -123,6 +127,8 @@ class TDataBroadcast(TPCI):
 class TDataTagGroup(TPCI):
     """T_Data_Tag_Group class."""
 
+    __slots__ = ()
+
     control = False
     numbered = False
     sequence_number = 0b0001
@@ -130,6 +136,8 @@ class TDataTagGroup(TPCI):
 
 class TDataIndividual(TPCI):
     """T_Data_Individual class."""
+
+    __slots__ = ()
 
     control = False
     numbered = False
@@ -142,6 +150,8 @@ class TDataIndividual(TPCI):
 class TDataConnected(TPCI):
     """T_Data_Connected class."""
 
+    __slots__ = ("sequence_number",)
+
     control = False
     numbered = True
 
@@ -153,6 +163,8 @@ class TDataConnected(TPCI):
 class TConnect(TPCI):
     """T_Connect class."""
 
+    __slots__ = ()
+
     control = True
     numbered = False
     control_flags = 0b00
@@ -161,6 +173,8 @@ class TConnect(TPCI):
 class TDisconnect(TPCI):
     """T_Disconnect class."""
 
+    __slots__ = ()
+
     control = True
     numbered = False
     control_flags = 0b01
@@ -168,6 +182,8 @@ class TDisconnect(TPCI):
 
 class TAck(TPCI):
     """T_Ack class."""
+
+    __slots__ = ("sequence_number",)
 
     control = True
     numbered = True
@@ -180,6 +196,8 @@ class TAck(TPCI):
 
 class TNak(TPCI):
     """T_Nak class."""
+
+    __slots__ = ("sequence_number",)
 
     control = True
     numbered = True
