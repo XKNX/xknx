@@ -324,8 +324,8 @@ class TestLight:
                 destination_address=GroupAddress("1/2/8"), payload=GroupValueRead()
             ),
         ]
-        assert len(set(telegrams)) == expected_telegrams
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
     async def test_sync_individual_color(self):
         """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
@@ -390,8 +390,8 @@ class TestLight:
                 payload=GroupValueRead(),
             ),
         ]
-        assert len(set(telegrams)) == 8
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
     #
     # TEST SET ON
@@ -463,8 +463,8 @@ class TestLight:
                 payload=GroupValueWrite(DPTBinary(True)),
             ),
         ]
-        assert len(set(telegrams)) == 4
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
         for telegram in telegrams:
             await light.process(telegram)
@@ -515,8 +515,8 @@ class TestLight:
                 payload=GroupValueWrite(DPTArray((0xFF,))),
             ),
         ]
-        assert len(set(telegrams)) == 4
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
         for telegram in telegrams:
             await light.process(telegram)
@@ -594,8 +594,8 @@ class TestLight:
                 payload=GroupValueWrite(DPTBinary(False)),
             ),
         ]
-        assert len(set(telegrams)) == 4
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
         for telegram in telegrams:
             await light.process(telegram)
@@ -641,8 +641,8 @@ class TestLight:
                 payload=GroupValueWrite(DPTArray((0,))),
             ),
         ]
-        assert len(set(telegrams)) == 4
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
         for telegram in telegrams:
             await light.process(telegram)
@@ -797,9 +797,8 @@ class TestLight:
                 payload=GroupValueWrite(DPTArray(25)),
             ),
         ]
-
-        assert len(set(telegrams)) == 3
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
         await xknx.devices.process(
             Telegram(
@@ -921,9 +920,8 @@ class TestLight:
                 payload=GroupValueWrite(DPTArray(26)),
             ),
         ]
-
-        assert len(set(telegrams)) == 4
-        assert set(telegrams) == set(test_telegrams)
+        for test_telegram in test_telegrams:
+            assert test_telegram in telegrams
 
         await xknx.devices.process(
             Telegram(

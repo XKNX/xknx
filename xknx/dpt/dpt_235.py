@@ -11,7 +11,7 @@ from .dpt_4byte_int import DPTActiveEnergy
 from .payload import DPTArray, DPTBinary
 
 
-@dataclass
+@dataclass(slots=True)
 class TariffActiveEnergy(DPTComplexData):
     """
     Representation of Tariff and ActiveEnergy.

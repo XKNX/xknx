@@ -220,8 +220,7 @@ class DPTNumeric(DPTBase):
         """Serialize to KNX/IP raw data."""
 
 
-# py3.10 use @dataclass(slots=True) here and for the subclasses
-@dataclass
+@dataclass(slots=True)
 class DPTComplexData(ABC):
     """Base class for KNX data point types decoding complex values."""
 

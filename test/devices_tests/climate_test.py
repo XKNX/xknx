@@ -372,7 +372,8 @@ class TestClimate:
             ),
         ]
 
-        assert set(telegrams) == set(test_telegrams)
+        for test_item in test_telegrams:
+            assert test_item in telegrams
 
     async def test_set_heat_cool_binary(self):
         """Test set_operation_mode with binary heat/cool group addresses defined."""

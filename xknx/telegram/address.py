@@ -59,6 +59,8 @@ def parse_device_group_address(
 class BaseAddress(ABC):
     """Base class for all knx address types."""
 
+    __slots__ = ("raw",)
+
     raw: int
 
     @abstractmethod
@@ -96,6 +98,8 @@ class BaseAddress(ABC):
 
 class IndividualAddress(BaseAddress):
     """Class for handling KNX individual addresses."""
+
+    __slots__ = ()
 
     MAX_AREA = 15
     MAX_MAIN = 15
@@ -204,6 +208,8 @@ class GroupAddressType(Enum):
 
 class GroupAddress(BaseAddress):
     """Class for handling KNX group addresses."""
+
+    __slots__ = ()
 
     # overridden by XKNX class on initialization to have consistent global string representation
     address_format: ClassVar[GroupAddressType] = GroupAddressType.LONG
@@ -338,6 +344,8 @@ class GroupAddress(BaseAddress):
 
 class InternalGroupAddress:
     """Class for handling addresses used internally in xknx devices only."""
+
+    __slots__ = ("raw",)
 
     def __init__(self, address: str | InternalGroupAddress) -> None:
         """Initialize InternalGroupAddress class."""
