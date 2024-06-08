@@ -1031,6 +1031,34 @@ class TestCover:
             assert cover.position_reached()
             assert cover._periodic_update_task is None
 
+    @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
+    async def test_remove_task_cancel(self, _outgoing, xknx_no_interface):
+        """Test if tasks are removed correctly when device is removed."""
+        xknx = xknx_no_interface
+        cover = Cover(
+            xknx,
+            "TestCoverRemoveTaskCancel",
+            group_address_long="1/2/1",
+            group_address_stop="1/2/2",
+            group_address_position_state="1/2/4",
+            travel_time_down=10,
+            travel_time_up=10,
+        )
+        xknx.devices.async_add(cover)
+        async with xknx:
+            # state telegram updates current position - we are not moving so this is new state - not moving
+            telegram = Telegram(
+                GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(0))
+            )
+            await cover.process(telegram)
+            assert cover.current_position() == 0
+            await cover.set_position(50)
+            assert cover._periodic_update_task is not None
+            assert cover._auto_stop_task is not None
+            xknx.devices.async_remove(cover)
+            assert cover._periodic_update_task is None
+            assert cover._auto_stop_task is None
+
     #
     # HAS GROUP ADDRESS
     #

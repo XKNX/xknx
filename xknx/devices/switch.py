@@ -66,6 +66,7 @@ class Switch(Device):
         """Remove async tasks of device."""
         if self._reset_task is not None:
             self._reset_task.cancel()
+            self._reset_task = None
 
     @property
     def state(self) -> bool | None:

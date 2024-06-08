@@ -1,8 +1,11 @@
 """Conftest for XKNX."""
 
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
+from xknx import XKNX
 
 
 class EventLoopClockAdvancer:
@@ -49,3 +52,19 @@ class EventLoopClockAdvancer:
 def time_travel(event_loop: asyncio.AbstractEventLoop) -> EventLoopClockAdvancer:
     """Advance loop time and run callbacks."""
     return EventLoopClockAdvancer(event_loop)
+
+
+@pytest.fixture
+def xknx_no_interface():
+    """Return XKNX instance without KNX/IP interface."""
+
+    def knx_ip_interface_mock():
+        """Create a xknx knx ip interface mock."""
+        mock = Mock()
+        mock.start = AsyncMock()
+        mock.stop = AsyncMock()
+        mock.send_cemi = AsyncMock()
+        return mock
+
+    with patch("xknx.xknx.knx_interface_factory", return_value=knx_ip_interface_mock()):
+        return XKNX()
