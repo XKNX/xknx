@@ -46,7 +46,6 @@ class Switch(Device):
         super().__init__(xknx, name, device_updated_cb)
 
         self.reset_after = reset_after
-        self._reset_task_name = f"switch.reset_{id(self)}"
         self._reset_task: Task | None = None
         self.respond_to_read = respond_to_read
         self.switch = RemoteValueSwitch(
@@ -63,14 +62,10 @@ class Switch(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.switch
 
-    def __del__(self) -> None:
-        """Destructor. Cleaning up if this was not done before."""
-        if self._reset_task:
-            try:
-                self._reset_task.cancel()
-            except RuntimeError:
-                pass
-        super().__del__()
+    def async_remove_tasks(self) -> None:
+        """Remove async tasks of device."""
+        if self._reset_task is not None:
+            self._reset_task.cancel()
 
     @property
     def state(self) -> bool | None:
@@ -90,7 +85,7 @@ class Switch(Device):
         if await self.switch.process(telegram):
             if self.reset_after is not None and self.switch.value:
                 self._reset_task = self.xknx.task_registry.register(
-                    name=self._reset_task_name,
+                    name=f"switch.reset_{id(self)}",
                     async_func=partial(self._reset_state, self.reset_after),
                     track_task=True,
                 ).start()

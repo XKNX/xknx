@@ -59,20 +59,23 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 ## [](#header-2)Example
 
 ```python
-light = Light(xknx,
-              name='TestLight',
-              group_address_switch='1/2/3',
-              group_address_switch_state='1/2/4',
-              group_address_brightness='1/2/5',
-              group_address_brightness_state='1/2/6',
-              group_address_color='1/2/7',
-              group_address_color_state='1/2/8',
-              group_address_rgbw='1/2/13',
-              group_address_rgbw_state='1/2/14',
-              group_address_tunable_white='1/2/9',
-              group_address_tunable_white_state='1/2/10',
-              group_address_color_temperature='1/2/11',
-              group_address_color_temperature_state='1/2/12')
+light = Light(
+    xknx,
+    name='TestLight',
+    group_address_switch='1/2/3',
+    group_address_switch_state='1/2/4',
+    group_address_brightness='1/2/5',
+    group_address_brightness_state='1/2/6',
+    group_address_color='1/2/7',
+    group_address_color_state='1/2/8',
+    group_address_rgbw='1/2/13',
+    group_address_rgbw_state='1/2/14',
+    group_address_tunable_white='1/2/9',
+    group_address_tunable_white_state='1/2/10',
+    group_address_color_temperature='1/2/11',
+    group_address_color_temperature_state='1/2/12'
+)
+xknx.devices.async_add(light)
 
 # Switching light on
 await light.set_on()
@@ -114,24 +117,27 @@ print(light.current_color_temperature)
 ## [](#header-2)Example: RGBW light with individual group addresses for red, green, blue and white
 
 ```python
-light = Light(xknx,
-              name='TestRGBWLight',
-              group_address_switch_red="1/1/1",
-              group_address_switch_red_state="1/1/2",
-              group_address_brightness_red="1/1/3",
-              group_address_brightness_red_state="1/1/4",
-              group_address_switch_green="1/1/5",
-              group_address_switch_green_state="1/1/6",
-              group_address_brightness_green="1/1/7",
-              group_address_brightness_green_state="1/1/8",
-              group_address_switch_blue="1/1/9",
-              group_address_switch_blue_state="1/1/10",
-              group_address_brightness_blue="1/1/11",
-              group_address_brightness_blue_state="1/1/12",
-              group_address_switch_white="1/1/13",
-              group_address_switch_white_state="1/1/14",
-              group_address_brightness_white="1/1/15",
-              group_address_brightness_white_state="1/1/16")
+light = Light(
+    xknx,
+    name='TestRGBWLight',
+    group_address_switch_red="1/1/1",
+    group_address_switch_red_state="1/1/2",
+    group_address_brightness_red="1/1/3",
+    group_address_brightness_red_state="1/1/4",
+    group_address_switch_green="1/1/5",
+    group_address_switch_green_state="1/1/6",
+    group_address_brightness_green="1/1/7",
+    group_address_brightness_green_state="1/1/8",
+    group_address_switch_blue="1/1/9",
+    group_address_switch_blue_state="1/1/10",
+    group_address_brightness_blue="1/1/11",
+    group_address_brightness_blue_state="1/1/12",
+    group_address_switch_white="1/1/13",
+    group_address_switch_white_state="1/1/14",
+    group_address_brightness_white="1/1/15",
+    group_address_brightness_white_state="1/1/16"
+)
+xknx.devices.async_add(light)
 
 # Switching light on
 await light.set_on()
@@ -174,6 +180,7 @@ light = Light(
     group_address_saturation="1/1/4",
     group_address_saturation_state="1/2/4",
 )
+xknx.devices.async_add(light)
 print(light.supports_brightness)
 print(light.supports_hs_color)
 

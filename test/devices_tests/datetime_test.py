@@ -13,11 +13,6 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestDateTime:
     """Test class for DateTime object."""
 
-    # pylint: disable=attribute-defined-outside-init
-    def teardown_method(self):
-        """Cancel broadcast_task."""
-        self.datetime.__del__()
-
     #
     # SET Time
     #

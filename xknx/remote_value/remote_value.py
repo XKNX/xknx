@@ -81,21 +81,26 @@ class RemoteValue(ABC, Generic[ValueT]):
         self._value: ValueT | None = None
         self.telegram: Telegram | None = None
         self.after_update_cb: AsyncCallbackType | None = after_update_cb
+        self._sync_state = sync_state
 
-        if sync_state is None:
-            sync_state = xknx.state_updater.default_use_updater
+    def register_state_updater(self) -> None:
+        """Register RemoteValue for state updates."""
+        sync_state = (
+            self._sync_state
+            if self._sync_state is not None
+            else self.xknx.state_updater.default_use_updater
+        )
         if sync_state and self.group_address_state:
             self.xknx.state_updater.register_remote_value(
                 self, tracker_options=sync_state
             )
 
-    def __del__(self) -> None:
-        """Destructor. Removing self from StateUpdater if was registered."""
+    def unregister_state_updater(self) -> None:
+        """Unregister RemoteValue from state updates."""
         try:
             self.xknx.state_updater.unregister_remote_value(self)
-        except (KeyError, AttributeError):
+        except KeyError:
             # KeyError if it was never added to StateUpdater
-            # AttributeError if instantiation failed (tests mostly)
             pass
 
     @property

@@ -192,6 +192,7 @@ class TestSensorExposeLoop:
             group_address="1/1/1",
             value_type=value_type,
         )
+        xknx.devices.async_add(expose)
         assert expose.resolve_state() is None
         # set a value from expose - HA sends strings for new values
         stringified_value = str(test_value)
@@ -213,6 +214,7 @@ class TestSensorExposeLoop:
             group_address_state="1/1/1",
             value_type=value_type,
         )
+        xknx.devices.async_add(sensor)
         assert sensor.resolve_state() is None
 
         # read sensor state (from expose as it has the same GA)
@@ -262,6 +264,7 @@ class TestBinarySensorExposeLoop:
             group_address="1/1/1",
             value_type=value_type,
         )
+        xknx.devices.async_add(expose)
         assert expose.resolve_state() is None
 
         await expose.set(test_value)
@@ -331,6 +334,7 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
             group_address="i-test",
             value_type=value_type,
         )
+        xknx.devices.async_add(expose)
         assert expose.resolve_state() is None
 
         await expose.set(test_value)
@@ -345,7 +349,12 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
         telegram_callback.assert_called_with(outgoing_telegram)
         assert expose.resolve_state() == test_value
 
-        bin_sensor = BinarySensor(xknx, "TestSensor", group_address_state="i-test")
+        bin_sensor = BinarySensor(
+            xknx,
+            "TestSensor",
+            group_address_state="i-test",
+        )
+        xknx.devices.async_add(bin_sensor)
         assert bin_sensor.state is None
 
         # read sensor state (from expose as it has the same GA)

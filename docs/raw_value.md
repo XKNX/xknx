@@ -33,6 +33,7 @@ value = RawValue(
     group_address='6/2/1',
     respond_to_read=True,
 )
+xknx.devices.async_add(value)
 
 # Set a value without sending to the bus
 value.remote_value.value = 23.0

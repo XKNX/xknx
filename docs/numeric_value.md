@@ -33,6 +33,7 @@ value = NumericValue(
     respond_to_read=True,
     value_type='temperature'
 )
+xknx.devices.async_add(value)
 
 # Set a value without sending to the bus
 value.sensor_value.value = 23.0

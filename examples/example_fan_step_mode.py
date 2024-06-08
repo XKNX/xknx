@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import Fan
 
 
-async def main():
+async def main() -> None:
     """Connect to KNX/IP bus, control a fan, and turn it off afterwards."""
     xknx = XKNX()
     await xknx.start()
@@ -18,6 +18,7 @@ async def main():
         group_address_speed="1/0/14",
         max_step=3,
     )
+    xknx.devices.async_add(fan)
 
     # Turn on the fan
     await fan.turn_on()

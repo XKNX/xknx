@@ -29,6 +29,7 @@ The logic within switches can further handle if a button is pressed once or twic
 
 ```python
 binarysensor = BinarySensor(xknx, 'TestInput', group_address_state='2/3/4')
+xknx.devices.async_add(binarysensor)
 
 # Returns the last received Telegram or None
 binarysensor.last_telegram

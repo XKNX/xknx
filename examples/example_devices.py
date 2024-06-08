@@ -6,11 +6,12 @@ from xknx import XKNX
 from xknx.devices import Switch
 
 
-async def main():
+async def main() -> None:
     """Add test Switch to devices storage and access it by name."""
     xknx = XKNX()
     await xknx.start()
-    Switch(xknx, name="TestOutlet", group_address="1/1/11")
+    switch = Switch(xknx, name="TestOutlet", group_address="1/1/11")
+    xknx.devices.async_add(switch)
 
     await xknx.devices["TestOutlet"].set_on()
     await asyncio.sleep(2)

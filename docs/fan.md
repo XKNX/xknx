@@ -36,6 +36,7 @@ fan = Fan(
     group_address_oscillation='1/2/3',
     group_address_oscillation_state='1/2/4'
 )
+xknx.devices.async_add(fan)
 
 # Set the fan speed
 await fan.set_speed(50)

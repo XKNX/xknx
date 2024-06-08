@@ -26,6 +26,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 
+BROADCAST_MINUTES = 60
+
+
 class DateTime(Device):
     """Class for virtual date/time device."""
 
@@ -62,18 +65,16 @@ class DateTime(Device):
             device_name=name,
             after_update_cb=self.after_update,
         )
-        self._broadcast_task: Task | None = self._create_broadcast_task(minutes=60)
+        self._broadcast_task: Task | None = None
 
     def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
 
-    def _iter_tasks(self) -> Iterator[Task | None]:
-        """Iterate the device tasks."""
-        yield self._broadcast_task
-
-    def _create_broadcast_task(self, minutes: int = 60) -> Task | None:
+    def async_start_tasks(self) -> None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
+        if not self.localtime:
+            return None
 
         async def broadcast_loop(self: DateTime, minutes: int) -> None:
             """Endless loop for broadcasting local time."""
@@ -81,13 +82,17 @@ class DateTime(Device):
                 await self.broadcast_localtime()
                 await asyncio.sleep(minutes * 60)
 
-        if self.localtime:
-            return self.xknx.task_registry.register(
-                name=f"datetime.broadcast_{id(self)}",
-                async_func=partial(broadcast_loop, self, minutes),
-                restart_after_reconnect=True,
-            ).start()
-        return None
+        self._broadcast_task = self.xknx.task_registry.register(
+            name=f"datetime.broadcast_{id(self)}",
+            async_func=partial(broadcast_loop, self, BROADCAST_MINUTES),
+            restart_after_reconnect=True,
+        ).start()
+
+    def async_remove_tasks(self) -> None:
+        """Stop background tasks of device."""
+        if self._broadcast_task is not None:
+            self.xknx.task_registry.unregister(self._broadcast_task.name)
+            self._broadcast_task = None
 
     async def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local time to KNX bus."""

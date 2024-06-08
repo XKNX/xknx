@@ -5,8 +5,6 @@ A binary sensor can be:
 * A switch in the wall (as in the thing you press to switch on the light)
 * A motion detector
 * A reed sensor for detecting of a window/door is opened or closed.
-
-A BinarySensor may also have Actions attached which are executed after state was changed.
 """
 
 from __future__ import annotations
@@ -53,8 +51,6 @@ class BinarySensor(Device):
         self._count_set_on = 0
         self._count_set_off = 0
         self._last_set: float | None = None
-        self._reset_task_name = f"binary_sensor.reset_{id(self)}"
-        self._context_task_name = f"binary_sensor.context_{id(self)}"
         self._reset_task: Task | None = None
         self._context_task: Task | None = None
 
@@ -72,10 +68,14 @@ class BinarySensor(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
 
-    def _iter_tasks(self) -> Iterator[Task | None]:
-        """Iterate the device tasks."""
-        yield self._context_task
-        yield self._reset_task
+    def async_remove_tasks(self) -> None:
+        """Remove async tasks of device."""
+        if self._context_task:
+            self.xknx.task_registry.unregister(self._context_task.name)
+            self._context_task = None
+        if self._reset_task:
+            self.xknx.task_registry.unregister(self._reset_task.name)
+            self._reset_task = None
 
     @property
     def last_telegram(self) -> Telegram | None:
@@ -95,7 +95,7 @@ class BinarySensor(Device):
             if self.ignore_internal_state and self._context_timeout:
                 self.bump_and_get_counter(state)
                 self._context_task = self.xknx.task_registry.register(
-                    name=self._context_task_name,
+                    name=f"binary_sensor.context_{id(self)}",
                     async_func=partial(self._counter_task, self._context_timeout),
                 ).start()
             else:
@@ -159,7 +159,7 @@ class BinarySensor(Device):
         """Create Task for resetting state if 'reset_after' is configured."""
         if self.reset_after is not None and self.state:
             self._reset_task = self.xknx.task_registry.register(
-                name=self._reset_task_name,
+                name=f"binary_sensor.reset_{id(self)}",
                 async_func=partial(self._reset_state, self.reset_after),
                 track_task=True,
             ).start()
