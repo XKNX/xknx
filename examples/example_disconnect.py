@@ -9,7 +9,7 @@ from xknx.io.transport import UDPTransport
 from xknx.knxip import HPAI
 
 
-async def main():
+async def main() -> None:
     """Search for a Tunnelling device, walk through all possible channels and disconnect them."""
     xknx = XKNX()
     gatewayscanner = GatewayScanner(xknx)

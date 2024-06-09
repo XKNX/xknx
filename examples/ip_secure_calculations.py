@@ -158,7 +158,7 @@ def calculate_wrapper(
     return encrypted_data
 
 
-def main():
+def main() -> None:
     """Recalculate KNX specification example frames."""
     ################
     # SessionRequest

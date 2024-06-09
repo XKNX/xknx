@@ -5,15 +5,15 @@ import getopt
 import sys
 
 from xknx import XKNX
-from xknx.telegram import AddressFilter
+from xknx.telegram import AddressFilter, Telegram
 
 
-async def telegram_received_cb(telegram):
+async def telegram_received_cb(telegram: Telegram) -> None:
     """Do something with the received telegram."""
     print(f"Telegram received: {telegram}")
 
 
-def show_help():
+def show_help() -> None:
     """Print Help."""
     print("Telegram filter.")
     print("")
@@ -27,7 +27,7 @@ def show_help():
     print("")
 
 
-async def monitor(address_filters):
+async def monitor(address_filters: list[AddressFilter] | None) -> None:
     """Set telegram_received_cb within XKNX and connect to KNX/IP device in daemon mode."""
     xknx = XKNX(daemon_mode=True)
     xknx.telegram_queue.register_telegram_received_cb(
@@ -37,7 +37,7 @@ async def monitor(address_filters):
     await xknx.stop()
 
 
-async def main(argv):
+async def main(argv: list[str]) -> None:
     """Parse command line arguments and start monitor."""
     try:
         opts, _ = getopt.getopt(argv, "hf:", ["help", "filter="])
