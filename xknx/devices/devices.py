@@ -93,18 +93,27 @@ class Devices:
 
     async def device_updated(self, device: Device) -> None:
         """Call all registered device updated callbacks of device."""
-        for device_updated_cb in self.device_updated_cbs:
-            await device_updated_cb(device)
+        await asyncio.gather(
+            *[
+                device_updated_cb(device)
+                for device_updated_cb in self.device_updated_cbs
+            ]
+        )
 
     async def process(self, telegram: Telegram) -> None:
         """Process telegram."""
         if isinstance(
             telegram.destination_address, GroupAddress | InternalGroupAddress
         ):
-            for device in self.devices_by_group_address(telegram.destination_address):
-                await device.process(telegram)
+            await asyncio.gather(
+                *[
+                    device.process(telegram)
+                    for device in self.devices_by_group_address(
+                        telegram.destination_address
+                    )
+                ]
+            )
 
     async def sync(self) -> None:
         """Read state of devices from KNX bus."""
-        for device in self.__devices:
-            await device.sync()
+        await asyncio.gather(*[device.sync() for device in self.__devices])

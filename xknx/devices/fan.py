@@ -9,6 +9,7 @@ It provides functionality for
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 from enum import Enum
 import logging
@@ -154,9 +155,11 @@ class Fan(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.switch.process(telegram)
-        await self.speed.process(telegram)
-        await self.oscillation.process(telegram)
+        await asyncio.gather(
+            self.switch.process(telegram),
+            self.speed.process(telegram),
+            self.oscillation.process(telegram),
+        )
 
     @property
     def current_speed(self) -> int | None:

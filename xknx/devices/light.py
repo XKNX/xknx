@@ -432,16 +432,18 @@ class Light(Device):
         if self.switch.writable:
             await self.switch.on()
             return
-        for color in self._iter_individual_colors():
-            await color.set_on()
+        await asyncio.gather(
+            *[color.set_on() for color in self._iter_individual_colors()]
+        )
 
     async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.writable:
             await self.switch.off()
             return
-        for color in self._iter_individual_colors():
-            await color.set_off()
+        await asyncio.gather(
+            *[color.set_off() for color in self._iter_individual_colors()]
+        )
 
     @property
     def current_brightness(self) -> int | None:
@@ -510,10 +512,12 @@ class Light(Device):
                 if all(
                     c.brightness.initialized for c in self._iter_individual_colors()
                 ):
-                    await self.red.brightness.set(color[0])
-                    await self.green.brightness.set(color[1])
-                    await self.blue.brightness.set(color[2])
-                    await self.white.brightness.set(white)
+                    await asyncio.gather(
+                        self.red.brightness.set(color[0]),
+                        self.green.brightness.set(color[1]),
+                        self.blue.brightness.set(color[2]),
+                        self.white.brightness.set(white),
+                    )
                     return
             logger.warning("RGBW not supported for device %s", self.get_name())
         else:
@@ -524,9 +528,11 @@ class Light(Device):
                 if all(
                     c.brightness.initialized for c in (self.red, self.green, self.blue)
                 ):
-                    await self.red.brightness.set(color[0])
-                    await self.green.brightness.set(color[1])
-                    await self.blue.brightness.set(color[2])
+                    await asyncio.gather(
+                        self.red.brightness.set(color[0]),
+                        self.green.brightness.set(color[1]),
+                        self.blue.brightness.set(color[2]),
+                    )
                     return
             logger.warning("Colors not supported for device %s", self.get_name())
 
@@ -558,8 +564,10 @@ class Light(Device):
             value_sent = True
         if not value_sent:
             # at least one value shall be sent to enable turn-on by hs_color
-            await self.hue.set(hue)
-            await self.saturation.set(saturation)
+            await asyncio.gather(
+                self.hue.set(hue),
+                self.saturation.set(saturation),
+            )
 
     async def _xyy_color_from_rv(self) -> None:
         """Update the current xyY-color from RemoteValue (Callback)."""
@@ -611,10 +619,16 @@ class Light(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        for remote_value in self._iter_instant_remote_values():
-            await remote_value.process(telegram)
-        for remote_value in self._iter_debounce_remote_values():
-            await remote_value.process(telegram, always_callback=True)
+        await asyncio.gather(
+            *[
+                remote_value.process(telegram)
+                for remote_value in self._iter_instant_remote_values()
+            ],
+            *[
+                remote_value.process(telegram, always_callback=True)
+                for remote_value in self._iter_debounce_remote_values()
+            ],
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""

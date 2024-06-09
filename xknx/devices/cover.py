@@ -364,10 +364,12 @@ class Cover(Device):
             if self.is_traveling():
                 await self._stop_position_update()
 
-        await self.position_current.process(telegram, always_callback=True)
-        await self.position_target.process(telegram, always_callback=True)
-        await self.angle.process(telegram)
-        await self.locked.process(telegram)
+        await asyncio.gather(
+            self.position_current.process(telegram, always_callback=True),
+            self.position_target.process(telegram, always_callback=True),
+            self.angle.process(telegram),
+            self.locked.process(telegram),
+        )
 
     def current_position(self) -> int | None:
         """Return current position of cover."""

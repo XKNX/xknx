@@ -7,6 +7,7 @@ Module for managing the climate within a room.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Any
@@ -266,8 +267,12 @@ class Climate(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        for remote_value in self._iter_remote_values():
-            await remote_value.process(telegram)
+        await asyncio.gather(
+            *[
+                remote_value.process(telegram)
+                for remote_value in self._iter_remote_values()
+            ]
+        )
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 
