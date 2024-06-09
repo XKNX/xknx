@@ -48,9 +48,13 @@ from xknx.devices import Light
 async def main():
     """Connect to KNX/IP bus, switch on light, wait 2 seconds and switch it off again."""
     async with XKNX() as xknx:
-        light = Light(xknx,
-                      name='TestLight',
-                      group_address_switch='1/0/9')
+        light = Light(
+            xknx,
+            name='TestLight',
+            group_address_switch='1/0/9',
+        )
+        xknx.devices.async_add(light)
+
         await light.set_on()
         await asyncio.sleep(2)
         await light.set_off()
