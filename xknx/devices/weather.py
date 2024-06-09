@@ -15,6 +15,7 @@ It provides functionality for
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Iterator
 from datetime import date, datetime
 from enum import Enum
@@ -249,8 +250,12 @@ class Weather(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        for remote_value in self._iter_remote_values():
-            await remote_value.process(telegram)
+        await asyncio.gather(
+            *[
+                remote_value.process(telegram)
+                for remote_value in self._iter_remote_values()
+            ]
+        )
 
     @property
     def temperature(self) -> float | None:
