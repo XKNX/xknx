@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import BinarySensor, Sensor
 
 
-async def main():
+async def main() -> None:
     """Connect to KNX/IP device and read the value of a temperature and a motion sensor."""
     xknx = XKNX()
     await xknx.start()
@@ -16,6 +16,7 @@ async def main():
         "DiningRoom.Motion.Sensor",
         group_address_state="6/0/2",
     )
+    xknx.devices.async_add(sensor1)
     await sensor1.sync(wait_for_result=True)
     print(sensor1)
 
@@ -25,6 +26,7 @@ async def main():
         group_address_state="6/2/1",
         value_type="temperature",
     )
+    xknx.devices.async_add(sensor2)
 
     await sensor2.sync(wait_for_result=True)
     print(sensor2)

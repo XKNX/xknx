@@ -130,6 +130,7 @@ async def test_tools_with_internal_addresses():
         value_type=test_type,
         respond_to_read=True,
     )
+    xknx.devices.async_add(number)
 
     assert number.resolve_state() is None
     await group_value_write(xknx, internal_address, 1, value_type=test_type)

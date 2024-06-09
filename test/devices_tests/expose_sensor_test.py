@@ -211,6 +211,7 @@ class TestExposeSensor:
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )
         expose_sensor.register_device_updated_cb(after_update_callback)
+        xknx.devices.async_add(expose_sensor)
 
         await expose_sensor.set(21.0)
         await xknx.devices.process(xknx.telegrams.get_nowait())
@@ -232,12 +233,14 @@ class TestExposeSensor:
             value_type="temperature",
             cooldown=10,
         )
+        xknx.devices.async_add(expose_sensor_cd)
         expose_sensor_no_cd = ExposeSensor(
             xknx,
             "TestSensor",
             group_address="1/2/4",
             value_type="temperature",
         )
+        xknx.devices.async_add(expose_sensor_no_cd)
 
         await expose_sensor_cd.set(21.0)
         await expose_sensor_no_cd.set(21.0)

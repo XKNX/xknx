@@ -296,6 +296,7 @@ class TestNumericValue:
         num_value = NumericValue(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )
+        xknx.devices.async_add(num_value)
         num_value.register_device_updated_cb(after_update_callback)
 
         await num_value.set(21.0)

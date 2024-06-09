@@ -149,6 +149,7 @@ class TestClimate:
         )
         after_update_callback = AsyncMock()
         climate.register_device_updated_cb(after_update_callback)
+        xknx.devices.async_add(climate)
 
         await climate.target_temperature.set(23.00)
         await xknx.devices.process(xknx.telegrams.get_nowait())
@@ -159,33 +160,6 @@ class TestClimate:
         await xknx.devices.process(xknx.telegrams.get_nowait())
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
-
-    def test_remove_climate_removes_climate_mode(self):
-        """Test shutting down climate will also shut down related ClimateMode."""
-
-        xknx = XKNX()
-        climate_mode = ClimateMode(
-            xknx,
-            name=None,
-            group_address_operation_mode="1/2/4",
-            group_address_operation_mode_state="1/2/5",
-            group_address_operation_mode_protection="1/2/6",
-            group_address_operation_mode_night="1/2/7",
-            group_address_operation_mode_comfort="1/2/8",
-            group_address_operation_mode_standby="1/2/9",
-            group_address_controller_status="1/2/10",
-            group_address_controller_status_state="1/2/11",
-            group_address_controller_mode="1/2/12",
-            group_address_controller_mode_state="1/2/13",
-            group_address_heat_cool="1/2/14",
-            group_address_heat_cool_state="1/2/15",
-        )
-
-        climate = Climate(xknx, name="TestClimate", mode=climate_mode)
-
-        assert len(xknx.devices) == 2
-        climate.shutdown()
-        assert len(xknx.devices) == 0
 
     async def test_process_callback_mode(self):
         """Test if after_update_callback is called after update of Climate object was changed."""
@@ -408,6 +382,7 @@ class TestClimate:
         """Test initialized_for_setpoint_shift_calculations method."""
         xknx = XKNX()
         climate1 = Climate(xknx, "TestClimate")
+        xknx.devices.async_add(climate1)
         assert not climate1.initialized_for_setpoint_shift_calculations
 
         climate2 = Climate(
@@ -416,6 +391,7 @@ class TestClimate:
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
+        xknx.devices.async_add(climate2)
         assert not climate2.initialized_for_setpoint_shift_calculations
         await climate2.set_setpoint_shift(4)
         await xknx.devices.process(xknx.telegrams.get_nowait())
@@ -428,6 +404,7 @@ class TestClimate:
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
+        xknx.devices.async_add(climate3)
         await climate3.set_setpoint_shift(4)
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate3.initialized_for_setpoint_shift_calculations
@@ -531,6 +508,8 @@ class TestClimate:
             max_temp="42",
             min_temp="3",
         )
+        xknx.devices.async_add(climate)
+
         await climate.set_setpoint_shift(4)
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate.initialized_for_setpoint_shift_calculations
@@ -555,6 +534,7 @@ class TestClimate:
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
+        xknx.devices.async_add(climate)
 
         await climate.set_setpoint_shift(3)
         assert xknx.telegrams.qsize() == 1
@@ -633,6 +613,7 @@ class TestClimate:
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
+        xknx.devices.async_add(climate)
 
         await climate.set_setpoint_shift(1)
         assert xknx.telegrams.qsize() == 1
@@ -714,6 +695,7 @@ class TestClimate:
             setpoint_shift_max=10,
             setpoint_shift_min=-10,
         )
+        xknx.devices.async_add(climate)
 
         await climate.set_setpoint_shift(3)
         assert xknx.telegrams.qsize() == 1
@@ -770,6 +752,7 @@ class TestClimate:
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
+        xknx.devices.async_add(climate)
 
         await climate.set_target_temperature(21.00)
         assert xknx.telegrams.qsize() == 1
@@ -825,6 +808,7 @@ class TestClimate:
             setpoint_shift_max=10,
             setpoint_shift_min=-10,
         )
+        xknx.devices.async_add(climate)
 
         # base temperature is 20 °C
         await climate.target_temperature.process(
@@ -1347,6 +1331,8 @@ class TestClimate:
         """Test turn_on and turn_off functions."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
+        xknx.devices.async_add(climate)
+
         await climate.turn_on()
         _telegram = xknx.telegrams.get_nowait()
         await xknx.devices.process(_telegram)
@@ -1367,6 +1353,8 @@ class TestClimate:
         climate_inv = Climate(
             xknx, "TestClimate", group_address_on_off="1/2/2", on_off_invert=True
         )
+        xknx.devices.async_add(climate_inv)
+
         await climate_inv.turn_on()
         _telegram = xknx.telegrams.get_nowait()
         await xknx.devices.process(_telegram)
@@ -1390,15 +1378,19 @@ class TestClimate:
         climate_active = Climate(
             xknx, "TestClimate1", group_address_active_state="1/1/1"
         )
+        xknx.devices.async_add(climate_active)
         climate_command = Climate(
             xknx, "TestClimate2", group_address_command_value_state="2/2/2"
         )
+        xknx.devices.async_add(climate_command)
         climate_active_command = Climate(
             xknx,
             "TestClimate3",
             group_address_active_state="1/1/1",
             group_address_command_value_state="2/2/2",
         )
+        xknx.devices.async_add(climate_active_command)
+
         assert climate_active.is_active is None
         assert climate_command.is_active is None
         assert climate_active_command.is_active is None

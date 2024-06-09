@@ -12,7 +12,6 @@ from collections.abc import Callable, Coroutine, Iterator
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from xknx.core import Task
 from xknx.remote_value import RemoteValue
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress
@@ -43,34 +42,29 @@ class Device(ABC):
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
-        self.xknx.devices.add(self)
-
-    def __del__(self) -> None:
-        """Remove Device form Devices."""
-        try:
-            self.shutdown()
-        except ValueError:
-            pass
-
-    def shutdown(self) -> None:
-        """Prepare for deletion. Remove callbacks and device form Devices vector."""
-        self.xknx.devices.remove(self)
-        self.device_updated_cbs = []
+    def register_state_updater(self) -> None:
+        """Register device addresses for StateUpdater."""
         for remote_value in self._iter_remote_values():
-            remote_value.__del__()  # pylint: disable=unnecessary-dunder-call
-        for task in self._iter_tasks():
-            if task:
-                self.xknx.task_registry.unregister(task.name)
+            remote_value.register_state_updater()
+
+    def unregister_state_updater(self) -> None:
+        """Unregister device addresses from StateUpdater."""
+        for remote_value in self._iter_remote_values():
+            remote_value.unregister_state_updater()
+
+    def async_start_tasks(self) -> None:
+        """Start async background tasks of device."""
+        return
+
+    def async_remove_tasks(self) -> None:
+        """Remove all tasks of device."""
+        return
 
     @abstractmethod
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         # yield self.remote_value
         # yield from (<list all used RemoteValue instances>)
-        yield from ()
-
-    def _iter_tasks(self) -> Iterator[Task | None]:
-        """Iterate the device tasks."""
         yield from ()
 
     def register_device_updated_cb(

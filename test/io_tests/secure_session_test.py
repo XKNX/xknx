@@ -65,8 +65,7 @@ class TestSecureSession:
         )
 
     def teardown_method(self):
-        """Cancel keepalive task."""
-        self.session.stop()
+        """Tear down test class."""
         self.patch_serial_number.stop()
         self.patch_message_tag.stop()
 
@@ -271,6 +270,9 @@ class TestSecureSession:
         )
         await time_travel(0)
         callback_mock.assert_not_called()
+        # async teardown
+        self.session.stop()
+        assert self.session.initialized is False
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
@@ -375,6 +377,9 @@ class TestSecureSession:
         )
         await connect_task
         assert self.session.initialized is True
+        # async teardown
+        self.session.stop()
+        assert self.session.initialized is False
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")

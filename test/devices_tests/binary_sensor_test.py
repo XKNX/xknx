@@ -313,3 +313,26 @@ class TestBinarySensor:
 
             mock_time.return_value = 1517000004.1  # TIME OUT ...
             assert switch.bump_and_get_counter(False) == 1
+
+    async def test_remove_tasks(self, xknx_no_interface):
+        """Test remove tasks."""
+        xknx = xknx_no_interface
+        switch = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            context_timeout=1,
+            reset_after=10,
+        )
+        xknx.devices.async_add(switch)
+        async with xknx:
+            write_telegram = Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            )
+            await switch.process(write_telegram)
+            assert switch._context_task
+            assert switch._reset_task
+            xknx.devices.async_remove(switch)
+            assert switch._context_task is None
+            assert switch._reset_task is None

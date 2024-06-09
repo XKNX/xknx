@@ -53,39 +53,44 @@ Climate are representations of KNX HVAC/Climate controls.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
 
 ```python
-climate_mode = ClimateMode(xknx,
-                 'TestClimateMode',
-                 group_address_operation_mode='',
-                 group_address_operation_mode_state='',
-                 group_address_operation_mode_protection=None,
-                 group_address_operation_mode_night=None,
-                 group_address_operation_mode_comfort=None,
-                 group_address_controller_status=None,
-                 group_address_controller_status_state=None,
-                 group_address_controller_mode=None,
-                 group_address_controller_mode_state=None,
-                 operation_modes=None,
-                 controller_modes=None,
-                 device_updated_cb=None)
+climate_mode = ClimateMode(
+    xknx,
+    'TestClimateMode',
+    group_address_operation_mode='',
+    group_address_operation_mode_state='',
+    group_address_operation_mode_protection=None,
+    group_address_operation_mode_night=None,
+    group_address_operation_mode_comfort=None,
+    group_address_controller_status=None,
+    group_address_controller_status_state=None,
+    group_address_controller_mode=None,
+    group_address_controller_mode_state=None,
+    operation_modes=None,
+    controller_modes=None,
+    device_updated_cb=None,
+)
 
 climate = Climate(
-        xknx,
-        'TestClimate',
-        group_address_temperature='',
-        group_address_target_temperature='',
-        group_address_target_temperature_state='',
-        group_address_setpoint_shift='',
-        group_address_setpoint_shift_state='',
-        temperature_step=0.1,
-        setpoint_shift_max=6,
-        setpoint_shift_min=-6,
-        group_address_on_off='',
-        group_address_on_off_state='',
-        on_off_invert=False,
-        min_temp=18,
-        max_temp=26,
-        mode=climate_mode,
-        device_updated_cb=None)
+    xknx,
+    'TestClimate',
+    group_address_temperature='',
+    group_address_target_temperature='',
+    group_address_target_temperature_state='',
+    group_address_setpoint_shift='',
+    group_address_setpoint_shift_state='',
+    temperature_step=0.1,
+    setpoint_shift_max=6,
+    setpoint_shift_min=-6,
+    group_address_on_off='',
+    group_address_on_off_state='',
+    on_off_invert=False,
+    min_temp=18,
+    max_temp=26,
+    mode=climate_mode,
+    device_updated_cb=None,
+)
+xknx.devices.async_add(climate)
+xknx.devices.async_add(climate_mode)
 
 # Set target temperature to 23 degrees. Works with setpoint_shift too.
 await climate.set_target_temperature(23)

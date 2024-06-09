@@ -49,6 +49,7 @@ cover = Cover(
     invert_position=False,
     invert_angle=False,
 )
+xknx.devices.async_add(cover)
 
 # Moving to up position
 await cover.set_up()

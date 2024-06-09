@@ -28,6 +28,7 @@ async def main() -> None:
         group_address_switch_state="1/0/45",
         device_updated_cb=light_callback,
     )
+    xknx.devices.async_add(light)
     # turn on light and listen for 10 seconds for changes
     await light.set_on()
     await asyncio.sleep(10)

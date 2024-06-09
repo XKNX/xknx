@@ -54,7 +54,6 @@ class XKNX:
     ) -> None:
         """Initialize XKNX class."""
         self.connection_manager = ConnectionManager()
-        self.devices = Devices()
         self.knxip_interface = knx_interface_factory(
             self, connection_config=connection_config or ConnectionConfig()
         )
@@ -72,6 +71,7 @@ class XKNX:
         self.rate_limit = rate_limit
         self.sigint_received = asyncio.Event()
         self.started = asyncio.Event()
+        self.devices = Devices(started=self.started)
         self.version = VERSION
 
         GroupAddress.address_format = address_format  # for global string representation
@@ -125,6 +125,7 @@ class XKNX:
         await self.knxip_interface.start()
         await self.telegram_queue.start()
         self.state_updater.start()
+        self.devices.async_start_device_tasks()
         self.started.set()
         if self.daemon_mode:
             await self.loop_until_sigint()
@@ -135,6 +136,7 @@ class XKNX:
 
     async def stop(self) -> None:
         """Stop XKNX module."""
+        self.devices.async_remove_device_tasks()
         self.task_registry.stop()
         self.state_updater.stop()
         await self.join()

@@ -80,9 +80,11 @@ class ExposeSensor(Device):
         """Iterate the devices RemoteValue classes."""
         yield self.sensor_value
 
-    def _iter_tasks(self) -> Iterator[Task | None]:
-        """Iterate the device tasks."""
-        yield self._cooldown_task
+    def async_remove_tasks(self) -> None:
+        """Remove async tasks of device."""
+        if self._cooldown_task is not None:
+            self.xknx.task_registry.unregister(self._cooldown_task.name)
+            self._cooldown_task = None
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

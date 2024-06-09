@@ -199,6 +199,22 @@ class TestSwitch:
         await time_travel(reset_after_sec / 2)
         assert xknx.telegrams.qsize() == 0
 
+    async def test_remove_device(self, xknx_no_interface):
+        """Test device removal cancels task."""
+        xknx = xknx_no_interface
+        switch = Switch(xknx, "TestInput", group_address="1/2/3", reset_after=1)
+        xknx.devices.async_add(switch)
+        async with xknx:
+            telegram_on = Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueResponse(DPTBinary(1)),
+            )
+            await switch.process(telegram_on)
+            assert switch.state
+            assert switch._reset_task is not None
+            xknx.devices.async_remove(switch)
+            assert switch._reset_task is None
+
     async def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
 

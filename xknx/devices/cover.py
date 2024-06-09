@@ -154,10 +154,14 @@ class Cover(Device):
         yield self.angle
         yield self.locked
 
-    def _iter_tasks(self) -> Iterator[Task | None]:
-        """Iterate the device tasks."""
-        yield self._auto_stop_task
-        yield self._periodic_update_task
+    def async_remove_tasks(self) -> None:
+        """Remove async tasks of device."""
+        if self._auto_stop_task is not None:
+            self.xknx.task_registry.unregister(self._auto_stop_task.name)
+            self._auto_stop_task = None
+        if self._periodic_update_task is not None:
+            self.xknx.task_registry.unregister(self._periodic_update_task.name)
+            self._periodic_update_task = None
 
     async def set_down(self) -> None:
         """Move cover down."""

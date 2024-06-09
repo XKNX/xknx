@@ -674,6 +674,8 @@ class TestLight:
         """Test setting the brightness of a non dimmable Light."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_brightness(23)
             assert xknx.telegrams.qsize() == 0
@@ -739,6 +741,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_color="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         await light.set_color((23, 24, 25))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -753,6 +757,8 @@ class TestLight:
         """Test setting the color of a non light without color."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_color((23, 24, 25))
             assert xknx.telegrams.qsize() == 0
@@ -779,6 +785,8 @@ class TestLight:
             group_address_brightness_blue="1/1/11",
             group_address_brightness_blue_state="1/1/12",
         )
+        xknx.devices.async_add(light)
+
         await light.set_color([23, 24, 25])
         assert xknx.telegrams.qsize() == 3
         telegrams = [xknx.telegrams.get_nowait() for _ in range(3)]
@@ -828,6 +836,8 @@ class TestLight:
             "TestLight",
             group_address_switch_red="1/1/1",
         )
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_color((23, 24, 25))
             assert xknx.telegrams.qsize() == 0
@@ -848,6 +858,8 @@ class TestLight:
             group_address_color="1/2/4",
             group_address_rgbw="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         await light.set_color((23, 24, 25), 26)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -867,6 +879,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_color="1/2/4",
         )
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_color((23, 24, 25), 26)
 
@@ -898,6 +912,8 @@ class TestLight:
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
         )
+        xknx.devices.async_add(light)
+
         await light.set_color([23, 24, 25], white=26)
         assert xknx.telegrams.qsize() == 4
         telegrams = [xknx.telegrams.get_nowait() for _ in range(4)]
@@ -968,6 +984,8 @@ class TestLight:
             group_address_brightness_blue="1/1/11",
             group_address_brightness_blue_state="1/1/12",
         )
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_color((23, 24, 25), 26)
 
@@ -989,6 +1007,8 @@ class TestLight:
             group_address_hue="1/2/4",
             group_address_saturation="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         await light.set_hs_color((359, 99))
         assert xknx.telegrams.qsize() == 2
 
@@ -1054,6 +1074,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_color="1/2/4",
         )
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_hs_color((22, 25))
 
@@ -1074,6 +1096,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_xyy_color="1/2/4",
         )
+        xknx.devices.async_add(light)
+
         await light.set_xyy_color(XYYColor((0.52, 0.31), 25))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -1093,6 +1117,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_color="1/2/4",
         )
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_xyy_color(XYYColor((0.5, 0.3), 25))
 
@@ -1113,6 +1139,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_tunable_white="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         await light.set_tunable_white(23)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -1125,6 +1153,8 @@ class TestLight:
         """Test setting the tunable white value of a non tw Light."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_tunable_white(23)
             assert xknx.telegrams.qsize() == 0
@@ -1144,6 +1174,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_color_temperature="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         await light.set_color_temperature(4000)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -1169,6 +1201,8 @@ class TestLight:
             group_address_color_temperature="1/2/5",
             color_temperature_type=ColorTemperatureType.FLOAT_2_BYTE,
         )
+        xknx.devices.async_add(light)
+
         await light.set_color_temperature(4000)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -1188,6 +1222,8 @@ class TestLight:
         """Test setting the color temperature value of an unsupported Light."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
+        xknx.devices.async_add(light)
+
         with patch("logging.Logger.warning") as mock_warn:
             await light.set_color_temperature(4000)
             assert xknx.telegrams.qsize() == 0
@@ -1207,6 +1243,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         assert light.state is None
 
         telegram = Telegram(
@@ -1242,6 +1280,8 @@ class TestLight:
             group_address_brightness_blue="1/1/11",
             group_address_brightness_blue_state="1/1/12",
         )
+        xknx.devices.async_add(light)
+
         assert light.state is None
 
         telegram = Telegram(
@@ -1268,6 +1308,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         after_update_callback = AsyncMock()
         light.register_device_updated_cb(after_update_callback)
 
@@ -1287,6 +1329,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_brightness="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         assert light.current_brightness is None
 
         telegram = Telegram(
@@ -1307,6 +1351,8 @@ class TestLight:
             group_address_brightness="1/2/5",
             device_updated_cb=cb_mock,
         )
+        xknx.devices.async_add(light)
+
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTBinary(1)),
@@ -1327,6 +1373,8 @@ class TestLight:
             group_address_brightness="1/2/5",
             device_updated_cb=cb_mock,
         )
+        xknx.devices.async_add(light)
+
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
             payload=GroupValueWrite(DPTArray((23, 24))),
@@ -1345,6 +1393,8 @@ class TestLight:
             group_address_switch="1/2/3",
             group_address_color="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         assert light.current_color == (None, None)
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
@@ -1372,6 +1422,8 @@ class TestLight:
             group_address_brightness_blue="1/1/11",
             group_address_brightness_blue_state="1/1/12",
         )
+        xknx.devices.async_add(light)
+
         assert light.current_color == (None, None)
 
         telegrams = [
@@ -1403,6 +1455,8 @@ class TestLight:
             group_address_color="1/2/4",
             group_address_rgbw="1/2/5",
         )
+        xknx.devices.async_add(light)
+
         assert light.current_color == (None, None)
         telegram = Telegram(
             destination_address=GroupAddress("1/2/5"),
@@ -1434,6 +1488,8 @@ class TestLight:
             group_address_brightness_white="1/1/15",
             group_address_brightness_white_state="1/1/16",
         )
+        xknx.devices.async_add(light)
+
         assert light.current_color == (None, None)
         telegram = Telegram(
             destination_address=GroupAddress("1/1/16"),
@@ -1465,6 +1521,7 @@ class TestLight:
             group_address_brightness_blue_state="1/1/12",
             device_updated_cb=rgb_callback,
         )
+        xknx.devices.async_add(rgb_light)
         rgbw_light = Light(
             xknx,
             "TestRGBWLight",
@@ -1479,6 +1536,7 @@ class TestLight:
             group_address_brightness_white_state="1/1/16",
             device_updated_cb=rgbw_callback,
         )
+        xknx.devices.async_add(rgbw_light)
 
         assert rgb_light.current_color == (None, None)
         assert rgbw_light.current_color == (None, None)

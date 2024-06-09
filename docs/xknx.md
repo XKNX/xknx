@@ -105,7 +105,9 @@ async def main():
     async with XKNX() as xknx:
         switch = Switch(xknx,
                 name='TestSwitch',
-                group_address='1/1/11')
+                group_address='1/1/11'
+        )
+        xknx.devices.async_add(switch)
 
         await switch.set_on()
 
@@ -114,14 +116,18 @@ asyncio.run(main())
 
 # [](#header-2)Devices
 
-XKNX keeps all initialized devices in a local storage named `devices`. All devices may be accessed by their name: `xknx.devices['NameOfDevice']`. When an update via KNX GroupValueWrite or GroupValueResponse was received devices will be updated accordingly.
+To attach a device to XKNX call `xknx.devices.async_add(device)`. Added devices may be accessed by their name: `xknx.devices['NameOfDevice']`. When an update via KNX GroupValueWrite or GroupValueResponse was received devices will be updated accordingly.
+To remove a device from XKNX call `xknx.devices.async_remove(device)`. Removed devices can be re-added at a later point. This cancels background tasks of that device and disconnects it from receiving new telegrams.
 
 Example:
 
 ```python
-switch = Switch(xknx,
-                name='TestSwitch',
-                group_address='1/1/11')
+switch = Switch(
+    xknx,
+    name='TestSwitch',
+    group_address='1/1/11'
+)
+xknx.devices.async_add(switch)
 
 await xknx.devices['TestSwitch'].set_on()
 await xknx.devices['TestSwitch'].set_off()

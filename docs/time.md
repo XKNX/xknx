@@ -20,6 +20,7 @@ time_device = DateTime(
     broadcast_type='TIME',
     localtime=True
 )
+xknx.devices.async_add(time_device)
 
 # `sync()` doesn't send a GroupValueRead when localtime is True but sends the current time to KNX bus
 await xknx.devices['TimeTest'].sync()
@@ -44,6 +45,7 @@ from xknx.devices import DateTime
 async def main():
     async with XKNX(daemon_mode=True) as xknx:
         time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
+        xknx.devices.async_add(time)
         print("Sending time to KNX bus every hour")
 
 asyncio.run(main())
@@ -51,13 +53,13 @@ asyncio.run(main())
 
 ## [](#header-2)Interface
 
-
 ```python
 from xknx import XKNX
 from xknx.devices import DateTime
 
 xknx = XKNX()
 time_device = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type='time')
+xknx.devices.async_add(time_device)
 
 await xknx.start()
 # Sending Time to KNX bus

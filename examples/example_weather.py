@@ -9,7 +9,7 @@ from xknx.devices import Weather
 logging.basicConfig(level=logging.WARNING)
 
 
-async def main():
+async def main() -> None:
     """Connect to KNX/IP device and create a weather device and read its sensors."""
     xknx = XKNX()
     await xknx.start()
@@ -26,6 +26,7 @@ async def main():
         group_address_day_night="7/0/7",
         group_address_rain_alarm="7/0/0",
     )
+    xknx.devices.async_add(weather)
 
     await weather.sync(wait_for_result=True)
     print(weather.max_brightness)

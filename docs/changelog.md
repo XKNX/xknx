@@ -12,6 +12,11 @@ nav_order: 2
 
 - Drop support for Python 3.9
 
+### Devices
+
+- A Device doesn't auto-add to `xknx.devices` anymore. It can be done via `xknx.devices.async_add()` now. `xknx.devices.async_remove` stops a device from processing telegrams, removes from StateUpdater and cancels its internal tasks. Removed devices can be added again.
+- `Device.shutdown` method is removed
+
 ### DPT
 
 - DPTComplex: Common interface for DPT transcoders with multi-value data. Resulting dataclasses can be converted to and from a dict with DPT specific properties to be JSON compatible.

@@ -32,6 +32,7 @@ sensor = Sensor(
     sync_state=True,
     value_type='temperature'
 )
+xknx.devices.async_add(sensor)
 
 # Requesting current state via KNX GroupValueRead from the bus
 await sensor.sync(wait_for_result=True)
