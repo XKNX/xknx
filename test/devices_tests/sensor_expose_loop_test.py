@@ -277,7 +277,12 @@ class TestBinarySensorExposeLoop:
         xknx.cemi_handler.send_telegram.assert_called_with(outgoing_telegram)
         assert expose.resolve_state() == test_value
 
-        bin_sensor = BinarySensor(xknx, "TestSensor", group_address_state="1/1/1")
+        bin_sensor = BinarySensor(
+            xknx,
+            "TestSensor",
+            group_address_state="1/1/1",
+        )
+        xknx.devices.async_add(bin_sensor)
         assert bin_sensor.state is None
 
         # read sensor state (from expose as it has the same GA)
