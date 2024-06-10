@@ -1,6 +1,6 @@
 """Unit test for RemoveValue objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -31,8 +31,8 @@ class TestRemoteValue:
             remote_value.value = "a"
         # new value is used in response Telegram
         test_payload = remote_value.to_knx(2.2)
-        remote_value._send = AsyncMock()
-        await remote_value.respond()
+        remote_value._send = Mock()
+        remote_value.respond()
         remote_value._send.assert_called_with(test_payload, response=True)
         # callback is not called when setting value programmatically
         remote_value.after_update_cb.assert_not_called()
@@ -60,7 +60,7 @@ class TestRemoteValue:
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         with patch("logging.Logger.info") as mock_info:
-            await remote_value.set(23)
+            remote_value.set(23)
             mock_info.assert_called_with(
                 "Setting value of uninitialized device: %s - %s (value: %s)",
                 "Unknown",
@@ -73,7 +73,7 @@ class TestRemoteValue:
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress("1/2/3"))
         with patch("logging.Logger.warning") as mock_warning:
-            await remote_value.set(23)
+            remote_value.set(23)
             mock_warning.assert_called_with(
                 "Attempted to set value for non-writable device: %s - %s (value: %s)",
                 "Unknown",

@@ -55,7 +55,7 @@ class Notification(Device):
     async def set(self, message: str) -> None:
         """Set message."""
         cropped_message = message[:14]
-        await self.remote_value.set(cropped_message)
+        self.remote_value.set(cropped_message)
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
@@ -67,7 +67,7 @@ class Notification(Device):
             self.respond_to_read
             and telegram.destination_address == self.remote_value.group_address
         ):
-            await self.remote_value.respond()
+            self.remote_value.respond()
 
     def __str__(self) -> str:
         """Return object as readable string."""

@@ -70,11 +70,11 @@ class NumericValue(Device):
             self.respond_to_read
             and telegram.destination_address == self.sensor_value.group_address
         ):
-            await self.sensor_value.respond()
+            self.sensor_value.respond()
 
     async def set(self, value: float | int) -> None:
         """Set new value."""
-        await self.sensor_value.set(value)
+        self.sensor_value.set(value)
 
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""

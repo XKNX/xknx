@@ -85,7 +85,7 @@ class TestRemoteValueString:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
-        await remote_value.set("asdf")
+        remote_value.set("asdf")
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -94,7 +94,7 @@ class TestRemoteValueString:
                 DPTArray((97, 115, 100, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
             ),
         )
-        await remote_value.set("ASDF")
+        remote_value.set("ASDF")
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

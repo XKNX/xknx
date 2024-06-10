@@ -151,7 +151,7 @@ class TestClimate:
         climate.register_device_updated_cb(after_update_callback)
         xknx.devices.async_add(climate)
 
-        await climate.target_temperature.set(23.00)
+        climate.target_temperature.set(23.00)
         await xknx.devices.process(xknx.telegrams.get_nowait())
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
@@ -409,7 +409,7 @@ class TestClimate:
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate3.initialized_for_setpoint_shift_calculations
 
-        await climate3.target_temperature.set(23.00)
+        climate3.target_temperature.set(23.00)
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate3.initialized_for_setpoint_shift_calculations
 
@@ -514,7 +514,7 @@ class TestClimate:
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate.initialized_for_setpoint_shift_calculations
 
-        await climate.target_temperature.set(23.00)
+        climate.target_temperature.set(23.00)
         await xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate.initialized_for_setpoint_shift_calculations
         assert climate.target_temperature_min == "3"
@@ -546,7 +546,7 @@ class TestClimate:
         )
         await xknx.devices.process(_telegram)
 
-        await climate.target_temperature.set(23.00)
+        climate.target_temperature.set(23.00)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
         assert _telegram == Telegram(
@@ -625,7 +625,7 @@ class TestClimate:
         )
         await xknx.devices.process(_telegram)
 
-        await climate.target_temperature.set(23.00)
+        climate.target_temperature.set(23.00)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
         assert _telegram == Telegram(
@@ -707,7 +707,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray(6)),
         )
 
-        await climate.target_temperature.set(23.00)
+        climate.target_temperature.set(23.00)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
         await xknx.devices.process(_telegram)

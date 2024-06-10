@@ -19,29 +19,29 @@ async def main() -> None:
         device_name="RGBWLight",
     )
 
-    await rgbw.set(RGBWColor(255, 255, 255, 0))  # cold-white
+    rgbw.set(RGBWColor(255, 255, 255, 0))  # cold-white
     await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 0, 0, 255))  # warm-white
+    rgbw.set(RGBWColor(0, 0, 0, 255))  # warm-white
     await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 0, 0, 0))  # off
-    await asyncio.sleep(1)
-
-    await rgbw.set(RGBWColor(255, 0, 0, 0))  # red
-    await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 255, 0, 0))  # green
-    await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 0, 255, 0))  # blue
-    await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 0, 0, 0))  # off
+    rgbw.set(RGBWColor(0, 0, 0, 0))  # off
     await asyncio.sleep(1)
 
-    await rgbw.set(RGBWColor(255, 255, 0, 0))
+    rgbw.set(RGBWColor(255, 0, 0, 0))  # red
     await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 255, 255, 0))
+    rgbw.set(RGBWColor(0, 255, 0, 0))  # green
     await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(255, 0, 255, 0))
+    rgbw.set(RGBWColor(0, 0, 255, 0))  # blue
     await asyncio.sleep(1)
-    await rgbw.set(RGBWColor(0, 0, 0, 0))  # off
+    rgbw.set(RGBWColor(0, 0, 0, 0))  # off
+    await asyncio.sleep(1)
+
+    rgbw.set(RGBWColor(255, 255, 0, 0))
+    await asyncio.sleep(1)
+    rgbw.set(RGBWColor(0, 255, 255, 0))
+    await asyncio.sleep(1)
+    rgbw.set(RGBWColor(255, 0, 255, 0))
+    await asyncio.sleep(1)
+    rgbw.set(RGBWColor(0, 0, 0, 0))  # off
     await asyncio.sleep(1)
 
     await xknx.stop()

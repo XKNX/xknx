@@ -40,14 +40,14 @@ class TestRemoteValueDptValue1Ucount:
         remote_value = RemoteValueDptValue1Ucount(
             xknx, group_address=GroupAddress("1/2/3")
         )
-        await remote_value.set(10)
+        remote_value.set(10)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x0A,))),
         )
-        await remote_value.set(11)
+        remote_value.set(11)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

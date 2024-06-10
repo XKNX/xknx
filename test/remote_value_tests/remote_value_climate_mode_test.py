@@ -176,14 +176,14 @@ class TestRemoteValueOperationMode:
             group_address=GroupAddress("1/2/3"),
             climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE,
         )
-        await remote_value.set(HVACOperationMode.NIGHT)
+        remote_value.set(HVACOperationMode.NIGHT)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x03,))),
         )
-        await remote_value.set(HVACOperationMode.FROST_PROTECTION)
+        remote_value.set(HVACOperationMode.FROST_PROTECTION)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -197,14 +197,14 @@ class TestRemoteValueOperationMode:
         remote_value = RemoteValueControllerMode(
             xknx, group_address=GroupAddress("1/2/3")
         )
-        await remote_value.set(HVACControllerMode.COOL)
+        remote_value.set(HVACControllerMode.COOL)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x03,))),
         )
-        await remote_value.set(HVACControllerMode.NIGHT_PURGE)
+        remote_value.set(HVACControllerMode.NIGHT_PURGE)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -220,14 +220,14 @@ class TestRemoteValueOperationMode:
             group_address=GroupAddress("1/2/3"),
             operation_mode=HVACOperationMode.STANDBY,
         )
-        await remote_value.set(HVACOperationMode.STANDBY)
+        remote_value.set(HVACOperationMode.STANDBY)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(True)),
         )
-        await remote_value.set(HVACOperationMode.FROST_PROTECTION)
+        remote_value.set(HVACOperationMode.FROST_PROTECTION)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

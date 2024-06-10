@@ -46,7 +46,7 @@ class Scene(Device):
 
     async def run(self) -> None:
         """Activate scene."""
-        await self.scene_value.set(self.scene_number)
+        self.scene_value.set(self.scene_number)
 
     def __str__(self) -> str:
         """Return object as readable string."""

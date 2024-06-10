@@ -212,9 +212,7 @@ class RemoteValue(ABC, Generic[ValueT]):
                 await self.after_update_cb()
         return True
 
-    async def _send(
-        self, payload: DPTArray | DPTBinary, response: bool = False
-    ) -> None:
+    def _send(self, payload: DPTArray | DPTBinary, response: bool = False) -> None:
         """Send payload as telegram to KNX bus."""
         if self.group_address is None:
             return
@@ -225,9 +223,9 @@ class RemoteValue(ABC, Generic[ValueT]):
             ),
             source_address=self.xknx.current_address,
         )
-        await self.xknx.telegrams.put(telegram)
+        self.xknx.telegrams.put_nowait(telegram)
 
-    async def set(self, value: ValueT, response: bool = False) -> None:
+    def set(self, value: ValueT, response: bool = False) -> None:
         """Set new value."""
         if not self.initialized:
             logger.info(
@@ -246,15 +244,15 @@ class RemoteValue(ABC, Generic[ValueT]):
             )
             return
         payload = self.to_knx(value)
-        await self._send(payload, response)
+        self._send(payload, response)
         # self._value is set and after_update_cb() called when the outgoing telegram is processed.
 
-    async def respond(self) -> None:
+    def respond(self) -> None:
         """Send current payload as GroupValueResponse telegram to KNX bus."""
         if self._value is None:
             return
         payload = self.to_knx(self._value)
-        await self._send(payload, response=True)
+        self._send(payload, response=True)
 
     async def read_state(self, wait_for_result: bool = False) -> None:
         """Send GroupValueRead telegram for state address to KNX bus."""

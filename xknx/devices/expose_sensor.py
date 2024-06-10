@@ -95,9 +95,9 @@ class ExposeSensor(Device):
         if not self.respond_to_read:
             return
         if self._cooldown_latest_value is not None:
-            await self.sensor_value.set(self._cooldown_latest_value, response=True)
+            self.sensor_value.set(self._cooldown_latest_value, response=True)
             return
-        await self.sensor_value.respond()
+        self.sensor_value.respond()
 
     async def set(self, value: Any) -> None:
         """Set new value."""
@@ -109,7 +109,7 @@ class ExposeSensor(Device):
                 name=self._cooldown_task_name,
                 async_func=self._cooldown_wait,
             ).start()
-        await self.sensor_value.set(value)
+        self.sensor_value.set(value)
 
     async def _cooldown_wait(self) -> None:
         """Send value after cooldown if it differs from last processed value."""
@@ -117,7 +117,7 @@ class ExposeSensor(Device):
             await asyncio.sleep(self.cooldown)
             if self.sensor_value.value == self._cooldown_latest_value:
                 break
-            await self.sensor_value.set(self._cooldown_latest_value)  # type: ignore[arg-type]
+            self.sensor_value.set(self._cooldown_latest_value)  # type: ignore[arg-type]
 
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""

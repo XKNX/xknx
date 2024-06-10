@@ -25,7 +25,7 @@ class TestRemoteValueControl:
         remote_value = RemoteValueControl(
             xknx, group_address=GroupAddress("1/2/3"), value_type="stepwise"
         )
-        await remote_value.set(25)
+        remote_value.set(25)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

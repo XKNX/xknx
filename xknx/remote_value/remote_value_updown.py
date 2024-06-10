@@ -74,11 +74,11 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
             feature_name=self.feature_name,
         )
 
-    async def down(self) -> None:
+    def down(self) -> None:
         """Set value to down."""
-        await self.set(self.Direction.DOWN)
+        self.set(self.Direction.DOWN)
 
-    async def up(self) -> None:
+    def up(self) -> None:
         """Set value to UP."""
         # pylint: disable=invalid-name
-        await self.set(self.Direction.UP)
+        self.set(self.Direction.UP)

@@ -52,14 +52,14 @@ class TestRemoteValueSwitch:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address=GroupAddress("1/2/3"))
-        await remote_value.on()
+        remote_value.on()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        await remote_value.off()
+        remote_value.off()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

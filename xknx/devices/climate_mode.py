@@ -249,7 +249,7 @@ class ClimateMode(Device):
                 rv_operation.writable
                 and operation_mode in rv_operation.supported_operation_modes()
             ):
-                await rv_operation.set(operation_mode)
+                rv_operation.set(operation_mode)
 
         await self._set_internal_operation_mode(operation_mode)
 
@@ -269,7 +269,7 @@ class ClimateMode(Device):
                 rv_controller.writable
                 and controller_mode in rv_controller.supported_operation_modes()
             ):
-                await rv_controller.set(controller_mode)
+                rv_controller.set(controller_mode)
 
         await self._set_internal_controller_mode(controller_mode)
 

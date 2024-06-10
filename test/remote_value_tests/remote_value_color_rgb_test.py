@@ -48,14 +48,14 @@ class TestRemoteValueColorRGB:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGB(xknx, group_address=GroupAddress("1/2/3"))
-        await remote_value.set(RGBColor(100, 101, 102))
+        remote_value.set(RGBColor(100, 101, 102))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66))),
         )
-        await remote_value.set(RGBColor(100, 101, 104))
+        remote_value.set(RGBColor(100, 101, 104))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

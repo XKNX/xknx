@@ -166,48 +166,48 @@ class Cover(Device):
     async def set_down(self) -> None:
         """Move cover down."""
         if self.updown.writable:
-            await self.updown.down()
+            self.updown.down()
             self._travel_direction_tilt = None
             await self._start_position_update(
                 target_position=self.travelcalculator.position_closed
             )
         elif self.position_target.writable:
-            await self.position_target.set(self.travelcalculator.position_closed)
+            self.position_target.set(self.travelcalculator.position_closed)
 
     async def set_up(self) -> None:
         """Move cover up."""
         if self.updown.writable:
-            await self.updown.up()
+            self.updown.up()
             self._travel_direction_tilt = None
             await self._start_position_update(
                 target_position=self.travelcalculator.position_open
             )
         elif self.position_target.writable:
-            await self.position_target.set(self.travelcalculator.position_open)
+            self.position_target.set(self.travelcalculator.position_open)
 
     async def set_short_down(self) -> None:
         """Move cover short down."""
-        await self.step.increase()
+        self.step.increase()
 
     async def set_short_up(self) -> None:
         """Move cover short up."""
-        await self.step.decrease()
+        self.step.decrease()
 
     async def stop(self) -> None:
         """Stop cover."""
         if self.stop_.writable:
-            await self.stop_.on()
+            self.stop_.on()
         elif self.step.writable:
             if TravelStatus.DIRECTION_UP in (
                 self.travelcalculator.travel_direction,
                 self._travel_direction_tilt,
             ):
-                await self.step.decrease()
+                self.step.decrease()
             elif TravelStatus.DIRECTION_DOWN in (
                 self.travelcalculator.travel_direction,
                 self._travel_direction_tilt,
             ):
-                await self.step.increase()
+                self.step.increase()
         else:
             logger.warning("Stop not supported for device %s", self.get_name())
             return
@@ -217,16 +217,16 @@ class Cover(Device):
     async def set_position(self, position: int) -> None:
         """Move cover to a desginated position."""
         if self.position_target.writable:
-            await self.position_target.set(position)
+            self.position_target.set(position)
             return
         # No direct positioning group address defined
         # fully open or close is always possible even if current position is not known
         current_position = self.travelcalculator.current_position()
         if current_position is None:
             if position == self.travelcalculator.position_open:
-                await self.updown.up()
+                self.updown.up()
             elif position == self.travelcalculator.position_closed:
-                await self.updown.down()
+                self.updown.down()
             else:
                 logger.warning(
                     "Current position unknown. Initialize cover by moving to end position."
@@ -235,9 +235,9 @@ class Cover(Device):
             await self._start_position_update(target_position=position)
             return
         if position < current_position:
-            await self.updown.up()
+            self.updown.up()
         elif position > current_position:
-            await self.updown.down()
+            self.updown.down()
         await self._start_position_update(target_position=position)
         # If device does not support auto_positioning,
         # we have to stop the device when position is reached,
@@ -334,7 +334,7 @@ class Cover(Device):
             else TravelStatus.DIRECTION_UP
         )
 
-        await self.angle.set(angle)
+        self.angle.set(angle)
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""

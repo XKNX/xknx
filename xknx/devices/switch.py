@@ -75,11 +75,11 @@ class Switch(Device):
 
     async def set_on(self) -> None:
         """Switch on switch."""
-        await self.switch.on()
+        self.switch.on()
 
     async def set_off(self) -> None:
         """Switch off switch."""
-        await self.switch.off()
+        self.switch.off()
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
@@ -97,7 +97,7 @@ class Switch(Device):
             self.respond_to_read
             and telegram.destination_address == self.switch.group_address
         ):
-            await self.switch.respond()
+            self.switch.respond()
 
     async def _reset_state(self, wait_seconds: float) -> None:
         await asyncio.sleep(wait_seconds)

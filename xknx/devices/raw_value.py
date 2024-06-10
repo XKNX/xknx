@@ -70,11 +70,11 @@ class RawValue(Device):
             self.respond_to_read
             and telegram.destination_address == self.remote_value.group_address
         ):
-            await self.remote_value.respond()
+            self.remote_value.respond()
 
     async def set(self, value: int) -> None:
         """Set new value."""
-        await self.remote_value.set(value)
+        self.remote_value.set(value)
 
     def resolve_state(self) -> int | None:
         """Return the current state of the sensor as an unsigned integer."""

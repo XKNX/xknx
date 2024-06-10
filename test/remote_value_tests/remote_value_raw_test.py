@@ -47,14 +47,14 @@ class TestRemoteValueRaw:
         rv_1 = RemoteValueRaw(xknx, payload_length=1, group_address="1/2/3")
         rv_2 = RemoteValueRaw(xknx, payload_length=2, group_address="1/2/3")
 
-        await rv_0.set(0)
+        rv_0.set(0)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(False)),
         )
-        await rv_0.set(63)
+        rv_0.set(63)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -62,14 +62,14 @@ class TestRemoteValueRaw:
             payload=GroupValueWrite(DPTBinary(0x3F)),
         )
 
-        await rv_1.set(0)
+        rv_1.set(0)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x00,))),
         )
-        await rv_1.set(63)
+        rv_1.set(63)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -77,14 +77,14 @@ class TestRemoteValueRaw:
             payload=GroupValueWrite(DPTArray((0x3F,))),
         )
 
-        await rv_2.set(0)
+        rv_2.set(0)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x00, 0x00))),
         )
-        await rv_2.set(63)
+        rv_2.set(63)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

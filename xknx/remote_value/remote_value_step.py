@@ -78,10 +78,10 @@ class RemoteValueStep(RemoteValue["RemoteValueStep.Direction"]):
             feature_name=self.feature_name,
         )
 
-    async def increase(self) -> None:
+    def increase(self) -> None:
         """Increase value."""
-        await self.set(self.Direction.INCREASE)
+        self.set(self.Direction.INCREASE)
 
-    async def decrease(self) -> None:
+    def decrease(self) -> None:
         """Decrease the value."""
-        await self.set(self.Direction.DECREASE)
+        self.set(self.Direction.DECREASE)
