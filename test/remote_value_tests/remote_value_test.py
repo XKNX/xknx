@@ -145,9 +145,8 @@ class TestRemoteValue:
             patch_read.return_value = telegram
 
             await remote_value.read_state(wait_for_result=True)
-
-            assert remote_value.telegram == telegram
-            assert remote_value.value
+            patch_read.assert_called_once()
+            # RemoteValue.value is updated by RemoteValue.process called from Device / TelegramQueue
 
     async def test_read_state_none(self):
         """Test read state while waiting for the result but got None."""
@@ -161,6 +160,7 @@ class TestRemoteValue:
             patch_read.return_value = None
 
             await remote_value.read_state(wait_for_result=True)
+            patch_read.assert_called_once()
             mock_warning.assert_called_once_with(
                 "Could not sync group address '%s' (%s - %s)",
                 GroupAddress("1/2/3"),

@@ -250,10 +250,7 @@ class RemoteValue(ABC, Generic[ValueT]):
 
             value_reader = ValueReader(self.xknx, self.group_address_state)
             if wait_for_result:
-                telegram = await value_reader.read()
-                if telegram is not None:
-                    await self.process(telegram)
-                else:
+                if await value_reader.read() is None:
                     logger.warning(
                         "Could not sync group address '%s' (%s - %s)",
                         self.group_address_state,
