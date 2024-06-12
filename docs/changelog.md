@@ -11,7 +11,7 @@ nav_order: 2
 ### General
 
 - Drop support for Python 3.9
-- Added eager telegram data decoding for GroupValueWrite / GroupValueResponse Telegrams. DPTs for group addresses can be set using `xknx.group_address_dpt.set_dpts()`.
+- Added eager telegram data decoding for GroupValueWrite / GroupValueResponse Telegrams. DPTs for group addresses can be set using `xknx.group_address_dpt.set()`.
 
 ### Devices
 

@@ -85,13 +85,13 @@ class Telegram:
             return
         if not isinstance(self.payload, GroupValueWrite | GroupValueResponse):
             return
-        payload_data = self.payload.value
         try:
-            value = transcoder.from_knx(payload_data)
+            value = transcoder.from_knx(self.payload.value)
         except (CouldNotParseTelegram, ConversionError) as err:
             _GA_DPT_LOGGER.warning(
                 "DPT decoding error for %s of %s: %s", transcoder, self, err
             )
+            return
         self.decoded_data = TelegramDecodedData(transcoder, value)
 
     def __str__(self) -> str:

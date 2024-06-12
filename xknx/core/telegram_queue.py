@@ -214,9 +214,7 @@ class TelegramQueue:
             telegram.destination_address, GroupAddress | InternalGroupAddress
         )
         if (
-            transcoder := self.xknx.group_address_dpt.get_transcoder(
-                telegram.destination_address
-            )
+            transcoder := self.xknx.group_address_dpt.get(telegram.destination_address)
         ) is not None:
             telegram.set_decoded_data(transcoder)
         telegram_logger.debug(telegram)

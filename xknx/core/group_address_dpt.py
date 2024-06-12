@@ -26,7 +26,7 @@ class GroupAddressDPT:
         # using dict[int | str] instead of dict[DeviceGroupAddress] is faster.
         self._ga_dpts: dict[int | str, type[DPTBase]] = {}
 
-    def set_dpts(
+    def set(
         self,
         ga_dpt: Mapping[DeviceAddressableType, int | str | _DPTMainSubDict],
     ) -> None:
@@ -45,6 +45,10 @@ class GroupAddressDPT:
         if unknown_dpts:
             _GA_DPT_LOGGER.debug("No transcoder found for DPTs: %s", unknown_dpts)
 
-    def get_transcoder(self, address: DeviceGroupAddress) -> type[DPTBase] | None:
+    def get(self, address: DeviceGroupAddress) -> type[DPTBase] | None:
         """Return transcoder for group address."""
         return self._ga_dpts.get(address.raw)
+
+    def clear(self) -> None:
+        """Clear all group addresses."""
+        self._ga_dpts = {}
