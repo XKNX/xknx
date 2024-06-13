@@ -125,6 +125,16 @@ class TelegramQueue:
                 self.xknx.telegrams.task_done()
                 break
 
+            assert isinstance(  # IndividualAddress telegrams are not processed by this queue
+                telegram.destination_address, GroupAddress | InternalGroupAddress
+            )
+            if (
+                transcoder := self.xknx.group_address_dpt.get(
+                    telegram.destination_address
+                )
+            ) is not None:
+                telegram.set_decoded_data(transcoder)
+
             if telegram.direction == TelegramDirection.INCOMING:
                 try:
                     await self.process_telegram_incoming(telegram)
@@ -210,13 +220,6 @@ class TelegramQueue:
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""
-        assert isinstance(
-            telegram.destination_address, GroupAddress | InternalGroupAddress
-        )
-        if (
-            transcoder := self.xknx.group_address_dpt.get(telegram.destination_address)
-        ) is not None:
-            telegram.set_decoded_data(transcoder)
         telegram_logger.debug(telegram)
         await self._run_telegram_received_cbs(telegram)
         await self.xknx.devices.process(telegram)
