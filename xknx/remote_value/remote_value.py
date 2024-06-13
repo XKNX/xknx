@@ -9,12 +9,12 @@ Remote value can be :
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Awaitable, Callable, Iterator
 import logging
 from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
-from xknx.dpt import DPTArray, DPTBinary
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import (
@@ -39,6 +39,8 @@ ValueT = TypeVar("ValueT")
 
 class RemoteValue(ABC, Generic[ValueT]):
     """Class for managing remote knx value."""
+
+    dpt_class: type[DPTBase] | None = None
 
     def __init__(
         self,
@@ -152,13 +154,21 @@ class RemoteValue(ABC, Generic[ValueT]):
 
         return group_address in remote_value_addresses()
 
-    @abstractmethod
     def from_knx(self, payload: DPTArray | DPTBinary) -> ValueT:
-        """Convert current payload to value - to be implemented in derived class."""
+        """Convert current payload to value - to be implemented in derived class when `dpt_class` can't be used."""
+        if self.dpt_class is None:
+            raise NotImplementedError(
+                "Either `dpt_class` must be set or `from_knx` must be implemented"
+            )
+        return self.dpt_class.from_knx(payload)  # type: ignore[no-any-return]
 
-    @abstractmethod
     def to_knx(self, value: ValueT) -> DPTArray | DPTBinary:
-        """Convert value to payload - to be implemented in derived class."""
+        """Convert value to payload - to be implemented in derived class when `dpt_class` can't be used."""
+        if self.dpt_class is None:
+            raise NotImplementedError(
+                "Either `dpt_class` must be set or `to_knx` must be implemented"
+            )
+        return self.dpt_class.to_knx(value)
 
     async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
@@ -177,7 +187,14 @@ class RemoteValue(ABC, Generic[ValueT]):
             )
 
         try:
-            decoded_payload = self.from_knx(telegram.payload.value)
+            decoded_payload: ValueT
+            if (
+                telegram.decoded_data is not None
+                and telegram.decoded_data.transcoder is self.dpt_class
+            ):
+                decoded_payload = telegram.decoded_data.value  # type: ignore[assignment]
+            else:
+                decoded_payload = self.from_knx(telegram.payload.value)
         except (ConversionError, CouldNotParseTelegram) as err:
             logger.warning(
                 "Can not process %s for %s - %s: %s",
@@ -199,17 +216,16 @@ class RemoteValue(ABC, Generic[ValueT]):
         self, payload: DPTArray | DPTBinary, response: bool = False
     ) -> None:
         """Send payload as telegram to KNX bus."""
-        if self.group_address is not None:
-            telegram = Telegram(
-                destination_address=self.group_address,
-                payload=(
-                    GroupValueResponse(payload)
-                    if response
-                    else GroupValueWrite(payload)
-                ),
-                source_address=self.xknx.current_address,
-            )
-            await self.xknx.telegrams.put(telegram)
+        if self.group_address is None:
+            return
+        telegram = Telegram(
+            destination_address=self.group_address,
+            payload=(
+                GroupValueResponse(payload) if response else GroupValueWrite(payload)
+            ),
+            source_address=self.xknx.current_address,
+        )
+        await self.xknx.telegrams.put(telegram)
 
     async def set(self, value: ValueT, response: bool = False) -> None:
         """Set new value."""
@@ -229,16 +245,16 @@ class RemoteValue(ABC, Generic[ValueT]):
                 value,
             )
             return
-
         payload = self.to_knx(value)
         await self._send(payload, response)
         # self._value is set and after_update_cb() called when the outgoing telegram is processed.
 
     async def respond(self) -> None:
         """Send current payload as GroupValueResponse telegram to KNX bus."""
-        if self._value is not None:
-            payload = self.to_knx(self._value)
-            await self._send(payload, response=True)
+        if self._value is None:
+            return
+        payload = self.to_knx(self._value)
+        await self._send(payload, response=True)
 
     async def read_state(self, wait_for_result: bool = False) -> None:
         """Send GroupValueRead telegram for state address to KNX bus."""

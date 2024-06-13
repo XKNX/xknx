@@ -196,6 +196,7 @@ class Light(Device):
             group_address_color_state,
             sync_state=sync_state,
             device_name=self.name,
+            feature_name="Color RGB",
             after_update_cb=self.after_update,
         )
 
@@ -205,6 +206,7 @@ class Light(Device):
             group_address_rgbw_state,
             sync_state=sync_state,
             device_name=self.name,
+            feature_name="Color RGBW",
             after_update_cb=self.after_update,
         )
 
@@ -237,6 +239,7 @@ class Light(Device):
             group_address_xyy_color_state,
             sync_state=sync_state,
             device_name=self.name,
+            feature_name="Color XYY",
             after_update_cb=self._xyy_color_from_rv,
         )
 

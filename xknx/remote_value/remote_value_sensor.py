@@ -7,10 +7,9 @@ for serialization and deserialization of the KNX value.
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from typing import TYPE_CHECKING, TypeVar
 
-from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric, DPTString
+from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
@@ -26,6 +25,7 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
 
     dpt_base_class: type[DPTBase]
     _default_dpt_class: type[DPTBase] | None = None
+    dpt_class: type[DPTBase]
 
     def __init__(
         self,
@@ -61,14 +61,6 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
             after_update_cb=after_update_cb,
         )
 
-    def to_knx(self, value: ValueT) -> DPTArray:
-        """Convert value to payload."""
-        return self.dpt_class.to_knx(value)  # type: ignore[return-value]
-
-    @abstractmethod
-    def from_knx(self, payload: DPTArray | DPTBinary) -> ValueT:
-        """Convert current payload to value."""
-
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
@@ -86,20 +78,12 @@ class RemoteValueSensor(_RemoteValueGeneric[int | float | str]):
     dpt_base_class = DPTBase
     dpt_class: type[DPTBase]
 
-    def from_knx(self, payload: DPTArray | DPTBinary) -> int | float | str:
-        """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload)  # type: ignore[no-any-return]
-
 
 class RemoteValueNumeric(_RemoteValueGeneric[int | float]):
     """Abstraction for numeric DPT types."""
 
     dpt_base_class = DPTNumeric
     dpt_class: type[DPTNumeric]
-
-    def from_knx(self, payload: DPTArray | DPTBinary) -> int | float:
-        """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload)
 
 
 class RemoteValueString(_RemoteValueGeneric[str]):
@@ -108,7 +92,3 @@ class RemoteValueString(_RemoteValueGeneric[str]):
     dpt_base_class = DPTString
     dpt_class: type[DPTString]
     _default_dpt_class = DPTString
-
-    def from_knx(self, payload: DPTArray | DPTBinary) -> str:
-        """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload)

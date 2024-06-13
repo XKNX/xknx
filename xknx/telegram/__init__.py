@@ -9,7 +9,7 @@ Module for handling KNX primitives.
 # flake8: noqa
 from .address import GroupAddress, GroupAddressType, IndividualAddress
 from .address_filter import AddressFilter
-from .telegram import Telegram, TelegramDirection
+from .telegram import Telegram, TelegramDirection, TelegramDecodedData
 
 __all__ = [
     "AddressFilter",
@@ -18,4 +18,5 @@ __all__ = [
     "IndividualAddress",
     "Telegram",
     "TelegramDirection",
+    "TelegramDecodedData",
 ]

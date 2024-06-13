@@ -10,7 +10,7 @@ from enum import Enum
 import time
 from typing import TYPE_CHECKING
 
-from xknx.dpt import DPTArray, DPTBinary, DPTDate, DPTDateTime, DPTTime
+from xknx.dpt import DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
@@ -62,11 +62,3 @@ class RemoteValueDateTime(RemoteValue[time.struct_time]):
             feature_name=feature_name,
             after_update_cb=after_update_cb,
         )
-
-    def to_knx(self, value: time.struct_time) -> DPTArray:
-        """Convert value to payload."""
-        return self.dpt_class.to_knx(value)
-
-    def from_knx(self, payload: DPTArray | DPTBinary) -> time.struct_time:
-        """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload)

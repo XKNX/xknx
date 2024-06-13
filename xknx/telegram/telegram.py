@@ -94,6 +94,17 @@ class Telegram:
             return
         self.decoded_data = TelegramDecodedData(transcoder, value)
 
+    def __eq__(self, other: object) -> bool:
+        """Equal operator. Omit decoded_data for comparison."""
+        return (
+            isinstance(other, Telegram)
+            and self.destination_address == other.destination_address
+            and self.direction == other.direction
+            and self.payload == other.payload
+            and self.source_address == other.source_address
+            and self.tpci == other.tpci
+        )
+
     def __str__(self) -> str:
         """Return object as readable string."""
         data = f'payload="{self.payload}"' if self.payload else f'tpci="{self.tpci}"'
