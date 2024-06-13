@@ -23,6 +23,11 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface):
         direction=TelegramDirection.INCOMING,
         payload=apci.GroupValueWrite(DPTArray((0x7F,))),
     )
+    read_telegram = Telegram(
+        destination_address=GroupAddress("1/2/3"),
+        direction=TelegramDirection.INCOMING,
+        payload=apci.GroupValueRead(),
+    )
     xknx.telegram_queue.register_telegram_received_cb(_telegram_callback)
     async with xknx:
         await xknx.telegrams.put(telegram)
@@ -37,6 +42,11 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface):
         assert test_telegram.decoded_data is not None
         assert test_telegram.decoded_data.transcoder is DPTScaling
         assert test_telegram.decoded_data.value == 50
+        # do nothing for read-telegrams
+        await xknx.telegrams.put(read_telegram)
+        await xknx.telegrams.join()
+        assert telegrams == 3
+        assert test_telegram.decoded_data is None
 
 
 @patch("logging.Logger.warning")
