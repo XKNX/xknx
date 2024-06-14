@@ -6,12 +6,16 @@ from collections.abc import Mapping
 import logging
 
 from xknx.dpt.dpt import DPTBase, _DPTMainSubDict
-from xknx.exceptions import CouldNotParseAddress
+from xknx.exceptions import ConversionError, CouldNotParseAddress, CouldNotParseTelegram
+from xknx.telegram import Telegram, TelegramDecodedData
 from xknx.telegram.address import (
     DeviceAddressableType,
     DeviceGroupAddress,
+    GroupAddress,
+    InternalGroupAddress,
     parse_device_group_address,
 )
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 _GA_DPT_LOGGER = logging.getLogger("xknx.ga_dpt")
 
@@ -52,3 +56,23 @@ class GroupAddressDPT:
     def clear(self) -> None:
         """Clear all group addresses."""
         self._ga_dpts = {}
+
+    def set_decoded_data(self, telegram: Telegram) -> None:
+        """Update telegram data with decoded value."""
+        if telegram.decoded_data is not None:
+            return
+        if not isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
+            return
+        assert isinstance(  # GroupValueWrite and GroupValueResponse can not have IndividualAddress
+            telegram.destination_address, GroupAddress | InternalGroupAddress
+        )
+        if (transcoder := self.get(telegram.destination_address)) is None:
+            return
+        try:
+            value = transcoder.from_knx(telegram.payload.value)
+        except (CouldNotParseTelegram, ConversionError) as err:
+            _GA_DPT_LOGGER.warning(
+                "DPT decoding error for %s of %s: %s", transcoder, self, err
+            )
+            return
+        telegram.decoded_data = TelegramDecodedData(transcoder, value)

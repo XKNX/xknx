@@ -19,16 +19,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
 
 from xknx.dpt import DPTBase, DPTComplexData
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
-from .apci import APCI, GroupValueResponse, GroupValueWrite
+from .apci import APCI
 from .tpci import TPCI, TDataBroadcast, TDataGroup, TDataIndividual
-
-_GA_DPT_LOGGER = logging.getLogger("xknx.ga_dpt")
 
 
 class TelegramDirection(Enum):
@@ -78,21 +74,6 @@ class Telegram:
                 self.tpci = TDataIndividual()
             else:  # InternalGroupAddress
                 self.tpci = TDataGroup()
-
-    def set_decoded_data(self, transcoder: type[DPTBase]) -> None:
-        """Update telegram data with decoded value."""
-        if self.decoded_data is not None:
-            return
-        if not isinstance(self.payload, GroupValueWrite | GroupValueResponse):
-            return
-        try:
-            value = transcoder.from_knx(self.payload.value)
-        except (CouldNotParseTelegram, ConversionError) as err:
-            _GA_DPT_LOGGER.warning(
-                "DPT decoding error for %s of %s: %s", transcoder, self, err
-            )
-            return
-        self.decoded_data = TelegramDecodedData(transcoder, value)
 
     def __eq__(self, other: object) -> bool:
         """Equal operator. Omit decoded_data for comparison."""
