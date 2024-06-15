@@ -28,7 +28,7 @@ async def main() -> None:
 
     await xknx.start()
     print("Tunnel connected")
-    await group_value_write(xknx, "1/0/32", True)
+    group_value_write(xknx, "1/0/32", True)
     await asyncio.sleep(5)
     await xknx.stop()
 

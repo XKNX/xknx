@@ -45,11 +45,11 @@ from xknx.tools import group_value_write
 async def main():
     async with XKNX() as xknx:
         # send a binary Telegram
-        await group_value_write(xknx, "1/2/3", True)
+        group_value_write(xknx, "1/2/3", True)
         # send a generic 1-byte Telegram
-        await group_value_write(xknx, "1/2/4", [0x80])
+        group_value_write(xknx, "1/2/4", [0x80])
         # send a Telegram with an encoded value
-        await group_value_write(xknx, "1/2/4", 50, value_type="percent")
+        group_value_write(xknx, "1/2/4", 50, value_type="percent")
 
 asyncio.run(main())
 ```

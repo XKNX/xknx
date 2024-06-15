@@ -272,7 +272,7 @@ class RemoteValue(ABC, Generic[ValueT]):
                         self.feature_name,
                     )
             else:
-                await value_reader.send_group_read()
+                value_reader.send_group_read()
 
     @property
     def unit_of_measurement(self) -> str | None:

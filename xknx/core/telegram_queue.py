@@ -109,7 +109,7 @@ class TelegramQueue:
         """Stop telegram queue."""
         logger.debug("Stopping TelegramQueue")
         # If a None object is pushed to the queue, the queue stops
-        await self.xknx.telegrams.put(None)
+        self.xknx.telegrams.put_nowait(None)
         if self._consumer_task is not None:
             await self._consumer_task
 

@@ -88,7 +88,7 @@ class TestValueReader:
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/1"))
 
-        await value_reader.send_group_read()
+        value_reader.send_group_read()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

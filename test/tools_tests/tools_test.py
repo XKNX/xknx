@@ -17,7 +17,7 @@ from xknx.tools import (
 )
 
 
-async def test_group_value_read():
+def test_group_value_read():
     """Test group_value_read."""
     xknx = XKNX()
     group_address = "1/2/3"
@@ -26,12 +26,12 @@ async def test_group_value_read():
         destination_address=GroupAddress(group_address),
         payload=apci.GroupValueRead(),
     )
-    await group_value_read(xknx, "1/2/3")
+    group_value_read(xknx, "1/2/3")
     assert xknx.telegrams.qsize() == 1
     assert xknx.telegrams.get_nowait() == read
 
 
-async def test_group_value_response():
+def test_group_value_response():
     """Test group_value_response."""
     xknx = XKNX()
     group_address = "1/2/3"
@@ -40,7 +40,7 @@ async def test_group_value_response():
         destination_address=GroupAddress(group_address),
         payload=apci.GroupValueResponse(DPTBinary(1)),
     )
-    await group_value_response(xknx, "1/2/3", True)
+    group_value_response(xknx, "1/2/3", True)
     assert xknx.telegrams.qsize() == 1
     assert xknx.telegrams.get_nowait() == response
 
@@ -57,7 +57,7 @@ async def test_group_value_response():
         (DPTBinary(1), None, DPTBinary(1)),
     ],
 )
-async def test_group_value_write(value, value_type, expected):
+def test_group_value_write(value, value_type, expected):
     """Test group_value_write."""
     xknx = XKNX()
     group_address = "1/2/3"
@@ -66,7 +66,7 @@ async def test_group_value_write(value, value_type, expected):
         destination_address=GroupAddress(group_address),
         payload=apci.GroupValueWrite(expected),
     )
-    await group_value_write(xknx, "1/2/3", value, value_type=value_type)
+    group_value_write(xknx, "1/2/3", value, value_type=value_type)
     assert xknx.telegrams.qsize() == 1
     assert xknx.telegrams.get_nowait() == write
 
@@ -79,11 +79,11 @@ async def test_group_value_write(value, value_type, expected):
         (101, "percent", ConversionError),  # too big
     ],
 )
-async def test_group_value_write_invalid(value, value_type, error_type):
+def test_group_value_write_invalid(value, value_type, error_type):
     """Test group_value_write."""
     xknx = XKNX()
     with pytest.raises(error_type):
-        await group_value_write(xknx, "1/2/3", value, value_type=value_type)
+        group_value_write(xknx, "1/2/3", value, value_type=value_type)
 
 
 @pytest.mark.parametrize(
@@ -115,11 +115,10 @@ async def test_read_group_value(value_reader_read_mock, value, value_type, expec
     assert response_value == value
 
 
-async def test_tools_with_internal_addresses():
+async def test_tools_with_internal_addresses(xknx_no_interface):
     """Test tools using internal addresses."""
-    with patch("xknx.io.knxip_interface.KNXIPInterface.start"):
-        xknx = XKNX()
-        await xknx.start()
+    xknx = xknx_no_interface
+    await xknx.start()
 
     internal_address = "i-test"
     test_type = "1byte_unsigned"
@@ -133,7 +132,7 @@ async def test_tools_with_internal_addresses():
     xknx.devices.async_add(number)
 
     assert number.resolve_state() is None
-    await group_value_write(xknx, internal_address, 1, value_type=test_type)
+    group_value_write(xknx, internal_address, 1, value_type=test_type)
     await xknx.telegrams.join()
     assert number.resolve_state() == 1
 

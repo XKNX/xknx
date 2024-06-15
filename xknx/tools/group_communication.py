@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.tools")
 
 
-async def group_value_read(
+def group_value_read(
     xknx: XKNX,
     group_address: DeviceAddressableType,
 ) -> None:
@@ -27,10 +27,10 @@ async def group_value_read(
     )
 
     logger.debug("Sending GroupValueRead telegram to %s", group_address)
-    await xknx.telegrams.put(telegram)
+    xknx.telegrams.put_nowait(telegram)
 
 
-async def group_value_response(
+def group_value_response(
     xknx: XKNX,
     group_address: DeviceAddressableType,
     value: Any,
@@ -48,10 +48,10 @@ async def group_value_response(
         value_type or "raw",
         group_address,
     )
-    await xknx.telegrams.put(telegram)
+    xknx.telegrams.put_nowait(telegram)
 
 
-async def group_value_write(
+def group_value_write(
     xknx: XKNX,
     group_address: DeviceAddressableType,
     value: Any,
@@ -69,7 +69,7 @@ async def group_value_write(
         value_type or "raw",
         group_address,
     )
-    await xknx.telegrams.put(telegram)
+    xknx.telegrams.put_nowait(telegram)
 
 
 async def read_group_value(
