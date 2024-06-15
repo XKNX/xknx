@@ -62,7 +62,7 @@ class RawValue(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.remote_value.process(telegram, always_callback=self.always_callback)
+        self.remote_value.process(telegram, always_callback=self.always_callback)
 
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
@@ -70,11 +70,11 @@ class RawValue(Device):
             self.respond_to_read
             and telegram.destination_address == self.remote_value.group_address
         ):
-            await self.remote_value.respond()
+            self.remote_value.respond()
 
     async def set(self, value: int) -> None:
         """Set new value."""
-        await self.remote_value.set(value)
+        self.remote_value.set(value)
 
     def resolve_state(self) -> int | None:
         """Return the current state of the sensor as an unsigned integer."""

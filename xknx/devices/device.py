@@ -7,21 +7,18 @@ It provides basis functionality for reading the state from the KNX bus.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
-from collections.abc import Callable, Coroutine, Iterator
+from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from xknx.remote_value import RemoteValue
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.typing import DeviceCallbackType, DeviceT
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
-
-T = TypeVar("T", bound="Device")
-DeviceCallbackType = Callable[[T], Coroutine[Any, Any, None]]
 
 logger = logging.getLogger("xknx.log")
 
@@ -30,15 +27,15 @@ class Device(ABC):
     """Base class for devices."""
 
     def __init__(
-        self: T,
+        self: DeviceT,
         xknx: XKNX,
         name: str,
-        device_updated_cb: DeviceCallbackType[T] | None = None,
+        device_updated_cb: DeviceCallbackType[DeviceT] | None = None,
     ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.device_updated_cbs: list[DeviceCallbackType[T]] = []
+        self.device_updated_cbs: list[DeviceCallbackType[DeviceT]] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
@@ -68,27 +65,28 @@ class Device(ABC):
         yield from ()
 
     def register_device_updated_cb(
-        self: T, device_updated_cb: DeviceCallbackType[T]
+        self: DeviceT, device_updated_cb: DeviceCallbackType[DeviceT]
     ) -> None:
         """Register device updated callback."""
         self.device_updated_cbs.append(device_updated_cb)
 
     def unregister_device_updated_cb(
-        self: T, device_updated_cb: DeviceCallbackType[T]
+        self: DeviceT, device_updated_cb: DeviceCallbackType[DeviceT]
     ) -> None:
         """Unregister device updated callback."""
         if device_updated_cb in self.device_updated_cbs:
             self.device_updated_cbs.remove(device_updated_cb)
 
-    async def after_update(self: T) -> None:
+    def after_update(self: DeviceT) -> None:
         """Execute callbacks after internal state has been changed."""
-        try:
-            await asyncio.gather(*[cb(self) for cb in self.device_updated_cbs])
-        except Exception:  # pylint: disable=broad-except
-            logger.exception(
-                "Unexpected error while processing device_updated_cb for %s",
-                self,
-            )
+        for device_callback in self.device_updated_cbs:
+            try:
+                device_callback(self)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception(
+                    "Unexpected error while processing device_updated_cb for %s",
+                    self,
+                )
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""

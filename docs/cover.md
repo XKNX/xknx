@@ -29,7 +29,7 @@ Shutters are simple representations of blind/roller cover actuators. With XKNX y
 - `invert_updown` invert up/down binary payload. Default: False
 - `invert_position` invert position percentage from / to KNX bus. Default: False
 - `invert_angle` invert angle from / to KNX bus. Default: False
-- `device_updated_cb` awaitable callback for each update.
+- `device_updated_cb` Callback for each update.
 
 ## [](#header-2)Example
 

@@ -7,7 +7,6 @@ Module for managing the climate within a room.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Any
@@ -170,11 +169,11 @@ class Climate(Device):
 
     async def turn_on(self) -> None:
         """Set power status to on."""
-        await self.on.on()
+        self.on.on()
 
     async def turn_off(self) -> None:
         """Set power status to off."""
-        await self.on.off()
+        self.on.off()
 
     @property
     def initialized_for_setpoint_shift_calculations(self) -> bool:
@@ -198,7 +197,7 @@ class Climate(Device):
             validated_temp = self.validate_value(
                 target_temperature, self.min_temp, self.max_temp
             )
-            await self.target_temperature.set(validated_temp)
+            self.target_temperature.set(validated_temp)
 
     @property
     def base_temperature(self) -> float | None:
@@ -240,10 +239,10 @@ class Climate(Device):
             offset, self.setpoint_shift_min, self.setpoint_shift_max
         )
         base_temperature = self.base_temperature
-        await self._setpoint_shift.set(validated_offset)
+        self._setpoint_shift.set(validated_offset)
         # broadcast new target temperature and set internally
         if self.target_temperature.writable and base_temperature is not None:
-            await self.target_temperature.set(base_temperature + validated_offset)
+            self.target_temperature.set(base_temperature + validated_offset)
 
     @property
     def target_temperature_max(self) -> float | None:
@@ -267,12 +266,9 @@ class Climate(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await asyncio.gather(
-            *[
-                remote_value.process(telegram)
-                for remote_value in self._iter_remote_values()
-            ]
-        )
+        for remote_value in self._iter_remote_values():
+            remote_value.process(telegram)
+
         if self.mode is not None:
             await self.mode.process_group_write(telegram)
 

@@ -1,6 +1,6 @@
 """Unit test for Switch objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Device, Sensor
@@ -13,33 +13,33 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestDevice:
     """Test class for Switch object."""
 
-    async def test_device_updated_cb(self):
+    def test_device_updated_cb(self):
         """Test device updated cb is added to the device."""
         xknx = XKNX()
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         device = Device(xknx, "TestDevice", device_updated_cb=after_update_callback)
 
-        await device.after_update()
+        device.after_update()
         after_update_callback.assert_called_with(device)
 
-    async def test_process_callback(self):
+    def test_process_callback(self):
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
-        after_update_callback1 = AsyncMock()
-        after_update_callback2 = AsyncMock()
+        after_update_callback1 = Mock()
+        after_update_callback2 = Mock()
         device.register_device_updated_cb(after_update_callback1)
         device.register_device_updated_cb(after_update_callback2)
 
         # Triggering first time. Both have to be called
-        await device.after_update()
+        device.after_update()
         after_update_callback1.assert_called_with(device)
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
         # Triggering 2nd time. Both have to be called
-        await device.after_update()
+        device.after_update()
         after_update_callback1.assert_called_with(device)
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
@@ -47,7 +47,7 @@ class TestDevice:
 
         # Unregistering first callback
         device.unregister_device_updated_cb(after_update_callback1)
-        await device.after_update()
+        device.after_update()
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_called_with(device)
         after_update_callback1.reset_mock()
@@ -55,24 +55,24 @@ class TestDevice:
 
         # Unregistering second callback
         device.unregister_device_updated_cb(after_update_callback2)
-        await device.after_update()
+        device.after_update()
         after_update_callback1.assert_not_called()
         after_update_callback2.assert_not_called()
 
     @patch("logging.Logger.exception")
-    async def test_bad_callback(self, logging_exception_mock):
+    def test_bad_callback(self, logging_exception_mock):
         """Test handling callback raising an exception."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
-        good_callback_1 = AsyncMock()
-        bad_callback = AsyncMock(side_effect=Exception("Boom"))
-        good_callback_2 = AsyncMock()
+        good_callback_1 = Mock()
+        bad_callback = Mock(side_effect=Exception("Boom"))
+        good_callback_2 = Mock()
 
         device.register_device_updated_cb(good_callback_1)
         device.register_device_updated_cb(bad_callback)
         device.register_device_updated_cb(good_callback_2)
 
-        await device.after_update()
+        device.after_update()
         good_callback_1.assert_called_with(device)
         bad_callback.assert_called_with(device)
         good_callback_2.assert_called_with(device)

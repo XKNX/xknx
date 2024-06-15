@@ -26,14 +26,14 @@ class TestRemoteValue1Count:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValue1Count(xknx, group_address=GroupAddress("1/2/3"))
-        await remote_value.set(100)
+        remote_value.set(100)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64,))),
         )
-        await remote_value.set(101)
+        remote_value.set(101)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -41,7 +41,7 @@ class TestRemoteValue1Count:
             payload=GroupValueWrite(DPTArray((0x65,))),
         )
 
-    async def test_process(self):
+    def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValue1Count(xknx, group_address=GroupAddress("1/2/3"))
@@ -49,10 +49,10 @@ class TestRemoteValue1Count:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64,))),
         )
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == 100
 
-    async def test_to_process_error(self):
+    def test_to_process_error(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValue1Count(xknx, group_address=GroupAddress("1/2/3"))
@@ -61,12 +61,12 @@ class TestRemoteValue1Count:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None

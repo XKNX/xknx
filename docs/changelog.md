@@ -11,6 +11,7 @@ nav_order: 2
 ### General
 
 - Drop support for Python 3.9
+- Change callback signatures from awaitable to callable in `XKNX.device_updated_cb`, Device, Devices and RemoteValue.
 - Added eager telegram data decoding for GroupValueWrite / GroupValueResponse Telegrams. DPTs for group addresses can be set using `xknx.group_address_dpt.set()`. `Telegram` has a new attribute `decoded_data` which is set when a decoder was found.
 
 ### Devices
@@ -38,6 +39,7 @@ nav_order: 2
 - Convert Telegram and APCI to dataclasses. `Telegram` is not hashable anymore.
 - Use `asyncio.gather` where applicable (mostly device telegram process pipeline)
 - RemoteValue instances use pre-decoded data from Telegrams if available and `dpt_class` for is set - otherwise they decode the data themselves in `from_knx` like before.
+- Change `RemoteValue.after_update_cb` from awaitable to callable. Remove `async` from `RemoteValue.set`, `.respond`, `.process` and `.update_value` (nothing has to be awaited there).
 
 # 2.12.2 Fix thread leak 2024-03-05
 

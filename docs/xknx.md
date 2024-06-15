@@ -42,7 +42,7 @@ The constructor of the XKNX object takes several parameters:
   - LONG: representation like '1/2/34' with middle groups
 - `connection_state_changed_cb` is a callback which is called every time the connection state to the gateway changes. See [callbacks](#callbacks) documentation for details.
 - `telegram_received_cb` is a callback which is called after every received KNX telegram. See [callbacks](#callbacks) documentation for details.
-- `device_updated_cb` is an async callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
+- `device_updated_cb` is a callback after a [XKNX device](#devices) was updated. See [callbacks](#callbacks) documentation for details.
 - `rate_limit` in telegrams per second - can be used to limit the outgoing traffic to the KNX/IP interface by the telegram queue. `0` disables rate limiter. Disabled by default.
 - `multicast_group` is the multicast group used for discovery - can be used to override the default multicast address (`224.0.23.12`)
 - `multicast_port` is the multicast port used for discovery - can be used to override the default multicast port (`3671`)
@@ -161,7 +161,7 @@ from xknx import XKNX
 from xknx.devices import Device, Switch
 
 
-async def device_updated_cb(device: Device):
+def device_updated_cb(device: Device):
     print("Callback received from {0}".format(device.name))
 
 

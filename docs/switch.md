@@ -21,7 +21,7 @@ Switches are simple representations of binary actors. They mainly support switch
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `invert` inverts the payload so state "on" is represented by 0 on bus and "off" by 1. Defaults to `False`
 - `reset_after` may be used to reset the switch to `OFF` again after given time in sec. Defaults to `None`
-- `device_updated_cb` awaitable callback for each update.
+- `device_updated_cb` Callback for each update.
 
 
 ## [](#header-2)Example

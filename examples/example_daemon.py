@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import Device, Switch
 
 
-async def device_updated_cb(device: Device) -> None:
+def device_updated_cb(device: Device) -> None:
     """Do something with the updated device."""
     print(f"Callback received from {device.name}")
 

@@ -1,6 +1,6 @@
 """Unit test for Fan objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Fan
@@ -272,7 +272,7 @@ class TestFan:
     async def test_process_speed_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         fan = Fan(
             xknx, name="TestFan", group_address_speed="1/2/3", device_updated_cb=cb_mock
         )
@@ -372,7 +372,7 @@ class TestFan:
     async def test_process_fan_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         fan = Fan(
             xknx, name="TestFan", group_address_speed="1/2/3", device_updated_cb=cb_mock
         )

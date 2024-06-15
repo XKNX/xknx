@@ -23,7 +23,7 @@ The logic within switches can further handle if a button is pressed once or twic
 - `ignore_internal_state` allows callback call regardless of the current binary sensor state. Defaults to `False`
 - `context_timeout` time in seconds telegrams should be counted towards the current context to increment the counter. If set `ignore_internal_state` is set `True`. Defaults to `None`
 - `reset_after` may be used to reset the internal state to `OFF` again after given time in sec. Defaults to `None`
-- `device_updated_cb` awaitable callback for each update.
+- `device_updated_cb` Callback for each update.
 
 ## [](#header-2)Example
 

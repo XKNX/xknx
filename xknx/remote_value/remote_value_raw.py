@@ -11,8 +11,9 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.typing import CallbackType
 
-from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -30,7 +31,7 @@ class RemoteValueRaw(RemoteValue[int]):
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Raw",
-        after_update_cb: AsyncCallbackType | None = None,
+        after_update_cb: CallbackType | None = None,
     ):
         """Initialize RemoteValueRaw class."""
         self.payload_length = payload_length

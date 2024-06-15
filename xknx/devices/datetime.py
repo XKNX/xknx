@@ -96,15 +96,15 @@ class DateTime(Device):
 
     async def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local time to KNX bus."""
-        await self.remote_value.set(time.localtime(), response=response)
+        self.remote_value.set(time.localtime(), response=response)
 
     async def set(self, struct_time: time.struct_time) -> None:
         """Set time and send to KNX bus."""
-        await self.remote_value.set(struct_time)
+        self.remote_value.set(struct_time)
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.remote_value.process(telegram)
+        self.remote_value.process(telegram)
 
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""
@@ -114,7 +114,7 @@ class DateTime(Device):
             self.respond_to_read
             and telegram.destination_address == self.remote_value.group_address
         ):
-            await self.remote_value.respond()
+            self.remote_value.respond()
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""

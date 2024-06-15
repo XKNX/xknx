@@ -14,7 +14,7 @@ It provides functionality for
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import Iterator
 from enum import Enum
 from itertools import chain
 import logging
@@ -31,14 +31,13 @@ from xknx.remote_value import (
     RemoteValueScaling,
     RemoteValueSwitch,
 )
+from xknx.typing import CallbackType
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
-
-AsyncCallback = Callable[[], Awaitable[None]]
 
 logger = logging.getLogger("xknx.log")
 
@@ -61,7 +60,7 @@ class _SwitchAndBrightness:
         group_address_brightness: GroupAddressesType = None,
         group_address_brightness_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
-        after_update_cb: AsyncCallback | None = None,
+        after_update_cb: CallbackType | None = None,
     ):
         self.switch = RemoteValueSwitch(
             xknx,
@@ -93,21 +92,21 @@ class _SwitchAndBrightness:
             return bool(self.brightness.value)
         return None
 
-    async def set_on(self) -> None:
+    def set_on(self) -> None:
         """Switch light on."""
         if self.switch.writable:
-            await self.switch.on()
+            self.switch.on()
             return
         if self.brightness.writable:
-            await self.brightness.set(self.brightness.range_to)
+            self.brightness.set(self.brightness.range_to)
 
-    async def set_off(self) -> None:
+    def set_off(self) -> None:
         """Switch light off."""
         if self.switch.writable:
-            await self.switch.off()
+            self.switch.off()
             return
         if self.brightness.writable:
-            await self.brightness.set(0)
+            self.brightness.set(0)
 
     def __eq__(self, other: object) -> bool:
         """Compare for equality."""
@@ -362,13 +361,13 @@ class Light(Device):
             )
         )
 
-    async def _individual_color_callback_debounce(self) -> None:
+    def _individual_color_callback_debounce(self) -> None:
         """Run callback after all individual colors were updated or timeout passed."""
 
         async def debouncer() -> None:
             await asyncio.sleep(Light.DEBOUNCE_TIMEOUT)
             self._reset_individual_color_debounce_telegrams()
-            await asyncio.shield(self.after_update())
+            self.after_update()
 
         self._individual_color_debounce_telegram_counter -= 1
         if self._individual_color_debounce_telegram_counter > 0:
@@ -380,7 +379,7 @@ class Light(Device):
             return
         self.xknx.task_registry.unregister(self._individual_color_debounce_task_name)
         self._reset_individual_color_debounce_telegrams()
-        await self.after_update()
+        self.after_update()
 
     @property
     def supports_brightness(self) -> bool:
@@ -433,20 +432,18 @@ class Light(Device):
     async def set_on(self) -> None:
         """Switch light on."""
         if self.switch.writable:
-            await self.switch.on()
+            self.switch.on()
             return
-        await asyncio.gather(
-            *[color.set_on() for color in self._iter_individual_colors()]
-        )
+        for color in self._iter_individual_colors():
+            color.set_on()
 
     async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.writable:
-            await self.switch.off()
+            self.switch.off()
             return
-        await asyncio.gather(
-            *[color.set_off() for color in self._iter_individual_colors()]
-        )
+        for color in self._iter_individual_colors():
+            color.set_off()
 
     @property
     def current_brightness(self) -> int | None:
@@ -458,7 +455,7 @@ class Light(Device):
         if not self.supports_brightness:
             logger.warning("Dimming not supported for device %s", self.get_name())
             return
-        await self.brightness.set(brightness)
+        self.brightness.set(brightness)
 
     @property
     def current_color(self) -> tuple[tuple[int, int, int] | None, int | None]:
@@ -510,32 +507,28 @@ class Light(Device):
         if white is not None:
             if self.supports_rgbw:
                 if self.rgbw.initialized:
-                    await self.rgbw.set(RGBWColor(*color, white))
+                    self.rgbw.set(RGBWColor(*color, white))
                     return
                 if all(
                     c.brightness.initialized for c in self._iter_individual_colors()
                 ):
-                    await asyncio.gather(
-                        self.red.brightness.set(color[0]),
-                        self.green.brightness.set(color[1]),
-                        self.blue.brightness.set(color[2]),
-                        self.white.brightness.set(white),
-                    )
+                    self.red.brightness.set(color[0])
+                    self.green.brightness.set(color[1])
+                    self.blue.brightness.set(color[2])
+                    self.white.brightness.set(white)
                     return
             logger.warning("RGBW not supported for device %s", self.get_name())
         else:
             if self.supports_color:
                 if self.color.initialized:
-                    await self.color.set(RGBColor(*color))
+                    self.color.set(RGBColor(*color))
                     return
                 if all(
                     c.brightness.initialized for c in (self.red, self.green, self.blue)
                 ):
-                    await asyncio.gather(
-                        self.red.brightness.set(color[0]),
-                        self.green.brightness.set(color[1]),
-                        self.blue.brightness.set(color[2]),
-                    )
+                    self.red.brightness.set(color[0])
+                    self.green.brightness.set(color[1])
+                    self.blue.brightness.set(color[2])
                     return
             logger.warning("Colors not supported for device %s", self.get_name())
 
@@ -560,26 +553,24 @@ class Light(Device):
             return
         value_sent = False
         if (hue := hs_color[0]) != self.hue.value:
-            await self.hue.set(hue)
+            self.hue.set(hue)
             value_sent = True
         if (saturation := hs_color[1]) != self.saturation.value:
-            await self.saturation.set(saturation)
+            self.saturation.set(saturation)
             value_sent = True
         if not value_sent:
             # at least one value shall be sent to enable turn-on by hs_color
-            await asyncio.gather(
-                self.hue.set(hue),
-                self.saturation.set(saturation),
-            )
+            self.hue.set(hue)
+            self.saturation.set(saturation)
 
-    async def _xyy_color_from_rv(self) -> None:
+    def _xyy_color_from_rv(self) -> None:
         """Update the current xyY-color from RemoteValue (Callback)."""
         new_xyy = self.xyy_color.value
         if self._xyy_color_valid is not None and new_xyy is not None:
             self._xyy_color_valid = self._xyy_color_valid | new_xyy
         else:
             self._xyy_color_valid = new_xyy
-        await self.after_update()
+        self.after_update()
 
     @property
     def current_xyy_color(self) -> XYYColor | None:
@@ -591,7 +582,7 @@ class Light(Device):
         if not self.supports_xyy_color:
             logger.warning("XYY-color not supported for device %s", self.get_name())
             return
-        await self.xyy_color.set(xyy)
+        self.xyy_color.set(xyy)
 
     @property
     def current_tunable_white(self) -> int | None:
@@ -603,7 +594,7 @@ class Light(Device):
         if not self.supports_tunable_white:
             logger.warning("Tunable white not supported for device %s", self.get_name())
             return
-        await self.tunable_white.set(tunable_white)
+        self.tunable_white.set(tunable_white)
 
     @property
     def current_color_temperature(self) -> int | float | None:
@@ -618,20 +609,14 @@ class Light(Device):
                 self.get_name(),
             )
             return
-        await self.color_temperature.set(color_temperature)
+        self.color_temperature.set(color_temperature)
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await asyncio.gather(
-            *[
-                remote_value.process(telegram)
-                for remote_value in self._iter_instant_remote_values()
-            ],
-            *[
-                remote_value.process(telegram, always_callback=True)
-                for remote_value in self._iter_debounce_remote_values()
-            ],
-        )
+        for remote_value in self._iter_instant_remote_values():
+            remote_value.process(telegram)
+        for remote_value in self._iter_debounce_remote_values():
+            remote_value.process(telegram, always_callback=True)
 
     def __str__(self) -> str:
         """Return object as readable string."""

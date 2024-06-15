@@ -53,14 +53,14 @@ class TestRemoteValueColorRGBW:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
-        await remote_value.set(RGBWColor(100, 101, 102, 103))
+        remote_value.set(RGBWColor(100, 101, 102, 103))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66, 0x67, 0x00, 0x0F))),
         )
-        await remote_value.set(RGBWColor(100, 101, 104, 105))
+        remote_value.set(RGBWColor(100, 101, 104, 105))
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -68,7 +68,7 @@ class TestRemoteValueColorRGBW:
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x68, 0x69, 0x00, 0x0F))),
         )
 
-    async def test_process(self):
+    def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
@@ -76,10 +76,10 @@ class TestRemoteValueColorRGBW:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66, 0x67, 0x00, 0x0F))),
         )
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == RGBWColor(100, 101, 102, 103)
 
-    async def test_to_process_error(self):
+    def test_to_process_error(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
@@ -88,13 +88,13 @@ class TestRemoteValueColorRGBW:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x66))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -102,6 +102,6 @@ class TestRemoteValueColorRGBW:
                 DPTArray((0x00, 0x00, 0x0F, 0x64, 0x65, 0x66, 0x67))
             ),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None

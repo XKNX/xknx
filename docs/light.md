@@ -54,7 +54,7 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `min_kelvin` lowest possible color temperature in Kelvin. Default: 2700
 - `max_kelvin` highest possible color temperature in Kelvin. Default: 6000
-- `device_updated_cb` awaitable callback for each update.
+- `device_updated_cb` Callback for each update.
 
 ## [](#header-2)Example
 

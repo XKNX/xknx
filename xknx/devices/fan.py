@@ -9,7 +9,6 @@ It provides functionality for
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 from enum import Enum
 import logging
@@ -130,7 +129,7 @@ class Fan(Device):
     async def turn_on(self, speed: int | None = None) -> None:
         """Turn on fan."""
         if self.switch.initialized:
-            await self.switch.on()
+            self.switch.on()
             # For a switch GA fan, we only use an explicitly provided speed, but not
             # arbitrarily set a default speed here, compared to the speed GA based fans below.
             if speed is not None:
@@ -141,25 +140,23 @@ class Fan(Device):
     async def turn_off(self) -> None:
         """Turn off fan."""
         if self.switch.initialized:
-            await self.switch.off()
+            self.switch.off()
         else:
             await self.set_speed(0)
 
     async def set_speed(self, speed: int) -> None:
         """Set the fan to a designated speed."""
-        await self.speed.set(speed)
+        self.speed.set(speed)
 
     async def set_oscillation(self, oscillation: bool) -> None:
         """Set the fan oscillation mode on or off."""
-        await self.oscillation.set(oscillation)
+        self.oscillation.set(oscillation)
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await asyncio.gather(
-            self.switch.process(telegram),
-            self.speed.process(telegram),
-            self.oscillation.process(telegram),
-        )
+        self.switch.process(telegram)
+        self.speed.process(telegram)
+        self.oscillation.process(telegram)
 
     @property
     def current_speed(self) -> int | None:

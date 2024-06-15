@@ -52,7 +52,7 @@ The weather device is basically a set of sensors that you can obtain from your w
 - **group_address_air_pressure** KNX address reading current air pressure. **DPT 9.006**
 - **group_address_humidity** KNX address for reading current humidity. **DPT 9.007**
 - **sync_state** Periodically sync the state.
-- **device_updated_cb** awaitable callback for each update.
+- **device_updated_cb** Callback for each update.
 
 ```python
 

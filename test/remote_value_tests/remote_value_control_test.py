@@ -25,7 +25,7 @@ class TestRemoteValueControl:
         remote_value = RemoteValueControl(
             xknx, group_address=GroupAddress("1/2/3"), value_type="stepwise"
         )
-        await remote_value.set(25)
+        remote_value.set(25)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -33,7 +33,7 @@ class TestRemoteValueControl:
             payload=GroupValueWrite(DPTBinary(0xB)),
         )
 
-    async def test_process(self):
+    def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControl(
@@ -44,10 +44,10 @@ class TestRemoteValueControl:
             payload=GroupValueWrite(DPTBinary(0xB)),
         )
         assert remote_value.value is None
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == 25
 
-    async def test_to_process_error(self):
+    def test_to_process_error(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControl(
@@ -58,12 +58,12 @@ class TestRemoteValueControl:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(0x01)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(0x10)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None

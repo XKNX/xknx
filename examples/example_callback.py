@@ -7,7 +7,7 @@ from xknx.devices import Light
 from xknx.io import ConnectionConfig, ConnectionType
 
 
-async def light_callback(light: Light) -> None:
+def light_callback(light: Light) -> None:
     """Run callback when the light changed any of its state."""
     print(f"{light.name} - {light.state}")
 

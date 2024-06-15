@@ -1,6 +1,6 @@
 """Unit test for Cover objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Cover
@@ -419,7 +419,7 @@ class TestCover:
         # Set cover tilt to a dummy start value, since otherwise we cannot
         # determine later on a tilt direction and without it, stopping the
         # til process has no effect.
-        await cover_short_stop.angle.process(
+        cover_short_stop.angle.process(
             Telegram(
                 destination_address=GroupAddress("1/2/5"),
                 payload=GroupValueWrite(DPTArray(0xAA)),
@@ -824,7 +824,7 @@ class TestCover:
             group_address_angle_state="1/2/7",
         )
 
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
 
         cover.register_device_updated_cb(after_update_callback)
         for address, payload, _feature in [
@@ -973,7 +973,7 @@ class TestCover:
     async def test_periodic_update(self, time_travel):
         """Test periodic update functionality."""
         xknx = XKNX()
-        callback_mock = AsyncMock()
+        callback_mock = Mock()
         cover = Cover(
             xknx,
             "TestCoverPeriodicUpdate",
@@ -992,9 +992,8 @@ class TestCover:
                 GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(0))
             )
             await cover.process(telegram)
-            assert (
-                callback_mock.call_count == 2
-            )  # 1 additional form _stop_position_update because previous state was None
+            await time_travel(0)
+            assert callback_mock.call_count == 1
             callback_mock.reset_mock()
             # move to 50%
             telegram = Telegram(

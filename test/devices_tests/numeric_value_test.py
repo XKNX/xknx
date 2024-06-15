@@ -1,6 +1,6 @@
 """Unit test for NumericValue objects."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -247,7 +247,7 @@ class TestNumericValue:
         sensor = NumericValue(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
@@ -273,7 +273,7 @@ class TestNumericValue:
             value_type="temperature",
             always_callback=True,
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
@@ -292,7 +292,7 @@ class TestNumericValue:
         """Test setting value. Test if callback is called."""
 
         xknx = XKNX()
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         num_value = NumericValue(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )

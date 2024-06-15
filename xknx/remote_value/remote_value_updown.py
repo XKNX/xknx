@@ -11,8 +11,9 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.typing import CallbackType
 
-from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -34,7 +35,7 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
         group_address_state: GroupAddressesType = None,
         device_name: str | None = None,
         feature_name: str = "Up/Down",
-        after_update_cb: AsyncCallbackType | None = None,
+        after_update_cb: CallbackType | None = None,
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.008."""
@@ -74,11 +75,11 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
             feature_name=self.feature_name,
         )
 
-    async def down(self) -> None:
+    def down(self) -> None:
         """Set value to down."""
-        await self.set(self.Direction.DOWN)
+        self.set(self.Direction.DOWN)
 
-    async def up(self) -> None:
+    def up(self) -> None:
         """Set value to UP."""
         # pylint: disable=invalid-name
-        await self.set(self.Direction.UP)
+        self.set(self.Direction.UP)

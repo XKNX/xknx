@@ -47,7 +47,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_heat_cool_state` KNX address for reading heating / cooling mode. *DPT 1*
 - `operation_modes` Overrides the supported operation modes.
 - `controller_modes` Overrides the supported controller modes.
-- `device_updated_cb` awaitable callback for each update.
+- `device_updated_cb` Callback for each update.
 
 **Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set `Standby`, `Comfort`, `Frost_Protection` and `Night` will be set as supported. If `group_address_operation_mode_standby` is omitted, `Standby` is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
