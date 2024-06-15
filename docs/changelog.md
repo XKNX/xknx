@@ -11,7 +11,7 @@ nav_order: 2
 ### General
 
 - Drop support for Python 3.9
-- Change callback signatures from awaitable to callable in `XKNX.device_updated_cb`, Device, Devices and RemoteValue.
+- Change callback signatures from awaitable to callable in `XKNX.device_updated_cb`, TelegramQueue, Device, Devices and RemoteValue.
 - Added eager telegram data decoding for GroupValueWrite / GroupValueResponse Telegrams. DPTs for group addresses can be set using `xknx.group_address_dpt.set()`. `Telegram` has a new attribute `decoded_data` which is set when a decoder was found.
 
 ### Devices
