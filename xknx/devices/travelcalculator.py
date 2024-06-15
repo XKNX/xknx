@@ -27,6 +27,18 @@ class TravelStatus(Enum):
 class TravelCalculator:
     """Class for calculating the current position of a cover."""
 
+    __slots__ = (
+        "travel_direction",
+        "travel_time_down",
+        "travel_time_up",
+        "_last_known_position",
+        "_last_known_position_timestamp",
+        "_position_confirmed",
+        "_travel_to_position",
+        "position_closed",
+        "position_open",
+    )
+
     def __init__(self, travel_time_down: float, travel_time_up: float) -> None:
         """Initialize TravelCalculator class."""
         self.travel_direction = TravelStatus.STOPPED
@@ -164,7 +176,3 @@ class TravelCalculator:
             self.travel_time_down if travel_range > 0 else self.travel_time_up
         )
         return travel_time_full * abs(travel_range) / self.position_closed
-
-    def __eq__(self, other: object | None) -> bool:
-        """Equal operator."""
-        return self.__dict__ == other.__dict__
