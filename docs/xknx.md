@@ -135,14 +135,14 @@ await xknx.devices['TestSwitch'].set_off()
 
 # [](#header-2)Callbacks
 
-An awaitable `telegram_received_cb` will be called for each KNX telegram received by the XKNX daemon. Example:
+A callback `telegram_received_cb` will be called for each KNX telegram received by the XKNX daemon. Example:
 
 ```python
 import asyncio
 from xknx import XKNX
 from xknx.telegram import Telegram
 
-async def telegram_received_cb(telegram: Telegram):
+def telegram_received_cb(telegram: Telegram):
     print("Telegram received: {0}".format(telegram))
 
 async def main():

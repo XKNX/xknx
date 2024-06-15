@@ -76,7 +76,7 @@ class ValueReader:
         )
         await self.xknx.telegrams.put(telegram)
 
-    async def telegram_received(self, telegram: Telegram) -> None:
+    def telegram_received(self, telegram: Telegram) -> None:
         """Test if telegram has correct group address and trigger event."""
         if telegram.destination_address == self.group_address and isinstance(
             telegram.payload, GroupValueResponse | GroupValueWrite

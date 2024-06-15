@@ -8,7 +8,7 @@ from xknx import XKNX
 from xknx.telegram import AddressFilter, Telegram
 
 
-async def telegram_received_cb(telegram: Telegram) -> None:
+def telegram_received_cb(telegram: Telegram) -> None:
     """Do something with the received telegram."""
     print(f"Telegram received: {telegram}")
 

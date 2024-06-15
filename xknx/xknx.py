@@ -29,7 +29,7 @@ from xknx.io import (
 )
 from xknx.management import Management
 from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress, Telegram
-from xknx.typing import DeviceCallbackType
+from xknx.typing import DeviceCallbackType, TelegramCallbackType
 
 from .__version__ import __version__ as VERSION
 
@@ -42,7 +42,7 @@ class XKNX:
     def __init__(
         self,
         address_format: GroupAddressType = GroupAddressType.LONG,
-        telegram_received_cb: Callable[[Telegram], Awaitable[None]] | None = None,
+        telegram_received_cb: TelegramCallbackType | None = None,
         device_updated_cb: DeviceCallbackType[Device] | None = None,
         connection_state_changed_cb: Callable[[XknxConnectionState], Awaitable[None]]
         | None = None,
