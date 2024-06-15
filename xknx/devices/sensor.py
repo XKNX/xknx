@@ -79,11 +79,11 @@ class Sensor(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.sensor_value.process(telegram, always_callback=self.always_callback)
+        self.sensor_value.process(telegram, always_callback=self.always_callback)
 
     async def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
-        await self.sensor_value.process(telegram)
+        self.sensor_value.process(telegram)
 
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""

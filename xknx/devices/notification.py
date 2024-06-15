@@ -59,7 +59,7 @@ class Notification(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.remote_value.process(telegram)
+        self.remote_value.process(telegram)
 
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""

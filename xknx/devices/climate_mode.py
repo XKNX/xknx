@@ -217,21 +217,19 @@ class ClimateMode(Device):
         yield self.remote_value_controller_mode
         yield self.remote_value_heat_cool
 
-    async def _set_internal_operation_mode(
-        self, operation_mode: HVACOperationMode
-    ) -> None:
+    def _set_internal_operation_mode(self, operation_mode: HVACOperationMode) -> None:
         """Set internal value of operation mode. Call hooks if operation mode was changed."""
         if operation_mode != self.operation_mode:
             self.operation_mode = operation_mode
-            await self.after_update()
+            self.after_update()
 
-    async def _set_internal_controller_mode(
+    def _set_internal_controller_mode(
         self, controller_mode: HVACControllerMode
     ) -> None:
         """Set internal value of controller mode. Call hooks if controller mode was changed."""
         if controller_mode != self.controller_mode:
             self.controller_mode = controller_mode
-            await self.after_update()
+            self.after_update()
 
     async def set_operation_mode(self, operation_mode: HVACOperationMode) -> None:
         """Set the operation mode of a thermostat. Send new operation_mode to BUS and update internal state."""
@@ -251,7 +249,7 @@ class ClimateMode(Device):
             ):
                 rv_operation.set(operation_mode)
 
-        await self._set_internal_operation_mode(operation_mode)
+        self._set_internal_operation_mode(operation_mode)
 
     async def set_controller_mode(self, controller_mode: HVACControllerMode) -> None:
         """Set the controller mode of a thermostat. Send new controller mode to the bus and update internal state."""
@@ -271,7 +269,7 @@ class ClimateMode(Device):
             ):
                 rv_controller.set(controller_mode)
 
-        await self._set_internal_controller_mode(controller_mode)
+        self._set_internal_controller_mode(controller_mode)
 
     @property
     def operation_modes(self) -> list[HVACOperationMode]:
@@ -309,17 +307,17 @@ class ClimateMode(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
             for rv_mode in self._iter_operation_remote_values():
-                if await rv_mode.process(telegram):
+                if rv_mode.process(telegram):
                     #  ignore inactive RemoteValueBinaryOperationMode
                     if rv_mode.value:
-                        await self._set_internal_operation_mode(rv_mode.value)
+                        self._set_internal_operation_mode(rv_mode.value)
                         return
 
         if self.supports_controller_mode:
             for rv_controller in self._iter_controller_remote_values():
-                if await rv_controller.process(telegram):
+                if rv_controller.process(telegram):
                     if rv_controller.value is not None:
-                        await self._set_internal_controller_mode(rv_controller.value)
+                        self._set_internal_controller_mode(rv_controller.value)
                     return
 
     def __str__(self) -> str:

@@ -71,10 +71,10 @@ class ExposeSensor(Device):
         self._cooldown_task: Task | None = None
         self._cooldown_task_name = f"expose_sensor.cooldown_{id(self)}"
 
-    async def after_update(self) -> None:
+    def after_update(self) -> None:
         """Call after state was updated."""
         self._cooldown_latest_value = self.sensor_value.value
-        await super().after_update()
+        super().after_update()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
@@ -88,7 +88,7 @@ class ExposeSensor(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.sensor_value.process(telegram)
+        self.sensor_value.process(telegram)
 
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""

@@ -83,7 +83,7 @@ class Switch(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        if await self.switch.process(telegram):
+        if self.switch.process(telegram):
             if self.reset_after is not None and self.switch.value:
                 self._reset_task = self.xknx.task_registry.register(
                     name=f"switch.reset_{id(self)}",

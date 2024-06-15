@@ -62,7 +62,7 @@ class NumericValue(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.sensor_value.process(telegram, always_callback=self.always_callback)
+        self.sensor_value.process(telegram, always_callback=self.always_callback)
 
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""

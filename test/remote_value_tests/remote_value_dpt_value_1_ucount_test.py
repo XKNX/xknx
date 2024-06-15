@@ -55,7 +55,7 @@ class TestRemoteValueDptValue1Ucount:
             payload=GroupValueWrite(DPTArray((0x0B,))),
         )
 
-    async def test_process(self):
+    def test_process(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
@@ -65,10 +65,10 @@ class TestRemoteValueDptValue1Ucount:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x0A,))),
         )
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == 10
 
-    async def test_to_process_error(self):
+    def test_to_process_error(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueDptValue1Ucount(
@@ -79,12 +79,12 @@ class TestRemoteValueDptValue1Ucount:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None

@@ -1,6 +1,6 @@
 """Unit test for RawValue objects."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -154,7 +154,7 @@ class TestRawValue:
             2,
             group_address="1/2/3",
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
@@ -180,7 +180,7 @@ class TestRawValue:
             group_address="1/2/3",
             always_callback=True,
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(

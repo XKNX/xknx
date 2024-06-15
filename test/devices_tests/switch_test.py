@@ -1,6 +1,6 @@
 """Unit test for Switch objects."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from xknx import XKNX
 from xknx.devices import Switch
@@ -47,7 +47,7 @@ class TestSwitch:
     async def test_process(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
-        callback_mock = AsyncMock()
+        callback_mock = Mock()
 
         switch1 = Switch(
             xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
@@ -89,7 +89,7 @@ class TestSwitch:
     async def test_process_state(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
-        callback_mock = AsyncMock()
+        callback_mock = Mock()
 
         switch1 = Switch(
             xknx,
@@ -222,12 +222,7 @@ class TestSwitch:
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
 
         after_update_callback = Mock()
-
-        async def async_after_update_callback(device):
-            """Async callback."""
-            after_update_callback(device)
-
-        switch.register_device_updated_cb(async_after_update_callback)
+        switch.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -380,7 +375,7 @@ class TestSwitch:
     async def test_process_passive(self):
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
-        callback_mock = AsyncMock()
+        callback_mock = Mock()
 
         switch1 = Switch(
             xknx,

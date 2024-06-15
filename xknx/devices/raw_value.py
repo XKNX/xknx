@@ -62,7 +62,7 @@ class RawValue(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await self.remote_value.process(telegram, always_callback=self.always_callback)
+        self.remote_value.process(telegram, always_callback=self.always_callback)
 
     async def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""

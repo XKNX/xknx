@@ -235,7 +235,7 @@ class TestRemoteValueOperationMode:
             payload=GroupValueWrite(DPTBinary(False)),
         )
 
-    async def test_process_operation_mode(self):
+    def test_process_operation_mode(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
@@ -247,10 +247,10 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x00,))),
         )
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == HVACOperationMode.AUTO
 
-    async def test_process_controller_mode(self):
+    def test_process_controller_mode(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(
@@ -260,10 +260,10 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x00,))),
         )
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == HVACControllerMode.AUTO
 
-    async def test_process_binary(self):
+    def test_process_binary(self):
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -275,10 +275,10 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(True)),
         )
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
         assert remote_value.value == HVACOperationMode.FROST_PROTECTION
 
-    async def test_to_process_error_operation_mode(self):
+    def test_to_process_error_operation_mode(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
@@ -291,17 +291,17 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None
 
-    async def test_to_process_error_binary_operation_mode(self):
+    def test_to_process_error_binary_operation_mode(self):
         """Test processing invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -315,9 +315,9 @@ class TestRemoteValueOperationMode:
                 DPTArray((1,)),
             ),
         )
-        assert await remote_value.process(telegram=invalid_telegram) is False
+        assert remote_value.process(telegram=invalid_telegram) is False
 
-    async def test_to_process_error_controller_mode(self):
+    def test_to_process_error_controller_mode(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(
@@ -328,17 +328,17 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None
 
-    async def test_to_process_error_heat_cool(self):
+    def test_to_process_error_heat_cool(self):
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
@@ -351,12 +351,12 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x01,))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x64, 0x65))),
         )
-        assert await remote_value.process(telegram) is False
+        assert remote_value.process(telegram) is False
 
         assert remote_value.value is None

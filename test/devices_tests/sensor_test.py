@@ -1,6 +1,6 @@
 """Unit test for Sensor objects."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import Mock
 
 import pytest
 
@@ -703,7 +703,7 @@ class TestSensor:
             always_callback=False,
             value_type="volume_liquid_litre",
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
         payload = DPTArray((0x00, 0x00, 0x01, 0x00))
         #  set initial payload of sensor
@@ -786,7 +786,7 @@ class TestSensor:
         sensor = Sensor(
             xknx, "TestSensor", group_address_state="1/2/3", value_type="temperature"
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(

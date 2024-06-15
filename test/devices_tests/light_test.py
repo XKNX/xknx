@@ -1,6 +1,6 @@
 """Unit test for Light objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Light
@@ -1310,7 +1310,7 @@ class TestLight:
         )
         xknx.devices.async_add(light)
 
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         light.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
@@ -1343,7 +1343,7 @@ class TestLight:
     async def test_process_dimm_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         light = Light(
             xknx,
             name="TestLight",
@@ -1365,7 +1365,7 @@ class TestLight:
     async def test_process_dimm_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         light = Light(
             xknx,
             name="TestLight",
@@ -1501,8 +1501,8 @@ class TestLight:
     async def test_process_individual_color_debouncer(self, time_travel):
         """Test the debouncer for individual color lights."""
         xknx = XKNX()
-        rgb_callback = AsyncMock()
-        rgbw_callback = AsyncMock()
+        rgb_callback = Mock()
+        rgbw_callback = Mock()
 
         rgb_light = Light(
             xknx,
@@ -1694,7 +1694,7 @@ class TestLight:
     async def test_process_tunable_white_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         light = Light(
             xknx,
             name="TestLight",
@@ -1714,7 +1714,7 @@ class TestLight:
     async def test_process_tunable_white_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         light = Light(
             xknx,
             name="TestLight",
@@ -1759,7 +1759,7 @@ class TestLight:
     async def test_process_color_temperature_wrong_payload(self):
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         light = Light(
             xknx,
             name="TestLight",
@@ -1779,7 +1779,7 @@ class TestLight:
     async def test_process_color_temperature_payload_invalid_length(self):
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        cb_mock = Mock()
         light = Light(
             xknx,
             name="TestLight",

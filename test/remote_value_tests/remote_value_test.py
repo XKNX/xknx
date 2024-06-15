@@ -21,7 +21,7 @@ class TestRemoteValue:
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         remote_value.to_knx = lambda value: DPT2ByteFloat.to_knx(value)
-        remote_value.after_update_cb = AsyncMock()
+        remote_value.after_update_cb = Mock()
 
         assert remote_value.value is None
         remote_value.value = 2.2
@@ -39,20 +39,20 @@ class TestRemoteValue:
         # no Telegram was sent to the queue
         assert xknx.telegrams.qsize() == 0
 
-    async def test_set_value(self):
+    def test_set_value(self):
         """Test set_value awaitable."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         remote_value.to_knx = lambda value: DPT2ByteFloat.to_knx(value)
-        remote_value.after_update_cb = AsyncMock()
+        remote_value.after_update_cb = Mock()
 
-        await remote_value.update_value(3.3)
+        remote_value.update_value(3.3)
         assert remote_value.value == 3.3
         remote_value.after_update_cb.assert_called_once()
         assert xknx.telegrams.qsize() == 0
         # invalid value raises ConversionError
         with pytest.raises(ConversionError):
-            await remote_value.update_value("a")
+            remote_value.update_value("a")
         assert remote_value.value == 3.3
 
     async def test_info_set_uninitialized(self):
@@ -103,9 +103,9 @@ class TestRemoteValue:
                 CouldNotParseTelegram,
                 match=r".*payload not a GroupValueWrite or GroupValueResponse.*",
             ):
-                await remote_value.process(telegram)
+                remote_value.process(telegram)
 
-    async def test_process_unsupported_payload(self):
+    def test_process_unsupported_payload(self):
         """Test warning is logged when processing telegram with unsupported payload."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -123,7 +123,7 @@ class TestRemoteValue:
             patch_has_group_address.return_value = True
             patch_from.side_effect = ConversionError("TestError")
 
-            assert await remote_value.process(telegram) is False
+            assert remote_value.process(telegram) is False
             mock_warning.assert_called_once_with(
                 "Can not process %s for %s - %s: %s",
                 telegram,
@@ -235,7 +235,7 @@ class TestRemoteValue:
             GroupAddress("2/2/20"),
         ]
 
-    async def test_process_passive_address(self):
+    def test_process_passive_address(self):
         """Test if passive group addresses are processed."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address=["1/2/3", "1/1/1"])
@@ -251,10 +251,10 @@ class TestRemoteValue:
             destination_address=GroupAddress("1/1/1"),
             payload=GroupValueWrite(test_payload),
         )
-        assert await remote_value.process(telegram)
+        assert remote_value.process(telegram)
         assert remote_value.telegram.payload.value == test_payload
 
-    async def test_to_from_knx(self):
+    def test_to_from_knx(self):
         """Test to_knx and from_knx raises when not set properly."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address="1/1/1")
@@ -267,14 +267,14 @@ class TestRemoteValue:
             payload=GroupValueWrite(test_payload),
         )
         with pytest.raises(NotImplementedError):
-            await remote_value.process(telegram)
+            remote_value.process(telegram)
 
         # doesn't raise with `dpt_class` set
         remote_value.dpt_class = DPT2ByteFloat
         remote_value.value = 3.3
-        await remote_value.process(telegram)
+        remote_value.process(telegram)
 
-    async def test_pre_decoded_telegram(self):
+    def test_pre_decoded_telegram(self):
         """Test if pre-decoded Telegram is processed."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address="1/1/1")
@@ -286,7 +286,7 @@ class TestRemoteValue:
             payload=GroupValueWrite(test_payload),
             decoded_data=TelegramDecodedData(transcoder=DPT2ByteFloat, value=3.3),
         )
-        assert await remote_value.process(telegram)
+        assert remote_value.process(telegram)
         assert remote_value.value == 3.3
 
     def test_eq(self):

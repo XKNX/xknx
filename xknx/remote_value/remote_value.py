@@ -10,7 +10,7 @@ Remote value can be :
 from __future__ import annotations
 
 from abc import ABC
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
@@ -23,6 +23,7 @@ from xknx.telegram.address import (
     parse_device_group_address,
 )
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
+from xknx.typing import CallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram.address import DeviceAddressableType
@@ -30,7 +31,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("xknx.log")
 
-AsyncCallbackType = Callable[[], Awaitable[None]]
 GroupAddressesType = Union[
     "DeviceAddressableType", list[Union["DeviceAddressableType", None]], None
 ]
@@ -50,7 +50,7 @@ class RemoteValue(ABC, Generic[ValueT]):
         sync_state: None | bool | int | float | str = None,
         device_name: str | None = None,
         feature_name: str | None = None,
-        after_update_cb: AsyncCallbackType | None = None,
+        after_update_cb: CallbackType | None = None,
     ):
         """Initialize RemoteValue class."""
         self.xknx: XKNX = xknx
@@ -82,7 +82,7 @@ class RemoteValue(ABC, Generic[ValueT]):
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
         self._value: ValueT | None = None
         self.telegram: Telegram | None = None
-        self.after_update_cb: AsyncCallbackType | None = after_update_cb
+        self.after_update_cb: CallbackType | None = after_update_cb
         self._sync_state = sync_state
 
     def register_state_updater(self) -> None:
@@ -118,11 +118,11 @@ class RemoteValue(ABC, Generic[ValueT]):
             self.to_knx(value)
         self._value = value
 
-    async def update_value(self, value: ValueT | None) -> None:
-        """Set new value without creating a Telegram. Awaits after_update_cb. Raises ConversionError on invalid value."""
+    def update_value(self, value: ValueT | None) -> None:
+        """Set new value without creating a Telegram. Calls after_update_cb. Raises ConversionError on invalid value."""
         self.value = value
         if self.after_update_cb is not None:
-            await self.after_update_cb()
+            self.after_update_cb()
 
     @property
     def initialized(self) -> bool:
@@ -170,7 +170,7 @@ class RemoteValue(ABC, Generic[ValueT]):
             )
         return self.dpt_class.to_knx(value)
 
-    async def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
+    def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
         if not isinstance(
             telegram.destination_address, GroupAddress | InternalGroupAddress
@@ -209,7 +209,7 @@ class RemoteValue(ABC, Generic[ValueT]):
             self._value = decoded_payload
             self.telegram = telegram
             if self.after_update_cb is not None:
-                await self.after_update_cb()
+                self.after_update_cb()
         return True
 
     def _send(self, payload: DPTArray | DPTBinary, response: bool = False) -> None:

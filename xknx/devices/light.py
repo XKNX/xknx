@@ -14,7 +14,7 @@ It provides functionality for
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import Iterator
 from enum import Enum
 from itertools import chain
 import logging
@@ -31,14 +31,13 @@ from xknx.remote_value import (
     RemoteValueScaling,
     RemoteValueSwitch,
 )
+from xknx.typing import CallbackType
 
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.telegram import Telegram
     from xknx.xknx import XKNX
-
-AsyncCallback = Callable[[], Awaitable[None]]
 
 logger = logging.getLogger("xknx.log")
 
@@ -61,7 +60,7 @@ class _SwitchAndBrightness:
         group_address_brightness: GroupAddressesType = None,
         group_address_brightness_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
-        after_update_cb: AsyncCallback | None = None,
+        after_update_cb: CallbackType | None = None,
     ):
         self.switch = RemoteValueSwitch(
             xknx,
@@ -93,7 +92,7 @@ class _SwitchAndBrightness:
             return bool(self.brightness.value)
         return None
 
-    async def set_on(self) -> None:
+    def set_on(self) -> None:
         """Switch light on."""
         if self.switch.writable:
             self.switch.on()
@@ -101,7 +100,7 @@ class _SwitchAndBrightness:
         if self.brightness.writable:
             self.brightness.set(self.brightness.range_to)
 
-    async def set_off(self) -> None:
+    def set_off(self) -> None:
         """Switch light off."""
         if self.switch.writable:
             self.switch.off()
@@ -362,13 +361,13 @@ class Light(Device):
             )
         )
 
-    async def _individual_color_callback_debounce(self) -> None:
+    def _individual_color_callback_debounce(self) -> None:
         """Run callback after all individual colors were updated or timeout passed."""
 
         async def debouncer() -> None:
             await asyncio.sleep(Light.DEBOUNCE_TIMEOUT)
             self._reset_individual_color_debounce_telegrams()
-            await asyncio.shield(self.after_update())
+            self.after_update()
 
         self._individual_color_debounce_telegram_counter -= 1
         if self._individual_color_debounce_telegram_counter > 0:
@@ -380,7 +379,7 @@ class Light(Device):
             return
         self.xknx.task_registry.unregister(self._individual_color_debounce_task_name)
         self._reset_individual_color_debounce_telegrams()
-        await self.after_update()
+        self.after_update()
 
     @property
     def supports_brightness(self) -> bool:
@@ -435,18 +434,16 @@ class Light(Device):
         if self.switch.writable:
             self.switch.on()
             return
-        await asyncio.gather(
-            *[color.set_on() for color in self._iter_individual_colors()]
-        )
+        for color in self._iter_individual_colors():
+            color.set_on()
 
     async def set_off(self) -> None:
         """Switch light off."""
         if self.switch.writable:
             self.switch.off()
             return
-        await asyncio.gather(
-            *[color.set_off() for color in self._iter_individual_colors()]
-        )
+        for color in self._iter_individual_colors():
+            color.set_off()
 
     @property
     def current_brightness(self) -> int | None:
@@ -566,14 +563,14 @@ class Light(Device):
             self.hue.set(hue)
             self.saturation.set(saturation)
 
-    async def _xyy_color_from_rv(self) -> None:
+    def _xyy_color_from_rv(self) -> None:
         """Update the current xyY-color from RemoteValue (Callback)."""
         new_xyy = self.xyy_color.value
         if self._xyy_color_valid is not None and new_xyy is not None:
             self._xyy_color_valid = self._xyy_color_valid | new_xyy
         else:
             self._xyy_color_valid = new_xyy
-        await self.after_update()
+        self.after_update()
 
     @property
     def current_xyy_color(self) -> XYYColor | None:
@@ -616,16 +613,10 @@ class Light(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        await asyncio.gather(
-            *[
-                remote_value.process(telegram)
-                for remote_value in self._iter_instant_remote_values()
-            ],
-            *[
-                remote_value.process(telegram, always_callback=True)
-                for remote_value in self._iter_debounce_remote_values()
-            ],
-        )
+        for remote_value in self._iter_instant_remote_values():
+            remote_value.process(telegram)
+        for remote_value in self._iter_debounce_remote_values():
+            remote_value.process(telegram, always_callback=True)
 
     def __str__(self) -> str:
         """Return object as readable string."""

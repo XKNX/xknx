@@ -1,6 +1,6 @@
 """Unit test for Notification objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Notification
@@ -54,7 +54,7 @@ class TestNotification:
 
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         notification.register_device_updated_cb(after_update_callback)
 
         telegram_set = Telegram(
@@ -67,9 +67,12 @@ class TestNotification:
     async def test_process_payload_invalid_length(self):
         """Test process wrong telegram (wrong payload length)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        after_update_callback = Mock()
         notification = Notification(
-            xknx, "Warning", group_address="1/2/3", device_updated_cb=cb_mock
+            xknx,
+            "Warning",
+            group_address="1/2/3",
+            device_updated_cb=after_update_callback,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -78,14 +81,17 @@ class TestNotification:
         with patch("logging.Logger.warning") as log_mock:
             await notification.process(telegram)
             log_mock.assert_called_once()
-            cb_mock.assert_not_called()
+            after_update_callback.assert_not_called()
 
     async def test_process_wrong_payload(self):
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
-        cb_mock = AsyncMock()
+        after_update_callback = Mock()
         notification = Notification(
-            xknx, "Warning", group_address="1/2/3", device_updated_cb=cb_mock
+            xknx,
+            "Warning",
+            group_address="1/2/3",
+            device_updated_cb=after_update_callback,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -94,7 +100,7 @@ class TestNotification:
         with patch("logging.Logger.warning") as log_mock:
             await notification.process(telegram)
             log_mock.assert_called_once()
-            cb_mock.assert_not_called()
+            after_update_callback.assert_not_called()
 
     #
     # TEST RESPOND

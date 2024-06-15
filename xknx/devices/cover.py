@@ -168,7 +168,7 @@ class Cover(Device):
         if self.updown.writable:
             self.updown.down()
             self._travel_direction_tilt = None
-            await self._start_position_update(
+            self._start_position_update(
                 target_position=self.travelcalculator.position_closed
             )
         elif self.position_target.writable:
@@ -179,7 +179,7 @@ class Cover(Device):
         if self.updown.writable:
             self.updown.up()
             self._travel_direction_tilt = None
-            await self._start_position_update(
+            self._start_position_update(
                 target_position=self.travelcalculator.position_open
             )
         elif self.position_target.writable:
@@ -212,7 +212,7 @@ class Cover(Device):
             logger.warning("Stop not supported for device %s", self.get_name())
             return
         self._travel_direction_tilt = None
-        await self._stop_position_update()
+        self._stop_position_update()
 
     async def set_position(self, position: int) -> None:
         """Move cover to a desginated position."""
@@ -232,13 +232,13 @@ class Cover(Device):
                     "Current position unknown. Initialize cover by moving to end position."
                 )
                 return
-            await self._start_position_update(target_position=position)
+            self._start_position_update(target_position=position)
             return
         if position < current_position:
             self.updown.up()
         elif position > current_position:
             self.updown.down()
-        await self._start_position_update(target_position=position)
+        self._start_position_update(target_position=position)
         # If device does not support auto_positioning,
         # we have to stop the device when position is reached,
         # unless device was traveling to fully open
@@ -263,10 +263,10 @@ class Cover(Device):
                 async_func=auto_stopper,
             ).start()
 
-    async def _start_position_update(self, target_position: int) -> None:
+    def _start_position_update(self, target_position: int) -> None:
         """Start the travel calculator and run device callbacks."""
         self.travelcalculator.start_travel(target_position)
-        await self.after_update()
+        self.after_update()
         if self.travelcalculator.is_traveling():
             self._start_auto_updater()
 
@@ -279,8 +279,8 @@ class Cover(Device):
                 await asyncio.sleep(TRAVELING_CALLBACK_INTERVAL)
                 if self.travelcalculator.is_traveling():
                     # else _stop_position_update will call after_update a second time
-                    await self.after_update()
-            asyncio.shield(self._stop_position_update())
+                    self.after_update()
+            self._stop_position_update()
 
         # restarts when already running
         self._periodic_update_task = self.xknx.task_registry.register(
@@ -288,7 +288,7 @@ class Cover(Device):
             async_func=periodic_updater,
         ).start()
 
-    async def _stop_position_update(self) -> None:
+    def _stop_position_update(self) -> None:
         """Stop the travel calculator and periodic device callbacks."""
         if not self.travelcalculator.position_reached():
             self.travelcalculator.stop()
@@ -298,16 +298,14 @@ class Cover(Device):
         if self._auto_stop_task:
             self._auto_stop_task.cancel()
             self._auto_stop_task = None
-        await self.after_update()
+        self.after_update()
 
-    async def _target_position_from_rv(self) -> None:
+    def _target_position_from_rv(self) -> None:
         """Update the target position from RemoteValue (Callback)."""
         if self.position_target.value is not None:
-            await self._start_position_update(
-                target_position=self.position_target.value
-            )
+            self._start_position_update(target_position=self.position_target.value)
 
-    async def _current_position_from_rv(self) -> None:
+    def _current_position_from_rv(self) -> None:
         """Update the current position from RemoteValue (Callback)."""
         position_before_update = self.travelcalculator.current_position()
         new_position = self.position_current.value
@@ -318,8 +316,9 @@ class Cover(Device):
         else:
             self.travelcalculator.set_position(new_position)
         if position_before_update != self.travelcalculator.current_position():
-            self._start_auto_updater()  # to restart the periodic updater
-            await self.after_update()
+            if position_before_update is not None:  # None on first move
+                self._start_auto_updater()  # to restart the periodic updater
+            self.after_update()
 
     async def set_angle(self, angle: int) -> None:
         """Move cover to designated angle."""
@@ -344,32 +343,30 @@ class Cover(Device):
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         # call after_update to account for travelcalculator changes
-        if await self.updown.process(telegram):
+        if self.updown.process(telegram):
             if (
                 not self.is_opening()
                 and self.updown.value == RemoteValueUpDown.Direction.UP
             ):
-                await self._start_position_update(
+                self._start_position_update(
                     target_position=self.travelcalculator.position_open
                 )
             elif (
                 not self.is_closing()
                 and self.updown.value == RemoteValueUpDown.Direction.DOWN
             ):
-                await self._start_position_update(
+                self._start_position_update(
                     target_position=self.travelcalculator.position_closed
                 )
         # stop from bus
-        if await self.stop_.process(telegram) or await self.step.process(telegram):
+        if self.stop_.process(telegram) or self.step.process(telegram):
             if self.is_traveling():
-                await self._stop_position_update()
+                self._stop_position_update()
 
-        await asyncio.gather(
-            self.position_current.process(telegram, always_callback=True),
-            self.position_target.process(telegram, always_callback=True),
-            self.angle.process(telegram),
-            self.locked.process(telegram),
-        )
+        self.position_current.process(telegram, always_callback=True)
+        self.position_target.process(telegram, always_callback=True)
+        self.angle.process(telegram)
+        self.locked.process(telegram)
 
     def current_position(self) -> int | None:
         """Return current position of cover."""

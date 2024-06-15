@@ -10,8 +10,9 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.typing import CallbackType
 
-from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -28,7 +29,7 @@ class RemoteValueSwitch(RemoteValue[bool]):
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "State",
-        after_update_cb: AsyncCallbackType | None = None,
+        after_update_cb: CallbackType | None = None,
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.001."""

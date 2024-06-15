@@ -1,6 +1,6 @@
 """Unit test for Sensor objects."""
 
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock, Mock, call
 
 from xknx import XKNX
 from xknx.devices import ExposeSensor
@@ -206,7 +206,7 @@ class TestExposeSensor:
         """Test setting value. Test if callback is called."""
 
         xknx = XKNX()
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         expose_sensor = ExposeSensor(
             xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
         )

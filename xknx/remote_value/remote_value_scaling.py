@@ -10,8 +10,9 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseTelegram
+from xknx.typing import CallbackType
 
-from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -28,7 +29,7 @@ class RemoteValueScaling(RemoteValue[int]):
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Value",
-        after_update_cb: AsyncCallbackType | None = None,
+        after_update_cb: CallbackType | None = None,
         range_from: int = 0,
         range_to: int = 100,
     ):

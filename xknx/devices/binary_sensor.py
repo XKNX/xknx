@@ -82,12 +82,12 @@ class BinarySensor(Device):
         """Return the last telegram received from the RemoteValue."""
         return self.remote_value.telegram
 
-    async def _state_from_remote_value(self) -> None:
+    def _state_from_remote_value(self) -> None:
         """Update the internal state from RemoteValue (Callback)."""
         if self.remote_value.value is not None:
-            await self._set_internal_state(self.remote_value.value)
+            self._set_internal_state(self.remote_value.value)
 
-    async def _set_internal_state(self, state: bool) -> None:
+    def _set_internal_state(self, state: bool) -> None:
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""
         if state != self.state or self.ignore_internal_state:
             self.state = state
@@ -99,16 +99,16 @@ class BinarySensor(Device):
                     async_func=partial(self._counter_task, self._context_timeout),
                 ).start()
             else:
-                await self.after_update()
+                self.after_update()
 
     async def _counter_task(self, wait_seconds: float) -> None:
         """Trigger after 1 second to prevent double triggers."""
         await asyncio.sleep(wait_seconds)
-        await self.after_update()
+        self.after_update()
 
         self._count_set_on = 0
         self._count_set_off = 0
-        await self.after_update()
+        self.after_update()
 
     @property
     def counter(self) -> int | None:
@@ -147,12 +147,12 @@ class BinarySensor(Device):
 
     async def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
-        if await self.remote_value.process(telegram, always_callback=True):
+        if self.remote_value.process(telegram, always_callback=True):
             self._process_reset_after()
 
     async def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
-        if await self.remote_value.process(telegram, always_callback=False):
+        if self.remote_value.process(telegram, always_callback=False):
             self._process_reset_after()
 
     def _process_reset_after(self) -> None:
@@ -166,7 +166,7 @@ class BinarySensor(Device):
 
     async def _reset_state(self, wait_seconds: float) -> None:
         await asyncio.sleep(wait_seconds)
-        await self._set_internal_state(False)
+        self._set_internal_state(False)
 
     def is_on(self) -> bool:
         """Return if binary sensor is 'on'."""

@@ -1,6 +1,6 @@
 """Unit test for Climate objects."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -147,7 +147,7 @@ class TestClimate:
             group_address_setpoint_shift_state="1/2/4",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         climate.register_device_updated_cb(after_update_callback)
         xknx.devices.async_add(climate)
 
@@ -165,7 +165,7 @@ class TestClimate:
         """Test if after_update_callback is called after update of Climate object was changed."""
 
         xknx = XKNX()
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
@@ -196,7 +196,7 @@ class TestClimate:
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         climate.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
@@ -230,7 +230,7 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx, "TestClimateMode", group_address_operation_mode="1/2/4"
         )
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
 
         climate = Climate(xknx, "TestClimate", mode=climate_mode)
         climate_mode.register_device_updated_cb(after_update_callback)
@@ -811,7 +811,7 @@ class TestClimate:
         xknx.devices.async_add(climate)
 
         # base temperature is 20 °C
-        await climate.target_temperature.process(
+        climate.target_temperature.process(
             Telegram(
                 destination_address=GroupAddress("1/2/2"),
                 payload=GroupValueWrite(DPT2ByteFloat().to_knx(20.00)),
@@ -837,7 +837,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray((0x87, 0xC4))),
         )  # -0.6
         # simulate incoming new target temperature for next calculation
-        await climate.target_temperature.process(
+        climate.target_temperature.process(
             Telegram(
                 destination_address=GroupAddress("1/2/2"),
                 payload=GroupValueWrite(DPT2ByteFloat().to_knx(19.40)),
@@ -1053,7 +1053,7 @@ class TestClimate:
     async def test_process_controller_status_wrong_payload(self):
         """Test process wrong telegram for controller status (wrong payload type)."""
         xknx = XKNX()
-        updated_cb = AsyncMock()
+        updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
@@ -1073,7 +1073,7 @@ class TestClimate:
     async def test_process_controller_status_payload_invalid_length(self):
         """Test process wrong telegram for controller status (wrong payload length)."""
         xknx = XKNX()
-        updated_cb = AsyncMock()
+        updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
@@ -1093,7 +1093,7 @@ class TestClimate:
     async def test_process_operation_mode_wrong_payload(self):
         """Test process wrong telegram for operation mode (wrong payload type)."""
         xknx = XKNX()
-        updated_cb = AsyncMock()
+        updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
@@ -1113,7 +1113,7 @@ class TestClimate:
     async def test_process_operation_mode_payload_invalid_length(self):
         """Test process wrong telegram for operation mode (wrong payload length)."""
         xknx = XKNX()
-        updated_cb = AsyncMock()
+        updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
             "TestClimate",
@@ -1135,7 +1135,7 @@ class TestClimate:
 
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
-        after_update_callback = AsyncMock()
+        after_update_callback = Mock()
         climate.register_device_updated_cb(after_update_callback)
 
         telegram = Telegram(
