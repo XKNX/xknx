@@ -1,6 +1,6 @@
 """Unit test for Sensor and ExposeSensor objects."""
 
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 
@@ -325,7 +325,7 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
         xknx = XKNX()
         xknx.cemi_handler = AsyncMock()
 
-        telegram_callback = AsyncMock()
+        telegram_callback = Mock()
         xknx.telegram_queue.register_telegram_received_cb(
             telegram_callback,
             address_filters=[AddressFilter("i-test")],

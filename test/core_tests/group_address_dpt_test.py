@@ -22,14 +22,14 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface):
     telegram_callback = Mock()
     xknx.telegram_queue.register_telegram_received_cb(telegram_callback)
     async with xknx:
-        await xknx.telegrams.put(telegram)
+        xknx.telegrams.put_nowait(telegram)
         await xknx.telegrams.join()
         assert telegram_callback.call_count == 1
         test_telegram = telegram_callback.call_args[0][0]
         assert test_telegram.decoded_data is None
 
         xknx.group_address_dpt.set({GroupAddress("1/2/3"): {"main": 5, "sub": 1}})
-        await xknx.telegrams.put(telegram)
+        xknx.telegrams.put_nowait(telegram)
         await xknx.telegrams.join()
         assert telegram_callback.call_count == 2
         test_telegram = telegram_callback.call_args[0][0]
@@ -37,7 +37,7 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface):
         assert test_telegram.decoded_data.transcoder is DPTScaling
         assert test_telegram.decoded_data.value == 50
         # do nothing for read-telegrams
-        await xknx.telegrams.put(read_telegram)
+        xknx.telegrams.put_nowait(read_telegram)
         await xknx.telegrams.join()
         assert telegram_callback.call_count == 3
         test_telegram = telegram_callback.call_args[0][0]
@@ -58,7 +58,7 @@ async def test_get_invalid_payload(logger_warning_mock, xknx_no_interface):
         payload=apci.GroupValueWrite(DPTArray((0x01, 0x02))),  # wrong payload size
     )
     async with xknx:
-        await xknx.telegrams.put(telegram)
+        xknx.telegrams.put_nowait(telegram)
         await xknx.telegrams.join()
         assert telegram_callback.call_count == 1
         test_telegram = telegram_callback.call_args[0][0]
