@@ -125,6 +125,8 @@ class TelegramQueue:
                 self.xknx.telegrams.task_done()
                 break
 
+            self.xknx.group_address_dpt.set_decoded_data(telegram)
+
             if telegram.direction == TelegramDirection.INCOMING:
                 try:
                     await self.process_telegram_incoming(telegram)

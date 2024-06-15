@@ -50,29 +50,29 @@ class RemoteValueSetpointShift(RemoteValue[float]):
             after_update_cb=after_update_cb,
         )
 
-        self.dpt_class: type[DPTValue1Count | DPTTemperature] | None = (
+        self._internal_dpt_class: type[DPTValue1Count | DPTTemperature] | None = (
             setpoint_shift_mode.value if setpoint_shift_mode is not None else None
         )
         self.setpoint_shift_step = setpoint_shift_step
 
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
-        if self.dpt_class is None:
+        if self._internal_dpt_class is None:
             raise ConversionError(
                 f"Setpoint shift DPT not initialized for {self.device_name}"
             )
-        if self.dpt_class == DPTValue1Count:
+        if self._internal_dpt_class == DPTValue1Count:
             converted_value = int(value / self.setpoint_shift_step)
             return DPTValue1Count.to_knx(converted_value)
         return DPTTemperature.to_knx(value)
 
     def from_knx(self, payload: DPTArray | DPTBinary) -> float:
         """Convert current payload to value."""
-        if self.dpt_class is None:
-            self.dpt_class = self._determine_dpt_class(payload)
+        if self._internal_dpt_class is None:
+            self._internal_dpt_class = self._determine_dpt_class(payload)
 
-        payload_value = self.dpt_class.from_knx(payload)
-        if self.dpt_class == DPTValue1Count:
+        payload_value = self._internal_dpt_class.from_knx(payload)
+        if self._internal_dpt_class == DPTValue1Count:
             return payload_value * self.setpoint_shift_step
         return payload_value
 

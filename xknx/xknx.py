@@ -14,6 +14,7 @@ from types import TracebackType
 from xknx.cemi import CEMIHandler
 from xknx.core import (
     ConnectionManager,
+    GroupAddressDPT,
     TaskRegistry,
     TelegramQueue,
     XknxConnectionState,
@@ -63,6 +64,7 @@ class XKNX:
         self.cemi_handler = CEMIHandler(self)
         self.state_updater = StateUpdater(self, default_tracker_option=state_updater)
         self.task_registry = TaskRegistry(self)
+        self.group_address_dpt = GroupAddressDPT()
 
         self.current_address = IndividualAddress(0)
         self.daemon_mode = daemon_mode

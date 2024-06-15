@@ -8,7 +8,7 @@ from xknx import XKNX
 from xknx.dpt import DPT2ByteFloat, DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import RemoteValue, RemoteValueSwitch
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import GroupAddress, Telegram, TelegramDecodedData
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -239,6 +239,8 @@ class TestRemoteValue:
         """Test if passive group addresses are processed."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address=["1/2/3", "1/1/1"])
+        remote_value.dpt_class = DPT2ByteFloat
+
         assert remote_value.writable
         assert not remote_value.readable
         # RemoteValue is initialized with only passive group address
@@ -251,6 +253,41 @@ class TestRemoteValue:
         )
         assert await remote_value.process(telegram)
         assert remote_value.telegram.payload.value == test_payload
+
+    async def test_to_from_knx(self):
+        """Test to_knx and from_knx raises when not set properly."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx, group_address="1/1/1")
+        with pytest.raises(NotImplementedError):
+            remote_value.value = 3.3  # without to_knx method
+
+        test_payload = DPTArray((0x01, 0x02))
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueWrite(test_payload),
+        )
+        with pytest.raises(NotImplementedError):
+            await remote_value.process(telegram)
+
+        # doesn't raise with `dpt_class` set
+        remote_value.dpt_class = DPT2ByteFloat
+        remote_value.value = 3.3
+        await remote_value.process(telegram)
+
+    async def test_pre_decoded_telegram(self):
+        """Test if pre-decoded Telegram is processed."""
+        xknx = XKNX()
+        remote_value = RemoteValue(xknx, group_address="1/1/1")
+        remote_value.dpt_class = DPT2ByteFloat
+
+        test_payload = "invalid for testing"
+        telegram = Telegram(
+            destination_address=GroupAddress("1/1/1"),
+            payload=GroupValueWrite(test_payload),
+            decoded_data=TelegramDecodedData(transcoder=DPT2ByteFloat, value=3.3),
+        )
+        assert await remote_value.process(telegram)
+        assert remote_value.value == 3.3
 
     def test_eq(self):
         """Test __eq__ operator."""

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from xknx.dpt import DPTArray, DPTBinary, DPTControlStepCode
+from xknx.dpt import DPTControlStepCode
 from xknx.exceptions import ConversionError
 
 from .remote_value import AsyncCallbackType, GroupAddressesType, RemoteValue
@@ -50,14 +50,6 @@ class RemoteValueControl(RemoteValue[Any]):
             feature_name=feature_name,
             after_update_cb=after_update_cb,
         )
-
-    def to_knx(self, value: Any) -> DPTBinary:
-        """Convert value to payload."""
-        return self.dpt_class.to_knx(value)
-
-    def from_knx(self, payload: DPTArray | DPTBinary) -> Any:
-        """Convert current payload to value."""
-        return self.dpt_class.from_knx(payload)
 
     @property
     def unit_of_measurement(self) -> str | None:

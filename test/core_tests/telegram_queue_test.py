@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 import pytest
 
 from xknx import XKNX
-from xknx.dpt import DPTBinary
+from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, InternalGroupAddress
@@ -210,6 +210,34 @@ class TestTelegramQueue:
         await xknx.telegram_queue.process_telegram_incoming(telegram)
         async_telegram_received_callback.assert_called_once_with(telegram)
         devices_process.assert_called_once_with(telegram)
+
+    async def test_callback_decoded_telegram_data(self):
+        """Test telegram_received_callback having decoded telegram data."""
+
+        xknx = XKNX()
+        xknx.group_address_dpt.set({"1/2/3": {"main": 5, "sub": 1}})
+        async_telegram_received_cb = AsyncMock()
+        xknx.telegram_queue.register_telegram_received_cb(async_telegram_received_cb)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(
+                DPTArray(
+                    0x7F,
+                )
+            ),
+        )
+        await xknx.telegram_queue.start()
+        xknx.telegrams.put_nowait(telegram)
+        await xknx.telegrams.join()
+        await xknx.telegram_queue.stop()
+
+        assert async_telegram_received_cb.call_count == 1
+        received = async_telegram_received_cb.call_args_list[0][0][0]
+        assert received == telegram
+        assert received.decoded_data is not None
+        assert received.decoded_data.value == 50
 
     async def test_outgoing(self):
         """Test outgoing telegrams in telegram queue."""

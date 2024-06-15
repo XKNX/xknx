@@ -20,6 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
+from xknx.dpt import DPTBase, DPTComplexData
+
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
 from .tpci import TPCI, TDataBroadcast, TDataGroup, TDataIndividual
@@ -33,6 +35,21 @@ class TelegramDirection(Enum):
 
 
 @dataclass(slots=True)
+class TelegramDecodedData:
+    """Context for a telegram."""
+
+    transcoder: type[DPTBase]
+    value: bool | int | float | str | DPTComplexData
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f"{self.value}{' ' + self.transcoder.unit if self.transcoder.unit is not None else ''}"
+            f" ({self.transcoder.__name__})"
+        )
+
+
+@dataclass(slots=True)
 class Telegram:
     """Class for KNX telegrams."""
 
@@ -43,6 +60,7 @@ class Telegram:
         default_factory=lambda: IndividualAddress(0)
     )
     tpci: TPCI = None  # type: ignore[assignment]  # set in __post_init__
+    decoded_data: TelegramDecodedData | None = None
 
     def __post_init__(self) -> None:
         """Initialize Telegram class."""
@@ -57,13 +75,27 @@ class Telegram:
             else:  # InternalGroupAddress
                 self.tpci = TDataGroup()
 
+    def __eq__(self, other: object) -> bool:
+        """Equal operator. Omit decoded_data for comparison."""
+        return (
+            isinstance(other, Telegram)
+            and self.destination_address == other.destination_address
+            and self.direction == other.direction
+            and self.payload == other.payload
+            and self.source_address == other.source_address
+            and self.tpci == other.tpci
+        )
+
     def __str__(self) -> str:
         """Return object as readable string."""
         data = f'payload="{self.payload}"' if self.payload else f'tpci="{self.tpci}"'
+        decoded_data = (
+            f' data="{self.decoded_data}"' if self.decoded_data is not None else ""
+        )
         return (
             "<Telegram "
             f'direction="{self.direction.value}" '
             f'source_address="{self.source_address}" '
             f'destination_address="{self.destination_address}" '
-            f"{data} />"
+            f"{data}{decoded_data} />"
         )

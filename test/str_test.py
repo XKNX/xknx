@@ -89,6 +89,7 @@ class TestStringRepresentations:
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" <1/2/3, 1/2/4, [], None /> />'
         )
 
+        remote_value.to_knx = lambda value: value  # to bypass NotImplementedError
         remote_value.value = 34
         assert (
             str(remote_value)
