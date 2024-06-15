@@ -62,7 +62,7 @@ RE_CURRENT = re.compile("Current_")
 RE_FREQUENCY = re.compile("Frequency_")
 
 
-async def device_updated_cb(device):
+def device_updated_cb(device):
     """Do something with the updated device."""
     # print(device.name + ' ' + str(device.resolve_state()) + ' ' + device.unit_of_measurement())
     value = None

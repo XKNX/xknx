@@ -31,7 +31,7 @@ await xknx.devices['TimeTest'].sync()
 * `group_address` is the KNX group address of the sensor device.
 * `broadcast_type` defines the value type that will be sent to the KNX bus. Valid attributes are: 'time', 'date' and 'datetime'. Default: `time`
 * `localtime` If set `True` sync() and GroupValueRead requests always return the current local time. On `False` the set value will be sent. Default: `True`
-* `device_updated_cb` awaitable callback for each update.
+* `device_updated_cb` Callback for each update.
 
 ## [](#header-2)Daemon mode
 
