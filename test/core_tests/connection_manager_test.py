@@ -1,8 +1,9 @@
 """Unit test for connection manager."""
 
+import asyncio
 from datetime import datetime
 import threading
-from unittest.mock import AsyncMock, patch
+from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
@@ -20,14 +21,14 @@ class TestConnectionManager:
         """Test connection_state_changed after register."""
 
         xknx = XKNX()
-        async_connection_state_changed_cb = AsyncMock()
+        connection_state_changed_cb = Mock()
         xknx.connection_manager.register_connection_state_changed_cb(
-            async_connection_state_changed_cb
+            connection_state_changed_cb
         )
-        await xknx.connection_manager.connection_state_changed(
+        xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED, XknxConnectionType.ROUTING_SECURE
         )
-        async_connection_state_changed_cb.assert_called_once_with(
+        connection_state_changed_cb.assert_called_once_with(
             XknxConnectionState.CONNECTED
         )
 
@@ -35,17 +36,15 @@ class TestConnectionManager:
         """Test unregister after register."""
 
         xknx = XKNX()
-        async_connection_state_changed_cb = AsyncMock()
+        connection_state_changed_cb = Mock()
         xknx.connection_manager.register_connection_state_changed_cb(
-            async_connection_state_changed_cb
+            connection_state_changed_cb
         )
         xknx.connection_manager.unregister_connection_state_changed_cb(
-            async_connection_state_changed_cb
+            connection_state_changed_cb
         )
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
-        async_connection_state_changed_cb.assert_not_called()
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        connection_state_changed_cb.assert_not_called()
 
     #
     # TEST PROCESS
@@ -54,15 +53,15 @@ class TestConnectionManager:
         """Test should return if current state equals parameter."""
 
         xknx = XKNX()
-        async_connection_state_changed_cb = AsyncMock()
+        connection_state_changed_cb = Mock()
         xknx.connection_manager.register_connection_state_changed_cb(
-            async_connection_state_changed_cb
+            connection_state_changed_cb
         )
         assert xknx.connection_manager.state == XknxConnectionState.DISCONNECTED
-        await xknx.connection_manager.connection_state_changed(
+        xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
-        async_connection_state_changed_cb.assert_not_called()
+        connection_state_changed_cb.assert_not_called()
 
     #
     # TEST CONNECTED
@@ -71,17 +70,15 @@ class TestConnectionManager:
         """Test connected event callback."""
 
         xknx = XKNX()
-        async_connection_state_changed_cb = AsyncMock()
+        connection_state_changed_cb = Mock()
         xknx.connection_manager.register_connection_state_changed_cb(
-            async_connection_state_changed_cb
+            connection_state_changed_cb
         )
 
         assert not xknx.connection_manager.connected.is_set()
 
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
-        async_connection_state_changed_cb.assert_called_once_with(
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        connection_state_changed_cb.assert_called_once_with(
             XknxConnectionState.CONNECTED
         )
 
@@ -93,7 +90,7 @@ class TestConnectionManager:
         self.main_thread = threading.get_ident()
         xknx = XKNX(connection_config=ConnectionConfig(threaded=True))
 
-        async def assert_main_thread(*args, **kwargs):
+        def assert_main_thread(*args, **kwargs):
             """Test callback is done by main thread."""
             assert self.main_thread == threading.get_ident()
 
@@ -101,7 +98,7 @@ class TestConnectionManager:
 
         async def set_connected():
             """Set connected state."""
-            await xknx.connection_manager.connection_state_changed(
+            xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.CONNECTED
             )
             assert self.main_thread != threading.get_ident()
@@ -111,6 +108,7 @@ class TestConnectionManager:
             # wait for side_effect to finish
             async with asyncio_timeout(1):
                 await xknx.connection_manager.connected.wait()
+                await asyncio.sleep(0)
             await xknx.stop()
 
     async def test_connection_information(self):
@@ -127,7 +125,7 @@ class TestConnectionManager:
         xknx.connection_manager.cemi_count_outgoing_error = 5
 
         # reset counters on new connection
-        await xknx.connection_manager.connection_state_changed(
+        xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED, XknxConnectionType.TUNNEL_TCP
         )
         assert xknx.connection_manager.cemi_count_incoming == 0
@@ -142,7 +140,7 @@ class TestConnectionManager:
         xknx.connection_manager.cemi_count_outgoing = 5
         xknx.connection_manager.cemi_count_outgoing_error = 5
         # keep values until new connection; set connection timestamp to None
-        await xknx.connection_manager.connection_state_changed(
+        xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         assert xknx.connection_manager.cemi_count_incoming == 5

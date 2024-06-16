@@ -127,7 +127,7 @@ class TaskRegistry:
         """Await all tracked tasks."""
         await asyncio.gather(*self.tasks)
 
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+    def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Handle connection state changes."""
         for task in self.tasks:
             if state == XknxConnectionState.CONNECTED:

@@ -1,7 +1,7 @@
 """Unit test for XKNX Module."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -37,7 +37,7 @@ class TestXknxModule:
 
     def test_register_connection_state_change_cb(self):
         """Test register con state callback."""
-        xknx = XKNX(connection_state_changed_cb=AsyncMock())
+        xknx = XKNX(connection_state_changed_cb=Mock())
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 1
 
     @patch("xknx.io.KNXIPInterface._start", new_callable=AsyncMock)

@@ -100,7 +100,7 @@ class _Tunnel(Interface):
 
     async def connect(self) -> bool:
         """Connect to a KNX tunneling interface. Returns True on success."""
-        await self.xknx.connection_manager.connection_state_changed(
+        self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING, self.connection_type
         )
         try:
@@ -113,7 +113,7 @@ class _Tunnel(Interface):
                 type(ex).__name__,
                 ex,
             )
-            await self.xknx.connection_manager.connection_state_changed(
+            self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
             if not self._initial_connection and self.auto_reconnect:
@@ -126,7 +126,7 @@ class _Tunnel(Interface):
             ) from ex
 
         self._tunnel_established()
-        await self.xknx.connection_manager.connection_state_changed(
+        self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED, self.connection_type
         )
         return True
@@ -140,10 +140,8 @@ class _Tunnel(Interface):
     def _tunnel_lost(self) -> None:
         """Prepare for reconnection or shutdown when the connection is lost. Callback."""
         self.stop_heartbeat()
-        self.xknx.task_registry.background(
-            self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.DISCONNECTED
-            )
+        self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
         )
         self._data_endpoint_addr = None
         if self.auto_reconnect:
@@ -169,7 +167,7 @@ class _Tunnel(Interface):
     async def disconnect(self) -> None:
         """Disconnect tunneling connection."""
         self.stop_heartbeat()
-        await self.xknx.connection_manager.connection_state_changed(
+        self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         self._data_endpoint_addr = None

@@ -83,9 +83,7 @@ class TestTaskRegistry:
         xknx = XKNX()
         xknx.task_registry.start()
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 1
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         # pylint: disable=attribute-defined-outside-init
         self.test = 0
 
@@ -106,16 +104,18 @@ class TestTaskRegistry:
         assert task._task is not None
         await time_travel(100)
         assert self.test == 1
-        await xknx.connection_manager.connection_state_changed(
+
+        xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
+        await asyncio.sleep(0)  # iterate loop to cancel task
         assert task._task is None
         assert self.test == 0
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
+
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         assert task._task is not None
         assert self.test == 0
+
         await time_travel(100)
         assert self.test == 1
         assert len(xknx.task_registry.tasks) == 1
