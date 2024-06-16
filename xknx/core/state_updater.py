@@ -203,9 +203,7 @@ class StateUpdater:
 
         self._stop()
 
-    async def connection_state_change_callback(
-        self, state: XknxConnectionState
-    ) -> None:
+    def connection_state_change_callback(self, state: XknxConnectionState) -> None:
         """Start and stop StateUpdater via connection state update."""
         if state == XknxConnectionState.CONNECTED:
             if not self.started:

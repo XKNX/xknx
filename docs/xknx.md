@@ -177,7 +177,7 @@ async def main():
 asyncio.run(main())
 ```
 
-An awaitable `connection_state_changed_cb` will be called every time the connection state to the gateway changes. Example:
+A callback `connection_state_changed_cb` will be called every time the connection state to the gateway changes. Example:
 
 ```python
 import asyncio
@@ -185,7 +185,7 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState
 
 
-async def connection_state_changed_cb(state: XknxConnectionState):
+def connection_state_changed_cb(state: XknxConnectionState):
     print("Callback received with state {0}".format(state.name))
 
 

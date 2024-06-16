@@ -11,9 +11,10 @@ nav_order: 2
 ### Breaking changes
 
 - Drop support for Python 3.9
-- Change callback signatures from awaitable to callable in `XKNX.device_updated_cb`, TelegramQueue, Device, Devices and RemoteValue.
+- Change callback signatures from awaitable to callable in `XKNX.device_updated_cb`, TelegramQueue, Device, Devices, ConnectionManager and RemoteValue.
 - Remove `async` from functions / methods (nothing has to be awaited there)
   - Tools:  `group_value_write`, `group_value_response` and `group_value_read`
+  - ConnectionManager: `.connection_state_changed`
   - RemoteValue: `.set`, `.respond`, `.process` and `.update_value`
   - ValueReader: `.send_group_read`
 

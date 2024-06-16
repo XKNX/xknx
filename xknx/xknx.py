@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
@@ -17,7 +16,6 @@ from xknx.core import (
     GroupAddressDPT,
     TaskRegistry,
     TelegramQueue,
-    XknxConnectionState,
 )
 from xknx.core.state_updater import StateUpdater, TrackerOptionType
 from xknx.devices import Device, Devices
@@ -29,7 +27,11 @@ from xknx.io import (
 )
 from xknx.management import Management
 from xknx.telegram import GroupAddress, GroupAddressType, IndividualAddress, Telegram
-from xknx.typing import DeviceCallbackType, TelegramCallbackType
+from xknx.typing import (
+    ConnectionChangeCallbackType,
+    DeviceCallbackType,
+    TelegramCallbackType,
+)
 
 from .__version__ import __version__ as VERSION
 
@@ -44,8 +46,7 @@ class XKNX:
         address_format: GroupAddressType = GroupAddressType.LONG,
         telegram_received_cb: TelegramCallbackType | None = None,
         device_updated_cb: DeviceCallbackType[Device] | None = None,
-        connection_state_changed_cb: Callable[[XknxConnectionState], Awaitable[None]]
-        | None = None,
+        connection_state_changed_cb: ConnectionChangeCallbackType | None = None,
         rate_limit: int = 0,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,

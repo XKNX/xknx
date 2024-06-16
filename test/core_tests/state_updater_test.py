@@ -200,15 +200,13 @@ class TestStateUpdater:
 
         assert xknx.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
+        xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
 
         assert not xknx.state_updater.started
 
-        await xknx.connection_manager.connection_state_changed(
-            XknxConnectionState.CONNECTED
-        )
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
 
         assert xknx.state_updater.started
 
