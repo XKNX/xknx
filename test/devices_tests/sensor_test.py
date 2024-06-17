@@ -684,7 +684,7 @@ class TestSensor:
             group_address_state="1/2/3",
             value_type=value_type,
         )
-        await sensor.process(
+        sensor.process(
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(value=raw_payload),
@@ -716,18 +716,18 @@ class TestSensor:
             payload=GroupValueResponse(payload),
         )
         # verify not called when always_callback is False
-        await sensor.process(telegram)
+        sensor.process(telegram)
         after_update_callback.assert_not_called()
         after_update_callback.reset_mock()
 
         sensor.always_callback = True
         # verify called when always_callback is True
-        await sensor.process(telegram)
+        sensor.process(telegram)
         after_update_callback.assert_called_once()
         after_update_callback.reset_mock()
 
         # verify not called when processing read responses
-        await sensor.process(response_telegram)
+        sensor.process(response_telegram)
         after_update_callback.assert_not_called()
 
     #
@@ -772,7 +772,7 @@ class TestSensor:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x06, 0xA0))),
         )
-        await sensor.process(telegram)
+        sensor.process(telegram)
         assert sensor.sensor_value.value == 16.96
         assert sensor.sensor_value.telegram.payload.value == DPTArray((0x06, 0xA0))
         assert sensor.resolve_state() == 16.96
@@ -793,6 +793,6 @@ class TestSensor:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
-        await sensor.process(telegram)
+        sensor.process(telegram)
         after_update_callback.assert_called_with(sensor)
         assert sensor.last_telegram == telegram

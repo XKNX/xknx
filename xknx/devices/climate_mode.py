@@ -303,7 +303,7 @@ class ClimateMode(Device):
         # remove duplicates
         return list(set(controller_modes))
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.supports_operation_mode:
             for rv_mode in self._iter_operation_remote_values():

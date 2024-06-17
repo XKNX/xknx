@@ -93,26 +93,26 @@ class Device(ABC):
         for remote_value in self._iter_remote_values():
             await remote_value.read_state(wait_for_result=wait_for_result)
 
-    async def process(self, telegram: Telegram) -> None:
+    def process(self, telegram: Telegram) -> None:
         """Process incoming telegram."""
         if isinstance(telegram.payload, GroupValueWrite):
-            await self.process_group_write(telegram)
+            self.process_group_write(telegram)
         elif isinstance(telegram.payload, GroupValueResponse):
-            await self.process_group_response(telegram)
+            self.process_group_response(telegram)
         elif isinstance(telegram.payload, GroupValueRead):
-            await self.process_group_read(telegram)
+            self.process_group_read(telegram)
 
-    async def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueRead telegrams."""
         # The default is, that devices don't answer to group reads
         return
 
-    async def process_group_response(self, telegram: Telegram) -> None:
+    def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
         # Per default mapped to group write.
-        await self.process_group_write(telegram)
+        self.process_group_write(telegram)
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming GroupValueWrite telegrams."""
         # The default is, that devices don't process group writes
         return

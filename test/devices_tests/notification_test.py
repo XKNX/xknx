@@ -39,14 +39,14 @@ class TestNotification:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
         )
-        await notification.process(telegram_set)
+        notification.process(telegram_set)
         assert notification.message == "Ein Prosit!"
 
         telegram_unset = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTString().to_knx("")),
         )
-        await notification.process(telegram_unset)
+        notification.process(telegram_unset)
         assert notification.message == ""
 
     async def test_process_callback(self):
@@ -61,7 +61,7 @@ class TestNotification:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
         )
-        await notification.process(telegram_set)
+        notification.process(telegram_set)
         after_update_callback.assert_called_with(notification)
 
     async def test_process_payload_invalid_length(self):
@@ -79,7 +79,7 @@ class TestNotification:
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
         with patch("logging.Logger.warning") as log_mock:
-            await notification.process(telegram)
+            notification.process(telegram)
             log_mock.assert_called_once()
             after_update_callback.assert_not_called()
 
@@ -98,7 +98,7 @@ class TestNotification:
             payload=GroupValueWrite(DPTBinary(1)),
         )
         with patch("logging.Logger.warning") as log_mock:
-            await notification.process(telegram)
+            notification.process(telegram)
             log_mock.assert_called_once()
             after_update_callback.assert_not_called()
 
@@ -130,11 +130,11 @@ class TestNotification:
             destination_address=GroupAddress("1/1/1"), payload=GroupValueRead()
         )
         # verify no response when respond_to_read is False
-        await non_responding.process(read_telegram)
+        non_responding.process(read_telegram)
         assert xknx.telegrams.qsize() == 0
 
         # verify response when respond_to_read is True
-        await responding.process(read_telegram)
+        responding.process(read_telegram)
         assert xknx.telegrams.qsize() == 1
         response = xknx.telegrams.get_nowait()
         assert response == Telegram(

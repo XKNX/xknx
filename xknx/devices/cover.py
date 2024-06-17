@@ -340,7 +340,7 @@ class Cover(Device):
         await self.position_current.read_state(wait_for_result=wait_for_result)
         await self.angle.read_state(wait_for_result=wait_for_result)
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         # call after_update to account for travelcalculator changes
         if self.updown.process(telegram):

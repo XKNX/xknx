@@ -87,33 +87,27 @@ class TestDevice:
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
 
-        with patch(
-            "xknx.devices.Device.process_group_read", new_callable=AsyncMock
-        ) as mock_group_read:
+        with patch("xknx.devices.Device.process_group_read") as mock_group_read:
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"), payload=GroupValueRead()
             )
-            await device.process(telegram)
+            device.process(telegram)
             mock_group_read.assert_called_with(telegram)
 
-        with patch(
-            "xknx.devices.Device.process_group_write", new_callable=AsyncMock
-        ) as mock_group_write:
+        with patch("xknx.devices.Device.process_group_write") as mock_group_write:
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
                 payload=GroupValueWrite(DPTArray((0x01, 0x02))),
             )
-            await device.process(telegram)
+            device.process(telegram)
             mock_group_write.assert_called_with(telegram)
 
-        with patch(
-            "xknx.devices.Device.process_group_response", new_callable=AsyncMock
-        ) as mock_group_response:
+        with patch("xknx.devices.Device.process_group_response") as mock_group_response:
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/1"),
                 payload=GroupValueResponse(DPTArray((0x01, 0x02))),
             )
-            await device.process(telegram)
+            device.process(telegram)
             mock_group_response.assert_called_with(telegram)
 
     async def test_sync_with_wait(self):
@@ -133,18 +127,14 @@ class TestDevice:
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
-        await device.process_group_write(Telegram(destination_address=GroupAddress(1)))
+        device.process_group_write(Telegram(destination_address=GroupAddress(1)))
 
     async def test_process_group_response(self):
         """Test if process_group_read. Testing if mapped to group_write."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
-        with patch(
-            "xknx.devices.Device.process_group_write", new_callable=AsyncMock
-        ) as mock_group_write:
-            await device.process_group_response(
-                Telegram(destination_address=GroupAddress(1))
-            )
+        with patch("xknx.devices.Device.process_group_write") as mock_group_write:
+            device.process_group_response(Telegram(destination_address=GroupAddress(1)))
             mock_group_write.assert_called_with(
                 Telegram(destination_address=GroupAddress(1))
             )
@@ -153,4 +143,4 @@ class TestDevice:
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
-        await device.process_group_read(Telegram(destination_address=GroupAddress(1)))
+        device.process_group_read(Telegram(destination_address=GroupAddress(1)))

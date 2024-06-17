@@ -179,7 +179,7 @@ class TestTelegramQueue:
         """Test process_telegram_incoming for forwarding telegram to a device."""
 
         xknx = XKNX()
-        test_device = AsyncMock()
+        test_device = Mock()
         devices_by_ga_mock.return_value = [test_device]
 
         telegram = Telegram(
@@ -191,7 +191,7 @@ class TestTelegramQueue:
         devices_by_ga_mock.assert_called_once_with(GroupAddress("1/2/3"))
         test_device.process.assert_called_once_with(telegram)
 
-    @patch("xknx.devices.Devices.process", new_callable=AsyncMock)
+    @patch("xknx.devices.Devices.process")
     async def test_process_to_callback(self, devices_process):
         """Test process_telegram_incoming with callback."""
 

@@ -152,12 +152,12 @@ class TestClimate:
         xknx.devices.async_add(climate)
 
         climate.target_temperature.set(23.00)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
         await climate.set_setpoint_shift(-2)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
@@ -203,7 +203,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTTemperature.to_knx(23)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
@@ -211,7 +211,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTTemperature.to_knx(23)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
@@ -219,7 +219,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTValue1Count.to_knx(-4)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
@@ -241,7 +241,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/4"),
             payload=GroupValueWrite(DPTArray(1)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
@@ -394,7 +394,7 @@ class TestClimate:
         xknx.devices.async_add(climate2)
         assert not climate2.initialized_for_setpoint_shift_calculations
         await climate2.set_setpoint_shift(4)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate2.initialized_for_setpoint_shift_calculations
 
         climate3 = Climate(
@@ -406,11 +406,11 @@ class TestClimate:
         )
         xknx.devices.async_add(climate3)
         await climate3.set_setpoint_shift(4)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate3.initialized_for_setpoint_shift_calculations
 
         climate3.target_temperature.set(23.00)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate3.initialized_for_setpoint_shift_calculations
 
     async def test_setpoint_shift_mode_autosensing(self):
@@ -434,7 +434,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTValue1Count.to_knx(-4)),
         )
-        await climate_dpt6.process(telegram)
+        climate_dpt6.process(telegram)
         assert climate_dpt6.initialized_for_setpoint_shift_calculations
 
         await climate_dpt6.set_setpoint_shift(1)
@@ -462,7 +462,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTTemperature.to_knx(-4)),
         )
-        await climate_dpt9.process(telegram)
+        climate_dpt9.process(telegram)
         assert climate_dpt9.initialized_for_setpoint_shift_calculations
 
         await climate_dpt9.set_setpoint_shift(1)
@@ -511,11 +511,11 @@ class TestClimate:
         xknx.devices.async_add(climate)
 
         await climate.set_setpoint_shift(4)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert not climate.initialized_for_setpoint_shift_calculations
 
         climate.target_temperature.set(23.00)
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate.initialized_for_setpoint_shift_calculations
         assert climate.target_temperature_min == "3"
         assert climate.target_temperature_max == "42"
@@ -544,7 +544,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(30)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
 
         climate.target_temperature.set(23.00)
         assert xknx.telegrams.qsize() == 1
@@ -553,7 +553,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(23.00)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.base_temperature == 20
 
         # First change
@@ -564,13 +564,13 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(40)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         _telegram = xknx.telegrams.get_nowait()
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(24.00)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.target_temperature.value == 24.00
 
         # Second change
@@ -581,13 +581,13 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(35)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         _telegram = xknx.telegrams.get_nowait()
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(23.50)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.target_temperature.value == 23.50
 
         # Test max target temperature
@@ -597,8 +597,8 @@ class TestClimate:
         # third change - limit exceeded, setting to max
         await climate.set_target_temperature(26.50)
         assert xknx.telegrams.qsize() == 2
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate.target_temperature_max == 26.00
         assert climate.setpoint_shift == 6
 
@@ -623,7 +623,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(10)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
 
         climate.target_temperature.set(23.00)
         assert xknx.telegrams.qsize() == 1
@@ -632,7 +632,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(23.00)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.base_temperature == 22.0
 
         # First change
@@ -643,13 +643,13 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(0xF1)),
         )  # -15
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         _telegram = xknx.telegrams.get_nowait()
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(20.50)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.target_temperature.value == 20.50
 
         # Second change
@@ -660,13 +660,13 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(0xE2)),
         )  # -30
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         _telegram = xknx.telegrams.get_nowait()
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(19.00)),
         )
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.target_temperature.value == 19.00
 
         # Test min target temperature
@@ -676,8 +676,8 @@ class TestClimate:
         # third change - limit exceeded, setting to min
         await climate.set_target_temperature(15.50)
         assert xknx.telegrams.qsize() == 2
-        await xknx.devices.process(xknx.telegrams.get_nowait())
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate.target_temperature_min == 16.00
         assert climate.setpoint_shift == -6
 
@@ -700,7 +700,7 @@ class TestClimate:
         await climate.set_setpoint_shift(3)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         # temperature_step is 0.5 -> payload = setpoint_shift * 2
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -710,7 +710,7 @@ class TestClimate:
         climate.target_temperature.set(23.00)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(23.00)),
@@ -719,13 +719,13 @@ class TestClimate:
         await climate.set_target_temperature(24.00)
         assert xknx.telegrams.qsize() == 2
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(8)),
         )
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(24.00)),
@@ -757,7 +757,7 @@ class TestClimate:
         await climate.set_target_temperature(21.00)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPT2ByteFloat().to_knx(21.00)),
@@ -769,7 +769,7 @@ class TestClimate:
         await climate.set_setpoint_shift(1)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         # DEFAULT_TEMPERATURE_STEP is 0.1 -> payload = setpoint_shift * 10
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -783,14 +783,14 @@ class TestClimate:
         # setpoint_shift and target_temperature are sent to the bus
         assert xknx.telegrams.qsize() == 2
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         # DEFAULT_TEMPERATURE_STEP is 0.1 -> payload = setpoint_shift * 10
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(20)),
         )
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.initialized_for_setpoint_shift_calculations
         assert climate.base_temperature == 20.00
         assert climate.target_temperature.value == 22
@@ -820,7 +820,7 @@ class TestClimate:
         await climate.set_setpoint_shift(0)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.initialized_for_setpoint_shift_calculations
         assert climate.base_temperature == 20.00
         assert _telegram == Telegram(
@@ -831,7 +831,7 @@ class TestClimate:
         await climate.set_target_temperature(19.40)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x87, 0xC4))),
@@ -847,7 +847,7 @@ class TestClimate:
         await climate.set_target_temperature(23.50)
         assert xknx.telegrams.qsize() == 1
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x01, 0x5E))),
@@ -1007,7 +1007,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTTemperature().to_knx(21.34)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         assert climate.temperature.value == 21.34
 
     async def test_process_operation_mode(self):
@@ -1024,7 +1024,7 @@ class TestClimate:
                 destination_address=GroupAddress("1/2/5"),
                 payload=GroupValueWrite(DPTHVACMode.to_knx(operation_mode)),
             )
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             assert climate_mode.operation_mode == operation_mode
         for operation_mode in DPT_20102_MODES:
             if operation_mode == HVACOperationMode.AUTO:
@@ -1033,7 +1033,7 @@ class TestClimate:
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueWrite(DPTControllerStatus.to_knx(operation_mode)),
             )
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             assert climate_mode.operation_mode == operation_mode
 
     async def test_process_controller_mode(self):
@@ -1047,7 +1047,7 @@ class TestClimate:
                 destination_address=GroupAddress("1/2/5"),
                 payload=GroupValueWrite(DPTHVACContrMode.to_knx(controller_mode)),
             )
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             assert climate_mode.controller_mode == controller_mode
 
     async def test_process_controller_status_wrong_payload(self):
@@ -1066,7 +1066,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(1)),
         )
         with patch("logging.Logger.warning") as log_mock:
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
@@ -1086,7 +1086,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
         with patch("logging.Logger.warning") as log_mock:
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
@@ -1106,7 +1106,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(1)),
         )
         with patch("logging.Logger.warning") as log_mock:
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
@@ -1126,7 +1126,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray((23, 24))),
         )
         with patch("logging.Logger.warning") as log_mock:
-            await climate_mode.process(telegram)
+            climate_mode.process(telegram)
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
@@ -1142,7 +1142,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTTemperature().to_knx(21.34)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         after_update_callback.assert_called_with(climate)
 
     async def test_process_heat_cool(self):
@@ -1160,14 +1160,14 @@ class TestClimate:
             destination_address=GroupAddress("1/2/14"),
             payload=GroupValueWrite(DPTBinary(False)),
         )
-        await climate_mode.process(telegram)
+        climate_mode.process(telegram)
         assert climate_mode.controller_mode == HVACControllerMode.COOL
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/14"),
             payload=GroupValueWrite(DPTBinary(True)),
         )
-        await climate_mode.process(telegram)
+        climate_mode.process(telegram)
         assert climate_mode.controller_mode == HVACControllerMode.HEAT
 
     #
@@ -1314,7 +1314,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        await climate.process(telegram)
+        climate.process(telegram)
         assert climate.is_on is True
 
         climate_inv = Climate(
@@ -1324,7 +1324,7 @@ class TestClimate:
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        await climate_inv.process(telegram)
+        climate_inv.process(telegram)
         assert climate_inv.is_on is False
 
     async def test_power_on_off(self):
@@ -1335,7 +1335,7 @@ class TestClimate:
 
         await climate.turn_on()
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.is_on is True
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
@@ -1343,7 +1343,7 @@ class TestClimate:
         )
         await climate.turn_off()
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate.is_on is False
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
@@ -1357,7 +1357,7 @@ class TestClimate:
 
         await climate_inv.turn_on()
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate_inv.is_on is True
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
@@ -1365,7 +1365,7 @@ class TestClimate:
         )
         await climate_inv.turn_off()
         _telegram = xknx.telegrams.get_nowait()
-        await xknx.devices.process(_telegram)
+        xknx.devices.process(_telegram)
         assert climate_inv.is_on is False
         assert _telegram == Telegram(
             destination_address=GroupAddress("1/2/2"),
@@ -1395,7 +1395,7 @@ class TestClimate:
         assert climate_command.is_active is None
         assert climate_active_command.is_active is None
         # set active to False
-        await xknx.devices.process(
+        xknx.devices.process(
             Telegram(
                 destination_address=GroupAddress("1/1/1"),
                 payload=GroupValueWrite(DPTBinary(False)),
@@ -1405,7 +1405,7 @@ class TestClimate:
         assert climate_command.is_active is None
         assert climate_active_command.is_active is False
         # set command to 50%
-        await xknx.devices.process(
+        xknx.devices.process(
             Telegram(
                 destination_address=GroupAddress("2/2/2"),
                 payload=GroupValueWrite(DPTArray((128,))),
@@ -1415,7 +1415,7 @@ class TestClimate:
         assert climate_command.is_active is True
         assert climate_active_command.is_active is False
         # set active to True
-        await xknx.devices.process(
+        xknx.devices.process(
             Telegram(
                 destination_address=GroupAddress("1/1/1"),
                 payload=GroupValueWrite(DPTBinary(True)),
@@ -1425,7 +1425,7 @@ class TestClimate:
         assert climate_command.is_active is True
         assert climate_active_command.is_active is True
         # set command to 0%
-        await xknx.devices.process(
+        xknx.devices.process(
             Telegram(
                 destination_address=GroupAddress("2/2/2"),
                 payload=GroupValueWrite(DPTArray((0,))),

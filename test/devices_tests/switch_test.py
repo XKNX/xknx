@@ -68,20 +68,20 @@ class TestSwitch:
             payload=GroupValueWrite(DPTBinary(0)),
         )
 
-        await switch1.process(telegram_on)
+        switch1.process(telegram_on)
         assert switch1.state is True
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
-        await switch1.process(telegram_off)
+        switch1.process(telegram_off)
         assert switch1.state is False
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
         # test setting switch2 to False with first telegram
-        await switch2.process(telegram_off)
+        switch2.process(telegram_off)
         assert switch2.state is False
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
-        await switch2.process(telegram_on)
+        switch2.process(telegram_on)
         assert switch2.state is True
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
@@ -118,20 +118,20 @@ class TestSwitch:
             payload=GroupValueResponse(DPTBinary(0)),
         )
 
-        await switch1.process(telegram_on)
+        switch1.process(telegram_on)
         assert switch1.state is True
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
-        await switch1.process(telegram_off)
+        switch1.process(telegram_off)
         assert switch1.state is False
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
         # test setting switch2 to False with first telegram
-        await switch2.process(telegram_off)
+        switch2.process(telegram_off)
         assert switch2.state is False
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
-        await switch2.process(telegram_on)
+        switch2.process(telegram_on)
         assert switch2.state is True
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
@@ -151,9 +151,9 @@ class TestSwitch:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-        await switch.process(telegram_inv_on)
+        switch.process(telegram_inv_on)
         assert switch.state is True
-        await switch.process(telegram_inv_off)
+        switch.process(telegram_inv_off)
         assert switch.state is False
 
     async def test_process_reset_after(self, time_travel):
@@ -168,12 +168,12 @@ class TestSwitch:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-        await switch.process(telegram_on)
+        switch.process(telegram_on)
         assert switch.state
         assert xknx.telegrams.qsize() == 0
         await time_travel(reset_after_sec)
         assert xknx.telegrams.qsize() == 1
-        await switch.process(xknx.telegrams.get_nowait())
+        switch.process(xknx.telegrams.get_nowait())
         assert not switch.state
 
     async def test_process_reset_after_cancel_existing(self, time_travel):
@@ -188,12 +188,12 @@ class TestSwitch:
             payload=GroupValueResponse(DPTBinary(1)),
         )
 
-        await switch.process(telegram_on)
+        switch.process(telegram_on)
         assert switch.state
         assert xknx.telegrams.qsize() == 0
         await time_travel(reset_after_sec / 2)
         # half way through the reset timer
-        await switch.process(telegram_on)
+        switch.process(telegram_on)
         assert switch.state
 
         await time_travel(reset_after_sec / 2)
@@ -209,7 +209,7 @@ class TestSwitch:
                 destination_address=GroupAddress("1/2/3"),
                 payload=GroupValueResponse(DPTBinary(1)),
             )
-            await switch.process(telegram_on)
+            switch.process(telegram_on)
             assert switch.state
             assert switch._reset_task is not None
             xknx.devices.async_remove(switch)
@@ -228,7 +228,7 @@ class TestSwitch:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        await switch.process(telegram)
+        switch.process(telegram)
 
         after_update_callback.assert_called_with(switch)
 
@@ -266,11 +266,11 @@ class TestSwitch:
             destination_address=GroupAddress("1/1/1"), payload=GroupValueRead()
         )
         # verify no response when respond is False
-        await non_responding.process(read_telegram)
+        non_responding.process(read_telegram)
         assert xknx.telegrams.qsize() == 0
 
         # verify response when respond is True
-        await responding.process(read_telegram)
+        responding.process(read_telegram)
         assert xknx.telegrams.qsize() == 1
         response = xknx.telegrams.get_nowait()
         assert response == Telegram(
@@ -278,19 +278,19 @@ class TestSwitch:
             payload=GroupValueResponse(DPTBinary(True)),
         )
         # verify no response when GroupValueRead request is not for group_address
-        await responding_multiple.process(read_telegram)
+        responding_multiple.process(read_telegram)
         assert xknx.telegrams.qsize() == 1
         response = xknx.telegrams.get_nowait()
         assert response == Telegram(
             destination_address=GroupAddress("1/1/1"),
             payload=GroupValueResponse(DPTBinary(True)),
         )
-        await responding_multiple.process(
+        responding_multiple.process(
             Telegram(
                 destination_address=GroupAddress("2/2/2"), payload=GroupValueRead()
             )
         )
-        await responding_multiple.process(
+        responding_multiple.process(
             Telegram(
                 destination_address=GroupAddress("3/3/3"), payload=GroupValueRead()
             )
@@ -396,11 +396,11 @@ class TestSwitch:
             payload=GroupValueWrite(DPTBinary(0)),
         )
 
-        await switch1.process(telegram_on_passive)
+        switch1.process(telegram_on_passive)
         assert switch1.state is True
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
-        await switch1.process(telegram_off_passive)
+        switch1.process(telegram_off_passive)
         assert switch1.state is False
         callback_mock.assert_called_once()
         callback_mock.reset_mock()

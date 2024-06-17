@@ -139,17 +139,17 @@ class TestDevices:
         xknx.devices.async_add(light1)
         for device in xknx.devices:
             await device.set_on()
-            await xknx.devices.process(xknx.telegrams.get_nowait())
+            xknx.devices.process(xknx.telegrams.get_nowait())
         assert light1.state
 
         device2 = xknx.devices["Living-Room.Light_1"]
         await device2.set_off()
-        await xknx.devices.process(xknx.telegrams.get_nowait())
+        xknx.devices.process(xknx.telegrams.get_nowait())
         assert not light1.state
 
         for device in xknx.devices.devices_by_group_address(GroupAddress("1/6/7")):
             await device.set_on()
-            await xknx.devices.process(xknx.telegrams.get_nowait())
+            xknx.devices.process(xknx.telegrams.get_nowait())
         assert light1.state
 
     #

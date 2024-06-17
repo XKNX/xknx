@@ -15,6 +15,8 @@ nav_order: 2
 - Remove `async` from functions / methods (nothing has to be awaited there)
   - Tools:  `group_value_write`, `group_value_response` and `group_value_read`
   - ConnectionManager: `.connection_state_changed`
+  - Device: `.process`, `.process_group_write`, `.process_group_read`, `.process_group_response`
+  - Devices: `.process`
   - RemoteValue: `.set`, `.respond`, `.process` and `.update_value`
   - ValueReader: `.send_group_read`
 

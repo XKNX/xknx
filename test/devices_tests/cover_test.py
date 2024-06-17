@@ -531,7 +531,7 @@ class TestCover:
         assert cover.travelcalculator._travel_to_position == 50
         assert cover.is_opening()
         # process the outgoing telegram to make sure it doesn't overwrite the target position
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.travelcalculator._travel_to_position == 50
         assert xknx.telegrams.qsize() == 0
 
@@ -558,7 +558,7 @@ class TestCover:
         assert cover.travelcalculator._travel_to_position == 80
         assert cover.is_closing()
         # process the outgoing telegram to make sure it doesn't overwrite the target position
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.travelcalculator._travel_to_position == 80
 
         await cover.stop()  # clean up tasks
@@ -672,14 +672,14 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(213))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.current_position() == 84
         assert not cover.is_traveling()
         # state telegram updates current position - we are not moving so this is new state - not moving
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.current_position() == 16
         assert not cover.is_traveling()
         assert cover.travelcalculator._travel_to_position == 16
@@ -687,7 +687,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(255))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.current_position() == 16
         assert cover.is_closing()
         assert cover.travelcalculator._travel_to_position == 100
@@ -695,7 +695,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(213))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.current_position() == 84
         assert cover.is_closing()
         assert cover.travelcalculator._travel_to_position == 100
@@ -716,7 +716,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.current_angle() == 16
 
     async def test_process_locked(self):
@@ -731,7 +731,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/4"), payload=GroupValueWrite(DPTBinary(1))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.is_locked() is True
 
     async def test_process_up(self):
@@ -748,7 +748,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/1"), payload=GroupValueWrite(DPTBinary(0))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.is_opening()
 
         await cover.stop()  # clean up tasks
@@ -767,7 +767,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/1"), payload=GroupValueWrite(DPTBinary(1))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert cover.is_closing()
 
         await cover.stop()  # clean up tasks
@@ -787,7 +787,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/2"), payload=GroupValueWrite(DPTBinary(1))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert not cover.is_traveling()
 
     async def test_process_short_stop(self):
@@ -805,7 +805,7 @@ class TestCover:
         telegram = Telegram(
             GroupAddress("1/2/2"), payload=GroupValueWrite(DPTBinary(1))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         assert not cover.is_traveling()
 
     async def test_process_callback(self):
@@ -842,17 +842,17 @@ class TestCover:
                 destination_address=GroupAddress(address),
                 payload=GroupValueWrite(payload),
             )
-            await cover.process(telegram)
+            cover.process(telegram)
             after_update_callback.assert_called_with(cover)
             after_update_callback.reset_mock()
         # Stop only when cover is travelling
         telegram = Telegram(
             GroupAddress("1/2/3"), payload=GroupValueWrite(DPTBinary(1))
         )
-        await cover.process(telegram)
+        cover.process(telegram)
         after_update_callback.assert_not_called()
         await cover.set_down()
-        await cover.process(telegram)
+        cover.process(telegram)
         after_update_callback.assert_called_with(cover)
 
         await cover.stop()  # clean up tasks
@@ -991,7 +991,7 @@ class TestCover:
             telegram = Telegram(
                 GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(0))
             )
-            await cover.process(telegram)
+            cover.process(telegram)
             await time_travel(0)
             assert callback_mock.call_count == 1
             callback_mock.reset_mock()
@@ -999,7 +999,7 @@ class TestCover:
             telegram = Telegram(
                 GroupAddress("1/2/3"), payload=GroupValueWrite(DPTArray(125))
             )
-            await cover.process(telegram)
+            cover.process(telegram)
             await time_travel(0)
             assert callback_mock.call_count == 1
 
@@ -1014,7 +1014,7 @@ class TestCover:
             telegram = Telegram(
                 GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(42))
             )
-            await cover.process(telegram)
+            cover.process(telegram)
             assert callback_mock.call_count == 3
             # next update 1 second after last received state telegram
             mock_time.return_value = 1517000002.0
@@ -1049,7 +1049,7 @@ class TestCover:
             telegram = Telegram(
                 GroupAddress("1/2/4"), payload=GroupValueWrite(DPTArray(0))
             )
-            await cover.process(telegram)
+            cover.process(telegram)
             assert cover.current_position() == 0
             await cover.set_position(50)
             assert cover._periodic_update_task is not None

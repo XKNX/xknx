@@ -18,7 +18,7 @@ class TestWeather:
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/4"),
                 payload=GroupValueWrite(value=DPTArray((0x19, 0xA))),
@@ -43,28 +43,28 @@ class TestWeather:
             group_address_temperature="1/4/4",
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/5"),
                 payload=GroupValueWrite(value=DPTArray((0x7C, 0x5E))),
             )
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/7"),
                 payload=GroupValueWrite(value=DPTArray((0x7C, 0x5C))),
             )
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/6"),
                 payload=GroupValueWrite(value=DPTArray((0x7C, 0x5A))),
             )
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/8"),
                 payload=GroupValueWrite(value=DPTArray((0x7C, 0x5A))),
@@ -92,7 +92,7 @@ class TestWeather:
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/4"),
                 payload=GroupValueWrite(value=DPTArray((0x6C, 0xAD))),
@@ -108,7 +108,7 @@ class TestWeather:
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_humidity="1/2/4")
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/2/4"),
                 payload=GroupValueWrite(value=DPTArray((0x7E, 0xE1))),
@@ -126,7 +126,7 @@ class TestWeather:
             name="weather", xknx=xknx, group_address_wind_speed="1/3/8"
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/8"),
                 payload=GroupValueWrite(value=DPTArray((0x7D, 0x98))),
@@ -144,7 +144,7 @@ class TestWeather:
             name="weather", xknx=xknx, group_address_wind_bearing="1/3/8"
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/8"),
                 payload=GroupValueWrite(value=DPTArray((0xBF,))),
@@ -225,7 +225,7 @@ class TestWeather:
             group_address_brightness_south="1/3/6",
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/6"),
                 payload=GroupValueWrite(value=DPTArray((0x46, 0x45))),
@@ -250,7 +250,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/6"),
                 payload=GroupValueWrite(value=DPTArray((0x7C, 0x5C))),
@@ -273,7 +273,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/6"),
                 payload=GroupValueWrite(value=DPTArray((0x7C, 0x5C))),
@@ -297,7 +297,7 @@ class TestWeather:
             group_address_brightness_west="1/3/7",
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/6"),
                 payload=GroupValueWrite(value=DPTArray((0x46, 0x45))),
@@ -318,7 +318,7 @@ class TestWeather:
             name="weather", xknx=xknx, group_address_day_night="1/3/20"
         )
 
-        await weather.process(
+        weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/20"),
                 payload=GroupValueWrite(value=DPTBinary(0)),

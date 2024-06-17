@@ -57,11 +57,11 @@ class Notification(Device):
         cropped_message = message[:14]
         self.remote_value.set(cropped_message)
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.remote_value.process(telegram)
 
-    async def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
         if (
             self.respond_to_read

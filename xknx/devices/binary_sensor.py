@@ -145,12 +145,12 @@ class BinarySensor(Device):
             self._count_set_off = 1
         return 1
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.remote_value.process(telegram, always_callback=True):
             self._process_reset_after()
 
-    async def process_group_response(self, telegram: Telegram) -> None:
+    def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
         if self.remote_value.process(telegram, always_callback=False):
             self._process_reset_after()

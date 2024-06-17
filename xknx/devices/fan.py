@@ -152,7 +152,7 @@ class Fan(Device):
         """Set the fan oscillation mode on or off."""
         self.oscillation.set(oscillation)
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.switch.process(telegram)
         self.speed.process(telegram)

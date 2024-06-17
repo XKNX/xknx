@@ -206,16 +206,16 @@ class TelegramQueue:
             # raises CommunicationError when interface is not connected
             await self.xknx.cemi_handler.send_telegram(telegram)
 
-        await self.xknx.devices.process(telegram)
-        await self._run_telegram_received_cbs(telegram)
+        self.xknx.devices.process(telegram)
+        self._run_telegram_received_cbs(telegram)
 
     async def process_telegram_incoming(self, telegram: Telegram) -> None:
         """Process incoming telegram."""
         telegram_logger.debug(telegram)
-        await self._run_telegram_received_cbs(telegram)
-        await self.xknx.devices.process(telegram)
+        self._run_telegram_received_cbs(telegram)
+        self.xknx.devices.process(telegram)
 
-    async def _run_telegram_received_cbs(self, telegram: Telegram) -> None:
+    def _run_telegram_received_cbs(self, telegram: Telegram) -> None:
         """Run registered callbacks. Don't propagate exceptions."""
         for callback in self.telegram_received_cbs:
             if not callback.is_within_filter(telegram):

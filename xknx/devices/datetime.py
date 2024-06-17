@@ -79,7 +79,7 @@ class DateTime(Device):
         async def broadcast_loop(self: DateTime, minutes: int) -> None:
             """Endless loop for broadcasting local time."""
             while True:
-                await self.broadcast_localtime()
+                self.broadcast_localtime()
                 await asyncio.sleep(minutes * 60)
 
         self._broadcast_task = self.xknx.task_registry.register(
@@ -94,7 +94,7 @@ class DateTime(Device):
             self.xknx.task_registry.unregister(self._broadcast_task.name)
             self._broadcast_task = None
 
-    async def broadcast_localtime(self, response: bool = False) -> None:
+    def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local time to KNX bus."""
         self.remote_value.set(time.localtime(), response=response)
 
@@ -102,14 +102,14 @@ class DateTime(Device):
         """Set time and send to KNX bus."""
         self.remote_value.set(struct_time)
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.remote_value.process(telegram)
 
-    async def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""
         if self.localtime:
-            await self.broadcast_localtime(True)
+            self.broadcast_localtime(True)
         elif (
             self.respond_to_read
             and telegram.destination_address == self.remote_value.group_address
@@ -119,7 +119,7 @@ class DateTime(Device):
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read state of device from KNX bus. Used here to broadcast time to KNX bus."""
         if self.localtime:
-            await self.broadcast_localtime(response=False)
+            self.broadcast_localtime(response=False)
         else:
             await super().sync(wait_for_result)
 
