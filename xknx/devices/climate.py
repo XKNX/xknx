@@ -264,13 +264,13 @@ class Climate(Device):
             return self.base_temperature + self.setpoint_shift_min
         return None
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             remote_value.process(telegram)
 
         if self.mode is not None:
-            await self.mode.process_group_write(telegram)
+            self.mode.process_group_write(telegram)
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""

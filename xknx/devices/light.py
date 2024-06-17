@@ -611,7 +611,7 @@ class Light(Device):
             return
         self.color_temperature.set(color_temperature)
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_instant_remote_values():
             remote_value.process(telegram)

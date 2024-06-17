@@ -35,7 +35,7 @@ class TestDateTime:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x9, 0xD, 0xE))),
         )
-        await datetime.process(telegram)
+        datetime.process(telegram)
         assert datetime.remote_value.value == test_time
 
     #
@@ -143,7 +143,7 @@ class TestDateTime:
         )
         with patch("time.localtime") as mock_time:
             mock_time.return_value = time.struct_time([2017, 1, 7, 9, 13, 14, 6, 0, 0])
-            await datetime.process(telegram_read)
+            datetime.process(telegram_read)
 
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -167,7 +167,7 @@ class TestDateTime:
         telegram_read = Telegram(
             destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
         )
-        await datetime.process(telegram_read)
+        datetime.process(telegram_read)
 
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(

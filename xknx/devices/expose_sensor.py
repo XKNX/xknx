@@ -86,11 +86,11 @@ class ExposeSensor(Device):
             self.xknx.task_registry.unregister(self._cooldown_task.name)
             self._cooldown_task = None
 
-    async def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.sensor_value.process(telegram)
 
-    async def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""
         if not self.respond_to_read:
             return

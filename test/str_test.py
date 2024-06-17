@@ -267,7 +267,7 @@ class TestStringRepresentations:
             == '<Notification name="Alarm" message=<1/2/3, 1/2/4, [], None /> />'
         )
         await notification.set("Einbrecher im Haus")
-        await notification.process(xknx.telegrams.get_nowait())
+        notification.process(xknx.telegrams.get_nowait())
         assert (
             str(notification) == '<Notification name="Alarm" '
             "message=<1/2/3, 1/2/4, [], 'Einbrecher im ' /> />"
@@ -298,7 +298,7 @@ class TestStringRepresentations:
             direction=TelegramDirection.INCOMING,
             payload=GroupValueWrite(DPTArray(0x40)),
         )
-        await sensor.process_group_write(telegram)
+        sensor.process_group_write(telegram)
         assert (
             str(sensor)
             == '<Sensor name="MeinSensor" sensor=<None, 1/2/3, [], 25 /> value=25 unit="%"/>'
@@ -315,7 +315,7 @@ class TestStringRepresentations:
             == '<ExposeSensor name="MeinSensor" sensor=<1/2/3, None, [], None /> value=None unit="%"/>'
         )
         await sensor.set(25)
-        await sensor.process(xknx.telegrams.get_nowait())
+        sensor.process(xknx.telegrams.get_nowait())
         assert (
             str(sensor)
             == '<ExposeSensor name="MeinSensor" sensor=<1/2/3, None, [], 25 /> value=25 unit="%"/>'
@@ -368,7 +368,7 @@ class TestStringRepresentations:
             direction=TelegramDirection.INCOMING,
             payload=GroupValueWrite(DPTBinary(1)),
         )
-        await weather.process_group_write(telegram)
+        weather.process_group_write(telegram)
 
         assert (
             str(weather)
