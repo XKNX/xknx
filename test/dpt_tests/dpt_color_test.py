@@ -2,7 +2,7 @@
 
 import pytest
 
-from xknx.dpt.dpt_color import (
+from xknx.dpt import (
     DPTArray,
     DPTColorRGB,
     DPTColorRGBW,

@@ -3,7 +3,7 @@
 import pytest
 
 from xknx.dpt import DPTArray, DPTControllerStatus, DPTHVACMode
-from xknx.dpt.dpt_hvac_mode import HVACOperationMode
+from xknx.dpt.dpt_20 import HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 

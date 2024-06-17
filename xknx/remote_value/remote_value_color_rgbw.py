@@ -8,8 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from xknx.dpt import DPTArray, DPTBinary
-from xknx.dpt.dpt_color import DPTColorRGBW, RGBWColor
+from xknx.dpt import DPTArray, DPTBinary, DPTColorRGBW, RGBWColor
 from xknx.typing import CallbackType
 
 from .remote_value import GroupAddressesType, RemoteValue

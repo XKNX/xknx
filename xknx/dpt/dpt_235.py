@@ -6,8 +6,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from .dpt import DPTComplex, DPTComplexData
-from .dpt_1byte_uint import DPTTariff
-from .dpt_4byte_int import DPTActiveEnergy
+from .dpt_5 import DPTTariff
+from .dpt_13 import DPTActiveEnergy
 from .payload import DPTArray, DPTBinary
 
 

@@ -6,7 +6,7 @@ DPT 242.600.
 
 from __future__ import annotations
 
-from xknx.dpt.dpt_color import DPTColorXYY, XYYColor
+from xknx.dpt import DPTColorXYY, XYYColor
 
 from .remote_value import RemoteValue
 
