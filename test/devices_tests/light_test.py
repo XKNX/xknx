@@ -6,7 +6,7 @@ from xknx import XKNX
 from xknx.devices import Light
 from xknx.devices.light import ColorTemperatureType
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.dpt.dpt_color import XYYColor
+from xknx.dpt.dpt_242 import XYYColor
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 

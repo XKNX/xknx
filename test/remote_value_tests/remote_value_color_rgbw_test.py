@@ -3,8 +3,7 @@
 import pytest
 
 from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBinary
-from xknx.dpt.dpt_color import RGBWColor
+from xknx.dpt import DPTArray, DPTBinary, RGBWColor
 from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueColorRGBW
 from xknx.telegram import GroupAddress, Telegram

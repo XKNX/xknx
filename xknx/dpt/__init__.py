@@ -5,19 +5,56 @@ Module for encoding and decoding KNX datatypes.
 * Derived KNX Values like Scaling, Temperature
 """
 
-# flake8: noqa
-from .dpt import DPTBase, DPTNumeric, DPTComplexData, DPTComplex
-from .dpt_1byte_signed import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
-from .dpt_1byte_uint import (
+# ruff: noqa: F401
+from .dpt import DPTBase, DPTComplex, DPTComplexData, DPTNumeric
+from .dpt_3 import (
+    DPTControlStartStop,
+    DPTControlStartStopBlinds,
+    DPTControlStartStopDimming,
+    DPTControlStepCode,
+    DPTControlStepwise,
+    DPTControlStepwiseBlinds,
+    DPTControlStepwiseDimming,
+)
+from .dpt_5 import (
+    DPTAngle,
     DPTDecimalFactor,
     DPTPercentU8,
-    DPTSceneNumber,
+    DPTScaling,
     DPTTariff,
     DPTValue1ByteUnsigned,
     DPTValue1Ucount,
 )
-from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
-from .dpt_2byte_float import (
+from .dpt_6 import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
+from .dpt_7 import (
+    DPT2ByteUnsigned,
+    DPT2Ucount,
+    DPTBrightness,
+    DPTColorTemperature,
+    DPTLengthMm,
+    DPTPropDataType,
+    DPTTimePeriod10Msec,
+    DPTTimePeriod100Msec,
+    DPTTimePeriodHrs,
+    DPTTimePeriodMin,
+    DPTTimePeriodMsec,
+    DPTTimePeriodSec,
+    DPTUElCurrentmA,
+)
+from .dpt_8 import (
+    DPT2ByteSigned,
+    DPTDeltaTime10Msec,
+    DPTDeltaTime100Msec,
+    DPTDeltaTimeHrs,
+    DPTDeltaTimeMin,
+    DPTDeltaTimeMsec,
+    DPTDeltaTimeSec,
+    DPTLengthM,
+    DPTPercentV16,
+    DPTRotationAngle,
+    DPTValue2Count,
+)
+from .dpt_9 import (
     DPT2ByteFloat,
     DPTAbsoluteHumidity,
     DPTAirFlow,
@@ -43,44 +80,31 @@ from .dpt_2byte_float import (
     DPTWsp,
     DPTWspKmh,
 )
-from .dpt_2byte_signed import (
-    DPT2ByteSigned,
-    DPTDeltaTime10Msec,
-    DPTDeltaTime100Msec,
-    DPTDeltaTimeHrs,
-    DPTDeltaTimeMin,
-    DPTDeltaTimeMsec,
-    DPTDeltaTimeSec,
-    DPTLengthM,
-    DPTPercentV16,
-    DPTRotationAngle,
-    DPTValue2Count,
+from .dpt_10 import DPTTime
+from .dpt_11 import DPTDate
+from .dpt_12 import (
+    DPT4ByteUnsigned,
+    DPTLongTimePeriodHrs,
+    DPTLongTimePeriodMin,
+    DPTLongTimePeriodSec,
+    DPTValue4Ucount,
+    DPTVolumeLiquidLitre,
+    DPTVolumeM3,
 )
-from .dpt_2byte_uint import (
-    DPT2ByteUnsigned,
-    DPT2Ucount,
-    DPTBrightness,
-    DPTColorTemperature,
-    DPTLengthMm,
-    DPTPropDataType,
-    DPTTimePeriod10Msec,
-    DPTTimePeriod100Msec,
-    DPTTimePeriodHrs,
-    DPTTimePeriodMin,
-    DPTTimePeriodMsec,
-    DPTTimePeriodSec,
-    DPTUElCurrentmA,
+from .dpt_13 import (
+    DPT4ByteSigned,
+    DPTActiveEnergy,
+    DPTActiveEnergykWh,
+    DPTActiveEnergyMWh,
+    DPTApparantEnergy,
+    DPTApparantEnergykVAh,
+    DPTFlowRateM3H,
+    DPTLongDeltaTimeSec,
+    DPTReactiveEnergy,
+    DPTReactiveEnergykVARh,
+    DPTValue4Count,
 )
-from .dpt_4bit_control import (
-    DPTControlStartStop,
-    DPTControlStartStopBlinds,
-    DPTControlStartStopDimming,
-    DPTControlStepCode,
-    DPTControlStepwise,
-    DPTControlStepwiseBlinds,
-    DPTControlStepwiseDimming,
-)
-from .dpt_4byte_float import (
+from .dpt_14 import (
     DPT4ByteFloat,
     DPTAbsoluteTemperature,
     DPTAcceleration,
@@ -164,38 +188,12 @@ from .dpt_4byte_float import (
     DPTWeight,
     DPTWork,
 )
-from .dpt_4byte_int import (
-    DPT4ByteSigned,
-    DPT4ByteUnsigned,
-    DPTActiveEnergy,
-    DPTActiveEnergykWh,
-    DPTActiveEnergyMWh,
-    DPTApparantEnergy,
-    DPTApparantEnergykVAh,
-    DPTFlowRateM3H,
-    DPTLongDeltaTimeSec,
-    DPTLongTimePeriodHrs,
-    DPTLongTimePeriodMin,
-    DPTLongTimePeriodSec,
-    DPTReactiveEnergy,
-    DPTReactiveEnergykVARh,
-    DPTValue4Count,
-    DPTValue4Ucount,
-    DPTVolumeLiquidLitre,
-    DPTVolumeM3,
-)
-from .dpt_color import (
-    DPTColorXYY,
-    DPTColorRGB,
-    RGBColor,
-    XYYColor,
-    RGBWColor,
-    DPTColorRGBW,
-)
-from .dpt_date import DPTDate
-from .dpt_datetime import DPTDateTime
-from .dpt_hvac_mode import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
-from .dpt_scaling import DPTAngle, DPTScaling
-from .dpt_string import DPTLatin1, DPTString
-from .dpt_time import DPTTime
+from .dpt_16 import DPTLatin1, DPTString
+from .dpt_17 import DPTSceneNumber
+from .dpt_19 import DPTDateTime
+from .dpt_20 import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
+from .dpt_232 import DPTColorRGB, RGBColor
+from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
+from .dpt_242 import DPTColorXYY, XYYColor
+from .dpt_251 import DPTColorRGBW, RGBWColor
 from .payload import DPTArray, DPTBinary

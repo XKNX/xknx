@@ -19,6 +19,7 @@ nav_order: 2
   - Devices: `.process`
   - RemoteValue: `.set`, `.respond`, `.process` and `.update_value`
   - ValueReader: `.send_group_read`
+- Rename DPT transcoder modules for schema `xknx.dpt.dpt_<main-number>.py`
 
 ### Features
 

@@ -4,7 +4,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.remote_value import (
     RemoteValueBinaryHeatCool,

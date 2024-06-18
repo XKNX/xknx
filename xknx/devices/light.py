@@ -20,7 +20,7 @@ from itertools import chain
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from xknx.dpt.dpt_color import RGBColor, RGBWColor, XYYColor
+from xknx.dpt import RGBColor, RGBWColor, XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,

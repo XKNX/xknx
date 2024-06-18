@@ -3,7 +3,7 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.dpt.dpt_color import RGBWColor
+from xknx.dpt import RGBWColor
 from xknx.remote_value import RemoteValueColorRGBW
 
 

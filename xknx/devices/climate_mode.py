@@ -11,7 +11,7 @@ from collections.abc import Iterator
 from itertools import chain
 from typing import TYPE_CHECKING, Any
 
-from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import GroupAddressesType, RemoteValue
 from xknx.remote_value.remote_value_climate_mode import (
