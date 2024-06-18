@@ -74,7 +74,9 @@ class TestDataSecure:
 
         self.data_secure = self.xknx.cemi_handler.data_secure
 
-    async def test_data_secure_init(self):
+    @patch("xknx.secure.data_secure.DataSecure.outgoing_cemi")
+    @patch("xknx.secure.data_secure.DataSecure.received_cemi")
+    async def test_data_secure_init(self, mock_ds_received_cemi, mock_ds_outgoing_cemi):
         """Test DataSecure init and passing frames from CEMIHandler to DataSecure."""
         assert self.data_secure is not None
 
@@ -95,31 +97,31 @@ class TestDataSecure:
             destination_address=GroupAddress("0/4/0"),
             payload=apci.GroupValueRead(),
         )
-        with patch.object(self.data_secure, "outgoing_cemi") as mock_ds_outgoing_cemi:
-            task = asyncio.create_task(
-                self.xknx.cemi_handler.send_telegram(test_telegram)
-            )
-            await asyncio.sleep(0)
-            mock_ds_outgoing_cemi.assert_called_once()
-            self.xknx.cemi_handler._l_data_confirmation_event.set()
-            await task
+
+        task = asyncio.create_task(self.xknx.cemi_handler.send_telegram(test_telegram))
+        await asyncio.sleep(0)
+        # Frame is passed to DataSecure class. Encryption is not tested here.
+        mock_ds_outgoing_cemi.assert_called_once()
+        assert isinstance(
+            mock_ds_outgoing_cemi.call_args.kwargs["cemi_data"], CEMILData
+        )
+        self.xknx.cemi_handler._l_data_confirmation_event.set()
+        await task
 
         test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_IND,
             data=CEMILData.init_from_telegram(test_telegram),
         )
-        with (
-            patch.object(
-                self.data_secure,
-                "received_cemi",
-                return_value=test_cemi.data,  # Reuse incoming plain APDU. Decryption is not tested here
-            ) as mock_ds_received_cemi,
-            patch.object(
-                self.xknx.cemi_handler, "telegram_received"
-            ) as mock_telegram_received,
-        ):  # suppress forwarding to telegras/management
+        # Reuse incoming plain APDU. Decryption is not tested here
+        mock_ds_received_cemi.return_value = test_cemi.data
+        with patch.object(
+            self.xknx.cemi_handler, "telegram_received"
+        ) as mock_telegram_received:  # suppress forwarding to telegras/management
             self.xknx.cemi_handler.handle_cemi_frame(test_cemi)
             mock_ds_received_cemi.assert_called_once()
+            assert isinstance(
+                mock_ds_received_cemi.call_args.kwargs["cemi_data"], CEMILData
+            )
             mock_telegram_received.assert_called_once()
 
     def test_data_secure_init_invalid_system_time(self):
