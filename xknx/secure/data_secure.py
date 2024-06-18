@@ -39,6 +39,12 @@ def _initial_sequence_number() -> int:
 class DataSecure:
     """Class for KNX Data Secure handling."""
 
+    __slots__ = (
+        "_group_key_table",
+        "_individual_address_table",
+        "_sequence_number_sending",
+    )
+
     def __init__(
         self,
         *,

@@ -48,7 +48,6 @@ nav_order: 2
 
 - Use `slots` in addresses, Telegram, DPTBinary, DPTArray, TPCI, APCI, DPTComplexData
 - Convert Telegram and APCI to dataclasses. `Telegram` is not hashable anymore.
-- Use `asyncio.gather` where applicable (mostly device telegram process pipeline)
 - RemoteValue instances use pre-decoded data from Telegrams if available and `dpt_class` for is set - otherwise they decode the data themselves in `from_knx` like before.
 
 # 2.12.2 Fix thread leak 2024-03-05
