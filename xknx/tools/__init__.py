@@ -1,6 +1,6 @@
 """Module for communication tools."""
 
-# flake8: noqa
+# ruff: noqa: F401
 from .group_communication import (
     group_value_read,
     group_value_response,

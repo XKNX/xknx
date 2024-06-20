@@ -1,6 +1,6 @@
 """Module for Profile and resource management ."""
 
-# flake8: noqa
+# ruff: noqa: F401
 from .const import (
     ResourceDevicePropertyId,
     ResourceEModeChannelPropertyId,
