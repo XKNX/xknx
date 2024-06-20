@@ -2,7 +2,6 @@
 
 # flake8: noqa
 from .remote_value import GroupAddressesType, RemoteValue
-from .remote_value_1count import RemoteValue1Count
 from .remote_value_climate_mode import (
     RemoteValueBinaryHeatCool,
     RemoteValueBinaryOperationMode,
@@ -32,7 +31,6 @@ from .remote_value_updown import RemoteValueUpDown
 __all__ = [
     "GroupAddressesType",
     "RemoteValue",
-    "RemoteValue1Count",
     "RemoteValueBinaryHeatCool",
     "RemoteValueBinaryOperationMode",
     "RemoteValueColorRGB",
