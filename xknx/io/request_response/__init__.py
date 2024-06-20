@@ -1,9 +1,6 @@
-"""
-This package contains all objects for sending Requests and waiting for the corresponding Response
-of specific KNX/IP Packets used for tunnelling connections.
-"""
+"""Package containing all objects for sending requests and waiting for the corresponding response of specific KNX/IP frames."""
 
-# flake8: noqa
+# ruff: noqa: F401
 from .authenticate import Authenticate
 from .connect import Connect
 from .connectionstate import ConnectionState

@@ -1,6 +1,5 @@
 """Module for handling values on the KNX bus."""
 
-# flake8: noqa
 from .remote_value import GroupAddressesType, RemoteValue
 from .remote_value_climate_mode import (
     RemoteValueBinaryHeatCool,
