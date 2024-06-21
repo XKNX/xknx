@@ -29,7 +29,7 @@ from xknx.telegram import IndividualAddress
 
 from .const import HEARTBEAT_RATE
 from .gateway_scanner import GatewayDescriptor
-from .interface import CEMICallbackType, Interface
+from .interface import CEMIBytesCallbackType, Interface
 from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, Disconnect, Tunnelling
 from .self_description import DescriptionQuery
@@ -50,7 +50,7 @@ class _Tunnel(Interface):
     def __init__(
         self,
         xknx: XKNX,
-        cemi_received_callback: CEMICallbackType,
+        cemi_received_callback: CEMIBytesCallbackType,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
     ):
@@ -379,7 +379,7 @@ class UDPTunnel(_Tunnel):
     def __init__(
         self,
         xknx: XKNX,
-        cemi_received_callback: CEMICallbackType,
+        cemi_received_callback: CEMIBytesCallbackType,
         gateway_ip: str,
         gateway_port: int,
         local_ip: str,
@@ -551,7 +551,7 @@ class TCPTunnel(_Tunnel):
     def __init__(
         self,
         xknx: XKNX,
-        cemi_received_callback: CEMICallbackType,
+        cemi_received_callback: CEMIBytesCallbackType,
         gateway_ip: str,
         gateway_port: int,
         individual_address: IndividualAddress | None = None,
@@ -595,7 +595,7 @@ class SecureTunnel(TCPTunnel):
     def __init__(
         self,
         xknx: XKNX,
-        cemi_received_callback: CEMICallbackType,
+        cemi_received_callback: CEMIBytesCallbackType,
         gateway_ip: str,
         gateway_port: int,
         user_id: int,

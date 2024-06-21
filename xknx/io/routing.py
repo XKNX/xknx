@@ -27,7 +27,7 @@ from xknx.knxip import (
 from xknx.telegram import IndividualAddress
 
 from .const import DEFAULT_INDIVIDUAL_ADDRESS, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
-from .interface import CEMICallbackType, Interface
+from .interface import CEMIBytesCallbackType, Interface
 from .ip_secure import SecureGroup
 from .transport import KNXIPTransport, UDPTransport
 
@@ -140,7 +140,7 @@ class Routing(Interface):
         self,
         xknx: XKNX,
         individual_address: IndividualAddress | None,
-        cemi_received_callback: CEMICallbackType,
+        cemi_received_callback: CEMIBytesCallbackType,
         local_ip: str,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
@@ -271,7 +271,7 @@ class SecureRouting(Routing):
         self,
         xknx: XKNX,
         individual_address: IndividualAddress | None,
-        cemi_received_callback: CEMICallbackType,
+        cemi_received_callback: CEMIBytesCallbackType,
         local_ip: str,
         backbone_key: bytes,
         latency_ms: int | None = None,

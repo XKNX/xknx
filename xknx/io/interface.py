@@ -13,7 +13,7 @@ from collections.abc import Callable
 
 from xknx.cemi import CEMIFrame
 
-CEMICallbackType = Callable[[bytes], None]
+CEMIBytesCallbackType = Callable[[bytes], None]
 
 
 class Interface(ABC):
