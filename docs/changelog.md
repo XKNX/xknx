@@ -33,11 +33,12 @@ nav_order: 2
 ### DPT
 
 - DPTComplex: Common interface for DPT transcoders with multi-value data. Resulting dataclasses can be converted to and from a dict with DPT specific properties to be JSON compatible.
-- Added or refactored DPTs and dataclasses:
+- Added or refactored complex DPTs and dataclasses:
   - 232.600 - DPTColorRGB - RGBColor
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
+- DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
 ### Address

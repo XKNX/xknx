@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from enum import Enum
 from inspect import isabstract
 from typing import Any, Generic, TypedDict, TypeVar, cast
 
@@ -218,6 +219,60 @@ class DPTNumeric(DPTBase):
     @abstractmethod
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
+
+
+EnumT = TypeVar("EnumT", bound=Enum)
+
+
+class DPTEnum(DPTBase, Generic[EnumT]):
+    """Abstraction for KNX DPT Enum."""
+
+    value_map: dict[int, EnumT]
+    data_type: type[EnumT]
+
+    payload_type = DPTArray
+    payload_length = 1
+
+    @classmethod
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> EnumT:
+        """Parse/deserialize from KNX/IP raw data."""
+        raw = cls.validate_payload(payload)
+        try:
+            return cls.value_map[raw[0]]  # type: ignore[no-any-return]  # without ClassVar this is Any, ClassVar doesn't work with bound TypeVar though
+        except KeyError:
+            raise ConversionError(
+                f"Payload not supported for {cls.__name__}", raw=raw
+            ) from None
+
+    @classmethod
+    def to_knx(cls, value: EnumT | str) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+        if isinstance(value, str):
+            try:
+                # snake_cased name may be used as translation key or serializable value
+                value = cls.data_type[value.upper()]
+            except KeyError:
+                try:
+                    value = cls.data_type(value)
+                except ValueError:
+                    raise ConversionError(
+                        f"Invalid value for {cls.data_type.__name__} in {cls.__name__}",
+                        value=value,
+                        valid_values=cls.get_valid_values(),
+                    ) from None
+        for knx_value, mode in cls.value_map.items():
+            if mode is value:
+                return DPTArray(knx_value)
+        raise ConversionError(
+            f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
+            value=value,
+            valid_values=cls.get_valid_values(),
+        )
+
+    @classmethod
+    def get_valid_values(cls) -> list[EnumT]:
+        """Return list of valid values."""
+        return list(cls.value_map.values())
 
 
 @dataclass(slots=True)
