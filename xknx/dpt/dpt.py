@@ -260,9 +260,9 @@ class DPTEnum(DPTBase, Generic[EnumT]):
                         value=value,
                         valid_values=cls.get_valid_values(),
                     ) from None
-        for knx_value, mode in cls.value_map.items():
-            if mode is value:
-                return DPTArray(knx_value)
+        for knx_raw_value, enum_member in cls.value_map.items():
+            if enum_member is value:
+                return DPTArray(knx_raw_value)
         raise ConversionError(
             f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
             value=value,

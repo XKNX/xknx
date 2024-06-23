@@ -20,6 +20,16 @@ class TestDPTControllerStatus:
             (0x04,)
         )
 
+    def test_mode_to_knx_by_string(self):
+        """Test parsing DPTHVACMode string values to KNX."""
+        assert DPTHVACMode.to_knx("auto") == DPTArray((0x00,))
+        assert DPTHVACMode.to_knx("Comfort") == DPTArray((0x01,))
+        assert DPTHVACMode.to_knx("standby") == DPTArray((0x02,))
+        assert DPTHVACMode.to_knx("NIGHT") == DPTArray((0x03,))
+        assert DPTHVACMode.to_knx(
+            "Frost Protection"  # Enum value, not name
+        ) == DPTArray((0x04,))
+
     def test_mode_to_knx_wrong_value(self):
         """Test serializing DPTHVACMode to KNX with wrong value."""
         with pytest.raises(ConversionError):
