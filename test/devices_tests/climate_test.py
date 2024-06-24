@@ -271,7 +271,7 @@ class TestClimate:
             xknx, "TestClimate", group_address_controller_mode="1/2/4"
         )
 
-        for _, controller_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
+        for controller_mode in DPTHVACContrMode.get_valid_values():
             await climate_mode.set_controller_mode(controller_mode)
             assert xknx.telegrams.qsize() == 1
             telegram = xknx.telegrams.get_nowait()
@@ -1042,7 +1042,7 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_controller_mode="1/2/5"
         )
-        for _, controller_mode in DPTHVACContrMode.SUPPORTED_MODES.items():
+        for controller_mode in DPTHVACContrMode.get_valid_values():
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/5"),
                 payload=GroupValueWrite(DPTHVACContrMode.to_knx(controller_mode)),

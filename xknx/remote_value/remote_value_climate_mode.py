@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from xknx.dpt import (
     DPTArray,
@@ -17,7 +17,7 @@ from xknx.dpt import (
     DPTHVACContrMode,
     DPTHVACMode,
 )
-from xknx.dpt.dpt_20 import HVACControllerMode, HVACModeT, HVACOperationMode
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.typing import CallbackType
 
@@ -25,6 +25,9 @@ from .remote_value import GroupAddressesType, RemoteValue
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
+
+
+HVACModeT = TypeVar("HVACModeT", "HVACControllerMode", "HVACOperationMode")
 
 
 class RemoteValueClimateModeBase(RemoteValue[HVACModeT | None]):
@@ -80,7 +83,7 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
 
     def supported_operation_modes(self) -> list[HVACOperationMode]:
         """Return a list of all supported operation modes."""
-        return list(self._climate_mode_transcoder.SUPPORTED_MODES.values())
+        return self._climate_mode_transcoder.get_valid_values()
 
     def to_knx(self, value: Any) -> DPTArray:
         """Convert value to payload."""
@@ -117,7 +120,7 @@ class RemoteValueControllerMode(RemoteValueClimateModeBase[HVACControllerMode]):
 
     def supported_operation_modes(self) -> list[HVACControllerMode]:
         """Return a list of all supported operation modes."""
-        return list(DPTHVACContrMode.SUPPORTED_MODES.values())
+        return DPTHVACContrMode.get_valid_values()
 
     def to_knx(self, value: Any) -> DPTArray:
         """Convert value to payload."""
