@@ -51,7 +51,7 @@ class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
     dpt_sub_number = 105
     value_type = "hvac_controller_mode"
     data_type = HVACControllerMode
-    value_map = {
+    VALUE_MAP = {
         0: HVACControllerMode.AUTO,
         1: HVACControllerMode.HEAT,
         2: HVACControllerMode.MORNING_WARMUP,
@@ -80,7 +80,7 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
     dpt_sub_number = 102
     value_type = "hvac_mode"
     data_type = HVACOperationMode
-    value_map = {
+    VALUE_MAP = {
         0: HVACOperationMode.AUTO,
         1: HVACOperationMode.COMFORT,
         2: HVACOperationMode.STANDBY,
@@ -101,7 +101,7 @@ class DPTControllerStatus(DPTEnum[HVACOperationMode]):
     """
 
     data_type = HVACOperationMode
-    value_map = {
+    VALUE_MAP = {
         0x21: HVACOperationMode.COMFORT,
         0x22: HVACOperationMode.STANDBY,
         0x24: HVACOperationMode.NIGHT,

@@ -227,18 +227,18 @@ EnumT = TypeVar("EnumT", bound=Enum)
 class DPTEnum(DPTBase, Generic[EnumT]):
     """Abstraction for KNX DPT Enum."""
 
-    value_map: dict[int, EnumT]
-    data_type: type[EnumT]
-
     payload_type = DPTArray
     payload_length = 1
+
+    data_type: type[EnumT]
+    VALUE_MAP: Mapping[int, EnumT]
 
     @classmethod
     def from_knx(cls, payload: DPTArray | DPTBinary) -> EnumT:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         try:
-            return cls.value_map[raw[0]]  # type: ignore[no-any-return]  # without ClassVar this is Any, ClassVar doesn't work with bound TypeVar though
+            return cls.VALUE_MAP[raw[0]]  # type: ignore[no-any-return]  # without ClassVar this is Any, ClassVar doesn't work with bound TypeVar though
         except KeyError:
             raise ConversionError(
                 f"Payload not supported for {cls.__name__}", raw=raw
@@ -260,7 +260,7 @@ class DPTEnum(DPTBase, Generic[EnumT]):
                         value=value,
                         valid_values=cls.get_valid_values(),
                     ) from None
-        for knx_raw_value, enum_member in cls.value_map.items():
+        for knx_raw_value, enum_member in cls.VALUE_MAP.items():
             if enum_member is value:
                 return DPTArray(knx_raw_value)
         raise ConversionError(
@@ -272,7 +272,7 @@ class DPTEnum(DPTBase, Generic[EnumT]):
     @classmethod
     def get_valid_values(cls) -> list[EnumT]:
         """Return list of valid values."""
-        return list(cls.value_map.values())
+        return list(cls.VALUE_MAP.values())
 
 
 @dataclass(slots=True)
