@@ -9,6 +9,10 @@ from xknx.dpt import (
     DPTArray,
     DPTBase,
     DPTBinary,
+    DPTColorRGBW,
+    DPTComplex,
+    DPTEnum,
+    DPTHVACContrMode,
     DPTNumeric,
     DPTScaling,
     DPTString,
@@ -23,7 +27,19 @@ class TestDPTBase:
     def test_dpt_abstract_subclasses_ignored(self):
         """Test if abstract base classes are ignored by dpt_class_tree and __recursive_subclasses__."""
         for dpt in DPTBase.dpt_class_tree():
-            assert dpt not in (DPTBase, DPTNumeric)
+            assert dpt not in (DPTBase, DPTNumeric, DPTEnum, DPTComplex)
+
+    def test_dpt_concrete_subclasses_included(self):
+        """Test if concrete subclasses are included by dpt_class_tree."""
+        for dpt in (
+            DPT2ByteFloat,
+            DPTString,
+            DPTTemperature,
+            DPTScaling,
+            DPTHVACContrMode,
+            DPTColorRGBW,
+        ):
+            assert dpt in DPTBase.dpt_class_tree()
 
     @pytest.mark.parametrize("dpt_class", [DPTString, DPT2ByteFloat])
     def test_dpt_non_abstract_baseclass_included(self, dpt_class):

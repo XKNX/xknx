@@ -7,7 +7,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from inspect import isabstract
-from typing import Any, Generic, TypedDict, TypeVar, cast
+from typing import Any, Generic, TypedDict, TypeVar, cast, final
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -231,14 +231,21 @@ class DPTEnum(DPTBase, Generic[EnumT]):
     payload_length = 1
 
     data_type: type[EnumT]
-    VALUE_MAP: Mapping[int, EnumT]
+
+    @classmethod
+    @abstractmethod
+    def get_value_map(cls) -> Mapping[int, EnumT]:
+        """Return mapping of raw KNX values to Enum members."""
+        # At least one abstract method is needed for our parse_transcoder lookup to
+        # ignore the DPTEnum base class and only find concrete base classes.
+        # Therefore this is not a ClassVar (which wouldn't support TypeVar parameters).
 
     @classmethod
     def from_knx(cls, payload: DPTArray | DPTBinary) -> EnumT:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         try:
-            return cls.VALUE_MAP[raw[0]]  # type: ignore[no-any-return]  # without ClassVar this is Any, ClassVar doesn't work with bound TypeVar though
+            return cls.get_value_map()[raw[0]]
         except KeyError:
             raise ConversionError(
                 f"Payload not supported for {cls.__name__}", raw=raw
@@ -260,7 +267,7 @@ class DPTEnum(DPTBase, Generic[EnumT]):
                         value=value,
                         valid_values=cls.get_valid_values(),
                     ) from None
-        for knx_raw_value, enum_member in cls.VALUE_MAP.items():
+        for knx_raw_value, enum_member in cls.get_value_map().items():
             if enum_member is value:
                 return DPTArray(knx_raw_value)
         raise ConversionError(
@@ -272,7 +279,7 @@ class DPTEnum(DPTBase, Generic[EnumT]):
     @classmethod
     def get_valid_values(cls) -> list[EnumT]:
         """Return list of valid values."""
-        return list(cls.VALUE_MAP.values())
+        return list(cls.get_value_map().values())
 
 
 @dataclass(slots=True)
@@ -301,6 +308,7 @@ class DPTComplex(DPTBase, Generic[TComplexData]):
     def from_knx(cls, payload: DPTArray | DPTBinary) -> TComplexData:
         """Parse/deserialize from KNX/IP payload data."""
 
+    @final
     @classmethod
     def to_knx(cls, value: TComplexData | Mapping[str, Any]) -> DPTArray:
         """Serialize to KNX/IP raw data."""
