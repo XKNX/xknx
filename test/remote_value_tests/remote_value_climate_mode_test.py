@@ -22,9 +22,7 @@ class TestRemoteValueOperationMode:
     def test_to_knx_operation_mode(self):
         """Test to_knx function with normal operation."""
         xknx = XKNX()
-        remote_value = RemoteValueOperationMode(
-            xknx, climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE
-        )
+        remote_value = RemoteValueOperationMode(xknx)
         assert remote_value.to_knx(HVACOperationMode.COMFORT) == DPTArray((0x01,))
 
     def test_to_knx_controller_mode(self):
@@ -72,9 +70,7 @@ class TestRemoteValueOperationMode:
     def test_from_knx_operation_mode(self):
         """Test from_knx function with normal operation."""
         xknx = XKNX()
-        remote_value = RemoteValueOperationMode(
-            xknx, climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE
-        )
+        remote_value = RemoteValueOperationMode(xknx)
         assert remote_value.from_knx(DPTArray((0x02,))) == HVACOperationMode.STANDBY
 
     def test_from_knx_controller_mode(self):
@@ -94,12 +90,6 @@ class TestRemoteValueOperationMode:
         )
         with pytest.raises(CouldNotParseTelegram):
             remote_value.from_knx(DPTArray((0x9, 0xF)))
-
-    def test_from_knx_operation_mode_error(self):
-        """Test from_knx function with invalid payload."""
-        xknx = XKNX()
-        with pytest.raises(ConversionError):
-            RemoteValueOperationMode(xknx, climate_mode_type=None)
 
     def test_from_knx_binary(self):
         """Test from_knx function with normal operation."""
@@ -134,9 +124,7 @@ class TestRemoteValueOperationMode:
     def test_to_knx_error_operation_mode(self):
         """Test to_knx function with wrong parameter."""
         xknx = XKNX()
-        remote_value = RemoteValueOperationMode(
-            xknx, climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE
-        )
+        remote_value = RemoteValueOperationMode(xknx)
         with pytest.raises(ConversionError):
             remote_value.to_knx(256)
         with pytest.raises(ConversionError):
@@ -172,9 +160,7 @@ class TestRemoteValueOperationMode:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
-            xknx,
-            group_address=GroupAddress("1/2/3"),
-            climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE,
+            xknx, group_address=GroupAddress("1/2/3")
         )
         remote_value.set(HVACOperationMode.NIGHT)
         assert xknx.telegrams.qsize() == 1
@@ -239,9 +225,7 @@ class TestRemoteValueOperationMode:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
-            xknx,
-            group_address=GroupAddress("1/2/3"),
-            climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE,
+            xknx, group_address=GroupAddress("1/2/3")
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -282,9 +266,7 @@ class TestRemoteValueOperationMode:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
-            xknx,
-            group_address=GroupAddress("1/2/3"),
-            climate_mode_type=RemoteValueOperationMode.ClimateModeType.HVAC_MODE,
+            xknx, group_address=GroupAddress("1/2/3")
         )
 
         telegram = Telegram(

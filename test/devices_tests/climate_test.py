@@ -11,13 +11,13 @@ from xknx.dpt import (
     DPT2ByteFloat,
     DPTArray,
     DPTBinary,
-    DPTControllerStatus,
     DPTHVACContrMode,
     DPTHVACMode,
+    DPTHVACStatus,
     DPTTemperature,
     DPTValue1Count,
 )
-from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import ConversionError, DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
@@ -295,22 +295,39 @@ class TestClimate:
             await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
 
     async def test_set_operation_mode_with_controller_status(self):
-        """Test set_operation_mode with controller status adddressedefined."""
+        """Test set_operation_mode with controller status address defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_controller_status="1/2/4"
         )
 
-        for operation_mode in DPT_20102_MODES:
-            if operation_mode == HVACOperationMode.AUTO:
-                continue
-            await climate_mode.set_operation_mode(operation_mode)
-            assert xknx.telegrams.qsize() == 1
-            telegram = xknx.telegrams.get_nowait()
-            assert telegram == Telegram(
+        # needs to be initialized before it can be sent
+        with pytest.raises(ConversionError):
+            await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
+
+        climate_mode.process(
+            Telegram(
                 destination_address=GroupAddress("1/2/4"),
-                payload=GroupValueWrite(DPTControllerStatus.to_knx(operation_mode)),
+                payload=GroupValueWrite(DPTArray((0b10000000,))),
             )
+        )
+        # controller mode
+        await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTArray((0b10000100,))),
+        )
+        climate_mode.process(telegram)  # process to have internal value updated
+        # operation mode
+        await climate_mode.set_operation_mode(HVACOperationMode.STANDBY)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/4"),
+            payload=GroupValueWrite(DPTArray((0b01000100,))),
+        )
 
     async def test_set_operation_mode_with_separate_addresses(self):
         """Test set_operation_mode with combined and separated group addresses defined."""
@@ -964,8 +981,8 @@ class TestClimate:
         telegrams = [xknx.telegrams.get_nowait() for _ in range(3)]
         assert telegrams == [
             Telegram(GroupAddress("1/2/5"), payload=GroupValueRead()),
-            Telegram(GroupAddress("1/2/6"), payload=GroupValueRead()),
             Telegram(GroupAddress("1/2/14"), payload=GroupValueRead()),
+            Telegram(GroupAddress("1/2/6"), payload=GroupValueRead()),
         ]
 
     async def test_sync_heat_cool(self):
@@ -1031,7 +1048,17 @@ class TestClimate:
                 continue
             telegram = Telegram(
                 destination_address=GroupAddress("1/2/3"),
-                payload=GroupValueWrite(DPTControllerStatus.to_knx(operation_mode)),
+                payload=GroupValueWrite(
+                    DPTHVACStatus.to_knx(
+                        HVACStatus(
+                            mode=operation_mode,
+                            dew_point=False,
+                            heat_cool=HVACControllerMode.HEAT,
+                            inactive=False,
+                            frost_alarm=False,
+                        )
+                    )
+                ),
             )
             climate_mode.process(telegram)
             assert climate_mode.operation_mode == operation_mode
@@ -1297,7 +1324,10 @@ class TestClimate:
     def test_custom_supported_controller_modes_when_controller_mode_unsupported(self):
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Heat", "Cool"]
-        modes = []
+        modes = [
+            HVACControllerMode.HEAT,
+            HVACControllerMode.COOL,
+        ]
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,

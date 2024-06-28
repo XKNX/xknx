@@ -2,12 +2,12 @@
 
 import pytest
 
-from xknx.dpt import DPTArray, DPTControllerStatus, DPTHVACMode
-from xknx.dpt.dpt_20 import HVACOperationMode
+from xknx.dpt import DPTArray, DPTHVACMode, DPTHVACStatus
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
-class TestDPTControllerStatus:
+class TestDPTHVACMode:
     """Test class for KNX DPT HVAC Operation modes."""
 
     def test_mode_to_knx(self):
@@ -46,74 +46,180 @@ class TestDPTControllerStatus:
             == HVACOperationMode.FROST_PROTECTION
         )
 
-    def test_controller_status_to_knx(self):
-        """Test serializing DPTControllerStatus to KNX."""
-        with pytest.raises(ConversionError):
-            DPTControllerStatus.to_knx(HVACOperationMode.AUTO)
-        assert DPTControllerStatus.to_knx(HVACOperationMode.COMFORT) == DPTArray(
-            (0x21,)
-        )
-        assert DPTControllerStatus.to_knx(HVACOperationMode.STANDBY) == DPTArray(
-            (0x22,)
-        )
-        assert DPTControllerStatus.to_knx(HVACOperationMode.NIGHT) == DPTArray((0x24,))
-        assert DPTControllerStatus.to_knx(
-            HVACOperationMode.FROST_PROTECTION
-        ) == DPTArray((0x28,))
-
-    def test_controller_status_to_knx_wrong_value(self):
-        """Test serializing DPTControllerStatus to KNX with wrong value."""
-        with pytest.raises(ConversionError):
-            DPTControllerStatus.to_knx(5)
-
-    def test_controller_status_from_knx(self):
-        """Test parsing DPTControllerStatus from KNX."""
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x21,))) == HVACOperationMode.COMFORT
-        )
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x22,))) == HVACOperationMode.STANDBY
-        )
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x24,))) == HVACOperationMode.NIGHT
-        )
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x28,)))
-            == HVACOperationMode.FROST_PROTECTION
-        )
-
-    def test_controller_status_from_knx_other_bits_set(self):
-        """Test parsing DPTControllerStatus from KNX."""
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x21,))) == HVACOperationMode.COMFORT
-        )
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x23,))) == HVACOperationMode.STANDBY
-        )
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x27,))) == HVACOperationMode.NIGHT
-        )
-        assert (
-            DPTControllerStatus.from_knx(DPTArray((0x2F,)))
-            == HVACOperationMode.FROST_PROTECTION
-        )
-
     def test_mode_from_knx_wrong_value(self):
-        """Test parsing of DPTControllerStatus with wrong value)."""
+        """Test parsing of DPTHVACMode with wrong value)."""
         with pytest.raises(CouldNotParseTelegram):
             DPTHVACMode.from_knx(DPTArray((1, 2)))
-
-    def test_mode_from_knx_wrong_code(self):
-        """Test parsing of DPTHVACMode with wrong code."""
         with pytest.raises(ConversionError):
             DPTHVACMode.from_knx(DPTArray((0x05,)))
 
-    def test_controller_status_from_knx_wrong_value(self):
-        """Test parsing of DPTControllerStatus with wrong value)."""
-        with pytest.raises(CouldNotParseTelegram):
-            DPTControllerStatus.from_knx(DPTArray((1, 2)))
 
-    def test_controller_status_from_knx_wrong_code(self):
-        """Test parsing of DPTControllerStatus with wrong code."""
+class TestHVACStatus:
+    """Test HVACStatus class."""
+
+    @pytest.mark.parametrize(
+        ("data", "value"),
+        [
+            (
+                {
+                    "mode": "comfort",
+                    "dew_point": False,
+                    "heat_cool": "heat",
+                    "inactive": False,
+                    "frost_alarm": False,
+                },
+                HVACStatus(
+                    mode=HVACOperationMode.COMFORT,
+                    dew_point=False,
+                    heat_cool=HVACControllerMode.HEAT,
+                    inactive=False,
+                    frost_alarm=False,
+                ),
+            ),
+            (
+                {
+                    "mode": "standby",
+                    "dew_point": False,
+                    "heat_cool": "cool",
+                    "inactive": True,
+                    "frost_alarm": False,
+                },
+                HVACStatus(
+                    mode=HVACOperationMode.STANDBY,
+                    dew_point=False,
+                    heat_cool=HVACControllerMode.COOL,
+                    inactive=True,
+                    frost_alarm=False,
+                ),
+            ),
+        ],
+    )
+    def test_dict(self, data, value):
+        """Test from_dict and as_dict methods."""
+        test_value = HVACStatus.from_dict(data)
+        assert test_value == value
+        assert value.as_dict() == data
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {
+                "mode": "happy",  # invalid
+                "dew_point": False,
+                "heat_cool": "heat",
+                "inactive": False,
+                "frost_alarm": False,
+            },
+            {
+                "mode": "comfort",
+                "dew_point": False,
+                "heat_cool": "free",  # invalid
+                "inactive": False,
+                "frost_alarm": False,
+            },
+            {
+                "mode": "comfort",
+                "dew_point": 20,  # invalid
+                "heat_cool": "heat",
+                "inactive": False,
+                "frost_alarm": False,
+            },
+        ],
+    )
+    def test_dict_invalid(self, data):
+        """Test from_dict and as_dict methods."""
+        with pytest.raises(ValueError):
+            HVACStatus.from_dict(data)
+
+
+class TestDPTHVACStatus:
+    """Test class for KNX DPTHVACStatus objects."""
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (
+                HVACStatus(
+                    mode=HVACOperationMode.COMFORT,
+                    dew_point=False,
+                    heat_cool=HVACControllerMode.HEAT,
+                    inactive=False,
+                    frost_alarm=False,
+                ),
+                (0b10000100,),
+            ),
+            (
+                HVACStatus(
+                    mode=HVACOperationMode.COMFORT,
+                    dew_point=False,
+                    heat_cool=HVACControllerMode.COOL,
+                    inactive=False,
+                    frost_alarm=False,
+                ),
+                (0b10000000,),
+            ),  # min values
+            (
+                HVACStatus(
+                    mode=HVACOperationMode.NIGHT,
+                    dew_point=False,
+                    heat_cool=HVACControllerMode.COOL,
+                    inactive=True,
+                    frost_alarm=False,
+                ),
+                (0b00100010,),
+            ),
+        ],
+    )
+    def test_dpt_encoding_decoding(self, value, raw):
+        """Test DPTHVACStatus parsing and streaming."""
+        knx_value = DPTHVACStatus.to_knx(value)
+        assert knx_value == DPTArray(raw)
+        assert DPTHVACStatus.from_knx(knx_value) == value
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (
+                {
+                    "mode": "comfort",
+                    "dew_point": False,
+                    "heat_cool": "heat",
+                    "inactive": False,
+                    "frost_alarm": False,
+                },
+                (0b10000100,),
+            ),
+            (
+                {
+                    "mode": "standby",
+                    "dew_point": False,
+                    "heat_cool": "cool",
+                    "inactive": True,
+                    "frost_alarm": False,
+                },
+                (0b01000010,),
+            ),
+        ],
+    )
+    def test_dpt_to_knx_from_dict(self, value, raw):
+        """Test DPTHVACStatus parsing from a dict."""
+        knx_value = DPTHVACStatus.to_knx(value)
+        assert knx_value == DPTArray(raw)
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            {"mode": "comfort", "dew_point": False, "heat_cool": "heat"},
+            1,
+            "cool",
+        ],
+    )
+    def test_dpt_wrong_value_to_knx(self, value):
+        """Test DPTHVACStatus parsing with wrong value."""
         with pytest.raises(ConversionError):
-            DPTControllerStatus.from_knx(DPTArray((0x00,)))
+            DPTHVACStatus.to_knx(value)
+
+    def test_dpt_wrong_value_from_knx(self):
+        """Test DPTHVACStatus parsing with wrong value."""
+        with pytest.raises(CouldNotParseTelegram):
+            DPTHVACStatus.from_knx(DPTArray((0xFF, 0x4E)))

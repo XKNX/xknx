@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING, Any
 
 from xknx.dpt import DPTControlStepCode
 from xknx.exceptions import ConversionError
-from xknx.typing import CallbackType
 
-from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -31,7 +30,7 @@ class RemoteValueControl(RemoteValue[Any]):
         value_type: str | None = None,
         device_name: str | None = None,
         feature_name: str = "Control",
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[Any] | None = None,
     ):
         """Initialize control remote value."""
         if value_type is None:

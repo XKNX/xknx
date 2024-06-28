@@ -300,17 +300,13 @@ class Cover(Device):
             self._auto_stop_task = None
         self.after_update()
 
-    def _target_position_from_rv(self) -> None:
+    def _target_position_from_rv(self, new_target_postion: int) -> None:
         """Update the target position from RemoteValue (Callback)."""
-        if self.position_target.value is not None:
-            self._start_position_update(target_position=self.position_target.value)
+        self._start_position_update(target_position=new_target_postion)
 
-    def _current_position_from_rv(self) -> None:
+    def _current_position_from_rv(self, new_position: int) -> None:
         """Update the current position from RemoteValue (Callback)."""
         position_before_update = self.travelcalculator.current_position()
-        new_position = self.position_current.value
-        if new_position is None:
-            return
         if self.is_traveling():
             self.travelcalculator.update_position(new_position)
         else:

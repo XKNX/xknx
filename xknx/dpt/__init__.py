@@ -191,7 +191,7 @@ from .dpt_14 import (
 from .dpt_16 import DPTLatin1, DPTString
 from .dpt_17 import DPTSceneNumber
 from .dpt_19 import DPTDateTime
-from .dpt_20 import DPTControllerStatus, DPTHVACContrMode, DPTHVACMode
+from .dpt_20 import DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
 from .dpt_232 import DPTColorRGB, RGBColor
 from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
 from .dpt_242 import DPTColorXYY, XYYColor

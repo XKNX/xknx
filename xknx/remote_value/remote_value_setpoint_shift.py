@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTTemperature, DPTValue1Count
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.typing import CallbackType
 
-from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -36,7 +35,7 @@ class RemoteValueSetpointShift(RemoteValue[float]):
         group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[float] | None = None,
         setpoint_shift_mode: SetpointShiftMode | None = None,
         setpoint_shift_step: float = 0.1,
     ):

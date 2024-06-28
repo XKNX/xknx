@@ -29,6 +29,7 @@ nav_order: 2
 
 - A Device doesn't auto-add to `xknx.devices` anymore. It can be done via `xknx.devices.async_add()` now. `xknx.devices.async_remove` stops a device from processing telegrams, removes from StateUpdater and cancels its internal tasks. Removed devices can be added again.
 - `Device.shutdown` method is removed
+- Refactor `ClimateMode` device
 
 ### DPT
 
@@ -38,7 +39,10 @@ nav_order: 2
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
+  - 20.60102 - DPTHVACStatusMode - HVACStatus (removed DPTControllerStatus in favour of this)
 - DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
+  - 20.102 - DPTHVACMode - HVACOperationMode
+  - 20.105 - DPTHVACContrMode - HVACControllerMode
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
 ### Address
@@ -51,6 +55,7 @@ nav_order: 2
 - Convert Telegram and APCI to dataclasses. `Telegram` is not hashable anymore.
 - RemoteValue instances use pre-decoded data from Telegrams if available and `dpt_class` for is set - otherwise they decode the data themselves in `from_knx` like before.
 - Remove unused RemoteValue1Count class
+- Add value argument to RemoteValue `after_update_cb` callback
 
 # 2.12.2 Fix thread leak 2024-03-05
 
