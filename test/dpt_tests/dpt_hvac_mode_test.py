@@ -104,7 +104,7 @@ class TestHVACStatus:
         "data",
         [
             {
-                "mode": "happy",  # invalid
+                "mode": 1,  # invalid
                 "dew_point": False,
                 "heat_cool": "heat",
                 "inactive": False,
@@ -113,7 +113,14 @@ class TestHVACStatus:
             {
                 "mode": "comfort",
                 "dew_point": False,
-                "heat_cool": "free",  # invalid
+                "heat_cool": "invalid",  # invalid
+                "inactive": False,
+                "frost_alarm": False,
+            },
+            {
+                "mode": "comfort",
+                "dew_point": False,
+                "heat_cool": "nodem",  # invalid for HVACStatus
                 "inactive": False,
                 "frost_alarm": False,
             },
@@ -161,12 +168,12 @@ class TestDPTHVACStatus:
             (
                 HVACStatus(
                     mode=HVACOperationMode.NIGHT,
-                    dew_point=False,
+                    dew_point=True,
                     heat_cool=HVACControllerMode.COOL,
-                    inactive=True,
-                    frost_alarm=False,
+                    inactive=False,
+                    frost_alarm=True,
                 ),
-                (0b00100010,),
+                (0b00101001,),
             ),
         ],
     )

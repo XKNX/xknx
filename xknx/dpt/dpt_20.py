@@ -186,7 +186,7 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
         elif raw & 0b00010000:
             mode = HVACOperationMode.FROST_PROTECTION
         else:
-            mode = HVACOperationMode.AUTO
+            mode = HVACOperationMode.AUTO  # not sure if this is possible / valid
 
         return HVACStatus(
             mode=mode,
