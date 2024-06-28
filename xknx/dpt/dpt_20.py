@@ -33,13 +33,17 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
     dpt_sub_number = 102
     value_type = "hvac_mode"
     data_type = HVACOperationMode
-    VALUE_MAP = {
-        0: HVACOperationMode.AUTO,
-        1: HVACOperationMode.COMFORT,
-        2: HVACOperationMode.STANDBY,
-        3: HVACOperationMode.NIGHT,
-        4: HVACOperationMode.FROST_PROTECTION,
-    }
+
+    @classmethod
+    def get_value_map(cls) -> Mapping[int, HVACOperationMode]:
+        """Return mapping of raw KNX values to Enum members."""
+        return {
+            0: HVACOperationMode.AUTO,
+            1: HVACOperationMode.COMFORT,
+            2: HVACOperationMode.STANDBY,
+            3: HVACOperationMode.NIGHT,
+            4: HVACOperationMode.FROST_PROTECTION,
+        }
 
 
 class HVACControllerMode(Enum):
