@@ -111,7 +111,7 @@ class ClimateMode(Device):
             sync_state=sync_state,
             device_name=name,
             feature_name="Operation mode Night",
-            operation_mode=HVACOperationMode.NIGHT,
+            operation_mode=HVACOperationMode.ECONOMY,
             after_update_cb=self._set_internal_operation_mode,
         )
         self.remote_value_operation_mode_protection = RemoteValueBinaryOperationMode(
@@ -121,7 +121,7 @@ class ClimateMode(Device):
             sync_state=sync_state,
             device_name=name,
             feature_name="Operation mode Protection",
-            operation_mode=HVACOperationMode.FROST_PROTECTION,
+            operation_mode=HVACOperationMode.BUILDING_PROTECTION,
             after_update_cb=self._set_internal_operation_mode,
         )
         self.remote_value_heat_cool = RemoteValueBinaryHeatCool(

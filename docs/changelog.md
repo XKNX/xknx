@@ -42,7 +42,9 @@ nav_order: 2
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
 - DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
   - 20.102 - DPTHVACMode - HVACOperationMode
+    - rename "NIGHT" to "ECONOMY" and "FROST_PROTECTION" to "BUILDING_PROTECTION" according to KNX specifications
   - 20.105 - DPTHVACContrMode - HVACControllerMode
+    - rename "DRY" to "DEHUMIDIFICATION" and add some values according to KNX specifications
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
 ### Address

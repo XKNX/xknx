@@ -179,8 +179,8 @@ class RemoteValueHVACStatus(RemoteValueClimateModeBase[HVACStatus]):
         return [
             HVACOperationMode.COMFORT,
             HVACOperationMode.STANDBY,
-            HVACOperationMode.NIGHT,
-            HVACOperationMode.FROST_PROTECTION,
+            HVACOperationMode.ECONOMY,
+            HVACOperationMode.BUILDING_PROTECTION,
         ]
 
     def set_operation_mode(self, mode: HVACOperationMode) -> None:
@@ -270,8 +270,8 @@ class RemoteValueBinaryOperationMode(
         """Return a list of all supported operation modes."""
         return [
             HVACOperationMode.COMFORT,
-            HVACOperationMode.FROST_PROTECTION,
-            HVACOperationMode.NIGHT,
+            HVACOperationMode.BUILDING_PROTECTION,
+            HVACOperationMode.ECONOMY,
             HVACOperationMode.STANDBY,
         ]
 
