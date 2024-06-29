@@ -24,10 +24,10 @@ class DPT2ByteUnsigned(DPTNumeric):
 
     value_min = 0
     value_max = 65535
-    resolution: float = 1
+    resolution = 1
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> int | float:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         return ((raw[0] * 256) + raw[1]) * cls.resolution
@@ -36,7 +36,7 @@ class DPT2ByteUnsigned(DPTNumeric):
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = int(float(value) / cls.resolution)
+            knx_value = int(value) // cls.resolution
             if not cls._test_boundaries(knx_value):
                 raise ValueError("Value out of range")
             return DPTArray((knx_value >> 8, knx_value & 0xFF))
