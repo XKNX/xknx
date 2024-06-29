@@ -58,82 +58,6 @@ class RemoteValueClimateModeBase(RemoteValue[HVACModeT]):
         """Set controller mode. Return if not supported."""
 
 
-class RemoteValueControllerStatus(RemoteValueClimateModeBase[HVACStatus]):
-    """Abstraction for remote value of KNX climate controller status."""
-
-    dpt_class = DPTHVACStatus
-
-    def __init__(
-        self,
-        xknx: XKNX,
-        group_address: GroupAddressesType = None,
-        group_address_state: GroupAddressesType = None,
-        sync_state: bool | int | float | str = True,
-        device_name: str | None = None,
-        feature_name: str = "Controller status",
-        after_update_cb: RVCallbackType[HVACStatus] | None = None,
-    ):
-        """Initialize remote value of KNX climate controller status."""
-        super().__init__(
-            xknx,
-            group_address=group_address,
-            group_address_state=group_address_state,
-            sync_state=sync_state,
-            device_name=device_name,
-            feature_name=feature_name,
-            after_update_cb=after_update_cb,
-        )
-
-    def supported_operation_modes(self) -> list[HVACOperationMode]:
-        """Return a list of all supported operation modes."""
-        return [
-            HVACOperationMode.COMFORT,
-            HVACOperationMode.STANDBY,
-            HVACOperationMode.NIGHT,
-            HVACOperationMode.FROST_PROTECTION,
-        ]
-
-    def set_operation_mode(self, mode: HVACOperationMode) -> None:
-        """Set operation mode. Return if not supported."""
-        if mode not in self.supported_operation_modes():
-            return
-        if self._value is None:
-            raise ConversionError(
-                "HVACStatus value not initialized. Can not write new mode.",
-                device_name=self.device_name,
-            )
-        new_status = HVACStatus(
-            mode=mode,
-            dew_point=self._value.dew_point,
-            heat_cool=self._value.heat_cool,
-            inactive=self._value.inactive,
-            frost_alarm=self._value.frost_alarm,
-        )
-        return super().set(new_status)
-
-    def supported_controller_modes(self) -> list[HVACControllerMode]:
-        """Return a list of all supported controller modes."""
-        return [HVACControllerMode.HEAT, HVACControllerMode.COOL]
-
-    def set_controller_mode(self, mode: HVACControllerMode) -> None:
-        """Set controller mode. Return if not supported."""
-        if mode not in self.supported_controller_modes():
-            return
-        if self._value is None:
-            raise ConversionError(
-                "HVACStatus value not initialized. Can not write new mode.",
-                device_name=self.device_name,
-            )
-        new_status = HVACStatus(
-            mode=self._value.mode,
-            dew_point=self._value.dew_point,
-            heat_cool=mode,  # type: ignore[arg-type]
-            inactive=self._value.inactive,
-            frost_alarm=self._value.frost_alarm,
-        )
-        super().set(new_status)
-
-
 class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
     """Abstraction for remote value of KNX climate operation modes."""
 
@@ -222,6 +146,82 @@ class RemoteValueControllerMode(RemoteValueClimateModeBase[HVACControllerMode]):
         if mode not in self.supported_controller_modes():
             return
         super().set(mode)
+
+
+class RemoteValueHVACStatus(RemoteValueClimateModeBase[HVACStatus]):
+    """Abstraction for remote value of KNX climate HVAC status (Eberle status)."""
+
+    dpt_class = DPTHVACStatus
+
+    def __init__(
+        self,
+        xknx: XKNX,
+        group_address: GroupAddressesType = None,
+        group_address_state: GroupAddressesType = None,
+        sync_state: bool | int | float | str = True,
+        device_name: str | None = None,
+        feature_name: str = "Controller status",
+        after_update_cb: RVCallbackType[HVACStatus] | None = None,
+    ):
+        """Initialize remote value of KNX climate controller status."""
+        super().__init__(
+            xknx,
+            group_address=group_address,
+            group_address_state=group_address_state,
+            sync_state=sync_state,
+            device_name=device_name,
+            feature_name=feature_name,
+            after_update_cb=after_update_cb,
+        )
+
+    def supported_operation_modes(self) -> list[HVACOperationMode]:
+        """Return a list of all supported operation modes."""
+        return [
+            HVACOperationMode.COMFORT,
+            HVACOperationMode.STANDBY,
+            HVACOperationMode.NIGHT,
+            HVACOperationMode.FROST_PROTECTION,
+        ]
+
+    def set_operation_mode(self, mode: HVACOperationMode) -> None:
+        """Set operation mode. Return if not supported."""
+        if mode not in self.supported_operation_modes():
+            return
+        if self._value is None:
+            raise ConversionError(
+                "HVACStatus value not initialized. Can not write new mode.",
+                device_name=self.device_name,
+            )
+        new_status = HVACStatus(
+            mode=mode,
+            dew_point=self._value.dew_point,
+            heat_cool=self._value.heat_cool,
+            inactive=self._value.inactive,
+            frost_alarm=self._value.frost_alarm,
+        )
+        return super().set(new_status)
+
+    def supported_controller_modes(self) -> list[HVACControllerMode]:
+        """Return a list of all supported controller modes."""
+        return [HVACControllerMode.HEAT, HVACControllerMode.COOL]
+
+    def set_controller_mode(self, mode: HVACControllerMode) -> None:
+        """Set controller mode. Return if not supported."""
+        if mode not in self.supported_controller_modes():
+            return
+        if self._value is None:
+            raise ConversionError(
+                "HVACStatus value not initialized. Can not write new mode.",
+                device_name=self.device_name,
+            )
+        new_status = HVACStatus(
+            mode=self._value.mode,
+            dew_point=self._value.dew_point,
+            heat_cool=mode,  # type: ignore[arg-type]
+            inactive=self._value.inactive,
+            frost_alarm=self._value.frost_alarm,
+        )
+        super().set(new_status)
 
 
 class RemoteValueBinaryOperationMode(

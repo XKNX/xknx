@@ -18,7 +18,7 @@ from xknx.remote_value.remote_value_climate_mode import (
     RemoteValueBinaryOperationMode,
     RemoteValueClimateModeBase,
     RemoteValueControllerMode,
-    RemoteValueControllerStatus,
+    RemoteValueHVACStatus,
     RemoteValueOperationMode,
 )
 
@@ -74,7 +74,7 @@ class ClimateMode(Device):
             feature_name="Controller mode",
             after_update_cb=self._set_internal_controller_mode,
         )
-        self.remote_value_controller_status = RemoteValueControllerStatus(
+        self.remote_value_controller_status = RemoteValueHVACStatus(
             xknx,
             group_address=group_address_controller_status,
             group_address_state=group_address_controller_status_state,

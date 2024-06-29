@@ -39,7 +39,7 @@ nav_order: 2
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
-  - 20.60102 - DPTHVACStatusMode - HVACStatus (removed DPTControllerStatus in favour of this)
+  - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
 - DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
   - 20.102 - DPTHVACMode - HVACOperationMode
   - 20.105 - DPTHVACContrMode - HVACControllerMode
