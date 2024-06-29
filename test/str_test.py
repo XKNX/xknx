@@ -151,7 +151,7 @@ class TestStringRepresentations:
             group_address_operation_mode="1/2/5",
             group_address_operation_mode_state="1/2/6",
             group_address_operation_mode_protection="1/2/7",
-            group_address_operation_mode_night="1/2/8",
+            group_address_operation_mode_economy="1/2/8",
             group_address_operation_mode_comfort="1/2/9",
             group_address_controller_status="1/2/10",
             group_address_controller_status_state="1/2/11",

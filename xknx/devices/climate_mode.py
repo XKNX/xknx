@@ -39,7 +39,7 @@ class ClimateMode(Device):
         group_address_operation_mode: GroupAddressesType = None,
         group_address_operation_mode_state: GroupAddressesType = None,
         group_address_operation_mode_protection: GroupAddressesType = None,
-        group_address_operation_mode_night: GroupAddressesType = None,
+        group_address_operation_mode_economy: GroupAddressesType = None,
         group_address_operation_mode_comfort: GroupAddressesType = None,
         group_address_operation_mode_standby: GroupAddressesType = None,
         group_address_controller_status: GroupAddressesType = None,
@@ -104,13 +104,13 @@ class ClimateMode(Device):
             operation_mode=HVACOperationMode.STANDBY,
             after_update_cb=self._set_internal_operation_mode,
         )
-        self.remote_value_operation_mode_night = RemoteValueBinaryOperationMode(
+        self.remote_value_operation_mode_economy = RemoteValueBinaryOperationMode(
             xknx,
-            group_address=group_address_operation_mode_night,
-            group_address_state=group_address_operation_mode_night,
+            group_address=group_address_operation_mode_economy,
+            group_address_state=group_address_operation_mode_economy,
             sync_state=sync_state,
             device_name=name,
-            feature_name="Operation mode Night",
+            feature_name="Operation mode Economy",
             operation_mode=HVACOperationMode.ECONOMY,
             after_update_cb=self._set_internal_operation_mode,
         )
@@ -170,7 +170,7 @@ class ClimateMode(Device):
         yield self.remote_value_controller_status
         yield self.remote_value_heat_cool
         yield self.remote_value_operation_mode_comfort
-        yield self.remote_value_operation_mode_night
+        yield self.remote_value_operation_mode_economy
         yield self.remote_value_operation_mode_protection
         yield self.remote_value_operation_mode_standby
 

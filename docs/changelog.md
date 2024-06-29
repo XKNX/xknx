@@ -30,6 +30,7 @@ nav_order: 2
 - A Device doesn't auto-add to `xknx.devices` anymore. It can be done via `xknx.devices.async_add()` now. `xknx.devices.async_remove` stops a device from processing telegrams, removes from StateUpdater and cancels its internal tasks. Removed devices can be added again.
 - `Device.shutdown` method is removed
 - Refactor `ClimateMode` device
+- Rename `ClimateMode` argument `group_address_operation_mode_night` to `group_address_operation_mode_economy`
 
 ### DPT
 

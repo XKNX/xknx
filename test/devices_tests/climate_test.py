@@ -105,7 +105,7 @@ class TestClimate:
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_state="1/2/5",
             group_address_operation_mode_protection="1/2/6",
-            group_address_operation_mode_night="1/2/7",
+            group_address_operation_mode_economy="1/2/7",
             group_address_operation_mode_comfort="1/2/8",
             group_address_operation_mode_standby="1/2/9",
             group_address_controller_status="1/2/10",
@@ -337,7 +337,7 @@ class TestClimate:
             "TestClimate",
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_protection="1/2/5",
-            group_address_operation_mode_night="1/2/6",
+            group_address_operation_mode_economy="1/2/6",
             group_address_operation_mode_comfort="1/2/7",
         )
 
@@ -402,7 +402,7 @@ class TestClimate:
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_state="1/2/5",
             group_address_operation_mode_protection="1/2/6",
-            group_address_operation_mode_night="1/2/7",
+            group_address_operation_mode_economy="1/2/7",
             group_address_operation_mode_comfort="1/2/8",
             group_address_operation_mode_standby="1/2/9",
             group_address_controller_status="1/2/10",
@@ -1302,7 +1302,7 @@ class TestClimate:
             xknx,
             "TestClimate",
             group_address_operation_mode_protection="1/2/5",
-            group_address_operation_mode_night="1/2/6",
+            group_address_operation_mode_economy="1/2/6",
             group_address_operation_mode_comfort="1/2/7",
         )
 
@@ -1313,11 +1313,11 @@ class TestClimate:
             HVACOperationMode.BUILDING_PROTECTION,
         }
 
-    def test_supported_operation_modes_only_night(self):
-        """Test get_supported_operation_modes with only night mode supported."""
+    def test_supported_operation_modes_only_economy(self):
+        """Test get_supported_operation_modes with only economy mode supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode_night="1/2/7"
+            xknx, "TestClimate", group_address_operation_mode_economy="1/2/7"
         )
         # If one binary climate object is set, all 4 operation modes are supported.
         assert set(climate_mode.operation_modes) == {
