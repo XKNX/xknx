@@ -416,7 +416,7 @@ class TestSensor:
             (
                 "percentV16",
                 DPTArray((0x8A, 0x2F)),
-                -30161,
+                -301.61,
             ),
             (
                 "phaseanglerad",
@@ -591,12 +591,12 @@ class TestSensor:
             (
                 "time_period_100msec",
                 DPTArray((0x6A, 0x35)),
-                27189,
+                2718900,
             ),
             (
                 "time_period_10msec",
                 DPTArray((0x32, 0x3)),
-                12803,
+                128030,
             ),
             (
                 "time_period_hrs",

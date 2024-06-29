@@ -21,6 +21,10 @@ nav_order: 2
   - ValueReader: `.send_group_read`
 - Rename DPT transcoder modules for schema `xknx.dpt.dpt_<main-number>.py`
 
+### Bugfixes
+
+- Fix value scaling for sensor types: time_period_100msec, time_period_10msec, delta_time_10ms, delta_time_100ms, percentV16
+
 ### Features
 
 - Added eager telegram data decoding for GroupValueWrite / GroupValueResponse Telegrams. DPTs for group addresses can be set using `xknx.group_address_dpt.set()`. `Telegram` has a new attribute `decoded_data` which is set when a decoder was found.

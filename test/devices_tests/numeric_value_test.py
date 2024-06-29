@@ -66,7 +66,7 @@ class TestNumericValue:
             (
                 "percentV16",
                 DPTArray((0x8A, 0x2F)),
-                -30161,
+                -301.61,
             ),
             (
                 "pulse",

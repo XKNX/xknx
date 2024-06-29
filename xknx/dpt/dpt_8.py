@@ -29,17 +29,17 @@ class DPT2ByteSigned(DPTNumeric):
 
     value_min = -32768
     value_max = 32767
-    resolution = 1
+    resolution: float = 1
 
     _struct_format = ">h"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int | float:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
 
         try:
-            return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore[no-any-return]
+            return struct.unpack(cls._struct_format, bytes(raw))[0] * cls.resolution  # type: ignore[no-any-return]
         except struct.error as err:
             raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
 
@@ -47,7 +47,7 @@ class DPT2ByteSigned(DPTNumeric):
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = int(value)
+            knx_value = int(float(value) / cls.resolution)
             if not cls._test_boundaries(knx_value):
                 raise ValueError("Value out of range")
             return DPTArray(struct.pack(cls._struct_format, knx_value))
@@ -86,6 +86,7 @@ class DPTDeltaTime10Msec(DPT2ByteSigned):
     dpt_main_number = 8
     dpt_sub_number = 3
     value_type = "delta_time_10ms"
+    resolution = 10
     unit = "ms"
 
 
@@ -95,6 +96,7 @@ class DPTDeltaTime100Msec(DPT2ByteSigned):
     dpt_main_number = 8
     dpt_sub_number = 4
     value_type = "delta_time_100ms"
+    resolution = 100
     unit = "ms"
 
 
@@ -131,6 +133,7 @@ class DPTPercentV16(DPT2ByteSigned):
     dpt_main_number = 8
     dpt_sub_number = 10
     value_type = "percentV16"
+    resolution = 0.01
     unit = "%"
 
 
