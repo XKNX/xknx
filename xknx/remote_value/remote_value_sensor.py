@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING, TypeVar
 
 from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
-from xknx.typing import CallbackType
 
-from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -37,7 +36,7 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         value_type: int | str | None = None,
         device_name: str | None = None,
         feature_name: str = "Value",
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[ValueT] | None = None,
     ):
         """Initialize RemoteValueSensor class."""
         _dpt_class = (

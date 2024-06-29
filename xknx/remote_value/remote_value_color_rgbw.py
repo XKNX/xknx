@@ -9,9 +9,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary, DPTColorRGBW, RGBWColor
-from xknx.typing import CallbackType
 
-from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -28,7 +27,7 @@ class RemoteValueColorRGBW(RemoteValue[RGBWColor]):
         sync_state: bool | int | float | str = True,
         device_name: str | None = None,
         feature_name: str = "Color RGBW",
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[RGBWColor] | None = None,
     ):
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         super().__init__(

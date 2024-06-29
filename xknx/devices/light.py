@@ -31,7 +31,7 @@ from xknx.remote_value import (
     RemoteValueScaling,
     RemoteValueSwitch,
 )
-from xknx.typing import CallbackType
+from xknx.remote_value.remote_value import RVCallbackType
 
 from .device import Device, DeviceCallbackType
 
@@ -60,7 +60,7 @@ class _SwitchAndBrightness:
         group_address_brightness: GroupAddressesType = None,
         group_address_brightness_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[bool | int] | None = None,
     ):
         self.switch = RemoteValueSwitch(
             xknx,
@@ -361,7 +361,7 @@ class Light(Device):
             )
         )
 
-    def _individual_color_callback_debounce(self) -> None:
+    def _individual_color_callback_debounce(self, *args: Any) -> None:
         """Run callback after all individual colors were updated or timeout passed."""
 
         async def debouncer() -> None:
@@ -563,13 +563,12 @@ class Light(Device):
             self.hue.set(hue)
             self.saturation.set(saturation)
 
-    def _xyy_color_from_rv(self) -> None:
+    def _xyy_color_from_rv(self, xyy_color: XYYColor) -> None:
         """Update the current xyY-color from RemoteValue (Callback)."""
-        new_xyy = self.xyy_color.value
-        if self._xyy_color_valid is not None and new_xyy is not None:
-            self._xyy_color_valid = self._xyy_color_valid | new_xyy
+        if self._xyy_color_valid is not None:
+            self._xyy_color_valid = self._xyy_color_valid | xyy_color
         else:
-            self._xyy_color_valid = new_xyy
+            self._xyy_color_valid = xyy_color
         self.after_update()
 
     @property

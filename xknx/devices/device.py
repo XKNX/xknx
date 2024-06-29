@@ -77,7 +77,10 @@ class Device(ABC):
         if device_updated_cb in self.device_updated_cbs:
             self.device_updated_cbs.remove(device_updated_cb)
 
-    def after_update(self: DeviceT) -> None:
+    def after_update(
+        self: DeviceT,
+        *args: Any,  # a single argument may be passed if used as a RemoteValue callback
+    ) -> None:
         """Execute callbacks after internal state has been changed."""
         for device_callback in self.device_updated_cbs:
             try:

@@ -12,9 +12,8 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTDate, DPTDateTime, DPTTime
 from xknx.exceptions import ConversionError
-from xknx.typing import CallbackType
 
-from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -40,7 +39,7 @@ class RemoteValueDateTime(RemoteValue[time.struct_time]):
         value_type: str = "time",
         device_name: str | None = None,
         feature_name: str = "DateTime",
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[time.struct_time] | None = None,
     ):
         """Initialize RemoteValueDateTime class."""
         try:

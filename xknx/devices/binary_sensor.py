@@ -82,10 +82,9 @@ class BinarySensor(Device):
         """Return the last telegram received from the RemoteValue."""
         return self.remote_value.telegram
 
-    def _state_from_remote_value(self) -> None:
+    def _state_from_remote_value(self, state: bool) -> None:
         """Update the internal state from RemoteValue (Callback)."""
-        if self.remote_value.value is not None:
-            self._set_internal_state(self.remote_value.value)
+        self._set_internal_state(state)
 
     def _set_internal_state(self, state: bool) -> None:
         """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""

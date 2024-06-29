@@ -56,7 +56,7 @@ class ExposeSensor(Device):
                 group_address=group_address,
                 sync_state=False,
                 device_name=self.name,
-                after_update_cb=self.after_update,
+                after_update_cb=self.expose_after_update,
             )
         else:
             self.sensor_value = RemoteValueSensor(
@@ -64,16 +64,16 @@ class ExposeSensor(Device):
                 group_address=group_address,
                 sync_state=False,
                 device_name=self.name,
-                after_update_cb=self.after_update,
+                after_update_cb=self.expose_after_update,
                 value_type=value_type,
             )
         self._cooldown_latest_value: Any | None = None
         self._cooldown_task: Task | None = None
         self._cooldown_task_name = f"expose_sensor.cooldown_{id(self)}"
 
-    def after_update(self) -> None:
+    def expose_after_update(self, value: int | float | str | bool) -> None:
         """Call after state was updated."""
-        self._cooldown_latest_value = self.sensor_value.value
+        self._cooldown_latest_value = value
         super().after_update()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:

@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.typing import CallbackType
 
-from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -35,7 +34,7 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
         group_address_state: GroupAddressesType = None,
         device_name: str | None = None,
         feature_name: str = "Up/Down",
-        after_update_cb: CallbackType | None = None,
+        after_update_cb: RVCallbackType[Direction] | None = None,
         invert: bool = False,
     ):
         """Initialize remote value of KNX DPT 1.008."""
