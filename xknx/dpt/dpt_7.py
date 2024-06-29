@@ -24,19 +24,19 @@ class DPT2ByteUnsigned(DPTNumeric):
 
     value_min = 0
     value_max = 65535
-    resolution = 1
+    resolution: float = 1
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int | float:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        return (raw[0] * 256) + raw[1]
+        return ((raw[0] * 256) + raw[1]) * cls.resolution
 
     @classmethod
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = int(value)
+            knx_value = int(float(value) / cls.resolution)
             if not cls._test_boundaries(knx_value):
                 raise ValueError("Value out of range")
             return DPTArray((knx_value >> 8, knx_value & 0xFF))
@@ -75,6 +75,7 @@ class DPTTimePeriod10Msec(DPT2ByteUnsigned):
     dpt_main_number = 7
     dpt_sub_number = 3
     value_type = "time_period_10msec"
+    resolution = 10
     unit = "ms"
 
 
@@ -84,6 +85,7 @@ class DPTTimePeriod100Msec(DPT2ByteUnsigned):
     dpt_main_number = 7
     dpt_sub_number = 4
     value_type = "time_period_100msec"
+    resolution = 100
     unit = "ms"
 
 
