@@ -50,6 +50,7 @@ nav_order: 2
     - rename "NIGHT" to "ECONOMY" and "FROST_PROTECTION" to "BUILDING_PROTECTION" according to KNX specifications
   - 20.105 - DPTHVACContrMode - HVACControllerMode
     - rename "DRY" to "DEHUMIDIFICATION" and add some values according to KNX specifications
+- Change DPT number of Enthalpy from 9.999 to 9.60000 (manufacturer specific range)
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
 ### Address
