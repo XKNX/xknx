@@ -26,8 +26,8 @@ DPT_20102_MODES = [
     HVACOperationMode.AUTO,
     HVACOperationMode.COMFORT,
     HVACOperationMode.STANDBY,
-    HVACOperationMode.NIGHT,
-    HVACOperationMode.FROST_PROTECTION,
+    HVACOperationMode.ECONOMY,
+    HVACOperationMode.BUILDING_PROTECTION,
 ]
 
 
@@ -105,7 +105,7 @@ class TestClimate:
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_state="1/2/5",
             group_address_operation_mode_protection="1/2/6",
-            group_address_operation_mode_night="1/2/7",
+            group_address_operation_mode_economy="1/2/7",
             group_address_operation_mode_comfort="1/2/8",
             group_address_operation_mode_standby="1/2/9",
             group_address_controller_status="1/2/10",
@@ -181,7 +181,7 @@ class TestClimate:
         after_update_callback.assert_not_called()
         after_update_callback.reset_mock()
 
-        await climate_mode.set_operation_mode(HVACOperationMode.FROST_PROTECTION)
+        await climate_mode.set_operation_mode(HVACOperationMode.BUILDING_PROTECTION)
         after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
@@ -337,7 +337,7 @@ class TestClimate:
             "TestClimate",
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_protection="1/2/5",
-            group_address_operation_mode_night="1/2/6",
+            group_address_operation_mode_economy="1/2/6",
             group_address_operation_mode_comfort="1/2/7",
         )
 
@@ -402,7 +402,7 @@ class TestClimate:
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_state="1/2/5",
             group_address_operation_mode_protection="1/2/6",
-            group_address_operation_mode_night="1/2/7",
+            group_address_operation_mode_economy="1/2/7",
             group_address_operation_mode_comfort="1/2/8",
             group_address_operation_mode_standby="1/2/9",
             group_address_controller_status="1/2/10",
@@ -444,10 +444,10 @@ class TestClimate:
         assert xknx.telegrams.qsize() == 3
         _process_all_telegrams()
 
-        await climate_mode.set_operation_mode(HVACOperationMode.NIGHT)
+        await climate_mode.set_operation_mode(HVACOperationMode.ECONOMY)
         assert xknx.telegrams.qsize() == 6
         _process_all_telegrams()
-        assert climate_mode.operation_mode == HVACOperationMode.NIGHT
+        assert climate_mode.operation_mode == HVACOperationMode.ECONOMY
         assert climate_mode.controller_mode == HVACControllerMode.COOL
 
     #
@@ -1268,8 +1268,8 @@ class TestClimate:
             HVACOperationMode.AUTO,
             HVACOperationMode.COMFORT,
             HVACOperationMode.STANDBY,
-            HVACOperationMode.NIGHT,
-            HVACOperationMode.FROST_PROTECTION,
+            HVACOperationMode.ECONOMY,
+            HVACOperationMode.BUILDING_PROTECTION,
         }
 
     def test_supported_modes_controller_status(self):
@@ -1281,8 +1281,8 @@ class TestClimate:
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.COMFORT,
             HVACOperationMode.STANDBY,
-            HVACOperationMode.NIGHT,
-            HVACOperationMode.FROST_PROTECTION,
+            HVACOperationMode.ECONOMY,
+            HVACOperationMode.BUILDING_PROTECTION,
         }
         assert set(climate_mode.controller_modes) == {
             HVACControllerMode.HEAT,
@@ -1302,29 +1302,29 @@ class TestClimate:
             xknx,
             "TestClimate",
             group_address_operation_mode_protection="1/2/5",
-            group_address_operation_mode_night="1/2/6",
+            group_address_operation_mode_economy="1/2/6",
             group_address_operation_mode_comfort="1/2/7",
         )
 
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.COMFORT,
             HVACOperationMode.STANDBY,
-            HVACOperationMode.NIGHT,
-            HVACOperationMode.FROST_PROTECTION,
+            HVACOperationMode.ECONOMY,
+            HVACOperationMode.BUILDING_PROTECTION,
         }
 
-    def test_supported_operation_modes_only_night(self):
-        """Test get_supported_operation_modes with only night mode supported."""
+    def test_supported_operation_modes_only_economy(self):
+        """Test get_supported_operation_modes with only economy mode supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode_night="1/2/7"
+            xknx, "TestClimate", group_address_operation_mode_economy="1/2/7"
         )
         # If one binary climate object is set, all 4 operation modes are supported.
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.STANDBY,
-            HVACOperationMode.NIGHT,
+            HVACOperationMode.ECONOMY,
             HVACOperationMode.COMFORT,
-            HVACOperationMode.FROST_PROTECTION,
+            HVACOperationMode.BUILDING_PROTECTION,
         }
 
     def test_supported_operation_modes_heat_cool(self):
@@ -1343,7 +1343,7 @@ class TestClimate:
 
     def test_custom_supported_operation_modes(self):
         """Test get_supported_operation_modes with custom mode."""
-        modes = [HVACOperationMode.STANDBY, HVACOperationMode.NIGHT]
+        modes = [HVACOperationMode.STANDBY, HVACOperationMode.ECONOMY]
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
@@ -1355,8 +1355,8 @@ class TestClimate:
 
     def test_custom_supported_operation_modes_as_str(self):
         """Test get_supported_operation_modes with custom mode as str list."""
-        str_modes = ["Standby", "Frost Protection"]
-        modes = [HVACOperationMode.STANDBY, HVACOperationMode.FROST_PROTECTION]
+        str_modes = ["Standby", "Building Protection"]
+        modes = [HVACOperationMode.STANDBY, HVACOperationMode.BUILDING_PROTECTION]
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,

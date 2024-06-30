@@ -18,8 +18,8 @@ class HVACOperationMode(Enum):
     AUTO = "Auto"
     COMFORT = "Comfort"
     STANDBY = "Standby"
-    NIGHT = "Night"
-    FROST_PROTECTION = "Frost Protection"
+    ECONOMY = "Economy"
+    BUILDING_PROTECTION = "Building Protection"
 
 
 class DPTHVACMode(DPTEnum[HVACOperationMode]):
@@ -41,8 +41,8 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
             0: HVACOperationMode.AUTO,
             1: HVACOperationMode.COMFORT,
             2: HVACOperationMode.STANDBY,
-            3: HVACOperationMode.NIGHT,
-            4: HVACOperationMode.FROST_PROTECTION,
+            3: HVACOperationMode.ECONOMY,
+            4: HVACOperationMode.BUILDING_PROTECTION,
         }
 
 
@@ -61,7 +61,12 @@ class HVACControllerMode(Enum):
     FAN_ONLY = "Fan only"
     FREE_COOL = "Free Cool"
     ICE = "Ice"
-    DRY = "Dry"
+    MAXIMUM_HEATING_MODE = "Maximum Heating Mode"
+    ECONOMIC_HEAT_COOL_MODE = "Economic Heat/Cool Mode"
+    DEHUMIDIFICATION = "Dehumidification"
+    CALIBRATION_MODE = "Calibration Mode"
+    EMERGENCY_COOL_MODE = "Emergency Cool Mode"
+    EMERGENCY_STEAM_MODE = "Emergency Steam Mode"
     NODEM = "NoDem"
 
 
@@ -93,7 +98,12 @@ class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
             9: HVACControllerMode.FAN_ONLY,
             10: HVACControllerMode.FREE_COOL,
             11: HVACControllerMode.ICE,
-            14: HVACControllerMode.DRY,
+            12: HVACControllerMode.MAXIMUM_HEATING_MODE,
+            13: HVACControllerMode.ECONOMIC_HEAT_COOL_MODE,
+            14: HVACControllerMode.DEHUMIDIFICATION,
+            15: HVACControllerMode.CALIBRATION_MODE,
+            16: HVACControllerMode.ECONOMIC_HEAT_COOL_MODE,
+            17: HVACControllerMode.EMERGENCY_STEAM_MODE,
             20: HVACControllerMode.NODEM,
         }
 
@@ -182,9 +192,9 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
         elif raw & 0b01000000:
             mode = HVACOperationMode.STANDBY
         elif raw & 0b00100000:
-            mode = HVACOperationMode.NIGHT
+            mode = HVACOperationMode.ECONOMY
         elif raw & 0b00010000:
-            mode = HVACOperationMode.FROST_PROTECTION
+            mode = HVACOperationMode.BUILDING_PROTECTION
         else:
             mode = HVACOperationMode.AUTO  # not sure if this is possible / valid
 
@@ -206,9 +216,9 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
             raw |= 0b10000000
         elif value.mode is HVACOperationMode.STANDBY:
             raw |= 0b01000000
-        elif value.mode is HVACOperationMode.NIGHT:
+        elif value.mode is HVACOperationMode.ECONOMY:
             raw |= 0b00100000
-        elif value.mode is HVACOperationMode.FROST_PROTECTION:
+        elif value.mode is HVACOperationMode.BUILDING_PROTECTION:
             raw |= 0b00010000
         if value.dew_point:
             raw |= 0b00001000

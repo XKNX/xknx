@@ -35,8 +35,8 @@ Climate are representations of KNX HVAC/Climate controls.
 - `mode` ClimateMode instance for this climate device
 - `group_address_operation_mode` KNX address for operation mode. *DPT 20.102*
 - `group_address_operation_mode_state` KNX address for operation mode status. *DPT 20.102*
-- `group_address_operation_mode_protection` KNX address for switching on/off frost/heat protection mode. *DPT 1*
-- `group_address_operation_mode_night` KNX address for switching on/off night nmode. *DPT 1*
+- `group_address_operation_mode_protection` KNX address for switching on/off building protection mode. *DPT 1*
+- `group_address_operation_mode_economy` KNX address for switching on/off economy mode. *DPT 1*
 - `group_address_operation_mode_comfort` KNX address for switching on/off comfort mode. *DPT 1*
 - `group_address_operation_mode_standby` KNX address for switching on/off standby mode. *DPT 1*
 - `group_address_controller_status` KNX address for controller status.
@@ -49,7 +49,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `controller_modes` Overrides the supported controller modes.
 - `device_updated_cb` Callback for each update.
 
-**Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_night` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set `Standby`, `Comfort`, `Frost_Protection` and `Night` will be set as supported. If `group_address_operation_mode_standby` is omitted, `Standby` is set when the other 3 are set to `False`.
+**Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_economy` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set `Standby`, `Comfort`, `Building Protection` and `Economy` will be set as supported. If `group_address_operation_mode_standby` is omitted, `Standby` is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
 
 ```python
@@ -59,7 +59,7 @@ climate_mode = ClimateMode(
     group_address_operation_mode='',
     group_address_operation_mode_state='',
     group_address_operation_mode_protection=None,
-    group_address_operation_mode_night=None,
+    group_address_operation_mode_economy=None,
     group_address_operation_mode_comfort=None,
     group_address_controller_status=None,
     group_address_controller_status_state=None,

@@ -34,6 +34,7 @@ nav_order: 2
 - A Device doesn't auto-add to `xknx.devices` anymore. It can be done via `xknx.devices.async_add()` now. `xknx.devices.async_remove` stops a device from processing telegrams, removes from StateUpdater and cancels its internal tasks. Removed devices can be added again.
 - `Device.shutdown` method is removed
 - Refactor `ClimateMode` device
+- Rename `ClimateMode` argument `group_address_operation_mode_night` to `group_address_operation_mode_economy`
 
 ### DPT
 
@@ -46,7 +47,9 @@ nav_order: 2
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
 - DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
   - 20.102 - DPTHVACMode - HVACOperationMode
+    - rename "NIGHT" to "ECONOMY" and "FROST_PROTECTION" to "BUILDING_PROTECTION" according to KNX specifications
   - 20.105 - DPTHVACContrMode - HVACControllerMode
+    - rename "DRY" to "DEHUMIDIFICATION" and add some values according to KNX specifications
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
 
 ### Address

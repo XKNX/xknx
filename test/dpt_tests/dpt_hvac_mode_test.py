@@ -15,8 +15,8 @@ class TestDPTHVACMode:
         assert DPTHVACMode.to_knx(HVACOperationMode.AUTO) == DPTArray((0x00,))
         assert DPTHVACMode.to_knx(HVACOperationMode.COMFORT) == DPTArray((0x01,))
         assert DPTHVACMode.to_knx(HVACOperationMode.STANDBY) == DPTArray((0x02,))
-        assert DPTHVACMode.to_knx(HVACOperationMode.NIGHT) == DPTArray((0x03,))
-        assert DPTHVACMode.to_knx(HVACOperationMode.FROST_PROTECTION) == DPTArray(
+        assert DPTHVACMode.to_knx(HVACOperationMode.ECONOMY) == DPTArray((0x03,))
+        assert DPTHVACMode.to_knx(HVACOperationMode.BUILDING_PROTECTION) == DPTArray(
             (0x04,)
         )
 
@@ -25,9 +25,9 @@ class TestDPTHVACMode:
         assert DPTHVACMode.to_knx("auto") == DPTArray((0x00,))
         assert DPTHVACMode.to_knx("Comfort") == DPTArray((0x01,))
         assert DPTHVACMode.to_knx("standby") == DPTArray((0x02,))
-        assert DPTHVACMode.to_knx("NIGHT") == DPTArray((0x03,))
+        assert DPTHVACMode.to_knx("ECONOMY") == DPTArray((0x03,))
         assert DPTHVACMode.to_knx(
-            "Frost Protection"  # Enum value, not name
+            "Building Protection"  # Enum value, not name
         ) == DPTArray((0x04,))
 
     def test_mode_to_knx_wrong_value(self):
@@ -40,10 +40,10 @@ class TestDPTHVACMode:
         assert DPTHVACMode.from_knx(DPTArray((0x00,))) == HVACOperationMode.AUTO
         assert DPTHVACMode.from_knx(DPTArray((0x01,))) == HVACOperationMode.COMFORT
         assert DPTHVACMode.from_knx(DPTArray((0x02,))) == HVACOperationMode.STANDBY
-        assert DPTHVACMode.from_knx(DPTArray((0x03,))) == HVACOperationMode.NIGHT
+        assert DPTHVACMode.from_knx(DPTArray((0x03,))) == HVACOperationMode.ECONOMY
         assert (
             DPTHVACMode.from_knx(DPTArray((0x04,)))
-            == HVACOperationMode.FROST_PROTECTION
+            == HVACOperationMode.BUILDING_PROTECTION
         )
 
     def test_mode_from_knx_wrong_value(self):
@@ -167,7 +167,7 @@ class TestDPTHVACStatus:
             ),  # min values
             (
                 HVACStatus(
-                    mode=HVACOperationMode.NIGHT,
+                    mode=HVACOperationMode.ECONOMY,
                     dew_point=True,
                     heat_cool=HVACControllerMode.COOL,
                     inactive=False,

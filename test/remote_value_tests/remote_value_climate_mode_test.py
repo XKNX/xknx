@@ -38,7 +38,7 @@ class TestRemoteValueOperationMode:
             xknx, operation_mode=HVACOperationMode.COMFORT
         )
         assert remote_value.to_knx(HVACOperationMode.COMFORT) == DPTBinary(True)
-        assert remote_value.to_knx(HVACOperationMode.NIGHT) == DPTBinary(False)
+        assert remote_value.to_knx(HVACOperationMode.ECONOMY) == DPTBinary(False)
 
     def test_from_knx_binary_error(self):
         """Test from_knx function with invalid payload."""
@@ -141,13 +141,13 @@ class TestRemoteValueOperationMode:
         with pytest.raises(ConversionError):
             remote_value.to_knx("256")
         with pytest.raises(ConversionError):
-            remote_value.to_knx(HVACOperationMode.NIGHT)
+            remote_value.to_knx(HVACOperationMode.ECONOMY)
 
     def test_to_knx_error_binary(self):
         """Test to_knx function with wrong parameter."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
-            xknx, operation_mode=HVACOperationMode.NIGHT
+            xknx, operation_mode=HVACOperationMode.ECONOMY
         )
         with pytest.raises(ConversionError):
             remote_value.to_knx(256)
@@ -162,14 +162,14 @@ class TestRemoteValueOperationMode:
         remote_value = RemoteValueOperationMode(
             xknx, group_address=GroupAddress("1/2/3")
         )
-        remote_value.set(HVACOperationMode.NIGHT)
+        remote_value.set(HVACOperationMode.ECONOMY)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x03,))),
         )
-        remote_value.set(HVACOperationMode.FROST_PROTECTION)
+        remote_value.set(HVACOperationMode.BUILDING_PROTECTION)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -213,7 +213,7 @@ class TestRemoteValueOperationMode:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(True)),
         )
-        remote_value.set(HVACOperationMode.FROST_PROTECTION)
+        remote_value.set(HVACOperationMode.BUILDING_PROTECTION)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
@@ -253,14 +253,14 @@ class TestRemoteValueOperationMode:
         remote_value = RemoteValueBinaryOperationMode(
             xknx,
             group_address=GroupAddress("1/2/3"),
-            operation_mode=HVACOperationMode.FROST_PROTECTION,
+            operation_mode=HVACOperationMode.BUILDING_PROTECTION,
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTBinary(True)),
         )
         remote_value.process(telegram)
-        assert remote_value.value == HVACOperationMode.FROST_PROTECTION
+        assert remote_value.value == HVACOperationMode.BUILDING_PROTECTION
 
     def test_to_process_error_operation_mode(self):
         """Test process erroneous telegram."""
