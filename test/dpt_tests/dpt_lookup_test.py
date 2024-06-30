@@ -91,7 +91,7 @@ from xknx.dpt import *
         ("electromagnetic_moment", DPTElectromagneticMoment, 14, 29, "A m²"),
         ("electromotive_force", DPTElectromotiveForce, 14, 30, "V"),
         ("energy", DPTEnergy, 14, 31, "J"),
-        ("enthalpy", DPTEnthalpy, 9, 999, "H"),
+        ("enthalpy", DPTEnthalpy, 9, 60000, "H"),
         ("flow_rate_m3h", DPTFlowRateM3H, 13, 2, "m³/h"),
         ("force", DPTForce, 14, 32, "N"),
         ("frequency", DPTFrequency, 14, 33, "Hz"),

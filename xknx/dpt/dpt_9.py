@@ -340,6 +340,6 @@ class DPTEnthalpy(DPT2ByteFloat):
 
     dpt_main_number = 9
     # this is here for backwards compatibility
-    dpt_sub_number = 999
+    dpt_sub_number = 60000
     value_type = "enthalpy"
     unit = "H"
