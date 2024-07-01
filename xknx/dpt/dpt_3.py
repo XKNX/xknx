@@ -52,9 +52,7 @@ class DPTControlStepCode(DPTBase, ABC):
     @classmethod
     def _test_values(cls, step_code: int) -> bool:
         """Test if input values are valid."""
-        if isinstance(step_code, int) and 0 <= step_code <= cls.APCI_STEPCODEMASK:
-            return True
-        return False
+        return isinstance(step_code, int) and 0 <= step_code <= cls.APCI_STEPCODEMASK
 
     @classmethod
     def to_knx(cls, value: Any) -> DPTBinary:

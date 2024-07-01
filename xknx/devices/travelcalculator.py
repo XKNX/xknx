@@ -142,17 +142,13 @@ class TravelCalculator:
 
         def position_reached_or_exceeded(relative_position: int) -> bool:
             """Return if designated position was reached."""
-            if (
+            return (
                 relative_position <= 0
                 and self.travel_direction == TravelStatus.DIRECTION_DOWN
-            ):
-                return True
-            if (
+            ) or (
                 relative_position >= 0
                 and self.travel_direction == TravelStatus.DIRECTION_UP
-            ):
-                return True
-            return False
+            )
 
         if position_reached_or_exceeded(relative_position):
             return self._travel_to_position

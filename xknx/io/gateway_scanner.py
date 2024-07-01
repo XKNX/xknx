@@ -163,37 +163,33 @@ class GatewayScanFilter:
         """Check whether the device is a gateway and given GatewayDescriptor matches the filter."""
         if self.name is not None and self.name != gateway.name:
             return False
-        if (
-            self.tunnelling
-            and gateway.supports_tunnelling
-            and not gateway.tunnelling_requires_secure
-        ):
-            return True
-        if (
-            self.tunnelling_tcp
-            and gateway.supports_tunnelling_tcp
-            and not gateway.tunnelling_requires_secure
-        ):
-            return True
-        if (
-            self.routing
-            and gateway.supports_routing
-            and not gateway.routing_requires_secure
-        ):
-            return True
-        if (
-            self.secure_tunnelling
-            and gateway.supports_tunnelling_tcp
-            and gateway.tunnelling_requires_secure
-        ):
-            return True
-        if (
-            self.secure_routing
-            and gateway.supports_routing
-            and gateway.routing_requires_secure
-        ):
-            return True
-        return False
+        return (
+            bool(
+                self.tunnelling
+                and gateway.supports_tunnelling
+                and not gateway.tunnelling_requires_secure
+            )
+            or bool(
+                self.tunnelling_tcp
+                and gateway.supports_tunnelling_tcp
+                and not gateway.tunnelling_requires_secure
+            )
+            or bool(
+                self.routing
+                and gateway.supports_routing
+                and not gateway.routing_requires_secure
+            )
+            or bool(
+                self.secure_tunnelling
+                and gateway.supports_tunnelling_tcp
+                and gateway.tunnelling_requires_secure
+            )
+            or bool(
+                self.secure_routing
+                and gateway.supports_routing
+                and gateway.routing_requires_secure
+            )
+        )
 
     def __eq__(self, other: object) -> bool:
         """Equality for GatewayScanFilter class."""
