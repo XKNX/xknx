@@ -225,61 +225,63 @@ EnumT = TypeVar("EnumT", bound=Enum)
 
 
 class DPTEnum(DPTBase, Generic[EnumT]):
-    """Abstraction for KNX DPT Enum."""
+    """
+    Abstraction for KNX DPT Enum.
 
-    payload_type = DPTArray
+    Expects Enum values to be integers representing the raw KNX value.
+    """
+
+    payload_type: type[DPTArray | DPTBinary] = DPTArray
     payload_length = 1
 
     data_type: type[EnumT]
-
-    @classmethod
-    @abstractmethod
-    def get_value_map(cls) -> Mapping[int, EnumT]:
-        """Return mapping of raw KNX values to Enum members."""
-        # At least one abstract method is needed for our parse_transcoder lookup to
-        # ignore the DPTEnum base class and only find concrete base classes.
-        # Therefore this is not a ClassVar (which wouldn't support TypeVar parameters).
 
     @classmethod
     def from_knx(cls, payload: DPTArray | DPTBinary) -> EnumT:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         try:
-            return cls.get_value_map()[raw[0]]
-        except KeyError:
+            return cls.data_type(raw[0])  # type: ignore[no-any-return]
+        except ValueError:
             raise ConversionError(
                 f"Payload not supported for {cls.__name__}", raw=raw
             ) from None
 
     @classmethod
-    def to_knx(cls, value: EnumT | str) -> DPTArray:
+    def to_knx(cls, value: EnumT | str | int) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
         if isinstance(value, str):
             try:
                 # snake_cased name may be used as translation key or serializable value
                 value = cls.data_type[value.upper()]
             except KeyError:
-                try:
-                    value = cls.data_type(value)
-                except ValueError:
-                    raise ConversionError(
-                        f"Invalid value for {cls.data_type.__name__} in {cls.__name__}",
-                        value=value,
-                        valid_values=cls.get_valid_values(),
-                    ) from None
-        for knx_raw_value, enum_member in cls.get_value_map().items():
-            if enum_member is value:
-                return DPTArray(knx_raw_value)
-        raise ConversionError(
-            f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
-            value=value,
-            valid_values=cls.get_valid_values(),
-        )
+                pass  # raise ConversionError below
+        elif isinstance(value, int):
+            try:
+                value = cls.data_type(value)
+            except ValueError:
+                pass  # raise ConversionError below
+
+        if not isinstance(value, cls.data_type):
+            raise ConversionError(
+                f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
+                value=value,
+                valid_values=cls.get_valid_values(),
+            )
+        return cls._to_knx(value)
+
+    @classmethod
+    @abstractmethod
+    def _to_knx(cls, value: EnumT) -> DPTArray | DPTBinary:
+        """Return the raw KNX value for an Enum member."""
+        # At least one abstract method is needed for our parse_transcoder lookup to
+        # ignore the DPTEnum base class and only find concrete base classes.
+        # `return DPTArray(value.value)` can be used typesafely if the Enum values are integers.
 
     @classmethod
     def get_valid_values(cls) -> list[EnumT]:
         """Return list of valid values."""
-        return list(cls.get_value_map().values())
+        return list(cls.data_type)  # type: ignore[call-overload, no-any-return]
 
 
 @dataclass(slots=True)

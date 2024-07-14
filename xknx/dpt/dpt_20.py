@@ -15,11 +15,11 @@ from .payload import DPTArray, DPTBinary
 class HVACOperationMode(Enum):
     """Enum for the different KNX HVAC operation modes."""
 
-    AUTO = "Auto"
-    COMFORT = "Comfort"
-    STANDBY = "Standby"
-    ECONOMY = "Economy"
-    BUILDING_PROTECTION = "Building Protection"
+    AUTO = 0
+    COMFORT = 1
+    STANDBY = 2
+    ECONOMY = 3
+    BUILDING_PROTECTION = 4
 
 
 class DPTHVACMode(DPTEnum[HVACOperationMode]):
@@ -35,39 +35,33 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
     data_type = HVACOperationMode
 
     @classmethod
-    def get_value_map(cls) -> Mapping[int, HVACOperationMode]:
-        """Return mapping of raw KNX values to Enum members."""
-        return {
-            0: HVACOperationMode.AUTO,
-            1: HVACOperationMode.COMFORT,
-            2: HVACOperationMode.STANDBY,
-            3: HVACOperationMode.ECONOMY,
-            4: HVACOperationMode.BUILDING_PROTECTION,
-        }
+    def _to_knx(cls, value: HVACOperationMode) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 class HVACControllerMode(Enum):
     """Enum for the different KNX HVAC controller modes."""
 
-    AUTO = "Auto"
-    HEAT = "Heat"
-    MORNING_WARMUP = "Morning Warmup"
-    COOL = "Cool"
-    NIGHT_PURGE = "Night Purge"
-    PRECOOL = "Precool"
-    OFF = "Off"
-    TEST = "Test"
-    EMERGENCY_HEAT = "Emergency Heat"
-    FAN_ONLY = "Fan only"
-    FREE_COOL = "Free Cool"
-    ICE = "Ice"
-    MAXIMUM_HEATING_MODE = "Maximum Heating Mode"
-    ECONOMIC_HEAT_COOL_MODE = "Economic Heat/Cool Mode"
-    DEHUMIDIFICATION = "Dehumidification"
-    CALIBRATION_MODE = "Calibration Mode"
-    EMERGENCY_COOL_MODE = "Emergency Cool Mode"
-    EMERGENCY_STEAM_MODE = "Emergency Steam Mode"
-    NODEM = "NoDem"
+    AUTO = 0
+    HEAT = 1
+    MORNING_WARMUP = 2
+    COOL = 3
+    NIGHT_PURGE = 4
+    PRECOOL = 5
+    OFF = 6
+    TEST = 7
+    EMERGENCY_HEAT = 8
+    FAN_ONLY = 9
+    FREE_COOL = 10
+    ICE = 11
+    MAXIMUM_HEATING_MODE = 12
+    ECONOMIC_HEAT_COOL_MODE = 13
+    DEHUMIDIFICATION = 14
+    CALIBRATION_MODE = 15
+    EMERGENCY_COOL_MODE = 16
+    EMERGENCY_STEAM_MODE = 17
+    NODEM = 20
 
 
 class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
@@ -83,29 +77,9 @@ class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
     data_type = HVACControllerMode
 
     @classmethod
-    def get_value_map(cls) -> Mapping[int, HVACControllerMode]:
-        """Return mapping of raw KNX values to Enum members."""
-        return {
-            0: HVACControllerMode.AUTO,
-            1: HVACControllerMode.HEAT,
-            2: HVACControllerMode.MORNING_WARMUP,
-            3: HVACControllerMode.COOL,
-            4: HVACControllerMode.NIGHT_PURGE,
-            5: HVACControllerMode.PRECOOL,
-            6: HVACControllerMode.OFF,
-            7: HVACControllerMode.TEST,
-            8: HVACControllerMode.EMERGENCY_HEAT,
-            9: HVACControllerMode.FAN_ONLY,
-            10: HVACControllerMode.FREE_COOL,
-            11: HVACControllerMode.ICE,
-            12: HVACControllerMode.MAXIMUM_HEATING_MODE,
-            13: HVACControllerMode.ECONOMIC_HEAT_COOL_MODE,
-            14: HVACControllerMode.DEHUMIDIFICATION,
-            15: HVACControllerMode.CALIBRATION_MODE,
-            16: HVACControllerMode.ECONOMIC_HEAT_COOL_MODE,
-            17: HVACControllerMode.EMERGENCY_STEAM_MODE,
-            20: HVACControllerMode.NODEM,
-        }
+    def _to_knx(cls, value: HVACControllerMode) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 @dataclass(slots=True)

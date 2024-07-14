@@ -26,9 +26,7 @@ class TestDPTHVACMode:
         assert DPTHVACMode.to_knx("Comfort") == DPTArray((0x01,))
         assert DPTHVACMode.to_knx("standby") == DPTArray((0x02,))
         assert DPTHVACMode.to_knx("ECONOMY") == DPTArray((0x03,))
-        assert DPTHVACMode.to_knx(
-            "Building Protection"  # Enum value, not name
-        ) == DPTArray((0x04,))
+        assert DPTHVACMode.to_knx("Building_Protection") == DPTArray((0x04,))
 
     def test_mode_to_knx_wrong_value(self):
         """Test serializing DPTHVACMode to KNX with wrong value."""

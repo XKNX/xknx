@@ -144,7 +144,9 @@ class ClimateMode(Device):
         else:
             for op_mode in operation_modes:
                 if isinstance(op_mode, str):
-                    self._operation_modes.append(HVACOperationMode(op_mode))
+                    self._operation_modes.append(
+                        HVACOperationMode[op_mode.replace(" ", "_").upper()]
+                    )
                 elif isinstance(op_mode, HVACOperationMode):
                     self._operation_modes.append(op_mode)
 
@@ -154,7 +156,9 @@ class ClimateMode(Device):
         else:
             for ct_mode in controller_modes:
                 if isinstance(ct_mode, str):
-                    self._controller_modes.append(HVACControllerMode(ct_mode))
+                    self._controller_modes.append(
+                        HVACControllerMode[ct_mode.replace(" ", "_").upper()]
+                    )
                 elif isinstance(ct_mode, HVACControllerMode):
                     self._controller_modes.append(ct_mode)
 
