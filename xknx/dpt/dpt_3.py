@@ -31,10 +31,9 @@ class DPTControlStepCode(DPTBase, ABC):
     # APCI (application layer control information)
     APCI_CONTROLMASK = 0x08
     APCI_STEPCODEMASK = 0x07
-    APCI_MAX_VALUE = APCI_CONTROLMASK | APCI_STEPCODEMASK
 
     payload_type = DPTBinary
-    payload_length = 1
+    payload_length = 4
 
     @classmethod
     def _encode(cls, control: bool, step_code: int) -> int:
@@ -82,8 +81,6 @@ class DPTControlStepCode(DPTBase, ABC):
     def from_knx(cls, payload: DPTArray | DPTBinary) -> Any:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)[0]
-        if raw > cls.APCI_MAX_VALUE:
-            raise ConversionError(f"Can't parse {cls.__name__}", raw=raw)
 
         control, step_code = cls._decode(raw)
         return {"control": control, "step_code": step_code}

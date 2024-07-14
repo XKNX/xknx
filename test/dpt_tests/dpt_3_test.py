@@ -67,7 +67,7 @@ class TestDPTControlStepCode:
 
     def test_from_knx_wrong_value(self):
         """Test parsing invalid DPTControlStepCode type from KNX."""
-        with pytest.raises(ConversionError):
+        with pytest.raises(CouldNotParseTelegram):
             DPTControlStepCode.from_knx(DPTBinary((0x1F,)))
 
     def test_unit(self):
@@ -134,7 +134,7 @@ class TestDPTControlStepwise:
 
     def test_from_knx_wrong_value(self):
         """Test parsing invalid DPTControlStepwise type from KNX."""
-        with pytest.raises(ConversionError):
+        with pytest.raises(CouldNotParseTelegram):
             DPTControlStepwise.from_knx(DPTBinary(0x1F))
 
     def test_unit(self):

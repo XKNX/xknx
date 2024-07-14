@@ -52,6 +52,7 @@ nav_order: 2
     - rename "DRY" to "DEHUMIDIFICATION" and add some values according to KNX specifications
 - Change DPT number of Enthalpy from 9.999 to 9.60000 (manufacturer specific range)
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
+- Verify DPTBinary max payload bitsize when decoding by transcoders `payload_length`
 
 ### Address
 

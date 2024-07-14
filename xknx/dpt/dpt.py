@@ -62,7 +62,7 @@ class DPTBase(ABC):
     """
 
     payload_type: type[DPTArray | DPTBinary]
-    payload_length: int = cast(int, None)  # only used for DPTArray
+    payload_length: int = cast(int, None)  # DPTArray: byte length; DPTBinary bit length
     dpt_main_number: int | None = None
     dpt_sub_number: int | None = None
     value_type: str | None = None
@@ -99,6 +99,13 @@ class DPTBase(ABC):
             )
 
         if cls.payload_type is DPTBinary and isinstance(payload, DPTBinary):
+            if payload.value >= 2**cls.payload_length:
+                # >= 0 is already checked by DPTBinary
+                raise CouldNotParseTelegram(
+                    f"Invalid payload bitlength for {cls.__name__}",
+                    payload=payload,
+                    expected_length=cls.payload_length,
+                )
             # wrap in tuple for consistent return signature
             return (payload.value,)
 
