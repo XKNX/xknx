@@ -2,8 +2,8 @@
 
 import pytest
 
-from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.dpt import DPTArray, DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from xknx.dpt.dpt_20 import HeatCool, HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -121,7 +121,7 @@ class TestHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.HEAT,
+                    heat_cool=HeatCool.HEAT,
                     inactive=False,
                     frost_alarm=False,
                 ),
@@ -137,7 +137,7 @@ class TestHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.STANDBY,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.COOL,
+                    heat_cool=HeatCool.COOL,
                     inactive=True,
                     frost_alarm=False,
                 ),
@@ -199,7 +199,7 @@ class TestDPTHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.HEAT,
+                    heat_cool=HeatCool.HEAT,
                     inactive=False,
                     frost_alarm=False,
                 ),
@@ -209,7 +209,7 @@ class TestDPTHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.COOL,
+                    heat_cool=HeatCool.COOL,
                     inactive=False,
                     frost_alarm=False,
                 ),
@@ -219,7 +219,7 @@ class TestDPTHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.ECONOMY,
                     dew_point=True,
-                    heat_cool=HVACControllerMode.COOL,
+                    heat_cool=HeatCool.COOL,
                     inactive=False,
                     frost_alarm=True,
                 ),

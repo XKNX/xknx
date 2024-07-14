@@ -16,6 +16,7 @@ from xknx.dpt import (
     DPTHVACMode,
     DPTHVACStatus,
 )
+from xknx.dpt.dpt_1 import HeatCool
 from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -217,7 +218,9 @@ class RemoteValueHVACStatus(RemoteValueClimateModeBase[HVACStatus]):
         new_status = HVACStatus(
             mode=self._value.mode,
             dew_point=self._value.dew_point,
-            heat_cool=mode,  # type: ignore[arg-type]
+            heat_cool=HeatCool.HEAT
+            if mode == HVACControllerMode.HEAT
+            else HeatCool.COOL,
             inactive=self._value.inactive,
             frost_alarm=self._value.frost_alarm,
         )

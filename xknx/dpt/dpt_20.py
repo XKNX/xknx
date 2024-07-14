@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
 from .dpt import DPTComplex, DPTComplexData, DPTEnum
+from .dpt_1 import HeatCool
 from .payload import DPTArray, DPTBinary
 
 
@@ -88,7 +89,7 @@ class HVACStatus(DPTComplexData):
 
     mode: HVACOperationMode
     dew_point: bool
-    heat_cool: Literal[HVACControllerMode.HEAT, HVACControllerMode.COOL]
+    heat_cool: HeatCool
     inactive: bool
     frost_alarm: bool
 
@@ -100,13 +101,11 @@ class HVACStatus(DPTComplexData):
             _heat_cool = data["heat_cool"]
             try:
                 mode = HVACOperationMode[_mode.upper()]
-                heat_cool = HVACControllerMode[_heat_cool.upper()]
+                heat_cool = HeatCool[_heat_cool.upper()]
             except AttributeError as err:
                 raise ValueError(
                     f"Invalid type for HVAC mode or heat_cool: {err}"
                 ) from err
-            if heat_cool not in (HVACControllerMode.HEAT, HVACControllerMode.COOL):
-                raise ValueError(f"Invalid value for HVAC heat_cool: {heat_cool=}")
             dew_point = data["dew_point"]
             inactive = data["inactive"]
             frost_alarm = data["frost_alarm"]
@@ -125,7 +124,7 @@ class HVACStatus(DPTComplexData):
         return cls(
             mode=mode,
             dew_point=dew_point,
-            heat_cool=heat_cool,  # type: ignore[arg-type]  # checked by `not in (HVACControllerMode.HEAT, HVACControllerMode.COOL)` above
+            heat_cool=heat_cool,
             inactive=inactive,
             frost_alarm=frost_alarm,
         )
@@ -175,9 +174,7 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
         return HVACStatus(
             mode=mode,
             dew_point=bool(raw & 0b00001000),
-            heat_cool=HVACControllerMode.HEAT
-            if raw & 0b00000100
-            else HVACControllerMode.COOL,
+            heat_cool=HeatCool.HEAT if raw & 0b00000100 else HeatCool.COOL,
             inactive=bool(raw & 0b00000010),
             frost_alarm=bool(raw & 0b00000001),
         )
@@ -196,7 +193,7 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
             raw |= 0b00010000
         if value.dew_point:
             raw |= 0b00001000
-        if value.heat_cool is HVACControllerMode.HEAT:
+        if value.heat_cool is HeatCool.HEAT:
             raw |= 0b00000100
         if value.inactive:
             raw |= 0b00000010
