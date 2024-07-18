@@ -30,6 +30,7 @@ class DPTHeatCool(DPT1BitEnum[HeatCool]):
     DPT 1.100
     """
 
+    dpt_main_number = 1
     dpt_sub_number = 100
     value_type = "heat_cool"
     data_type = HeatCool
