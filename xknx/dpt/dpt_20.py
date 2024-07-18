@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
 from .dpt import DPTComplex, DPTComplexData, DPTEnum
+from .dpt_1 import HeatCool
 from .payload import DPTArray, DPTBinary
 
 
@@ -15,11 +16,11 @@ from .payload import DPTArray, DPTBinary
 class HVACOperationMode(Enum):
     """Enum for the different KNX HVAC operation modes."""
 
-    AUTO = "Auto"
-    COMFORT = "Comfort"
-    STANDBY = "Standby"
-    ECONOMY = "Economy"
-    BUILDING_PROTECTION = "Building Protection"
+    AUTO = 0
+    COMFORT = 1
+    STANDBY = 2
+    ECONOMY = 3
+    BUILDING_PROTECTION = 4
 
 
 class DPTHVACMode(DPTEnum[HVACOperationMode]):
@@ -35,39 +36,33 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
     data_type = HVACOperationMode
 
     @classmethod
-    def get_value_map(cls) -> Mapping[int, HVACOperationMode]:
-        """Return mapping of raw KNX values to Enum members."""
-        return {
-            0: HVACOperationMode.AUTO,
-            1: HVACOperationMode.COMFORT,
-            2: HVACOperationMode.STANDBY,
-            3: HVACOperationMode.ECONOMY,
-            4: HVACOperationMode.BUILDING_PROTECTION,
-        }
+    def _to_knx(cls, value: HVACOperationMode) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 class HVACControllerMode(Enum):
     """Enum for the different KNX HVAC controller modes."""
 
-    AUTO = "Auto"
-    HEAT = "Heat"
-    MORNING_WARMUP = "Morning Warmup"
-    COOL = "Cool"
-    NIGHT_PURGE = "Night Purge"
-    PRECOOL = "Precool"
-    OFF = "Off"
-    TEST = "Test"
-    EMERGENCY_HEAT = "Emergency Heat"
-    FAN_ONLY = "Fan only"
-    FREE_COOL = "Free Cool"
-    ICE = "Ice"
-    MAXIMUM_HEATING_MODE = "Maximum Heating Mode"
-    ECONOMIC_HEAT_COOL_MODE = "Economic Heat/Cool Mode"
-    DEHUMIDIFICATION = "Dehumidification"
-    CALIBRATION_MODE = "Calibration Mode"
-    EMERGENCY_COOL_MODE = "Emergency Cool Mode"
-    EMERGENCY_STEAM_MODE = "Emergency Steam Mode"
-    NODEM = "NoDem"
+    AUTO = 0
+    HEAT = 1
+    MORNING_WARMUP = 2
+    COOL = 3
+    NIGHT_PURGE = 4
+    PRECOOL = 5
+    OFF = 6
+    TEST = 7
+    EMERGENCY_HEAT = 8
+    FAN_ONLY = 9
+    FREE_COOL = 10
+    ICE = 11
+    MAXIMUM_HEATING_MODE = 12
+    ECONOMIC_HEAT_COOL_MODE = 13
+    DEHUMIDIFICATION = 14
+    CALIBRATION_MODE = 15
+    EMERGENCY_COOL_MODE = 16
+    EMERGENCY_STEAM_MODE = 17
+    NODEM = 20
 
 
 class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
@@ -83,29 +78,9 @@ class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
     data_type = HVACControllerMode
 
     @classmethod
-    def get_value_map(cls) -> Mapping[int, HVACControllerMode]:
-        """Return mapping of raw KNX values to Enum members."""
-        return {
-            0: HVACControllerMode.AUTO,
-            1: HVACControllerMode.HEAT,
-            2: HVACControllerMode.MORNING_WARMUP,
-            3: HVACControllerMode.COOL,
-            4: HVACControllerMode.NIGHT_PURGE,
-            5: HVACControllerMode.PRECOOL,
-            6: HVACControllerMode.OFF,
-            7: HVACControllerMode.TEST,
-            8: HVACControllerMode.EMERGENCY_HEAT,
-            9: HVACControllerMode.FAN_ONLY,
-            10: HVACControllerMode.FREE_COOL,
-            11: HVACControllerMode.ICE,
-            12: HVACControllerMode.MAXIMUM_HEATING_MODE,
-            13: HVACControllerMode.ECONOMIC_HEAT_COOL_MODE,
-            14: HVACControllerMode.DEHUMIDIFICATION,
-            15: HVACControllerMode.CALIBRATION_MODE,
-            16: HVACControllerMode.ECONOMIC_HEAT_COOL_MODE,
-            17: HVACControllerMode.EMERGENCY_STEAM_MODE,
-            20: HVACControllerMode.NODEM,
-        }
+    def _to_knx(cls, value: HVACControllerMode) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 @dataclass(slots=True)
@@ -114,7 +89,7 @@ class HVACStatus(DPTComplexData):
 
     mode: HVACOperationMode
     dew_point: bool
-    heat_cool: Literal[HVACControllerMode.HEAT, HVACControllerMode.COOL]
+    heat_cool: HeatCool
     inactive: bool
     frost_alarm: bool
 
@@ -126,13 +101,11 @@ class HVACStatus(DPTComplexData):
             _heat_cool = data["heat_cool"]
             try:
                 mode = HVACOperationMode[_mode.upper()]
-                heat_cool = HVACControllerMode[_heat_cool.upper()]
+                heat_cool = HeatCool[_heat_cool.upper()]
             except AttributeError as err:
                 raise ValueError(
                     f"Invalid type for HVAC mode or heat_cool: {err}"
                 ) from err
-            if heat_cool not in (HVACControllerMode.HEAT, HVACControllerMode.COOL):
-                raise ValueError(f"Invalid value for HVAC heat_cool: {heat_cool=}")
             dew_point = data["dew_point"]
             inactive = data["inactive"]
             frost_alarm = data["frost_alarm"]
@@ -151,7 +124,7 @@ class HVACStatus(DPTComplexData):
         return cls(
             mode=mode,
             dew_point=dew_point,
-            heat_cool=heat_cool,  # type: ignore[arg-type]  # checked by `not in (HVACControllerMode.HEAT, HVACControllerMode.COOL)` above
+            heat_cool=heat_cool,
             inactive=inactive,
             frost_alarm=frost_alarm,
         )
@@ -201,9 +174,7 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
         return HVACStatus(
             mode=mode,
             dew_point=bool(raw & 0b00001000),
-            heat_cool=HVACControllerMode.HEAT
-            if raw & 0b00000100
-            else HVACControllerMode.COOL,
+            heat_cool=HeatCool.HEAT if raw & 0b00000100 else HeatCool.COOL,
             inactive=bool(raw & 0b00000010),
             frost_alarm=bool(raw & 0b00000001),
         )
@@ -222,7 +193,7 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
             raw |= 0b00010000
         if value.dew_point:
             raw |= 0b00001000
-        if value.heat_cool is HVACControllerMode.HEAT:
+        if value.heat_cool is HeatCool.HEAT:
             raw |= 0b00000100
         if value.inactive:
             raw |= 0b00000010

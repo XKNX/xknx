@@ -46,12 +46,14 @@ nav_order: 2
   - 251.600 - DPTColorRGBW - RGBWColor
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
 - DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
+  - 1.100 - DPTHeatCool - HeatCool
   - 20.102 - DPTHVACMode - HVACOperationMode
     - rename "NIGHT" to "ECONOMY" and "FROST_PROTECTION" to "BUILDING_PROTECTION" according to KNX specifications
   - 20.105 - DPTHVACContrMode - HVACControllerMode
     - rename "DRY" to "DEHUMIDIFICATION" and add some values according to KNX specifications
 - Change DPT number of Enthalpy from 9.999 to 9.60000 (manufacturer specific range)
 - Support dict values with "main" and "sub" keys for `DPTBase.parse_transcoder()`
+- Verify DPTBinary max payload bitsize when decoding by transcoders `payload_length`
 
 ### Address
 

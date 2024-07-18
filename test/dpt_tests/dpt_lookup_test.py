@@ -25,7 +25,7 @@ from xknx.dpt import *
 
 
 @pytest.mark.parametrize(
-    "value_type,dpt_class,main,sub,unit",
+    ("value_type", "dpt_class", "main", "sub", "unit"),
     [
         ("1byte_signed", DPTSignedRelativeValue, 6, None, None),
         ("1byte_unsigned", DPTValue1ByteUnsigned, 5, None, None),
@@ -60,7 +60,10 @@ from xknx.dpt import *
         ("capacitance", DPTCapacitance, 14, 11, "F"),
         ("charge_density_surface", DPTChargeDensitySurface, 14, 12, "C/m²"),
         ("charge_density_volume", DPTChargeDensityVolume, 14, 13, "C/m³"),
+        ("color_rgb", DPTColorRGB, 232, 600, None),
+        ("color_rgbw", DPTColorRGBW, 251, 600, None),
         ("color_temperature", DPTColorTemperature, 7, 600, "K"),
+        ("color_xyy", DPTColorXYY, 242, 600, None),
         ("common_temperature", DPTCommonTemperature, 14, 68, "°C"),
         ("compressibility", DPTCompressibility, 14, 14, "m²/N"),
         ("concentration_ugm3", DPTConcentrationUGM3, 9, 30, "μg/m³"),
@@ -95,10 +98,14 @@ from xknx.dpt import *
         ("flow_rate_m3h", DPTFlowRateM3H, 13, 2, "m³/h"),
         ("force", DPTForce, 14, 32, "N"),
         ("frequency", DPTFrequency, 14, 33, "Hz"),
+        ("heat_cool", DPTHeatCool, 1, 100, None),
         ("heat_quantity", DPTHeatQuantity, 14, 37, "J"),
         ("heatcapacity", DPTHeatCapacity, 14, 35, "J/K"),
         ("heatflowrate", DPTHeatFlowRate, 14, 36, "W"),
         ("humidity", DPTHumidity, 9, 7, "%"),
+        ("hvac_controller_mode", DPTHVACContrMode, 20, 105, None),
+        ("hvac_mode", DPTHVACMode, 20, 102, None),
+        ("hvac_status", DPTHVACStatus, 20, 60102, None),
         ("illuminance", DPTLux, 9, 4, "lx"),
         ("impedance", DPTImpedance, 14, 38, "Ω"),
         ("kelvin_per_percent", DPTKelvinPerPercent, 9, 23, "K/%"),
@@ -162,6 +169,7 @@ from xknx.dpt import *
         ("string", DPTString, 16, 0, None),
         ("surface_tension", DPTSurfaceTension, 14, 67, "N/m"),
         ("tariff", DPTTariff, 5, 6, None),
+        ("tariff_active_energy", DPTTariffActiveEnergy, 235, 1, None),
         ("temperature", DPTTemperature, 9, 1, "°C"),
         ("temperature_a", DPTTemperatureA, 9, 3, "K/h"),
         ("temperature_difference", DPTTemperatureDifference, 14, 70, "K"),

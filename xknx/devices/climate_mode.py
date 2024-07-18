@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
+from xknx.dpt.dpt_1 import HeatCool
 from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import GroupAddressesType
@@ -144,7 +145,9 @@ class ClimateMode(Device):
         else:
             for op_mode in operation_modes:
                 if isinstance(op_mode, str):
-                    self._operation_modes.append(HVACOperationMode(op_mode))
+                    self._operation_modes.append(
+                        HVACOperationMode[op_mode.replace(" ", "_").upper()]
+                    )
                 elif isinstance(op_mode, HVACOperationMode):
                     self._operation_modes.append(op_mode)
 
@@ -154,7 +157,9 @@ class ClimateMode(Device):
         else:
             for ct_mode in controller_modes:
                 if isinstance(ct_mode, str):
-                    self._controller_modes.append(HVACControllerMode(ct_mode))
+                    self._controller_modes.append(
+                        HVACControllerMode[ct_mode.replace(" ", "_").upper()]
+                    )
                 elif isinstance(ct_mode, HVACControllerMode):
                     self._controller_modes.append(ct_mode)
 
@@ -196,8 +201,13 @@ class ClimateMode(Device):
         if status.mode != self.operation_mode:
             self.operation_mode = status.mode
             updated = True
-        if status.heat_cool != self.controller_mode:
-            self.controller_mode = status.heat_cool
+        contr_mode_heat_cool = (
+            HVACControllerMode.HEAT
+            if status.heat_cool is HeatCool.HEAT
+            else HVACControllerMode.COOL
+        )
+        if contr_mode_heat_cool != self.controller_mode:
+            self.controller_mode = contr_mode_heat_cool
             updated = True
         if updated:
             self.after_update()

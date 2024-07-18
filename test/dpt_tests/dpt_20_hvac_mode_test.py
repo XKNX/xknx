@@ -2,8 +2,8 @@
 
 import pytest
 
-from xknx.dpt import DPTArray, DPTHVACMode, DPTHVACStatus
-from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
+from xknx.dpt import DPTArray, DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from xknx.dpt.dpt_20 import HeatCool, HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -26,9 +26,7 @@ class TestDPTHVACMode:
         assert DPTHVACMode.to_knx("Comfort") == DPTArray((0x01,))
         assert DPTHVACMode.to_knx("standby") == DPTArray((0x02,))
         assert DPTHVACMode.to_knx("ECONOMY") == DPTArray((0x03,))
-        assert DPTHVACMode.to_knx(
-            "Building Protection"  # Enum value, not name
-        ) == DPTArray((0x04,))
+        assert DPTHVACMode.to_knx("Building_Protection") == DPTArray((0x04,))
 
     def test_mode_to_knx_wrong_value(self):
         """Test serializing DPTHVACMode to KNX with wrong value."""
@@ -54,6 +52,58 @@ class TestDPTHVACMode:
             DPTHVACMode.from_knx(DPTArray((0x05,)))
 
 
+class TestDPTHVACControllerMode:
+    """Test class for KNX DPT HVAC Controller modes."""
+
+    def test_mode_to_knx(self):
+        """Test parsing DPTHVACContrMode to KNX."""
+        assert DPTHVACContrMode.to_knx(HVACControllerMode.AUTO) == DPTArray((0x00,))
+        assert DPTHVACContrMode.to_knx(HVACControllerMode.HEAT) == DPTArray((0x01,))
+        assert DPTHVACContrMode.to_knx(HVACControllerMode.COOL) == DPTArray((0x03,))
+        assert DPTHVACContrMode.to_knx(HVACControllerMode.OFF) == DPTArray((0x06,))
+        assert DPTHVACContrMode.to_knx(HVACControllerMode.DEHUMIDIFICATION) == DPTArray(
+            (0x0E,)
+        )
+
+    def test_mode_to_knx_by_string(self):
+        """Test parsing DPTHVACMode string values to KNX."""
+        assert DPTHVACContrMode.to_knx("morning_warmup") == DPTArray((0x02,))
+        assert DPTHVACContrMode.to_knx("NIGHT_PURGE") == DPTArray((0x04,))
+        assert DPTHVACContrMode.to_knx("precool") == DPTArray((0x05,))
+        assert DPTHVACContrMode.to_knx("Test") == DPTArray((0x07,))
+        assert DPTHVACContrMode.to_knx("NODEM") == DPTArray((0x14,))
+
+    def test_mode_to_knx_wrong_value(self):
+        """Test serializing DPTHVACMode to KNX with wrong value."""
+        with pytest.raises(ConversionError):
+            DPTHVACContrMode.to_knx(18)
+        with pytest.raises(ConversionError):
+            DPTHVACContrMode.to_knx(19)
+        with pytest.raises(ConversionError):
+            DPTHVACContrMode.to_knx(21)
+
+    @pytest.mark.parametrize(
+        ("raw", "value"),
+        [
+            (0x00, HVACControllerMode.AUTO),
+            (0x08, HVACControllerMode.EMERGENCY_HEAT),
+            (0x09, HVACControllerMode.FAN_ONLY),
+            (0x0A, HVACControllerMode.FREE_COOL),
+            (0x0B, HVACControllerMode.ICE),
+        ],
+    )
+    def test_mode_from_knx(self, raw, value):
+        """Test parsing DPTHVACMode from KNX."""
+        assert DPTHVACContrMode.from_knx(DPTArray((raw,))) is value
+
+    def test_mode_from_knx_wrong_value(self):
+        """Test parsing of DPTHVACMode with wrong value)."""
+        with pytest.raises(CouldNotParseTelegram):
+            DPTHVACContrMode.from_knx(DPTArray((1, 2)))
+        with pytest.raises(ConversionError):
+            DPTHVACContrMode.from_knx(DPTArray((18,)))
+
+
 class TestHVACStatus:
     """Test HVACStatus class."""
 
@@ -71,7 +121,7 @@ class TestHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.HEAT,
+                    heat_cool=HeatCool.HEAT,
                     inactive=False,
                     frost_alarm=False,
                 ),
@@ -87,7 +137,7 @@ class TestHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.STANDBY,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.COOL,
+                    heat_cool=HeatCool.COOL,
                     inactive=True,
                     frost_alarm=False,
                 ),
@@ -149,7 +199,7 @@ class TestDPTHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.HEAT,
+                    heat_cool=HeatCool.HEAT,
                     inactive=False,
                     frost_alarm=False,
                 ),
@@ -159,7 +209,7 @@ class TestDPTHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
-                    heat_cool=HVACControllerMode.COOL,
+                    heat_cool=HeatCool.COOL,
                     inactive=False,
                     frost_alarm=False,
                 ),
@@ -169,7 +219,7 @@ class TestDPTHVACStatus:
                 HVACStatus(
                     mode=HVACOperationMode.ECONOMY,
                     dew_point=True,
-                    heat_cool=HVACControllerMode.COOL,
+                    heat_cool=HeatCool.COOL,
                     inactive=False,
                     frost_alarm=True,
                 ),
