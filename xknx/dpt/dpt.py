@@ -269,13 +269,14 @@ class DPTEnum(DPTBase, Generic[EnumT]):
             except ValueError:
                 pass  # raise ConversionError below
 
-        if not isinstance(value, cls.data_type):
-            raise ConversionError(
-                f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
-                value=value,
-                valid_values=cls.get_valid_values(),
-            )
-        return cls._to_knx(value)
+        if isinstance(value, cls.data_type):
+            return cls._to_knx(value)
+
+        raise ConversionError(
+            f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
+            value=value,
+            valid_values=cls.get_valid_values(),
+        )
 
     @classmethod
     @abstractmethod
