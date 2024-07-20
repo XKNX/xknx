@@ -7,7 +7,7 @@ Module for encoding and decoding KNX datatypes.
 
 # ruff: noqa: F401
 from .dpt import DPTBase, DPTComplex, DPTComplexData, DPTEnum, DPTNumeric
-from .dpt_1 import DPTHeatCool
+from .dpt_1 import DPTHeatCool, DPTStep, DPTUpDown
 from .dpt_3 import (
     DPTControlStartStop,
     DPTControlStartStopBlinds,

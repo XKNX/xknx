@@ -46,7 +46,9 @@ nav_order: 2
   - 251.600 - DPTColorRGBW - RGBWColor
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
 - DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
-  - 1.100 - DPTHeatCool - HeatCool
+  - 1.007 - DPTStep
+  - 1.008 - DPTUpDown
+  - 1.100 - DPTHeatCool
   - 20.102 - DPTHVACMode - HVACOperationMode
     - rename "NIGHT" to "ECONOMY" and "FROST_PROTECTION" to "BUILDING_PROTECTION" according to KNX specifications
   - 20.105 - DPTHVACContrMode - HVACControllerMode
