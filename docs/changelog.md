@@ -35,11 +35,14 @@ nav_order: 2
 - `Device.shutdown` method is removed
 - Refactor `ClimateMode` device
 - Rename `ClimateMode` argument `group_address_operation_mode_night` to `group_address_operation_mode_economy`
+- Remove DPT 3 special handling `stepwise_*` and `startstop_*` from Sensor device
 
 ### DPT
 
 - DPTComplex: Common interface for DPT transcoders with multi-value data. Resulting dataclasses can be converted to and from a dict with DPT specific properties to be JSON compatible.
 - Added or refactored complex DPTs and dataclasses:
+  - 3.007 - DPTControlDimming
+  - 3.008 - DPTControlBlinds
   - 232.600 - DPTColorRGB - RGBColor
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
@@ -66,7 +69,7 @@ nav_order: 2
 - Use `slots` in addresses, Telegram, DPTBinary, DPTArray, TPCI, APCI, DPTComplexData
 - Convert Telegram and APCI to dataclasses. `Telegram` is not hashable anymore.
 - RemoteValue instances use pre-decoded data from Telegrams if available and `dpt_class` for is set - otherwise they decode the data themselves in `from_knx` like before.
-- Remove unused RemoteValue1Count class
+- Remove RemoteValueControl and unused RemoteValue1Count class
 - Add value argument to RemoteValue `after_update_cb` callback
 
 # 2.12.2 Fix thread leak 2024-03-05

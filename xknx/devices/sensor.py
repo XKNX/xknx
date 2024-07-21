@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
-    RemoteValueControl,
     RemoteValueSensor,
 )
 
@@ -41,31 +40,14 @@ class Sensor(Device):
     ):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
-
-        self.sensor_value: RemoteValueControl | RemoteValueSensor
-        if isinstance(value_type, str) and value_type in [
-            "stepwise_dimming",
-            "stepwise_blinds",
-            "startstop_dimming",
-            "startstop_blinds",
-        ]:
-            self.sensor_value = RemoteValueControl(
-                xknx,
-                group_address_state=group_address_state,
-                sync_state=sync_state,
-                value_type=value_type,
-                device_name=self.name,
-                after_update_cb=self.after_update,
-            )
-        else:
-            self.sensor_value = RemoteValueSensor(
-                xknx,
-                group_address_state=group_address_state,
-                sync_state=sync_state,
-                value_type=value_type,
-                device_name=self.name,
-                after_update_cb=self.after_update,
-            )
+        self.sensor_value = RemoteValueSensor(
+            xknx,
+            group_address_state=group_address_state,
+            sync_state=sync_state,
+            value_type=value_type,
+            device_name=self.name,
+            after_update_cb=self.after_update,
+        )
         self.always_callback = always_callback
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:

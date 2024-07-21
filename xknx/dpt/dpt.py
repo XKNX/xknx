@@ -320,7 +320,7 @@ class DPTComplex(DPTBase, Generic[TComplexData]):
 
     @final
     @classmethod
-    def to_knx(cls, value: TComplexData | Mapping[str, Any]) -> DPTArray:
+    def to_knx(cls, value: TComplexData | Mapping[str, Any]) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
         try:
             if isinstance(value, cls.data_type):
@@ -333,5 +333,5 @@ class DPTComplex(DPTBase, Generic[TComplexData]):
 
     @classmethod
     @abstractmethod
-    def _to_knx(cls, value: TComplexData) -> DPTArray:
+    def _to_knx(cls, value: TComplexData) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
