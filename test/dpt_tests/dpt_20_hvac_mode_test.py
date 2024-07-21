@@ -183,7 +183,7 @@ class TestHVACStatus:
         ],
     )
     def test_dict_invalid(self, data):
-        """Test from_dict and as_dict methods."""
+        """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             HVACStatus.from_dict(data)
 

@@ -34,7 +34,7 @@ class ControlDimming(DPTComplexData):
             raise ValueError(f"Invalid value for ControlDimming: {err}") from err
         try:
             control = Step[_control.upper()]
-        except KeyError:
+        except (KeyError, AttributeError):
             try:
                 control = Step(_control)
             except ValueError as err:
@@ -105,7 +105,7 @@ class ControlBlinds(DPTComplexData):
             raise ValueError(f"Invalid value for ControlBlinds: {err}") from err
         try:
             control = UpDown[_control.upper()]
-        except KeyError:
+        except (KeyError, AttributeError):
             try:
                 control = UpDown(_control)
             except ValueError as err:

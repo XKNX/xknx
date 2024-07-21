@@ -38,6 +38,25 @@ class TestControlData:
         assert test_dataclass.from_dict(dict_value) == data
         assert data.as_dict() == dict_value
 
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"control": 1, "step_code": "invalid"},
+            {"control": "up", "step_code": "invalid"},
+            {"control": "increase", "step_code": "invalid"},
+            {"control": "down", "step_code": None},
+            {"control": None, "step_code": 1},
+            {"control": "invalid", "step_code": 0},
+            {"control": 2, "step_code": 4},
+        ],
+    )
+    def test_dict_invalid(self, data):
+        """Test from_dict with invalid data."""
+        with pytest.raises(ValueError):
+            ControlBlinds.from_dict(data)
+        with pytest.raises(ValueError):
+            ControlDimming.from_dict(data)
+
 
 @pytest.mark.parametrize(
     ("dpt", "dpt_data", "control_enum"),
