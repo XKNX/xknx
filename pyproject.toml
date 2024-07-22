@@ -63,6 +63,7 @@ warn_unreachable = true
 ignore = "test"
 persistent = "no"
 reports = "no"
+allow-reexport-from-package = true
 
 [tool.pylint.message_control]
 # Reasons disabled:

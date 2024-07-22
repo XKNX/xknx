@@ -5,16 +5,14 @@ import sys
 from typing import TYPE_CHECKING, TypeVar
 
 if sys.version_info >= (3, 11):
-    from typing import Self
+    from typing import Self as Self
 else:
-    from typing_extensions import Self
+    from typing_extensions import Self as Self
 
 if TYPE_CHECKING:
     from xknx.core.connection_manager import XknxConnectionState
     from xknx.devices import Device
     from xknx.telegram import Telegram
-
-Self = Self
 
 CallbackType = Callable[[], None]
 
