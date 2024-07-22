@@ -108,16 +108,9 @@ class TestHVACStatus:
     """Test HVACStatus class."""
 
     @pytest.mark.parametrize(
-        ("data", "value"),
+        ("data", "dict_value"),
         [
             (
-                {
-                    "mode": "comfort",
-                    "dew_point": False,
-                    "heat_cool": "heat",
-                    "inactive": False,
-                    "frost_alarm": False,
-                },
                 HVACStatus(
                     mode=HVACOperationMode.COMFORT,
                     dew_point=False,
@@ -125,15 +118,15 @@ class TestHVACStatus:
                     inactive=False,
                     frost_alarm=False,
                 ),
-            ),
-            (
                 {
-                    "mode": "standby",
+                    "mode": "comfort",
                     "dew_point": False,
-                    "heat_cool": "cool",
-                    "inactive": True,
+                    "heat_cool": "heat",
+                    "inactive": False,
                     "frost_alarm": False,
                 },
+            ),
+            (
                 HVACStatus(
                     mode=HVACOperationMode.STANDBY,
                     dew_point=False,
@@ -141,14 +134,20 @@ class TestHVACStatus:
                     inactive=True,
                     frost_alarm=False,
                 ),
+                {
+                    "mode": "standby",
+                    "dew_point": False,
+                    "heat_cool": "cool",
+                    "inactive": True,
+                    "frost_alarm": False,
+                },
             ),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data, dict_value):
         """Test from_dict and as_dict methods."""
-        test_value = HVACStatus.from_dict(data)
-        assert test_value == value
-        assert value.as_dict() == data
+        assert HVACStatus.from_dict(dict_value) == data
+        assert data.as_dict() == dict_value
 
     @pytest.mark.parametrize(
         "data",
@@ -184,7 +183,7 @@ class TestHVACStatus:
         ],
     )
     def test_dict_invalid(self, data):
-        """Test from_dict and as_dict methods."""
+        """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             HVACStatus.from_dict(data)
 

@@ -41,7 +41,7 @@ class RemoteValueColorRGBW(RemoteValue[RGBWColor]):
         )
         self._valid_value = RGBWColor()
 
-    def to_knx(self, value: RGBWColor) -> DPTArray:
+    def to_knx(self, value: RGBWColor) -> DPTArray | DPTBinary:
         """Convert value to payload."""
         return DPTColorRGBW.to_knx(value)
 
