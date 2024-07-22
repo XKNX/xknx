@@ -10,10 +10,10 @@ from inspect import isabstract
 from typing import Any, Generic, TypedDict, TypeVar, cast, final
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.typing import Self
 
 from .payload import DPTArray, DPTBinary
 
-T = TypeVar("T", bound=type["DPTBase"])  # pylint: disable=invalid-name
 TComplexData = TypeVar("TComplexData", bound="DPTComplexData")  # pylint: disable=invalid-name
 
 
@@ -125,7 +125,7 @@ class DPTBase(ABC):
         """
 
     @classmethod
-    def __recursive_subclasses__(cls: T) -> Iterator[T]:
+    def __recursive_subclasses__(cls: type[Self]) -> Iterator[type[Self]]:
         """Yield all subclasses and their subclasses."""
         for subclass in cls.__subclasses__():
             yield from subclass.__recursive_subclasses__()
@@ -133,7 +133,7 @@ class DPTBase(ABC):
                 yield subclass
 
     @classmethod
-    def dpt_class_tree(cls: T) -> Iterator[T]:
+    def dpt_class_tree(cls: type[Self]) -> Iterator[type[Self]]:
         """Yield class, all subclasses and their subclasses that are not abstract."""
         if not isabstract(cls):
             yield cls
@@ -151,8 +151,8 @@ class DPTBase(ABC):
 
     @classmethod
     def transcoder_by_dpt(
-        cls: T, dpt_main: int, dpt_sub: int | None = None
-    ) -> T | None:
+        cls: type[Self], dpt_main: int, dpt_sub: int | None = None
+    ) -> type[Self] | None:
         """Return Class reference of DPTBase subclass with matching DPT number."""
         for dpt in cls.dpt_class_tree():
             if dpt.has_distinct_dpt_numbers():
@@ -161,7 +161,7 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def transcoder_by_value_type(cls: T, value_type: str) -> T | None:
+    def transcoder_by_value_type(cls: type[Self], value_type: str) -> type[Self] | None:
         """Return Class reference of DPTBase subclass with matching value_type."""
         for dpt in cls.dpt_class_tree():
             if dpt.has_distinct_value_type():
@@ -170,7 +170,9 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def parse_transcoder(cls: T, value_type: int | str | _DPTMainSubDict) -> T | None:
+    def parse_transcoder(
+        cls: type[Self], value_type: int | str | _DPTMainSubDict
+    ) -> type[Self] | None:
         """
         Return Class reference of DPTBase subclass from value_type or DPT number.
 
@@ -298,9 +300,7 @@ class DPTComplexData(ABC):
 
     @classmethod
     @abstractmethod
-    def from_dict(
-        cls, data: Mapping[str, Any]
-    ) -> DPTComplexData:  # py3.11: use typing.Self
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
         """Init from a dictionary."""
 
     @abstractmethod

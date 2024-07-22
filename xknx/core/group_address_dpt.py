@@ -45,7 +45,7 @@ class GroupAddressDPT:
             if (transcoder := DPTBase.parse_transcoder(dpt)) is None:
                 unknown_dpts.add(repr(dpt))  # prevent unhashable types (dict)
                 continue
-            self._ga_dpts[address.raw] = transcoder  # type: ignore[type-abstract]
+            self._ga_dpts[address.raw] = transcoder
         if unknown_dpts:
             _GA_DPT_LOGGER.debug("No transcoder found for DPTs: %s", unknown_dpts)
 

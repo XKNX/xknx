@@ -15,7 +15,7 @@ from xknx.remote_value import RemoteValue
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
-from xknx.typing import DeviceCallbackType, DeviceT
+from xknx.typing import DeviceCallbackType, Self
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -27,15 +27,15 @@ class Device(ABC):
     """Base class for devices."""
 
     def __init__(
-        self: DeviceT,
+        self,
         xknx: XKNX,
         name: str,
-        device_updated_cb: DeviceCallbackType[DeviceT] | None = None,
+        device_updated_cb: DeviceCallbackType[Self] | None = None,
     ):
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name
-        self.device_updated_cbs: list[DeviceCallbackType[DeviceT]] = []
+        self.device_updated_cbs: list[DeviceCallbackType[Self]] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
 
@@ -65,20 +65,20 @@ class Device(ABC):
         yield from ()
 
     def register_device_updated_cb(
-        self: DeviceT, device_updated_cb: DeviceCallbackType[DeviceT]
+        self, device_updated_cb: DeviceCallbackType[Self]
     ) -> None:
         """Register device updated callback."""
         self.device_updated_cbs.append(device_updated_cb)
 
     def unregister_device_updated_cb(
-        self: DeviceT, device_updated_cb: DeviceCallbackType[DeviceT]
+        self, device_updated_cb: DeviceCallbackType[Self]
     ) -> None:
         """Unregister device updated callback."""
         if device_updated_cb in self.device_updated_cbs:
             self.device_updated_cbs.remove(device_updated_cb)
 
     def after_update(
-        self: DeviceT,
+        self: Self,
         *args: Any,  # a single argument may be passed if used as a RemoteValue callback
     ) -> None:
         """Execute callbacks after internal state has been changed."""
