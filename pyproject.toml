@@ -20,6 +20,7 @@ classifiers = [
 ]
 dependencies = [
   "async_timeout>=4.0.0; python_version<'3.11'",
+  "typing_extensions; python_version<'3.11'",
   "cryptography>=35.0.0",
   "ifaddr>=0.1.7",
 ]

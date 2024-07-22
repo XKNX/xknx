@@ -19,17 +19,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 from re import compile as re_compile
-from typing import ClassVar, TypeVar, Union
+from typing import ClassVar, Union
 
 from xknx.exceptions import CouldNotParseAddress
+from xknx.typing import Self
 
 GroupAddressableType = Union["GroupAddress", str, int]
 IndividualAddressableType = Union["IndividualAddress", str, int]
 InternalGroupAddressableType = Union["InternalGroupAddress", str]
 DeviceAddressableType = GroupAddressableType | InternalGroupAddressableType
 DeviceGroupAddress = Union["GroupAddress", "InternalGroupAddress"]
-# py3.10 backwards compatibility - in py3.11 typing.Self is available
-Self = TypeVar("Self", bound="BaseAddress")
 
 
 INVALID_PREFIX_MESSAGE = "Invalid prefix for internal group address"

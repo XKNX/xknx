@@ -1,12 +1,20 @@
 """Types used by XKNX."""
 
 from collections.abc import Callable
+import sys
 from typing import TYPE_CHECKING, TypeVar
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
 
 if TYPE_CHECKING:
     from xknx.core.connection_manager import XknxConnectionState
     from xknx.devices import Device
     from xknx.telegram import Telegram
+
+Self = Self
 
 CallbackType = Callable[[], None]
 
