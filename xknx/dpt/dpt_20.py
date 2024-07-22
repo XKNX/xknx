@@ -4,16 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any
 
-from .dpt import DPTComplex, DPTComplexData, DPTEnum
+from .dpt import DPTComplex, DPTComplexData, DPTEnum, DPTEnumData
 from .dpt_1 import HeatCool
 from .payload import DPTArray, DPTBinary
 
 
-# ruff: noqa: RUF012  # Mutable class attributes should be annotated with `typing.ClassVar`
-class HVACOperationMode(Enum):
+class HVACOperationMode(DPTEnumData):
     """Enum for the different KNX HVAC operation modes."""
 
     AUTO = 0
@@ -41,7 +39,7 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
         return DPTArray(value.value)
 
 
-class HVACControllerMode(Enum):
+class HVACControllerMode(DPTEnumData):
     """Enum for the different KNX HVAC controller modes."""
 
     AUTO = 0

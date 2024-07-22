@@ -14,8 +14,6 @@ from xknx.typing import Self
 
 from .payload import DPTArray, DPTBinary
 
-TComplexData = TypeVar("TComplexData", bound="DPTComplexData")  # pylint: disable=invalid-name
-
 
 class _DPTMainSubDict(TypedDict):
     """DPT type dictionary in accordance to xknxproject DPTType data."""
@@ -230,23 +228,45 @@ class DPTNumeric(DPTBase):
         """Serialize to KNX/IP raw data."""
 
 
-EnumT = TypeVar("EnumT", bound=Enum)
-
-
-class DPTEnum(DPTBase, Generic[EnumT]):
+class DPTEnumData(Enum):
     """
-    Abstraction for KNX DPT Enum.
+    Base class for KNX data point types decoding Enum values.
 
-    Expects Enum values to be integers representing the raw KNX value.
+    Member values should be integers representing the raw KNX value.
     """
+
+    @classmethod
+    def parse(cls, value: Self | str | int) -> Self:
+        """Parse from Enum instance, name or value."""
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, str):
+            try:
+                # snake_cased name may be used as translation key or serializable value
+                return cls[value.upper()]
+            except KeyError:
+                pass  # raise ValueError below
+        if isinstance(value, int):
+            try:
+                return cls(value)
+            except ValueError:
+                pass  # raise ValueError below
+        raise ValueError(f"Could not parse {cls.__name__} from {value}")
+
+
+EnumDataT = TypeVar("EnumDataT", bound=DPTEnumData)
+
+
+class DPTEnum(DPTBase, Generic[EnumDataT]):
+    """Base class for KNX data point types decoding Enum values."""
 
     payload_type: type[DPTArray | DPTBinary] = DPTArray
     payload_length = 1
 
-    data_type: type[EnumT]
+    data_type: type[EnumDataT]
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> EnumT:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> EnumDataT:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         try:
@@ -257,39 +277,27 @@ class DPTEnum(DPTBase, Generic[EnumT]):
             ) from None
 
     @classmethod
-    def to_knx(cls, value: EnumT | str | int) -> DPTArray | DPTBinary:
+    def to_knx(cls, value: EnumDataT | str | int) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
-        if isinstance(value, str):
-            try:
-                # snake_cased name may be used as translation key or serializable value
-                value = cls.data_type[value.upper()]
-            except KeyError:
-                pass  # raise ConversionError below
-        elif isinstance(value, int):
-            try:
-                value = cls.data_type(value)
-            except ValueError:
-                pass  # raise ConversionError below
-
-        if isinstance(value, cls.data_type):
-            return cls._to_knx(value)
-
-        raise ConversionError(
-            f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
-            value=value,
-            valid_values=cls.get_valid_values(),
-        )
+        try:
+            return cls._to_knx(cls.data_type.parse(value))
+        except ValueError as err:
+            raise ConversionError(
+                f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
+                value=value,
+                valid_values=cls.get_valid_values(),
+            ) from err
 
     @classmethod
     @abstractmethod
-    def _to_knx(cls, value: EnumT) -> DPTArray | DPTBinary:
+    def _to_knx(cls, value: EnumDataT) -> DPTArray | DPTBinary:
         """Return the raw KNX value for an Enum member."""
         # At least one abstract method is needed for our parse_transcoder lookup to
         # ignore the DPTEnum base class and only find concrete base classes.
         # `return DPTArray(value.value)` can be used typesafely if the Enum values are integers.
 
     @classmethod
-    def get_valid_values(cls) -> list[EnumT]:
+    def get_valid_values(cls) -> list[EnumDataT]:
         """Return list of valid values."""
         return list(cls.data_type)  # type: ignore[call-overload, no-any-return]
 
@@ -308,19 +316,22 @@ class DPTComplexData(ABC):
         """Create a JSON serializable dictionary."""
 
 
-class DPTComplex(DPTBase, Generic[TComplexData]):
+_ComplexDataT = TypeVar("_ComplexDataT", bound=DPTComplexData)
+
+
+class DPTComplex(DPTBase, Generic[_ComplexDataT]):
     """Base class for KNX data point types decoding complex values."""
 
-    data_type: type[TComplexData]
+    data_type: type[_ComplexDataT]
 
     @classmethod
     @abstractmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> TComplexData:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> _ComplexDataT:
         """Parse/deserialize from KNX/IP payload data."""
 
     @final
     @classmethod
-    def to_knx(cls, value: TComplexData | Mapping[str, Any]) -> DPTArray | DPTBinary:
+    def to_knx(cls, value: _ComplexDataT | Mapping[str, Any]) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
         try:
             if isinstance(value, cls.data_type):
@@ -333,5 +344,5 @@ class DPTComplex(DPTBase, Generic[TComplexData]):
 
     @classmethod
     @abstractmethod
-    def _to_knx(cls, value: TComplexData) -> DPTArray | DPTBinary:
+    def _to_knx(cls, value: _ComplexDataT) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
