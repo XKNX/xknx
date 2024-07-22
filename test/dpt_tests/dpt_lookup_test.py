@@ -160,6 +160,7 @@ from xknx.dpt import *
         ("resistance", DPTResistance, 14, 60, "Ω"),
         ("resistivity", DPTResistivity, 14, 61, "Ωm"),
         ("rotation_angle", DPTRotationAngle, 8, 11, "°"),
+        ("scene_control", DPTSceneControl, 18, 1, None),
         ("scene_number", DPTSceneNumber, 17, 1, None),
         ("self_inductance", DPTSelfInductance, 14, 62, "H"),
         ("solid_angle", DPTSolidAngle, 14, 63, "sr"),

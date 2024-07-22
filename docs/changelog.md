@@ -43,6 +43,7 @@ nav_order: 2
 - Added or refactored complex DPTs and dataclasses:
   - 3.007 - DPTControlDimming
   - 3.008 - DPTControlBlinds
+  - 18.001 - DPTSceneControl
   - 232.600 - DPTColorRGB - RGBColor
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
