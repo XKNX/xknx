@@ -48,7 +48,7 @@ nav_order: 2
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
-- DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum or string values for encoding.
+- DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum, string or raw integer values for encoding.
   - 1.007 - DPTStep
   - 1.008 - DPTUpDown
   - 1.100 - DPTHeatCool

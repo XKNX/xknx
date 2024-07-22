@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from enum import Enum
-
-from .dpt import DPTEnum, EnumT
+from .dpt import DPTEnum, DPTEnumData, EnumDataT
 from .payload import DPTBinary
 
 
-class DPT1BitEnum(DPTEnum[EnumT]):
+class DPT1BitEnum(DPTEnum[EnumDataT]):
     """Base class for KNX 1-Bit values encoded as Enums."""
 
     payload_type = DPTBinary
@@ -16,7 +14,7 @@ class DPT1BitEnum(DPTEnum[EnumT]):
     dpt_main_number = 1
 
 
-class Step(Enum):
+class Step(DPTEnumData):
     """Enum for dimming control."""
 
     DECREASE = False
@@ -41,7 +39,7 @@ class DPTStep(DPT1BitEnum[Step]):
         return DPTBinary(value.value)
 
 
-class UpDown(Enum):
+class UpDown(DPTEnumData):
     """Enum for up/down."""
 
     UP = False
@@ -66,7 +64,7 @@ class DPTUpDown(DPT1BitEnum[UpDown]):
         return DPTBinary(value.value)
 
 
-class HeatCool(Enum):
+class HeatCool(DPTEnumData):
     """Enum for heat/cool."""
 
     COOL = False

@@ -28,21 +28,10 @@ class ControlDimming(DPTComplexData):
     def from_dict(cls, data: Mapping[str, Any]) -> ControlDimming:
         """Init from a dictionary."""
         try:
-            _control = data["control"]
-            step_code = data["step_code"]
-        except (KeyError, TypeError) as err:
+            control = Step.parse(data["control"])
+            step_code = int(data["step_code"])
+        except (KeyError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for ControlDimming: {err}") from err
-        try:
-            control = Step[_control.upper()]
-        except (KeyError, AttributeError):
-            try:
-                control = Step(_control)
-            except ValueError as err:
-                raise ValueError(f"Invalid value for control: {err}") from err
-        try:
-            step_code = int(step_code)
-        except (ValueError, TypeError) as err:
-            raise ValueError(f"Invalid value for step_code: {err}") from err
         return cls(control=control, step_code=step_code)
 
     def as_dict(self) -> dict[str, int | str]:
@@ -99,21 +88,10 @@ class ControlBlinds(DPTComplexData):
     def from_dict(cls, data: Mapping[str, Any]) -> ControlBlinds:
         """Init from a dictionary."""
         try:
-            _control = data["control"]
-            step_code = data["step_code"]
-        except (KeyError, TypeError) as err:
+            control = UpDown.parse(data["control"])
+            step_code = int(data["step_code"])
+        except (KeyError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for ControlBlinds: {err}") from err
-        try:
-            control = UpDown[_control.upper()]
-        except (KeyError, AttributeError):
-            try:
-                control = UpDown(_control)
-            except ValueError as err:
-                raise ValueError(f"Invalid value for control: {err}") from err
-        try:
-            step_code = int(step_code)
-        except (ValueError, TypeError) as err:
-            raise ValueError(f"Invalid value for step_code: {err}") from err
         return cls(control=control, step_code=step_code)
 
     def as_dict(self) -> dict[str, int | str]:
