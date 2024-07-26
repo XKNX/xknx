@@ -2,29 +2,72 @@
 
 from __future__ import annotations
 
-import time
+from collections.abc import Mapping
+from dataclasses import dataclass
+import datetime
+from typing import Any
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
 
-class DPTDate(DPTBase):
-    """Abstraction for KNX 3 octet date (DPT 11.001)."""
+@dataclass(slots=True)
+class KNXDate(DPTComplexData):
+    """Class for KNX Date."""
 
-    payload_type = DPTArray
-    payload_length = 3
+    year: int
+    month: int
+    day: int
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> time.struct_time:
+    def from_dict(cls, data: Mapping[str, Any]) -> KNXDate:
+        """Init from a dictionary."""
+        try:
+            year = int(data["year"])
+            month = int(data["month"])
+            day = int(data["day"])
+        except (KeyError, TypeError, ValueError) as err:
+            raise ValueError(f"Invalid value for KNXDate: {err}") from err
+        return cls(year=year, month=month, day=day)
+
+    def as_dict(self) -> dict[str, int]:
+        """Return object as dictionary."""
+        return {
+            "year": self.year,
+            "month": self.month,
+            "day": self.day,
+        }
+
+    def as_date(self) -> datetime.date:
+        """Return datetime object."""
+        return datetime.date(self.year, self.month, self.day)
+
+    @classmethod
+    def from_date(cls, date: datetime.date) -> KNXDate:
+        """Return KNXDate object from a datetime.date object."""
+        return cls(date.year, date.month, date.day)
+
+
+class DPTDate(DPTComplex[KNXDate]):
+    """Abstraction for KNX 3 octet date (DPT 11.001)."""
+
+    data_type = KNXDate
+    payload_type = DPTArray
+    payload_length = 3
+    dpt_main_number = 11
+    dpt_sub_number = 1
+    value_type = "date"
+
+    @classmethod
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> KNXDate:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
 
         day = raw[0] & 0x1F
         month = raw[1] & 0x0F
         year = raw[2] & 0x7F
-
         if not DPTDate._test_range(day, month, year):
             raise ConversionError("Could not parse DPTDate", raw=raw)
 
@@ -33,31 +76,26 @@ class DPTDate(DPTBase):
         else:
             year += 2000
 
-        try:
-            # strptime conversion used for catching exceptions; filled with default values
-            return time.strptime(f"{year} {month} {day}", "%Y %m %d")
-        except ValueError as err:
-            raise ConversionError("Could not parse DPTDate", raw=raw) from err
+        return KNXDate(year, month, day)
 
     @classmethod
-    def to_knx(cls, value: time.struct_time) -> DPTArray:
-        """Serialize to KNX/IP raw data from time.struct_time."""
+    def _to_knx(cls, value: KNXDate) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
 
         def _knx_year(year: int) -> int:
             if 2000 <= year < 2090:
                 return year - 2000
             if 1990 <= year < 2000:
                 return year - 1900
-            raise ConversionError("Could not serialize DPTDate", year=year)
-
-        if not isinstance(value, time.struct_time):
-            raise ConversionError("Could not serialize DPTDate", value=value)
+            raise ConversionError(
+                "Could not serialize DPTDate. Year out of range 1990..2089", year=year
+            )
 
         return DPTArray(
             (
-                value.tm_mday,
-                value.tm_mon,
-                _knx_year(value.tm_year),
+                value.day,
+                value.month,
+                _knx_year(value.year),
             )
         )
 
