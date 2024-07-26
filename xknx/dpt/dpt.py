@@ -237,7 +237,7 @@ class DPTEnumData(Enum):
 
     @classmethod
     def parse(cls, value: Self | str | int) -> Self:
-        """Parse from Enum instance, name or value."""
+        """Parse from Enum instance, name or value. Raises ValueError if parsing fails."""
         if isinstance(value, cls):
             return value
         if isinstance(value, str):

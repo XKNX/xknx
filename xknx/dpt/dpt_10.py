@@ -2,81 +2,122 @@
 
 from __future__ import annotations
 
-import time
+from collections.abc import Mapping
+from dataclasses import dataclass
+import datetime
+from typing import Any
 
 from xknx.exceptions import ConversionError
 
-from .dpt import DPTBase
+from .dpt import DPTComplex, DPTComplexData, DPTEnumData
 from .payload import DPTArray, DPTBinary
 
 
-class DPTTime(DPTBase):
+class KNXDay(DPTEnumData):
+    """Enum for the different KNX days."""
+
+    NO_DAY = 0
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+    THURSDAY = 4
+    FRIDAY = 5
+    SATURDAY = 6
+    SUNDAY = 7
+
+
+@dataclass(slots=True)
+class KNXTime(DPTComplexData):
+    """Class for KNX Time."""
+
+    hour: int
+    minutes: int
+    seconds: int
+    day: KNXDay = KNXDay.NO_DAY
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> KNXTime:
+        """Init from a dictionary."""
+        try:
+            hour = int(data["hour"])
+            minutes = int(data["minutes"])
+            seconds = int(data["seconds"])
+            day = KNXDay.parse(data.get("day", KNXDay.NO_DAY))
+        except (KeyError, TypeError, ValueError) as err:
+            raise ValueError(f"Invalid value for KNXTime: {err}") from err
+        return cls(hour=hour, minutes=minutes, seconds=seconds, day=day)
+
+    def as_dict(self) -> dict[str, int | str]:
+        """Create a JSON serializable dictionary."""
+        return {
+            "hour": self.hour,
+            "minutes": self.minutes,
+            "seconds": self.seconds,
+            "day": self.day.name.lower(),
+        }
+
+    def as_time(self) -> datetime.time:
+        """Return time object. Ignoring day field."""
+        return datetime.time(self.hour, self.minutes, self.seconds)
+
+    @classmethod
+    def from_time(cls, time: datetime.time) -> KNXTime:
+        """Return KNXTime object from time object. Day field is set to NO_DAY."""
+        return cls(time.hour, time.minute, time.second)
+
+
+class DPTTime(DPTComplex[KNXTime]):
     """
     Abstraction for KNX 3 Octet Time.
 
     DPT 10.001
     """
 
+    data_type = KNXTime
     payload_type = DPTArray
     payload_length = 3
+    dpt_main_number = 10
+    dpt_sub_number = 1
+    value_type = "time"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> time.struct_time:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> KNXTime:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
 
-        weekday = (raw[0] & 0xE0) >> 5
+        weekday = (raw[0] & 0xE0) >> 5  # can not be out of range - 3 bits 0..7
         hours = raw[0] & 0x1F
         minutes = raw[1] & 0x3F
         seconds = raw[2] & 0x3F
-
-        if not DPTTime._test_range(weekday, hours, minutes, seconds):
-            raise ConversionError("Could not parse DPTTime", raw=raw)
-
         try:
-            if weekday == 0:
-                # struct_time has no concept of "no day"; default to monday (for %w this is 1)
-                weekday = 1
-            elif weekday == 7:
-                # in knx Sunday is 7; in strftime %w its 0
-                weekday = 0
-            # strptime conversion used for catching exceptions; filled with default values
-            return time.strptime(
-                f"{hours} {minutes} {seconds} {weekday}", "%H %M %S %w"
-            )
+            DPTTime._test_range(hours, minutes, seconds)
         except ValueError as err:
-            raise ConversionError("Could not parse DPTTime", raw=raw) from err
+            raise ConversionError(f"Could not parse {cls.__name__}: {err}") from err
+        return KNXTime(
+            hour=hours, minutes=minutes, seconds=seconds, day=KNXDay(weekday)
+        )
 
     @classmethod
-    def to_knx(cls, value: time.struct_time) -> DPTArray:
-        """Serialize to KNX/IP raw data from dict with elements weekday,hours,minutes,seconds."""
-        if not isinstance(value, time.struct_time):
-            raise ConversionError(
-                "Could not serialize DPTTime - time.struct_time expected", value=value
-            )
-
-        _default_time = time.strptime("", "")
-        weekday = 0
-        # if 0 year, 1 month, 2 day, 6 weekday, 7 yearday, 8 dst are equal to default assume "any weekday" (0)
-        for index in [0, 1, 2, 6, 7, 8]:
-            if value[index] is not _default_time[index]:
-                weekday = value.tm_wday + 1
-                break
-
+    def _to_knx(cls, value: KNXTime) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+        try:
+            DPTTime._test_range(value.hour, value.minutes, value.seconds)
+        except ValueError as err:
+            raise ConversionError(f"Could not serialize {cls.__name__}: {err}") from err
         return DPTArray(
             (
-                weekday << 5 | value.tm_hour,
-                value.tm_min,
-                value.tm_sec,
+                value.day.value << 5 | value.hour,
+                value.minutes,
+                value.seconds,
             )
         )
 
     @staticmethod
-    def _test_range(weekday: int, hours: int, minutes: int, seconds: int) -> bool:
+    def _test_range(hour: int, minutes: int, seconds: int) -> None:
         """Test if values are in the correct value range."""
-        return (
-            0 <= weekday <= 7
-            and 0 <= hours <= 23
-            and 0 <= minutes <= 59
-            and 0 <= seconds <= 59
-        )
+        if not 0 <= hour <= 23:
+            raise ValueError(f"Hour out of range 0..23: {hour}")
+        if not 0 <= minutes <= 59:
+            raise ValueError(f"Minutes out of range 0..59: {minutes}")
+        if not 0 <= seconds <= 59:
+            raise ValueError(f"Seconds out of range 0..59: {seconds}")
