@@ -10,7 +10,7 @@ from .remote_value_climate_mode import (
 from .remote_value_color_rgb import RemoteValueColorRGB
 from .remote_value_color_rgbw import RemoteValueColorRGBW
 from .remote_value_color_xyy import RemoteValueColorXYY
-from .remote_value_datetime import RemoteValueDateTime
+from .remote_value_datetime import RemoteValueDate, RemoteValueDateTime, RemoteValueTime
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
 from .remote_value_raw import RemoteValueRaw
 from .remote_value_scaling import RemoteValueScaling
@@ -36,6 +36,8 @@ __all__ = [
     "RemoteValueColorXYY",
     "RemoteValueControllerMode",
     "RemoteValueDateTime",
+    "RemoteValueDate",
+    "RemoteValueTime",
     "RemoteValueDptValue1Ucount",
     "RemoteValueNumeric",
     "RemoteValueOperationMode",

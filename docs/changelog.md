@@ -36,6 +36,7 @@ nav_order: 2
 - Refactor `ClimateMode` device
 - Rename `ClimateMode` argument `group_address_operation_mode_night` to `group_address_operation_mode_economy`
 - Remove DPT 3 special handling `stepwise_*` and `startstop_*` from Sensor device
+- Remove `DateTime` device in favour of `DateDevice`, `TimeDevice` and `DateTimeDevice` using `datetime` objects instead of `time.struct_time`
 
 ### DPT
 
@@ -43,13 +44,16 @@ nav_order: 2
 - Added or refactored complex DPTs and dataclasses:
   - 3.007 - DPTControlDimming
   - 3.008 - DPTControlBlinds
+  - 10.001 - DPTTime - KNXTime
+  - 11.001 - DPTDate - KNXDate
   - 18.001 - DPTSceneControl
+  - 19.001 - DPTDateTime - KNXDateTime
   - 232.600 - DPTColorRGB - RGBColor
   - 235.001 - DPTTariffActiveEnergy - TariffActiveEnergy
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
-- DPTEnum: Common interface for DPT transcoders with enumueration values. Transcoders accept Enum, string or raw integer values for encoding.
+- DPTEnum: Common interface for DPT trath enumueration values. Transcoders accept Enum, string or raw integer values for encoding.
   - 1.007 - DPTStep
   - 1.008 - DPTUpDown
   - 1.100 - DPTHeatCool

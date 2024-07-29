@@ -1,21 +1,28 @@
-"""
-Module for broadcasting date/time to the KNX bus.
-
-DateTime is a virtual/pseudo device, optionally
-broadcasting localtime periodically.
-"""
+"""Module for broadcasting date/time to the KNX bus, optionally broadcasting localtime periodically."""
 
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Iterator
+import datetime
 from functools import partial
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from xknx.core import Task
-from xknx.remote_value import GroupAddressesType, RemoteValueDateTime
+from xknx.dpt.dpt_10 import KNXDay, KNXTime
+from xknx.dpt.dpt_11 import KNXDate
+from xknx.dpt.dpt_19 import KNXDateTime, KNXDayOfWeek
+from xknx.remote_value import (
+    GroupAddressesType,
+    RemoteValue,
+    RemoteValueDate,
+    RemoteValueDateTime,
+    RemoteValueTime,
+)
+from xknx.typing import Self
 
 from .device import Device, DeviceCallbackType
 
@@ -28,55 +35,75 @@ logger = logging.getLogger("xknx.log")
 
 BROADCAST_MINUTES = 60
 
+_RemoteValueTimeT = TypeVar(
+    "_RemoteValueTimeT", RemoteValueTime, RemoteValueDate, RemoteValueDateTime
+)
+_DateTimeT = TypeVar("_DateTimeT", datetime.datetime, datetime.date, datetime.time)
 
-class DateTime(Device):
-    """Class for virtual date/time device."""
+
+class _DateTimeBase(Device, Generic[_RemoteValueTimeT, _DateTimeT]):
+    """Base class for virtual date/time device."""
+
+    _remote_value_cls: type[_RemoteValueTimeT]  # set in subclass
+
+    remote_value: _RemoteValueTimeT
+    _dt_value: _DateTimeT | None
 
     def __init__(
         self,
         xknx: XKNX,
         name: str,
-        broadcast_type: str = "TIME",
         localtime: bool = True,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
-        device_updated_cb: DeviceCallbackType[DateTime] | None = None,
+        device_updated_cb: DeviceCallbackType[Self] | None = None,
     ):
         """Initialize DateTime class."""
+        self._dt_value = None
         super().__init__(xknx, name, device_updated_cb)
         self.localtime = localtime
         if localtime and group_address_state is not None:
             logger.warning(
-                "State address invalid in DateTime device when using `localtime=True`. Ignoring `group_address_state=%s` argument.",
+                "State address invalid in %s device when using `localtime=True`. Ignoring `group_address_state=%s` argument.",
+                self.__class__.__name__,
                 group_address_state,
             )
             # state address invalid for localtime - therefore sync_state doesn't apply for localtime
             group_address_state = None
         self.respond_to_read = respond_to_read
-        self._broadcast_type = broadcast_type.upper()
-        self.remote_value = RemoteValueDateTime(
+        self.remote_value = self._remote_value_cls(
             xknx,
             group_address=group_address,
             group_address_state=group_address_state,
             sync_state=sync_state,
-            value_type=broadcast_type,
             device_name=name,
-            after_update_cb=self.after_update,
+            after_update_cb=self._value_updated,
         )
         self._broadcast_task: Task | None = None
 
-    def _iter_remote_values(self) -> Iterator[RemoteValueDateTime]:
+    def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.remote_value
+
+    @property
+    def value(self) -> _DateTimeT | None:
+        """Return the current date/time value."""
+        return self._dt_value
+
+    @abstractmethod
+    def _value_updated(self, value: Any) -> None:
+        """Update internal state after remote value has been changed."""
+        # set self._dt_value
+        # call self.after_update()
 
     def async_start_tasks(self) -> None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
         if not self.localtime:
             return None
 
-        async def broadcast_loop(self: DateTime, minutes: int) -> None:
+        async def broadcast_loop(self: Self, minutes: int) -> None:
             """Endless loop for broadcasting local time."""
             while True:
                 self.broadcast_localtime()
@@ -94,13 +121,15 @@ class DateTime(Device):
             self.xknx.task_registry.unregister(self._broadcast_task.name)
             self._broadcast_task = None
 
+    @abstractmethod
     def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local time to KNX bus."""
-        self.remote_value.set(time.localtime(), response=response)
+        # self.remote_value.set(now, response=response)
 
-    async def set(self, struct_time: time.struct_time) -> None:
+    @abstractmethod
+    async def set(self, value: Any) -> None:
         """Set time and send to KNX bus."""
-        self.remote_value.set(struct_time)
+        # self.remote_value.set(value)
 
     def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
@@ -126,7 +155,82 @@ class DateTime(Device):
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
-            f'<DateTime name="{self.name}" '
-            f"remote_value={self.remote_value.group_addr_str()} "
-            f'broadcast_type="{self._broadcast_type}" />'
+            f'<{self.__class__.__name__} name="{self.name}" '
+            f"remote_value={self.remote_value.group_addr_str()} />"
         )
+
+
+class TimeDevice(_DateTimeBase[RemoteValueTime, datetime.time]):
+    """Class for virtual time device."""
+
+    _remote_value_cls = RemoteValueTime
+
+    def _value_updated(self, value: KNXTime) -> None:
+        """Update internal state after remote value has been changed."""
+        self._dt_value = value.as_time()
+        self.after_update()
+
+    async def set(self, value: KNXTime | datetime.time) -> None:
+        """Set time and send to KNX bus."""
+        if isinstance(value, datetime.time):
+            value = KNXTime.from_time(value)
+        self.remote_value.set(value)
+
+    def broadcast_localtime(self, response: bool = False) -> None:
+        """Broadcast the local time to KNX bus."""
+        now = datetime.datetime.now()
+        knx_time = KNXTime.from_time(now.time())
+        knx_time.day = KNXDay(now.weekday() + 1)
+        self.remote_value.set(knx_time, response=response)
+
+
+class DateDevice(_DateTimeBase[RemoteValueDate, datetime.date]):
+    """Class for virtual date device."""
+
+    _remote_value_cls = RemoteValueDate
+
+    def _value_updated(self, value: KNXDate) -> None:
+        """Update internal state after remote value has been changed."""
+        self._dt_value = value.as_date()
+        self.after_update()
+
+    async def set(self, value: KNXDate | datetime.date) -> None:
+        """Set date and send to KNX bus."""
+        if isinstance(value, datetime.date):
+            value = KNXDate.from_date(value)
+        self.remote_value.set(value)
+
+    def broadcast_localtime(self, response: bool = False) -> None:
+        """Broadcast the local date to KNX bus."""
+        now = datetime.datetime.now()
+        self.remote_value.set(KNXDate.from_date(now.date()), response=response)
+
+
+class DateTimeDevice(_DateTimeBase[RemoteValueDateTime, datetime.datetime]):
+    """Class for virtual date/time device."""
+
+    _remote_value_cls = RemoteValueDateTime
+
+    timezone: datetime.tzinfo | None = None
+
+    def _value_updated(self, value: KNXDateTime) -> None:
+        """Update internal state after remote value has been changed."""
+        self._dt_value = value.as_datetime()
+        self.after_update()
+
+    async def set(self, value: KNXDateTime | datetime.datetime) -> None:
+        """Set date/time and send to KNX bus."""
+        if isinstance(value, datetime.datetime):
+            value = KNXDateTime.from_datetime(value)
+        self.remote_value.set(value)
+
+    def broadcast_localtime(self, response: bool = False) -> None:
+        """Broadcast the local date/time to KNX bus."""
+        time_now = time.localtime()
+        now = datetime.datetime.now()
+        knx_datetime = KNXDateTime.from_datetime(now)
+        knx_datetime.day_of_week = KNXDayOfWeek(now.weekday() + 1)
+        knx_datetime.dst = time_now.tm_isdst > 0
+        knx_datetime.external_sync = True
+        knx_datetime.source_reliable = True
+        self.remote_value.set(knx_datetime, response=response)
