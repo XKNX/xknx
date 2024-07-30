@@ -20,7 +20,7 @@
 |Example|Description|
 |-|-|
 |[Climate Control](./example_climate.py)|Example for controlling climate device|
-|[Datetime](./example_datetime.py)|Example for DateTime device|
+|[Datetime](./example_datetime.py)|Example for Date and Time devices|
 |[Devices](./example_devices.py)|Example for internal devices storage|
 |[Dimm light](./example_light_dimm.py)|Example for switching a light on and off|
 |[State of light](./example_light_state.py)|Example for reading the state from the KNX bus|

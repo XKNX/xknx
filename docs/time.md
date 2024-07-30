@@ -9,15 +9,14 @@ nav_order: 10
 
 ## [](#header-2)Overview
 
-XKNX provides the possibility to send the local time, date or both combined to the KNX bus in regular intervals. This can be used to display the time within [KNX touch sensors](https://katalog.gira.de/en/datenblatt.html?id=638294) or for KNX automation schemes programmed with the ETS.
+XKNX provides the possibility to send the local time, date or both combined to the KNX bus in regular intervals with `TimeDevice`, `DateDevice` or `DateTimeDevice`.
 
 ## [](#header-2)Example
 
 ```python
-time_device = DateTime(
+time_device = TimeDevice(
     xknx, 'TimeTest',
     group_address='1/2/3',
-    broadcast_type='TIME',
     localtime=True
 )
 xknx.devices.async_add(time_device)
@@ -29,24 +28,23 @@ await xknx.devices['TimeTest'].sync()
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
 * `group_address` is the KNX group address of the sensor device.
-* `broadcast_type` defines the value type that will be sent to the KNX bus. Valid attributes are: 'time', 'date' and 'datetime'. Default: `time`
-* `localtime` If set `True` sync() and GroupValueRead requests always return the current local time. On `False` the set value will be sent. Default: `True`
+* `localtime` If set `True` sync() and GroupValueRead requests always return the current local time and it is also sent every 60 minutes. On `False` the set value will be sent. Default: `True`
 * `device_updated_cb` Callback for each update.
 
-## [](#header-2)Daemon mode
+## [](#header-2)Local time
 
-When XKNX is started in [daemon mode](/xknx), with START_STATE_UPDATER enabled, XKNX will automatically send the time to the KNX bus with the `sync_state`-loop.
+When XKNX is started, a DateDevice, DateTimeDevice or TimeDevice will automatically send the time to the KNX bus every hour. This can be disabled by setting `localtime=False`.
 
 ```python
 import asyncio
 from xknx import XKNX
-from xknx.devices import DateTime
+from xknx.devices import DateTimeDevice
 
 async def main():
     async with XKNX(daemon_mode=True) as xknx:
-        time = DateTime(xknx, 'TimeTest', group_address='1/2/3')
-        xknx.devices.async_add(time)
-        print("Sending time to KNX bus every hour")
+        dt_device = DateTimeDevice(xknx, 'TimeTest', group_address='1/2/3')
+        xknx.devices.async_add(dt_device)
+        print("Sending datetime object to KNX bus every hour")
 
 asyncio.run(main())
 ```
@@ -55,11 +53,11 @@ asyncio.run(main())
 
 ```python
 from xknx import XKNX
-from xknx.devices import DateTime
+from xknx.devices import DateDevice
 
 xknx = XKNX()
-time_device = DateTime(xknx, 'TimeTest', group_address='1/2/3', broadcast_type='time')
-xknx.devices.async_add(time_device)
+date_device = DateDevice(xknx, 'TimeTest', group_address='1/2/3')
+xknx.devices.async_add(date_device)
 
 await xknx.start()
 # Sending Time to KNX bus

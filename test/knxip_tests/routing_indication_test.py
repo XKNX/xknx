@@ -1,9 +1,7 @@
 """Unit test for KNX/IP RountingIndication objects."""
 
-import time
-
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
-from xknx.dpt import DPTTime
+from xknx.dpt import DPTActiveEnergy
 from xknx.knxip import KNXIPFrame, RoutingIndication
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
@@ -31,11 +29,11 @@ class TestKNXIPRountingIndication:
         assert knxipframe.to_knx() == raw
 
     def test_telegram_set(self):
-        """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray/DPTTime as payload."""
+        """Test parsing and streaming CEMIFrame KNX/IP packet with DPTArray as payload."""
         telegram = Telegram(
             destination_address=GroupAddress(337),
             payload=GroupValueWrite(
-                DPTTime().to_knx(time.strptime("13:23:42", "%H:%M:%S"))
+                DPTActiveEnergy().to_knx(0x12345678),
             ),
         )
         cemi = CEMIFrame(
@@ -51,7 +49,7 @@ class TestKNXIPRountingIndication:
         knxipframe = KNXIPFrame.init_from_body(routing_indication)
 
         raw = bytes.fromhex(
-            "06 10 05 30 00 14 29 00 bc d0 12 02 01 51 04 00 80 0d 17 2a"
+            "06 10 05 30 00 15 29 00 bc d0 12 02 01 51 05 00 80 12 34 56 78"
         )
 
         assert knxipframe.header.to_knx() == raw[:6]
