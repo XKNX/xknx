@@ -38,16 +38,14 @@ BROADCAST_MINUTES = 60
 _RemoteValueTimeT = TypeVar(
     "_RemoteValueTimeT", RemoteValueTime, RemoteValueDate, RemoteValueDateTime
 )
-_DateTimeT = TypeVar("_DateTimeT", datetime.datetime, datetime.date, datetime.time)
 
 
-class _DateTimeBase(Device, Generic[_RemoteValueTimeT, _DateTimeT]):
+class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
     """Base class for virtual date/time device."""
 
     _remote_value_cls: type[_RemoteValueTimeT]  # set in subclass
 
     remote_value: _RemoteValueTimeT
-    _dt_value: _DateTimeT | None
 
     def __init__(
         self,
@@ -61,7 +59,6 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT, _DateTimeT]):
         device_updated_cb: DeviceCallbackType[Self] | None = None,
     ):
         """Initialize DateTime class."""
-        self._dt_value = None
         super().__init__(xknx, name, device_updated_cb)
         self.localtime = localtime
         if localtime and group_address_state is not None:
@@ -79,7 +76,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT, _DateTimeT]):
             group_address_state=group_address_state,
             sync_state=sync_state,
             device_name=name,
-            after_update_cb=self._value_updated,
+            after_update_cb=self.after_update,
         )
         self._broadcast_task: Task | None = None
 
@@ -88,15 +85,9 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT, _DateTimeT]):
         yield self.remote_value
 
     @property
-    def value(self) -> _DateTimeT | None:
-        """Return the current date/time value."""
-        return self._dt_value
-
     @abstractmethod
-    def _value_updated(self, value: Any) -> None:
-        """Update internal state after remote value has been changed."""
-        # set self._dt_value
-        # call self.after_update()
+    def value(self) -> datetime.datetime | datetime.date | datetime.time | None:
+        """Return the current date/time value."""
 
     def async_start_tasks(self) -> None:
         """Create an asyncio.Task for broadcasting local time periodically if `localtime` is set."""
@@ -160,15 +151,15 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT, _DateTimeT]):
         )
 
 
-class TimeDevice(_DateTimeBase[RemoteValueTime, datetime.time]):
+class TimeDevice(_DateTimeBase[RemoteValueTime]):
     """Class for virtual time device."""
 
     _remote_value_cls = RemoteValueTime
 
-    def _value_updated(self, value: KNXTime) -> None:
-        """Update internal state after remote value has been changed."""
-        self._dt_value = value.as_time()
-        self.after_update()
+    @property
+    def value(self) -> datetime.time | None:
+        """Return the current time value."""
+        return self.remote_value.value.as_time() if self.remote_value.value else None
 
     async def set(self, value: KNXTime | datetime.time) -> None:
         """Set time and send to KNX bus."""
@@ -184,15 +175,15 @@ class TimeDevice(_DateTimeBase[RemoteValueTime, datetime.time]):
         self.remote_value.set(knx_time, response=response)
 
 
-class DateDevice(_DateTimeBase[RemoteValueDate, datetime.date]):
+class DateDevice(_DateTimeBase[RemoteValueDate]):
     """Class for virtual date device."""
 
     _remote_value_cls = RemoteValueDate
 
-    def _value_updated(self, value: KNXDate) -> None:
-        """Update internal state after remote value has been changed."""
-        self._dt_value = value.as_date()
-        self.after_update()
+    @property
+    def value(self) -> datetime.date | None:
+        """Return the current time value."""
+        return self.remote_value.value.as_date() if self.remote_value.value else None
 
     async def set(self, value: KNXDate | datetime.date) -> None:
         """Set date and send to KNX bus."""
@@ -206,17 +197,19 @@ class DateDevice(_DateTimeBase[RemoteValueDate, datetime.date]):
         self.remote_value.set(KNXDate.from_date(now.date()), response=response)
 
 
-class DateTimeDevice(_DateTimeBase[RemoteValueDateTime, datetime.datetime]):
+class DateTimeDevice(_DateTimeBase[RemoteValueDateTime]):
     """Class for virtual date/time device."""
 
     _remote_value_cls = RemoteValueDateTime
 
     timezone: datetime.tzinfo | None = None
 
-    def _value_updated(self, value: KNXDateTime) -> None:
-        """Update internal state after remote value has been changed."""
-        self._dt_value = value.as_datetime()
-        self.after_update()
+    @property
+    def value(self) -> datetime.datetime | None:
+        """Return the current time value."""
+        return (
+            self.remote_value.value.as_datetime() if self.remote_value.value else None
+        )
 
     async def set(self, value: KNXDateTime | datetime.datetime) -> None:
         """Set date/time and send to KNX bus."""
