@@ -79,8 +79,14 @@ class TestDPTDate:
         with pytest.raises(CouldNotParseTelegram):
             DPTDate.from_knx(DPTArray((0xF8, 0x23)))
 
-    def test_to_knx_wrong_parameter(self):
+    def test_to_knx_wrong_value(self):
         """Test parsing from DPTDate object from wrong string value."""
+        with pytest.raises(ConversionError):
+            DPTDate.to_knx(KNXDate(2090, 1, 1))  # year out of range
+        with pytest.raises(ConversionError):
+            DPTDate.to_knx(KNXDate(1990, 0, 1))  # month out of range
+        with pytest.raises(ConversionError):
+            DPTDate.to_knx(KNXDate(1990, 1, 32))  # day out of range
         with pytest.raises(ConversionError):
             DPTDate.to_knx("hello")
 

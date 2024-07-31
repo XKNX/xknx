@@ -169,8 +169,26 @@ class TestDPTDateTime:
         with pytest.raises(CouldNotParseTelegram):
             DPTDateTime.from_knx(DPTBinary(True))
 
-    def test_to_knx_wrong_parameter(self):
-        """Test parsing from DPTDateTime object from wrong string value."""
+    def test_to_knx_wrong_value(self):
+        """Test parsing from DPTDateTime object from wrong value."""
+        with pytest.raises(ConversionError):
+            # year out of range
+            DPTDateTime.to_knx(KNXDateTime(1889, 1, 1, 0, 0, 0))
+        with pytest.raises(ConversionError):
+            # day out of range (0)
+            DPTDateTime.to_knx(KNXDateTime(2000, 1, 0, 0, 0, 0))
+        with pytest.raises(ConversionError):
+            # hour out of range
+            DPTDateTime.to_knx(KNXDateTime(2000, 1, 1, 25, 0, 0))
+        with pytest.raises(ConversionError):
+            # minutes out of range
+            DPTDateTime.to_knx(KNXDateTime(2000, 1, 1, 1, 60, 0))
+        with pytest.raises(ConversionError):
+            # seconds out of range
+            DPTDateTime.to_knx(KNXDateTime(2000, 1, 1, 1, 0, 60))
+        with pytest.raises(ConversionError):
+            # seconds out of range at hour 24
+            DPTDateTime.to_knx(KNXDateTime(2000, 1, 1, 24, 0, 1))
         with pytest.raises(ConversionError):
             DPTDateTime.to_knx("hello")
         with pytest.raises(ConversionError):

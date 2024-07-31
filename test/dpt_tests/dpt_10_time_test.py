@@ -87,7 +87,7 @@ class TestDPTTime:
         assert DPTTime.from_knx(knx_value) == value
 
     def test_from_knx_wrong_value(self):
-        """Test parsing from DPTTime object from wrong binary values (wrong bytes)."""
+        """Test parsing from DPTTime object from wrong binary values."""
         with pytest.raises(ConversionError):
             # this parameter exceeds limit
             DPTTime.from_knx(DPTArray((0xF7, 0x3B, 0x3C)))
@@ -97,7 +97,11 @@ class TestDPTTime:
             DPTTime.from_knx(DPTBinary(True))
 
     def test_to_knx_wrong_parameter(self):
-        """Test parsing from DPTTime object from wrong string value."""
+        """Test parsing from DPTTime object from wrong value."""
+        with pytest.raises(ConversionError):
+            DPTTime.to_knx(KNXTime(24, 0, 0))  # out of range
+        with pytest.raises(ConversionError):
+            DPTTime.to_knx(KNXTime(0, 60, 0))  # out of range
         with pytest.raises(ConversionError):
             DPTTime.to_knx("fnord")
         with pytest.raises(ConversionError):

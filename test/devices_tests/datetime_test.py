@@ -21,26 +21,37 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestDateTime:
     """Test class for Time object."""
 
-    async def test_process_set_custom_time(self):
+    @pytest.mark.parametrize(
+        ("test_cls", "dt_value", "raw"),
+        [
+            (TimeDevice, dt.time(9, 13, 14), (0x9, 0xD, 0xE)),
+            (DateDevice, dt.date(2017, 1, 7), (0x07, 0x01, 0x11)),
+            (
+                DateTimeDevice,
+                dt.datetime(2017, 1, 7, 9, 13, 14),
+                (0x75, 0x01, 0x07, 0x09, 0x0D, 0x0E, 0x24, 0x00),
+            ),
+        ],
+    )
+    async def test_process_set_custom_time(self, test_cls, dt_value, raw):
         """Test setting a new time."""
         xknx = XKNX()
-        test_device = TimeDevice(
+        test_device = test_cls(
             xknx,
-            "TestDateTime",
+            "Test",
             group_address="1/2/3",
             localtime=False,
         )
         assert test_device.value is None
 
-        test_time = dt.time(9, 13, 14)
-        await test_device.set(test_time)
+        await test_device.set(dt_value)
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTArray((0x9, 0xD, 0xE))),
+            payload=GroupValueWrite(DPTArray(raw)),
         )
         test_device.process(telegram)
-        assert test_device.value == test_time
+        assert test_device.value == dt_value
 
     @pytest.mark.parametrize(
         ("cls", "raw_length", "raw"),
