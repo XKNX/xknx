@@ -15,7 +15,7 @@ from xknx.devices import (
     Climate,
     ClimateMode,
     Cover,
-    DateTime,
+    DateTimeDevice,
     ExposeSensor,
     Fan,
     Light,
@@ -385,10 +385,12 @@ class TestStringRepresentations:
     def test_datetime(self):
         """Test string representation of datetime object."""
         xknx = XKNX()
-        date_time = DateTime(xknx, name="Zeit", group_address="1/2/3", localtime=False)
+        date_time = DateTimeDevice(
+            xknx, name="Zeit", group_address="1/2/3", localtime=False
+        )
         assert (
             str(date_time)
-            == '<DateTime name="Zeit" remote_value=<1/2/3, None, [], None /> broadcast_type="TIME" />'
+            == '<DateTimeDevice name="Zeit" remote_value=<1/2/3, None, [], None /> />'
         )
 
     def test_could_not_parse_telegramn_exception(self):
