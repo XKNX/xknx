@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.0.0 Eager telegram decoding, DPTComplex and DPTEnum 2024-07-31
 
 ### Breaking changes
 
