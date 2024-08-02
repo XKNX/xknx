@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from xknx.dpt import DPTBase, DPTComplexData
+from xknx.dpt import DPTBase, DPTComplexData, DPTEnumData
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI
@@ -39,7 +39,7 @@ class TelegramDecodedData:
     """Context for a telegram."""
 
     transcoder: type[DPTBase]
-    value: bool | int | float | str | DPTComplexData
+    value: bool | int | float | str | DPTComplexData | DPTEnumData
 
     def __str__(self) -> str:
         """Return object as readable string."""
