@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- Add DPT 1 definitions (as of KNX Specification 03_07_02 version 02.02.01)
+
 # 3.0.0 Eager telegram decoding, DPTComplex and DPTEnum 2024-07-31
 
 ### Breaking changes
@@ -53,7 +59,7 @@ nav_order: 2
   - 242.600 - DPTColorXYY - XYYColor
   - 251.600 - DPTColorRGBW - RGBWColor
   - 20.60102 - DPTHVACStatus - HVACStatus (removed DPTControllerStatus in favour of this)
-- DPTEnum: Common interface for DPT trath enumueration values. Transcoders accept Enum, string or raw integer values for encoding.
+- DPTEnum: Common interface for DPT representing enumueration values. Transcoders accept Enum, string or raw integer values for encoding.
   - 1.007 - DPTStep
   - 1.008 - DPTUpDown
   - 1.100 - DPTHeatCool
