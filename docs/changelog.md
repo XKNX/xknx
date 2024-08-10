@@ -12,6 +12,10 @@ nav_order: 2
 
 - Add DPT 1 definitions (as of KNX Specification 03_07_02 version 02.02.01)
 
+### Bugfixes
+
+- Fix log message for DPT decoding errors in `GroupAddressDPT` parsing
+
 # 3.0.0 Eager telegram decoding, DPTComplex and DPTEnum 2024-07-31
 
 ### Breaking changes

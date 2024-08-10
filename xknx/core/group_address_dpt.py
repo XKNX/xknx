@@ -72,7 +72,12 @@ class GroupAddressDPT:
             value = transcoder.from_knx(telegram.payload.value)
         except (CouldNotParseTelegram, ConversionError) as err:
             _GA_DPT_LOGGER.warning(
-                "DPT decoding error for %s of %s: %s", transcoder, self, err
+                "DPT decoding error. Telegram from %s to %s with payload %s can't be decoded by %s: %s",
+                telegram.source_address,
+                telegram.destination_address,
+                telegram.payload.value,
+                transcoder.__name__,
+                err,
             )
             return
         telegram.decoded_data = TelegramDecodedData(transcoder, value)
