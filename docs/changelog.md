@@ -12,6 +12,10 @@ nav_order: 2
 
 - Add DPT 1 definitions (as of KNX Specification 03_07_02 version 02.02.01)
 
+### Devices
+
+- Restore `Climate.suppports_operation_mode` and `Climate.supports_controller_mode` to be `True` when read-only (like pre 3.0.0).
+
 ### Bugfixes
 
 - Fix log message for DPT decoding errors in `GroupAddressDPT` parsing

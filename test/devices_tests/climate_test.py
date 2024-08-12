@@ -1328,7 +1328,7 @@ class TestClimate:
         }
 
     def test_supported_operation_modes_heat_cool(self):
-        """Test get_supported_operation_modes with heat_cool group address."""
+        """Test supported controller_modes with heat_cool address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
@@ -1336,7 +1336,23 @@ class TestClimate:
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
         )
+        assert climate_mode.supports_controller_mode
         assert set(climate_mode.controller_modes) == {
+            HVACControllerMode.HEAT,
+            HVACControllerMode.COOL,
+        }
+
+    def test_supported_operation_modes_heat_cool_read_only(self):
+        """Test supported controller_modes with heat_cool_state address."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            group_address_heat_cool_state="1/2/15",
+        )
+        assert climate_mode.supports_controller_mode
+        assert climate_mode.controller_modes == []  # only writable modes
+        assert set(climate_mode.gather_controller_modes(only_writable=False)) == {
             HVACControllerMode.HEAT,
             HVACControllerMode.COOL,
         }
@@ -1386,10 +1402,7 @@ class TestClimate:
     def test_custom_supported_controller_modes_when_controller_mode_unsupported(self):
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Heat", "Cool"]
-        modes = [
-            HVACControllerMode.HEAT,
-            HVACControllerMode.COOL,
-        ]
+        modes = []
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
