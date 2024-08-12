@@ -139,29 +139,35 @@ class ClimateMode(Device):
         self.operation_mode = HVACOperationMode.STANDBY
         self.controller_mode = HVACControllerMode.HEAT
 
-        self._operation_modes: list[HVACOperationMode] = []
-        if operation_modes is None:
-            self._operation_modes = self.gather_operation_modes(only_writable=True)
-        else:
+        self._operation_modes = self.gather_operation_modes(only_writable=True)
+        if operation_modes is not None:
+            custom_operation_modes = []
             for op_mode in operation_modes:
                 if isinstance(op_mode, str):
-                    self._operation_modes.append(
+                    custom_operation_modes.append(
                         HVACOperationMode[op_mode.replace(" ", "_").upper()]
                     )
                 elif isinstance(op_mode, HVACOperationMode):
-                    self._operation_modes.append(op_mode)
+                    custom_operation_modes.append(op_mode)
+            self._operation_modes = [
+                mode for mode in custom_operation_modes if mode in self._operation_modes
+            ]
 
-        self._controller_modes: list[HVACControllerMode] = []
-        if controller_modes is None:
-            self._controller_modes = self.gather_controller_modes(only_writable=True)
-        else:
+        self._controller_modes = self.gather_controller_modes(only_writable=True)
+        if controller_modes is not None:
+            custom_controller_modes = []
             for ct_mode in controller_modes:
                 if isinstance(ct_mode, str):
-                    self._controller_modes.append(
+                    custom_controller_modes.append(
                         HVACControllerMode[ct_mode.replace(" ", "_").upper()]
                     )
                 elif isinstance(ct_mode, HVACControllerMode):
-                    self._controller_modes.append(ct_mode)
+                    custom_controller_modes.append(ct_mode)
+            self._controller_modes = [
+                mode
+                for mode in custom_controller_modes
+                if mode in self._controller_modes
+            ]
 
         self.supports_operation_mode = bool(
             self.gather_operation_modes(only_writable=False)
@@ -251,15 +257,11 @@ class ClimateMode(Device):
     @property
     def operation_modes(self) -> list[HVACOperationMode]:
         """Return all configured operation modes."""
-        if not self.supports_operation_mode:
-            return []
         return self._operation_modes
 
     @property
     def controller_modes(self) -> list[HVACControllerMode]:
         """Return all configured controller modes."""
-        if not self.supports_controller_mode:
-            return []
         return self._controller_modes
 
     def gather_operation_modes(

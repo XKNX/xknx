@@ -1308,9 +1308,9 @@ class TestClimate:
 
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.COMFORT,
-            HVACOperationMode.STANDBY,
             HVACOperationMode.ECONOMY,
             HVACOperationMode.BUILDING_PROTECTION,
+            HVACOperationMode.STANDBY,
         }
 
     def test_supported_operation_modes_only_economy(self):
@@ -1319,12 +1319,11 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_operation_mode_economy="1/2/7"
         )
-        # If one binary climate object is set, all 4 operation modes are supported.
+        # If one binary climate object is set, this mode and Standby are supported.
+        # All binary modes off -> Standby according to MDT heating actuator
         assert set(climate_mode.operation_modes) == {
-            HVACOperationMode.STANDBY,
             HVACOperationMode.ECONOMY,
-            HVACOperationMode.COMFORT,
-            HVACOperationMode.BUILDING_PROTECTION,
+            HVACOperationMode.STANDBY,
         }
 
     def test_supported_operation_modes_heat_cool(self):
@@ -1378,6 +1377,24 @@ class TestClimate:
             xknx,
             "TestClimate",
             group_address_operation_mode="1/2/7",
+            operation_modes=str_modes,
+        )
+        assert climate_mode.operation_modes == modes
+
+    def test_custom_supported_operation_modes_only_valid(self):
+        """Test get_supported_operation_modes with custom mode as str list."""
+        str_modes = [
+            "Standby",
+            "Building Protection",
+            "Comfort",  # Comfort can't be set - no address set
+        ]
+        modes = [HVACOperationMode.STANDBY, HVACOperationMode.BUILDING_PROTECTION]
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            group_address_operation_mode_standby="1/2/7",
+            group_address_operation_mode_protection="1/2/8",
             operation_modes=str_modes,
         )
         assert climate_mode.operation_modes == modes
