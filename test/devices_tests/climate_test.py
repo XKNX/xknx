@@ -1308,9 +1308,9 @@ class TestClimate:
 
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.COMFORT,
-            HVACOperationMode.STANDBY,
             HVACOperationMode.ECONOMY,
             HVACOperationMode.BUILDING_PROTECTION,
+            HVACOperationMode.STANDBY,
         }
 
     def test_supported_operation_modes_only_economy(self):
@@ -1319,16 +1319,15 @@ class TestClimate:
         climate_mode = ClimateMode(
             xknx, "TestClimate", group_address_operation_mode_economy="1/2/7"
         )
-        # If one binary climate object is set, all 4 operation modes are supported.
+        # If one binary climate object is set, this mode and Standby are supported.
+        # All binary modes off -> Standby according to MDT heating actuator
         assert set(climate_mode.operation_modes) == {
-            HVACOperationMode.STANDBY,
             HVACOperationMode.ECONOMY,
-            HVACOperationMode.COMFORT,
-            HVACOperationMode.BUILDING_PROTECTION,
+            HVACOperationMode.STANDBY,
         }
 
     def test_supported_operation_modes_heat_cool(self):
-        """Test get_supported_operation_modes with heat_cool group address."""
+        """Test supported controller_modes with heat_cool address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
@@ -1336,7 +1335,23 @@ class TestClimate:
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
         )
+        assert climate_mode.supports_controller_mode
         assert set(climate_mode.controller_modes) == {
+            HVACControllerMode.HEAT,
+            HVACControllerMode.COOL,
+        }
+
+    def test_supported_operation_modes_heat_cool_read_only(self):
+        """Test supported controller_modes with heat_cool_state address."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            group_address_heat_cool_state="1/2/15",
+        )
+        assert climate_mode.supports_controller_mode
+        assert climate_mode.controller_modes == []  # only writable modes
+        assert set(climate_mode.gather_controller_modes(only_writable=False)) == {
             HVACControllerMode.HEAT,
             HVACControllerMode.COOL,
         }
@@ -1366,6 +1381,24 @@ class TestClimate:
         )
         assert climate_mode.operation_modes == modes
 
+    def test_custom_supported_operation_modes_only_valid(self):
+        """Test get_supported_operation_modes with custom mode as str list."""
+        str_modes = [
+            "Standby",
+            "Building Protection",
+            "Comfort",  # Comfort can't be set - no address set
+        ]
+        modes = [HVACOperationMode.STANDBY, HVACOperationMode.BUILDING_PROTECTION]
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            "TestClimate",
+            group_address_operation_mode_standby="1/2/7",
+            group_address_operation_mode_protection="1/2/8",
+            operation_modes=str_modes,
+        )
+        assert climate_mode.operation_modes == modes
+
     def test_custom_supported_controller_modes_as_str(self):
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Heat", "Cool", HVACControllerMode.NODEM]
@@ -1386,10 +1419,7 @@ class TestClimate:
     def test_custom_supported_controller_modes_when_controller_mode_unsupported(self):
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Heat", "Cool"]
-        modes = [
-            HVACControllerMode.HEAT,
-            HVACControllerMode.COOL,
-        ]
+        modes = []
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,

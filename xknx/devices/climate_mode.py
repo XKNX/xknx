@@ -139,32 +139,42 @@ class ClimateMode(Device):
         self.operation_mode = HVACOperationMode.STANDBY
         self.controller_mode = HVACControllerMode.HEAT
 
-        self._operation_modes: list[HVACOperationMode] = []
-        if operation_modes is None:
-            self._operation_modes = self.gather_operation_modes()
-        else:
+        self._operation_modes = self.gather_operation_modes(only_writable=True)
+        if operation_modes is not None:
+            custom_operation_modes = []
             for op_mode in operation_modes:
                 if isinstance(op_mode, str):
-                    self._operation_modes.append(
+                    custom_operation_modes.append(
                         HVACOperationMode[op_mode.replace(" ", "_").upper()]
                     )
                 elif isinstance(op_mode, HVACOperationMode):
-                    self._operation_modes.append(op_mode)
+                    custom_operation_modes.append(op_mode)
+            self._operation_modes = [
+                mode for mode in custom_operation_modes if mode in self._operation_modes
+            ]
 
-        self._controller_modes: list[HVACControllerMode] = []
-        if controller_modes is None:
-            self._controller_modes = self.gather_controller_modes()
-        else:
+        self._controller_modes = self.gather_controller_modes(only_writable=True)
+        if controller_modes is not None:
+            custom_controller_modes = []
             for ct_mode in controller_modes:
                 if isinstance(ct_mode, str):
-                    self._controller_modes.append(
+                    custom_controller_modes.append(
                         HVACControllerMode[ct_mode.replace(" ", "_").upper()]
                     )
                 elif isinstance(ct_mode, HVACControllerMode):
-                    self._controller_modes.append(ct_mode)
+                    custom_controller_modes.append(ct_mode)
+            self._controller_modes = [
+                mode
+                for mode in custom_controller_modes
+                if mode in self._controller_modes
+            ]
 
-        self.supports_operation_mode = bool(self._operation_modes)
-        self.supports_controller_mode = bool(self._controller_modes)
+        self.supports_operation_mode = bool(
+            self.gather_operation_modes(only_writable=False)
+        )
+        self.supports_controller_mode = bool(
+            self.gather_controller_modes(only_writable=False)
+        )
 
     def _iter_remote_values(
         self,
@@ -247,31 +257,35 @@ class ClimateMode(Device):
     @property
     def operation_modes(self) -> list[HVACOperationMode]:
         """Return all configured operation modes."""
-        if not self.supports_operation_mode:
-            return []
         return self._operation_modes
 
     @property
     def controller_modes(self) -> list[HVACControllerMode]:
         """Return all configured controller modes."""
-        if not self.supports_controller_mode:
-            return []
         return self._controller_modes
 
-    def gather_operation_modes(self) -> list[HVACOperationMode]:
+    def gather_operation_modes(
+        self, only_writable: bool = True
+    ) -> list[HVACOperationMode]:
         """Gather operation modes from RemoteValues."""
         operation_modes: list[HVACOperationMode] = []
         for rv in self._iter_remote_values():
-            if rv.writable:
+            if rv.initialized:
+                if only_writable and not rv.writable:
+                    continue
                 operation_modes.extend(rv.supported_operation_modes())
         # remove duplicates
         return list(set(operation_modes))
 
-    def gather_controller_modes(self) -> list[HVACControllerMode]:
+    def gather_controller_modes(
+        self, only_writable: bool = True
+    ) -> list[HVACControllerMode]:
         """Gather controller modes from RemoteValues."""
         controller_modes: list[HVACControllerMode] = []
         for rv in self._iter_remote_values():
-            if rv.writable:
+            if rv.initialized:
+                if only_writable and not rv.writable:
+                    continue
                 controller_modes.extend(rv.supported_controller_modes())
         # remove duplicates
         return list(set(controller_modes))

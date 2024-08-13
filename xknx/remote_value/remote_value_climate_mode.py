@@ -251,13 +251,6 @@ class RemoteValueBinaryOperationMode(
                 device_name=str(device_name),
                 feature_name=feature_name,
             )
-        if operation_mode not in self.supported_operation_modes():
-            raise ConversionError(
-                "Operation mode not supported for binary mode object",
-                operation_mode=str(operation_mode),
-                device_name=str(device_name),
-                feature_name=feature_name,
-            )
         self.operation_mode = operation_mode
         super().__init__(
             xknx,
@@ -271,17 +264,15 @@ class RemoteValueBinaryOperationMode(
 
     def supported_operation_modes(self) -> list[HVACOperationMode]:
         """Return a list of all supported operation modes."""
-        return [
-            HVACOperationMode.COMFORT,
-            HVACOperationMode.BUILDING_PROTECTION,
-            HVACOperationMode.ECONOMY,
-            HVACOperationMode.STANDBY,
-        ]
+        # all binary operation modes off -> Standby according to MDT
+        return (
+            [self.operation_mode, HVACOperationMode.STANDBY]
+            if self.operation_mode is not HVACOperationMode.STANDBY
+            else [HVACOperationMode.STANDBY]
+        )
 
     def set_operation_mode(self, mode: HVACOperationMode) -> None:
         """Set operation mode. Return if not supported."""
-        if mode not in self.supported_operation_modes():
-            return
         super().set(mode)
 
     def supported_controller_modes(self) -> list[HVACControllerMode]:
