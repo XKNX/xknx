@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.1.0 DPT 1 2024-08-13
 
 ### DPT
 
@@ -15,7 +15,7 @@ nav_order: 2
 ### Devices
 
 - ClimateMode: Restore `Climate.suppports_operation_mode` and `Climate.supports_controller_mode` to be `True` when read-only (like pre 3.0.0)
-- ClimateMode: Filter custom operation modes for available settable modes
+- ClimateMode: Filter custom controller / operation modes for available settable modes
 - ClimateMode: For binary operation modes, only list configured modes and `Standby` in `operation_modes`
 
 ### Bugfixes
