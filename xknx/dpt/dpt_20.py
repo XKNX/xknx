@@ -158,23 +158,23 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
         raw = cls.validate_payload(payload)[0]
 
         mode: HVACOperationMode
-        if raw & 0b10000000:
+        if raw & 0x1:
             mode = HVACOperationMode.COMFORT
-        elif raw & 0b01000000:
+        elif raw & 0x2:
             mode = HVACOperationMode.STANDBY
-        elif raw & 0b00100000:
+        elif raw & 0x4:
             mode = HVACOperationMode.ECONOMY
-        elif raw & 0b00010000:
+        elif raw & 0x8:
             mode = HVACOperationMode.BUILDING_PROTECTION
         else:
             mode = HVACOperationMode.AUTO  # not sure if this is possible / valid
 
         return HVACStatus(
             mode=mode,
-            dew_point=bool(raw & 0b00001000),
-            heat_cool=HeatCool.HEAT if raw & 0b00000100 else HeatCool.COOL,
-            inactive=bool(raw & 0b00000010),
-            frost_alarm=bool(raw & 0b00000001),
+            dew_point=bool(raw & 0x10),
+            heat_cool=HeatCool.HEAT if raw & 0x20 else HeatCool.COOL,
+            inactive=bool(raw & 0x40),
+            frost_alarm=bool(raw & 0x80),
         )
 
     @classmethod
@@ -182,19 +182,19 @@ class DPTHVACStatus(DPTComplex[HVACStatus]):
         """Serialize to KNX/IP raw data."""
         raw = 0
         if value.mode is HVACOperationMode.COMFORT:
-            raw |= 0b10000000
+            raw |= 0x1
         elif value.mode is HVACOperationMode.STANDBY:
-            raw |= 0b01000000
+            raw |= 0x2
         elif value.mode is HVACOperationMode.ECONOMY:
-            raw |= 0b00100000
+            raw |= 0x4
         elif value.mode is HVACOperationMode.BUILDING_PROTECTION:
-            raw |= 0b00010000
+            raw |= 0x8
         if value.dew_point:
-            raw |= 0b00001000
+            raw |= 0x10
         if value.heat_cool is HeatCool.HEAT:
-            raw |= 0b00000100
+            raw |= 0x20
         if value.inactive:
-            raw |= 0b00000010
+            raw |= 0x40
         if value.frost_alarm:
-            raw |= 0b00000001
+            raw |= 0x80
         return DPTArray(raw)

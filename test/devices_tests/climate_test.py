@@ -308,16 +308,19 @@ class TestClimate:
         climate_mode.process(
             Telegram(
                 destination_address=GroupAddress("1/2/4"),
-                payload=GroupValueWrite(DPTArray((0b10000000,))),
+                payload=GroupValueWrite(DPTArray((0x01,))),
             )
         )
+        assert climate_mode.controller_mode == HVACControllerMode.COOL
+        assert climate_mode.operation_mode == HVACOperationMode.COMFORT
+
         # controller mode
         await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/4"),
-            payload=GroupValueWrite(DPTArray((0b10000100,))),
+            payload=GroupValueWrite(DPTArray((0x21,))),
         )
         climate_mode.process(telegram)  # process to have internal value updated
         # operation mode
@@ -326,7 +329,7 @@ class TestClimate:
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/4"),
-            payload=GroupValueWrite(DPTArray((0b01000100,))),
+            payload=GroupValueWrite(DPTArray((0x22,))),
         )
 
     async def test_set_operation_mode_with_separate_addresses(self):
