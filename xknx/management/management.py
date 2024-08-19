@@ -159,7 +159,7 @@ class BroadcastContext:
 
     async def receive(
         self,
-        timeout: float | None = 3,  # ruff: noqa: ASYNC109
+        timeout: float | None = 3,  # noqa: ASYNC109
     ) -> AsyncGenerator[Telegram, None]:
         """Receive telegrams from the broadcast context."""
         try:
