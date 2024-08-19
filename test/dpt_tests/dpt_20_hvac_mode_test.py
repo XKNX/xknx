@@ -202,7 +202,7 @@ class TestDPTHVACStatus:
                     inactive=False,
                     frost_alarm=False,
                 ),
-                (0b10000100,),
+                (0x21,),
             ),
             (
                 HVACStatus(
@@ -212,8 +212,8 @@ class TestDPTHVACStatus:
                     inactive=False,
                     frost_alarm=False,
                 ),
-                (0b10000000,),
-            ),  # min values
+                (0x01,),
+            ),
             (
                 HVACStatus(
                     mode=HVACOperationMode.ECONOMY,
@@ -222,7 +222,7 @@ class TestDPTHVACStatus:
                     inactive=False,
                     frost_alarm=True,
                 ),
-                (0b00101001,),
+                (0x94,),
             ),
         ],
     )
@@ -243,7 +243,7 @@ class TestDPTHVACStatus:
                     "inactive": False,
                     "frost_alarm": False,
                 },
-                (0b10000100,),
+                (0x21,),
             ),
             (
                 {
@@ -253,7 +253,7 @@ class TestDPTHVACStatus:
                     "inactive": True,
                     "frost_alarm": False,
                 },
-                (0b01000010,),
+                (0x42,),
             ),
         ],
     )

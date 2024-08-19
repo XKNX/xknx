@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### DPT
+
+- Fix DPTHVACStatus inverted bit order
+
 # 3.1.0 DPT 1 2024-08-13
 
 ### DPT
