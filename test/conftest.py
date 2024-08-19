@@ -32,7 +32,7 @@ class EventLoopClockAdvancer:
     async def _exhaust_callbacks(self) -> None:
         """Run the loop until all ready callbacks are executed."""
         while self.loop._ready:  # type: ignore[attr-defined]
-            await asyncio.sleep(0)
+            await asyncio.sleep(0)  # ruff: noqa: ASYNC110
 
     async def __call__(self, seconds: float) -> None:
         """Advance time by a given offset in seconds."""

@@ -79,7 +79,9 @@ async def nm_individual_address_check(
 
 
 async def nm_individual_address_read(
-    xknx: XKNX, timeout: float | None = 3, raise_if_multiple: bool = False
+    xknx: XKNX,
+    timeout: float | None = 3,  # ruff: noqa: ASYNC109
+    raise_if_multiple: bool = False,
 ) -> list[IndividualAddress]:
     """
     Request individual addresses of all devices that are in programming mode.
@@ -181,7 +183,9 @@ async def nm_invididual_address_write(
 
 
 async def nm_individual_address_serial_number_read(
-    xknx: XKNX, serial: bytes, timeout: float = 3
+    xknx: XKNX,
+    serial: bytes,
+    timeout: float = 3,  # ruff: noqa: ASYNC109
 ) -> IndividualAddress | None:
     """Read individual address from device with specified serial number."""
 
