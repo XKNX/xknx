@@ -6,7 +6,9 @@ nav_order: 2
 
 # Changelog
 
-### DPT
+# 3.1.1 Fix Eberle status 2024-08-19
+
+### Bugfixes
 
 - Fix DPTHVACStatus inverted bit order
 
