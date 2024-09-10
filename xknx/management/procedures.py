@@ -80,7 +80,7 @@ async def nm_individual_address_check(
 
 async def nm_individual_address_read(
     xknx: XKNX,
-    timeout: float | None = 3,  # noqa: ASYNC109
+    timeout: float | None = 3,
     raise_if_multiple: bool = False,
 ) -> list[IndividualAddress]:
     """
@@ -185,7 +185,7 @@ async def nm_invididual_address_write(
 async def nm_individual_address_serial_number_read(
     xknx: XKNX,
     serial: bytes,
-    timeout: float = 3,  # noqa: ASYNC109
+    timeout: float = 3,
 ) -> IndividualAddress | None:
     """Read individual address from device with specified serial number."""
 
