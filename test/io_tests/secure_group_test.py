@@ -3,7 +3,10 @@
 import asyncio
 from unittest.mock import Mock, patch
 
+import pytest
+
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
+from xknx.exceptions import IPSecureError
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
@@ -308,7 +311,7 @@ class TestSecureGroup:
         mock_super_connect,
         time_travel,
     ):
-        """Test handling of received TimerNotify frames."""
+        """Test handling of received SecureWrapper frames."""
         mock_monotonic_ms.return_value = 0
         secure_group = SecureGroup(
             local_addr=self.mock_addr,
@@ -423,17 +426,15 @@ class TestSecureGroup:
 
     @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
     @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
-    @patch("xknx.io.transport.udp_transport.UDPTransport.handle_knxipframe")
     async def test_send_secure_wrapper(
         self,
-        mock_super_handle_knxipframe,
         mock_monotonic_ms,
         _mock_notify_timer_expired,  # we don't want to actually send here
         mock_super_send,
         mock_super_connect,
         time_travel,
     ):
-        """Test handling of received TimerNotify frames."""
+        """Test sending SecureWrapper frames."""
         mock_monotonic_ms.return_value = 0
         secure_group = SecureGroup(
             local_addr=self.mock_addr,
@@ -471,6 +472,41 @@ class TestSecureGroup:
                 KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
             )
             mock_reschedule.assert_not_called()
+
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
+    @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
+    async def test_send_secure_wrapper_timer_overflow(
+        self,
+        mock_monotonic_ms,
+        _mock_notify_timer_expired,  # we don't want to actually send here
+        mock_super_send,
+        mock_super_connect,
+    ):
+        """Test raising when secure timer overflows."""
+        mock_monotonic_ms.return_value = 0xFF_FF_FF_FF_FF_FF + 1
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+        secure_timer.timer_authenticated = True
+
+        raw_test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("1/2/3"),
+                    payload=apci.GroupValueRead(),
+                )
+            ),
+        ).to_knx()
+
+        with pytest.raises(IPSecureError):
+            secure_group.send(
+                KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
+            )
 
     async def test_receive_plain_frames(
         self,

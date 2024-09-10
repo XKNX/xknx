@@ -40,6 +40,10 @@ class TunnellingAckError(CommunicationError):
     """No ACK or error status received from UDP KNX server for sent Telegram."""
 
 
+class IPSecureError(CommunicationError):
+    """Error in IP Secure communication."""
+
+
 class CouldNotParseTelegram(XKNXException):
     """Could not parse telegram error."""
 
@@ -179,11 +183,7 @@ class DataSecureError(XKNXException):
         self.log_level = log_level
 
 
-class SecureException(XKNXException):
-    """Exception class for IP secure handling."""
-
-
-class InvalidSecureConfiguration(SecureException):
+class InvalidSecureConfiguration(XKNXException):
     """Exception class used when the secure configuration is invalid."""
 
 
