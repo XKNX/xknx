@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 from xknx.exceptions import (
     CommunicationError,
     CouldNotParseKNXIP,
+    IPSecureError,
     KNXSecureValidationError,
 )
 from xknx.knxip import (
@@ -113,7 +114,16 @@ class _IPSecureTransportLayer(ABC):
 
     def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:
         """Wrap KNX/IP frame in SecureWrapper."""
-        sequence_information = self.get_sequence_information()
+        try:
+            sequence_information = self.get_sequence_information()
+        except OverflowError as err:
+            raise IPSecureError(
+                "KNX IP Secure sequence counter overflow."
+                "\nCongratulations! You've managed to overflow a counter designed to last about 9000 years! "
+                "Before celebrating, please check for any malfunctioning devices or suspicious activity "
+                "in your installation. Once you've ensured everything's safe, reset the secure session "
+                "to restore normal operation."
+            ) from err
         message_tag = self.get_message_tag()
         plain_payload = plain_frame.to_knx()  # P
         payload_length = len(plain_payload)  # Q
@@ -222,7 +232,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
             request_authentication.response.status
             != SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         ):
-            raise CommunicationError(
+            raise IPSecureError(
                 f"Secure session authentication failed: {request_authentication.response.status}"
             )
         self._session_status_handler = self.register_callback(
@@ -259,7 +269,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
                 mac=session_response.message_authentication_code,
             )
             if mac_tr != response_mac_cbc:
-                raise CommunicationError("SessionResponse MAC verification failed.")
+                raise IPSecureError("SessionResponse MAC verification failed.")
         # calculate session key
         ecdh_shared_secret = self._private_key.exchange(self._peer_public_key)
         self._key = sha256_hash(ecdh_shared_secret)[:16]
