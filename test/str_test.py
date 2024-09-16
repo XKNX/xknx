@@ -131,6 +131,8 @@ class TestStringRepresentations:
             setpoint_shift_min=-20,
             group_address_on_off="1/2/14",
             group_address_on_off_state="1/2/15",
+            group_address_fan_speed="1/2/16",
+            group_address_fan_speed_state="1/2/17",
         )
         assert (
             str(climate) == '<Climate name="Wohnzimmer" '
@@ -139,7 +141,8 @@ class TestStringRepresentations:
             'temperature_step="0.1" '
             "setpoint_shift=<1/2/3, 1/2/4, [], None /> "
             'setpoint_shift_max="20" setpoint_shift_min="-20" '
-            "group_address_on_off=<1/2/14, 1/2/15, [], None /> />"
+            "group_address_on_off=<1/2/14, 1/2/15, [], None /> "
+            "group_address_fan_speed=<1/2/16, 1/2/17, [], None /> />"
         )
 
     def test_climate_mode(self):

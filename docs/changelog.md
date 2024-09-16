@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### Features
+
+- Added fan speed support to climate
+
 # 3.1.1 Fix Eberle status 2024-08-19
 
 ### Bugfixes

@@ -45,9 +45,12 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_controller_mode_state` KNX address for controller mode status. *DPT 20.105*
 - `group_address_heat_cool` KNX address for switching heating / cooling mode. *DPT 1*
 - `group_address_heat_cool_state` KNX address for reading heating / cooling mode. *DPT 1*
+- `group_address_fan_speed` KNX address for the fan speed. *DPT 5.001 / 5.010*
+- `group_address_fan_speed_state` KNX address for reading fan speed. *DPT 5.001 / 5.010*
 - `operation_modes` Overrides the supported operation modes.
 - `controller_modes` Overrides the supported controller modes.
 - `device_updated_cb` Callback for each update.
+- `fan_max_step` Maximum step amount for fans which are controlled with steps and not percentage. If this attribute is set, the fan is controlled by sending the step value in the range `0` and `max_step`. In that case, the group address DPT changes from *DPT 5.001* to *DPT 5.010*. Default: None.
 
 **Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_economy` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set `Standby`, `Comfort`, `Building Protection` and `Economy` will be set as supported. If `group_address_operation_mode_standby` is omitted, `Standby` is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
@@ -65,9 +68,12 @@ climate_mode = ClimateMode(
     group_address_controller_status_state=None,
     group_address_controller_mode=None,
     group_address_controller_mode_state=None,
+    group_address_fan_speed=None,
+    group_address_fan_speed_state=None,
     operation_modes=None,
     controller_modes=None,
     device_updated_cb=None,
+    fan_max_step=None,
 )
 
 climate = Climate(
