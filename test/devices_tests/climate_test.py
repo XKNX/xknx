@@ -1606,7 +1606,6 @@ class TestClimate:
         await climate_step.set_fan_speed(3)
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
-        # 115 is 45% as byte (0...255)
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray(3)),
