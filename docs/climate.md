@@ -20,6 +20,8 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_target_temperature_state` KNX address for reading the target temperature from the KNX bus. Used in for setpoint_shift calculations as base temperature. *DPT 9.001*
 - `group_address_setpoint_shift` KNX address to set setpoint_shift (base temperature deviation). *DPT 6.010* or *DPT 9.002*
 - `group_address_setpoint_shift_state` KNX address to read current setpoint_shift. *DPT 6.010* or *DPT 9.002*
+- `group_address_fan_speed` KNX address for the fan speed. *DPT 5.001 / 5.010*
+- `group_address_fan_speed_state` KNX address for reading fan speed. *DPT 5.001 / 5.010*
 - `setpoint_shift_mode` SetpointShiftMode Enum for setpoint_shift payload encoding. When `None` it is inferred from first incoming payload. Default: `None`
 - `setpoint_shift_max` Maximum value for setpoint_shift.
 - `setpoint_shift_min` Minimum value for setpoint_shift.
@@ -32,6 +34,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `max_temp` Maximum value for target temperature.
 - `min_temp` Minimum value for target temperature.
+- `fan_max_step` Maximum step amount for fans which are controlled with steps and not percentage. If this attribute is set, the fan is controlled by sending the step value in the range `0` and `max_step`. In that case, the group address DPT changes from *DPT 5.001* to *DPT 5.010*. Default: None.
 - `mode` ClimateMode instance for this climate device
 - `group_address_operation_mode` KNX address for operation mode. *DPT 20.102*
 - `group_address_operation_mode_state` KNX address for operation mode status. *DPT 20.102*
@@ -45,12 +48,9 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_controller_mode_state` KNX address for controller mode status. *DPT 20.105*
 - `group_address_heat_cool` KNX address for switching heating / cooling mode. *DPT 1*
 - `group_address_heat_cool_state` KNX address for reading heating / cooling mode. *DPT 1*
-- `group_address_fan_speed` KNX address for the fan speed. *DPT 5.001 / 5.010*
-- `group_address_fan_speed_state` KNX address for reading fan speed. *DPT 5.001 / 5.010*
 - `operation_modes` Overrides the supported operation modes.
 - `controller_modes` Overrides the supported controller modes.
 - `device_updated_cb` Callback for each update.
-- `fan_max_step` Maximum step amount for fans which are controlled with steps and not percentage. If this attribute is set, the fan is controlled by sending the step value in the range `0` and `max_step`. In that case, the group address DPT changes from *DPT 5.001* to *DPT 5.010*. Default: None.
 
 **Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_economy` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set `Standby`, `Comfort`, `Building Protection` and `Economy` will be set as supported. If `group_address_operation_mode_standby` is omitted, `Standby` is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
@@ -68,12 +68,9 @@ climate_mode = ClimateMode(
     group_address_controller_status_state=None,
     group_address_controller_mode=None,
     group_address_controller_mode_state=None,
-    group_address_fan_speed=None,
-    group_address_fan_speed_state=None,
     operation_modes=None,
     controller_modes=None,
     device_updated_cb=None,
-    fan_max_step=None,
 )
 
 climate = Climate(
@@ -84,6 +81,8 @@ climate = Climate(
     group_address_target_temperature_state='',
     group_address_setpoint_shift='',
     group_address_setpoint_shift_state='',
+    group_address_fan_speed=None,
+    group_address_fan_speed_state=None,
     temperature_step=0.1,
     setpoint_shift_max=6,
     setpoint_shift_min=-6,
@@ -94,6 +93,7 @@ climate = Climate(
     max_temp=26,
     mode=climate_mode,
     device_updated_cb=None,
+    fan_max_step=None,
 )
 xknx.devices.async_add(climate)
 xknx.devices.async_add(climate_mode)
