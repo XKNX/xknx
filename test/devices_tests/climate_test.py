@@ -1562,3 +1562,77 @@ class TestClimate:
         # only command initialized
         climate_active_command.active.value = None
         assert climate_active_command.is_active is False
+
+    async def test_fan_speed(self):
+        """Test fan speed functionality."""
+        xknx = XKNX()
+        climate_step = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_fan_speed="1/2/3",
+            group_address_fan_speed_state="1/2/4",
+            fan_max_step=3,
+        )
+        xknx.devices.async_add(climate_step)
+        climate_percent = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_fan_speed="1/2/5",
+            group_address_fan_speed_state="1/2/6",
+        )
+        xknx.devices.async_add(climate_percent)
+
+        # Test initial state
+        assert climate_step.current_fan_speed is None
+        assert climate_percent.current_fan_speed is None
+
+        xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(2)),
+            )
+        )
+        assert climate_step.current_fan_speed == 2
+
+        # 140 is 55% as byte (0...255)
+        xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTArray(140)),
+            )
+        )
+        assert climate_percent.current_fan_speed == 55
+
+        await climate_step.set_fan_speed(3)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(3)),
+        )
+
+        await climate_percent.set_fan_speed(45)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        # 115 is 45% as byte (0...255)
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray(115)),
+        )
+
+        xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/4"),
+                payload=GroupValueWrite(DPTArray(2)),
+            )
+        )
+        assert climate_step.current_fan_speed == 2
+
+        # 140 is 55% as byte (0...255)
+        xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/6"),
+                payload=GroupValueWrite(DPTArray(140)),
+            )
+        )
+        assert climate_percent.current_fan_speed == 55

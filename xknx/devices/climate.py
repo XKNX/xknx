@@ -11,9 +11,11 @@ from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Any
 
+from xknx.devices.fan import FanSpeedMode
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
+    RemoteValueDptValue1Ucount,
     RemoteValueScaling,
     RemoteValueSetpointShift,
     RemoteValueSwitch,
@@ -63,6 +65,9 @@ class Climate(Device):
         max_temp: float | None = None,
         mode: ClimateMode | None = None,
         device_updated_cb: DeviceCallbackType[Climate] | None = None,
+        group_address_fan_speed: GroupAddressesType = None,
+        group_address_fan_speed_state: GroupAddressesType = None,
+        fan_max_step: int | None = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -135,6 +140,33 @@ class Climate(Device):
             after_update_cb=self.after_update,
         )
 
+        self.fan_speed: RemoteValueDptValue1Ucount | RemoteValueScaling
+        self.fan_mode = FanSpeedMode.STEP if fan_max_step else FanSpeedMode.PERCENT
+        self.fan_max_step = fan_max_step
+
+        if self.fan_mode == FanSpeedMode.STEP:
+            self.fan_speed = RemoteValueDptValue1Ucount(
+                xknx,
+                group_address_fan_speed,
+                group_address_fan_speed_state,
+                sync_state=sync_state,
+                device_name=self.name,
+                feature_name="Fan Speed",
+                after_update_cb=self.after_update,
+            )
+        else:
+            self.fan_speed = RemoteValueScaling(
+                xknx,
+                group_address_fan_speed,
+                group_address_fan_speed_state,
+                sync_state=sync_state,
+                device_name=self.name,
+                feature_name="Fan Speed",
+                after_update_cb=self.after_update,
+                range_from=0,
+                range_to=100,
+            )
+
         self.mode = mode
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
@@ -145,6 +177,7 @@ class Climate(Device):
         yield self.on
         yield self.active
         yield self.command_value
+        yield self.fan_speed
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
@@ -196,6 +229,10 @@ class Climate(Device):
                 target_temperature, self.min_temp, self.max_temp
             )
             self.target_temperature.set(validated_temp)
+
+    async def set_fan_speed(self, speed: int) -> None:
+        """Set the fan to a designated speed."""
+        self.fan_speed.set(speed)
 
     @property
     def base_temperature(self) -> float | None:
@@ -262,6 +299,11 @@ class Climate(Device):
             return self.base_temperature + self.setpoint_shift_min
         return None
 
+    @property
+    def current_fan_speed(self) -> int | None:
+        """Return current speed of fan."""
+        return self.fan_speed.value
+
     def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
@@ -287,5 +329,6 @@ class Climate(Device):
             f'setpoint_shift_max="{self.setpoint_shift_max}" '
             f'setpoint_shift_min="{self.setpoint_shift_min}" '
             f"group_address_on_off={self.on.group_addr_str()} "
+            f"group_address_fan_speed={self.fan_speed.group_addr_str()} "
             "/>"
         )
