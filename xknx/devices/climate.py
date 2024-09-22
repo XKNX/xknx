@@ -67,7 +67,7 @@ class Climate(Device):
         device_updated_cb: DeviceCallbackType[Climate] | None = None,
         group_address_fan_speed: GroupAddressesType = None,
         group_address_fan_speed_state: GroupAddressesType = None,
-        fan_max_step: int | None = None,
+        fan_speed_mode: FanSpeedMode = FanSpeedMode.STEP,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -141,10 +141,9 @@ class Climate(Device):
         )
 
         self.fan_speed: RemoteValueDptValue1Ucount | RemoteValueScaling
-        self.fan_mode = FanSpeedMode.STEP if fan_max_step else FanSpeedMode.PERCENT
-        self.fan_max_step = fan_max_step
+        self.fan_speed_mode = fan_speed_mode
 
-        if self.fan_mode == FanSpeedMode.STEP:
+        if self.fan_speed_mode == FanSpeedMode.STEP:
             self.fan_speed = RemoteValueDptValue1Ucount(
                 xknx,
                 group_address_fan_speed,
