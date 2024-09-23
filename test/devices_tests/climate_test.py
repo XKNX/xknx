@@ -1579,8 +1579,8 @@ class TestClimate:
             name="TestClimate",
             group_address_fan_speed="1/2/5",
             group_address_fan_speed_state="1/2/6",
-            fan_speed_mode=FanSpeedMode.PERCENT,
         )
+        assert climate_percent.fan_speed_mode == FanSpeedMode.PERCENT
         xknx.devices.async_add(climate_percent)
 
         # Test initial state

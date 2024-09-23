@@ -34,7 +34,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `max_temp` Maximum value for target temperature.
 - `min_temp` Minimum value for target temperature.
-- `fan_speed_mode` Defines the mode of fan speed control. Can be either `FanSpeedMode.STEP` for step-wise control or `FanSpeedMode.PERCENT` for percentage control. For `STEP` mode, the fan speed is controlled by sending integer values, and the group address uses *DPT 5.010*. For `PERCENT` mode, the fan speed is controlled by sending percentage values (0-100%), and the group address uses *DPT 5.001*. Default: `FanSpeedMode.STEP`.
+- `fan_speed_mode` Defines the mode of fan speed control. Can be either `FanSpeedMode.STEP` for step-wise control or `FanSpeedMode.PERCENT` for percentage control. For `STEP` mode, the fan speed is controlled by sending integer values, and the group address uses *DPT 5.010*. For `PERCENT` mode, the fan speed is controlled by sending percentage values (0-100%), and the group address uses *DPT 5.001*. Default: `FanSpeedMode.PERCENT`.
 - `mode` ClimateMode instance for this climate device
 - `group_address_operation_mode` KNX address for operation mode. *DPT 20.102*
 - `group_address_operation_mode_state` KNX address for operation mode status. *DPT 20.102*

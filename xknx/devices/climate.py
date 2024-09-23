@@ -67,7 +67,7 @@ class Climate(Device):
         device_updated_cb: DeviceCallbackType[Climate] | None = None,
         group_address_fan_speed: GroupAddressesType = None,
         group_address_fan_speed_state: GroupAddressesType = None,
-        fan_speed_mode: FanSpeedMode = FanSpeedMode.STEP,
+        fan_speed_mode: FanSpeedMode = FanSpeedMode.PERCENT,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
