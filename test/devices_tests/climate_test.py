@@ -6,7 +6,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.devices import Climate, ClimateMode
-from xknx.devices.climate import SetpointShiftMode
+from xknx.devices.climate import FanSpeedMode, SetpointShiftMode
 from xknx.dpt import (
     DPT2ByteFloat,
     DPTArray,
@@ -1571,7 +1571,7 @@ class TestClimate:
             name="TestClimate",
             group_address_fan_speed="1/2/3",
             group_address_fan_speed_state="1/2/4",
-            fan_max_step=3,
+            fan_speed_mode=FanSpeedMode.STEP,
         )
         xknx.devices.async_add(climate_step)
         climate_percent = Climate(
@@ -1580,6 +1580,7 @@ class TestClimate:
             group_address_fan_speed="1/2/5",
             group_address_fan_speed_state="1/2/6",
         )
+        assert climate_percent.fan_speed_mode == FanSpeedMode.PERCENT
         xknx.devices.async_add(climate_percent)
 
         # Test initial state
