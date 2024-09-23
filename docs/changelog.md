@@ -6,9 +6,11 @@ nav_order: 2
 
 # Changelog
 
-### Features
+# 3.2.0 Climate Fan speed 2024-09-23
 
-- Added fan speed support to climate
+### Devices
+
+- Climate: Added fan speed support
 
 # 3.1.1 Fix Eberle status 2024-08-19
 
