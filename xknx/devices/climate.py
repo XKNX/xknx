@@ -16,6 +16,7 @@ from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
     RemoteValueDptValue1Ucount,
+    RemoteValueHumidity,
     RemoteValueScaling,
     RemoteValueSetpointShift,
     RemoteValueSwitch,
@@ -68,6 +69,7 @@ class Climate(Device):
         group_address_fan_speed: GroupAddressesType = None,
         group_address_fan_speed_state: GroupAddressesType = None,
         fan_speed_mode: FanSpeedMode = FanSpeedMode.PERCENT,
+        group_address_humidity: GroupAddressesType = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -168,6 +170,15 @@ class Climate(Device):
 
         self.mode = mode
 
+        self.humidity = RemoteValueHumidity(
+            xknx,
+            group_address_state=group_address_humidity,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Current humidity",
+            after_update_cb=self.after_update,
+        )
+
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
         yield self.temperature
@@ -177,6 +188,7 @@ class Climate(Device):
         yield self.active
         yield self.command_value
         yield self.fan_speed
+        yield self.humidity
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""

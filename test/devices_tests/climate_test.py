@@ -11,6 +11,7 @@ from xknx.dpt import (
     DPT2ByteFloat,
     DPTArray,
     DPTBinary,
+    DPTHumidity,
     DPTHVACContrMode,
     DPTHVACMode,
     DPTHVACStatus,
@@ -84,6 +85,7 @@ class TestClimate:
             group_address_setpoint_shift_state="1/2/4",
             group_address_on_off="1/2/11",
             group_address_on_off_state="1/2/12",
+            group_address_humidity="1/2/16",
         )
 
         assert climate.has_group_address(GroupAddress("1/2/1"))
@@ -91,6 +93,7 @@ class TestClimate:
         assert climate.has_group_address(GroupAddress("1/2/4"))
         assert climate.has_group_address(GroupAddress("1/2/11"))
         assert climate.has_group_address(GroupAddress("1/2/12"))
+        assert climate.has_group_address(GroupAddress("1/2/16"))
         assert not climate.has_group_address(GroupAddress("1/2/99"))
 
     #
@@ -1073,6 +1076,15 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/4"), payload=GroupValueRead())
 
+    async def test_sync_humidity(self):
+        """Test sync function / sending group reads to KNX bus for humidity."""
+        xknx = XKNX()
+        climate = Climate(xknx, "TestClimate", group_address_humidity="1/2/16")
+        await climate.sync()
+        assert xknx.telegrams.qsize() == 1
+        telegram1 = xknx.telegrams.get_nowait()
+        assert telegram1 == Telegram(GroupAddress("1/2/16"), payload=GroupValueRead())
+
     #
     # TEST PROCESS
     #
@@ -1257,6 +1269,33 @@ class TestClimate:
         )
         climate_mode.process(telegram)
         assert climate_mode.controller_mode == HVACControllerMode.HEAT
+
+    async def test_process_humidity(self):
+        """Test process / reading telegrams from telegram queue. Test if humidity is processed correctly."""
+        xknx = XKNX()
+        climate = Climate(xknx, "TestClimate", group_address_humidity="1/2/16")
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/16"),
+            payload=GroupValueWrite(DPTHumidity().to_knx(45.6)),
+        )
+        climate.process(telegram)
+        assert climate.humidity.value == 45.6
+
+    async def test_process_callback_humidity(self):
+        """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving humidity."""
+
+        xknx = XKNX()
+        climate = Climate(xknx, "TestClimate", group_address_humidity="1/2/16")
+        after_update_callback = Mock()
+        climate.register_device_updated_cb(after_update_callback)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/16"),
+            payload=GroupValueWrite(DPTHumidity().to_knx(45.6)),
+        )
+        climate.process(telegram)
+        after_update_callback.assert_called_with(climate)
 
     #
     # SUPPORTED OPERATION MODES

@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### Devices
+
+- Climate: Added humidity support
+
 # 3.2.0 Climate Fan speed 2024-09-23
 
 ### Devices
