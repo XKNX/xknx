@@ -6,6 +6,9 @@ nav_order: 2
 
 # Changelog
 
+
+# 3.3.0 Climate humidity 2024-10-20
+
 ### Devices
 
 - Climate: Added humidity support
