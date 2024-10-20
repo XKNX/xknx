@@ -16,7 +16,7 @@ from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
     RemoteValueDptValue1Ucount,
-    RemoteValueHumidity,
+    RemoteValueNumeric,
     RemoteValueScaling,
     RemoteValueSetpointShift,
     RemoteValueSwitch,
@@ -69,7 +69,7 @@ class Climate(Device):
         group_address_fan_speed: GroupAddressesType = None,
         group_address_fan_speed_state: GroupAddressesType = None,
         fan_speed_mode: FanSpeedMode = FanSpeedMode.PERCENT,
-        group_address_humidity: GroupAddressesType = None,
+        group_address_humidity_state: GroupAddressesType = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -170,10 +170,11 @@ class Climate(Device):
 
         self.mode = mode
 
-        self.humidity = RemoteValueHumidity(
+        self.humidity = RemoteValueNumeric(
             xknx,
-            group_address_state=group_address_humidity,
+            group_address_state=group_address_humidity_state,
             sync_state=sync_state,
+            value_type="humidity",
             device_name=self.name,
             feature_name="Current humidity",
             after_update_cb=self.after_update,

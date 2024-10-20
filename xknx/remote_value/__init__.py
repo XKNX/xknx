@@ -12,7 +12,6 @@ from .remote_value_color_rgbw import RemoteValueColorRGBW
 from .remote_value_color_xyy import RemoteValueColorXYY
 from .remote_value_datetime import RemoteValueDate, RemoteValueDateTime, RemoteValueTime
 from .remote_value_dpt_value_1_ucount import RemoteValueDptValue1Ucount
-from .remote_value_humidity import RemoteValueHumidity
 from .remote_value_raw import RemoteValueRaw
 from .remote_value_scaling import RemoteValueScaling
 from .remote_value_scene_number import RemoteValueSceneNumber
@@ -40,7 +39,6 @@ __all__ = [
     "RemoteValueDate",
     "RemoteValueTime",
     "RemoteValueDptValue1Ucount",
-    "RemoteValueHumidity",
     "RemoteValueNumeric",
     "RemoteValueOperationMode",
     "RemoteValueRaw",

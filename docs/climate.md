@@ -31,6 +31,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `on_off_invert` Invert on/off. Default: `False`
 - `group_address_active_state` KNX address for reading if the climate device is currently active. *DPT 1*
 - `group_address_command_value_state` KNX address for reading the current command value / valve position in %. *DPT 5.001*
+- `group_address_humidity_state` KNX address of current room humidity. *DPT 9.007*
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `max_temp` Maximum value for target temperature.
 - `min_temp` Minimum value for target temperature.
@@ -51,7 +52,6 @@ Climate are representations of KNX HVAC/Climate controls.
 - `operation_modes` Overrides the supported operation modes.
 - `controller_modes` Overrides the supported controller modes.
 - `device_updated_cb` Callback for each update.
-- `group_address_humidity` KNX address of current room humidity. *DPT 9.007*
 
 **Note:** `group_address_operation_mode_protection` / `group_address_operation_mode_economy` / `group_address_operation_mode_comfort` / `group_address_operation_mode_standby` are not necessary if `group_address_operation_mode` was specified. When one of these is set `True`, the others will be set `False`. When one of these is set `Standby`, `Comfort`, `Building Protection` and `Economy` will be set as supported. If `group_address_operation_mode_standby` is omitted, `Standby` is set when the other 3 are set to `False`.
 If only a subset of operation modes shall be used a list of supported modes may be passed to `operation_modes`.
