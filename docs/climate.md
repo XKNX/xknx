@@ -95,7 +95,7 @@ climate = Climate(
     mode=climate_mode,
     device_updated_cb=None,
     fan_speed_mode=FanSpeedMode.STEP,
-    group_address_humidity='',
+    group_address_humidity_state='',
 )
 xknx.devices.async_add(climate)
 xknx.devices.async_add(climate_mode)
