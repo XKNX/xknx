@@ -31,6 +31,7 @@ Climate are representations of KNX HVAC/Climate controls.
 - `on_off_invert` Invert on/off. Default: `False`
 - `group_address_active_state` KNX address for reading if the climate device is currently active. *DPT 1*
 - `group_address_command_value_state` KNX address for reading the current command value / valve position in %. *DPT 5.001*
+- `group_address_humidity_state` KNX address of current room humidity. *DPT 9.007*
 - `sync_state` defines if and how often the value should be actively read from the bus. If `False` no GroupValueRead telegrams will be sent to its group address. Defaults to `True`
 - `max_temp` Maximum value for target temperature.
 - `min_temp` Minimum value for target temperature.
@@ -94,6 +95,7 @@ climate = Climate(
     mode=climate_mode,
     device_updated_cb=None,
     fan_speed_mode=FanSpeedMode.STEP,
+    group_address_humidity_state='',
 )
 xknx.devices.async_add(climate)
 xknx.devices.async_add(climate_mode)
