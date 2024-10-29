@@ -192,7 +192,7 @@ class P2PConnection:
         self._expected_sequence_number = 0
         self._connected = False
 
-        self._last_sent_time = time.time()
+        self._last_sent_time: float = 0
 
         self._ack_waiter: asyncio.Future[TAck | TNak] | None = None
         self._response_waiter: asyncio.Future[Telegram] = (
