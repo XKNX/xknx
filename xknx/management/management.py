@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import logging
+import time
 from typing import TYPE_CHECKING
 
 from xknx.exceptions import (
@@ -81,11 +82,13 @@ class Management:
         logger.debug("Unhandled management telegram: %r", telegram)
         return
 
-    async def connect(self, address: IndividualAddress) -> P2PConnection:
+    async def connect(
+        self, address: IndividualAddress, rate_limit: int = 0
+    ) -> P2PConnection:
         """Open a point-to-point connection to a KNX device."""
         if address in self._connections:
             raise ManagementConnectionError(f"Connection to {address} already exists.")
-        p2p_connection = P2PConnection(self.xknx, address)
+        p2p_connection = P2PConnection(self.xknx, address, rate_limit)
         try:
             await p2p_connection.connect()
         except ManagementConnectionError as exc:
@@ -176,15 +179,20 @@ class BroadcastContext:
 class P2PConnection:
     """Class to manage a point-to-point connection with a KNX device."""
 
-    def __init__(self, xknx: XKNX, address: IndividualAddress) -> None:
+    def __init__(
+        self, xknx: XKNX, address: IndividualAddress, rate_limit: int = 0
+    ) -> None:
         """Initialize P2PConnection class."""
         self.xknx = xknx
         self.address = address
         self.disconnect_hook: Callable[[], None]
+        self.rate_limit = rate_limit
 
         self.sequence_number = self._sequence_number_generator()
         self._expected_sequence_number = 0
         self._connected = False
+
+        self._last_sent_time = time.time()
 
         self._ack_waiter: asyncio.Future[TAck | TNak] | None = None
         self._response_waiter: asyncio.Future[Telegram] = (
@@ -359,5 +367,15 @@ class P2PConnection:
             raise ManagementConnectionRefused(
                 "Management connection disconnected by the peer."
             )
+
+        if self.rate_limit:
+            # time in seconds since the last request operation
+            time_diff = time.time() - self._last_sent_time
+            wait_time = 1 / self.rate_limit
+            if time_diff < wait_time:
+                await asyncio.sleep(wait_time - time_diff)
+
         await self._send_data(payload)
-        return await self._receive(expected)
+        response = await self._receive(expected)
+        self._last_sent_time = time.time()
+        return response
