@@ -106,7 +106,7 @@ async def nm_individual_address_read(
     return addresses
 
 
-async def nm_invididual_address_write(
+async def nm_individual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> None:
     """
