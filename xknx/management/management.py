@@ -180,7 +180,7 @@ class P2PConnection:
     """Class to manage a point-to-point connection with a KNX device."""
 
     def __init__(
-        self, xknx: XKNX, address: IndividualAddress, rate_limit: int = 0
+        self, xknx: XKNX, address: IndividualAddress, rate_limit: int = 20
     ) -> None:
         """Initialize P2PConnection class."""
         self.xknx = xknx
