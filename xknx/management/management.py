@@ -192,7 +192,7 @@ class P2PConnection:
         self._expected_sequence_number = 0
         self._connected = False
 
-        self._last_sent_time: float = 0
+        self._last_response_time: float = 0
 
         self._ack_waiter: asyncio.Future[TAck | TNak] | None = None
         self._response_waiter: asyncio.Future[Telegram] = (
@@ -370,12 +370,12 @@ class P2PConnection:
 
         if self.rate_limit:
             # time in seconds since the last request operation
-            time_diff = time.time() - self._last_sent_time
+            time_diff = time.time() - self._last_response_time
             wait_time = 1 / self.rate_limit
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
         await self._send_data(payload)
         response = await self._receive(expected)
-        self._last_sent_time = time.time()
+        self._last_response_time = time.time()
         return response

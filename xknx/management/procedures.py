@@ -182,6 +182,10 @@ async def nm_individual_address_write(
         await xknx.cemi_handler.send_telegram(telegram)
 
 
+# for backwards compatibility
+nm_invididual_address_write = nm_individual_address_write
+
+
 async def nm_individual_address_serial_number_read(
     xknx: XKNX,
     serial: bytes,

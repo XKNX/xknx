@@ -265,6 +265,8 @@ async def test_p2p_rate_limit(time_travel, rate_limit):
 
     await task
 
+    xknx.cemi_handler.reset_mock()
+
     # create second task
     task = asyncio.create_task(
         conn.request(
@@ -273,12 +275,30 @@ async def test_p2p_rate_limit(time_travel, rate_limit):
         )
     )
     await asyncio.sleep(0)
-    send_responses(1)
 
     if rate_limit > 0:
-        # this should raise a timeout, since the data was not yet sent
+        # this should raise a timeout, since the data was never confirmed
         with pytest.raises(ManagementConnectionTimeout):
+            # the request is queued
+            await time_travel(0.5 / rate_limit)
+            assert xknx.cemi_handler.send_telegram.call_args_list == []
+
+            # the request should now be sent
+            await time_travel(0.6 / rate_limit)
+
+            assert xknx.cemi_handler.send_telegram.call_args_list == [
+                call(
+                    Telegram(
+                        destination_address=ia,
+                        tpci=tpci.TDataConnected(1),
+                        payload=apci.DeviceDescriptorRead(descriptor=0),
+                    )
+                ),
+            ]
+
             await task
     else:
         # should work as expected
+        send_responses(1)
+
         await task
