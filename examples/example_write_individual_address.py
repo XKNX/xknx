@@ -23,7 +23,7 @@ async def main(argv: list[str]) -> int:
 
     async with XKNX() as xknx:
         individual_address = IndividualAddress(address)
-        await procedures.nm_invididual_address_write(xknx, individual_address)
+        await procedures.nm_individual_address_write(xknx, individual_address)
 
     return 0
 

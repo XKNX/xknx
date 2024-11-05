@@ -106,7 +106,7 @@ async def nm_individual_address_read(
     return addresses
 
 
-async def nm_invididual_address_write(
+async def nm_individual_address_write(
     xknx: XKNX, individual_address: IndividualAddressableType
 ) -> None:
     """
@@ -180,6 +180,10 @@ async def nm_invididual_address_write(
             tpci=tpci.TDataConnected(sequence_number=seq_num),
         )
         await xknx.cemi_handler.send_telegram(telegram)
+
+
+# for backwards compatibility
+nm_invididual_address_write = nm_individual_address_write
 
 
 async def nm_individual_address_serial_number_read(

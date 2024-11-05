@@ -223,3 +223,79 @@ async def test_broadcast_message():
 
     with pytest.raises(TypeError):
         await xknx.management.broadcast(connect)
+
+
+@pytest.mark.parametrize("rate_limit", [0, 1])
+async def test_p2p_rate_limit(time_travel, rate_limit):
+    """Test rate limit for P2P management connections."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+
+    def send_responses(index):
+        ack = Telegram(
+            source_address=ia,
+            destination_address=IndividualAddress(0),
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TAck(index),
+        )
+        device_desc_resp = Telegram(
+            source_address=ia,
+            destination_address=IndividualAddress(0),
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TDataConnected(index),
+            payload=apci.DeviceDescriptorResponse(),
+        )
+
+        xknx.management.process(ack)
+        xknx.management.process(device_desc_resp)
+
+    conn = await xknx.management.connect(ia, rate_limit)
+
+    # create task and request data
+    task = asyncio.create_task(
+        conn.request(
+            payload=apci.DeviceDescriptorRead(descriptor=0),
+            expected=apci.DeviceDescriptorResponse,
+        )
+    )
+
+    await asyncio.sleep(0)
+    send_responses(0)
+
+    await task
+
+    xknx.cemi_handler.reset_mock()
+
+    # create second task
+    task = asyncio.create_task(
+        conn.request(
+            payload=apci.DeviceDescriptorRead(descriptor=0),
+            expected=apci.DeviceDescriptorResponse,
+        )
+    )
+    await asyncio.sleep(0)
+
+    if rate_limit:
+        await time_travel(0.5 / rate_limit)
+
+        # the request is still queued
+        assert not xknx.cemi_handler.send_telegram.call_args_list
+
+        await time_travel(0.5 / rate_limit)
+
+        # the requests should be sent now, the behaviour should match no rate limit
+
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(
+            Telegram(
+                destination_address=ia,
+                tpci=tpci.TDataConnected(1),
+                payload=apci.DeviceDescriptorRead(descriptor=0),
+            )
+        ),
+    ]
+
+    send_responses(1)
+
+    await task
