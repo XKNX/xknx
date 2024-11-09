@@ -12,6 +12,7 @@ from xknx.knxip import (
     TunnellingFeatureSet,
     TunnellingFeatureType,
 )
+from xknx.management.application_layer_enum import ReturnCode
 
 
 class TestKNXIPTunnellingFeature:
@@ -74,13 +75,14 @@ class TestKNXIPTunnellingFeature:
         assert (
             knxipframe.body.feature_type == TunnellingFeatureType.BUS_CONNECTION_STATUS
         )
+        assert knxipframe.body.return_code == ReturnCode.E_SUCCESS
         assert knxipframe.body.data == b"\x01\x00"
 
         tunnelling_request = TunnellingFeatureResponse(
             communication_channel_id=1,
             sequence_counter=23,
-            status_code=ErrorCode.E_NO_ERROR,
             feature_type=TunnellingFeatureType.BUS_CONNECTION_STATUS,
+            return_code=ReturnCode.E_SUCCESS,
             data=b"\x01\x00",
         )
         knxipframe2 = KNXIPFrame.init_from_body(tunnelling_request)

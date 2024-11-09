@@ -13,6 +13,7 @@ from __future__ import annotations
 import struct
 
 from xknx.exceptions import CouldNotParseKNXIP
+from xknx.management.application_layer_enum import ReturnCode
 
 from .body import KNXIPBody, KNXIPBodyResponse
 from .error_code import ErrorCode
@@ -162,6 +163,53 @@ class TunnellingFeatureResponse(_TunnellingFeature, KNXIPBodyResponse):
 
     SERVICE_TYPE = KNXIPServiceType.TUNNELLING_FEATURE_RESPONSE
 
+    def __init__(
+        self,
+        communication_channel_id: int = 1,
+        sequence_counter: int = 0,
+        feature_type: TunnellingFeatureType = TunnellingFeatureType.SUPPORTED_EMI_TYPE,
+        return_code: ReturnCode = ReturnCode.E_SUCCESS,
+        data: bytes = b"",
+    ):
+        """Initialize TunnellingFeatureSet object."""
+        super().__init__(
+            communication_channel_id=communication_channel_id,
+            sequence_counter=sequence_counter,
+            feature_type=feature_type,
+            data=data,
+        )
+        self.return_code = return_code
+
+    def from_knx(self, raw: bytes) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        if raw[0] != _TunnellingFeature.HEADER_LENGTH:  # structure_length field
+            raise CouldNotParseKNXIP("TunnellingFeature header has invalid length")
+        self.communication_channel_id = raw[1]
+        self.sequence_counter = raw[2]
+        self.status_code = ErrorCode(raw[3])
+        self.feature_type = TunnellingFeatureType(raw[4])
+        self.return_code = ReturnCode(raw[5])
+        self.data = raw[6:]
+        if self.return_code is ReturnCode.E_SUCCESS and len(self.data) == 0:
+            # Data may be omitted by some servers when an error occurred
+            raise CouldNotParseKNXIP("TunnellingFeature missing data.")
+        return len(raw)
+
+    def to_knx(self) -> bytes:
+        """Serialize to KNX/IP raw data."""
+        data_size = len(self.data) + (len(self.data) % 2) if self._has_data() else 0
+        return struct.pack(
+            # Append a NUL byte if data size is uneven
+            f"!BBBBBB{data_size}s",
+            _TunnellingFeature.HEADER_LENGTH,
+            self.communication_channel_id,
+            self.sequence_counter,
+            self.status_code.value,
+            self.feature_type.value,
+            self.return_code.value,
+            self.data,
+        )
+
     def __repr__(self) -> str:
         """Return object as readable string."""
         return (
@@ -170,5 +218,6 @@ class TunnellingFeatureResponse(_TunnellingFeature, KNXIPBodyResponse):
             f'sequence_counter="{self.sequence_counter}" '
             f'status_code="{self.status_code}" '
             f'feature_type="{self.feature_type}" '
+            f'return_code="{self.return_code}" '
             f'data="{self.data.hex()}" />'
         )
