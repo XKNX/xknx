@@ -695,7 +695,7 @@ class TestStringRepresentations:
         assert (
             str(tunnelling_feature)
             == '<TunnellingFeatureResponse communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" '
-            'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" data="0100" />'
+            'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" return_code="ReturnCode.E_SUCCESS" data="0100" />'
         )
 
     def test_tunnelling_feature_set(self):
