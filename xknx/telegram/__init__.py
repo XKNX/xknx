@@ -17,6 +17,6 @@ __all__ = [
     "GroupAddressType",
     "IndividualAddress",
     "Telegram",
-    "TelegramDirection",
     "TelegramDecodedData",
+    "TelegramDirection",
 ]

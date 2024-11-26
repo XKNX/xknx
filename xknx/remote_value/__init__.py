@@ -35,9 +35,8 @@ __all__ = [
     "RemoteValueColorRGBW",
     "RemoteValueColorXYY",
     "RemoteValueControllerMode",
-    "RemoteValueDateTime",
     "RemoteValueDate",
-    "RemoteValueTime",
+    "RemoteValueDateTime",
     "RemoteValueDptValue1Ucount",
     "RemoteValueNumeric",
     "RemoteValueOperationMode",
@@ -50,5 +49,6 @@ __all__ = [
     "RemoteValueString",
     "RemoteValueSwitch",
     "RemoteValueTemp",
+    "RemoteValueTime",
     "RemoteValueUpDown",
 ]

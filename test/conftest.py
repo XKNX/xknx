@@ -14,7 +14,7 @@ class EventLoopClockAdvancer:
     # thanks to @dermotduffy for his asyncio.sleep mock
     # https://github.com/dermotduffy/hyperion-py/blob/main/tests/client_test.py#L273
 
-    __slots__ = ("offset", "loop", "_base_time")
+    __slots__ = ("_base_time", "loop", "offset")
 
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         """Initialize."""
