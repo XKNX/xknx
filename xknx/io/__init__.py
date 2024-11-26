@@ -16,18 +16,18 @@ from .self_description import DescriptionQuery
 from .tunnel import TCPTunnel, UDPTunnel
 
 __all__ = [
-    "knx_interface_factory",
     "DEFAULT_MCAST_GRP",
     "DEFAULT_MCAST_PORT",
-    "DescriptionQuery",
-    "GatewayScanFilter",
-    "GatewayDescriptor",
-    "GatewayScanner",
     "ConnectionConfig",
-    "SecureConfig",
     "ConnectionType",
+    "DescriptionQuery",
+    "GatewayDescriptor",
+    "GatewayScanFilter",
+    "GatewayScanner",
     "KNXIPInterface",
     "Routing",
+    "SecureConfig",
     "TCPTunnel",
     "UDPTunnel",
+    "knx_interface_factory",
 ]

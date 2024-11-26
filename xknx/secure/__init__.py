@@ -5,7 +5,7 @@ from .util import bytes_xor, sha256_hash
 
 __all__ = [
     "Keyring",
-    "load_keyring",
     "bytes_xor",
+    "load_keyring",
     "sha256_hash",
 ]

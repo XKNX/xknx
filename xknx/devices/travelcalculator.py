@@ -28,15 +28,15 @@ class TravelCalculator:
     """Class for calculating the current position of a cover."""
 
     __slots__ = (
-        "travel_direction",
-        "travel_time_down",
-        "travel_time_up",
         "_last_known_position",
         "_last_known_position_timestamp",
         "_position_confirmed",
         "_travel_to_position",
         "position_closed",
         "position_open",
+        "travel_direction",
+        "travel_time_down",
+        "travel_time_up",
     )
 
     def __init__(self, travel_time_down: float, travel_time_up: float) -> None:
