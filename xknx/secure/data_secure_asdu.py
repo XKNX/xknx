@@ -70,7 +70,7 @@ class SecurityALService(IntEnum):
 class SecurityControlField:
     """Class for KNX Data Secure Security Control Field (SCF)."""
 
-    __slots__ = ("tool_access", "algorithm", "system_broadcast", "service")
+    __slots__ = ("algorithm", "service", "system_broadcast", "tool_access")
 
     def __init__(
         self,
@@ -122,7 +122,7 @@ class SecurityControlField:
 class SecureData:
     """Class for KNX Data Secure ASDU for S-A_Data-service."""
 
-    __slots__ = ("sequence_number_bytes", "secured_apdu", "message_authentication_code")
+    __slots__ = ("message_authentication_code", "secured_apdu", "sequence_number_bytes")
 
     def __init__(
         self,
