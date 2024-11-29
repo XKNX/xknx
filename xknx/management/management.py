@@ -83,7 +83,7 @@ class Management:
         return
 
     async def connect(
-        self, address: IndividualAddress, rate_limit: int = 0
+        self, address: IndividualAddress, rate_limit: int = 20
     ) -> P2PConnection:
         """Open a point-to-point connection to a KNX device."""
         if address in self._connections:
@@ -123,10 +123,10 @@ class Management:
 
     @asynccontextmanager
     async def connection(
-        self, address: IndividualAddress
+        self, address: IndividualAddress, rate_limit: int = 20
     ) -> AsyncIterator[P2PConnection]:
         """Provide a point-to-point connection to a KNX device."""
-        conn = await self.connect(address)
+        conn = await self.connect(address, rate_limit)
         try:
             yield conn
         finally:
