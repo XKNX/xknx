@@ -1,6 +1,7 @@
 """Module for handling values on the KNX bus."""
 
 from .remote_value import GroupAddressesType, RemoteValue
+from .remote_value_by_length import RemoteValueByLength
 from .remote_value_climate_mode import (
     RemoteValueBinaryHeatCool,
     RemoteValueBinaryOperationMode,
@@ -31,6 +32,7 @@ __all__ = [
     "RemoteValue",
     "RemoteValueBinaryHeatCool",
     "RemoteValueBinaryOperationMode",
+    "RemoteValueByLength",
     "RemoteValueColorRGB",
     "RemoteValueColorRGBW",
     "RemoteValueColorXYY",

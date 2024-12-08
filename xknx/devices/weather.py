@@ -20,9 +20,11 @@ from datetime import date, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from xknx.dpt import DPTPressure, DPTPressure2Byte
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
+    RemoteValueByLength,
     RemoteValueNumeric,
     RemoteValueSwitch,
 )
@@ -211,11 +213,11 @@ class Weather(Device):
             after_update_cb=self.after_update,
         )
 
-        self._air_pressure = RemoteValueNumeric(
+        self._air_pressure = RemoteValueByLength(
             xknx,
+            dpt_classes=(DPTPressure, DPTPressure2Byte),
             group_address_state=group_address_air_pressure,
             sync_state=sync_state,
-            value_type="pressure_2byte",
             device_name=self.name,
             feature_name="Air pressure",
             after_update_cb=self.after_update,
