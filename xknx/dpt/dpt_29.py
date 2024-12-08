@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from .dpt_12 import DPT4ByteUnsigned
+from .dpt import DPTNumeric, DPTStructIntMixin
 
 
-class DPT8ByteSigned(DPT4ByteUnsigned):
+class DPT8ByteSigned(DPTStructIntMixin, DPTNumeric):
     """
     Abstraction for KNX 8 Byte "64-bit signed".
 

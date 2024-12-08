@@ -22,7 +22,7 @@ class TestDPT8ByteSigned:
         ),
     )
     def test_values(self, raw, expected):
-        """Test members of DPT2ByteSigned."""
+        """Test valid values."""
         assert DPT8ByteSigned.to_knx(expected) == DPTArray(raw)
         assert DPT8ByteSigned.from_knx(DPTArray(raw)) == expected
 
@@ -30,6 +30,6 @@ class TestDPT8ByteSigned:
         "value", (9_223_372_036_854_775_808, -9_223_372_036_854_775_809)
     )
     def test_exceeding_limits(self, value):
-        """Test initialization of DPT2ByteSigned with wrong value (Underflow)."""
+        """Test invalid values."""
         with pytest.raises(ConversionError):
             DPT8ByteSigned.to_knx(value)

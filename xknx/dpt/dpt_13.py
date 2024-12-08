@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from .dpt_12 import DPT4ByteUnsigned
+from .dpt import DPTNumeric, DPTStructIntMixin
 
 
-class DPT4ByteSigned(DPT4ByteUnsigned):
+class DPT4ByteSigned(DPTStructIntMixin, DPTNumeric):
     """
     Abstraction for KNX 4 Byte "32-bit signed".
 
@@ -15,6 +15,7 @@ class DPT4ByteSigned(DPT4ByteUnsigned):
     dpt_main_number = 13
     dpt_sub_number: int | None = None
     value_type = "4byte_signed"
+    payload_length = 4
 
     value_min = -2147483648
     value_max = 2147483647
