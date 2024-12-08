@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-import struct
-
-from xknx.exceptions import ConversionError
-
-from .dpt import DPTNumeric
-from .payload import DPTArray, DPTBinary
+from .dpt import DPTNumeric, DPTStructIntMixin
 
 
-class DPT4ByteUnsigned(DPTNumeric):
+class DPT4ByteUnsigned(DPTStructIntMixin, DPTNumeric):
     """
     Abstraction for KNX 4 Byte "32-bit unsigned".
 
@@ -27,34 +22,6 @@ class DPT4ByteUnsigned(DPTNumeric):
     resolution = 1
 
     _struct_format = ">I"
-
-    @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
-        """Parse/deserialize from KNX/IP raw data."""
-        raw = cls.validate_payload(payload)
-
-        try:
-            return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore[no-any-return]
-        except struct.error as err:
-            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
-
-    @classmethod
-    def to_knx(cls, value: int | float) -> DPTArray:
-        """Serialize to KNX/IP raw data."""
-        try:
-            knx_value = int(value)
-            if not cls._test_boundaries(knx_value):
-                raise ValueError
-            return DPTArray(struct.pack(cls._struct_format, knx_value))
-        except (ValueError, struct.error) as err:
-            raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
-            ) from err
-
-    @classmethod
-    def _test_boundaries(cls, value: int) -> bool:
-        """Test if value is within defined range for this object."""
-        return cls.value_min <= value <= cls.value_max
 
 
 class DPTValue4Ucount(DPT4ByteUnsigned):

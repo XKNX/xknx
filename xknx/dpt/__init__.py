@@ -213,6 +213,12 @@ from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
 from .dpt_19 import DPTDateTime
 from .dpt_20 import DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from .dpt_29 import (
+    DPT8ByteSigned,
+    DPTActiveEnergy8Byte,
+    DPTApparantEnergy8Byte,
+    DPTReactiveEnergy8Byte,
+)
 from .dpt_232 import DPTColorRGB, RGBColor
 from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
 from .dpt_242 import DPTColorXYY, XYYColor

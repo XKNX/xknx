@@ -29,8 +29,9 @@ class DPT2ByteSigned(DPTNumeric):
 
     value_min = -32768
     value_max = 32767
-    resolution: float = 1
+    resolution: int | float = 1
 
+    # not using DPTStructIntMixin because return type of from_knx can be float when resolution is < 1
     _struct_format = ">h"
 
     @classmethod
@@ -48,18 +49,13 @@ class DPT2ByteSigned(DPTNumeric):
         """Serialize to KNX/IP raw data."""
         try:
             knx_value = int(float(value) / cls.resolution)
-            if not cls._test_boundaries(knx_value):
+            if not (cls.value_min <= knx_value <= cls.value_max):
                 raise ValueError("Value out of range")
             return DPTArray(struct.pack(cls._struct_format, knx_value))
         except (ValueError, struct.error) as err:
             raise ConversionError(
                 f"Could not serialize {cls.__name__}", value=value
             ) from err
-
-    @classmethod
-    def _test_boundaries(cls, value: int) -> bool:
-        """Test if value is within defined range for this object."""
-        return cls.value_min <= value <= cls.value_max
 
 
 class DPTValue2Count(DPT2ByteSigned):

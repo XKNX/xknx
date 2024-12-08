@@ -6,6 +6,11 @@ nav_order: 2
 
 # Changelog
 
+
+### DPT
+
+- Add DPT 29 - 8byte signed definitions: generic, 29.010, 29.011, 20.012
+
 ### Management
 
 - Add rate limit (in packets per second) option to P2PConnection.

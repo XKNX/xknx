@@ -135,6 +135,7 @@ class DPTPercentU8(DPTValue1ByteUnsigned):
     dpt_sub_number = 4
     value_type = "percentU8"
     unit = "%"
+    resolution = 1
 
 
 class DPTDecimalFactor(DPTValue1ByteUnsigned):

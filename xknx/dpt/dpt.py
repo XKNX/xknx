@@ -7,6 +7,7 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from inspect import isabstract
+import struct
 from typing import Any, Generic, TypedDict, TypeVar, cast, final
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -226,6 +227,43 @@ class DPTNumeric(DPTBase):
     @abstractmethod
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
+
+
+class DPTStructIntMixin:
+    """
+    Mixin for DPT classes using struct to convert values.
+
+    Base class shall be DPTNumeric.
+    Resolution shall always be 1.
+    """
+
+    value_min: int | float
+    value_max: int | float
+    # https://docs.python.org/3/library/struct.html#format-characters
+    _struct_format: str
+
+    @classmethod
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> int:
+        """Parse/deserialize from KNX/IP raw data."""
+        raw = cls.validate_payload(payload)  # type: ignore[attr-defined]
+
+        try:
+            return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore[no-any-return]
+        except struct.error as err:
+            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
+
+    @classmethod
+    def to_knx(cls, value: int | float) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+        try:
+            knx_value = int(value)
+            if not (cls.value_min <= knx_value <= cls.value_max):
+                raise ValueError
+            return DPTArray(struct.pack(cls._struct_format, knx_value))
+        except (ValueError, struct.error) as err:
+            raise ConversionError(
+                f"Could not serialize {cls.__name__}", value=value
+            ) from err
 
 
 class DPTEnumData(Enum):
