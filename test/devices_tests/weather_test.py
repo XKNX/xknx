@@ -2,6 +2,8 @@
 
 import datetime
 
+import pytest
+
 from xknx import XKNX
 from xknx.devices import Weather
 from xknx.devices.weather import WeatherCondition
@@ -87,35 +89,42 @@ class TestWeather:
         assert weather._brightness_north.unit_of_measurement == "lx"
         assert weather._brightness_north.ha_device_class == "illuminance"
 
-    async def test_pressure(self):
-        """Test resolve state with pressure."""
+    @pytest.mark.parametrize(
+        ("value", "payload"),
+        [
+            (98631.68, DPTArray((0x6C, 0xB4))),  # 2byte float
+            (98631.68, DPTArray((0x47, 0xC0, 0xA3, 0xD7))),  # 4byte float
+        ],
+    )
+    async def test_pressure(self, value, payload):
+        """Test air pressure telegram."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
 
         weather.process(
             Telegram(
                 destination_address=GroupAddress("1/3/4"),
-                payload=GroupValueWrite(value=DPTArray((0x6C, 0xAD))),
+                payload=GroupValueWrite(value=payload),
             )
         )
 
-        assert weather.air_pressure == 98058.24
+        assert weather.air_pressure == value
         assert weather._air_pressure.unit_of_measurement == "Pa"
         assert weather._air_pressure.ha_device_class == "pressure"
 
     async def test_humidity(self):
-        """Test humidity."""
+        """Test humidity telegram."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_humidity="1/2/4")
 
         weather.process(
             Telegram(
                 destination_address=GroupAddress("1/2/4"),
-                payload=GroupValueWrite(value=DPTArray((0x7E, 0xE1))),
+                payload=GroupValueWrite(value=DPTArray((0x15, 0x73))),
             )
         )
 
-        assert weather.humidity == 577044.48
+        assert weather.humidity == 55.8
         assert weather._humidity.unit_of_measurement == "%"
         assert weather._humidity.ha_device_class == "humidity"
 

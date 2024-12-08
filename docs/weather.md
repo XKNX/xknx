@@ -49,7 +49,7 @@ The weather device is basically a set of sensors that you can obtain from your w
 - **group_address_wind_alarm** KNX address for reading if wind alarm is on/off.
 - **group_address_frost_alarm** KNX address for reading if frost alarm is on/off.
 - **group_address_day_night** KNX address for reading a day/night object.
-- **group_address_air_pressure** KNX address reading current air pressure. **DPT 9.006**
+- **group_address_air_pressure** KNX address reading current air pressure. **DPT 9.006 or 14.058**
 - **group_address_humidity** KNX address for reading current humidity. **DPT 9.007**
 - **sync_state** Periodically sync the state.
 - **device_updated_cb** Callback for each update.

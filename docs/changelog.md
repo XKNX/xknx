@@ -6,6 +6,9 @@ nav_order: 2
 
 # Changelog
 
+### Devices
+
+- Weather: Support either DPT 9.006 (2byte) or DPT 14.058 (4byte) for `group_address_air_pressure`
 
 ### DPT
 
