@@ -6,6 +6,8 @@ nav_order: 2
 
 # Changelog
 
+# 3.4.0 8 byte energy and 4 byte pressure 2024-11-20
+
 ### Devices
 
 - Weather: Support either DPT 9.006 (2byte) or DPT 14.058 (4byte) for `group_address_air_pressure`
