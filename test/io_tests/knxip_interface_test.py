@@ -128,6 +128,8 @@ class TestKNXIPInterface:
             start_tunnelling_tcp_mock.assert_called_once_with(
                 gateway_ip="10.1.0.0",
                 gateway_port=3671,
+                gateway_path=None,
+                connect_cb=None,
             )
 
     async def test_start_automatic_with_keyring_and_ia(self):
@@ -170,6 +172,8 @@ class TestKNXIPInterface:
             start_tunnelling_tcp_mock.assert_called_once_with(
                 gateway_ip="10.1.0.0",
                 gateway_port=3671,
+                gateway_path=None,
+                connect_cb=None,
             )
 
         # IA not listed in keyring
@@ -240,6 +244,8 @@ class TestKNXIPInterface:
             start_tunnelling_tcp.assert_called_once_with(
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
+                gateway_path=None,
+                connect_cb=None,
             )
         with patch("xknx.io.tunnel.TCPTunnel.connect") as connect_tcp:
             interface = knx_interface_factory(self.xknx, connection_config)
@@ -271,6 +277,8 @@ class TestKNXIPInterface:
             start_tunnelling_tcp.assert_called_once_with(
                 gateway_ip=gateway_ip,
                 gateway_port=3671,
+                gateway_path=None,
+                connect_cb=None,
             )
         with patch("xknx.io.tunnel.TCPTunnel.connect") as connect_tcp:
             interface = knx_interface_factory(self.xknx, connection_config)

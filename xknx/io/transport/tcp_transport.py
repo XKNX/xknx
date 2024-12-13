@@ -7,7 +7,7 @@ The module is build upon asyncio stream socket functions.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import logging
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
@@ -67,6 +67,11 @@ class TCPTransport(KNXIPTransport):
         self,
         remote_addr: tuple[str, int],
         connection_lost_cb: Callable[[], None] | None = None,
+        connect_cb: Callable[
+            [asyncio.AbstractEventLoop, Callable[[], asyncio.Protocol]],
+            Awaitable[tuple[asyncio.Transport, asyncio.Protocol]],
+        ]
+        | None = None,
     ):
         """Initialize TCPTransport class."""
         self.remote_addr = remote_addr
@@ -74,6 +79,7 @@ class TCPTransport(KNXIPTransport):
 
         self.callbacks = []
         self._connection_lost_cb = connection_lost_cb
+        self._connect_cb = connect_cb
         self.transport: asyncio.Transport | None = None
         self._buffer = b""
 
@@ -117,11 +123,17 @@ class TCPTransport(KNXIPTransport):
             connection_lost_callback=self._connection_lost,
         )
         loop = asyncio.get_running_loop()
-        (self.transport, _) = await loop.create_connection(
-            lambda: tcp_transport_factory,
-            host=self.remote_hpai.ip_addr,
-            port=self.remote_hpai.port,
-        )
+        if self._connect_cb is None:
+            (self.transport, _) = await loop.create_connection(
+                lambda: tcp_transport_factory,
+                host=self.remote_hpai.ip_addr,
+                port=self.remote_hpai.port,
+            )
+        else:
+            (self.transport, _) = await self._connect_cb(
+                loop,
+                lambda: tcp_transport_factory,
+            )
 
     def _connection_lost(self) -> None:
         """Call assigned callback. Callback for connection lost."""

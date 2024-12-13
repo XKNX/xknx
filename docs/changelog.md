@@ -20,6 +20,10 @@ nav_order: 2
 - Fix typo in management procedure (`nm_invididual_address_write` was renamed to `nm_individual_address_write`)
 - Fix TunnellingFeatureResponse missing `return_code`
 
+### Connection
+
+- Add support for making connections over unix domain sockets.
+
 # 3.3.0 Climate humidity 2024-10-20
 
 ### Devices

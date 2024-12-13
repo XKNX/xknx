@@ -8,12 +8,13 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import Awaitable, Callable
 import logging
 from typing import TYPE_CHECKING
 
 from xknx.cemi import CEMIFrame
 from xknx.core import XknxConnectionState, XknxConnectionType
-from xknx.exceptions import CommunicationError, TunnellingAckError
+from xknx.exceptions import CommunicationError, TunnellingAckError, XKNXException
 from xknx.knxip import (
     HPAI,
     ConnectRequestInformation,
@@ -552,15 +553,38 @@ class TCPTunnel(_Tunnel):
         self,
         xknx: XKNX,
         cemi_received_callback: CEMIBytesCallbackType,
-        gateway_ip: str,
+        gateway_ip: str | None,
         gateway_port: int,
+        gateway_path: str | None = None,
+        connect_cb: Callable[
+            [asyncio.AbstractEventLoop, Callable[[], asyncio.Protocol]],
+            Awaitable[tuple[asyncio.Transport, asyncio.Protocol]],
+        ]
+        | None = None,
         individual_address: IndividualAddress | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
     ):
         """Initialize Tunnel class."""
+
+        arg_count = (
+            (gateway_ip is not None)
+            + (gateway_path is not None)
+            + (connect_cb is not None)
+        )
+        if arg_count > 1:
+            raise XKNXException(
+                "Only one of gateway_ip, gateway_path and connect_cb may be set"
+            )
+        if arg_count == 0:
+            raise XKNXException(
+                "One of gateway_ip, gateway_path and connect_cb must be set"
+            )
+
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        self.gateway_path = gateway_path
+        self.connect_cb = connect_cb
         super().__init__(
             xknx=xknx,
             cemi_received_callback=cemi_received_callback,
@@ -573,10 +597,29 @@ class TCPTunnel(_Tunnel):
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
-        self.transport = TCPTransport(
-            remote_addr=(self.gateway_ip, self.gateway_port),
-            connection_lost_cb=self._tunnel_lost,
-        )
+        if self.connect_cb is not None:
+            self.transport = TCPTransport(
+                remote_addr=("0.0.0.0", 0),
+                connection_lost_cb=self._tunnel_lost,
+                connect_cb=self.connect_cb,
+            )
+        elif self.gateway_path is not None:
+            self.transport = TCPTransport(
+                remote_addr=("0.0.0.0", 0),
+                connection_lost_cb=self._tunnel_lost,
+                connect_cb=lambda loop, protocol_factory: loop.create_unix_connection(
+                    protocol_factory, path=self.gateway_path
+                ),
+            )
+        elif self.gateway_ip is not None:
+            self.transport = TCPTransport(
+                remote_addr=(self.gateway_ip, self.gateway_port),
+                connection_lost_cb=self._tunnel_lost,
+            )
+        else:
+            raise XKNXException(
+                "One of gateway_ip, gateway_path and connect_cb must be set"
+            )
 
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
@@ -619,8 +662,11 @@ class SecureTunnel(TCPTunnel):
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
+        ip = self.gateway_ip
+        if ip is None:
+            ip = "unknown"
         self.transport = SecureSession(
-            remote_addr=(self.gateway_ip, self.gateway_port),
+            remote_addr=(ip, self.gateway_port),
             user_id=self._user_id,
             user_password=self._user_password,
             device_authentication_password=self._device_authentication_password,
