@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from enum import Enum, auto
 import os
 from typing import Any
@@ -41,6 +43,8 @@ class ConnectionConfig:
     * local_ip: Local ip or interface name though which xknx should connect.
     * gateway_ip: IP or hostname of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
+    * gateway_path: Filename of unix domain socket of KNX/IP tunneling device.
+    * connect_cb: A callback which will be called every time a connection is created.
     * route_back: For UDP TUNNELING connection.
         The KNXnet/IP Server shall use the IP address and port in the received IP package
         as the target IP address or port number for the response to the KNXnet/IP Client.
@@ -62,6 +66,12 @@ class ConnectionConfig:
         local_port: int = 0,
         gateway_ip: str | None = None,
         gateway_port: int = DEFAULT_MCAST_PORT,
+        gateway_path: str | None = None,
+        connect_cb: Callable[
+            [asyncio.AbstractEventLoop, Callable[[], asyncio.Protocol]],
+            Awaitable[tuple[asyncio.Transport, asyncio.Protocol]],
+        ]
+        | None = None,
         route_back: bool = False,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
@@ -80,6 +90,8 @@ class ConnectionConfig:
         self.local_port = local_port
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
+        self.gateway_path = gateway_path
+        self.connect_cb = connect_cb
         self.route_back = route_back
         self.multicast_group = multicast_group
         self.multicast_port = multicast_port
