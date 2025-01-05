@@ -6,6 +6,16 @@ nav_order: 2
 
 # Changelog
 
+# 3.5.0 add support for exposing and validating sensor value types / DPTs
+
+### Devices
+
+- Sensor: Added support for exposing supported DPT classes and validating the provided `value_type`.
+
+### DPT
+
+- DPTBase: Added `to_dict` method for DPT object serialization.
+
 # 3.4.0 8 byte energy and 4 byte pressure 2024-11-20
 
 ### Devices
