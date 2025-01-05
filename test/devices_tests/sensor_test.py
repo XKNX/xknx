@@ -6,7 +6,21 @@ import pytest
 
 from xknx import XKNX
 from xknx.devices import Sensor
-from xknx.dpt import DPTArray
+from xknx.dpt import (
+    DPT2ByteFloat,
+    DPT2ByteSigned,
+    DPT2ByteUnsigned,
+    DPT4ByteFloat,
+    DPT4ByteSigned,
+    DPT4ByteUnsigned,
+    DPT8ByteSigned,
+    DPTArray,
+    DPTScaling,
+    DPTSignedRelativeValue,
+    DPTString,
+    DPTValue1ByteUnsigned,
+)
+from xknx.exceptions.exception import DeviceIllegalValue
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -693,6 +707,16 @@ class TestSensor:
 
         assert sensor.resolve_state() == expected_state
 
+    async def test_sensor_invalid_value_type(self):
+        """Test sensor with invalid value type."""
+        with pytest.raises(DeviceIllegalValue):
+            Sensor(
+                XKNX(),
+                "TestSensor",
+                group_address_state="1/2/3",
+                value_type="invalid",
+            )
+
     async def test_always_callback_sensor(self):
         """Test always callback sensor."""
         xknx = XKNX()
@@ -796,3 +820,213 @@ class TestSensor:
         sensor.process(telegram)
         after_update_callback.assert_called_with(sensor)
         assert sensor.last_telegram == telegram
+
+    #
+    # TEST GET SUPPORTED DPTS
+    #
+    async def test_get_supported_dpts(self):
+        """Test supported dpts."""
+        supported_dpts = Sensor.supported_dpts
+
+        # supported_dpts should be not empty or print error message
+        assert supported_dpts, "Supported DPTs are empty"
+
+        # Expected types
+        expected_base_types = (
+            DPTValue1ByteUnsigned,
+            DPTScaling,
+            DPTSignedRelativeValue,
+            DPT2ByteUnsigned,
+            DPT2ByteSigned,
+            DPT2ByteFloat,
+            DPT4ByteUnsigned,
+            DPT4ByteSigned,
+            DPT4ByteFloat,
+            DPTString,
+            DPT8ByteSigned,
+        )
+
+        # Verify all items are subclasses of expected types
+        for dpt in supported_dpts:
+            assert issubclass(
+                dpt, expected_base_types
+            ), f"{dpt.__name__} is not a subclass of expected base types: {', '.join([base.__name__ for base in expected_base_types])}"
+
+    @pytest.mark.parametrize(
+        "dpt, expected_value_type",
+        [
+            ("5", "1byte_unsigned"),
+            ("5.001", "percent"),
+            ("5.003", "angle"),
+            ("5.004", "percentU8"),
+            ("5.005", "decimal_factor"),
+            ("5.006", "tariff"),
+            ("5.010", "pulse"),
+            ("6", "1byte_signed"),
+            ("6.001", "percentV8"),
+            ("6.010", "counter_pulses"),
+            ("7", "2byte_unsigned"),
+            ("7.001", "pulse_2byte"),
+            ("7.002", "time_period_msec"),
+            ("7.003", "time_period_10msec"),
+            ("7.004", "time_period_100msec"),
+            ("7.005", "time_period_sec"),
+            ("7.006", "time_period_min"),
+            ("7.007", "time_period_hrs"),
+            ("7.011", "length_mm"),
+            ("7.012", "current"),
+            ("7.013", "brightness"),
+            ("7.600", "color_temperature"),
+            ("8", "2byte_signed"),
+            ("8.001", "pulse_2byte_signed"),
+            ("8.002", "delta_time_ms"),
+            ("8.003", "delta_time_10ms"),
+            ("8.004", "delta_time_100ms"),
+            ("8.005", "delta_time_sec"),
+            ("8.006", "delta_time_min"),
+            ("8.007", "delta_time_hrs"),
+            ("8.010", "percentV16"),
+            ("8.011", "rotation_angle"),
+            ("8.012", "length_m"),
+            ("9", "2byte_float"),
+            ("9.001", "temperature"),
+            ("9.002", "temperature_difference_2byte"),
+            ("9.003", "temperature_a"),
+            ("9.004", "illuminance"),
+            ("9.005", "wind_speed_ms"),
+            ("9.006", "pressure_2byte"),
+            ("9.007", "humidity"),
+            ("9.008", "ppm"),
+            ("9.009", "air_flow"),
+            ("9.010", "time_1"),
+            ("9.011", "time_2"),
+            ("9.020", "voltage"),
+            ("9.021", "curr"),
+            ("9.022", "power_density"),
+            ("9.023", "kelvin_per_percent"),
+            ("9.024", "power_2byte"),
+            ("9.025", "volume_flow"),
+            ("9.026", "rain_amount"),
+            ("9.027", "temperature_f"),
+            ("9.028", "wind_speed_kmh"),
+            ("9.029", "absolute_humidity"),
+            ("9.030", "concentration_ugm3"),
+            ("9.60000", "enthalpy"),
+            ("12", "4byte_unsigned"),
+            ("12.001", "pulse_4_ucount"),
+            ("12.100", "long_time_period_sec"),
+            ("12.101", "long_time_period_min"),
+            ("12.102", "long_time_period_hrs"),
+            ("12.1200", "volume_liquid_litre"),
+            ("12.1201", "volume_m3"),
+            ("13", "4byte_signed"),
+            ("13.001", "pulse_4byte"),
+            ("13.002", "flow_rate_m3h"),
+            ("13.010", "active_energy"),
+            ("13.011", "apparant_energy"),
+            ("13.012", "reactive_energy"),
+            ("13.013", "active_energy_kwh"),
+            ("13.014", "apparant_energy_kvah"),
+            ("13.015", "reactive_energy_kvarh"),
+            ("13.016", "active_energy_mwh"),
+            ("13.100", "long_delta_timesec"),
+            ("14", "4byte_float"),
+            ("14.000", "acceleration"),
+            ("14.001", "acceleration_angular"),
+            ("14.002", "activation_energy"),
+            ("14.003", "activity"),
+            ("14.004", "mol"),
+            ("14.005", "amplitude"),
+            ("14.006", "angle_rad"),
+            ("14.007", "angle_deg"),
+            ("14.008", "angular_momentum"),
+            ("14.009", "angular_velocity"),
+            ("14.010", "area"),
+            ("14.011", "capacitance"),
+            ("14.012", "charge_density_surface"),
+            ("14.013", "charge_density_volume"),
+            ("14.014", "compressibility"),
+            ("14.015", "conductance"),
+            ("14.016", "electrical_conductivity"),
+            ("14.017", "density"),
+            ("14.018", "electric_charge"),
+            ("14.019", "electric_current"),
+            ("14.020", "electric_current_density"),
+            ("14.021", "electric_dipole_moment"),
+            ("14.022", "electric_displacement"),
+            ("14.023", "electric_field_strength"),
+            ("14.024", "electric_flux"),
+            ("14.025", "electric_flux_density"),
+            ("14.026", "electric_polarization"),
+            ("14.027", "electric_potential"),
+            ("14.028", "electric_potential_difference"),
+            ("14.029", "electromagnetic_moment"),
+            ("14.030", "electromotive_force"),
+            ("14.031", "energy"),
+            ("14.032", "force"),
+            ("14.033", "frequency"),
+            ("14.034", "angular_frequency"),
+            ("14.035", "heatcapacity"),
+            ("14.036", "heatflowrate"),
+            ("14.037", "heat_quantity"),
+            ("14.038", "impedance"),
+            ("14.039", "length"),
+            ("14.040", "light_quantity"),
+            ("14.041", "luminance"),
+            ("14.042", "luminous_flux"),
+            ("14.043", "luminous_intensity"),
+            ("14.044", "magnetic_field_strength"),
+            ("14.045", "magnetic_flux"),
+            ("14.046", "magnetic_flux_density"),
+            ("14.047", "magnetic_moment"),
+            ("14.048", "magnetic_polarization"),
+            ("14.049", "magnetization"),
+            ("14.050", "magnetomotive_force"),
+            ("14.051", "mass"),
+            ("14.052", "mass_flux"),
+            ("14.053", "momentum"),
+            ("14.054", "phaseanglerad"),
+            ("14.055", "phaseangledeg"),
+            ("14.056", "power"),
+            ("14.057", "powerfactor"),
+            ("14.058", "pressure"),
+            ("14.059", "reactance"),
+            ("14.060", "resistance"),
+            ("14.061", "resistivity"),
+            ("14.062", "self_inductance"),
+            ("14.063", "solid_angle"),
+            ("14.064", "sound_intensity"),
+            ("14.065", "speed"),
+            ("14.066", "stress"),
+            ("14.067", "surface_tension"),
+            ("14.068", "common_temperature"),
+            ("14.069", "absolute_temperature"),
+            ("14.070", "temperature_difference"),
+            ("14.071", "thermal_capacity"),
+            ("14.072", "thermal_conductivity"),
+            ("14.073", "thermoelectric_power"),
+            ("14.074", "time_seconds"),
+            ("14.075", "torque"),
+            ("14.076", "volume"),
+            ("14.077", "volume_flux"),
+            ("14.078", "weight"),
+            ("14.079", "work"),
+            ("14.080", "apparent_power"),
+            ("16.000", "string"),
+            ("16.001", "latin_1"),
+            ("17.001", "scene_number"),
+            ("29", "8byte_signed"),
+            ("29.010", "active_energy_8byte"),
+            ("29.011", "apparant_energy_8byte"),
+            ("29.012", "reactive_energy_8byte"),
+            ("99.999", None),
+        ],
+    )
+    async def test_transcode_dpt_to_value_type(
+        self, dpt: str, expected_value_type: str
+    ):
+        """Test transcode DPT to value type with pytest parameters."""
+        result = Sensor.transcode_dpt_to_value_type(dpt)
+        assert (
+            result == expected_value_type
+        ), f"Expected {expected_value_type}, got {result}"

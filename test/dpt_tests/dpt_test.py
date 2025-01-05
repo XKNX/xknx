@@ -24,6 +24,21 @@ from xknx.exceptions import CouldNotParseTelegram
 class TestDPTBase:
     """Test class for transcoder base object."""
 
+    def test_to_dict(self):
+        """Test the to_dict method of DPTBase."""
+        for dpt in DPTBase.dpt_class_tree():
+            dpt_dict = dpt.to_dict()
+
+            assert isinstance(dpt_dict, dict)
+
+            assert dpt_dict["payload_type"] == dpt.payload_type.__name__
+            assert dpt_dict["payload_length"] == dpt.payload_length
+            assert dpt_dict["value_type"] == dpt.value_type
+            assert dpt_dict["dpt_main_number"] == dpt.dpt_main_number
+            assert dpt_dict["dpt_sub_number"] == dpt.dpt_sub_number
+            assert dpt_dict["unit"] == dpt.unit
+            assert dpt_dict["ha_device_class"] == dpt.ha_device_class
+
     def test_dpt_abstract_subclasses_ignored(self):
         """Test if abstract base classes are ignored by dpt_class_tree and __recursive_subclasses__."""
         for dpt in DPTBase.dpt_class_tree():

@@ -209,6 +209,19 @@ class DPTBase(ABC):
                 return None
             return cls.transcoder_by_dpt(dpt_main=main, dpt_sub=_sub)
 
+    @classmethod
+    def to_dict(cls) -> dict[str, Any]:
+        """Return dictionary representation of the DPT object."""
+        return {
+            "payload_type": cls.payload_type.__name__,
+            "payload_length": cls.payload_length,
+            "dpt_main_number": cls.dpt_main_number,
+            "dpt_sub_number": cls.dpt_sub_number,
+            "value_type": cls.value_type,
+            "unit": cls.unit,
+            "ha_device_class": cls.ha_device_class,
+        }
+
 
 class DPTNumeric(DPTBase):
     """Base class for KNX data point types decoding numeric values."""
