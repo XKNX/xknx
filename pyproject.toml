@@ -62,7 +62,6 @@ warn_unreachable = true
 
 [tool.pylint.master]
 init-hook='import sys; sys.path.append(".")'
-ignore = "test"
 persistent = "no"
 reports = "no"
 allow-reexport-from-package = true
