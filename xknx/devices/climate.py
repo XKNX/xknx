@@ -70,6 +70,10 @@ class Climate(Device):
         group_address_fan_speed_state: GroupAddressesType = None,
         fan_speed_mode: FanSpeedMode = FanSpeedMode.PERCENT,
         group_address_humidity_state: GroupAddressesType = None,
+        group_address_swing: GroupAddressesType = None,
+        group_address_swing_state: GroupAddressesType = None,
+        group_address_horizontal_swing: GroupAddressesType = None,
+        group_address_horizontal_swing_state: GroupAddressesType = None,
     ):
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
@@ -168,6 +172,24 @@ class Climate(Device):
                 range_to=100,
             )
 
+        self.swing = RemoteValueSwitch(
+            xknx,
+            group_address_swing,
+            group_address_swing_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            after_update_cb=self.after_update,
+        )
+
+        self.horizontal_swing = RemoteValueSwitch(
+            xknx,
+            group_address_horizontal_swing,
+            group_address_horizontal_swing_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            after_update_cb=self.after_update,
+        )
+
         self.mode = mode
 
         self.humidity = RemoteValueNumeric(
@@ -189,6 +211,8 @@ class Climate(Device):
         yield self.active
         yield self.command_value
         yield self.fan_speed
+        yield self.swing
+        yield self.horizontal_swing
         yield self.humidity
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
@@ -245,6 +269,14 @@ class Climate(Device):
     async def set_fan_speed(self, speed: int) -> None:
         """Set the fan to a designated speed."""
         self.fan_speed.set(speed)
+
+    async def set_swing(self, swing: bool) -> None:
+        """Set swing to the designated state."""
+        self.swing.set(swing)
+
+    async def set_horizontal_swing(self, horizontal_swing: bool) -> None:
+        """Set swing to the designated state."""
+        self.horizontal_swing.set(horizontal_swing)
 
     @property
     def base_temperature(self) -> float | None:
@@ -316,6 +348,16 @@ class Climate(Device):
         """Return current speed of fan."""
         return self.fan_speed.value
 
+    @property
+    def current_swing(self) -> bool | None:
+        """Return current swing state."""
+        return self.swing.value
+
+    @property
+    def current_horizontal_swing(self) -> bool | None:
+        """Return current horizontal swing state."""
+        return self.horizontal_swing.value
+
     def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
@@ -342,5 +384,7 @@ class Climate(Device):
             f'setpoint_shift_min="{self.setpoint_shift_min}" '
             f"group_address_on_off={self.on.group_addr_str()} "
             f"group_address_fan_speed={self.fan_speed.group_addr_str()} "
+            f"group_address_swing={self.swing.group_addr_str()} "
+            f"group_address_horizontal_swing={self.horizontal_swing.group_addr_str()} "
             "/>"
         )
