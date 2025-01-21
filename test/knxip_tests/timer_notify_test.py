@@ -9,7 +9,7 @@ class TestKNXIPTimerNotify:
     def test_timer_notify(self):
         """Test parsing and streaming TimerNotify KNX/IP packet."""
         message_authentication_code = bytes.fromhex(
-            "72 12 a0 3a aa e4 9d a8" "56 89 77 4c 1d 2b 4d a4"
+            "72 12 a0 3a aa e4 9d a8 56 89 77 4c 1d 2b 4d a4"
         )
         raw = (
             bytes.fromhex(

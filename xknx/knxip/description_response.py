@@ -52,4 +52,4 @@ class DescriptionResponse(KNXIPBody):
     def __repr__(self) -> str:
         """Return object as readable string."""
         _dibs_str = ",\n".join(dib.__repr__() for dib in self.dibs)
-        return "<DescriptionResponse " f'dibs="[\n{_dibs_str}\n]" />'
+        return f'<DescriptionResponse dibs="[\n{_dibs_str}\n]" />'

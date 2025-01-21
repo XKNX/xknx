@@ -13,7 +13,7 @@ class TestKNXIPSessionAuthenticate:
             "e5 d9 72 7f 08 46 2c de"
         )
         raw = (
-            bytes.fromhex("06 10 09 53 00 18" "00 01")  # KNXnet/IP header  # User ID
+            bytes.fromhex("06 10 09 53 00 18 00 01")  # KNXnet/IP header  # User ID
             + message_authentication_code
         )
         knxipframe, _ = KNXIPFrame.from_knx(raw)
