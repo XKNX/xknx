@@ -22,6 +22,10 @@ Climate are representations of KNX HVAC/Climate controls.
 - `group_address_setpoint_shift_state` KNX address to read current setpoint_shift. *DPT 6.010* or *DPT 9.002*
 - `group_address_fan_speed` KNX address for the fan speed. *DPT 5.001 / 5.010*
 - `group_address_fan_speed_state` KNX address for reading fan speed. *DPT 5.001 / 5.010*
+- `group_address_swing` KNX address for fan swing. If `group_address_horizontal_swing` is present this should refer to vertical swing *DPT 1*
+- `group_address_swing_state` KNX address for reading fan swing. If `group_address_horizontal_swing` is present this should refer to vertical swing *DPT 1*
+- `group_address_horizontal_swing` KNX address for horizontal fan swing. *DPT 1*
+- `group_address_horizontal_swing_state` KNX address for reading horizontal fan swing. *DPT 1*
 - `setpoint_shift_mode` SetpointShiftMode Enum for setpoint_shift payload encoding. When `None` it is inferred from first incoming payload. Default: `None`
 - `setpoint_shift_max` Maximum value for setpoint_shift.
 - `setpoint_shift_min` Minimum value for setpoint_shift.
@@ -84,6 +88,10 @@ climate = Climate(
     group_address_setpoint_shift_state='',
     group_address_fan_speed=None,
     group_address_fan_speed_state=None,
+    group_address_swing=None,
+    group_address_swing_sate=None,
+    group_address_horizontal_swing=None,
+    group_address_horizontal_swing_state=None,
     temperature_step=0.1,
     setpoint_shift_max=6,
     setpoint_shift_min=-6,

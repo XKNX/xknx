@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### Features
+
+- Added swing and horizontal swing support to climate device
+
 # 3.4.0 8 byte energy and 4 byte pressure 2024-11-20
 
 ### Devices
