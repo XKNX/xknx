@@ -6,6 +6,8 @@ nav_order: 2
 
 # Changelog
 
+# 3.5.0 Swing it 2025-01-28
+
 ### Features
 
 - Added swing and horizontal swing support to climate device
