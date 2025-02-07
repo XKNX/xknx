@@ -7,7 +7,6 @@ for serialization and deserialization of the KNX value.
 
 from __future__ import annotations
 
-from inspect import isabstract
 from typing import TYPE_CHECKING, TypeVar
 
 from xknx.dpt import DPTBase, DPTNumeric, DPTString
@@ -41,30 +40,19 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         after_update_cb: RVCallbackType[ValueT] | None = None,
     ) -> None:
         """Initialize RemoteValueSensor class."""
-        if isinstance(value_type, type):
-            if issubclass(value_type, self.dpt_base_class) and not isabstract(
-                value_type
-            ):
-                self.dpt_class = value_type
+        try:
+            if value_type is None:
+                if self._default_dpt_class is None:
+                    raise ValueError
+                self.dpt_class = self._default_dpt_class
             else:
-                raise ConversionError(
-                    f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
-                    value_type=value_type,
-                    device_name=device_name,
-                )
-        else:
-            _dpt_class = (
-                self.dpt_base_class.parse_transcoder(value_type)
-                if value_type is not None
-                else self._default_dpt_class
-            )
-            if _dpt_class is None:
-                raise ConversionError(
-                    f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
-                    value_type=value_type,
-                    device_name=device_name,
-                )
-            self.dpt_class = _dpt_class
+                self.dpt_class = self.dpt_base_class.get_dpt(value_type)
+        except ValueError:
+            raise ConversionError(
+                f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
+                value_type=value_type,
+                device_name=device_name,
+            ) from None
         super().__init__(
             xknx,
             group_address,

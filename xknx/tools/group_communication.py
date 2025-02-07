@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from inspect import isabstract
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -94,13 +93,7 @@ async def read_group_value(
 def _parse_dpt(value_type: DPTParsable | type[DPTBase] | None) -> type[DPTBase] | None:
     if value_type is None:
         return None
-    if isinstance(value_type, type):
-        if issubclass(value_type, DPTBase) and not isabstract(value_type):
-            return value_type
-    else:
-        if transcoder := DPTBase.parse_transcoder(value_type):
-            return transcoder
-    raise ValueError(f"Invalid value_type: {value_type}")
+    return DPTBase.get_dpt(value_type)
 
 
 def _parse_payload(

@@ -214,6 +214,23 @@ class DPTBase(ABC):
                 return None
             return cls.transcoder_by_dpt(dpt_main=main, dpt_sub=_sub)
 
+    @classmethod
+    def get_dpt(cls: type[Self], value_type: DPTParsable | type[DPTBase]) -> type[Self]:
+        """
+        Return DPT class from value.
+
+        Raises ValueError if value_type can't be parsed to DPT class.
+        """
+        if isinstance(value_type, type):
+            if issubclass(value_type, cls) and not isabstract(value_type):
+                return value_type
+        else:
+            if transcoder := cls.parse_transcoder(value_type):
+                return transcoder
+        raise ValueError(
+            f"Invalid value type for base class {cls.__name__}: {value_type}"
+        )
+
 
 class DPTNumeric(DPTBase):
     """Base class for KNX data point types decoding numeric values."""
