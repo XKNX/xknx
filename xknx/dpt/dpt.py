@@ -8,19 +8,12 @@ from dataclasses import dataclass
 from enum import Enum
 from inspect import isabstract
 import struct
-from typing import Any, Generic, TypedDict, TypeVar, cast, final
+from typing import Any, Generic, TypeVar, cast, final
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.typing import Self
+from xknx.typing import DPTParsable, Self
 
 from .payload import DPTArray, DPTBinary
-
-
-class _DPTMainSubDict(TypedDict):
-    """DPT type dictionary in accordance to xknxproject DPTType data."""
-
-    main: int
-    sub: int | None
 
 
 class DPTBase(ABC):
@@ -183,9 +176,7 @@ class DPTBase(ABC):
         return None
 
     @classmethod
-    def parse_transcoder(
-        cls: type[Self], value_type: int | str | _DPTMainSubDict
-    ) -> type[Self] | None:
+    def parse_transcoder(cls: type[Self], value_type: DPTParsable) -> type[Self] | None:
         """
         Return Class reference of DPTBase subclass from value_type or DPT number.
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 
-from xknx.dpt.dpt import DPTBase, _DPTMainSubDict
+from xknx.dpt.dpt import DPTBase
 from xknx.exceptions import ConversionError, CouldNotParseAddress, CouldNotParseTelegram
 from xknx.telegram import Telegram, TelegramDecodedData
 from xknx.telegram.address import (
@@ -16,6 +16,7 @@ from xknx.telegram.address import (
     parse_device_group_address,
 )
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
+from xknx.typing import DPTParsable
 
 _GA_DPT_LOGGER = logging.getLogger("xknx.ga_dpt")
 
@@ -32,7 +33,7 @@ class GroupAddressDPT:
 
     def set(
         self,
-        ga_dpt: Mapping[DeviceAddressableType, int | str | _DPTMainSubDict],
+        ga_dpt: Mapping[DeviceAddressableType, DPTParsable],
     ) -> None:
         """Assign decoders to group addresses."""
         unknown_dpts = set()

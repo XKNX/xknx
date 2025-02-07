@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from inspect import isabstract
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -10,6 +11,7 @@ from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceAddressableType, parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.typing import DPTParsable
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -34,7 +36,7 @@ def group_value_response(
     xknx: XKNX,
     group_address: DeviceAddressableType,
     value: Any,
-    value_type: int | str | type[DPTBase] | None = None,
+    value_type: DPTParsable | type[DPTBase] | None = None,
 ) -> None:
     """Send a GroupValueResponse telegram."""
     payload = _parse_payload(value, value_type)
@@ -55,7 +57,7 @@ def group_value_write(
     xknx: XKNX,
     group_address: DeviceAddressableType,
     value: Any,
-    value_type: int | str | type[DPTBase] | None = None,
+    value_type: DPTParsable | type[DPTBase] | None = None,
 ) -> None:
     """Send a GroupValueWrite telegram."""
     payload = _parse_payload(value, value_type)
@@ -75,7 +77,7 @@ def group_value_write(
 async def read_group_value(
     xknx: XKNX,
     group_address: DeviceAddressableType,
-    value_type: int | str | type[DPTBase] | None = None,
+    value_type: DPTParsable | type[DPTBase] | None = None,
 ) -> int | tuple[int, ...] | Any | None:
     """Read a value from a KNX group address."""
     transcoder = _parse_dpt(value_type)
@@ -89,24 +91,21 @@ async def read_group_value(
     return None
 
 
-def _parse_dpt(value_type: int | str | type[DPTBase] | None) -> type[DPTBase] | None:
+def _parse_dpt(value_type: DPTParsable | type[DPTBase] | None) -> type[DPTBase] | None:
     if value_type is None:
         return None
-    if isinstance(value_type, int | str):
+    if isinstance(value_type, type):
+        if issubclass(value_type, DPTBase) and not isabstract(value_type):
+            return value_type
+    else:
         if transcoder := DPTBase.parse_transcoder(value_type):
             return transcoder
-    else:
-        try:
-            if issubclass(value_type, DPTBase):
-                return value_type
-        except TypeError:
-            pass
     raise ValueError(f"Invalid value_type: {value_type}")
 
 
 def _parse_payload(
     value: Any,
-    value_type: int | str | type[DPTBase] | None = None,
+    value_type: DPTParsable | type[DPTBase] | None = None,
 ) -> DPTBinary | DPTArray:
     if isinstance(value, DPTArray | DPTBinary):
         return value

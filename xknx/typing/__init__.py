@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import sys
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 
 if sys.version_info >= (3, 11):
     from typing import Self as Self
@@ -22,3 +22,13 @@ DeviceT = TypeVar("DeviceT", bound="Device")
 DeviceCallbackType = Callable[[DeviceT], None]
 
 TelegramCallbackType = Callable[["Telegram"], None]
+
+
+class DPTMainSubDict(TypedDict):
+    """DPT type dictionary in accordance to xknxproject DPTType data."""
+
+    main: int
+    sub: int | None
+
+
+DPTParsable = str | int | DPTMainSubDict

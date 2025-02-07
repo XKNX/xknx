@@ -12,11 +12,13 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
+from xknx.dpt import DPTBase
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
     RemoteValueSensor,
 )
+from xknx.typing import DPTParsable
 
 from .device import Device, DeviceCallbackType
 
@@ -35,7 +37,7 @@ class Sensor(Device):
         group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         always_callback: bool = False,
-        value_type: int | str | None = None,
+        value_type: DPTParsable | type[DPTBase] | None = None,
         device_updated_cb: DeviceCallbackType[Sensor] | None = None,
     ) -> None:
         """Initialize Sensor class."""

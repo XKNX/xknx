@@ -18,12 +18,14 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
 from xknx.core import Task
+from xknx.dpt import DPTBase
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
     RemoteValueSensor,
     RemoteValueSwitch,
 )
+from xknx.typing import DPTParsable
 
 from .device import Device, DeviceCallbackType
 
@@ -41,7 +43,7 @@ class ExposeSensor(Device):
         name: str,
         group_address: GroupAddressesType = None,
         respond_to_read: bool = True,
-        value_type: int | str | None = None,
+        value_type: DPTParsable | type[DPTBase] | None = None,
         cooldown: float = 0,
         device_updated_cb: DeviceCallbackType[ExposeSensor] | None = None,
     ) -> None:

@@ -7,10 +7,12 @@ for serialization and deserialization of the KNX value.
 
 from __future__ import annotations
 
+from inspect import isabstract
 from typing import TYPE_CHECKING, TypeVar
 
 from xknx.dpt import DPTBase, DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
+from xknx.typing import DPTParsable
 
 from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
@@ -33,24 +35,36 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
-        value_type: int | str | None = None,
+        value_type: DPTParsable | type[DPTBase] | None = None,
         device_name: str | None = None,
         feature_name: str = "Value",
         after_update_cb: RVCallbackType[ValueT] | None = None,
     ) -> None:
         """Initialize RemoteValueSensor class."""
-        _dpt_class = (
-            self.dpt_base_class.parse_transcoder(value_type)
-            if value_type is not None
-            else self._default_dpt_class
-        )
-        if _dpt_class is None:
-            raise ConversionError(
-                f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
-                value_type=value_type,
-                device_name=device_name,
+        if isinstance(value_type, type):
+            if issubclass(value_type, self.dpt_base_class) and not isabstract(
+                value_type
+            ):
+                self.dpt_class = value_type
+            else:
+                raise ConversionError(
+                    f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
+                    value_type=value_type,
+                    device_name=device_name,
+                )
+        else:
+            _dpt_class = (
+                self.dpt_base_class.parse_transcoder(value_type)
+                if value_type is not None
+                else self._default_dpt_class
             )
-        self.dpt_class = _dpt_class
+            if _dpt_class is None:
+                raise ConversionError(
+                    f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
+                    value_type=value_type,
+                    device_name=device_name,
+                )
+            self.dpt_class = _dpt_class
         super().__init__(
             xknx,
             group_address,
