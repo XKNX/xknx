@@ -13,7 +13,7 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestDevice:
     """Test class for Switch object."""
 
-    def test_device_updated_cb(self):
+    def test_device_updated_cb(self) -> None:
         """Test device updated cb is added to the device."""
         xknx = XKNX()
         after_update_callback = Mock()
@@ -22,7 +22,7 @@ class TestDevice:
         device.after_update()
         after_update_callback.assert_called_with(device)
 
-    def test_process_callback(self):
+    def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
@@ -60,7 +60,7 @@ class TestDevice:
         after_update_callback2.assert_not_called()
 
     @patch("logging.Logger.exception")
-    def test_bad_callback(self, logging_exception_mock):
+    def test_bad_callback(self, logging_exception_mock: Mock) -> None:
         """Test handling callback raising an exception."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
@@ -82,7 +82,7 @@ class TestDevice:
             device,
         )
 
-    async def test_process(self):
+    async def test_process(self) -> None:
         """Test if telegram is handled by the correct process_* method."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
@@ -110,7 +110,7 @@ class TestDevice:
             device.process(telegram)
             mock_group_response.assert_called_with(telegram)
 
-    async def test_sync_with_wait(self):
+    async def test_sync_with_wait(self) -> None:
         """Test sync with wait_for_result=True."""
         xknx = XKNX()
         sensor = Sensor(
@@ -123,13 +123,13 @@ class TestDevice:
             await sensor.sync(wait_for_result=True)
             read_state_mock.assert_called_with(wait_for_result=True)
 
-    async def test_process_group_write(self):
+    async def test_process_group_write(self) -> None:
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
         device.process_group_write(Telegram(destination_address=GroupAddress(1)))
 
-    async def test_process_group_response(self):
+    async def test_process_group_response(self) -> None:
         """Test if process_group_read. Testing if mapped to group_write."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")
@@ -139,7 +139,7 @@ class TestDevice:
                 Telegram(destination_address=GroupAddress(1))
             )
 
-    async def test_process_group_read(self):
+    async def test_process_group_read(self) -> None:
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX()
         device = Device(xknx, "TestDevice")

@@ -179,8 +179,10 @@ class TestSensorExposeLoop:
         ("4byte_float", DPTArray((0xC2, 0x09, 0xEE, 0xCC)), -34.4832),
     ]
 
-    @pytest.mark.parametrize("value_type,test_payload,test_value", test_cases)
-    async def test_array_sensor_loop(self, value_type, test_payload, test_value):
+    @pytest.mark.parametrize(("value_type", "test_payload", "test_value"), test_cases)
+    async def test_array_sensor_loop(
+        self, value_type: str, test_payload: DPTArray, test_value: float
+    ) -> None:
         """Test sensor and expose_sensor with different values."""
         xknx = XKNX()
         xknx.cemi_handler = AsyncMock()
@@ -246,13 +248,15 @@ class TestBinarySensorExposeLoop:
     """Process incoming Telegrams and send the values to the bus again."""
 
     @pytest.mark.parametrize(
-        "value_type,test_payload,test_value",
+        ("value_type", "test_payload", "test_value"),
         [
             ("binary", DPTBinary(0), False),
             ("binary", DPTBinary(1), True),
         ],
     )
-    async def test_binary_sensor_loop(self, value_type, test_payload, test_value):
+    async def test_binary_sensor_loop(
+        self, value_type: str, test_payload: DPTBinary, test_value: bool
+    ) -> None:
         """Test binary_sensor and expose_sensor with binary values."""
         xknx = XKNX()
         xknx.cemi_handler = AsyncMock()
@@ -314,13 +318,15 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
     """Process incoming Telegrams and send values to other devices."""
 
     @pytest.mark.parametrize(
-        "value_type,test_payload,test_value",
+        ("value_type", "test_payload", "test_value"),
         [
             ("binary", DPTBinary(0), False),
             ("binary", DPTBinary(1), True),
         ],
     )
-    async def test_binary_sensor_loop(self, value_type, test_payload, test_value):
+    async def test_binary_sensor_loop(
+        self, value_type: str, test_payload: DPTBinary, test_value: bool
+    ) -> None:
         """Test binary_sensor and expose_sensor with binary values."""
         xknx = XKNX()
         xknx.cemi_handler = AsyncMock()

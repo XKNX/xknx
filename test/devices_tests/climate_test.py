@@ -38,7 +38,7 @@ class TestClimate:
     #
     # SUPPORTS TEMPERATURE / SETPOINT
     #
-    def test_support_temperature(self):
+    def test_support_temperature(self) -> None:
         """Test supports_temperature flag."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
@@ -46,7 +46,7 @@ class TestClimate:
         assert climate.temperature.initialized
         assert not climate.target_temperature.initialized
 
-    def test_support_target_temperature(self):
+    def test_support_target_temperature(self) -> None:
         """Test supports_target__temperature flag."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_target_temperature="1/2/3")
@@ -54,7 +54,7 @@ class TestClimate:
         assert not climate.temperature.initialized
         assert climate.target_temperature.initialized
 
-    def test_support_operation_mode(self):
+    def test_support_operation_mode(self) -> None:
         """Test supports_supports_operation_mode flag. One group address for all modes."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -62,7 +62,7 @@ class TestClimate:
         )
         assert climate_mode.supports_operation_mode
 
-    def test_support_operation_mode2(self):
+    def test_support_operation_mode2(self) -> None:
         """Test supports_supports_operation_mode flag. Split group addresses for each mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -73,7 +73,7 @@ class TestClimate:
     #
     # TEST HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test if has_group_address function works."""
         xknx = XKNX()
         climate = Climate(
@@ -99,7 +99,7 @@ class TestClimate:
     #
     # TEST HAS GROUP ADDRESS
     #
-    def test_has_group_address_mode(self):
+    def test_has_group_address_mode(self) -> None:
         """Test if has_group_address function works."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -138,7 +138,7 @@ class TestClimate:
     #
     # TEST CALLBACK
     #
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test if after_update_callback is called after update of Climate object was changed."""
 
         xknx = XKNX()
@@ -164,7 +164,7 @@ class TestClimate:
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-    async def test_process_callback_mode(self):
+    async def test_process_callback_mode(self) -> None:
         """Test if after_update_callback is called after update of Climate object was changed."""
 
         xknx = XKNX()
@@ -188,7 +188,7 @@ class TestClimate:
         after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
-    async def test_process_callback_updated_via_telegram(self):
+    async def test_process_callback_updated_via_telegram(self) -> None:
         """Test if after_update_callback is called after update of Climate object."""
 
         xknx = XKNX()
@@ -226,7 +226,7 @@ class TestClimate:
         after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
-    async def test_climate_mode_process_callback_updated_via_telegram(self):
+    async def test_climate_mode_process_callback_updated_via_telegram(self) -> None:
         """Test if after_update_callback is called after update of ClimateMode object."""
 
         xknx = XKNX()
@@ -251,7 +251,7 @@ class TestClimate:
     #
     # TEST SET OPERATION MODE
     #
-    async def test_set_operation_mode(self):
+    async def test_set_operation_mode(self) -> None:
         """Test set_operation_mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -267,7 +267,7 @@ class TestClimate:
                 payload=GroupValueWrite(DPTHVACMode.to_knx(operation_mode)),
             )
 
-    async def test_set_controller_operation_mode(self):
+    async def test_set_controller_operation_mode(self) -> None:
         """Test set_operation_mode with DPT20.105 controller."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -283,21 +283,21 @@ class TestClimate:
                 payload=GroupValueWrite(DPTHVACContrMode.to_knx(controller_mode)),
             )
 
-    async def test_set_operation_mode_not_supported(self):
+    async def test_set_operation_mode_not_supported(self) -> None:
         """Test set_operation_mode but not supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(xknx, "TestClimate")
         with pytest.raises(DeviceIllegalValue):
             await climate_mode.set_operation_mode(HVACOperationMode.AUTO)
 
-    async def test_set_controller_mode_not_supported(self):
+    async def test_set_controller_mode_not_supported(self) -> None:
         """Test set_controller_mode but not supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(xknx, "TestClimate")
         with pytest.raises(DeviceIllegalValue):
             await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
 
-    async def test_set_operation_mode_with_controller_status(self):
+    async def test_set_operation_mode_with_controller_status(self) -> None:
         """Test set_operation_mode with controller status address defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -335,7 +335,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray((0x22,))),
         )
 
-    async def test_set_operation_mode_with_separate_addresses(self):
+    async def test_set_operation_mode_with_separate_addresses(self) -> None:
         """Test set_operation_mode with combined and separated group addresses defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -372,7 +372,7 @@ class TestClimate:
         for test_item in test_telegrams:
             assert test_item in telegrams
 
-    async def test_set_heat_cool_binary(self):
+    async def test_set_heat_cool_binary(self) -> None:
         """Test set_operation_mode with binary heat/cool group addresses defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -398,7 +398,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(False)),
         )
 
-    async def test_set_multiple_mode(self):
+    async def test_set_multiple_mode(self) -> None:
         """Test if set operation or controller mode with multiple mode types."""
 
         xknx = XKNX()
@@ -419,7 +419,7 @@ class TestClimate:
             group_address_heat_cool_state="1/2/15",
         )
 
-        def _process_all_telegrams():
+        def _process_all_telegrams() -> None:
             """Process all telegrams in the queue in ClimateMode device."""
             for _ in range(xknx.telegrams.qsize()):
                 telegram = xknx.telegrams.get_nowait()
@@ -459,7 +459,7 @@ class TestClimate:
     #
     # TEST initialized_for_setpoint_shift_calculations
     #
-    async def test_initialized_for_setpoint_shift_calculations(self):
+    async def test_initialized_for_setpoint_shift_calculations(self) -> None:
         """Test initialized_for_setpoint_shift_calculations method."""
         xknx = XKNX()
         climate1 = Climate(xknx, "TestClimate")
@@ -494,7 +494,7 @@ class TestClimate:
         xknx.devices.process(xknx.telegrams.get_nowait())
         assert climate3.initialized_for_setpoint_shift_calculations
 
-    async def test_setpoint_shift_mode_autosensing(self):
+    async def test_setpoint_shift_mode_autosensing(self) -> None:
         """Test autosensing setpoint_shift_mode."""
 
         xknx = XKNX()
@@ -557,7 +557,7 @@ class TestClimate:
     #
     # TEST for uninitialized target_temperature_min/target_temperature_max
     #
-    def test_uninitalized_for_target_temperature_min_max(self):
+    def test_uninitalized_for_target_temperature_min_max(self) -> None:
         """Test if target_temperature_min/target_temperature_max return non if not initialized."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate")
@@ -567,7 +567,9 @@ class TestClimate:
     #
     # TEST for uninitialized target_temperature_min/target_temperature_max but with overridden max and min temperature
     #
-    def test_uninitalized_for_target_temperature_min_max_can_be_overridden(self):
+    def test_uninitalized_for_target_temperature_min_max_can_be_overridden(
+        self,
+    ) -> None:
         """Test if target_temperature_min/target_temperature_max return overridden value if specified."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", min_temp="7", max_temp="35")
@@ -577,7 +579,7 @@ class TestClimate:
     #
     # TEST for overridden max and min temp do have precedence over setpoint shift calculations
     #
-    async def test_overridden_max_min_temperature_has_priority(self):
+    async def test_overridden_max_min_temperature_has_priority(self) -> None:
         """Test that the overridden min and max temp always have precedence over setpoint shift calculations."""
         xknx = XKNX()
         climate = Climate(
@@ -604,7 +606,7 @@ class TestClimate:
     #
     # TEST TARGET TEMPERATURE
     #
-    async def test_target_temperature_up(self):
+    async def test_target_temperature_up(self) -> None:
         """Test increase target temperature."""
 
         xknx = XKNX()
@@ -683,7 +685,7 @@ class TestClimate:
         assert climate.target_temperature_max == 26.00
         assert climate.setpoint_shift == 6
 
-    async def test_target_temperature_down(self):
+    async def test_target_temperature_down(self) -> None:
         """Test decrease target temperature."""
 
         xknx = XKNX()
@@ -762,7 +764,7 @@ class TestClimate:
         assert climate.target_temperature_min == 16.00
         assert climate.setpoint_shift == -6
 
-    async def test_target_temperature_modified_step(self):
+    async def test_target_temperature_modified_step(self) -> None:
         """Test increase target temperature with modified step size."""
 
         xknx = XKNX()
@@ -821,7 +823,7 @@ class TestClimate:
     # TEST BASE TEMPERATURE
     #
 
-    async def test_base_temperature(self):
+    async def test_base_temperature(self) -> None:
         """Test base temperature."""
 
         xknx = XKNX()
@@ -876,7 +878,7 @@ class TestClimate:
         assert climate.base_temperature == 20.00
         assert climate.target_temperature.value == 22
 
-    async def test_target_temperature_step_mode_9002(self):
+    async def test_target_temperature_step_mode_9002(self) -> None:
         """Test increase target temperature with modified step size."""
 
         xknx = XKNX()
@@ -937,7 +939,7 @@ class TestClimate:
     #
     # TEST TEMPERATURE STEP
     #
-    async def test_temperature_step(self):
+    async def test_temperature_step(self) -> None:
         """Test base temperature step."""
 
         xknx = XKNX()
@@ -975,7 +977,7 @@ class TestClimate:
     #
     # TEST SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
@@ -984,7 +986,7 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
 
-    async def test_sync_operation_mode(self):
+    async def test_sync_operation_mode(self) -> None:
         """Test sync function / sending group reads to KNX bus for operation mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -998,7 +1000,7 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/4"), payload=GroupValueRead())
 
-    async def test_sync_controller_status(self):
+    async def test_sync_controller_status(self) -> None:
         """Test sync function / sending group reads to KNX bus for controller status."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1012,7 +1014,7 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/24"), payload=GroupValueRead())
 
-    async def test_sync_controller_mode(self):
+    async def test_sync_controller_mode(self) -> None:
         """Test sync function / sending group reads to KNX bus for controller mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1026,7 +1028,7 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/14"), payload=GroupValueRead())
 
-    async def test_sync_operation_mode_state(self):
+    async def test_sync_operation_mode_state(self) -> None:
         """Test sync function / sending group reads to KNX bus for multiple mode addresses."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1049,7 +1051,7 @@ class TestClimate:
             Telegram(GroupAddress("1/2/6"), payload=GroupValueRead()),
         ]
 
-    async def test_sync_heat_cool(self):
+    async def test_sync_heat_cool(self) -> None:
         """Test sync function / sending group reads to KNX bus for heat/cool."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1063,7 +1065,7 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/15"), payload=GroupValueRead())
 
-    async def test_sync_mode_from_climate(self):
+    async def test_sync_mode_from_climate(self) -> None:
         """Test sync function / propagating to mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1076,7 +1078,7 @@ class TestClimate:
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/4"), payload=GroupValueRead())
 
-    async def test_sync_humidity(self):
+    async def test_sync_humidity(self) -> None:
         """Test sync function / sending group reads to KNX bus for humidity."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_humidity_state="1/2/16")
@@ -1088,7 +1090,7 @@ class TestClimate:
     #
     # TEST PROCESS
     #
-    async def test_process_temperature(self):
+    async def test_process_temperature(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if temperature is processed correctly."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
@@ -1100,7 +1102,7 @@ class TestClimate:
         climate.process(telegram)
         assert climate.temperature.value == 21.34
 
-    async def test_process_operation_mode(self):
+    async def test_process_operation_mode(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if operation mode is processed correctly."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1136,7 +1138,7 @@ class TestClimate:
             climate_mode.process(telegram)
             assert climate_mode.operation_mode == operation_mode
 
-    async def test_process_controller_mode(self):
+    async def test_process_controller_mode(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1150,7 +1152,7 @@ class TestClimate:
             climate_mode.process(telegram)
             assert climate_mode.controller_mode == controller_mode
 
-    async def test_process_controller_status_wrong_payload(self):
+    async def test_process_controller_status_wrong_payload(self) -> None:
         """Test process wrong telegram for controller status (wrong payload type)."""
         xknx = XKNX()
         updated_cb = Mock()
@@ -1170,7 +1172,7 @@ class TestClimate:
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
-    async def test_process_controller_status_payload_invalid_length(self):
+    async def test_process_controller_status_payload_invalid_length(self) -> None:
         """Test process wrong telegram for controller status (wrong payload length)."""
         xknx = XKNX()
         updated_cb = Mock()
@@ -1190,7 +1192,7 @@ class TestClimate:
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
-    async def test_process_operation_mode_wrong_payload(self):
+    async def test_process_operation_mode_wrong_payload(self) -> None:
         """Test process wrong telegram for operation mode (wrong payload type)."""
         xknx = XKNX()
         updated_cb = Mock()
@@ -1210,7 +1212,7 @@ class TestClimate:
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
-    async def test_process_operation_mode_payload_invalid_length(self):
+    async def test_process_operation_mode_payload_invalid_length(self) -> None:
         """Test process wrong telegram for operation mode (wrong payload length)."""
         xknx = XKNX()
         updated_cb = Mock()
@@ -1230,7 +1232,7 @@ class TestClimate:
             log_mock.assert_called_once()
             updated_cb.assert_not_called()
 
-    async def test_process_callback_temp(self):
+    async def test_process_callback_temp(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
 
         xknx = XKNX()
@@ -1245,7 +1247,7 @@ class TestClimate:
         climate.process(telegram)
         after_update_callback.assert_called_with(climate)
 
-    async def test_process_heat_cool(self):
+    async def test_process_heat_cool(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if heat/cool is set correctly."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1270,7 +1272,7 @@ class TestClimate:
         climate_mode.process(telegram)
         assert climate_mode.controller_mode == HVACControllerMode.HEAT
 
-    async def test_process_humidity(self):
+    async def test_process_humidity(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if humidity is processed correctly."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_humidity_state="1/2/16")
@@ -1289,7 +1291,7 @@ class TestClimate:
     #
     # SUPPORTED OPERATION MODES
     #
-    def test_supported_operation_modes(self):
+    def test_supported_operation_modes(self) -> None:
         """Test get_supported_operation_modes with combined group address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1303,7 +1305,7 @@ class TestClimate:
             HVACOperationMode.BUILDING_PROTECTION,
         }
 
-    def test_supported_modes_controller_status(self):
+    def test_supported_modes_controller_status(self) -> None:
         """Test supported modes with HVAC status group address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1320,13 +1322,13 @@ class TestClimate:
             HVACControllerMode.COOL,
         }
 
-    def test_supported_operation_modes_no_mode(self):
+    def test_supported_operation_modes_no_mode(self) -> None:
         """Test get_supported_operation_modes no operation_modes supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(xknx, "TestClimate")
         assert not climate_mode.operation_modes
 
-    def test_supported_operation_modes_with_separate_addresses(self):
+    def test_supported_operation_modes_with_separate_addresses(self) -> None:
         """Test get_supported_operation_modes with separated group addresses."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1344,7 +1346,7 @@ class TestClimate:
             HVACOperationMode.STANDBY,
         }
 
-    def test_supported_operation_modes_only_economy(self):
+    def test_supported_operation_modes_only_economy(self) -> None:
         """Test get_supported_operation_modes with only economy mode supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1357,7 +1359,7 @@ class TestClimate:
             HVACOperationMode.STANDBY,
         }
 
-    def test_supported_operation_modes_heat_cool(self):
+    def test_supported_operation_modes_heat_cool(self) -> None:
         """Test supported controller_modes with heat_cool address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1372,7 +1374,7 @@ class TestClimate:
             HVACControllerMode.COOL,
         }
 
-    def test_supported_operation_modes_heat_cool_read_only(self):
+    def test_supported_operation_modes_heat_cool_read_only(self) -> None:
         """Test supported controller_modes with heat_cool_state address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -1387,7 +1389,7 @@ class TestClimate:
             HVACControllerMode.COOL,
         }
 
-    def test_custom_supported_operation_modes(self):
+    def test_custom_supported_operation_modes(self) -> None:
         """Test get_supported_operation_modes with custom mode."""
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.ECONOMY]
         xknx = XKNX()
@@ -1399,7 +1401,7 @@ class TestClimate:
         )
         assert climate_mode.operation_modes == modes
 
-    def test_custom_supported_operation_modes_as_str(self):
+    def test_custom_supported_operation_modes_as_str(self) -> None:
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Standby", "Building Protection"]
         modes = [HVACOperationMode.STANDBY, HVACOperationMode.BUILDING_PROTECTION]
@@ -1412,7 +1414,7 @@ class TestClimate:
         )
         assert climate_mode.operation_modes == modes
 
-    def test_custom_supported_operation_modes_only_valid(self):
+    def test_custom_supported_operation_modes_only_valid(self) -> None:
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = [
             "Standby",
@@ -1430,7 +1432,7 @@ class TestClimate:
         )
         assert climate_mode.operation_modes == modes
 
-    def test_custom_supported_controller_modes_as_str(self):
+    def test_custom_supported_controller_modes_as_str(self) -> None:
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Heat", "Cool", HVACControllerMode.NODEM]
         modes = [
@@ -1447,7 +1449,9 @@ class TestClimate:
         )
         assert climate_mode.controller_modes == modes
 
-    def test_custom_supported_controller_modes_when_controller_mode_unsupported(self):
+    def test_custom_supported_controller_modes_when_controller_mode_unsupported(
+        self,
+    ) -> None:
         """Test get_supported_operation_modes with custom mode as str list."""
         str_modes = ["Heat", "Cool"]
         modes = []
@@ -1459,7 +1463,7 @@ class TestClimate:
         )
         assert climate_mode.controller_modes == modes
 
-    async def test_process_power_status(self):
+    async def test_process_power_status(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
@@ -1480,7 +1484,7 @@ class TestClimate:
         climate_inv.process(telegram)
         assert climate_inv.is_on is False
 
-    async def test_power_on_off(self):
+    async def test_power_on_off(self) -> None:
         """Test turn_on and turn_off functions."""
         xknx = XKNX()
         climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
@@ -1525,7 +1529,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(True)),
         )
 
-    async def test_is_active(self):
+    async def test_is_active(self) -> None:
         """Test is_active property."""
         xknx = XKNX()
         climate_active = Climate(
@@ -1591,7 +1595,7 @@ class TestClimate:
         climate_active_command.active.value = None
         assert climate_active_command.is_active is False
 
-    async def test_fan_speed(self):
+    async def test_fan_speed(self) -> None:
         """Test fan speed functionality."""
         xknx = XKNX()
         climate_step = Climate(
@@ -1666,7 +1670,7 @@ class TestClimate:
         )
         assert climate_percent.current_fan_speed == 55
 
-    async def test_swing(self):
+    async def test_swing(self) -> None:
         """Test fan speed functionality."""
         xknx = XKNX()
         climate_swing = Climate(
@@ -1696,7 +1700,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTBinary(False)),
         )
 
-    async def test_horizontal_swing(self):
+    async def test_horizontal_swing(self) -> None:
         """Test fan speed functionality."""
         xknx = XKNX()
         climate_horizontal_swing = Climate(

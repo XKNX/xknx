@@ -8,6 +8,8 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestExposeSensor:
     """Test class for Sensor objects."""
@@ -15,7 +17,7 @@ class TestExposeSensor:
     #
     # STR FUNCTIONS
     #
-    async def test_str_binary(self):
+    async def test_str_binary(self) -> None:
         """Test resolve state with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -31,7 +33,7 @@ class TestExposeSensor:
         assert expose_sensor.resolve_state() is True
         assert expose_sensor.unit_of_measurement() is None
 
-    async def test_str_percent(self):
+    async def test_str_percent(self) -> None:
         """Test resolve state with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -48,7 +50,7 @@ class TestExposeSensor:
         assert expose_sensor.resolve_state() == 25
         assert expose_sensor.unit_of_measurement() == "%"
 
-    async def test_str_temperature(self):
+    async def test_str_temperature(self) -> None:
         """Test resolve state with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -68,7 +70,7 @@ class TestExposeSensor:
     #
     # TEST SET
     #
-    async def test_set_binary(self):
+    async def test_set_binary(self) -> None:
         """Test set with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -82,7 +84,7 @@ class TestExposeSensor:
             payload=GroupValueWrite(DPTBinary(0)),
         )
 
-    async def test_set_percent(self):
+    async def test_set_percent(self) -> None:
         """Test set with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -97,7 +99,7 @@ class TestExposeSensor:
             payload=GroupValueWrite(DPTArray((0xBF,))),
         )
 
-    async def test_set_temperature(self):
+    async def test_set_temperature(self) -> None:
         """Test set with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -114,7 +116,7 @@ class TestExposeSensor:
     #
     # TEST PROCESS (GROUP READ)
     #
-    async def test_process_binary(self):
+    async def test_process_binary(self) -> None:
         """Test reading binary expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -131,7 +133,7 @@ class TestExposeSensor:
             payload=GroupValueResponse(DPTBinary(True)),
         )
 
-    async def test_process_percent(self):
+    async def test_process_percent(self) -> None:
         """Test reading percent expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -154,7 +156,7 @@ class TestExposeSensor:
             payload=GroupValueResponse(DPTArray((0x40,))),
         )
 
-    async def test_process_temperature(self):
+    async def test_process_temperature(self) -> None:
         """Test reading temperature expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -171,7 +173,7 @@ class TestExposeSensor:
             payload=GroupValueResponse(DPTArray((0x0C, 0x1A))),
         )
 
-    async def test_process_no_respond_to_read(self):
+    async def test_process_no_respond_to_read(self) -> None:
         """Test expose sensor with respond_to_read set to False."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -190,7 +192,7 @@ class TestExposeSensor:
     #
     # HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test expose sensor has group address."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
@@ -202,7 +204,7 @@ class TestExposeSensor:
     #
     # PROCESS CALLBACK
     #
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test setting value. Test if callback is called."""
 
         xknx = XKNX()
@@ -220,7 +222,7 @@ class TestExposeSensor:
     #
     # TEST COOLDOWN
     #
-    async def test_cooldown(self, time_travel):
+    async def test_cooldown(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test cooldown."""
         xknx = XKNX()
         xknx.cemi_handler = AsyncMock()

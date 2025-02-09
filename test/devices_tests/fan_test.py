@@ -15,7 +15,7 @@ class TestFan:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed_state="1/2/3")
@@ -26,7 +26,7 @@ class TestFan:
             destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
         )
 
-    async def test_sync_step(self):
+    async def test_sync_step(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         fan = Fan(
@@ -44,7 +44,7 @@ class TestFan:
     #
     # SYNC WITH STATE ADDRESS
     #
-    async def test_sync_state_address(self):
+    async def test_sync_state_address(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         fan = Fan(
@@ -63,7 +63,7 @@ class TestFan:
     #
     # TEST SWITCH ON/OFF
     #
-    async def test_switch_on_off(self):
+    async def test_switch_on_off(self) -> None:
         """Test switching on/off of a Fan."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
@@ -141,7 +141,7 @@ class TestFan:
     #
     # TEST SET SPEED
     #
-    async def test_set_speed(self):
+    async def test_set_speed(self) -> None:
         """Test setting the speed of a Fan."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
@@ -201,7 +201,7 @@ class TestFan:
     #
     # TEST SET SPEED STEP
     #
-    async def test_set_speed_step(self):
+    async def test_set_speed_step(self) -> None:
         """Test setting the speed of a Fan in step mode."""
 
         xknx = XKNX()
@@ -222,7 +222,7 @@ class TestFan:
     #
     # TEST SET OSCILLATION
     #
-    async def test_set_oscillation(self):
+    async def test_set_oscillation(self) -> None:
         """Test setting the oscillation of a Fan."""
         xknx = XKNX()
         fan = Fan(
@@ -242,7 +242,7 @@ class TestFan:
     #
     # TEST PROCESS SPEED
     #
-    async def test_process_speed(self):
+    async def test_process_speed(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
         xknx = XKNX()
         fan = Fan(xknx, name="TestFan", group_address_speed="1/2/3")
@@ -269,7 +269,7 @@ class TestFan:
         assert fan.is_on is False
         assert fan.current_speed == 0
 
-    async def test_process_speed_wrong_payload(self):
+    async def test_process_speed_wrong_payload(self) -> None:
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -288,7 +288,7 @@ class TestFan:
     #
     # TEST PROCESS SWITCH
     #
-    async def test_process_switch(self):
+    async def test_process_switch(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if switch is handled correctly."""
         xknx = XKNX()
         fan = Fan(
@@ -351,7 +351,7 @@ class TestFan:
     #
     # TEST PROCESS OSCILLATION
     #
-    async def test_process_oscillation(self):
+    async def test_process_oscillation(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if oscillation is processed."""
         xknx = XKNX()
         fan = Fan(
@@ -369,7 +369,7 @@ class TestFan:
         fan.process(telegram)
         assert fan.current_oscillation
 
-    async def test_process_fan_payload_invalid_length(self):
+    async def test_process_fan_payload_invalid_length(self) -> None:
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -388,7 +388,7 @@ class TestFan:
     #
     # TEST PROCESS STEP MODE
     #
-    async def test_process_speed_step(self):
+    async def test_process_speed_step(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if speed is processed."""
 
         xknx = XKNX()
@@ -407,7 +407,7 @@ class TestFan:
         fan.process(telegram)
         assert fan.current_speed == 2
 
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
         fan = Fan(

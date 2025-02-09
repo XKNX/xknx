@@ -52,10 +52,10 @@ class TestRawValue:
     )
     async def test_payloads(
         self,
-        payload_length,
-        raw_payload,
-        expected_state,
-    ):
+        payload_length: int,
+        raw_payload: DPTArray | DPTBinary,
+        expected_state: int,
+    ) -> None:
         """Test raw value types."""
         xknx = XKNX()
         raw_value = RawValue(
@@ -75,7 +75,7 @@ class TestRawValue:
     #
     # TEST RESPOND
     #
-    async def test_respond_to_read(self):
+    async def test_respond_to_read(self) -> None:
         """Test respond_to_read function."""
         xknx = XKNX()
         responding = RawValue(
@@ -144,7 +144,7 @@ class TestRawValue:
     # TEST PROCESS CALLBACK
     #
 
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
@@ -169,7 +169,7 @@ class TestRawValue:
         sensor.process(telegram)
         after_update_callback.assert_not_called()
 
-    async def test_process_callback_always(self):
+    async def test_process_callback_always(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
@@ -198,7 +198,7 @@ class TestRawValue:
     #
     # TEST SET
     #
-    async def test_set_0(self):
+    async def test_set_0(self) -> None:
         """Test set with raw value."""
         xknx = XKNX()
         raw_value = RawValue(xknx, "TestSensor", 0, group_address="1/2/3")
@@ -211,7 +211,7 @@ class TestRawValue:
             payload=GroupValueWrite(DPTBinary(True)),
         )
 
-    async def test_set_1(self):
+    async def test_set_1(self) -> None:
         """Test set with raw value."""
         xknx = XKNX()
         raw_value = RawValue(xknx, "TestSensor", 1, group_address="1/2/3")
@@ -224,7 +224,7 @@ class TestRawValue:
             payload=GroupValueWrite(DPTArray((0x4B,))),
         )
 
-    def test_string(self):
+    def test_string(self) -> None:
         """Test RawValue string representation."""
 
         xknx = XKNX()

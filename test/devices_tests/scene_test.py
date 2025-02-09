@@ -13,7 +13,7 @@ class TestScene:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
@@ -23,7 +23,7 @@ class TestScene:
     #
     # TEST RUN SCENE
     #
-    async def test_run(self):
+    async def test_run(self) -> None:
         """Test running scene."""
         xknx = XKNX()
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
@@ -38,7 +38,7 @@ class TestScene:
     #
     # TEST has_group_address
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)

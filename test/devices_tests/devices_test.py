@@ -15,7 +15,7 @@ class TestDevices:
     #
     # XKNX Config
     #
-    def test_get_item(self):
+    def test_get_item(self) -> None:
         """Test get item by name or by index."""
         xknx = XKNX()
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
@@ -43,7 +43,7 @@ class TestDevices:
             # pylint: disable=pointless-statement
             xknx.devices[4]
 
-    def test_device_by_group_address(self):
+    def test_device_by_group_address(self) -> None:
         """Test get devices by group address."""
         xknx = XKNX()
 
@@ -67,7 +67,7 @@ class TestDevices:
             sensor2,
         )
 
-    def test_iter(self):
+    def test_iter(self) -> None:
         """Test __iter__() function."""
         xknx = XKNX()
 
@@ -82,7 +82,7 @@ class TestDevices:
 
         assert tuple(iter(xknx.devices)) == (light1, sensor1, sensor2, light2)
 
-    def test_len(self):
+    def test_len(self) -> None:
         """Test len() function."""
         xknx = XKNX()
         assert len(xknx.devices) == 0
@@ -103,7 +103,7 @@ class TestDevices:
         xknx.devices.async_add(light)
         assert len(xknx.devices) == 2
 
-    def test_contains(self):
+    def test_contains(self) -> None:
         """Test __contains__() function."""
         xknx = XKNX()
         xknx.devices.async_add(
@@ -118,7 +118,7 @@ class TestDevices:
         assert "Living-Room.Light_3" not in xknx.devices
 
     @patch.multiple(Device, __abstractmethods__=set())
-    def test_add_remove(self):
+    def test_add_remove(self) -> None:
         """Tesst add and remove functions."""
         xknx = XKNX()
         device1 = Device(xknx, "TestDevice1")
@@ -132,7 +132,7 @@ class TestDevices:
         xknx.devices.async_remove(device2)
         assert len(xknx.devices) == 0
 
-    async def test_modification_of_device(self):
+    async def test_modification_of_device(self) -> None:
         """Test if devices object does store references and not copies of objects."""
         xknx = XKNX()
         light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
@@ -156,7 +156,7 @@ class TestDevices:
     # TEST SYNC
     #
     @patch.multiple(Device, __abstractmethods__=set())
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function."""
         xknx = XKNX()
         xknx.devices.async_add(Device(xknx, "TestDevice1"))
@@ -169,7 +169,7 @@ class TestDevices:
     # TEST CALLBACK
     #
     @patch.multiple(Device, __abstractmethods__=set())
-    def test_device_updated_callback(self):
+    def test_device_updated_callback(self) -> None:
         """Test if device updated callback is called correctly if device was updated."""
         xknx = XKNX()
         device1 = Device(xknx, "TestDevice1")

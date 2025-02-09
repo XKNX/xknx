@@ -15,7 +15,7 @@ from xknx.telegram.apci import GroupValueWrite
 class TestWeather:
     """Test class for Weather objects."""
 
-    async def test_temperature(self):
+    async def test_temperature(self) -> None:
         """Test resolve state with temperature."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
@@ -32,7 +32,7 @@ class TestWeather:
         assert weather._temperature.unit_of_measurement == "°C"
         assert weather._temperature.ha_device_class == "temperature"
 
-    async def test_brightness(self):
+    async def test_brightness(self) -> None:
         """Test resolve state for brightness east, west and south."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -96,7 +96,7 @@ class TestWeather:
             (98631.68, DPTArray((0x47, 0xC0, 0xA3, 0xD7))),  # 4byte float
         ],
     )
-    async def test_pressure(self, value, payload):
+    async def test_pressure(self, value: float, payload: DPTArray) -> None:
         """Test air pressure telegram."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_air_pressure="1/3/4")
@@ -112,7 +112,7 @@ class TestWeather:
         assert weather._air_pressure.unit_of_measurement == "Pa"
         assert weather._air_pressure.ha_device_class == "pressure"
 
-    async def test_humidity(self):
+    async def test_humidity(self) -> None:
         """Test humidity telegram."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_humidity="1/2/4")
@@ -128,7 +128,7 @@ class TestWeather:
         assert weather._humidity.unit_of_measurement == "%"
         assert weather._humidity.ha_device_class == "humidity"
 
-    async def test_wind_speed(self):
+    async def test_wind_speed(self) -> None:
         """Test wind speed received."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -146,7 +146,7 @@ class TestWeather:
         assert weather._wind_speed.unit_of_measurement == "m/s"
         assert weather._wind_speed.ha_device_class == "wind_speed"
 
-    async def test_wind_bearing(self):
+    async def test_wind_bearing(self) -> None:
         """Test wind bearing received."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -164,7 +164,7 @@ class TestWeather:
         assert weather._wind_bearing.unit_of_measurement == "°"
         assert weather._wind_bearing.ha_device_class is None
 
-    def test_state_lightning(self):
+    def test_state_lightning(self) -> None:
         """Test current_state returns lightning if wind alarm and rain alarm are true."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -179,7 +179,7 @@ class TestWeather:
 
         assert weather.ha_current_state() == WeatherCondition.LIGHTNING_RAINY
 
-    def test_state_snowy_rainy(self):
+    def test_state_snowy_rainy(self) -> None:
         """Test snow rain if frost alarm and rain alarm are true."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -194,7 +194,7 @@ class TestWeather:
 
         assert weather.ha_current_state() == WeatherCondition.SNOWY_RAINY
 
-    def test_wind_alarm(self):
+    def test_wind_alarm(self) -> None:
         """Test basic state mapping."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -209,7 +209,7 @@ class TestWeather:
 
         assert weather.ha_current_state() == WeatherCondition.WINDY
 
-    def test_rain_alarm(self):
+    def test_rain_alarm(self) -> None:
         """Test basic state mapping."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -224,7 +224,7 @@ class TestWeather:
 
         assert weather.ha_current_state() == WeatherCondition.RAINY
 
-    async def test_cloudy_summer(self):
+    async def test_cloudy_summer(self) -> None:
         """Test cloudy summer if illuminance matches defined interval."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -248,7 +248,7 @@ class TestWeather:
             == WeatherCondition.CLOUDY
         )
 
-    async def test_sunny_summer(self):
+    async def test_sunny_summer(self) -> None:
         """Test returns sunny condition if illuminance is in defined interval."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -272,7 +272,7 @@ class TestWeather:
             weather.ha_current_state(current_date=summer_date) == WeatherCondition.SUNNY
         )
 
-    async def test_sunny_winter(self):
+    async def test_sunny_winter(self) -> None:
         """Test sunny winter if illuminance matches defined interval."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -295,7 +295,7 @@ class TestWeather:
             weather.ha_current_state(current_date=winter_date) == WeatherCondition.SUNNY
         )
 
-    async def test_cloudy_winter(self):
+    async def test_cloudy_winter(self) -> None:
         """Test cloudy winter if illuminance matches defined interval."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -320,7 +320,7 @@ class TestWeather:
             == WeatherCondition.CLOUDY
         )
 
-    async def test_day_night(self):
+    async def test_day_night(self) -> None:
         """Test day night mapping."""
         xknx = XKNX()
         weather: Weather = Weather(
@@ -336,7 +336,7 @@ class TestWeather:
 
         assert weather.ha_current_state() == WeatherCondition.CLEAR_NIGHT
 
-    def test_weather_default(self):
+    def test_weather_default(self) -> None:
         """Test default state mapping."""
         xknx = XKNX()
         weather: Weather = Weather(name="weather", xknx=xknx)
@@ -346,7 +346,7 @@ class TestWeather:
     #
     # GENERATOR _iter_remote_values
     #
-    def test_iter_remote_values(self):
+    def test_iter_remote_values(self) -> None:
         """Test sensor has group address."""
         xknx = XKNX()
         weather = Weather(
@@ -364,7 +364,7 @@ class TestWeather:
     #
     # HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test sensor has group address."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")

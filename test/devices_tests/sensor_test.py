@@ -15,7 +15,7 @@ class TestSensor:
     """Test class for Sensor objects."""
 
     @pytest.mark.parametrize(
-        "value_type,raw_payload,expected_state",
+        ("value_type", "raw_payload", "expected_state"),
         [
             # DPT-14 values are according to ETS group monitor values
             (
@@ -672,10 +672,10 @@ class TestSensor:
     )
     async def test_sensor_value_types(
         self,
-        value_type,
-        raw_payload,
-        expected_state,
-    ):
+        value_type: str,
+        raw_payload: DPTArray,
+        expected_state: float,
+    ) -> None:
         """Test sensor value types."""
         xknx = XKNX()
         sensor = Sensor(
@@ -693,7 +693,7 @@ class TestSensor:
 
         assert sensor.resolve_state() == expected_state
 
-    async def test_always_callback_sensor(self):
+    async def test_always_callback_sensor(self) -> None:
         """Test always callback sensor."""
         xknx = XKNX()
         sensor = Sensor(
@@ -733,7 +733,7 @@ class TestSensor:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         sensor = Sensor(
@@ -749,7 +749,7 @@ class TestSensor:
     #
     # HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test sensor has group address."""
         xknx = XKNX()
         sensor = Sensor(
@@ -761,7 +761,7 @@ class TestSensor:
     #
     # TEST PROCESS
     #
-    async def test_process(self):
+    async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
         sensor = Sensor(
@@ -779,7 +779,7 @@ class TestSensor:
         # test HomeAssistant device class
         assert sensor.ha_device_class() == "temperature"
 
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()

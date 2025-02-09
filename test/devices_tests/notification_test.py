@@ -15,7 +15,7 @@ class TestNotification:
     #
     # SYNC
     #
-    async def test_sync_state(self):
+    async def test_sync_state(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         notification = Notification(
@@ -31,7 +31,7 @@ class TestNotification:
     #
     # TEST PROCESS
     #
-    async def test_process(self):
+    async def test_process(self) -> None:
         """Test process telegram with notification. Test if device was updated."""
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
@@ -49,7 +49,7 @@ class TestNotification:
         notification.process(telegram_unset)
         assert notification.message == ""
 
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
 
         xknx = XKNX()
@@ -64,7 +64,7 @@ class TestNotification:
         notification.process(telegram_set)
         after_update_callback.assert_called_with(notification)
 
-    async def test_process_payload_invalid_length(self):
+    async def test_process_payload_invalid_length(self) -> None:
         """Test process wrong telegram (wrong payload length)."""
         xknx = XKNX()
         after_update_callback = Mock()
@@ -83,7 +83,7 @@ class TestNotification:
             log_mock.assert_called_once()
             after_update_callback.assert_not_called()
 
-    async def test_process_wrong_payload(self):
+    async def test_process_wrong_payload(self) -> None:
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
         after_update_callback = Mock()
@@ -105,7 +105,7 @@ class TestNotification:
     #
     # TEST RESPOND
     #
-    async def test_respond_to_read(self):
+    async def test_respond_to_read(self) -> None:
         """Test respond_to_read function."""
         xknx = XKNX()
         responding = Notification(
@@ -164,7 +164,7 @@ class TestNotification:
     #
     # TEST SET MESSAGE
     #
-    async def test_set(self):
+    async def test_set(self) -> None:
         """Test notificationing off notification."""
         xknx = XKNX()
         notification = Notification(xknx, "Warning", group_address="1/2/3")
@@ -188,7 +188,7 @@ class TestNotification:
     #
     # TEST has_group_address
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
         notification = Notification(
