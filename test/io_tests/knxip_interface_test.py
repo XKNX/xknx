@@ -1,7 +1,9 @@
 """Unit test for KNX/IP Interface."""
 
+from collections.abc import AsyncGenerator
 from pathlib import Path
 import threading
+from typing import Any
 from unittest.mock import DEFAULT, Mock, patch
 
 import pytest
@@ -41,7 +43,7 @@ class TestKNXIPInterface:
             start_automatic_mock.assert_called_once_with(local_ip=None, keyring=None)
             assert threading.active_count() == 1
 
-        async def gateway_generator_mock(_):
+        async def gateway_generator_mock(_: Any) -> AsyncGenerator[GatewayDescriptor]:
             secure_interface = GatewayDescriptor(
                 ip_addr="10.1.2.3",
                 port=3671,
@@ -101,7 +103,7 @@ class TestKNXIPInterface:
         interface = knx_interface_factory(self.xknx, connection_config)
 
         # in the test keyfile the only host is 1.0.0 - others shall be skipped
-        async def gateway_generator_mock(_):
+        async def gateway_generator_mock(_: Any) -> AsyncGenerator[GatewayDescriptor]:
             yield GatewayDescriptor(
                 ip_addr="10.1.5.5",
                 port=3671,
@@ -143,7 +145,7 @@ class TestKNXIPInterface:
         interface = knx_interface_factory(self.xknx, connection_config)
 
         # in the test keyfile the only host is 1.0.0 - others shall be skipped
-        async def gateway_generator_mock(_):
+        async def gateway_generator_mock(_: Any) -> AsyncGenerator[GatewayDescriptor]:
             yield GatewayDescriptor(
                 ip_addr="10.1.5.5",
                 port=3671,
@@ -315,7 +317,7 @@ class TestKNXIPInterface:
         # pylint: disable=attribute-defined-outside-init
         self.main_thread = threading.get_ident()
 
-        def assert_thread(*args, **kwargs) -> None:
+        def assert_thread(*args: Any, **kwargs: dict[str, Any]) -> None:
             """Test threaded connection."""
             assert self.main_thread != threading.get_ident()
 
@@ -337,7 +339,7 @@ class TestKNXIPInterface:
         # pylint: disable=attribute-defined-outside-init
         self.main_thread = threading.get_ident()
 
-        def assert_thread(*args, **kwargs):
+        def assert_thread(*args: Any, **kwargs: dict[str, Any]) -> Any:
             """Test threaded connection."""
             assert self.main_thread != threading.get_ident()
             return DEFAULT  # to not disable `return_value` of send_cemi_mock
@@ -589,7 +591,9 @@ class TestKNXIPInterface:
             ),
         ],
     )
-    async def test_invalid_secure_error(self, connection_config) -> None:
+    async def test_invalid_secure_error(
+        self, connection_config: ConnectionConfig
+    ) -> None:
         """Test ip secure invalid configurations."""
         gateway_ip = "192.168.1.1"
         gateway_description = GatewayDescriptor(
