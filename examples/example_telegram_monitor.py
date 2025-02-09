@@ -1,7 +1,7 @@
 """Example for the telegram monitor callback."""
 
 import asyncio
-import getopt
+import getopt  # pylint: disable=deprecated-module
 import sys
 
 from xknx import XKNX
