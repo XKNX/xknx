@@ -18,8 +18,10 @@ from xknx.telegram import (
     tpci,
 )
 
+from ..conftest import EventLoopClockAdvancer
 
-async def test_dm_restart():
+
+async def test_dm_restart() -> None:
     """Test dm_restart."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -43,7 +45,7 @@ async def test_dm_restart():
     ]
 
 
-async def test_nm_individual_address_check_success():
+async def test_nm_individual_address_check_success() -> None:
     """Test nm_individual_address_check."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -82,7 +84,7 @@ async def test_nm_individual_address_check_success():
     assert await task
 
 
-async def test_nm_individual_address_check_refused():
+async def test_nm_individual_address_check_refused() -> None:
     """Test nm_individual_address_check."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -119,7 +121,7 @@ async def test_nm_individual_address_check_refused():
     assert await task
 
 
-async def test_nm_individual_address_read(time_travel):
+async def test_nm_individual_address_read(time_travel: EventLoopClockAdvancer) -> None:
     """Test nm_individual_address_read."""
     _timeout = 2
     xknx = XKNX()
@@ -156,7 +158,7 @@ async def test_nm_individual_address_read(time_travel):
     assert await task
 
 
-async def test_nm_individual_address_read_multiple():
+async def test_nm_individual_address_read_multiple() -> None:
     """Test nm_individual_address_read."""
     _timeout = 2
     xknx = XKNX()
@@ -196,7 +198,7 @@ async def test_nm_individual_address_read_multiple():
         await task
 
 
-async def test_nm_individual_address_write(time_travel):
+async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) -> None:
     """Test nm_individual_address_write."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -281,7 +283,9 @@ async def test_nm_individual_address_write(time_travel):
     await task
 
 
-async def test_nm_individual_address_write_two_devices_in_programming_mode(time_travel):
+async def test_nm_individual_address_write_two_devices_in_programming_mode(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_write."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -337,7 +341,9 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(time_
     assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
 
 
-async def test_nm_individual_address_write_no_device_programming_mode(time_travel):
+async def test_nm_individual_address_write_no_device_programming_mode(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_write."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -389,7 +395,9 @@ async def test_nm_individual_address_write_no_device_programming_mode(time_trave
     assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
 
 
-async def test_nm_individual_address_write_address_found(time_travel):
+async def test_nm_individual_address_write_address_found(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_write."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -457,7 +465,9 @@ async def test_nm_individual_address_write_address_found(time_travel):
     assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
 
 
-async def test_nm_individual_address_write_programming_failed(time_travel):
+async def test_nm_individual_address_write_programming_failed(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_write."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -525,8 +535,8 @@ async def test_nm_individual_address_write_programming_failed(time_travel):
 
 
 async def test_nm_individual_address_write_address_found_other_in_programming_mode(
-    time_travel,
-):
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_write."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -597,7 +607,9 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         await task
 
 
-async def test_nm_individual_address_serial_number_read(time_travel):
+async def test_nm_individual_address_serial_number_read(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_serial_number_read."""
 
     xknx = XKNX()
@@ -633,7 +645,9 @@ async def test_nm_individual_address_serial_number_read(time_travel):
     assert await task == individual_address
 
 
-async def test_nm_individual_address_serial_number_read_fail(time_travel):
+async def test_nm_individual_address_serial_number_read_fail(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_serial_number_read."""
 
     xknx = XKNX()
@@ -660,7 +674,9 @@ async def test_nm_individual_address_serial_number_read_fail(time_travel):
     assert await task is None
 
 
-async def test_nm_individual_address_serial_number_write(time_travel):
+async def test_nm_individual_address_serial_number_write(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_serial_number_write."""
 
     xknx = XKNX()
@@ -702,7 +718,9 @@ async def test_nm_individual_address_serial_number_write(time_travel):
     await task
 
 
-async def test_nm_individual_address_serial_number_write_fail_no_response(time_travel):
+async def test_nm_individual_address_serial_number_write_fail_no_response(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_serial_number_write."""
 
     xknx = XKNX()
@@ -738,8 +756,8 @@ async def test_nm_individual_address_serial_number_write_fail_no_response(time_t
 
 
 async def test_nm_individual_address_serial_number_write_fail_wrong_address(
-    time_travel,
-):
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test nm_individual_address_serial_number_write."""
 
     xknx = XKNX()

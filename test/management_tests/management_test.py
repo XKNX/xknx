@@ -22,15 +22,17 @@ from xknx.telegram import (
     tpci,
 )
 
+from ..conftest import EventLoopClockAdvancer
 
-async def test_connect():
+
+async def test_connect() -> None:
     """Test establishing connections."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     ia_1 = IndividualAddress("4.0.1")
     ia_2 = IndividualAddress("4.0.2")
 
-    def tg_connect(ia):
+    def tg_connect(ia: IndividualAddress) -> Telegram:
         return Telegram(
             source_address=xknx.current_address,
             destination_address=ia,
@@ -38,7 +40,7 @@ async def test_connect():
             tpci=tpci.TConnect(),
         )
 
-    def tg_disconnect(ia):
+    def tg_disconnect(ia: IndividualAddress) -> Telegram:
         return Telegram(
             source_address=xknx.current_address,
             destination_address=ia,
@@ -71,7 +73,7 @@ async def test_connect():
     await xknx.management.connect(ia_1)
 
 
-async def test_ack_timeout(time_travel):
+async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
     """Test ACK timeout handling."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -109,7 +111,7 @@ async def test_ack_timeout(time_travel):
     await conn.disconnect()
 
 
-async def test_failed_connect_disconnect():
+async def test_failed_connect_disconnect() -> None:
     """Test failing connections."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -136,7 +138,7 @@ async def test_failed_connect_disconnect():
         await conn_1.disconnect()
 
 
-async def test_reject_incoming_connection():
+async def test_reject_incoming_connection() -> None:
     """Test rejecting incoming transport connections."""
     # Note: incoming L_DATA.ind indication connection requests are rejected
     # L_DATA.req frames received from a tunnelling client are not yet supported
@@ -160,7 +162,7 @@ async def test_reject_incoming_connection():
         assert send_telegram.call_args_list == [call(disconnect)]
 
 
-async def test_incoming_unexpected_numbered_telegram():
+async def test_incoming_unexpected_numbered_telegram() -> None:
     """Test incoming unexpected numbered telegram is acked."""
     xknx = XKNX()
     individual_address = IndividualAddress("4.0.10")
@@ -184,7 +186,7 @@ async def test_incoming_unexpected_numbered_telegram():
         assert send_telegram.call_args_list == [call(ack)]
 
 
-async def test_incoming_wrong_address():
+async def test_incoming_wrong_address() -> None:
     """Test incoming telegrams addressed to different devices."""
     xknx = XKNX()
     individual_address = IndividualAddress("4.0.10")
@@ -217,7 +219,7 @@ async def test_incoming_wrong_address():
         send_telegram.assert_not_called()
 
 
-async def test_broadcast_message():
+async def test_broadcast_message() -> None:
     """Test broadcast message sending."""
     xknx = XKNX()
 
@@ -234,13 +236,15 @@ async def test_broadcast_message():
 
 
 @pytest.mark.parametrize("rate_limit", [0, 1])
-async def test_p2p_rate_limit(time_travel, rate_limit):
+async def test_p2p_rate_limit(
+    time_travel: EventLoopClockAdvancer, rate_limit: int
+) -> None:
     """Test rate limit for P2P management connections."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     ia = IndividualAddress("4.0.1")
 
-    def send_responses(index):
+    def send_responses(index: int) -> None:
         ack = Telegram(
             source_address=ia,
             destination_address=IndividualAddress(0),
