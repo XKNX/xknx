@@ -1,9 +1,9 @@
 """Unit test for StateUpdater."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from typint import Any
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
