@@ -16,15 +16,15 @@ def telegram_received_cb(telegram: Telegram) -> None:
 def show_help() -> None:
     """Print Help."""
     print("Telegram filter.")
-    print("")
+    print()
     print("Usage:")
-    print("")
+    print()
     print(__file__, "                            Listen to all telegrams")
     print(
         __file__, "-f --filter 1/2/*,1/4/[5-6]    Filter for specific group addresses"
     )
     print(__file__, "-h --help                      Print help")
-    print("")
+    print()
 
 
 async def monitor(address_filters: list[AddressFilter] | None) -> None:
