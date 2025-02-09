@@ -6,7 +6,7 @@ from xknx.knxip import KNXIPFrame, SessionAuthenticate
 class TestKNXIPSessionAuthenticate:
     """Test class for KNX/IP SessionAuthenticate objects."""
 
-    def test_session_authenticate(self):
+    def test_session_authenticate(self) -> None:
         """Test parsing and streaming session authenticate KNX/IP packet."""
         message_authentication_code = bytes.fromhex(
             "1f 1d 59 ea 9f 12 a1 52"  # Message Authentication Code

@@ -18,7 +18,7 @@ from xknx.management.application_layer_enum import ReturnCode
 class TestKNXIPTunnellingFeature:
     """Test class for KNX/IP TunnelingFeature objects."""
 
-    def test_get(self):
+    def test_get(self) -> None:
         """Test parsing and streaming connection tunneling feature get KNX/IP packet."""
         raw = bytes.fromhex("06 10 04 22 00 0c 04 01 17 00 03 00")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -40,7 +40,7 @@ class TestKNXIPTunnellingFeature:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_info(self):
+    def test_info(self) -> None:
         """Test parsing and streaming connection tunneling feature info KNX/IP packet."""
         raw = bytes.fromhex("06 10 04 25 00 0e 04 01 17 00 03 00 01 00")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -63,7 +63,7 @@ class TestKNXIPTunnellingFeature:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_response(self):
+    def test_response(self) -> None:
         """Test parsing and streaming connection tunneling feature response KNX/IP packet."""
         raw = bytes.fromhex("06 10 04 23 00 0e 04 01 17 00 03 00 01 00")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -89,7 +89,7 @@ class TestKNXIPTunnellingFeature:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_set(self):
+    def test_set(self) -> None:
         """Test parsing and streaming connection tunneling feature set KNX/IP packet."""
         raw = bytes.fromhex("06 10 04 24 00 0e 04 01 17 00 08 00 01 00")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -113,19 +113,19 @@ class TestKNXIPTunnellingFeature:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_from_knx_wrong_header(self):
+    def test_from_knx_wrong_header(self) -> None:
         """Test parsing and streaming wrong Tunnelling Feature (wrong header length byte)."""
         raw = bytes.fromhex("06 10 04 22 00 0c 06 01 17 00 03 00")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_get_with_data(self):
+    def test_get_with_data(self) -> None:
         """Test parsing and streaming wrong Get (unexpected data)."""
         raw = bytes.fromhex("06 10 04 22 00 0e 04 01 17 00 03 00 01 00")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_set_without_data(self):
+    def test_set_without_data(self) -> None:
         """Test parsing and streaming wrong Get (missing data)."""
         raw = bytes.fromhex("06 10 04 24 00 0c 04 01 17 00 03 00")
         with pytest.raises(CouldNotParseKNXIP):

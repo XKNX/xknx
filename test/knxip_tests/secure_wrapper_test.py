@@ -6,7 +6,7 @@ from xknx.knxip import KNXIPFrame, SecureWrapper
 class TestKNXIPSecureWrapper:
     """Test class for KNX/IP SecureWrapper objects."""
 
-    def test_secure_wrapper(self):
+    def test_secure_wrapper(self) -> None:
         """Test parsing and streaming secure wrapper KNX/IP packet."""
         sequence_number = bytes.fromhex("00 00 00 00 00 00")
         knx_serial_number = bytes.fromhex("00 fa 12 34 56 78")

@@ -7,7 +7,7 @@ from xknx.knxip.knxip_enum import HostProtocol
 class TestKNXIPSessionRequest:
     """Test class for KNX/IP SessionRequest objects."""
 
-    def test_session_request(self):
+    def test_session_request(self) -> None:
         """Test parsing and streaming session request KNX/IP packet."""
         public_key = bytes.fromhex(
             "0a a2 27 b4 fd 7a 32 31"  # Diffie-Hellman Client Public Value X

@@ -10,7 +10,7 @@ from xknx.knxip.srp import SRP
 class TestKNXIPSRP:
     """Test class for KNX/IP SRP objects."""
 
-    def test_basic(self):
+    def test_basic(self) -> None:
         """Test SRP with mac contains mac address."""
         srp: SRP = SRP.with_mac_address(bytes([1, 2, 3, 4, 5, 6]))
         assert len(srp) == SRP.SRP_HEADER_SIZE + 6
@@ -32,7 +32,7 @@ class TestKNXIPSRP:
         assert len(srp) == SRP.SRP_HEADER_SIZE + len(dibs)
         assert srp.type == SearchRequestParameterType.REQUEST_DIBS
 
-    def test_invalid_payload_raises(self):
+    def test_invalid_payload_raises(self) -> None:
         """Test SRP with invalid data size raises."""
         with pytest.raises(ConversionError):
             SRP.with_mac_address(bytes([1, 2, 3, 4, 5, 6, 7, 8]))
@@ -43,7 +43,7 @@ class TestKNXIPSRP:
         with pytest.raises(ConversionError):
             SRP(SearchRequestParameterType.REQUEST_DIBS, True)
 
-    def test_invalid_payload_from_knx_raises(self):
+    def test_invalid_payload_from_knx_raises(self) -> None:
         """Test from_knx with invalid data size raises."""
         # size is too big
         with pytest.raises(CouldNotParseKNXIP):
@@ -54,7 +54,7 @@ class TestKNXIPSRP:
             SRP.from_knx(bytes.fromhex("08"))
 
     @pytest.mark.parametrize(
-        "srp,expected_bytes",
+        ("srp", "expected_bytes"),
         [
             (
                 SRP.with_mac_address(bytes([1, 2, 3, 4, 5, 6])),
@@ -80,7 +80,7 @@ class TestKNXIPSRP:
             ),
         ],
     )
-    def test_to_and_from_knx(self, srp, expected_bytes):
+    def test_to_and_from_knx(self, srp: SRP, expected_bytes: bytes) -> None:
         """Test to and from KNX."""
         assert bytes(srp) == expected_bytes
         assert SRP.from_knx(expected_bytes) == srp

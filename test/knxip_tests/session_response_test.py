@@ -6,7 +6,7 @@ from xknx.knxip import KNXIPFrame, SessionResponse
 class TestKNXIPSessionResponse:
     """Test class for KNX/IP SessionResponse objects."""
 
-    def test_session_response(self):
+    def test_session_response(self) -> None:
         """Test parsing and streaming session response KNX/IP packet."""
         public_key = bytes.fromhex(
             "bd f0 99 90 99 23 14 3e"  # Diffie-Hellman Server Public Value Y

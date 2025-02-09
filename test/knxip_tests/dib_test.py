@@ -20,7 +20,7 @@ from xknx.telegram import IndividualAddress
 class TestKNXIPDIB:
     """Test class for KNX/IP DIB objects."""
 
-    def test_dib_base(self):
+    def test_dib_base(self) -> None:
         """Test parsing and streaming KNX/IP DIB packet."""
         raw = bytes(
             (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
@@ -31,13 +31,13 @@ class TestKNXIPDIB:
         assert dib.to_knx() == raw
         assert dib.calculated_length() == 12
 
-    def test_dib_wrong_input(self):
+    def test_dib_wrong_input(self) -> None:
         """Test parsing of wrong KNX/IP DIB packet."""
         raw = (0x08, 0x01, 0xC0, 0xA8, 0x2A)
         with pytest.raises(CouldNotParseKNXIP):
             DIBGeneric().from_knx(raw)
 
-    def test_device_info(self):
+    def test_device_info(self) -> None:
         """Test parsing of device info."""
         raw = bytes.fromhex(
             "36 01 02 00 11 00 23 42 13 37 13 37 13 37 E0 00"
@@ -60,7 +60,7 @@ class TestKNXIPDIB:
         assert dib.installation_number == 2
         assert dib.to_knx() == raw
 
-    def test_dib_sup_svc_families_router(self):
+    def test_dib_sup_svc_families_router(self) -> None:
         """Test parsing of svc families."""
         raw = bytes(
             (0x0C, 0x02, 0x02, 0x01, 0x03, 0x02, 0x04, 0x01, 0x05, 0x01, 0x07, 0x01)
@@ -94,7 +94,7 @@ class TestKNXIPDIB:
         assert dib.version(DIBServiceFamily.TUNNELING) == 1
         assert dib.version(DIBServiceFamily.ROUTING) == 1
 
-    def test_dib_sup_svc_families_interface(self):
+    def test_dib_sup_svc_families_interface(self) -> None:
         """Test parsing of svc families."""
         raw = bytes((0x0A, 0x02, 0x02, 0x02, 0x03, 0x02, 0x04, 0x02, 0x07, 0x01))
 
@@ -123,7 +123,7 @@ class TestKNXIPDIB:
         assert dib.version(DIBServiceFamily.TUNNELING) == 2
         assert dib.version(DIBServiceFamily.ROUTING) is None
 
-    def test_dib_secured_service_families(self):
+    def test_dib_secured_service_families(self) -> None:
         """Test parsing of secured service families."""
         raw = bytes((0x08, 0x06, 0x03, 0x01, 0x04, 0x01, 0x05, 0x01))
 
@@ -145,7 +145,7 @@ class TestKNXIPDIB:
         assert not dib.supports(DIBServiceFamily.ROUTING, version=2)
         assert dib.supports(DIBServiceFamily.DEVICE_MANAGEMENT)
 
-    def test_dib_tunneling_info(self):
+    def test_dib_tunneling_info(self) -> None:
         """Test parsing of tunneling info."""
         raw = (
             b"\x24\x07\x00\xf8\x40\x01\x00\x05\x40\x02\x00\x05\x40\x03\x00\x05"

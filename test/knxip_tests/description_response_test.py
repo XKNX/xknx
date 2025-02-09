@@ -12,7 +12,7 @@ from xknx.knxip import (
 class TestKNXIPDescriptionResponse:
     """Test class for KNX/IP DescriptionResponse objects."""
 
-    def test_description_response(self):
+    def test_description_response(self) -> None:
         """Test parsing and streaming DescriptionResponse KNX/IP packet."""
         raw = bytes.fromhex(
             "06 10 02 04 00 48 36 01 02 00 10 00 00 00 00 08"
@@ -52,7 +52,7 @@ class TestKNXIPDescriptionResponse:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_unknown_device_name(self):
+    def test_unknown_device_name(self) -> None:
         """Test device_name if no DIBDeviceInformation is present."""
         description_response = DescriptionResponse()
         assert description_response.device_name == "UNKNOWN"

@@ -11,7 +11,7 @@ from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 class TestKNXIPDeviceConfigurationRequest:
     """Test class for KNX/IP DeviceConfigurationRequest objects."""
 
-    def test_device_configuration_request(self):
+    def test_device_configuration_request(self) -> None:
         """Test parsing and streaming device configuration ACK KNX/IP packet."""
         raw = bytes.fromhex("06 10 03 10 00 11 04 2A 17 00 FC 00 0B 01 34 10 01")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -54,13 +54,13 @@ class TestKNXIPDeviceConfigurationRequest:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_from_knx_wrong_header(self):
+    def test_from_knx_wrong_header(self) -> None:
         """Test parsing and streaming wrong DeviceConfigurationRequest (wrong length byte)."""
         raw = bytes((0x06, 0x10, 0x03, 0x10, 0x00, 0x15, 0x03))
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_from_knx_wrong_header2(self):
+    def test_from_knx_wrong_header2(self) -> None:
         """Test parsing and streaming wrong DeviceConfigurationRequest (wrong length)."""
         raw = bytes((0x06, 0x10, 0x03, 0x10, 0x00, 0x15, 0x04))
         with pytest.raises(CouldNotParseKNXIP):
