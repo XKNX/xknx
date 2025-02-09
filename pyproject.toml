@@ -115,12 +115,15 @@ asyncio_mode = "auto"
 [tool.ruff]
 lint.select = [
   "A",     # builtins shadowing
+  "ANN",   # annotations
   "ASYNC", # async
   "B",     # bugbear
   "C4",    # comprehensions
   "D",     # pydocstyle
   "E",     # pycodestyle
   "F",     # pyflakes
+  "FLY",   # flynt
+  "FURB",  # refurb
   "G",     # logging
   "I",     # isort
   "LOG",   # logging
@@ -133,6 +136,7 @@ lint.select = [
   "W",     # pydocstyle warning
 ]
 lint.ignore = [
+  "ANN401", # any-type - mypy should handle this where necessary
   "D202",
   "D203",
   "D212",
