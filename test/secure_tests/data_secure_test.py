@@ -2,7 +2,7 @@
 
 import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -27,7 +27,7 @@ from xknx.telegram import (
 
 
 @pytest.fixture(name="test_group_response_cemi")
-def fixture_test_group_response_cemi():
+def fixture_test_group_response_cemi() -> CEMIFrame:
     """Return a CEMI frame for a group response telegram."""
     # src = 4.0.9; dst = 0/4/0; GroupValueResponse; value=(116, 41, 41)
     # A+C; seq_num=155806854986
@@ -37,7 +37,7 @@ def fixture_test_group_response_cemi():
 
 
 @pytest.fixture(name="test_point_to_point_cemi")
-def fixture_test_point_to_point_cemi():
+def fixture_test_point_to_point_cemi() -> CEMIFrame:
     """Return a CEMI frame for a group response telegram."""
     # Property Value Write PID_GRP_KEY_TABLE connectionless
     # Object Idx = 5, PropId = 35h, Element Count = 1, Index = 1
@@ -59,12 +59,12 @@ class TestDataSecure:
     secure_test_keyring: Keyring
 
     @classmethod
-    def setup_class(cls):
+    def setup_class(cls) -> None:
         """Set up any state specific to the execution of the given class."""
         secure_test_keyfile = Path(__file__).parent / "resources/SecureTest.knxkeys"
         cls.secure_test_keyring = sync_load_keyring(secure_test_keyfile, "test")
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test methods."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
@@ -76,7 +76,9 @@ class TestDataSecure:
 
     @patch("xknx.secure.data_secure.DataSecure.outgoing_cemi")
     @patch("xknx.secure.data_secure.DataSecure.received_cemi")
-    async def test_data_secure_init(self, mock_ds_received_cemi, mock_ds_outgoing_cemi):
+    async def test_data_secure_init(
+        self, mock_ds_received_cemi: MagicMock, mock_ds_outgoing_cemi: MagicMock
+    ) -> None:
         """Test DataSecure init and passing frames from CEMIHandler to DataSecure."""
         assert self.data_secure is not None
 
@@ -124,7 +126,7 @@ class TestDataSecure:
             )
             mock_telegram_received.assert_called_once()
 
-    def test_data_secure_init_invalid_system_time(self):
+    def test_data_secure_init_invalid_system_time(self) -> None:
         """Test DataSecure init with invalid system time."""
         with (
             patch("time.time", return_value=1515108203.0),  # 2018-01-04T23:23:23+00:00
@@ -132,7 +134,7 @@ class TestDataSecure:
         ):
             self.xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
 
-    def test_data_secure_group_send(self):
+    def test_data_secure_group_send(self) -> None:
         """Test outgoing DataSecure group communication."""
         self.data_secure._sequence_number_sending = 160170101607
 
@@ -161,7 +163,9 @@ class TestDataSecure:
             "bce0500104000e03f11000254ae1cb67cd184afe5744"
         )
 
-    def test_data_secure_group_receive(self, test_group_response_cemi):
+    def test_data_secure_group_receive(
+        self, test_group_response_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure group communication."""
         assert (
             self.data_secure._individual_address_table[IndividualAddress("4.0.9")]
@@ -182,7 +186,9 @@ class TestDataSecure:
             == 155806854986
         )
 
-    def test_data_secure_individual_receive_tool_key(self, test_point_to_point_cemi):
+    def test_data_secure_individual_receive_tool_key(
+        self, test_point_to_point_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure point-to-point communication via tool key."""
         self.xknx.current_address = IndividualAddress("15.15.0")
         assert isinstance(test_point_to_point_cemi.data.payload, apci.SecureAPDU)
@@ -196,7 +202,9 @@ class TestDataSecure:
             self.xknx.cemi_handler.handle_cemi_frame(test_point_to_point_cemi) is None
         )
 
-    def test_data_secure_individual_receive(self, test_point_to_point_cemi):
+    def test_data_secure_individual_receive(
+        self, test_point_to_point_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure point-to-point communication."""
         self.xknx.current_address = IndividualAddress("15.15.0")
         assert isinstance(test_point_to_point_cemi.data.payload, apci.SecureAPDU)
@@ -214,7 +222,9 @@ class TestDataSecure:
             self.xknx.cemi_handler.handle_cemi_frame(test_point_to_point_cemi) is None
         )
 
-    def test_data_secure_group_receive_unknown_source(self, test_group_response_cemi):
+    def test_data_secure_group_receive_unknown_source(
+        self, test_group_response_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure group communication from unknown source."""
         test_group_response_cemi.data.src_addr = IndividualAddress("1.2.3")
         with pytest.raises(
@@ -224,8 +234,8 @@ class TestDataSecure:
             self.data_secure.received_cemi(test_group_response_cemi.data)
 
     def test_data_secure_group_receive_unknown_destination(
-        self, test_group_response_cemi
-    ):
+        self, test_group_response_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure group communication for unknown destination."""
         test_group_response_cemi.data.dst_addr = GroupAddress("1/2/3")
         with pytest.raises(
@@ -235,8 +245,8 @@ class TestDataSecure:
             self.data_secure.received_cemi(test_group_response_cemi.data)
 
     def test_data_secure_group_receive_wrong_sequence_number(
-        self, test_group_response_cemi
-    ):
+        self, test_group_response_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure group communication with wrong sequence number."""
         seq_num = 155806854986
         assert (
@@ -251,7 +261,9 @@ class TestDataSecure:
         ):
             self.data_secure.received_cemi(test_group_response_cemi.data)
 
-    def test_data_secure_group_receive_wrong_mac(self, test_group_response_cemi):
+    def test_data_secure_group_receive_wrong_mac(
+        self, test_group_response_cemi: CEMIFrame
+    ) -> None:
         """Test incoming DataSecure group communication with wrong MAC."""
         test_group_response_cemi.data.payload.secured_data.message_authentication_code = bytes(
             4
@@ -262,7 +274,7 @@ class TestDataSecure:
         ):
             self.data_secure.received_cemi(test_group_response_cemi.data)
 
-    def test_data_secure_group_receive_plain_frame(self):
+    def test_data_secure_group_receive_plain_frame(self) -> None:
         """Test incoming DataSecure group communication with plain frame."""
         src_addr = IndividualAddress("4.0.9")
         test_cemi = CEMIFrame(
@@ -283,7 +295,7 @@ class TestDataSecure:
         ):
             self.data_secure.received_cemi(test_cemi.data)
 
-    def test_non_secure_group_receive_plain_frame(self):
+    def test_non_secure_group_receive_plain_frame(self) -> None:
         """Test incoming non-secure group communication with plain frame."""
         dst_addr = GroupAddress("1/2/3")
         test_cemi = CEMIFrame(
@@ -300,7 +312,7 @@ class TestDataSecure:
         assert dst_addr not in self.data_secure._group_key_table
         assert self.data_secure.received_cemi(test_cemi.data) == test_cemi.data
 
-    def test_non_secure_group_send_plain_frame(self):
+    def test_non_secure_group_send_plain_frame(self) -> None:
         """Test outgoing non-secure group communication with plain frame."""
         dst_addr = GroupAddress("1/2/3")
         test_cemi = CEMIFrame(
@@ -317,7 +329,7 @@ class TestDataSecure:
         assert dst_addr not in self.data_secure._group_key_table
         assert self.data_secure.outgoing_cemi(test_cemi.data) == test_cemi.data
 
-    def test_non_secure_individual_receive_plain_frame(self):
+    def test_non_secure_individual_receive_plain_frame(self) -> None:
         """Test incoming non-secure group communication with plain frame."""
         src_addr = IndividualAddress("1.2.3")
         test_cemi = CEMIFrame(
@@ -343,7 +355,7 @@ class TestDataSecure:
         assert src_addr not in self.data_secure._individual_address_table
         assert self.data_secure.received_cemi(test_cemi.data) == test_cemi.data
 
-    def test_non_secure_individual_send_plain_frame(self):
+    def test_non_secure_individual_send_plain_frame(self) -> None:
         """Test outgoing non-secure group communication with plain frame."""
         dst_addr = IndividualAddress("1.2.3")
         test_cemi = CEMIFrame(
@@ -369,7 +381,7 @@ class TestDataSecure:
         assert dst_addr not in self.data_secure._individual_address_table
         assert self.data_secure.outgoing_cemi(test_cemi.data) == test_cemi.data
 
-    def test_data_secure_authentication_only(self):
+    def test_data_secure_authentication_only(self) -> None:
         """Test frame de-/serialization for DataSecure authentication only."""
         # This is currently not used from xknx and I also don't know if it is used
         # in any ETS or runtime KNX communication. Therefore a very generic test.
