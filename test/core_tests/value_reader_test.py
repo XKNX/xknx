@@ -15,7 +15,7 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestValueReader:
     """Test class for value reader."""
 
-    async def test_value_reader_read_success(self):
+    async def test_value_reader_read_success(self) -> None:
         """Test value reader: successful read."""
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/1")
@@ -41,7 +41,9 @@ class TestValueReader:
         assert successful_read == response_telegram
 
     @patch("logging.Logger.warning")
-    async def test_value_reader_read_timeout(self, logger_warning_mock):
+    async def test_value_reader_read_timeout(
+        self, logger_warning_mock: MagicMock
+    ) -> None:
         """Test value reader: read timeout."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/1"))
@@ -66,7 +68,7 @@ class TestValueReader:
         # Unsuccessful read() returns None
         assert timed_out_read is None
 
-    async def test_value_reader_read_cancelled(self):
+    async def test_value_reader_read_cancelled(self) -> None:
         """Test value reader: read cancelled."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/1"))
@@ -83,7 +85,7 @@ class TestValueReader:
         # No telegram was received
         assert value_reader.received_telegram is None
 
-    async def test_value_reader_send_group_read(self):
+    async def test_value_reader_send_group_read(self) -> None:
         """Test value reader: send_group_read."""
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/1"))
@@ -95,7 +97,7 @@ class TestValueReader:
             destination_address=GroupAddress("0/0/1"), payload=GroupValueRead()
         )
 
-    async def test_value_reader_telegram_received(self):
+    async def test_value_reader_telegram_received(self) -> None:
         """Test value reader: telegram_received."""
         xknx = XKNX()
         test_group_address = GroupAddress("0/0/1")

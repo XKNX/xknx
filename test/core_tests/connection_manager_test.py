@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime
 import threading
+from typing import Any
 from unittest.mock import Mock, patch
 
 from xknx import XKNX
@@ -17,7 +18,7 @@ class TestConnectionManager:
     #
     # TEST REGISTER/UNREGISTER
     #
-    async def test_register(self):
+    async def test_register(self) -> None:
         """Test connection_state_changed after register."""
 
         xknx = XKNX()
@@ -32,7 +33,7 @@ class TestConnectionManager:
             XknxConnectionState.CONNECTED
         )
 
-    async def test_unregister(self):
+    async def test_unregister(self) -> None:
         """Test unregister after register."""
 
         xknx = XKNX()
@@ -49,7 +50,7 @@ class TestConnectionManager:
     #
     # TEST PROCESS
     #
-    async def test_state_return(self):
+    async def test_state_return(self) -> None:
         """Test should return if current state equals parameter."""
 
         xknx = XKNX()
@@ -66,7 +67,7 @@ class TestConnectionManager:
     #
     # TEST CONNECTED
     #
-    async def test_connected_event(self):
+    async def test_connected_event(self) -> None:
         """Test connected event callback."""
 
         xknx = XKNX()
@@ -84,19 +85,19 @@ class TestConnectionManager:
 
         assert xknx.connection_manager.connected.is_set()
 
-    async def test_threaded_connection(self):
+    async def test_threaded_connection(self) -> None:
         """Test starting threaded connection."""
         # pylint: disable=attribute-defined-outside-init
         self.main_thread = threading.get_ident()
         xknx = XKNX(connection_config=ConnectionConfig(threaded=True))
 
-        def assert_main_thread(*args, **kwargs):
+        def assert_main_thread(*args: Any, **kwargs: dict[str, Any]) -> None:
             """Test callback is done by main thread."""
             assert self.main_thread == threading.get_ident()
 
         xknx.connection_manager.register_connection_state_changed_cb(assert_main_thread)
 
-        async def set_connected():
+        async def set_connected() -> None:
             """Set connected state."""
             xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.CONNECTED
@@ -111,7 +112,7 @@ class TestConnectionManager:
                 await asyncio.sleep(0)
             await xknx.stop()
 
-    async def test_connection_information(self):
+    async def test_connection_information(self) -> None:
         """Test connection information."""
         xknx = XKNX()
 
