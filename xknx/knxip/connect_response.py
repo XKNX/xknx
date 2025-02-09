@@ -141,8 +141,4 @@ class ConnectResponseData:
             if self._is_tunnel_crd() and self.individual_address
             else ""
         )
-        return (
-            "<ConnectResponseData "
-            f'request_type="{self.request_type}" '
-            f"{_address}/>"
-        )
+        return f'<ConnectResponseData request_type="{self.request_type}" {_address}/>'

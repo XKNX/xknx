@@ -1665,3 +1665,63 @@ class TestClimate:
             )
         )
         assert climate_percent.current_fan_speed == 55
+
+    async def test_swing(self):
+        """Test fan speed functionality."""
+        xknx = XKNX()
+        climate_swing = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_swing="1/2/3",
+            group_address_swing_state="1/2/4",
+        )
+        xknx.devices.async_add(climate_swing)
+
+        # Test initial state
+        assert climate_swing.current_swing is None
+
+        xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
+        assert climate_swing.current_swing is True
+
+        await climate_swing.set_swing(False)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(False)),
+        )
+
+    async def test_horizontal_swing(self):
+        """Test fan speed functionality."""
+        xknx = XKNX()
+        climate_horizontal_swing = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_horizontal_swing="1/2/3",
+            group_address_horizontal_swing_state="1/2/4",
+        )
+        xknx.devices.async_add(climate_horizontal_swing)
+
+        # Test initial state
+        assert climate_horizontal_swing.current_horizontal_swing is None
+
+        xknx.devices.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
+        assert climate_horizontal_swing.current_horizontal_swing is True
+
+        await climate_horizontal_swing.set_horizontal_swing(False)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(False)),
+        )
