@@ -1,5 +1,7 @@
 """Unit test for KNX DPT 18 objects."""
 
+from typing import Any
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTBinary, DPTSceneControl, SceneControl
@@ -26,7 +28,7 @@ class TestSceneControl:
             ),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, Any], value: SceneControl) -> None:
         """Test from_dict and as_dict methods."""
         test_value = SceneControl.from_dict(data)
         assert test_value == value
@@ -45,7 +47,7 @@ class TestSceneControl:
             {"scene_number": 1, "learn": None},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             SceneControl.from_dict(data)
@@ -63,7 +65,7 @@ class TestDPTSceneControl:
             (SceneControl(64, True), (0b10111111,)),
         ],
     )
-    def test_parse(self, value, raw):
+    def test_parse(self, value: SceneControl, raw: tuple[int]) -> None:
         """Test DPTTariffActiveEnergy parsing and streaming."""
         knx_value = DPTSceneControl.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -76,7 +78,7 @@ class TestDPTSceneControl:
             ({"scene_number": 21, "learn": True}, (0x94,)),
         ],
     )
-    def test_to_knx_from_dict(self, value, raw):
+    def test_to_knx_from_dict(self, value: dict[str, Any], raw: tuple[int]) -> None:
         """Test DPTTariffActiveEnergy parsing from a dict."""
         assert DPTSceneControl.to_knx(value) == DPTArray(raw)
 
@@ -87,12 +89,12 @@ class TestDPTSceneControl:
             SceneControl(scene_number=65, learn=True),
         ],
     )
-    def test_to_knx_limits(self, value):
+    def test_to_knx_limits(self, value: SceneControl) -> None:
         """Test initialization of DPTTariffActiveEnergy with wrong value."""
         with pytest.raises(ConversionError):
             DPTSceneControl.to_knx(value)
 
-    def test_from_knx_wrong_value(self):
+    def test_from_knx_wrong_value(self) -> None:
         """Test DPTTariffActiveEnergy parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTSceneControl.from_knx(DPTArray((0xFF, 0x4E)))

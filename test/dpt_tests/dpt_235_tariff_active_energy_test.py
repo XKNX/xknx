@@ -1,5 +1,7 @@
 """Unit test for KNX DPT 235 objects."""
 
+from typing import Any
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTTariffActiveEnergy, TariffActiveEnergy
@@ -37,7 +39,7 @@ class TestTariffActiveEnergy:
             ({"energy": 128, "tariff": 128}, TariffActiveEnergy(128, 128)),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, Any], value: TariffActiveEnergy) -> None:
         """Test from_dict and as_dict methods."""
         test_value = TariffActiveEnergy.from_dict(data)
         assert test_value == value
@@ -53,7 +55,7 @@ class TestTariffActiveEnergy:
             {"energy": "a", "tariff": 128},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             TariffActiveEnergy.from_dict(data)
@@ -90,7 +92,9 @@ class TestDPTTariffActiveEnergy:
             (TariffActiveEnergy(204, 204), (0x00, 0x00, 0x00, 0xCC, 0xCC, 0x03)),
         ],
     )
-    def test_dpt_tariff_active_energy_value(self, value, raw):
+    def test_dpt_tariff_active_energy_value(
+        self, value: TariffActiveEnergy, raw: tuple[int, ...]
+    ) -> None:
         """Test DPTTariffActiveEnergy parsing and streaming."""
         knx_value = DPTTariffActiveEnergy.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -103,7 +107,9 @@ class TestDPTTariffActiveEnergy:
             ({"tariff": 204, "energy": 204}, (0x00, 0x00, 0x00, 0xCC, 0xCC, 0x03)),
         ],
     )
-    def test_dpt_tariff_active_energy_to_knx_from_dict(self, value, raw):
+    def test_dpt_tariff_active_energy_to_knx_from_dict(
+        self, value: dict[str, Any], raw: tuple[int, ...]
+    ) -> None:
         """Test DPTTariffActiveEnergy parsing from a dict."""
         knx_value = DPTTariffActiveEnergy.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -117,7 +123,9 @@ class TestDPTTariffActiveEnergy:
             TariffActiveEnergy(0, 255),
         ],
     )
-    def test_dpt_tariff_active_energy_to_knx_limits(self, value):
+    def test_dpt_tariff_active_energy_to_knx_limits(
+        self, value: TariffActiveEnergy
+    ) -> None:
         """Test initialization of DPTTariffActiveEnergy with wrong value."""
         with pytest.raises(ConversionError):
             DPTTariffActiveEnergy.to_knx(value)
@@ -136,12 +144,12 @@ class TestDPTTariffActiveEnergy:
             TariffActiveEnergy(tariff="a", energy=0),
         ],
     )
-    def test_dpt_tariff_active_energy_wrong_value_to_knx(self, value):
+    def test_dpt_tariff_active_energy_wrong_value_to_knx(self, value: Any) -> None:
         """Test DPTTariffActiveEnergy parsing with wrong value."""
         with pytest.raises(ConversionError):
             DPTTariffActiveEnergy.to_knx(value)
 
-    def test_dpt_tariff_active_energy_wrong_value_from_knx(self):
+    def test_dpt_tariff_active_energy_wrong_value_from_knx(self) -> None:
         """Test DPTTariffActiveEnergy parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTTariffActiveEnergy.from_knx(DPTArray((0xFF, 0x4E)))

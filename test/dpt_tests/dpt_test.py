@@ -24,12 +24,12 @@ from xknx.exceptions import CouldNotParseTelegram
 class TestDPTBase:
     """Test class for transcoder base object."""
 
-    def test_dpt_abstract_subclasses_ignored(self):
+    def test_dpt_abstract_subclasses_ignored(self) -> None:
         """Test if abstract base classes are ignored by dpt_class_tree and __recursive_subclasses__."""
         for dpt in DPTBase.dpt_class_tree():
             assert dpt not in (DPTBase, DPTNumeric, DPTEnum, DPTComplex)
 
-    def test_dpt_concrete_subclasses_included(self):
+    def test_dpt_concrete_subclasses_included(self) -> None:
         """Test if concrete subclasses are included by dpt_class_tree."""
         for dpt in (
             DPT2ByteFloat,
@@ -42,27 +42,29 @@ class TestDPTBase:
             assert dpt in DPTBase.dpt_class_tree()
 
     @pytest.mark.parametrize("dpt_class", [DPTString, DPT2ByteFloat])
-    def test_dpt_non_abstract_baseclass_included(self, dpt_class):
+    def test_dpt_non_abstract_baseclass_included(
+        self, dpt_class: type[DPTBase]
+    ) -> None:
         """Test if non-abstract base classes is included by dpt_class_tree."""
         assert dpt_class in dpt_class.dpt_class_tree()
 
-    def test_dpt_subclasses_definition_types(self):
+    def test_dpt_subclasses_definition_types(self) -> None:
         """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
         for dpt in DPTBase.dpt_class_tree():
             if dpt.value_type is not None:
-                assert isinstance(
-                    dpt.value_type, str
-                ), f"Wrong type for value_type in {dpt} : {type(dpt.value_type)} - str `None` expected"
+                assert isinstance(dpt.value_type, str), (
+                    f"Wrong type for value_type in {dpt} : {type(dpt.value_type)} - str `None` expected"
+                )
             if dpt.dpt_main_number is not None:
-                assert isinstance(
-                    dpt.dpt_main_number, int
-                ), f"Wrong type for dpt_main_number in {dpt} : {type(dpt.dpt_main_number)} - int or `None` expected"
+                assert isinstance(dpt.dpt_main_number, int), (
+                    f"Wrong type for dpt_main_number in {dpt} : {type(dpt.dpt_main_number)} - int or `None` expected"
+                )
             if dpt.dpt_sub_number is not None:
-                assert isinstance(
-                    dpt.dpt_sub_number, int
-                ), f"Wrong type for dpt_sub_number in {dpt} : {type(dpt.dpt_sub_number)} - int or `None` expected"
+                assert isinstance(dpt.dpt_sub_number, int), (
+                    f"Wrong type for dpt_sub_number in {dpt} : {type(dpt.dpt_sub_number)} - int or `None` expected"
+                )
 
-    def test_dpt_subclasses_no_duplicate_value_types(self):
+    def test_dpt_subclasses_no_duplicate_value_types(self) -> None:
         """Test for duplicate value_type values in subclasses of DPTBase."""
         value_types = [
             dpt.value_type
@@ -71,7 +73,7 @@ class TestDPTBase:
         ]
         assert len(value_types) == len(set(value_types))
 
-    def test_dpt_subclasses_no_duplicate_dpt_number(self):
+    def test_dpt_subclasses_no_duplicate_dpt_number(self) -> None:
         """Test for duplicate value_type values in subclasses of DPTBase."""
         dpt_tuples = [
             (dpt.dpt_main_number, dpt.dpt_sub_number)
@@ -89,13 +91,13 @@ class TestDPTBase:
             ["active_energy", "13.010", {"main": 13, "sub": 10}],
         ],
     )
-    def test_dpt_alternative_notations(self, equal_dpts: list[Any]):
+    def test_dpt_alternative_notations(self, equal_dpts: list[Any]) -> None:
         """Test the parser for accepting alternative notations for the same DPT class."""
         parsed = [DPTBase.parse_transcoder(dpt) for dpt in equal_dpts]
         assert issubclass(parsed[0], DPTBase)
         assert all(parsed[0] == dpt for dpt in parsed)
 
-    def test_parse_transcoder_from_subclass(self):
+    def test_parse_transcoder_from_subclass(self) -> None:
         """Test parsing only subclasses of a DPT class."""
         assert DPTBase.parse_transcoder("string") == DPTString
         assert DPTNumeric.parse_transcoder("string") is None
@@ -125,7 +127,7 @@ class TestDPTBase:
             (9,),
         ],
     )
-    def test_parse_transcoder_invalid_data(self, value: Any):
+    def test_parse_transcoder_invalid_data(self, value: Any) -> None:
         """Test parsing invalid data."""
         assert DPTBase.parse_transcoder(value) is None
 
@@ -134,12 +136,12 @@ class TestDPTBaseSubclass:
     """Test subclass of transcoder base object."""
 
     @pytest.mark.parametrize("dpt_class", DPTBase.dpt_class_tree())
-    def test_required_values(self, dpt_class):
+    def test_required_values(self, dpt_class: type[DPTBase]) -> None:
         """Test required class variables are set for definitions."""
         assert dpt_class.payload_type in (DPTArray, DPTBinary)
         assert dpt_class.payload_length is not None
 
-    def test_validate_payload_array(self):
+    def test_validate_payload_array(self) -> None:
         """Test validate_payload method."""
 
         class DPTArrayTest(DPTBase):
@@ -159,7 +161,7 @@ class TestDPTBaseSubclass:
 
         assert DPTArrayTest.validate_payload(DPTArray((1, 1))) == (1, 1)
 
-    def test_validate_payload_binary(self):
+    def test_validate_payload_binary(self) -> None:
         """Test validate_payload method."""
 
         class DPTBinaryTest(DPTBase):
@@ -182,7 +184,7 @@ class TestDPTNumeric:
     """Test class for numeric transcoder base object."""
 
     @pytest.mark.parametrize("dpt_class", DPTNumeric.dpt_class_tree())
-    def test_values(self, dpt_class):
+    def test_values(self, dpt_class: type[DPTNumeric]) -> None:
         """Test boundary values are set for numeric definitions (because mypy doesn't)."""
 
         assert isinstance(dpt_class.value_min, int | float)

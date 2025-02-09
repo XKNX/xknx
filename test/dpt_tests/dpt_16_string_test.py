@@ -31,7 +31,9 @@ class TestDPTString:
         ],
     )
     @pytest.mark.parametrize("test_dpt", [DPTString, DPTLatin1])
-    def test_values(self, string, raw, test_dpt):
+    def test_values(
+        self, string: str, raw: tuple[int, ...], test_dpt: type[DPTString]
+    ) -> None:
         """Test parsing and streaming strings."""
         assert test_dpt.to_knx(string) == DPTArray(raw)
         assert test_dpt.from_knx(DPTArray(raw)) == string
@@ -51,7 +53,9 @@ class TestDPTString:
             ),
         ],
     )
-    def test_to_knx_ascii_invalid_chars(self, string, knx_string, raw):
+    def test_to_knx_ascii_invalid_chars(
+        self, string: str, knx_string: str, raw: tuple[int, ...]
+    ) -> None:
         """Test streaming ASCII string with invalid chars."""
         assert DPTString.to_knx(string) == DPTArray(raw)
         assert DPTString.from_knx(DPTArray(raw)) == knx_string
@@ -69,12 +73,12 @@ class TestDPTString:
             ),
         ],
     )
-    def test_to_knx_latin_1(self, string, raw):
+    def test_to_knx_latin_1(self, string: str, raw: tuple[int, ...]) -> None:
         """Test streaming Latin-1 strings."""
         assert DPTLatin1.to_knx(string) == DPTArray(raw)
         assert DPTLatin1.from_knx(DPTArray(raw)) == string
 
-    def test_to_knx_too_long(self):
+    def test_to_knx_too_long(self) -> None:
         """Test serializing DPTString to KNX with wrong value (to long)."""
         with pytest.raises(ConversionError):
             DPTString.to_knx("AAAAABBBBBCCCCx")
@@ -86,11 +90,11 @@ class TestDPTString:
             ((0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),),
         ],
     )
-    def test_from_knx_wrong_parameter_length(self, raw):
+    def test_from_knx_wrong_parameter_length(self, raw: tuple[int, ...]) -> None:
         """Test parsing of KNX string with wrong elements length."""
         with pytest.raises(CouldNotParseTelegram):
             DPTString.from_knx(DPTArray(raw))
 
-    def test_no_unit_of_measurement(self):
+    def test_no_unit_of_measurement(self) -> None:
         """Test for no unit set for DPT 16."""
         assert DPTString.unit is None

@@ -9,7 +9,7 @@ from xknx.exceptions import ConversionError
 class TestDPT:
     """Test class for KNX binary/integer objects."""
 
-    def test_compare_binary(self):
+    def test_compare_binary(self) -> None:
         """Test comparison of DPTBinary objects."""
         assert DPTBinary(0) == DPTBinary(0)
         assert DPTBinary(0) == DPTBinary(False)
@@ -19,7 +19,7 @@ class TestDPT:
         assert DPTBinary(2) != DPTBinary(0)
         assert DPTBinary(0) != DPTBinary(2)
 
-    def test_compare_array(self):
+    def test_compare_array(self) -> None:
         """Test comparison of DPTArray objects."""
         assert DPTArray(()) == DPTArray(())
         assert DPTArray([1]) == DPTArray((1,))
@@ -30,7 +30,7 @@ class TestDPT:
         assert DPTArray((1, 2, 3, 4)) != DPTArray([1, 2, 3])
         assert DPTArray((1, 2, 3)) != DPTArray([1, 2, 4])
 
-    def test_compare_none(self):
+    def test_compare_none(self) -> None:
         """Test comparison DPTArray objects with None."""
         assert DPTArray(()) is not None
         assert None is not DPTArray(())
@@ -41,7 +41,7 @@ class TestDPT:
         assert DPTBinary(1) is not None
         assert None is not DPTBinary(1)
 
-    def test_compare_array_binary(self):
+    def test_compare_array_binary(self) -> None:
         """Test comparison of empty DPTArray objects with DPTBinary objects."""
         assert DPTArray(()) != DPTBinary(0)
         assert DPTBinary(0) != DPTArray(())
@@ -52,26 +52,26 @@ class TestDPT:
         assert DPTArray((2,)) != DPTBinary(2)
         assert DPTBinary(2) != DPTArray((2,))
 
-    def test_dpt_binary_assign(self):
+    def test_dpt_binary_assign(self) -> None:
         """Test initialization of DPTBinary objects."""
         assert DPTBinary(8).value == 8
 
-    def test_dpt_binary_assign_limit_exceeded(self):
+    def test_dpt_binary_assign_limit_exceeded(self) -> None:
         """Test initialization of DPTBinary objects with wrong value (value exceeded)."""
         with pytest.raises(ConversionError):
             DPTBinary(DPTBinary.APCI_BITMASK + 1)
 
-    def test_dpt_init_with_string(self):
+    def test_dpt_init_with_string(self) -> None:
         """Teest initialization of DPTBinary object with wrong value (wrong type)."""
         with pytest.raises(TypeError):
             DPTBinary("bla")
 
-    def test_dpt_array_init_with_string(self):
+    def test_dpt_array_init_with_string(self) -> None:
         """Test initialization of DPTArray object with wrong value (wrong type)."""
         with pytest.raises(TypeError):
             DPTArray("bla")
 
-    def test_dpt_representation(self):
+    def test_dpt_representation(self) -> None:
         """Test representation of DPTBinary and DPTArray."""
         assert repr(DPTBinary(True)) == "DPTBinary(0x1)"
         assert repr(DPTArray((5, 15))) == "DPTArray((0x5, 0xf))"
