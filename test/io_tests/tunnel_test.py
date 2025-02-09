@@ -169,7 +169,7 @@ class TestUDPTunnel:
         with pytest.raises(CommunicationError):
             self.tunnel._request_received(test_frame_9, None, None)
         await time_travel(0)
-        assert self.tunnel.transport.send.call_args_list == []
+        self.tunnel.transport.send.assert_not_called()
         self.tunnel.transport.send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1

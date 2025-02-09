@@ -143,6 +143,8 @@ class TestDPTBaseSubclass:
         """Test validate_payload method."""
 
         class DPTArrayTest(DPTBase):
+            """Mock class for testing array payloads."""
+
             payload_type = DPTArray
             payload_length = 2
 
@@ -161,6 +163,8 @@ class TestDPTBaseSubclass:
         """Test validate_payload method."""
 
         class DPTBinaryTest(DPTBase):
+            """Mock class for testing binary payloads."""
+
             payload_type = DPTBinary
             payload_length = 1
 

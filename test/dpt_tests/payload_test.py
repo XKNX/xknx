@@ -73,5 +73,5 @@ class TestDPT:
 
     def test_dpt_representation(self):
         """Test representation of DPTBinary and DPTArray."""
-        assert DPTBinary(True).__repr__() == "DPTBinary(0x1)"
-        assert DPTArray((5, 15)).__repr__() == "DPTArray((0x5, 0xf))"
+        assert repr(DPTBinary(True)) == "DPTBinary(0x1)"
+        assert repr(DPTArray((5, 15))) == "DPTArray((0x5, 0xf))"

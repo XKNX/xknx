@@ -54,3 +54,24 @@ repos:
         types: [python]
         require_serial: true
         files: ^xknx/.+\.py$
+
+  - repo: local
+    hooks:
+    - id: pylint-xknx
+      name: pylint-xknx
+      entry: pylint xknx examples
+      language: python
+      types: [python]
+      pass_filenames: true
+      require_serial: true
+      files: ^(xknx/|examples/)
+
+    - id: pylint-test
+      name: pylint-test
+      entry: pylint --disable=protected-access,abstract-class-instantiated
+      language: python
+      types: [python]
+      pass_filenames: true
+      require_serial: true
+      files: ^test/
+

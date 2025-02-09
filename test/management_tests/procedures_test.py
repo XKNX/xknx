@@ -7,8 +7,8 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-import xknx.management as management
 from xknx.management import procedures
+from xknx.management.management import MANAGAMENT_CONNECTION_TIMEOUT
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,
@@ -255,14 +255,14 @@ async def test_nm_individual_address_write(time_travel):
     )
 
     # make sure first request (address check) times out
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
 
     # confirm device is up and running
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
     xknx.management.process(ack)
     xknx.management.process(device_desc_resp)
 
@@ -496,16 +496,16 @@ async def test_nm_individual_address_write_programming_failed(time_travel):
     )
 
     # make sure first request (address check) times out
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
 
     # device experienced error, so set connection request timeout
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
@@ -581,7 +581,7 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
     await time_travel(0)
     xknx.management.process(ack)
     xknx.management.process(device_desc_resp)
-    await time_travel(management.management.MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
 
     xknx.management.process(address_reply_message)
 

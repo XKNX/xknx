@@ -3,7 +3,7 @@
 # flake8: noqa
 import pytest
 
-from xknx.dpt import *
+from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # """
 # Generate a list of all DPTs for the following test.

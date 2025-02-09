@@ -80,7 +80,7 @@ class TestDevices:
         xknx.devices.async_add(sensor2)
         xknx.devices.async_add(light2)
 
-        assert tuple(xknx.devices.__iter__()) == (light1, sensor1, sensor2, light2)
+        assert tuple(iter(xknx.devices)) == (light1, sensor1, sensor2, light2)
 
     def test_len(self):
         """Test len() function."""

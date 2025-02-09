@@ -20,7 +20,7 @@ class TestRemoteValue:
         """Test value getter and setter."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
-        remote_value.to_knx = lambda value: DPT2ByteFloat.to_knx(value)
+        remote_value.to_knx = DPT2ByteFloat.to_knx
         remote_value.after_update_cb = Mock()
 
         assert remote_value.value is None
@@ -43,7 +43,7 @@ class TestRemoteValue:
         """Test set_value awaitable."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
-        remote_value.to_knx = lambda value: DPT2ByteFloat.to_knx(value)
+        remote_value.to_knx = DPT2ByteFloat.to_knx
         remote_value.after_update_cb = Mock()
 
         remote_value.update_value(3.3)

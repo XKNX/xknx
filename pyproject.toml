@@ -61,39 +61,26 @@ warn_unreachable = true
 
 
 [tool.pylint.master]
-ignore = "test"
+init-hook = 'import sys; sys.path.append(".")'
 persistent = "no"
 reports = "no"
 allow-reexport-from-package = true
+jobs = 0
 
 [tool.pylint.message_control]
 # Reasons disabled:
-# format - handled by ruff
-# locally-disabled - it spams too much
-# duplicate-code - unavoidable
-# cyclic-import - doesn't test if both import on load
-# abstract-class-little-used - prevents from setting right foundation
-# unused-argument - generic callbacks and setup methods create a lot of warnings
-# raise-missing-from - we use this in order to avoid too generic exception to the user
 # too-many-* - are not enforced for the sake of readability
 # too-few-* - same as too-many-*
-# abstract-method - with intro of async there are always methods missing
-# inconsistent-return-statements - doesn't handle raise
-# too-many-ancestors - it's too strict.
-# wrong-import-order - isort guards this
-# fixme - TODO
 disable = [
-  "format",
-  "abstract-method",
-  "cyclic-import",
-  "duplicate-code",
-  "fixme",
-  "inconsistent-return-statements",
-  "locally-disabled",
-  "not-context-manager",
-  "raise-missing-from",
+  "format",                         # handled by ruff
+  "no-member",                      # handled by mypy - pylint has false positives sometimes
+  "cyclic-import",                  # doesn't test if both import on load
+  "duplicate-code",                 # unavoidable
+  "fixme",                          # TODO
+  "inconsistent-return-statements", # doesn't handle raise
+  "locally-disabled",               # it spams too much
   "too-few-public-methods",
-  "too-many-ancestors",
+  "too-many-ancestors",             # it's too strict.
   "too-many-arguments",
   "too-many-branches",
   "too-many-instance-attributes",
@@ -104,8 +91,8 @@ disable = [
   "too-many-return-statements",
   "too-many-statements",
   "too-many-boolean-expressions",
-  "unused-argument",
-  "wrong-import-order",
+  "unused-argument",                # generic callbacks and setup methods create a lot of warnings
+  "wrong-import-order",             # handled by ruff
 ]
 # disabled for tests via command line options in tox.ini:
 #   - protected-access
