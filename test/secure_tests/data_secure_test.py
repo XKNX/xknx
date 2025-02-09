@@ -26,8 +26,8 @@ from xknx.telegram import (
 )
 
 
-@pytest.fixture
-def test_group_response_cemi():
+@pytest.fixture(name="test_group_response_cemi")
+def fixture_test_group_response_cemi():
     """Return a CEMI frame for a group response telegram."""
     # src = 4.0.9; dst = 0/4/0; GroupValueResponse; value=(116, 41, 41)
     # A+C; seq_num=155806854986
@@ -36,8 +36,8 @@ def test_group_response_cemi():
     )
 
 
-@pytest.fixture
-def test_point_to_point_cemi():
+@pytest.fixture(name="test_point_to_point_cemi")
+def fixture_test_point_to_point_cemi():
     """Return a CEMI frame for a group response telegram."""
     # Property Value Write PID_GRP_KEY_TABLE connectionless
     # Object Idx = 5, PropId = 35h, Element Count = 1, Index = 1
