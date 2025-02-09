@@ -7,7 +7,7 @@ from xknx.remote_value import RemoteValueScaling
 class TestRemoteValueScaling:
     """Test class for RemoteValueScaling objects."""
 
-    def test_calc_0_10(self):
+    def test_calc_0_10(self) -> None:
         """Test if from/to calculations work with small range."""
         assert RemoteValueScaling._calc_to_knx(0, 10, 0) == 0
         assert RemoteValueScaling._calc_to_knx(0, 10, 1) == 26
@@ -21,7 +21,7 @@ class TestRemoteValueScaling:
         assert RemoteValueScaling._calc_from_knx(0, 10, 254) == 10
         assert RemoteValueScaling._calc_from_knx(0, 10, 255) == 10
 
-    def test_calc_0_100(self):
+    def test_calc_0_100(self) -> None:
         """Test if from/to calculations work range 0-100 with many test cases."""
         assert RemoteValueScaling._calc_to_knx(0, 100, 0) == 0
         assert RemoteValueScaling._calc_to_knx(0, 100, 1) == 3
@@ -50,7 +50,7 @@ class TestRemoteValueScaling:
         assert RemoteValueScaling._calc_from_knx(0, 100, 254) == 100
         assert RemoteValueScaling._calc_from_knx(0, 100, 255) == 100
 
-    def test_calc_0_1000(self):
+    def test_calc_0_1000(self) -> None:
         """Test if from/to calculations work with large range."""
         assert RemoteValueScaling._calc_to_knx(0, 1000, 0) == 0
         assert RemoteValueScaling._calc_to_knx(0, 1000, 1) == 0
@@ -72,7 +72,7 @@ class TestRemoteValueScaling:
         assert RemoteValueScaling._calc_from_knx(0, 1000, 254) == 996
         assert RemoteValueScaling._calc_from_knx(0, 1000, 255) == 1000
 
-    def test_calc_100_0(self):
+    def test_calc_100_0(self) -> None:
         """Test if from/to calculations work with negative range."""
         assert RemoteValueScaling._calc_to_knx(100, 0, 0) == 255
         assert RemoteValueScaling._calc_to_knx(100, 0, 1) == 252
@@ -101,7 +101,7 @@ class TestRemoteValueScaling:
         assert RemoteValueScaling._calc_from_knx(100, 0, 254) == 0
         assert RemoteValueScaling._calc_from_knx(100, 0, 255) == 0
 
-    def test_calc_100_200(self):
+    def test_calc_100_200(self) -> None:
         """Test if from/to calculations work with range not starting at zero."""
         assert RemoteValueScaling._calc_to_knx(100, 200, 100) == 0
         assert RemoteValueScaling._calc_to_knx(100, 200, 130) == 76
@@ -115,7 +115,7 @@ class TestRemoteValueScaling:
         assert RemoteValueScaling._calc_from_knx(100, 200, 178) == 170
         assert RemoteValueScaling._calc_from_knx(100, 200, 255) == 200
 
-    def test_value_unit(self):
+    def test_value_unit(self) -> None:
         """Test for the unit_of_measurement."""
         xknx = XKNX()
         remote_value = RemoteValueScaling(xknx)

@@ -13,7 +13,7 @@ from xknx.telegram.apci import GroupValueWrite
 class TestRemoteValueColorXYY:
     """Test class for RemoteValueColorXYY objects."""
 
-    def test_to_knx(self):
+    def test_to_knx(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx)
@@ -24,7 +24,7 @@ class TestRemoteValueColorXYY:
             (0xFF, 0xFF, 0x00, 0x00, 0x66, 0x03)
         )
 
-    def test_from_knx(self):
+    def test_from_knx(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx)
@@ -32,7 +32,7 @@ class TestRemoteValueColorXYY:
             DPTArray((0x99, 0x99, 0x99, 0x99, 0x66, 0x03))
         ) == XYYColor((0.6, 0.6), 102)
 
-    def test_to_knx_error(self):
+    def test_to_knx_error(self) -> None:
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx)
@@ -49,7 +49,7 @@ class TestRemoteValueColorXYY:
         with pytest.raises(ConversionError):
             remote_value.to_knx(XYYColor((1,), 1))
 
-    async def test_set(self):
+    async def test_set(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx, group_address=GroupAddress("1/2/3"))
@@ -68,7 +68,7 @@ class TestRemoteValueColorXYY:
             payload=GroupValueWrite(DPTArray((0xFF, 0xFF, 0xE6, 0x66, 0xFF, 0x03))),
         )
 
-    def test_process(self):
+    def test_process(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx, group_address=GroupAddress("1/2/3"))
@@ -79,7 +79,7 @@ class TestRemoteValueColorXYY:
         remote_value.process(telegram)
         assert remote_value.value == XYYColor((1, 0.4), 250)
 
-    def test_to_process_error(self):
+    def test_to_process_error(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorXYY(xknx, group_address=GroupAddress("1/2/3"))

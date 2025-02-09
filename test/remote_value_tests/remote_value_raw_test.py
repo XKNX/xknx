@@ -13,7 +13,7 @@ from xknx.telegram.apci import GroupValueWrite
 class TestRemoteValueRaw:
     """Test class for RemoteValueRaw objects."""
 
-    def test_to_knx(self):
+    def test_to_knx(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0)
@@ -25,7 +25,7 @@ class TestRemoteValueRaw:
         assert rv_1.to_knx(100) == DPTArray((0x64,))
         assert rv_2.to_knx(100) == DPTArray((0x00, 0x64))
 
-    def test_from_knx(self):
+    def test_from_knx(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0)
@@ -40,7 +40,7 @@ class TestRemoteValueRaw:
         with pytest.raises(ConversionError):
             assert rv_1.from_knx(DPTArray((256,)))
 
-    async def test_set(self):
+    async def test_set(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0, group_address="1/2/3")
@@ -92,7 +92,7 @@ class TestRemoteValueRaw:
             payload=GroupValueWrite(DPTArray((0x00, 0x3F))),
         )
 
-    def test_process(self):
+    def test_process(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0, group_address="1/0/0")
@@ -120,7 +120,7 @@ class TestRemoteValueRaw:
         rv_2.process(telegram)
         assert rv_2.value == 4660
 
-    def test_to_process_error(self):
+    def test_to_process_error(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0, group_address="1/0/0")
@@ -166,7 +166,7 @@ class TestRemoteValueRaw:
         assert rv_2.process(telegram) is False
         assert rv_2.value is None
 
-    def test_to_knx_error(self):
+    def test_to_knx_error(self) -> None:
         """Test to_knx function with wrong parameters."""
         xknx = XKNX()
         rv_0 = RemoteValueRaw(xknx, payload_length=0, group_address="1/0/0")

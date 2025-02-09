@@ -14,7 +14,7 @@ from xknx.remote_value.remote_value_setpoint_shift import (
 class TestRemoteValueSetpointShift:
     """Test class for RemoteValueSetpointShift objects."""
 
-    def test_payload_valid_mode_assignment(self):
+    def test_payload_valid_mode_assignment(self) -> None:
         """Test if setpoint_shift_mode is assigned properly by payload length."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(xknx=xknx)
@@ -43,7 +43,7 @@ class TestRemoteValueSetpointShift:
             # DPT 6 is invalid now
             remote_value.from_knx(dpt_6_payload)
 
-    def test_payload_valid_preassigned_mode(self):
+    def test_payload_valid_preassigned_mode(self) -> None:
         """Test if setpoint_shift_mode is assigned properly by payload length."""
         xknx = XKNX()
         remote_value_6 = RemoteValueSetpointShift(
@@ -77,7 +77,7 @@ class TestRemoteValueSetpointShift:
             remote_value_9.from_knx(DPTBinary(1))
         assert remote_value_9.from_knx(dpt_9_payload) == 1
 
-    def test_to_knx_uninitialized(self):
+    def test_to_knx_uninitialized(self) -> None:
         """Test to_knx raising ConversionError."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(xknx=xknx)
@@ -86,7 +86,7 @@ class TestRemoteValueSetpointShift:
         with pytest.raises(ConversionError):
             remote_value.to_knx(1)
 
-    def test_to_knx_dpt_6(self):
+    def test_to_knx_dpt_6(self) -> None:
         """Test to_knx returning DPT 6.010 payload."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(
@@ -95,7 +95,7 @@ class TestRemoteValueSetpointShift:
         assert remote_value.setpoint_shift_step == 0.1
         assert remote_value.to_knx(1) == DPTArray((10,))
 
-    def test_to_knx_dpt_9(self):
+    def test_to_knx_dpt_9(self) -> None:
         """Test to_knx returning DPT 9.002 payload."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(
@@ -103,7 +103,7 @@ class TestRemoteValueSetpointShift:
         )
         assert remote_value.to_knx(1) == DPTArray((0x00, 0x64))
 
-    def test_from_knx_uninitialized(self):
+    def test_from_knx_uninitialized(self) -> None:
         """Test from_knx for uninitialized setpoint_shift_mode."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(xknx=xknx)
@@ -116,7 +116,7 @@ class TestRemoteValueSetpointShift:
         with pytest.raises(CouldNotParseTelegram):
             remote_value.from_knx(DPTArray((10,)))
 
-    def test_from_knx_dpt_6(self):
+    def test_from_knx_dpt_6(self) -> None:
         """Test from_knx for DPT 6.010 setpoint_shift_mode."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(
@@ -125,7 +125,7 @@ class TestRemoteValueSetpointShift:
         assert remote_value.setpoint_shift_step == 0.1
         assert remote_value.from_knx(DPTArray((10,))) == 1
 
-    def test_from_knx_dpt_9(self):
+    def test_from_knx_dpt_9(self) -> None:
         """Test from_knx for DPT 9.002 setpoint_shift_mode."""
         xknx = XKNX()
         remote_value = RemoteValueSetpointShift(

@@ -13,7 +13,7 @@ from xknx.telegram.apci import GroupValueWrite
 class TestRemoteValueColorRGBW:
     """Test class for RemoteValueColorRGBW objects."""
 
-    def test_to_knx(self):
+    def test_to_knx(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
@@ -21,7 +21,7 @@ class TestRemoteValueColorRGBW:
         expected = DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x0F))
         assert remote_value.to_knx(input_value) == expected
 
-    def test_from_knx(self):
+    def test_from_knx(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
@@ -41,14 +41,14 @@ class TestRemoteValueColorRGBW:
             DPTArray((0x64, 0x65, 0x66, 0x7F, 0x00, 0x01))
         ) == RGBWColor(255, 101, 102, 127)
 
-    def test_to_knx_error(self):
+    def test_to_knx_error(self) -> None:
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx)
         with pytest.raises(ConversionError):
             remote_value.to_knx((101, 102, 103, 104))
 
-    async def test_set(self):
+    async def test_set(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
@@ -67,7 +67,7 @@ class TestRemoteValueColorRGBW:
             payload=GroupValueWrite(DPTArray((0x64, 0x65, 0x68, 0x69, 0x00, 0x0F))),
         )
 
-    def test_process(self):
+    def test_process(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))
@@ -78,7 +78,7 @@ class TestRemoteValueColorRGBW:
         remote_value.process(telegram)
         assert remote_value.value == RGBWColor(100, 101, 102, 103)
 
-    def test_to_process_error(self):
+    def test_to_process_error(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueColorRGBW(xknx, group_address=GroupAddress("1/2/3"))

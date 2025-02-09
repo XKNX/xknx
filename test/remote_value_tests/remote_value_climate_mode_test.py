@@ -19,19 +19,19 @@ from xknx.telegram.apci import GroupValueWrite
 class TestRemoteValueOperationMode:
     """Test class for RemoteValueOperationMode objects."""
 
-    def test_to_knx_operation_mode(self):
+    def test_to_knx_operation_mode(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(xknx)
         assert remote_value.to_knx(HVACOperationMode.COMFORT) == DPTArray((0x01,))
 
-    def test_to_knx_controller_mode(self):
+    def test_to_knx_controller_mode(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(xknx)
         assert remote_value.to_knx(HVACControllerMode.HEAT) == DPTArray((0x01,))
 
-    def test_to_knx_binary(self):
+    def test_to_knx_binary(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -40,7 +40,7 @@ class TestRemoteValueOperationMode:
         assert remote_value.to_knx(HVACOperationMode.COMFORT) == DPTBinary(True)
         assert remote_value.to_knx(HVACOperationMode.ECONOMY) == DPTBinary(False)
 
-    def test_from_knx_binary_error(self):
+    def test_from_knx_binary_error(self) -> None:
         """Test from_knx function with invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -49,7 +49,7 @@ class TestRemoteValueOperationMode:
         with pytest.raises(CouldNotParseTelegram):
             remote_value.from_knx(DPTArray((0x9, 0xF)))
 
-    def test_to_knx_heat_cool(self):
+    def test_to_knx_heat_cool(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
@@ -58,7 +58,7 @@ class TestRemoteValueOperationMode:
         assert remote_value.to_knx(HVACControllerMode.HEAT) == DPTBinary(True)
         assert remote_value.to_knx(HVACControllerMode.COOL) == DPTBinary(False)
 
-    def test_to_knx_heat_cool_error(self):
+    def test_to_knx_heat_cool_error(self) -> None:
         """Test to_knx function with wrong controller mode."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
@@ -67,13 +67,13 @@ class TestRemoteValueOperationMode:
         with pytest.raises(ConversionError):
             remote_value.to_knx(HVACOperationMode.STANDBY)
 
-    def test_from_knx_operation_mode(self):
+    def test_from_knx_operation_mode(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(xknx)
         assert remote_value.from_knx(DPTArray((0x02,))) == HVACOperationMode.STANDBY
 
-    def test_from_knx_controller_mode(self):
+    def test_from_knx_controller_mode(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(xknx)
@@ -82,7 +82,7 @@ class TestRemoteValueOperationMode:
             == HVACControllerMode.MORNING_WARMUP
         )
 
-    def test_from_knx_binary_heat_cool(self):
+    def test_from_knx_binary_heat_cool(self) -> None:
         """Test from_knx function with invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
@@ -91,7 +91,7 @@ class TestRemoteValueOperationMode:
         with pytest.raises(CouldNotParseTelegram):
             remote_value.from_knx(DPTArray((0x9, 0xF)))
 
-    def test_from_knx_binary(self):
+    def test_from_knx_binary(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -100,7 +100,7 @@ class TestRemoteValueOperationMode:
         assert remote_value.from_knx(DPTBinary(True)) == HVACOperationMode.COMFORT
         assert remote_value.from_knx(DPTBinary(False)) is None
 
-    def test_from_knx_heat_cool(self):
+    def test_from_knx_heat_cool(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
@@ -109,19 +109,19 @@ class TestRemoteValueOperationMode:
         assert remote_value.from_knx(DPTBinary(True)) == HVACControllerMode.HEAT
         assert remote_value.from_knx(DPTBinary(False)) == HVACControllerMode.COOL
 
-    def test_from_knx_unsupported_operation_mode(self):
+    def test_from_knx_unsupported_operation_mode(self) -> None:
         """Test from_knx function with unsupported operation."""
         xknx = XKNX()
         with pytest.raises(ConversionError):
             RemoteValueBinaryHeatCool(xknx, controller_mode=HVACControllerMode.NODEM)
 
-    def test_from_knx_unknown_operation_mode(self):
+    def test_from_knx_unknown_operation_mode(self) -> None:
         """Test from_knx function with unsupported operation."""
         xknx = XKNX()
         with pytest.raises(ConversionError):
             RemoteValueBinaryHeatCool(xknx, controller_mode=None)
 
-    def test_to_knx_error_operation_mode(self):
+    def test_to_knx_error_operation_mode(self) -> None:
         """Test to_knx function with wrong parameter."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(xknx)
@@ -132,7 +132,7 @@ class TestRemoteValueOperationMode:
         with pytest.raises(ConversionError):
             remote_value.to_knx(HVACControllerMode.HEAT)
 
-    def test_to_knx_error_controller_mode(self):
+    def test_to_knx_error_controller_mode(self) -> None:
         """Test to_knx function with wrong parameter."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(xknx)
@@ -143,7 +143,7 @@ class TestRemoteValueOperationMode:
         with pytest.raises(ConversionError):
             remote_value.to_knx(HVACOperationMode.ECONOMY)
 
-    def test_to_knx_error_binary(self):
+    def test_to_knx_error_binary(self) -> None:
         """Test to_knx function with wrong parameter."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -156,7 +156,7 @@ class TestRemoteValueOperationMode:
         with pytest.raises(ConversionError):
             remote_value.to_knx(HVACControllerMode.HEAT)
 
-    async def test_set_operation_mode(self):
+    async def test_set_operation_mode(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
@@ -177,7 +177,7 @@ class TestRemoteValueOperationMode:
             payload=GroupValueWrite(DPTArray((0x04,))),
         )
 
-    async def test_set_controller_mode(self):
+    async def test_set_controller_mode(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(
@@ -198,7 +198,7 @@ class TestRemoteValueOperationMode:
             payload=GroupValueWrite(DPTArray((0x04,))),
         )
 
-    async def test_set_binary(self):
+    async def test_set_binary(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -221,7 +221,7 @@ class TestRemoteValueOperationMode:
             payload=GroupValueWrite(DPTBinary(False)),
         )
 
-    def test_process_operation_mode(self):
+    def test_process_operation_mode(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
@@ -234,7 +234,7 @@ class TestRemoteValueOperationMode:
         remote_value.process(telegram)
         assert remote_value.value == HVACOperationMode.AUTO
 
-    def test_process_controller_mode(self):
+    def test_process_controller_mode(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(
@@ -247,7 +247,7 @@ class TestRemoteValueOperationMode:
         remote_value.process(telegram)
         assert remote_value.value == HVACControllerMode.AUTO
 
-    def test_process_binary(self):
+    def test_process_binary(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -262,7 +262,7 @@ class TestRemoteValueOperationMode:
         remote_value.process(telegram)
         assert remote_value.value == HVACOperationMode.BUILDING_PROTECTION
 
-    def test_to_process_error_operation_mode(self):
+    def test_to_process_error_operation_mode(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueOperationMode(
@@ -283,7 +283,7 @@ class TestRemoteValueOperationMode:
 
         assert remote_value.value is None
 
-    def test_to_process_error_binary_operation_mode(self):
+    def test_to_process_error_binary_operation_mode(self) -> None:
         """Test processing invalid payload."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryOperationMode(
@@ -299,7 +299,7 @@ class TestRemoteValueOperationMode:
         )
         assert remote_value.process(telegram=invalid_telegram) is False
 
-    def test_to_process_error_controller_mode(self):
+    def test_to_process_error_controller_mode(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueControllerMode(
@@ -320,7 +320,7 @@ class TestRemoteValueOperationMode:
 
         assert remote_value.value is None
 
-    def test_to_process_error_heat_cool(self):
+    def test_to_process_error_heat_cool(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueBinaryHeatCool(
