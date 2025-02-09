@@ -129,11 +129,11 @@ class TestTaskRegistry:
 
     async def test_background(self, time_travel):
         """Test running background task."""
-        TIME = 10
+        test_time = 10
 
         async def callback() -> None:
             """Do nothing."""
-            await asyncio.sleep(TIME)
+            await asyncio.sleep(test_time)
 
         xknx = XKNX()
         xknx.task_registry.background(callback())
@@ -144,7 +144,7 @@ class TestTaskRegistry:
         assert not task.done()
 
         # after task is finished it should remove itself from the background registry
-        await time_travel(TIME)
+        await time_travel(test_time)
         assert len(xknx.task_registry._background_task) == 0
         assert task.done()
         refs = sys.getrefcount(task)

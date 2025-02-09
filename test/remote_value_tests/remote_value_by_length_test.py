@@ -57,23 +57,23 @@ class TestRemoteValueByLength:
         self, first_dpt: type[DPTBase], invalid_dpt: type[DPTBase]
     ) -> None:
         """Test if DPT is assigned properly by payload length."""
-        TEST_VALUE = 1
+        test_value = 1
         xknx = XKNX()
         remote_value = RemoteValueByLength(
             xknx=xknx,
             dpt_classes=(DPTPressure, DPTPressure2Byte),
         )
-        first_payload = first_dpt.to_knx(TEST_VALUE)
-        invalid_payload = invalid_dpt.to_knx(TEST_VALUE)
+        first_payload = first_dpt.to_knx(test_value)
+        invalid_payload = invalid_dpt.to_knx(test_value)
 
         assert remote_value._internal_dpt_class is None
-        assert remote_value.from_knx(first_payload) == TEST_VALUE
+        assert remote_value.from_knx(first_payload) == test_value
         assert remote_value._internal_dpt_class == first_dpt
         with pytest.raises(CouldNotParseTelegram):
             # other DPT is invalid now
             remote_value.from_knx(invalid_payload)
         # to_knx works when initialized
-        assert remote_value.to_knx(TEST_VALUE) == first_payload
+        assert remote_value.to_knx(test_value) == first_payload
 
     def test_to_knx_uninitialized(self) -> None:
         """Test to_knx raising ConversionError when DPT is not known."""
