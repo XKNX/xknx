@@ -25,7 +25,7 @@ class RequestResponse:
         transport: KNXIPTransport,
         awaited_response_class: type[KNXIPBody],
         timeout_in_seconds: float = 1.0,
-    ):
+    ) -> None:
         """Initialize RequstResponse class."""
         self.transport = transport
         self.awaited_response_class: type[KNXIPBody] = awaited_response_class

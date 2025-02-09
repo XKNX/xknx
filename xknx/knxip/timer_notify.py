@@ -27,7 +27,7 @@ class TimerNotify(KNXIPBody):
         serial_number: bytes = bytes(6),
         message_tag: bytes = bytes(2),
         message_authentication_code: bytes = bytes(16),
-    ):
+    ) -> None:
         """Initialize TimerNotify object."""
         self.timer_value = timer_value
         self.serial_number = serial_number

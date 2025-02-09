@@ -409,7 +409,7 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
         remote_addr: tuple[str, int],
         backbone_key: bytes,
         latency_ms: int = 1000,
-    ):
+    ) -> None:
         """Initialize SecureGroup class."""
         super().__init__(
             local_addr=local_addr,

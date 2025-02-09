@@ -52,7 +52,7 @@ class RemoteValue(ABC, Generic[ValueT]):
         device_name: str | None = None,
         feature_name: str | None = None,
         after_update_cb: RVCallbackType[ValueT] | None = None,
-    ):
+    ) -> None:
         """Initialize RemoteValue class."""
         self.xknx: XKNX = xknx
         self.passive_group_addresses: list[DeviceGroupAddress] = []

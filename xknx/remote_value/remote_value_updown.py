@@ -36,7 +36,7 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
         feature_name: str = "Up/Down",
         after_update_cb: RVCallbackType[Direction] | None = None,
         invert: bool = False,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 1.008."""
         super().__init__(
             xknx,

@@ -27,7 +27,7 @@ class RemoteValueByLength(RemoteValue[float]):
         device_name: str | None = None,
         feature_name: str | None = None,
         after_update_cb: RVCallbackType[float] | None = None,
-    ):
+    ) -> None:
         """Initialize RemoteValueByLength class."""
         _payload_lengths = set()
         for dpt_class in dpt_classes:

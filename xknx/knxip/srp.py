@@ -31,7 +31,7 @@ class SRP:
         srp_type: SearchRequestParameterType,
         mandatory: bool = True,
         data: bytes = b"",
-    ):
+    ) -> None:
         """Initialize a SRP."""
         self.type = srp_type
         self.mandatory = mandatory

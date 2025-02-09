@@ -15,7 +15,7 @@ class RoutingIndication(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.ROUTING_INDICATION
 
-    def __init__(self, raw_cemi: bytes = b""):
+    def __init__(self, raw_cemi: bytes = b"") -> None:
         """Initialize RoutingIndication object."""
         self.raw_cemi = raw_cemi
 

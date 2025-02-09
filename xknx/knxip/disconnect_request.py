@@ -22,7 +22,7 @@ class DisconnectRequest(KNXIPBody):
         self,
         communication_channel_id: int = 1,
         control_endpoint: HPAI | None = None,
-    ):
+    ) -> None:
         """Initialize DisconnectRequest object."""
         self.communication_channel_id = communication_channel_id
         self.control_endpoint = control_endpoint or HPAI()

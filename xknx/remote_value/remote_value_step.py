@@ -36,7 +36,7 @@ class RemoteValueStep(RemoteValue["RemoteValueStep.Direction"]):
         feature_name: str = "Step",
         after_update_cb: RVCallbackType[Direction] | None = None,
         invert: bool = False,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 1.007."""
         super().__init__(
             xknx,

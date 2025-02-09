@@ -31,7 +31,7 @@ class RemoteValueRaw(RemoteValue[int]):
         device_name: str | None = None,
         feature_name: str = "Raw",
         after_update_cb: RVCallbackType[int] | None = None,
-    ):
+    ) -> None:
         """Initialize RemoteValueRaw class."""
         self.payload_length = payload_length
         super().__init__(

@@ -46,7 +46,7 @@ class SecureWrapper(KNXIPBody):
         message_tag: bytes = bytes(2),
         encrypted_data: bytes = bytes(0),
         message_authentication_code: bytes = bytes(16),
-    ):
+    ) -> None:
         """Initialize SecureWrapper object."""
         self.secure_session_id = secure_session_id
         self.sequence_information = sequence_information

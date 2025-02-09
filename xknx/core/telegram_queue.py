@@ -40,7 +40,7 @@ class TelegramQueue:
             address_filters: list[AddressFilter] | None = None,
             group_addresses: list[GroupAddress | InternalGroupAddress] | None = None,
             match_for_outgoing_telegrams: bool = False,
-        ):
+        ) -> None:
             """Initialize Callback class."""
             self.callback = callback
             self._match_all = address_filters is None and group_addresses is None
@@ -68,7 +68,7 @@ class TelegramQueue:
                         return True
             return False
 
-    def __init__(self, xknx: XKNX):
+    def __init__(self, xknx: XKNX) -> None:
         """Initialize TelegramQueue class."""
         self.xknx = xknx
         self.telegram_received_cbs: list[TelegramQueue.Callback] = []

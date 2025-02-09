@@ -30,7 +30,7 @@ class TCPTransport(KNXIPTransport):
             self,
             data_received_callback: Callable[[bytes], None],
             connection_lost_callback: Callable[[], None],
-        ):
+        ) -> None:
             """Initialize UDPTransportFactory class."""
             self.transport: asyncio.BaseTransport | None = None
             self.data_received_callback = data_received_callback
@@ -67,7 +67,7 @@ class TCPTransport(KNXIPTransport):
         self,
         remote_addr: tuple[str, int],
         connection_lost_cb: Callable[[], None] | None = None,
-    ):
+    ) -> None:
         """Initialize TCPTransport class."""
         self.remote_addr = remote_addr
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)

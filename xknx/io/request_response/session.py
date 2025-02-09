@@ -19,7 +19,7 @@ class Session(RequestResponse):
         self,
         transport: KNXIPTransport,
         ecdh_client_public_key: bytes,
-    ):
+    ) -> None:
         """Initialize Session class."""
         # TODO: increase timeout to timeoutAuthentication: 10sec ?
         super().__init__(transport, SessionResponse)

@@ -20,7 +20,7 @@ class Authenticate(RequestResponse):
         transport: KNXIPTransport,
         user_id: int,
         message_authentication_code: bytes,
-    ):
+    ) -> None:
         """Initialize Session class."""
         super().__init__(transport, SessionStatus, timeout_in_seconds=10)
         self.user_id = user_id

@@ -22,7 +22,7 @@ class Tunnelling(RequestResponse):
         transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
         tunnelling_request: TunnellingRequest,
-    ):
+    ) -> None:
         """Initialize Tunnelling class."""
         self.data_endpoint_addr = data_endpoint
         self.tunnelling_request = tunnelling_request

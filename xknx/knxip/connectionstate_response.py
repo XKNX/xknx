@@ -24,7 +24,7 @@ class ConnectionStateResponse(KNXIPBodyResponse):
         self,
         communication_channel_id: int = 1,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
-    ):
+    ) -> None:
         """Initialize ConnectionStateResponse object."""
         self.communication_channel_id = communication_channel_id
         self.status_code = status_code

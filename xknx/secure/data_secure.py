@@ -51,7 +51,7 @@ class DataSecure:
         group_key_table: dict[GroupAddress, bytes],
         individual_address_table: dict[IndividualAddress, int],
         last_sequence_number_sending: int | None = None,
-    ):
+    ) -> None:
         """Initialize DataSecure class."""
         self._group_key_table = group_key_table
         self._individual_address_table = individual_address_table

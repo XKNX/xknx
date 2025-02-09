@@ -41,7 +41,7 @@ class Switch(Device):
         invert: bool = False,
         reset_after: float | None = None,
         device_updated_cb: DeviceCallbackType[Switch] | None = None,
-    ):
+    ) -> None:
         """Initialize Switch class."""
         super().__init__(xknx, name, device_updated_cb)
 

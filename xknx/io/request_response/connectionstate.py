@@ -21,7 +21,7 @@ class ConnectionState(RequestResponse):
         transport: KNXIPTransport,
         communication_channel_id: int,
         local_hpai: HPAI,
-    ):
+    ) -> None:
         """Initialize ConnectionState class."""
         super().__init__(
             transport,

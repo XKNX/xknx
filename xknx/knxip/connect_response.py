@@ -28,7 +28,7 @@ class ConnectResponse(KNXIPBodyResponse):
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         data_endpoint: HPAI | None = None,
         crd: ConnectResponseData | None = None,
-    ):
+    ) -> None:
         """Initialize ConnectResponse class."""
         self.communication_channel = communication_channel
         self.status_code = status_code
@@ -84,7 +84,7 @@ class ConnectResponseData:
         self,
         request_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
         individual_address: IndividualAddress | None = None,
-    ):
+    ) -> None:
         """Initialize ConnectResponseData object."""
         self.request_type = request_type
         self.individual_address = individual_address

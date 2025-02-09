@@ -22,7 +22,7 @@ class DeviceConfiguration(RequestResponse):
         transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
         device_configuration_request: DeviceConfigurationRequest,
-    ):
+    ) -> None:
         """Initialize DeviceConfiguration class."""
         self.data_endpoint_addr = data_endpoint
         self.device_configuration_request = device_configuration_request

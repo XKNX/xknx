@@ -53,7 +53,7 @@ class _Tunnel(Interface):
         cemi_received_callback: CEMIBytesCallbackType,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
-    ):
+    ) -> None:
         """Initialize Tunnel class."""
         self.xknx = xknx
         self.auto_reconnect = auto_reconnect
@@ -387,7 +387,7 @@ class UDPTunnel(_Tunnel):
         route_back: bool = False,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
-    ):
+    ) -> None:
         """Initialize Tunnel class."""
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
@@ -557,7 +557,7 @@ class TCPTunnel(_Tunnel):
         individual_address: IndividualAddress | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
-    ):
+    ) -> None:
         """Initialize Tunnel class."""
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
@@ -603,7 +603,7 @@ class SecureTunnel(TCPTunnel):
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
         device_authentication_password: str | None = None,
-    ):
+    ) -> None:
         """Initialize SecureTunnel class."""
         self._device_authentication_password = device_authentication_password
         self._user_id = user_id

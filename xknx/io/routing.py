@@ -144,7 +144,7 @@ class Routing(Interface):
         local_ip: str,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
-    ):
+    ) -> None:
         """Initialize Routing class."""
         self.xknx = xknx
         self.individual_address = individual_address or DEFAULT_INDIVIDUAL_ADDRESS
@@ -277,7 +277,7 @@ class SecureRouting(Routing):
         latency_ms: int | None = None,
         multicast_group: str = DEFAULT_MCAST_GRP,
         multicast_port: int = DEFAULT_MCAST_PORT,
-    ):
+    ) -> None:
         """Initialize SecureRouting class."""
         self.backbone_key = backbone_key
         self.latency_ms = latency_ms or DEFAULT_LATENCY_TOLERANCE_MS

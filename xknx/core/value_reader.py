@@ -33,7 +33,7 @@ class ValueReader:
         xknx: XKNX,
         group_address: GroupAddress | InternalGroupAddress,
         timeout_in_seconds: float = 2.0,
-    ):
+    ) -> None:
         """Initialize ValueReader class."""
         self.xknx = xknx
         self.group_address: GroupAddress | InternalGroupAddress = group_address

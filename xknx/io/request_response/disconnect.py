@@ -20,7 +20,7 @@ class Disconnect(RequestResponse):
         transport: KNXIPTransport,
         communication_channel_id: int,
         local_hpai: HPAI,
-    ):
+    ) -> None:
         """Initialize Disconnect class."""
         super().__init__(transport, DisconnectResponse)
         self.communication_channel_id = communication_channel_id

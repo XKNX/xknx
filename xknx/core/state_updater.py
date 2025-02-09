@@ -39,7 +39,7 @@ class StateUpdater:
         xknx: XKNX,
         default_tracker_option: TrackerOptionType,
         parallel_reads: int = 2,
-    ):
+    ) -> None:
         """Initialize StateUpdater class."""
         self.xknx = xknx
         self.started = False
@@ -227,7 +227,7 @@ class _StateTracker:
         self,
         read_state_awaitable: Callable[[], Awaitable[None]],
         tracker_options: TrackerOptions,
-    ):
+    ) -> None:
         """Initialize StateTracker class."""
         self.tracker_type = tracker_options.tracker_type
         self.update_interval = tracker_options.update_interval_min * 60

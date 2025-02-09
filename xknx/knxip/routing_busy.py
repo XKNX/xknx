@@ -23,7 +23,7 @@ class RoutingBusy(KNXIPBody):
         device_state: int = 0,
         wait_time: int = 100,
         control_field: int = 0,
-    ):
+    ) -> None:
         """Initialize RoutingBusy object."""
         self.device_state = device_state
         self.wait_time = wait_time

@@ -36,7 +36,7 @@ class RawValue(Device):
         sync_state: bool | int | float | str = True,
         always_callback: bool = False,
         device_updated_cb: DeviceCallbackType[RawValue] | None = None,
-    ):
+    ) -> None:
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
         self.always_callback = always_callback

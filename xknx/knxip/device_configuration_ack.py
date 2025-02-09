@@ -20,7 +20,7 @@ class DeviceConfigurationAck(KNXIPBodyResponse):
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
-    ):
+    ) -> None:
         """Initialize DeviceConfigurationAck object."""
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter

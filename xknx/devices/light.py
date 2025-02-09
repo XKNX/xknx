@@ -61,7 +61,7 @@ class _SwitchAndBrightness:
         group_address_brightness_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         after_update_cb: RVCallbackType[bool | int] | None = None,
-    ):
+    ) -> None:
         self.switch = RemoteValueSwitch(
             xknx,
             group_address_switch,
@@ -163,7 +163,7 @@ class Light(Device):
         min_kelvin: int | None = None,
         max_kelvin: int | None = None,
         device_updated_cb: DeviceCallbackType[Light] | None = None,
-    ):
+    ) -> None:
         """Initialize Light class."""
         super().__init__(xknx, name, device_updated_cb)
 

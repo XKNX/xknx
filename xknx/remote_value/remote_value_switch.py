@@ -30,7 +30,7 @@ class RemoteValueSwitch(RemoteValue[bool]):
         feature_name: str = "State",
         after_update_cb: RVCallbackType[bool] | None = None,
         invert: bool = False,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 1.001."""
         super().__init__(
             xknx,

@@ -38,7 +38,7 @@ class RemoteValueSetpointShift(RemoteValue[float]):
         after_update_cb: RVCallbackType[float] | None = None,
         setpoint_shift_mode: SetpointShiftMode | None = None,
         setpoint_shift_step: float = 0.1,
-    ):
+    ) -> None:
         """Initialize RemoteValueSetpointShift class."""
         super().__init__(
             xknx,

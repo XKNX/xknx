@@ -31,7 +31,7 @@ class RemoteValueScaling(RemoteValue[int]):
         after_update_cb: RVCallbackType[int] | None = None,
         range_from: int = 0,
         range_to: int = 100,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 5.001 (DPT_Scaling)."""
         super().__init__(
             xknx,

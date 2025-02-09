@@ -19,7 +19,7 @@ class DeviceConfigurationRequest(KNXIPBody):
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
         raw_cemi: bytes = b"",
-    ):
+    ) -> None:
         """Initialize DeviceConfigurationRequest object."""
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter

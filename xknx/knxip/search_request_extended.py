@@ -23,7 +23,7 @@ class SearchRequestExtended(KNXIPBody):
         self,
         discovery_endpoint: HPAI | None = None,
         srps: list[SRP] | None = None,
-    ):
+    ) -> None:
         """Initialize SearchRequestExtended object."""
         self.discovery_endpoint = discovery_endpoint or HPAI()
         self.srps = srps or []
