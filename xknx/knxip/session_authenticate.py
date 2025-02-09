@@ -26,7 +26,7 @@ class SessionAuthenticate(KNXIPBody):
         self,
         user_id: int = 0x02,
         message_authentication_code: bytes = bytes(16),
-    ):
+    ) -> None:
         """Initialize SessionAuthenticate object."""
         # 00h: Reserved, shall not be used
         # 01h: Management level access

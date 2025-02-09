@@ -73,7 +73,7 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
         device_name: str | None = None,
         feature_name: str = "Climate mode",
         after_update_cb: RVCallbackType[HVACOperationMode] | None = None,
-    ):
+    ) -> None:
         """Initialize remote value of KNX climate mode."""
         super().__init__(
             xknx,
@@ -118,7 +118,7 @@ class RemoteValueControllerMode(RemoteValueClimateModeBase[HVACControllerMode]):
         device_name: str | None = None,
         feature_name: str = "Controller Mode",
         after_update_cb: RVCallbackType[HVACControllerMode] | None = None,
-    ):
+    ) -> None:
         """Initialize remote value of KNX climate mode."""
         super().__init__(
             xknx,
@@ -163,7 +163,7 @@ class RemoteValueHVACStatus(RemoteValueClimateModeBase[HVACStatus]):
         device_name: str | None = None,
         feature_name: str = "Controller status",
         after_update_cb: RVCallbackType[HVACStatus] | None = None,
-    ):
+    ) -> None:
         """Initialize remote value of KNX climate controller status."""
         super().__init__(
             xknx,
@@ -242,7 +242,7 @@ class RemoteValueBinaryOperationMode(
         feature_name: str = "Climate mode binary",
         after_update_cb: RVCallbackType[HVACOperationMode | None] | None = None,
         operation_mode: HVACOperationMode | None = None,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 1 representing a climate operation mode."""
         if not isinstance(operation_mode, HVACOperationMode):
             raise ConversionError(
@@ -322,7 +322,7 @@ class RemoteValueBinaryHeatCool(RemoteValueClimateModeBase[HVACControllerMode]):
         feature_name: str = "Controller mode Heat/Cool",
         after_update_cb: RVCallbackType[HVACControllerMode] | None = None,
         controller_mode: HVACControllerMode | None = None,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 1 representing a climate controller mode."""
         if not isinstance(controller_mode, HVACControllerMode):
             raise ConversionError(

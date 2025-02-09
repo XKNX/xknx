@@ -19,6 +19,8 @@ from xknx.knxip import (
 )
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestSecureSession:
     """Test class for xknx/io/SecureSession objects."""
@@ -45,7 +47,7 @@ class TestSecureSession:
     mock_serial_number = bytes.fromhex("00 fa 12 34 56 78")
     mock_message_tag = bytes.fromhex("af fe")
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.patch_serial_number = patch(
@@ -64,7 +66,7 @@ class TestSecureSession:
             device_authentication_password=self.mock_device_authentication_password,
         )
 
-    def teardown_method(self):
+    def teardown_method(self) -> None:
         """Tear down test class."""
         self.patch_serial_number.stop()
         self.patch_message_tag.stop()
@@ -77,11 +79,11 @@ class TestSecureSession:
     )
     async def test_lifecycle(
         self,
-        _mock_generate,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        _mock_generate: Mock,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test connection, handshake, keepalive and shutdown."""
         connect_task = asyncio.create_task(self.session.connect())
         await time_travel(0)
@@ -176,7 +178,7 @@ class TestSecureSession:
             mock_transport.close.assert_called_once()
             assert self.session._keepalive_task is None
 
-    def test_uninitialized(self):
+    def test_uninitialized(self) -> None:
         """Test for raising when an encrypted Frame arrives at an uninitialized Session."""
         secure_wrapper_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
@@ -201,11 +203,11 @@ class TestSecureSession:
     )
     async def test_invalid_frames(
         self,
-        _mock_generate,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        _mock_generate: Mock,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test handling invalid frames."""
         callback_mock = Mock()
         self.session.register_callback(callback_mock)
@@ -282,11 +284,11 @@ class TestSecureSession:
     )
     async def test_invalid_session_response(
         self,
-        _mock_generate,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        _mock_generate: Mock,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test handling invalid session response."""
         connect_task = asyncio.create_task(self.session.connect())
         await time_travel(0)
@@ -315,11 +317,11 @@ class TestSecureSession:
     )
     async def test_no_authentication(
         self,
-        _mock_generate,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        _mock_generate: Mock,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test handling initializing session without verifying server authenticity."""
         self.session._device_authentication_code = None
         connect_task = asyncio.create_task(self.session.connect())
@@ -389,11 +391,11 @@ class TestSecureSession:
     )
     async def test_invalid_authentication(
         self,
-        _mock_generate,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        _mock_generate: Mock,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test handling no session status while authenticating."""
         connect_task = asyncio.create_task(self.session.connect())
         await time_travel(0)

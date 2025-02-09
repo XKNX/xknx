@@ -16,7 +16,7 @@ class TestKNXIPTransport:
     """Test class for KNXIPTransport base class."""
 
     @patch.multiple(KNXIPTransport, __abstractmethods__=set())
-    def test_callback(self):
+    def test_callback(self) -> None:
         """Test if callback is called correctly."""
         transport = KNXIPTransport()
         transport.callbacks = []

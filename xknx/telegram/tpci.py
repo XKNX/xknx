@@ -155,7 +155,7 @@ class TDataConnected(TPCI):
     control = False
     numbered = True
 
-    def __init__(self, sequence_number: int):
+    def __init__(self, sequence_number: int) -> None:
         """Initialize TDataConnected."""
         self.sequence_number = sequence_number
 
@@ -189,7 +189,7 @@ class TAck(TPCI):
     numbered = True
     control_flags = 0b10
 
-    def __init__(self, sequence_number: int):
+    def __init__(self, sequence_number: int) -> None:
         """Initialize TAck."""
         self.sequence_number = sequence_number
 
@@ -203,6 +203,6 @@ class TNak(TPCI):
     numbered = True
     control_flags = 0b11
 
-    def __init__(self, sequence_number: int):
+    def __init__(self, sequence_number: int) -> None:
         """Initialize TNak."""
         self.sequence_number = sequence_number

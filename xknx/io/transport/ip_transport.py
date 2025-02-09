@@ -36,7 +36,7 @@ class KNXIPTransport(ABC):
             self,
             callback: TransportCallbackType,
             service_types: list[KNXIPServiceType] | None = None,
-        ):
+        ) -> None:
             """Initialize Callback class."""
             self.callback = callback
             self.service_types = service_types or []

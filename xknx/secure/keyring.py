@@ -483,7 +483,7 @@ class KeyringSAXContentHandler(ContentHandler):
 
     _attribute_blacklist = ("xmlns", "Signature")
 
-    def __init__(self, keyring_password: str):
+    def __init__(self, keyring_password: str) -> None:
         """Initialize."""
         self.hashed_password = hash_keyring_password(keyring_password.encode("utf-8"))
         self.output = bytearray()

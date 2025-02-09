@@ -1,5 +1,6 @@
 """Unit test for String representations."""
 
+from typing import Any
 from unittest.mock import patch
 
 from xknx import XKNX
@@ -75,10 +76,10 @@ class TestStringRepresentations:
     """Test class for Configuration logic."""
 
     @patch.multiple(RemoteValue, __abstractmethods__=set())
-    def test_remote_value(self):
+    def test_remote_value(self) -> None:
         """Test string representation of remote value."""
         xknx = XKNX()
-        remote_value = RemoteValue(
+        remote_value: RemoteValue[Any] = RemoteValue(
             xknx,
             group_address="1/2/3",
             device_name="MyDevice",
@@ -97,7 +98,7 @@ class TestStringRepresentations:
             "<1/2/3, 1/2/4, [], 34 /> />"
         )
 
-        remote_value_passive = RemoteValue(
+        remote_value_passive: RemoteValue[Any] = RemoteValue(
             xknx,
             group_address=["1/2/3", "1/2/4", "i-test"],
             device_name="MyDevice",
@@ -107,7 +108,7 @@ class TestStringRepresentations:
             == "<RemoteValue device_name=\"MyDevice\" feature_name=\"Unknown\" <1/2/3, None, ['1/2/4', 'i-test'], None /> />"
         )
 
-    def test_binary_sensor(self):
+    def test_binary_sensor(self) -> None:
         """Test string representation of binary sensor object."""
         xknx = XKNX()
         binary_sensor = BinarySensor(xknx, name="Fnord", group_address_state="1/2/3")
@@ -116,7 +117,7 @@ class TestStringRepresentations:
             == '<BinarySensor name="Fnord" remote_value=<None, 1/2/3, [], None /> state=None />'
         )
 
-    def test_climate(self):
+    def test_climate(self) -> None:
         """Test string representation of climate object."""
         xknx = XKNX()
         climate = Climate(
@@ -151,7 +152,7 @@ class TestStringRepresentations:
             "group_address_horizontal_swing=<1/2/20, 1/2/21, [], None /> />"
         )
 
-    def test_climate_mode(self):
+    def test_climate_mode(self) -> None:
         """Test string representation of climate mode object."""
         xknx = XKNX()
         climate_mode = ClimateMode(
@@ -174,7 +175,7 @@ class TestStringRepresentations:
             "controller_status=<1/2/10, 1/2/11, [], None /> />"
         )
 
-    def test_cover(self):
+    def test_cover(self) -> None:
         """Test string representation of cover object."""
         xknx = XKNX()
         cover = Cover(
@@ -204,7 +205,7 @@ class TestStringRepresentations:
             'travel_time_up="10" />'
         )
 
-    def test_fan(self):
+    def test_fan(self) -> None:
         """Test string representation of fan object."""
         xknx = XKNX()
         fan = Fan(
@@ -220,7 +221,7 @@ class TestStringRepresentations:
             == '<Fan name="Dunstabzug" speed=<1/2/3, 1/2/4, [], None /> oscillation=<1/2/5, 1/2/6, [], None /> />'
         )
 
-    def test_light(self):
+    def test_light(self) -> None:
         """Test string representation of non dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -231,7 +232,7 @@ class TestStringRepresentations:
         )
         assert str(light) == '<Light name="Licht" switch=<1/2/3, 1/2/4, [], None /> />'
 
-    def test_light_dimmable(self):
+    def test_light_dimmable(self) -> None:
         """Test string representation of dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -248,7 +249,7 @@ class TestStringRepresentations:
             "brightness=<1/2/5, 1/2/6, [], None /> />"
         )
 
-    def test_light_color(self):
+    def test_light_color(self) -> None:
         """Test string representation of dimmable light object."""
         xknx = XKNX()
         light = Light(
@@ -265,7 +266,7 @@ class TestStringRepresentations:
             "color=<1/2/5, 1/2/6, [], None /> />"
         )
 
-    async def test_notification(self):
+    async def test_notification(self) -> None:
         """Test string representation of notification object."""
         xknx = XKNX()
         notification = Notification(
@@ -282,7 +283,7 @@ class TestStringRepresentations:
             "message=<1/2/3, 1/2/4, [], 'Einbrecher im ' /> />"
         )
 
-    def test_scene(self):
+    def test_scene(self) -> None:
         """Test string representation of scene object."""
         xknx = XKNX()
         scene = Scene(xknx, name="Romantic", group_address="1/2/3", scene_number=23)
@@ -291,7 +292,7 @@ class TestStringRepresentations:
             == '<Scene name="Romantic" scene_value=<1/2/3, None, [], None /> scene_number="23" />'
         )
 
-    async def test_sensor(self):
+    async def test_sensor(self) -> None:
         """Test string representation of sensor object."""
         xknx = XKNX()
         sensor = Sensor(
@@ -313,7 +314,7 @@ class TestStringRepresentations:
             == '<Sensor name="MeinSensor" sensor=<None, 1/2/3, [], 25 /> value=25 unit="%"/>'
         )
 
-    async def test_expose_sensor(self):
+    async def test_expose_sensor(self) -> None:
         """Test string representation of expose sensor object."""
         xknx = XKNX()
         sensor = ExposeSensor(
@@ -330,7 +331,7 @@ class TestStringRepresentations:
             == '<ExposeSensor name="MeinSensor" sensor=<1/2/3, None, [], 25 /> value=25 unit="%"/>'
         )
 
-    def test_switch(self):
+    def test_switch(self) -> None:
         """Test string representation of switch object."""
         xknx = XKNX()
         switch = Switch(
@@ -341,7 +342,7 @@ class TestStringRepresentations:
             == '<Switch name="Schalter" switch=<1/2/3, 1/2/4, [], None /> />'
         )
 
-    async def test_weather(self):
+    async def test_weather(self) -> None:
         """Test string representation of switch object."""
         xknx = XKNX()
         weather = Weather(
@@ -391,7 +392,7 @@ class TestStringRepresentations:
             "air_pressure=<None, 7/0/9, [], None /> humidity=<None, 7/0/9, [], None /> />"
         )
 
-    def test_datetime(self):
+    def test_datetime(self) -> None:
         """Test string representation of datetime object."""
         xknx = XKNX()
         date_time = DateTimeDevice(
@@ -402,12 +403,12 @@ class TestStringRepresentations:
             == '<DateTimeDevice name="Zeit" remote_value=<1/2/3, None, [], None /> />'
         )
 
-    def test_could_not_parse_telegramn_exception(self):
+    def test_could_not_parse_telegramn_exception(self) -> None:
         """Test string representation of CouldNotParseTelegram exception."""
         exception = CouldNotParseTelegram(description="Fnord")
         assert str(exception) == '<CouldNotParseTelegram description="Fnord" />'
 
-    def test_could_not_parse_telegramn_exception_parameter(self):
+    def test_could_not_parse_telegramn_exception_parameter(self) -> None:
         """Test string representation of CouldNotParseTelegram exception."""
         exception = CouldNotParseTelegram(description="Fnord", one="one", two="two")
         assert (
@@ -415,17 +416,17 @@ class TestStringRepresentations:
             == '<CouldNotParseTelegram description="Fnord" one="one" two="two"/>'
         )
 
-    def test_could_not_parse_knxip_exception(self):
+    def test_could_not_parse_knxip_exception(self) -> None:
         """Test string representation of CouldNotParseKNXIP exception."""
         exception = CouldNotParseKNXIP(description="Fnord")
         assert str(exception) == '<CouldNotParseKNXIP description="Fnord" />'
 
-    def test_conversion_error_exception(self):
+    def test_conversion_error_exception(self) -> None:
         """Test string representation of ConversionError exception."""
         exception = ConversionError(description="Fnord")
         assert str(exception) == '<ConversionError description="Fnord" />'
 
-    def test_conversion_error_exception_parameter(self):
+    def test_conversion_error_exception_parameter(self) -> None:
         """Test string representation of ConversionError exception."""
         exception = ConversionError(description="Fnord", one="one", two="two")
         assert (
@@ -433,12 +434,12 @@ class TestStringRepresentations:
             == '<ConversionError description="Fnord" one="one" two="two"/>'
         )
 
-    def test_could_not_parse_address_exception(self):
+    def test_could_not_parse_address_exception(self) -> None:
         """Test string representation of CouldNotParseAddress exception."""
         exception = CouldNotParseAddress(address="1/2/1000")
         assert str(exception) == '<CouldNotParseAddress address="1/2/1000" />'
 
-    def test_device_illegal_value_exception(self):
+    def test_device_illegal_value_exception(self) -> None:
         """Test string representation of DeviceIllegalValue exception."""
         exception = DeviceIllegalValue(value=12, description="Fnord exceeded")
         assert (
@@ -446,28 +447,28 @@ class TestStringRepresentations:
             == '<DeviceIllegalValue description="12" value="Fnord exceeded" />'
         )
 
-    def test_incomplete_knxip_frame_excetpion(self):
+    def test_incomplete_knxip_frame_excetpion(self) -> None:
         """Test string representation of IncompleteKNXIPFrame exception."""
         exception = IncompleteKNXIPFrame("Hello")
         assert str(exception) == '<IncompleteKNXIPFrame description="Hello" />'
 
-    def test_address(self):
+    def test_address(self) -> None:
         """Test string representation of address object."""
         address = GroupAddress("1/2/3")
         assert repr(address) == 'GroupAddress("1/2/3")'
         assert str(address) == "1/2/3"
 
-    def test_dpt_array(self):
+    def test_dpt_array(self) -> None:
         """Test string representation of DPTBinary."""
         dpt_array = DPTArray([0x01, 0x02])
         assert str(dpt_array) == '<DPTArray value="[0x1,0x2]" />'
 
-    def test_dpt_binary(self):
+    def test_dpt_binary(self) -> None:
         """Test string representation of DPTBinary."""
         dpt_binary = DPTBinary(7)
         assert str(dpt_binary) == '<DPTBinary value="7" />'
 
-    def test_telegram(self):
+    def test_telegram(self) -> None:
         """Test string representation of Telegram."""
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -478,14 +479,14 @@ class TestStringRepresentations:
             'destination_address="1/2/3" payload="<GroupValueWrite value="<DPTBinary value="7" />" />" />'
         )
 
-    def test_dib_generic(self):
+    def test_dib_generic(self) -> None:
         """Test string representation of DIBGeneric."""
         dib = DIBGeneric()
         dib.dtc = 0x01
         dib.data = [0x02, 0x03, 0x04]
         assert str(dib) == '<DIB dtc="1" data="0x02, 0x03, 0x04" />'
 
-    def test_dib_supp_svc_families(self):
+    def test_dib_supp_svc_families(self) -> None:
         """Test string representation of DIBSuppSVCFamilies."""
         dib = DIBSuppSVCFamilies()
         dib.families.append(DIBSuppSVCFamilies.Family(DIBServiceFamily.CORE, "1"))
@@ -497,7 +498,7 @@ class TestStringRepresentations:
             == '<DIBSuppSVCFamilies families="[DIBServiceFamily.CORE version: 1, DIBServiceFamily.DEVICE_MANAGEMENT version: 2]" />'
         )
 
-    def test_dib_device_informatio(self):
+    def test_dib_device_informatio(self) -> None:
         """Test string representation of DIBDeviceInformation."""
         dib = DIBDeviceInformation()
         dib.knx_medium = KNXMedium.TP1
@@ -522,7 +523,7 @@ class TestStringRepresentations:
             '\tname="Gira KNX/IP-Router" />'
         )
 
-    def test_hpai(self):
+    def test_hpai(self) -> None:
         """Test string representation of HPAI."""
         hpai_udp = HPAI(ip_addr="192.168.42.1", port=33941)
         assert str(hpai_udp) == "192.168.42.1:33941/udp"
@@ -532,7 +533,7 @@ class TestStringRepresentations:
         assert str(hpai_tcp) == "10.1.4.1:3671/tcp"
         assert repr(hpai_tcp) == "HPAI('10.1.4.1', 3671, HostProtocol.IPV4_TCP)"
 
-    def test_header(self):
+    def test_header(self) -> None:
         """Test string representation of KNX/IP-Header."""
         header = KNXIPHeader()
         header.total_length = 42
@@ -542,7 +543,7 @@ class TestStringRepresentations:
             "/>"
         )
 
-    def test_connect_request(self):
+    def test_connect_request(self) -> None:
         """Test string representation of KNX/IP ConnectRequest."""
         connect_request = ConnectRequest()
         connect_request.request_type = ConnectRequestType.TUNNEL_CONNECTION
@@ -554,7 +555,7 @@ class TestStringRepresentations:
             'cri="<ConnectRequestInformation connection_type="TUNNEL_CONNECTION" knx_layer="DATA_LINK_LAYER" />" />'
         )
 
-    def test_connect_response(self):
+    def test_connect_response(self) -> None:
         """Test string representatoin of KNX/IP ConnectResponse."""
         connect_response = ConnectResponse()
         connect_response.communication_channel = 13
@@ -570,7 +571,7 @@ class TestStringRepresentations:
             'crd="<ConnectResponseData request_type="ConnectRequestType.TUNNEL_CONNECTION" individual_address="1.2.3" />" />'
         )
 
-    def test_disconnect_request(self):
+    def test_disconnect_request(self) -> None:
         """Test string representation of KNX/IP DisconnectRequest."""
         disconnect_request = DisconnectRequest()
         disconnect_request.communication_channel_id = 13
@@ -580,7 +581,7 @@ class TestStringRepresentations:
             == '<DisconnectRequest communication_channel_id="13" control_endpoint="192.168.42.1:33941/udp" />'
         )
 
-    def test_disconnect_response(self):
+    def test_disconnect_response(self) -> None:
         """Test string representation of KNX/IP DisconnectResponse."""
         disconnect_response = DisconnectResponse()
         disconnect_response.communication_channel_id = 23
@@ -589,7 +590,7 @@ class TestStringRepresentations:
             == '<DisconnectResponse communication_channel_id="23" status_code="ErrorCode.E_NO_ERROR" />'
         )
 
-    def test_connectionstate_request(self):
+    def test_connectionstate_request(self) -> None:
         """Test string representation of KNX/IP ConnectionStateRequest."""
         connectionstate_request = ConnectionStateRequest()
         connectionstate_request.communication_channel_id = 23
@@ -601,7 +602,7 @@ class TestStringRepresentations:
             == '<ConnectionStateRequest communication_channel_id="23", control_endpoint="192.168.42.1:33941/udp" />'
         )
 
-    def test_connectionstate_response(self):
+    def test_connectionstate_response(self) -> None:
         """Test string representation of KNX/IP ConnectionStateResponse."""
         connectionstate_response = ConnectionStateResponse()
         connectionstate_response.communication_channel_id = 23
@@ -610,7 +611,7 @@ class TestStringRepresentations:
             == '<ConnectionStateResponse communication_channel_id="23" status_code="ErrorCode.E_NO_ERROR" />'
         )
 
-    def test_search_reqeust(self):
+    def test_search_reqeust(self) -> None:
         """Test string representation of KNX/IP SearchRequest."""
         search_request = SearchRequest()
         assert (
@@ -618,7 +619,7 @@ class TestStringRepresentations:
             == '<SearchRequest discovery_endpoint="0.0.0.0:0/udp" />'
         )
 
-    def test_search_response(self):
+    def test_search_response(self) -> None:
         """Test string representation of KNX/IP SearchResponse."""
         search_response = SearchResponse()
         search_response.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
@@ -632,7 +633,7 @@ class TestStringRepresentations:
             ']" />'
         )
 
-    def test_search_response_extended(self):
+    def test_search_response_extended(self) -> None:
         """Test string representation of KNX/IP SearchResponseExtended."""
         search_response = SearchResponseExtended()
         search_response.control_endpoint = HPAI(ip_addr="192.168.42.1", port=33941)
@@ -646,7 +647,7 @@ class TestStringRepresentations:
             ']" />'
         )
 
-    def test_tunnelling_request(self):
+    def test_tunnelling_request(self) -> None:
         """Test string representation of KNX/IP TunnellingRequest."""
         tunnelling_request = TunnellingRequest()
         tunnelling_request.communication_channel_id = 23
@@ -656,7 +657,7 @@ class TestStringRepresentations:
             == '<TunnellingRequest communication_channel_id="23" sequence_counter="42" cemi="" />'
         )
 
-    def test_tunnelling_ack(self):
+    def test_tunnelling_ack(self) -> None:
         """Test string representation of KNX/IP TunnellingAck."""
         tunnelling_ack = TunnellingAck()
         tunnelling_ack.communication_channel_id = 23
@@ -666,7 +667,7 @@ class TestStringRepresentations:
             == '<TunnellingAck communication_channel_id="23" sequence_counter="42" status_code="ErrorCode.E_NO_ERROR" />'
         )
 
-    def test_tunnelling_feature_get(self):
+    def test_tunnelling_feature_get(self) -> None:
         """Test string representation of KNX/IP TunnellingFeatureGet."""
         tunnelling_feature = TunnellingFeatureGet()
         tunnelling_feature.communication_channel_id = 23
@@ -678,7 +679,7 @@ class TestStringRepresentations:
             'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" />'
         )
 
-    def test_tunnelling_feature_info(self):
+    def test_tunnelling_feature_info(self) -> None:
         """Test string representation of KNX/IP TunnellingFeatureInfo."""
         tunnelling_feature = TunnellingFeatureInfo()
         tunnelling_feature.communication_channel_id = 23
@@ -691,7 +692,7 @@ class TestStringRepresentations:
             'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" data="0100" />'
         )
 
-    def test_tunnelling_feature_response(self):
+    def test_tunnelling_feature_response(self) -> None:
         """Test string representation of KNX/IP TunnellingFeatureResponse."""
         tunnelling_feature = TunnellingFeatureResponse()
         tunnelling_feature.communication_channel_id = 23
@@ -704,7 +705,7 @@ class TestStringRepresentations:
             'feature_type="TunnellingFeatureType.BUS_CONNECTION_STATUS" return_code="ReturnCode.E_SUCCESS" data="0100" />'
         )
 
-    def test_tunnelling_feature_set(self):
+    def test_tunnelling_feature_set(self) -> None:
         """Test string representation of KNX/IP TunnellingFeatureSet."""
         tunnelling_feature = TunnellingFeatureSet()
         tunnelling_feature.communication_channel_id = 23
@@ -719,7 +720,7 @@ class TestStringRepresentations:
             'feature_type="TunnellingFeatureType.INTERFACE_FEATURE_INFO_ENABLE" data="0100" />'
         )
 
-    def test_cemi_ldata_frame(self):
+    def test_cemi_ldata_frame(self) -> None:
         """Test string representation of KNX/IP CEMI Frame."""
         cemi_frame = CEMIFrame(
             code=CEMIMessageCode.L_DATA_IND,
@@ -738,7 +739,7 @@ class TestStringRepresentations:
             'payload="<GroupValueWrite value="<DPTBinary value="7" />" />")" />'
         )
 
-    def test_cemi_mprop_frame(self):
+    def test_cemi_mprop_frame(self) -> None:
         """Test string representation of KNX/IP CEMI Frame."""
         cemi_frame = CEMIFrame(
             code=CEMIMessageCode.M_PROP_READ_REQ,
@@ -756,7 +757,7 @@ class TestStringRepresentations:
             'property_id="52" number_of_elements="1" start_index="1" error_code="None" data="1203" )" />'
         )
 
-    def test_knxip_frame(self):
+    def test_knxip_frame(self) -> None:
         """Test string representation of KNX/IP Frame."""
         search_request = SearchRequest()
         knxipframe = KNXIPFrame.init_from_body(search_request)
@@ -769,7 +770,7 @@ class TestStringRepresentations:
     #
     # Gateway Scanner
     #
-    def test_gateway_descriptor(self):
+    def test_gateway_descriptor(self) -> None:
         """Test string representation of GatewayDescriptor."""
         gateway_descriptor = GatewayDescriptor(
             name="KNX-Interface",
@@ -786,7 +787,7 @@ class TestStringRepresentations:
     #
     # Routing Indication
     #
-    def test_routing_indication_str(self):
+    def test_routing_indication_str(self) -> None:
         """Test string representation of GatewayDescriptor."""
         routing_indication = RoutingIndication()
         assert str(routing_indication) == '<RoutingIndication cemi="" />'

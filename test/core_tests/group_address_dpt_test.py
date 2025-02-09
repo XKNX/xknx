@@ -2,11 +2,12 @@
 
 from unittest.mock import Mock, patch
 
+from xknx import XKNX
 from xknx.dpt import DPTArray, DPTHumidity, DPTScaling, DPTTemperature
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection, apci
 
 
-async def test_group_address_dpt_in_telegram_queue(xknx_no_interface):
+async def test_group_address_dpt_in_telegram_queue(xknx_no_interface: XKNX) -> None:
     """Test group address dpt."""
     xknx = xknx_no_interface
     telegram = Telegram(
@@ -45,7 +46,9 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface):
 
 
 @patch("logging.Logger.warning")
-async def test_get_invalid_payload(logger_warning_mock, xknx_no_interface):
+async def test_get_invalid_payload(
+    logger_warning_mock: Mock, xknx_no_interface: XKNX
+) -> None:
     """Test processing when DPT doesn't fit payload."""
     xknx = xknx_no_interface
     xknx.group_address_dpt.set({GroupAddress("1/2/3"): {"main": 5}})
@@ -67,7 +70,7 @@ async def test_get_invalid_payload(logger_warning_mock, xknx_no_interface):
         assert "DPT decoding error" in logger_warning_mock.call_args[0][0]
 
 
-def test_set(xknx_no_interface):
+def test_set(xknx_no_interface: XKNX) -> None:
     """Test set."""
     xknx = xknx_no_interface
     xknx.group_address_dpt.set(
@@ -87,7 +90,9 @@ def test_set(xknx_no_interface):
 
 @patch("logging.Logger.warning")
 @patch("logging.Logger.debug")
-def test_set_invalid(logger_debug_mock, logger_warning_mock, xknx_no_interface):
+def test_set_invalid(
+    logger_debug_mock: Mock, logger_warning_mock: Mock, xknx_no_interface: XKNX
+) -> None:
     """Test set invalid dpts."""
     xknx = xknx_no_interface
     xknx.group_address_dpt.set(
@@ -104,7 +109,7 @@ def test_set_invalid(logger_debug_mock, logger_warning_mock, xknx_no_interface):
     assert not xknx.group_address_dpt._ga_dpts
 
 
-def test_clear(xknx_no_interface):
+def test_clear(xknx_no_interface: XKNX) -> None:
     """Test clear."""
     xknx = xknx_no_interface
     xknx.group_address_dpt.set(

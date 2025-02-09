@@ -39,7 +39,7 @@ class BinarySensor(Device):
         reset_after: float | None = None,
         context_timeout: float | None = None,
         device_updated_cb: DeviceCallbackType[BinarySensor] | None = None,
-    ):
+    ) -> None:
         """Initialize BinarySensor class."""
         super().__init__(xknx, name, device_updated_cb)
 

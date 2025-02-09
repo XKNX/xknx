@@ -11,7 +11,7 @@ from xknx.remote_value import RemoteValueNumeric, RemoteValueSensor
 class TestRemoteValueSensor:
     """Test class for RemoteValueSensor objects."""
 
-    def test_value_type(self):
+    def test_value_type(self) -> None:
         """Test initializing a value_type."""
         xknx = XKNX()
         assert RemoteValueSensor(xknx=xknx, value_type="pulse")
@@ -19,7 +19,7 @@ class TestRemoteValueSensor:
         assert RemoteValueSensor(xknx=xknx, value_type="9.021")
         assert RemoteValueSensor(xknx=xknx, value_type="string")
 
-    def test_wrong_value_type(self):
+    def test_wrong_value_type(self) -> None:
         """Test initializing with wrong value_type."""
         xknx = XKNX()
         with pytest.raises(ConversionError):
@@ -35,12 +35,12 @@ class TestRemoteValueSensor:
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx)
 
-    def test_payload_length_defined(self):
+    def test_payload_length_defined(self) -> None:
         """Test if all members of DPTMAP implement payload_length."""
         for dpt_class in DPTBase.__recursive_subclasses__():
             assert isinstance(dpt_class.payload_length, int)
 
-    def test_payload_invalid(self):
+    def test_payload_invalid(self) -> None:
         """Test invalid payloads."""
         xknx = XKNX()
         remote_value = RemoteValueSensor(xknx=xknx, value_type="pulse")
@@ -57,14 +57,14 @@ class TestRemoteValueSensor:
 class TestRemoteValueNumeric:
     """Test class for RemoteValueNumeric objects."""
 
-    def test_value_type(self):
+    def test_value_type(self) -> None:
         """Test initializing a value_type."""
         xknx = XKNX()
         assert RemoteValueNumeric(xknx=xknx, value_type="pulse")
         assert RemoteValueNumeric(xknx=xknx, value_type=9)
         assert RemoteValueNumeric(xknx=xknx, value_type="9.021")
 
-    def test_wrong_value_type(self):
+    def test_wrong_value_type(self) -> None:
         """Test initializing with wrong value_type."""
         xknx = XKNX()
         with pytest.raises(ConversionError):

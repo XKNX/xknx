@@ -7,7 +7,7 @@ from xknx.knxip.srp import SRP
 class TestKNXIPSearchRequestExtended:
     """Test class for KNX/IP SearchRequest Extended objects."""
 
-    def test_search_request_extended(self):
+    def test_search_request_extended(self) -> None:
         """Test parsing and streaming SearchRequest Extended KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 0b 00 0e 08 01 e0 00 17 0C 0E 57")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -25,7 +25,7 @@ class TestKNXIPSearchRequestExtended:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_search_request_extended_srp(self):
+    def test_search_request_extended_srp(self) -> None:
         """Test parsing and streaming SearchRequest Extended with SRPs KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 0b 00 10 08 01 e0 00 17 0c 0e 57 02 81")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -46,7 +46,7 @@ class TestKNXIPSearchRequestExtended:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_search_request_extended_multiple_srp(self):
+    def test_search_request_extended_multiple_srp(self) -> None:
         """Test parsing and streaming SearchRequest Extended with SRPs KNX/IP packet."""
         raw = bytes.fromhex(
             "06 10 02 0b 00 18 08 01 e0 00 17 0c 0e 57 02 81 08 82 01 02 03 04 05 06"

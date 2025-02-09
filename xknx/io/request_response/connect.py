@@ -31,7 +31,7 @@ class Connect(RequestResponse):
         transport: KNXIPTransport,
         local_hpai: HPAI,
         cri: ConnectRequestInformation | None = None,
-    ):
+    ) -> None:
         """Initialize Connect class."""
         super().__init__(transport, ConnectResponse)
         self.communication_channel = 0

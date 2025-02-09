@@ -16,7 +16,7 @@ class SearchRequest(KNXIPBody):
 
     SERVICE_TYPE = KNXIPServiceType.SEARCH_REQUEST
 
-    def __init__(self, discovery_endpoint: HPAI | None = None):
+    def __init__(self, discovery_endpoint: HPAI | None = None) -> None:
         """Initialize SearchRequest object."""
         self.discovery_endpoint = discovery_endpoint or HPAI()
 

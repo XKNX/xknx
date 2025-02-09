@@ -6,6 +6,8 @@ import sys
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestTaskRegistry:
     """Test class for task registry."""
@@ -13,7 +15,7 @@ class TestTaskRegistry:
     #
     # TEST REGISTER/UNREGISTER
     #
-    async def test_register(self):
+    async def test_register(self) -> None:
         """Test register."""
 
         xknx = XKNX()
@@ -35,7 +37,7 @@ class TestTaskRegistry:
         assert task.done()
         assert len(xknx.task_registry.tasks) == 0
 
-    async def test_unregister(self):
+    async def test_unregister(self) -> None:
         """Test unregister after register."""
 
         xknx = XKNX()
@@ -56,7 +58,7 @@ class TestTaskRegistry:
     #
     # TEST START/STOP
     #
-    async def test_stop(self):
+    async def test_stop(self) -> None:
         """Test stop."""
 
         xknx = XKNX()
@@ -77,7 +79,9 @@ class TestTaskRegistry:
     #
     # TEST CONNECTION HANDLING
     #
-    async def test_reconnect_handling(self, time_travel):
+    async def test_reconnect_handling(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test reconnect handling."""
 
         xknx = XKNX()
@@ -127,7 +131,7 @@ class TestTaskRegistry:
         assert self.test == 0
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 0
 
-    async def test_background(self, time_travel):
+    async def test_background(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test running background task."""
         test_time = 10
 

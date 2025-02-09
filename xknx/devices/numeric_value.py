@@ -36,7 +36,7 @@ class NumericValue(Device):
         value_type: int | str | None = None,
         always_callback: bool = False,
         device_updated_cb: DeviceCallbackType[NumericValue] | None = None,
-    ):
+    ) -> None:
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
         self.always_callback = always_callback

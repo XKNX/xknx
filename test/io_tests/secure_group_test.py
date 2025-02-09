@@ -12,6 +12,8 @@ from xknx.io.ip_secure import SecureGroup
 from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
 from xknx.telegram import GroupAddress, Telegram, apci
 
+from ..conftest import EventLoopClockAdvancer
+
 ONE_HOUR_MS = 60 * 60 * 1000
 
 
@@ -28,11 +30,11 @@ class TestSecureGroup:
 
     def assert_timer_notify(
         self,
-        knxipframe,
-        timer_value=None,
-        serial_number=None,
-        message_tag=None,
-        mac=None,
+        knxipframe: KNXIPFrame,
+        timer_value: int | None = None,
+        serial_number: bytes | None = None,
+        message_tag: bytes | None = None,
+        mac: bytes | None = None,
     ) -> bytes:
         """Assert that knxipframe is a TimerNotify."""
         assert isinstance(knxipframe.body, TimerNotify)
@@ -48,10 +50,10 @@ class TestSecureGroup:
 
     async def test_no_synchronize(
         self,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test synchronisazion not answered."""
         secure_group = SecureGroup(
             local_addr=self.mock_addr,
@@ -113,10 +115,10 @@ class TestSecureGroup:
 
     async def test_synchronize(
         self,
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test synchronisazion."""
         secure_group = SecureGroup(
             local_addr=self.mock_addr,
@@ -169,12 +171,12 @@ class TestSecureGroup:
     @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
     async def test_received_timer_notify(
         self,
-        mock_monotonic_ms,
-        _mock_notify_timer_expired,  # we don't want to actually send here
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        mock_monotonic_ms: Mock,
+        _mock_notify_timer_expired: Mock,  # we don't want to actually send here
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test handling of received TimerNotify frames."""
         mock_monotonic_ms.return_value = 0
         secure_group = SecureGroup(
@@ -304,13 +306,13 @@ class TestSecureGroup:
     @patch("xknx.io.transport.udp_transport.UDPTransport.handle_knxipframe")
     async def test_received_secure_wrapper(
         self,
-        mock_super_handle_knxipframe,
-        mock_monotonic_ms,
-        _mock_notify_timer_expired,  # we don't want to actually send here
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        mock_super_handle_knxipframe: Mock,
+        mock_monotonic_ms: Mock,
+        _mock_notify_timer_expired: Mock,  # we don't want to actually send here
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test handling of received SecureWrapper frames."""
         mock_monotonic_ms.return_value = 0
         secure_group = SecureGroup(
@@ -428,12 +430,12 @@ class TestSecureGroup:
     @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
     async def test_send_secure_wrapper(
         self,
-        mock_monotonic_ms,
-        _mock_notify_timer_expired,  # we don't want to actually send here
-        mock_super_send,
-        mock_super_connect,
-        time_travel,
-    ):
+        mock_monotonic_ms: Mock,
+        _mock_notify_timer_expired: Mock,  # we don't want to actually send here
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test sending SecureWrapper frames."""
         mock_monotonic_ms.return_value = 0
         secure_group = SecureGroup(
@@ -477,11 +479,11 @@ class TestSecureGroup:
     @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
     async def test_send_secure_wrapper_timer_overflow(
         self,
-        mock_monotonic_ms,
-        _mock_notify_timer_expired,  # we don't want to actually send here
-        mock_super_send,
-        mock_super_connect,
-    ):
+        mock_monotonic_ms: Mock,
+        _mock_notify_timer_expired: Mock,  # we don't want to actually send here
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+    ) -> None:
         """Test raising when secure timer overflows."""
         mock_monotonic_ms.return_value = 0xFF_FF_FF_FF_FF_FF + 1
         secure_group = SecureGroup(
@@ -510,9 +512,9 @@ class TestSecureGroup:
 
     async def test_receive_plain_frames(
         self,
-        mock_super_send,
-        mock_super_connect,
-    ):
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+    ) -> None:
         """Test class for KNXnet/IP secure routing."""
         frame_received_mock = Mock()
         secure_group = SecureGroup(

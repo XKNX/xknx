@@ -44,7 +44,7 @@ class ExposeSensor(Device):
         value_type: int | str | None = None,
         cooldown: float = 0,
         device_updated_cb: DeviceCallbackType[ExposeSensor] | None = None,
-    ):
+    ) -> None:
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
         self.cooldown = cooldown

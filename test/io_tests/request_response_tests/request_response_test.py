@@ -13,7 +13,7 @@ from xknx.knxip import DisconnectResponse, KNXIPBody
 class TestConnectResponse:
     """Test class for xknx/io/Disconnect objects."""
 
-    async def test_create_knxipframe_err(self):
+    async def test_create_knxipframe_err(self) -> None:
         """Test if create_knxipframe of base class raises an exception."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         request_response = RequestResponse(udp_transport, DisconnectResponse)
@@ -27,8 +27,8 @@ class TestConnectResponse:
         "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
     )
     async def test_request_response_timeout(
-        self, _send_request_mock, logger_debug_mock
-    ):
+        self, _send_request_mock: MagicMock, logger_debug_mock: AsyncMock
+    ) -> None:
         """Test RequestResponse: timeout. No callback shall be left."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = RequestResponse(udp_transport, KNXIPBody)
@@ -48,7 +48,9 @@ class TestConnectResponse:
     @patch(
         "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
     )
-    async def test_request_response_cancelled(self, _send_request_mock):
+    async def test_request_response_cancelled(
+        self, _send_request_mock: AsyncMock
+    ) -> None:
         """Test RequestResponse: task cancelled. No callback shall be left."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = RequestResponse(udp_transport, KNXIPBody)

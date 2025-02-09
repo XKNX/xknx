@@ -1,6 +1,7 @@
 """Unit test for KNX time objects."""
 
 import datetime
+from typing import Any
 
 import pytest
 
@@ -29,7 +30,7 @@ class TestKNXTime:
             ),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, Any], value: KNXTime) -> None:
         """Test from_dict and as_dict methods."""
         assert KNXTime.from_dict(data) == value
         # day defaults to `no_day`
@@ -49,7 +50,7 @@ class TestKNXTime:
             {"hour": 1, "minutes": 2, "seconds": 3, "day": "a"},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             KNXTime.from_dict(data)
@@ -63,7 +64,7 @@ class TestKNXTime:
             (datetime.time(23, 59, 59), KNXTime(23, 59, 59)),
         ],
     )
-    def test_as_time(self, time, value):
+    def test_as_time(self, time: datetime.time, value: KNXTime) -> None:
         """Test from_time and as_time methods."""
         assert KNXTime.from_time(time) == value
         assert value.as_time() == time
@@ -80,13 +81,13 @@ class TestDPTTime:
             (KNXTime(23, 59, 59, KNXDay.SUNDAY), (0xF7, 0x3B, 0x3B)),
         ],
     )
-    def test_parse(self, value, raw):
+    def test_parse(self, value: KNXTime, raw: tuple[int, ...]) -> None:
         """Test parsing and streaming."""
         knx_value = DPTTime.to_knx(value)
         assert knx_value == DPTArray(raw)
         assert DPTTime.from_knx(knx_value) == value
 
-    def test_from_knx_wrong_value(self):
+    def test_from_knx_wrong_value(self) -> None:
         """Test parsing from DPTTime object from wrong binary values."""
         with pytest.raises(ConversionError):
             # this parameter exceeds limit
@@ -96,7 +97,7 @@ class TestDPTTime:
         with pytest.raises(CouldNotParseTelegram):
             DPTTime.from_knx(DPTBinary(True))
 
-    def test_to_knx_wrong_parameter(self):
+    def test_to_knx_wrong_parameter(self) -> None:
         """Test parsing from DPTTime object from wrong value."""
         with pytest.raises(ConversionError):
             DPTTime.to_knx(KNXTime(24, 0, 0))  # out of range

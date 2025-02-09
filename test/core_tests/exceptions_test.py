@@ -47,7 +47,11 @@ from xknx.exceptions import (
         ),
     ],
 )
-def test_exceptions(base, equal, diff):
+def test_exceptions(
+    base: XKNXException,
+    equal: XKNXException,
+    diff: XKNXException,
+) -> None:
     """Test hashability and repr of exceptions."""
     assert hash(base) == hash(equal)
     assert hash(base) != hash(diff)

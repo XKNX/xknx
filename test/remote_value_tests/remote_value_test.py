@@ -16,7 +16,7 @@ from xknx.telegram.apci import GroupValueWrite
 class TestRemoteValue:
     """Test class for RemoteValue objects."""
 
-    async def test_get_set_value(self):
+    async def test_get_set_value(self) -> None:
         """Test value getter and setter."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -39,7 +39,7 @@ class TestRemoteValue:
         # no Telegram was sent to the queue
         assert xknx.telegrams.qsize() == 0
 
-    def test_set_value(self):
+    def test_set_value(self) -> None:
         """Test set_value awaitable."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -55,7 +55,7 @@ class TestRemoteValue:
             remote_value.update_value("a")
         assert remote_value.value == 3.3
 
-    async def test_info_set_uninitialized(self):
+    async def test_info_set_uninitialized(self) -> None:
         """Test for info if RemoteValue is not initialized."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -68,7 +68,7 @@ class TestRemoteValue:
                 23,
             )
 
-    async def test_info_set_unwritable(self):
+    async def test_info_set_unwritable(self) -> None:
         """Test for warning if RemoteValue is read only."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address_state=GroupAddress("1/2/3"))
@@ -81,13 +81,13 @@ class TestRemoteValue:
                 23,
             )
 
-    def test_default_value_unit(self):
+    def test_default_value_unit(self) -> None:
         """Test for the default value of unit_of_measurement."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
         assert remote_value.unit_of_measurement is None
 
-    async def test_process_unsupported_payload_type(self):
+    async def test_process_unsupported_payload_type(self) -> None:
         """Test if exception is raised when processing telegram with unsupported payload type."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -105,7 +105,7 @@ class TestRemoteValue:
             ):
                 remote_value.process(telegram)
 
-    def test_process_unsupported_payload(self):
+    def test_process_unsupported_payload(self) -> None:
         """Test warning is logged when processing telegram with unsupported payload."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
@@ -132,7 +132,7 @@ class TestRemoteValue:
                 ConversionError("TestError"),
             )
 
-    async def test_read_state(self):
+    async def test_read_state(self) -> None:
         """Test read state while waiting for the result."""
         xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
@@ -148,7 +148,7 @@ class TestRemoteValue:
             patch_read.assert_called_once()
             # RemoteValue.value is updated by RemoteValue.process called from Device / TelegramQueue
 
-    async def test_read_state_none(self):
+    async def test_read_state_none(self) -> None:
         """Test read state while waiting for the result but got None."""
         xknx = XKNX()
         remote_value = RemoteValueSwitch(xknx, group_address_state="1/2/3")
@@ -168,7 +168,7 @@ class TestRemoteValue:
                 "State",
             )
 
-    def test_unpacking_passive_address(self):
+    def test_unpacking_passive_address(self) -> None:
         """Test if passive group addresses are properly unpacked."""
         xknx = XKNX()
 
@@ -235,7 +235,7 @@ class TestRemoteValue:
             GroupAddress("2/2/20"),
         ]
 
-    def test_process_passive_address(self):
+    def test_process_passive_address(self) -> None:
         """Test if passive group addresses are processed."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address=["1/2/3", "1/1/1"])
@@ -254,7 +254,7 @@ class TestRemoteValue:
         assert remote_value.process(telegram)
         assert remote_value.telegram.payload.value == test_payload
 
-    def test_to_from_knx(self):
+    def test_to_from_knx(self) -> None:
         """Test to_knx and from_knx raises when not set properly."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address="1/1/1")
@@ -274,7 +274,7 @@ class TestRemoteValue:
         remote_value.value = 3.3
         remote_value.process(telegram)
 
-    def test_pre_decoded_telegram(self):
+    def test_pre_decoded_telegram(self) -> None:
         """Test if pre-decoded Telegram is processed."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx, group_address="1/1/1")
@@ -289,7 +289,7 @@ class TestRemoteValue:
         assert remote_value.process(telegram)
         assert remote_value.value == 3.3
 
-    def test_eq(self):
+    def test_eq(self) -> None:
         """Test __eq__ operator."""
         xknx = XKNX()
         remote_value1 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
@@ -298,7 +298,7 @@ class TestRemoteValue:
         remote_value4 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
         remote_value4.fnord = "fnord"
 
-        def _callback():
+        def _callback() -> None:
             pass
 
         remote_value5 = RemoteValue(

@@ -17,7 +17,7 @@ from xknx.telegram import IndividualAddress
 class TestKNXIPConnectResponse:
     """Test class for KNX/IP ConnectResponses."""
 
-    def test_tunnel_connect_response(self):
+    def test_tunnel_connect_response(self) -> None:
         """Test parsing and streaming connection response KNX/IP packet."""
         raw = bytes.fromhex(
             "06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 04 04 11 FF"
@@ -43,7 +43,7 @@ class TestKNXIPConnectResponse:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_mgmt_connect_response(self):
+    def test_mgmt_connect_response(self) -> None:
         """Test parsing and streaming connection response KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 06 00 12 01 00 08 01 C0 A8 2A 0A 0E 57 02 03")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -69,7 +69,7 @@ class TestKNXIPConnectResponse:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_from_knx_wrong_crd(self):
+    def test_from_knx_wrong_crd(self) -> None:
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length byte)."""
         raw = bytes.fromhex(
             "06 10 02 06 00 14 01 00 08 01 C0 A8 2A 0A 0E 57 03 04 11 FF"
@@ -77,31 +77,31 @@ class TestKNXIPConnectResponse:
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_from_knx_wrong_crd2(self):
+    def test_from_knx_wrong_crd2(self) -> None:
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
         raw = bytes.fromhex("06 10 02 06 00 12 01 00 08 01 C0 A8 2A 0A 0E 57 04 04")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_from_knx_wrong_crd3(self):
+    def test_from_knx_wrong_crd3(self) -> None:
         """Test parsing and streaming wrong ConnectRequest (CRD length too small)."""
         raw = bytes.fromhex("06 10 02 06 00 12 01 00 08 01 C0 A8 2A 0A 0E 57 01 04")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_from_knx_wrong_crd4(self):
+    def test_from_knx_wrong_crd4(self) -> None:
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
         raw = bytes.fromhex("06 10 02 06 00 12 01 00 08 01 C0 A8 2A 0A 0E 57 04 03")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_from_knx_wrong_crd5(self):
+    def test_from_knx_wrong_crd5(self) -> None:
         """Test parsing and streaming wrong ConnectRequest (wrong CRD length)."""
         raw = bytes.fromhex("06 10 02 06 00 13 01 00 08 01 C0 A8 2A 0A 0E 57 03 03 01")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_connect_response_connection_error_gira(self):
+    def test_connect_response_connection_error_gira(self) -> None:
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
 
@@ -128,7 +128,7 @@ class TestKNXIPConnectResponse:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_connect_response_connection_error_lox(self):
+    def test_connect_response_connection_error_lox(self) -> None:
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
 
@@ -144,7 +144,7 @@ class TestKNXIPConnectResponse:
 
         # no further tests: the current API can't (and shouldn't) create such odd packets
 
-    def test_connect_response_connection_error_mdt(self):
+    def test_connect_response_connection_error_mdt(self) -> None:
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
 

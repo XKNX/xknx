@@ -32,7 +32,7 @@ class CEMIInfo:
     As specified within KNX Chapter 3.6.3/4.1.4.3 "Additional information".
     """
 
-    def __init__(self, raw: bytes = bytes(0)):
+    def __init__(self, raw: bytes = bytes(0)) -> None:
         """Initialize CEMILInfo object."""
         self.raw = raw
 
@@ -97,7 +97,7 @@ class CEMILData(CEMIData):
         dst_addr: GroupAddress | IndividualAddress,
         tpci: TPCI,
         payload: APCI | None,
-    ):
+    ) -> None:
         """Initialize CEMILData object."""
         self.flags = flags
         self.src_addr = src_addr
@@ -293,7 +293,7 @@ class CEMIMPropInfo:
         property_id: ResourcePropertyId | int,
         number_of_elements: int = 1,
         start_index: int = 1,
-    ):
+    ) -> None:
         """Initialize CEMIMProp object."""
         self.object_type = object_type
         self.object_instance = object_instance
@@ -359,7 +359,7 @@ class CEMIMPropInfo:
 class CEMIMPropReadRequest(CEMIData):
     """Representation of CEMI Device Management Property Read Request."""
 
-    def __init__(self, *, property_info: CEMIMPropInfo):
+    def __init__(self, *, property_info: CEMIMPropInfo) -> None:
         """Initialize CEMIMPropReadRequest object."""
         self.property_info = property_info
 
@@ -389,7 +389,7 @@ class CEMIMPropReadResponse(CEMIData):
         *,
         property_info: CEMIMPropInfo,
         data: bytes,
-    ):
+    ) -> None:
         """Initialize CEMIMPropReadResponse object."""
         self.property_info = property_info
         self.data = data
@@ -451,7 +451,7 @@ class CEMIMPropWriteRequest(CEMIData):
         *,
         property_info: CEMIMPropInfo,
         data: bytes,
-    ):
+    ) -> None:
         """Initialize CEMIMPropWriteRequest object."""
         self.property_info = property_info
         self.data = data
@@ -489,7 +489,7 @@ class CEMIMPropWriteResponse(CEMIData):
         *,
         property_info: CEMIMPropInfo,
         error_code: CEMIErrorCode | None = None,
-    ):
+    ) -> None:
         """Initialize CEMIMPropWriteResponse object."""
         self.property_info = property_info
         self._error_code = error_code
@@ -558,7 +558,7 @@ class CEMIFrame:
         code: CEMIMessageCode,
         info: CEMIInfo | None = None,
         data: CEMIData | None,
-    ):
+    ) -> None:
         """Initialize CEMIFrame object."""
         self.code = code
         self.info = info or CEMIInfo()

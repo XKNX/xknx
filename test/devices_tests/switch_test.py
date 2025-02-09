@@ -8,6 +8,8 @@ from xknx.dpt import DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestSwitch:
     """Test class for Switch object."""
@@ -15,7 +17,7 @@ class TestSwitch:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         switch = Switch(
@@ -28,7 +30,7 @@ class TestSwitch:
             destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
         )
 
-    async def test_sync_state_address(self):
+    async def test_sync_state_address(self) -> None:
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
         xknx = XKNX()
         switch = Switch(
@@ -44,7 +46,7 @@ class TestSwitch:
     #
     # TEST PROCESS
     #
-    async def test_process(self):
+    async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
         callback_mock = Mock()
@@ -86,7 +88,7 @@ class TestSwitch:
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
 
-    async def test_process_state(self):
+    async def test_process_state(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
         callback_mock = Mock()
@@ -136,7 +138,7 @@ class TestSwitch:
         callback_mock.assert_called_once()
         callback_mock.reset_mock()
 
-    async def test_process_invert(self):
+    async def test_process_invert(self) -> None:
         """Test process / reading telegrams from telegram queue with inverted switch."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
@@ -156,7 +158,9 @@ class TestSwitch:
         switch.process(telegram_inv_off)
         assert switch.state is False
 
-    async def test_process_reset_after(self, time_travel):
+    async def test_process_reset_after(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test process reset_after."""
         xknx = XKNX()
         reset_after_sec = 1
@@ -176,7 +180,9 @@ class TestSwitch:
         switch.process(xknx.telegrams.get_nowait())
         assert not switch.state
 
-    async def test_process_reset_after_cancel_existing(self, time_travel):
+    async def test_process_reset_after_cancel_existing(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test process reset_after cancels existing reset tasks."""
         xknx = XKNX()
         reset_after_sec = 0.01
@@ -199,7 +205,7 @@ class TestSwitch:
         await time_travel(reset_after_sec / 2)
         assert xknx.telegrams.qsize() == 0
 
-    async def test_remove_device(self, xknx_no_interface):
+    async def test_remove_device(self, xknx_no_interface: XKNX) -> None:
         """Test device removal cancels task."""
         xknx = xknx_no_interface
         switch = Switch(xknx, "TestInput", group_address="1/2/3", reset_after=1)
@@ -215,7 +221,7 @@ class TestSwitch:
             xknx.devices.async_remove(switch)
             assert switch._reset_task is None
 
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
 
         xknx = XKNX()
@@ -235,7 +241,7 @@ class TestSwitch:
     #
     # TEST RESPOND
     #
-    async def test_respond_to_read(self):
+    async def test_respond_to_read(self) -> None:
         """Test respond_to_read function."""
         xknx = XKNX()
         responding = Switch(
@@ -300,7 +306,7 @@ class TestSwitch:
     #
     # TEST SET ON
     #
-    async def test_set_on(self):
+    async def test_set_on(self) -> None:
         """Test switching on switch."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
@@ -315,7 +321,7 @@ class TestSwitch:
     #
     # TEST SET OFF
     #
-    async def test_set_off(self):
+    async def test_set_off(self) -> None:
         """Test switching off switch."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
@@ -330,7 +336,7 @@ class TestSwitch:
     #
     # TEST SET INVERT
     #
-    async def test_set_invert(self):
+    async def test_set_invert(self) -> None:
         """Test switching on/off inverted switch."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
@@ -354,7 +360,7 @@ class TestSwitch:
     #
     # TEST has_group_address
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
@@ -364,7 +370,7 @@ class TestSwitch:
     #
     # TEST passive group addresses
     #
-    def test_has_group_address_passive(self):
+    def test_has_group_address_passive(self) -> None:
         """Test has_group_address with passive group address."""
         xknx = XKNX()
         switch = Switch(xknx, "TestOutlet", group_address=["1/2/3", "4/4/4"])
@@ -372,7 +378,7 @@ class TestSwitch:
         assert switch.has_group_address(GroupAddress("4/4/4"))
         assert not switch.has_group_address(GroupAddress("2/2/2"))
 
-    async def test_process_passive(self):
+    async def test_process_passive(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if device was updated."""
         xknx = XKNX()
         callback_mock = Mock()

@@ -11,8 +11,10 @@ from xknx.dpt import DPTArray
 from xknx.exceptions import ConfirmationError
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, apci, tpci
 
+from ..conftest import EventLoopClockAdvancer
 
-async def test_wait_for_l2_confirmation(time_travel):
+
+async def test_wait_for_l2_confirmation(time_travel: EventLoopClockAdvancer) -> None:
     """Test waiting for L_DATA.con before sending another L_DATA.req."""
     xknx = XKNX()
     xknx.knxip_interface = AsyncMock()
@@ -57,7 +59,7 @@ async def test_wait_for_l2_confirmation(time_travel):
         assert xknx.connection_manager.cemi_count_outgoing_error == 1
 
 
-def test_incoming_cemi():
+def test_incoming_cemi() -> None:
     """Test incoming CEMI."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.1")
@@ -109,7 +111,7 @@ def test_incoming_cemi():
         ),
     ],
 )
-def test_incoming_management_telegram(telegram):
+def test_incoming_management_telegram(telegram: Telegram) -> None:
     """Test incoming management CEMI."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.1")
@@ -133,7 +135,7 @@ def test_incoming_management_telegram(telegram):
         bytes.fromhex("2900b06010fa10ff00"),
     ],
 )
-def test_invalid_cemi(raw):
+def test_invalid_cemi(raw: bytes) -> None:
     """Test incoming invalid CEMI Frames."""
     xknx = XKNX()
 
@@ -155,7 +157,7 @@ def test_invalid_cemi(raw):
         bytes.fromhex("2900b0d0000100000103f8"),
     ],
 )
-def test_unsupported_cemi(raw):
+def test_unsupported_cemi(raw: bytes) -> None:
     """Test incoming unsupported CEMI Frames."""
     xknx = XKNX()
 
@@ -169,7 +171,7 @@ def test_unsupported_cemi(raw):
         assert xknx.connection_manager.cemi_count_incoming_error == 1
 
 
-def test_incoming_from_own_ia():
+def test_incoming_from_own_ia() -> None:
     """Test incoming CEMI from own IA."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.22")

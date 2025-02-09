@@ -15,7 +15,7 @@ from xknx.secure.security_primitives import (
 class TestIPSecure:
     """Test class for IP Secure primitives."""
 
-    def test_calculate_message_authentication_code_cbc(self):
+    def test_calculate_message_authentication_code_cbc(self) -> None:
         """Test calculate message authentication code CBC."""
         # SessionResponse from example in KNX specification AN159v06
         assert calculate_message_authentication_code_cbc(
@@ -34,7 +34,7 @@ class TestIPSecure:
             block_0=bytes.fromhex("c0 c1 c2 c3 c4 c5 00 fa 12 34 56 78 af fe 00 11"),
         ) == bytes.fromhex("bd 0a 29 4b 95 25 54 b2 35 39 20 4c 22 71 d2 6b")
 
-    def test_encrypt_data_ctr(self):
+    def test_encrypt_data_ctr(self) -> None:
         """Test encrypt data with AES-CTR."""
         # RoutingIndication from example in KNX specification AN159v06
         key = bytes.fromhex("00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f")
@@ -49,7 +49,7 @@ class TestIPSecure:
         )
         assert mac == bytes.fromhex("72 12 a0 3a aa e4 9d a8 56 89 77 4c 1d 2b 4d a4")
 
-    def test_decrypt_ctr(self):
+    def test_decrypt_ctr(self) -> None:
         """Test decrypt data with AES-CTR."""
         # RoutingIndication from example in KNX specification AN159v06
         key = bytes.fromhex("00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f")
@@ -69,19 +69,19 @@ class TestIPSecure:
             "bd 0a 29 4b 95 25 54 b2 35 39 20 4c 22 71 d2 6b"
         )
 
-    def test_derive_device_authentication_password(self):
+    def test_derive_device_authentication_password(self) -> None:
         """Test derive device authentication password."""
         assert derive_device_authentication_password("trustme") == bytes.fromhex(
             "e1 58 e4 01 20 47 bd 6c c4 1a af bc 5c 04 c1 fc"
         )
 
-    def test_derive_user_password(self):
+    def test_derive_user_password(self) -> None:
         """Test derive user password."""
         assert derive_user_password("secret") == bytes.fromhex(
             "03 fc ed b6 66 60 25 1e c8 1a 1a 71 69 01 69 6a"
         )
 
-    def test_generate_ecdh_key_pair(self):
+    def test_generate_ecdh_key_pair(self) -> None:
         """Test generate ECDH key pair."""
         private_key, public_key_bytes = generate_ecdh_key_pair()
         assert isinstance(private_key, X25519PrivateKey)

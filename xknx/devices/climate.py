@@ -74,7 +74,7 @@ class Climate(Device):
         group_address_swing_state: GroupAddressesType = None,
         group_address_horizontal_swing: GroupAddressesType = None,
         group_address_horizontal_swing_state: GroupAddressesType = None,
-    ):
+    ) -> None:
         """Initialize Climate class."""
         super().__init__(xknx, name, device_updated_cb)
 

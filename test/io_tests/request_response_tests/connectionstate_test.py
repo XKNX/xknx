@@ -16,7 +16,7 @@ from xknx.knxip import (
 class TestConnectionState:
     """Test class for xknx/io/ConnectionState objects."""
 
-    async def test_connectionstate(self):
+    async def test_connectionstate(self) -> None:
         """Test connectionstateing from KNX bus."""
         communication_channel_id = 23
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
@@ -68,7 +68,7 @@ class TestConnectionState:
         connectionstate.response_rec_callback(res_knxipframe, HPAI(), None)
         assert connectionstate.success
 
-    async def test_connectionstate_route_back_true(self):
+    async def test_connectionstate_route_back_true(self) -> None:
         """Test connectionstateing from KNX bus."""
         communication_channel_id = 23
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))

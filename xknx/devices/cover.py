@@ -61,7 +61,7 @@ class Cover(Device):
         invert_position: bool = False,
         invert_angle: bool = False,
         device_updated_cb: DeviceCallbackType[Cover] | None = None,
-    ):
+    ) -> None:
         """Initialize Cover class."""
         super().__init__(xknx, name, device_updated_cb)
         # self.after_update for position changes is called after updating the

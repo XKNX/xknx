@@ -6,7 +6,7 @@ from xknx.knxip import HPAI, DescriptionRequest, KNXIPFrame
 class TestKNXIPDescriptionRequest:
     """Test class for KNX/IP DescriptionRequest objects."""
 
-    def test_description_request(self):
+    def test_description_request(self) -> None:
         """Test parsing and streaming DescriptionRequest KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 03 00 0E 08 01 7F 00 00 02 0E 57")
         knxipframe, _ = KNXIPFrame.from_knx(raw)

@@ -24,7 +24,7 @@ class ConnectRequest(KNXIPBody):
         control_endpoint: HPAI | None = None,
         data_endpoint: HPAI | None = None,
         cri: ConnectRequestInformation | None = None,
-    ):
+    ) -> None:
         """Initialize ConnectRequest object."""
         self.control_endpoint = control_endpoint or HPAI()
         self.data_endpoint = data_endpoint or HPAI()
@@ -77,7 +77,7 @@ class ConnectRequestInformation:
         connection_type: ConnectRequestType = ConnectRequestType.TUNNEL_CONNECTION,
         knx_layer: TunnellingLayer = TunnellingLayer.DATA_LINK_LAYER,
         individual_address: IndividualAddress | None = None,
-    ):
+    ) -> None:
         """Initialize ConnectRequest object."""
         self.connection_type = connection_type
         self.knx_layer = knx_layer

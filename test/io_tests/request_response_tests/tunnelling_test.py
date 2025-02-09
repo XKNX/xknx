@@ -21,7 +21,7 @@ from xknx.telegram.apci import GroupValueWrite
 class TestTunnelling:
     """Test class for xknx/io/Tunnelling objects."""
 
-    async def test_tunnelling(self):
+    async def test_tunnelling(self) -> None:
         """Test tunnelling from KNX bus."""
         data_endpoint = ("192.168.1.2", 4567)
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))

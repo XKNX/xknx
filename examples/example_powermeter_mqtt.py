@@ -20,6 +20,8 @@ import asyncio
 import re
 import sys
 
+from xknx.devices import Device
+
 try:
     # The following library is not included.
     from myhouse_sensors_mqtt import MetricType, SensorClientMqtt
@@ -62,7 +64,7 @@ RE_CURRENT = re.compile("Current_")
 RE_FREQUENCY = re.compile("Frequency_")
 
 
-def device_updated_cb(device):
+def device_updated_cb(device: Device) -> None:
     """Do something with the updated device."""
     # print(device.name + ' ' + str(device.resolve_state()) + ' ' + device.unit_of_measurement())
     value = None
@@ -125,7 +127,7 @@ def device_updated_cb(device):
         mqttc.publish(topic, value)
 
 
-async def main():
+async def main() -> None:
     """
     KNX device objects are created and the MQTT server connection is established.
 

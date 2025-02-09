@@ -70,7 +70,7 @@ class ConnectionConfig:
         scan_filter: GatewayScanFilter | None = None,
         threaded: bool = False,
         secure_config: SecureConfig | None = None,
-    ):
+    ) -> None:
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
         self.individual_address = (
@@ -118,7 +118,7 @@ class SecureConfig:
         user_password: str | None = None,
         knxkeys_file_path: str | os.PathLike[Any] | None = None,
         knxkeys_password: str | None = None,
-    ):
+    ) -> None:
         """Initialize SecureConfig class."""
         self.backbone_key = bytes.fromhex(backbone_key) if backbone_key else None
         self.latency_ms = latency_ms

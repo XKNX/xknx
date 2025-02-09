@@ -55,10 +55,10 @@ def time_travel(event_loop: asyncio.AbstractEventLoop) -> EventLoopClockAdvancer
 
 
 @pytest.fixture
-def xknx_no_interface():
+def xknx_no_interface() -> XKNX:
     """Return XKNX instance without KNX/IP interface."""
 
-    def knx_ip_interface_mock():
+    def knx_ip_interface_mock() -> Mock:
         """Create a xknx knx ip interface mock."""
         mock = Mock()
         mock.start = AsyncMock()

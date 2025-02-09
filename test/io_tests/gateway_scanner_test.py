@@ -1,6 +1,7 @@
 """Unit test for KNX/IP gateway scanner."""
 
 import asyncio
+from typing import Any
 from unittest.mock import Mock, create_autospec, patch
 
 import pytest
@@ -22,6 +23,8 @@ from xknx.knxip import (
     SearchResponseExtended,
 )
 from xknx.telegram import IndividualAddress
+
+from ..conftest import EventLoopClockAdvancer
 
 
 class TestGatewayDescriptor:
@@ -136,7 +139,7 @@ class TestGatewayDescriptor:
             ),
         ],
     )
-    def test_parser(self, raw, expected):
+    def test_parser(self, raw: bytes, expected: dict[str, Any]) -> None:
         """Test parsing GatewayDescriptor objects from real-world responses."""
         response, _ = KNXIPFrame.from_knx(raw)
         assert isinstance(response.body, SearchResponse | SearchResponseExtended)
@@ -225,7 +228,7 @@ class TestGatewayScanner:
     )
     gateway_desc_secure_router.routing_requires_secure = True
 
-    def test_gateway_scan_filter_match(self):
+    def test_gateway_scan_filter_match(self) -> None:
         """Test match function of gateway filter."""
         filter_default = GatewayScanFilter()
         filter_tunnel = GatewayScanFilter(routing=False, secure_routing=False)
@@ -308,7 +311,7 @@ class TestGatewayScanner:
         assert not filter_secure_router.match(self.gateway_desc_secure_tunnel)
         assert filter_secure_router.match(self.gateway_desc_secure_router)
 
-    def test_search_response_reception(self):
+    def test_search_response_reception(self) -> None:
         """Test function of gateway scanner."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
@@ -346,11 +349,11 @@ class TestGatewayScanner:
     )
     async def test_scan_timeout(
         self,
-        getsockname_mock,
-        udp_transport_send_mock,
-        udp_transport_connect_mock,
-        time_travel,
-    ):
+        getsockname_mock: Mock,
+        udp_transport_send_mock: Mock,
+        udp_transport_connect_mock: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test gateway scanner timeout."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx)
@@ -363,13 +366,13 @@ class TestGatewayScanner:
     @patch("xknx.io.gateway_scanner.UDPTransport.send")
     async def test_async_scan_timeout(
         self,
-        udp_transport_send_mock,
-        udp_transport_connect_mock,
-        time_travel,
-    ):
+        udp_transport_send_mock: Mock,
+        udp_transport_connect_mock: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test gateway scanner timeout for async generator."""
 
-        async def test():
+        async def test() -> bool:
             xknx = XKNX()
             async for _ in GatewayScanner(xknx).async_scan():
                 break
@@ -404,10 +407,10 @@ class TestGatewayScanner:
     @patch("xknx.io.gateway_scanner.UDPTransport.send")
     async def test_async_scan_exit(
         self,
-        udp_transport_send_mock,
-        udp_transport_connect_mock,
-        time_travel,
-    ):
+        udp_transport_send_mock: Mock,
+        udp_transport_connect_mock: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test gateway scanner timeout for async generator."""
         xknx = XKNX()
         test_search_response = fake_router_search_response()
@@ -416,7 +419,7 @@ class TestGatewayScanner:
 
         gateway_scanner = GatewayScanner(xknx, local_ip="10.1.1.2")
 
-        async def test():
+        async def test() -> bool:
             async for gateway in gateway_scanner.async_scan():
                 assert isinstance(gateway, GatewayDescriptor)
                 return True
@@ -446,9 +449,9 @@ class TestGatewayScanner:
     @patch("xknx.io.gateway_scanner.UDPTransport.send")
     async def test_send_search_requests(
         self,
-        udp_transport_send_mock,
-        udp_transport_connect_mock,
-    ):
+        udp_transport_send_mock: Mock,
+        udp_transport_connect_mock: Mock,
+    ) -> None:
         """Test if both search requests are sent per interface."""
         xknx = XKNX()
         gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0)
@@ -476,7 +479,7 @@ class TestGatewayScanner:
         assert isinstance(frame_2.body, SearchRequest)
         assert frame_1.body.discovery_endpoint == HPAI(ip_addr="10.1.1.2", port=56789)
 
-    def test_gateway_scan_filter_compare(self):
+    def test_gateway_scan_filter_compare(self) -> None:
         """Test GatewayScanFilter comparison."""
         assert GatewayScanFilter() == GatewayScanFilter()
         assert GatewayScanFilter() != GatewayScanFilter(tunnelling=False)

@@ -33,7 +33,7 @@ class _TunnellingFeature:
         status_code: ErrorCode = ErrorCode.E_NO_ERROR,
         feature_type: TunnellingFeatureType = TunnellingFeatureType.SUPPORTED_EMI_TYPE,
         data: bytes = b"",
-    ):
+    ) -> None:
         """Initialize _TunnellingFeature object."""
         self.communication_channel_id = communication_channel_id
         self.sequence_counter = sequence_counter
@@ -104,7 +104,7 @@ class TunnellingFeatureGet(_TunnellingFeature, KNXIPBody):
         communication_channel_id: int = 1,
         sequence_counter: int = 0,
         feature_type: TunnellingFeatureType = TunnellingFeatureType.SUPPORTED_EMI_TYPE,
-    ):
+    ) -> None:
         """Initialize TunnellingFeatureGet object."""
         super().__init__(
             communication_channel_id=communication_channel_id,
@@ -127,7 +127,7 @@ class TunnellingFeatureSet(_TunnellingFeature, KNXIPBody):
         sequence_counter: int = 0,
         feature_type: TunnellingFeatureType = TunnellingFeatureType.SUPPORTED_EMI_TYPE,
         data: bytes = b"",
-    ):
+    ) -> None:
         """Initialize TunnellingFeatureSet object."""
         super().__init__(
             communication_channel_id=communication_channel_id,
@@ -148,7 +148,7 @@ class TunnellingFeatureInfo(_TunnellingFeature, KNXIPBody):
         sequence_counter: int = 0,
         feature_type: TunnellingFeatureType = TunnellingFeatureType.SUPPORTED_EMI_TYPE,
         data: bytes = b"",
-    ):
+    ) -> None:
         """Initialize TunnellingFeatureInfo object."""
         super().__init__(
             communication_channel_id=communication_channel_id,
@@ -170,7 +170,7 @@ class TunnellingFeatureResponse(_TunnellingFeature, KNXIPBodyResponse):
         feature_type: TunnellingFeatureType = TunnellingFeatureType.SUPPORTED_EMI_TYPE,
         return_code: ReturnCode = ReturnCode.E_SUCCESS,
         data: bytes = b"",
-    ):
+    ) -> None:
         """Initialize TunnellingFeatureSet object."""
         super().__init__(
             communication_channel_id=communication_channel_id,

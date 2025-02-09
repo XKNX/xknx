@@ -61,7 +61,7 @@ class KNXIPInterface:
         self,
         xknx: XKNX,
         connection_config: ConnectionConfig | None = None,
-    ):
+    ) -> None:
         """Initialize KNXIPInterface class."""
         self.xknx = xknx
         self.connection_config = connection_config or ConnectionConfig()
@@ -496,7 +496,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         self,
         xknx: XKNX,
         connection_config: ConnectionConfig | None = None,
-    ):
+    ) -> None:
         """Initialize KNXIPInterface class."""
         super().__init__(xknx, connection_config)
         self._main_loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()

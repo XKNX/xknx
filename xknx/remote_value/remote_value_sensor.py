@@ -37,7 +37,7 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         device_name: str | None = None,
         feature_name: str = "Value",
         after_update_cb: RVCallbackType[ValueT] | None = None,
-    ):
+    ) -> None:
         """Initialize RemoteValueSensor class."""
         _dpt_class = (
             self.dpt_base_class.parse_transcoder(value_type)

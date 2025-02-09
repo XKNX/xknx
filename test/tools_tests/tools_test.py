@@ -1,6 +1,7 @@
 """Test xknx tools package."""
 
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -17,7 +18,7 @@ from xknx.tools import (
 )
 
 
-def test_group_value_read():
+def test_group_value_read() -> None:
     """Test group_value_read."""
     xknx = XKNX()
     group_address = "1/2/3"
@@ -31,7 +32,7 @@ def test_group_value_read():
     assert xknx.telegrams.get_nowait() == read
 
 
-def test_group_value_response():
+def test_group_value_response() -> None:
     """Test group_value_response."""
     xknx = XKNX()
     group_address = "1/2/3"
@@ -46,7 +47,7 @@ def test_group_value_response():
 
 
 @pytest.mark.parametrize(
-    "value,value_type,expected",
+    ("value", "value_type", "expected"),
     [
         (50, "percent", DPTArray((0x80,))),
         (True, None, DPTBinary(1)),
@@ -57,7 +58,9 @@ def test_group_value_response():
         (DPTBinary(1), None, DPTBinary(1)),
     ],
 )
-def test_group_value_write(value, value_type, expected):
+def test_group_value_write(
+    value: Any, value_type: Any, expected: DPTArray | DPTBinary
+) -> None:
     """Test group_value_write."""
     xknx = XKNX()
     group_address = "1/2/3"
@@ -72,14 +75,16 @@ def test_group_value_write(value, value_type, expected):
 
 
 @pytest.mark.parametrize(
-    "value,value_type,error_type",
+    ("value", "value_type", "error_type"),
     [
         (50, "unknown", ValueError),
         (50, 9.001, ValueError),  # float is invalid
         (101, "percent", ConversionError),  # too big
     ],
 )
-def test_group_value_write_invalid(value, value_type, error_type):
+def test_group_value_write_invalid(
+    value: int, value_type: Any, error_type: type[Exception]
+) -> None:
     """Test group_value_write."""
     xknx = XKNX()
     with pytest.raises(error_type):
@@ -87,7 +92,7 @@ def test_group_value_write_invalid(value, value_type, error_type):
 
 
 @pytest.mark.parametrize(
-    "value,value_type,expected",
+    ("value", "value_type", "expected"),
     [
         (50, "percent", DPTArray((0x80,))),
         ((0x80,), None, DPTArray((0x80,))),
@@ -95,7 +100,12 @@ def test_group_value_write_invalid(value, value_type, error_type):
     ],
 )
 @patch("xknx.core.value_reader.ValueReader.read")
-async def test_read_group_value(value_reader_read_mock, value, value_type, expected):
+async def test_read_group_value(
+    value_reader_read_mock: MagicMock,
+    value: Any,
+    value_type: Any,
+    expected: DPTArray | DPTBinary,
+) -> None:
     """Test read_group_value."""
     xknx = XKNX()
     test_group_address = "1/2/3"
@@ -115,7 +125,7 @@ async def test_read_group_value(value_reader_read_mock, value, value_type, expec
     assert response_value == value
 
 
-async def test_tools_with_internal_addresses(xknx_no_interface):
+async def test_tools_with_internal_addresses(xknx_no_interface: XKNX) -> None:
     """Test tools using internal addresses."""
     xknx = xknx_no_interface
     await xknx.start()

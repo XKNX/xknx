@@ -9,7 +9,7 @@ from xknx.knxip import HPAI, ConnectionStateRequest, KNXIPFrame
 class TestKNXIPConnectionStateRequest:
     """Test class for KNX/IP ConnectionStateRequests."""
 
-    def test_connection_state_request(self):
+    def test_connection_state_request(self) -> None:
         """Test parsing and streaming connection state request KNX/IP packet."""
         raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3 B4")
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -29,7 +29,7 @@ class TestKNXIPConnectionStateRequest:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_from_knx_wrong_info(self):
+    def test_from_knx_wrong_info(self) -> None:
         """Test parsing and streaming wrong ConnectionStateRequest."""
         raw = bytes((0x06, 0x10, 0x02, 0x07, 0x00, 0x010))
         with pytest.raises(CouldNotParseKNXIP):

@@ -8,6 +8,8 @@ from xknx.io.transport.udp_transport import UDPTransport
 from xknx.knxip import HPAI, DescriptionRequest, KNXIPFrame, SearchRequestExtended
 from xknx.telegram import IndividualAddress
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestSelfDescription:
     """Test class for KNX/IP self description."""
@@ -41,7 +43,7 @@ class TestSelfDescription:
         "50 08 ff fd 08 08 00 00 00 37 09 1a"
     )
 
-    async def test_description_query(self, time_travel):
+    async def test_description_query(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test DescriptionQuery class."""
         local_addr = ("127.0.0.1", 12345)
         remote_addr = ("127.0.0.2", 54321)
@@ -69,8 +71,8 @@ class TestSelfDescription:
 
     async def test_request_description_v1(
         self,
-        time_travel,
-    ):
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test request_description function with Core v1 device."""
         local_addr = ("127.0.0.1", 12345)
         remote_addr = ("127.0.0.2", 54321)
@@ -111,8 +113,8 @@ class TestSelfDescription:
 
     async def test_request_description_extended(
         self,
-        time_travel,
-    ):
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test request_description function with Core v2 device."""
         local_addr = ("127.0.0.1", 12345)
         remote_addr = ("127.0.0.2", 54321)

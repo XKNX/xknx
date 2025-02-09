@@ -9,7 +9,7 @@ from xknx.knxip import HPAI, HostProtocol
 class TestKNXIPHPAI:
     """Test class for KNX/IP HPAI objects."""
 
-    def test_hpai_udp(self):
+    def test_hpai_udp(self) -> None:
         """Test parsing and streaming HPAI KNX/IP fragment."""
         raw = bytes((0x08, 0x01, 0xC0, 0xA8, 0x2A, 0x01, 0x84, 0x95))
 
@@ -24,7 +24,7 @@ class TestKNXIPHPAI:
         assert hpai2.to_knx() == raw
         assert not hpai2.route_back
 
-    def test_hpai_tcp(self):
+    def test_hpai_tcp(self) -> None:
         """Test parsing and streaming HPAI KNX/IP fragment."""
         raw = bytes((0x08, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00))
 
@@ -38,31 +38,31 @@ class TestKNXIPHPAI:
         hpai2 = HPAI(ip_addr="0.0.0.0", port=0, protocol=HostProtocol.IPV4_TCP)
         assert hpai2.to_knx() == raw
 
-    def test_from_knx_wrong_input1(self):
+    def test_from_knx_wrong_input1(self) -> None:
         """Test parsing of wrong HPAI KNX/IP packet (wrong length)."""
         raw = bytes((0x08, 0x01, 0xC0, 0xA8, 0x2A))
         with pytest.raises(CouldNotParseKNXIP):
             HPAI().from_knx(raw)
 
-    def test_from_knx_wrong_input2(self):
+    def test_from_knx_wrong_input2(self) -> None:
         """Test parsing of wrong HPAI KNX/IP packet (wrong length byte)."""
         raw = bytes((0x09, 0x01, 0xC0, 0xA8, 0x2A, 0x01, 0x84, 0x95))
         with pytest.raises(CouldNotParseKNXIP):
             HPAI().from_knx(raw)
 
-    def test_from_knx_wrong_input3(self):
+    def test_from_knx_wrong_input3(self) -> None:
         """Test parsing of wrong HPAI KNX/IP packet (wrong HPAI type)."""
         raw = bytes((0x08, 0x03, 0xC0, 0xA8, 0x2A, 0x01, 0x84, 0x95))
         with pytest.raises(CouldNotParseKNXIP):
             HPAI().from_knx(raw)
 
-    def test_to_knx_wrong_ip(self):
+    def test_to_knx_wrong_ip(self) -> None:
         """Test serializing HPAI to KNV/IP with wrong ip type."""
         hpai = HPAI(ip_addr=127001)
         with pytest.raises(ConversionError):
             hpai.to_knx()
 
-    def test_route_back(self):
+    def test_route_back(self) -> None:
         """Test route_back property."""
         hpai = HPAI()
         assert hpai.ip_addr == "0.0.0.0"

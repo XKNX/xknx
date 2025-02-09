@@ -41,7 +41,7 @@ class TestKeyRing:
 
         assert matched
 
-    def test_load_keyring_test(self):
+    def test_load_keyring_test(self) -> None:
         """Test load keyring from knxkeys file."""
         keyring = sync_load_keyring(self.keyring_test_file, "pwd")
         TestKeyRing.assert_interface(keyring, "user4", IndividualAddress("1.1.4"))
@@ -54,7 +54,7 @@ class TestKeyRing:
             "96f034fccf510760cbd63da0f70d4a9d"
         )
 
-    def test_load_testcase_file(self):
+    def test_load_testcase_file(self) -> None:
         """Test load keyring from knxkeys file."""
         keyring = sync_load_keyring(self.testcase_file, "password")
         TestKeyRing.assert_interface(keyring, "user1", IndividualAddress("1.0.1"))
@@ -73,7 +73,7 @@ class TestKeyRing:
         assert device is not None
         assert device.decrypted_authentication == "authenticationcode"
 
-    def test_load_special_chars_file(self):
+    def test_load_special_chars_file(self) -> None:
         """Test load keyring from knxkeys file."""
         keyring = sync_load_keyring(self.special_chars_file, "test")
         TestKeyRing.assert_interface(keyring, "tunnel_2", IndividualAddress("1.0.2"))
@@ -83,7 +83,7 @@ class TestKeyRing:
         TestKeyRing.assert_interface(keyring, "tunnel_6", IndividualAddress("1.0.6"))
         assert keyring.backbone is None
 
-    def test_load_data_secure_ip(self):
+    def test_load_data_secure_ip(self) -> None:
         """Test load keyring from knxkeys file."""
         keyring = sync_load_keyring(self.data_secure_ip, "test")
         assert len(keyring.interfaces) == 1
@@ -105,7 +105,7 @@ class TestKeyRing:
         assert tunnel.group_addresses[GroupAddress("31/7/255")] == []
         assert keyring.backbone is None
 
-    def test_load_data_secure_usb(self):
+    def test_load_data_secure_usb(self) -> None:
         """Test load keyring from knxkeys file."""
         keyring = sync_load_keyring(self.data_secure_usb, "test")
         assert len(keyring.interfaces) == 1
@@ -122,25 +122,25 @@ class TestKeyRing:
         ]
         assert keyring.backbone is None
 
-    def test_verify_signature(self):
+    def test_verify_signature(self) -> None:
         """Test signature verification."""
         assert verify_keyring_signature(self.keyring_test_file, "pwd")
         assert verify_keyring_signature(self.testcase_file, "password")
         assert verify_keyring_signature(self.special_chars_file, "test")
 
-    def test_invalid_signature(self):
+    def test_invalid_signature(self) -> None:
         """Test invalid signature throws error."""
         with pytest.raises(InvalidSecureConfiguration):
             sync_load_keyring(self.testcase_file, "wrong_password")
 
-    def test_raises_error(self):
+    def test_raises_error(self) -> None:
         """Test raises error if password is wrong."""
         with pytest.raises(InvalidSecureConfiguration):
             sync_load_keyring(
                 self.testcase_file, "wrong_password", validate_signature=False
             )
 
-    def test_keyring_get_methods_full(self):
+    def test_keyring_get_methods_full(self) -> None:
         """Test keyring get_* methods for full project export."""
         keyring = sync_load_keyring(self.keyring_test_file, "pwd")
         test_interfaces = keyring.get_tunnel_interfaces_by_host(
@@ -194,7 +194,7 @@ class TestKeyRing:
         ia_seq_nums = keyring.get_data_secure_senders()
         assert len(ia_seq_nums) == 5
 
-    def test_keyring_get_methods_one_interface(self):
+    def test_keyring_get_methods_one_interface(self) -> None:
         """Test keyring get_* methods for partial export."""
         keyring = sync_load_keyring(self.data_secure_ip, "test")
 
@@ -212,7 +212,7 @@ class TestKeyRing:
             IndividualAddress("1.0.2"): 0,
         }
 
-    def test_keyring_metadata(self):
+    def test_keyring_metadata(self) -> None:
         """Test keyring metadata parsing."""
         keyring = sync_load_keyring(self.data_secure_ip, "test")
         assert keyring.project_name == "DataSecure_only"

@@ -56,7 +56,7 @@ class Fan(Device):
         sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType[Fan] | None = None,
         max_step: int | None = None,
-    ):
+    ) -> None:
         """Initialize fan class."""
         super().__init__(xknx, name, device_updated_cb)
 

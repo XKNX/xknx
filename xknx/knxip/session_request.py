@@ -27,7 +27,7 @@ class SessionRequest(KNXIPBody):
         self,
         control_endpoint: HPAI | None = None,
         ecdh_client_public_key: bytes = bytes(32),
-    ):
+    ) -> None:
         """Initialize SessionRequest object."""
         self.control_endpoint = control_endpoint or HPAI(protocol=HostProtocol.IPV4_TCP)
         self.ecdh_client_public_key = ecdh_client_public_key

@@ -235,7 +235,13 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
         ("work", DPTWork, 14, 79, "J"),
     ],
 )
-def test_dpt_lookup(value_type, dpt_class, main, sub, unit):
+def test_dpt_lookup(
+    value_type: str,
+    dpt_class: type[DPTBase],
+    main: int,
+    sub: int | None,
+    unit: str | None,
+) -> None:
     """Test DPT4ByteUnsigned."""
     dpt = DPTBase.parse_transcoder(value_type)
     assert dpt is dpt_class

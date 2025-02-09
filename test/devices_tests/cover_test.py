@@ -8,6 +8,8 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestCover:
     """Test class for Cover objects."""
@@ -15,7 +17,7 @@ class TestCover:
     #
     # SUPPORTS STOP/POSITION/ANGLE
     #
-    def test_supports_stop_true(self):
+    def test_supports_stop_true(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover_short_stop = Cover(
@@ -34,7 +36,7 @@ class TestCover:
         )
         assert cover_manual_stop.supports_stop
 
-    async def test_supports_stop_false(self):
+    async def test_supports_stop_false(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover = Cover(
@@ -52,7 +54,7 @@ class TestCover:
                 "Stop not supported for device %s", "Children.Venetian"
             )
 
-    def test_supports_position_true(self):
+    def test_supports_position_true(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover = Cover(
@@ -64,7 +66,7 @@ class TestCover:
         )
         assert cover.supports_position
 
-    def test_supports_position_false(self):
+    def test_supports_position_false(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover = Cover(
@@ -75,7 +77,7 @@ class TestCover:
         )
         assert not cover.supports_position
 
-    def test_supports_angle_true(self):
+    def test_supports_angle_true(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover = Cover(
@@ -87,7 +89,7 @@ class TestCover:
         )
         assert cover.supports_angle
 
-    def test_support_angle_false(self):
+    def test_support_angle_false(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover = Cover(
@@ -101,7 +103,7 @@ class TestCover:
     #
     # SUPPORTS LOCKED
     #
-    def test_support_locked(self):
+    def test_support_locked(self) -> None:
         """Test support_position_true."""
         xknx = XKNX()
         cover_locked = Cover(
@@ -121,7 +123,7 @@ class TestCover:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         cover = Cover(
@@ -138,7 +140,7 @@ class TestCover:
             destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
         )
 
-    async def test_sync_state(self):
+    async def test_sync_state(self) -> None:
         """Test sync function with explicit state address."""
         xknx = XKNX()
         cover = Cover(
@@ -156,7 +158,7 @@ class TestCover:
             destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
         )
 
-    async def test_sync_angle(self):
+    async def test_sync_angle(self) -> None:
         """Test sync function for cover with angle."""
         xknx = XKNX()
         cover = Cover(
@@ -178,7 +180,7 @@ class TestCover:
             destination_address=GroupAddress("1/2/4"), payload=GroupValueRead()
         )
 
-    async def test_sync_angle_state(self):
+    async def test_sync_angle_state(self) -> None:
         """Test sync function with angle/explicit state."""
         xknx = XKNX()
         cover = Cover(
@@ -199,7 +201,7 @@ class TestCover:
     #
     # TEST SET UP
     #
-    async def test_set_up(self):
+    async def test_set_up(self) -> None:
         """Test moving cover to 'up' position."""
         xknx = XKNX()
         cover = Cover(
@@ -222,7 +224,7 @@ class TestCover:
     #
     # TEST SET DOWN
     #
-    async def test_set_short_down(self):
+    async def test_set_short_down(self) -> None:
         """Test moving cover to 'down' position."""
         xknx = XKNX()
         cover = Cover(
@@ -244,7 +246,7 @@ class TestCover:
     #
     # TEST SET DOWN INVERTED
     #
-    async def test_set_down_inverted(self):
+    async def test_set_down_inverted(self) -> None:
         """Test moving cover to 'down' position."""
         xknx = XKNX()
         cover = Cover(
@@ -267,7 +269,7 @@ class TestCover:
     #
     # TEST SET SHORT UP
     #
-    async def test_set_short_up(self):
+    async def test_set_short_up(self) -> None:
         """Test moving cover 'short up'."""
         xknx = XKNX()
         cover = Cover(
@@ -290,7 +292,7 @@ class TestCover:
     #
     # TEST SET UP INVERTED
     #
-    async def test_set_up_inverted(self):
+    async def test_set_up_inverted(self) -> None:
         """Test moving cover 'short up'."""
         xknx = XKNX()
         cover = Cover(
@@ -314,7 +316,7 @@ class TestCover:
     #
     # TEST SET SHORT DOWN
     #
-    async def test_set_down(self):
+    async def test_set_down(self) -> None:
         """Test moving cover 'short down'."""
         xknx = XKNX()
         cover = Cover(
@@ -337,7 +339,7 @@ class TestCover:
     #
     # TEST STOP
     #
-    async def test_stop(self):
+    async def test_stop(self) -> None:
         """Test stopping cover."""
         xknx = XKNX()
         cover_short_stop = Cover(
@@ -401,7 +403,7 @@ class TestCover:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-    async def test_stop_angle(self):
+    async def test_stop_angle(self) -> None:
         """Test stopping cover during angle move / tilting."""
         xknx = XKNX()
         cover_short_stop = Cover(
@@ -459,7 +461,7 @@ class TestCover:
     #
     # TEST POSITION
     #
-    async def test_position(self):
+    async def test_position(self) -> None:
         """Test moving cover to absolute position."""
         xknx = XKNX()
         cover = Cover(
@@ -479,7 +481,7 @@ class TestCover:
         )
         await cover.stop()  # clean up tasks
 
-    async def test_position_without_binary(self):
+    async def test_position_without_binary(self) -> None:
         """Test moving cover - with no binary positioning supported."""
         xknx = XKNX()
         cover = Cover(
@@ -509,7 +511,7 @@ class TestCover:
             payload=GroupValueWrite(DPTArray(0x00)),
         )
 
-    async def test_position_without_position_address_up(self):
+    async def test_position_without_position_address_up(self) -> None:
         """Test moving cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
@@ -537,7 +539,7 @@ class TestCover:
 
         await cover.stop()  # clean up tasks
 
-    async def test_position_without_position_address_down(self):
+    async def test_position_without_position_address_down(self) -> None:
         """Test moving cover down - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
@@ -563,7 +565,7 @@ class TestCover:
 
         await cover.stop()  # clean up tasks
 
-    async def test_position_without_position_address_uninitialized_up(self):
+    async def test_position_without_position_address_uninitialized_up(self) -> None:
         """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
@@ -590,7 +592,7 @@ class TestCover:
         )
         await cover.stop()  # clean up tasks
 
-    async def test_position_without_position_address_uninitialized_down(self):
+    async def test_position_without_position_address_uninitialized_down(self) -> None:
         """Test moving uninitialized cover to absolute position - with no absolute positioning supported."""
         xknx = XKNX()
         cover = Cover(
@@ -617,7 +619,7 @@ class TestCover:
         )
         await cover.stop()  # clean up tasks
 
-    async def test_angle(self):
+    async def test_angle(self) -> None:
         """Test changing angle."""
         xknx = XKNX()
         cover = Cover(
@@ -638,7 +640,7 @@ class TestCover:
             payload=GroupValueWrite(DPTArray(0x80)),
         )
 
-    async def test_angle_not_supported(self):
+    async def test_angle_not_supported(self) -> None:
         """Test changing angle on cover which does not support angle."""
         xknx = XKNX()
         cover = Cover(
@@ -657,7 +659,7 @@ class TestCover:
     #
     # TEST PROCESS
     #
-    async def test_process_position(self):
+    async def test_process_position(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -702,7 +704,7 @@ class TestCover:
 
         await cover.stop()  # clean up tasks
 
-    async def test_process_angle(self):
+    async def test_process_angle(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -719,7 +721,7 @@ class TestCover:
         cover.process(telegram)
         assert cover.current_angle() == 16
 
-    async def test_process_locked(self):
+    async def test_process_locked(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if position is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -734,7 +736,7 @@ class TestCover:
         cover.process(telegram)
         assert cover.is_locked() is True
 
-    async def test_process_up(self):
+    async def test_process_up(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -753,7 +755,7 @@ class TestCover:
 
         await cover.stop()  # clean up tasks
 
-    async def test_process_down(self):
+    async def test_process_down(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if up/down is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -772,7 +774,7 @@ class TestCover:
 
         await cover.stop()  # clean up tasks
 
-    async def test_process_stop(self):
+    async def test_process_stop(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if stop is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -790,7 +792,7 @@ class TestCover:
         cover.process(telegram)
         assert not cover.is_traveling()
 
-    async def test_process_short_stop(self):
+    async def test_process_short_stop(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if stop is processed correctly."""
         xknx = XKNX()
         cover = Cover(
@@ -808,7 +810,7 @@ class TestCover:
         cover.process(telegram)
         assert not cover.is_traveling()
 
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is executed."""
 
         xknx = XKNX()
@@ -860,7 +862,7 @@ class TestCover:
     #
     # IS TRAVELING / IS UP / IS DOWN
     #
-    async def test_is_traveling(self):
+    async def test_is_traveling(self) -> None:
         """Test moving cover to absolute position."""
         xknx = XKNX()
         cover = Cover(
@@ -932,7 +934,7 @@ class TestCover:
     #
     # TEST TASKS
     #
-    async def test_auto_stop(self, time_travel):
+    async def test_auto_stop(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test auto stop functionality."""
         xknx = XKNX()
         cover = Cover(
@@ -970,7 +972,7 @@ class TestCover:
                 payload=GroupValueWrite(DPTBinary(True)),
             )
 
-    async def test_periodic_update(self, time_travel):
+    async def test_periodic_update(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test periodic update functionality."""
         xknx = XKNX()
         callback_mock = Mock()
@@ -1031,7 +1033,9 @@ class TestCover:
             assert cover._periodic_update_task is None
 
     @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
-    async def test_remove_task_cancel(self, _outgoing, xknx_no_interface):
+    async def test_remove_task_cancel(
+        self, _outgoing: AsyncMock, xknx_no_interface: XKNX
+    ) -> None:
         """Test if tasks are removed correctly when device is removed."""
         xknx = xknx_no_interface
         cover = Cover(
@@ -1061,7 +1065,7 @@ class TestCover:
     #
     # HAS GROUP ADDRESS
     #
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test sensor has group address."""
         xknx = XKNX()
         cover = Cover(

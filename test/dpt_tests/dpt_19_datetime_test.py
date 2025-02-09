@@ -1,6 +1,7 @@
 """Unit test for KNX datetime objects."""
 
 import datetime
+from typing import Any
 
 import pytest
 
@@ -78,7 +79,7 @@ class TestKNXDateTime:
             ),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, Any], value: KNXDateTime) -> None:
         """Test from_dict and as_dict methods."""
         assert KNXDateTime.from_dict(data) == value
         default_dict = {
@@ -107,7 +108,7 @@ class TestKNXDateTime:
             },
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             KNXDateTime.from_dict(data)
@@ -125,7 +126,7 @@ class TestKNXDateTime:
             ),
         ],
     )
-    def test_as_datetime(self, dt, value):
+    def test_as_datetime(self, dt: datetime.datetime, value: KNXDateTime) -> None:
         """Test from_time and as_time methods."""
         assert KNXDateTime.from_datetime(dt) == value
         assert value.as_datetime() == dt
@@ -151,13 +152,13 @@ class TestDPTDateTime:
             ),
         ],
     )
-    def test_parse(self, value, raw):
+    def test_parse(self, value: KNXDateTime, raw: tuple[int, ...]) -> None:
         """Test parsing and streaming."""
         knx_value = DPTDateTime.to_knx(value)
         assert knx_value == DPTArray(raw)
         assert DPTDateTime.from_knx(knx_value) == value
 
-    def test_from_knx_wrong_value(self):
+    def test_from_knx_wrong_value(self) -> None:
         """Test parsing DPTDateTime from KNX with wrong binary values."""
         with pytest.raises(CouldNotParseTelegram):
             DPTDateTime.from_knx(DPTArray((0xF8, 0x23)))
@@ -169,7 +170,7 @@ class TestDPTDateTime:
         with pytest.raises(CouldNotParseTelegram):
             DPTDateTime.from_knx(DPTBinary(True))
 
-    def test_to_knx_wrong_value(self):
+    def test_to_knx_wrong_value(self) -> None:
         """Test parsing from DPTDateTime object from wrong value."""
         with pytest.raises(ConversionError):
             # year out of range

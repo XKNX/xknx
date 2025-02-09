@@ -26,7 +26,7 @@ class Scene(Device):
         group_address: GroupAddressesType = None,
         scene_number: int = 1,
         device_updated_cb: DeviceCallbackType[Scene] | None = None,
-    ):
+    ) -> None:
         """Initialize Sceneclass."""
         super().__init__(xknx, name, device_updated_cb)
 

@@ -31,7 +31,7 @@ class Device(ABC):
         xknx: XKNX,
         name: str,
         device_updated_cb: DeviceCallbackType[Self] | None = None,
-    ):
+    ) -> None:
         """Initialize Device class."""
         self.xknx = xknx
         self.name = name

@@ -223,7 +223,7 @@ class _DIBServiceFamilies(DIB):
     class Family:
         """Class for storing a supported device family."""
 
-        def __init__(self, name: DIBServiceFamily, version: int):
+        def __init__(self, name: DIBServiceFamily, version: int) -> None:
             """Initialize DIBSuppSVCFamilies.Family."""
             self.name = name
             self.version = version

@@ -27,7 +27,7 @@ class Notification(Device):
         sync_state: bool | int | float | str = True,
         value_type: int | str | None = None,
         device_updated_cb: DeviceCallbackType[Notification] | None = None,
-    ):
+    ) -> None:
         """Initialize notification class."""
         super().__init__(xknx, name, device_updated_cb)
 

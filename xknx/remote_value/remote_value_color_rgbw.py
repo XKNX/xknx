@@ -28,7 +28,7 @@ class RemoteValueColorRGBW(RemoteValue[RGBWColor]):
         device_name: str | None = None,
         feature_name: str = "Color RGBW",
         after_update_cb: RVCallbackType[RGBWColor] | None = None,
-    ):
+    ) -> None:
         """Initialize remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
         super().__init__(
             xknx,

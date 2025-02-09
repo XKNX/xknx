@@ -8,6 +8,8 @@ from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestBinarySensor:
     """Test class for BinarySensor objects."""
@@ -15,7 +17,7 @@ class TestBinarySensor:
     #
     # TEST PROCESS
     #
-    async def test_process(self):
+    async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
@@ -47,7 +49,7 @@ class TestBinarySensor:
         assert binaryinput2.last_telegram == telegram_off2
         assert binaryinput2.state is False
 
-    async def test_process_invert(self):
+    async def test_process_invert(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
         bs_invert = BinarySensor(xknx, "TestInput", "1/2/3", invert=True)
@@ -69,7 +71,9 @@ class TestBinarySensor:
         bs_invert.process(telegram_off)
         assert bs_invert.state is False
 
-    async def test_process_reset_after(self, time_travel):
+    async def test_process_reset_after(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
         reset_after_sec = 1
@@ -109,7 +113,7 @@ class TestBinarySensor:
         # once for 'on' and once for 'off'
         assert after_update_callback.call_count == 2
 
-    async def test_process_wrong_payload(self):
+    async def test_process_wrong_payload(self) -> None:
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
         binary_sensor = BinarySensor(xknx, "Warning", group_address_state="1/2/3")
@@ -125,7 +129,7 @@ class TestBinarySensor:
     #
     # TEST SWITCHED ON
     #
-    def test_is_on(self):
+    def test_is_on(self) -> None:
         """Test is_on() and is_off() of a BinarySensor with state 'on'."""
         xknx = XKNX()
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
@@ -139,7 +143,7 @@ class TestBinarySensor:
     #
     # TEST SWITCHED OFF
     #
-    def test_is_off(self):
+    def test_is_off(self) -> None:
         """Test is_on() and is_off() of a BinarySensor with state 'off'."""
         xknx = XKNX()
         binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
@@ -151,7 +155,7 @@ class TestBinarySensor:
     #
     # TEST PROCESS CALLBACK
     #
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test after_update_callback after state of switch was changed."""
         xknx = XKNX()
         switch = BinarySensor(
@@ -175,7 +179,7 @@ class TestBinarySensor:
         switch.process(telegram)
         after_update_callback.assert_not_called()
 
-    async def test_process_callback_ignore_internal_state(self):
+    async def test_process_callback_ignore_internal_state(self) -> None:
         """Test after_update_callback after state of switch was changed."""
         xknx = XKNX()
         switch = BinarySensor(
@@ -217,7 +221,7 @@ class TestBinarySensor:
         assert after_update_callback.call_count == 2
         assert switch.counter == 0
 
-    async def test_process_callback_ignore_internal_state_no_counter(self):
+    async def test_process_callback_ignore_internal_state_no_counter(self) -> None:
         """Test after_update_callback after state of switch was changed."""
         xknx = XKNX()
         switch = BinarySensor(
@@ -245,7 +249,7 @@ class TestBinarySensor:
         switch.process(telegram)
         after_update_callback.assert_called_once_with(switch)
 
-    async def test_process_group_value_response(self):
+    async def test_process_group_value_response(self) -> None:
         """Test process of GroupValueResponse telegrams."""
         xknx = XKNX()
         switch = BinarySensor(
@@ -286,7 +290,7 @@ class TestBinarySensor:
     #
     # TEST COUNTER
     #
-    def test_counter(self):
+    def test_counter(self) -> None:
         """Test counter functionality."""
         xknx = XKNX()
         switch = BinarySensor(
@@ -314,7 +318,7 @@ class TestBinarySensor:
             mock_time.return_value = 1517000004.1  # TIME OUT ...
             assert switch.bump_and_get_counter(False) == 1
 
-    async def test_remove_tasks(self, xknx_no_interface):
+    async def test_remove_tasks(self, xknx_no_interface: XKNX) -> None:
         """Test remove tasks."""
         xknx = xknx_no_interface
         switch = BinarySensor(

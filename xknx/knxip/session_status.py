@@ -25,7 +25,7 @@ class SessionStatus(KNXIPBody):
     def __init__(
         self,
         status: SecureSessionStatusCode = SecureSessionStatusCode.STATUS_KEEPALIVE,
-    ):
+    ) -> None:
         """Initialize SessionStatus object."""
         self.status = status
 

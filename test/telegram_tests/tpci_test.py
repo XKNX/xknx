@@ -18,7 +18,7 @@ from xknx.telegram.tpci import (
 
 
 @pytest.mark.parametrize(
-    "tpci_int,dst_is_group_address,dst_is_zero,tpci_expected",
+    ("tpci_int", "dst_is_group_address", "dst_is_zero", "tpci_expected"),
     [
         (0b00000000, True, False, TDataGroup()),
         (0b00000000, True, True, TDataBroadcast()),
@@ -34,8 +34,8 @@ from xknx.telegram.tpci import (
     ],
 )
 def test_tpci_resolve_encode(
-    tpci_int, dst_is_group_address, dst_is_zero, tpci_expected
-):
+    tpci_int: int, dst_is_group_address: bool, dst_is_zero: bool, tpci_expected: TPCI
+) -> None:
     """Test resolving and encoding TPCI classes."""
     assert (
         TPCI.resolve(
@@ -50,7 +50,7 @@ def test_tpci_resolve_encode(
 
 @pytest.mark.parametrize("dst_is_zero", [True, False])
 @pytest.mark.parametrize(
-    "tpci_int,dst_is_group_address",
+    ("tpci_int", "dst_is_group_address"),
     [
         # sequence_number for non-numbered
         (0b00100000, True),
@@ -61,7 +61,9 @@ def test_tpci_resolve_encode(
         (0b01000000, True),
     ],
 )
-def test_invalid_tpci(tpci_int, dst_is_group_address, dst_is_zero):
+def test_invalid_tpci(
+    tpci_int: int, dst_is_group_address: bool, dst_is_zero: bool
+) -> None:
     """Test resolving TPCI classes."""
     with pytest.raises(ConversionError):
         TPCI.resolve(
@@ -71,7 +73,7 @@ def test_invalid_tpci(tpci_int, dst_is_group_address, dst_is_zero):
         )
 
 
-def test_equality():
+def test_equality() -> None:
     """Test equality."""
     assert TDataGroup() == TDataGroup()
     assert TDataGroup() != TDataIndividual()

@@ -23,22 +23,22 @@ class TestDPTRelativeValue:
             ((0xFF,), -1),
         ],
     )
-    def test_transcoder(self, raw, value):
+    def test_transcoder(self, raw: tuple[int], value: int) -> None:
         """Test value from and to KNX."""
         assert DPTSignedRelativeValue.from_knx(DPTArray(raw)) == value
         assert DPTSignedRelativeValue.to_knx(value) == DPTArray(raw)
 
-    def test_assert_min_exceeded(self):
+    def test_assert_min_exceeded(self) -> None:
         """Test initialization with wrong value (Underflow)."""
         with pytest.raises(ConversionError):
             DPTSignedRelativeValue.to_knx(-129)
 
-    def test_assert_max_exceeded(self):
+    def test_assert_max_exceeded(self) -> None:
         """Test initialization with wrong value (Overflow)."""
         with pytest.raises(ConversionError):
             DPTSignedRelativeValue.to_knx(128)
 
-    def test_unit(self):
+    def test_unit(self) -> None:
         """Test unit of 1 byte relative value objects."""
         assert DPTSignedRelativeValue.unit is None
         assert DPTPercentV8.unit == "%"

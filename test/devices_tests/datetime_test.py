@@ -17,6 +17,8 @@ from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestDateTime:
     """Test class for Time object."""
@@ -33,7 +35,12 @@ class TestDateTime:
             ),
         ],
     )
-    async def test_process_set_custom_time(self, test_cls, dt_value, raw):
+    async def test_process_set_custom_time(
+        self,
+        test_cls: type[DateDevice | DateTimeDevice | TimeDevice],
+        dt_value: dt.time | dt.date | dt.datetime,
+        raw: tuple[int],
+    ) -> None:
         """Test setting a new time."""
         xknx = XKNX()
         test_device = test_cls(
@@ -61,7 +68,12 @@ class TestDateTime:
             (DateTimeDevice, 8, (0x75, 0x01, 0x07, 0xC9, 0x0D, 0x0E, 0x20, 0xC0)),
         ],
     )
-    async def test_sync_localtime(self, cls, raw_length, raw):
+    async def test_sync_localtime(
+        self,
+        cls: type[DateDevice | DateTimeDevice | TimeDevice],
+        raw_length: int,
+        raw: tuple[int],
+    ) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         test_device = cls(xknx, "Test", group_address="1/2/3")
@@ -75,7 +87,7 @@ class TestDateTime:
         assert len(telegram.payload.value.value) == raw_length
         assert telegram.payload.value.value == raw
 
-    async def test_sync_time_custom(self):
+    async def test_sync_time_custom(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         test_device = TimeDevice(
@@ -92,7 +104,7 @@ class TestDateTime:
         assert telegram.destination_address == GroupAddress("1/2/4")
         assert isinstance(telegram.payload, GroupValueRead)
 
-    async def test_process_read_localtime(self):
+    async def test_process_read_localtime(self) -> None:
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
         test_device = TimeDevice(xknx, "TestDateTime", group_address="1/2/3")
@@ -109,7 +121,7 @@ class TestDateTime:
             payload=GroupValueResponse(DPTArray((0xC9, 0xD, 0xE))),
         )
 
-    async def test_process_read_custom_time(self):
+    async def test_process_read_custom_time(self) -> None:
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
         test_device = TimeDevice(
@@ -142,7 +154,7 @@ class TestDateTime:
     #
     # TEST HAS GROUP ADDRESS
     #
-    async def test_has_group_address_localtime(self):
+    async def test_has_group_address_localtime(self) -> None:
         """Test if has_group_address function works."""
         xknx = XKNX()
         test_device = DateDevice(
@@ -156,7 +168,7 @@ class TestDateTime:
         # group_address_state ignored when using localtime
         assert not test_device.has_group_address(GroupAddress("1/2/4"))
 
-    async def test_has_group_address_custom_time(self):
+    async def test_has_group_address_custom_time(self) -> None:
         """Test if has_group_address function works."""
         xknx = XKNX()
         test_device = DateDevice(
@@ -175,10 +187,10 @@ class TestDateTime:
     @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
     async def test_background_task(
         self,
-        process_telegram_outgoing_mock,
-        time_travel,
-        xknx_no_interface,
-    ):
+        process_telegram_outgoing_mock: AsyncMock,
+        time_travel: EventLoopClockAdvancer,
+        xknx_no_interface: XKNX,
+    ) -> None:
         """Test if background task works."""
         xknx = xknx_no_interface
         test_device = TimeDevice(xknx, "TestDateTime", group_address="1/2/3")
@@ -200,10 +212,10 @@ class TestDateTime:
     @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
     async def test_no_background_task(
         self,
-        process_telegram_outgoing_mock,
-        time_travel,
-        xknx_no_interface,
-    ):
+        process_telegram_outgoing_mock: AsyncMock,
+        time_travel: EventLoopClockAdvancer,
+        xknx_no_interface: XKNX,
+    ) -> None:
         """Test if background task is not started when not using `localtime`."""
         xknx = xknx_no_interface
         test_device = TimeDevice(

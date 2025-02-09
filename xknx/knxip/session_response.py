@@ -29,7 +29,7 @@ class SessionResponse(KNXIPBody):
         secure_session_id: int = 0,
         ecdh_server_public_key: bytes = bytes(32),
         message_authentication_code: bytes = bytes(16),
-    ):
+    ) -> None:
         """Initialize SessionResponse object."""
         self.ecdh_server_public_key = ecdh_server_public_key
         # secure session identifier 0 shall in general be reserved for

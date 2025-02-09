@@ -19,7 +19,7 @@ class TestTelegramQueue:
     #
     # TEST START, RUN, STOP
     #
-    async def test_start(self):
+    async def test_start(self) -> None:
         """Test start, run and stop."""
 
         xknx = XKNX()
@@ -48,7 +48,7 @@ class TestTelegramQueue:
         assert xknx.telegram_queue._consumer_task.done()
 
     @patch("asyncio.sleep", new_callable=AsyncMock)
-    async def test_rate_limit(self, async_sleep_mock):
+    async def test_rate_limit(self, async_sleep_mock: AsyncMock) -> None:
         """Test rate limit."""
         xknx = XKNX(
             rate_limit=20,  # 50 ms per outgoing telegram
@@ -98,7 +98,7 @@ class TestTelegramQueue:
     #
     # TEST REGISTER
     #
-    async def test_register(self):
+    async def test_register(self) -> None:
         """Test telegram_received_callback after state of switch was changed."""
 
         xknx = XKNX()
@@ -113,7 +113,7 @@ class TestTelegramQueue:
         await xknx.telegram_queue.process_telegram_incoming(telegram)
         telegram_received_cb.assert_called_once_with(telegram)
 
-    async def test_register_with_outgoing_telegrams(self):
+    async def test_register_with_outgoing_telegrams(self) -> None:
         """Test telegram_received_callback with outgoing telegrams."""
 
         xknx = XKNX()
@@ -132,7 +132,7 @@ class TestTelegramQueue:
         await xknx.telegram_queue.process_telegram_outgoing(telegram)
         telegram_received_cb.assert_called_once_with(telegram)
 
-    async def test_register_with_outgoing_telegrams_does_not_trigger(self):
+    async def test_register_with_outgoing_telegrams_does_not_trigger(self) -> None:
         """Test telegram_received_callback with outgoing telegrams."""
 
         xknx = XKNX()
@@ -152,7 +152,7 @@ class TestTelegramQueue:
     #
     # TEST UNREGISTER
     #
-    async def test_unregister(self):
+    async def test_unregister(self) -> None:
         """Test telegram_received_callback after state of switch was changed."""
 
         xknx = XKNX()
@@ -175,7 +175,7 @@ class TestTelegramQueue:
     # TEST PROCESS
     #
     @patch("xknx.devices.Devices.devices_by_group_address")
-    async def test_process_to_device(self, devices_by_ga_mock):
+    async def test_process_to_device(self, devices_by_ga_mock: Mock) -> None:
         """Test process_telegram_incoming for forwarding telegram to a device."""
 
         xknx = XKNX()
@@ -192,9 +192,8 @@ class TestTelegramQueue:
         test_device.process.assert_called_once_with(telegram)
 
     @patch("xknx.devices.Devices.process")
-    async def test_process_to_callback(self, devices_process):
+    async def test_process_to_callback(self, devices_process: MagicMock) -> None:
         """Test process_telegram_incoming with callback."""
-
         xknx = XKNX()
         telegram_received_cb = Mock()
 
@@ -209,7 +208,7 @@ class TestTelegramQueue:
         telegram_received_cb.assert_called_once_with(telegram)
         devices_process.assert_called_once_with(telegram)
 
-    async def test_callback_decoded_telegram_data(self):
+    async def test_callback_decoded_telegram_data(self) -> None:
         """Test telegram_received_callback having decoded telegram data."""
 
         xknx = XKNX()
@@ -237,7 +236,7 @@ class TestTelegramQueue:
         assert received.decoded_data is not None
         assert received.decoded_data.value == 50
 
-    async def test_outgoing(self):
+    async def test_outgoing(self) -> None:
         """Test outgoing telegrams in telegram queue."""
         xknx = XKNX()
 
@@ -258,12 +257,14 @@ class TestTelegramQueue:
 
     @patch("logging.Logger.error")
     @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=MagicMock)
-    async def test_process_exception(self, process_tg_in_mock, logging_error_mock):
+    async def test_process_exception(
+        self, process_tg_in_mock: MagicMock, logging_error_mock: MagicMock
+    ) -> None:
         """Test process_telegram exception handling."""
 
         xknx = XKNX()
 
-        async def process_exception():
+        async def process_exception() -> None:
             raise CouldNotParseTelegram(
                 "Something went wrong when receiving the telegram."
             )
@@ -287,8 +288,10 @@ class TestTelegramQueue:
     @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
     @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=AsyncMock)
     async def test_process_all_telegrams(
-        self, process_telegram_incoming_mock, process_telegram_outgoing_mock
-    ):
+        self,
+        process_telegram_incoming_mock: AsyncMock,
+        process_telegram_outgoing_mock: AsyncMock,
+    ) -> None:
         """Test _process_all_telegrams for clearing the queue."""
         xknx = XKNX()
 
@@ -305,16 +308,15 @@ class TestTelegramQueue:
 
         xknx.telegrams.put_nowait(telegram_in)
         xknx.telegrams.put_nowait(telegram_out)
-        res = await xknx.telegram_queue._process_all_telegrams()
+        await xknx.telegram_queue._process_all_telegrams()
 
-        assert res is None
         process_telegram_incoming_mock.assert_called_once()
         process_telegram_outgoing_mock.assert_called_once()
 
     #
     # TEST NO FILTERS
     #
-    async def test_callback_no_filters(self):
+    async def test_callback_no_filters(self) -> None:
         """Test telegram_received_callback after state of switch was changed."""
         xknx = XKNX()
         telegram_received_cb = Mock()
@@ -334,7 +336,7 @@ class TestTelegramQueue:
     #
     # TEST POSITIVE FILTERS
     #
-    async def test_callback_positive_address_filters(self):
+    async def test_callback_positive_address_filters(self) -> None:
         """Test telegram_received_callback after state of switch was changed."""
         xknx = XKNX()
         telegram_received_cb = Mock()
@@ -357,7 +359,7 @@ class TestTelegramQueue:
     #
     # TEST NEGATIVE FILTERS
     #
-    async def test_callback_negative_address_filters(self):
+    async def test_callback_negative_address_filters(self) -> None:
         """Test telegram_received_callback after state of switch was changed."""
         xknx = XKNX()
         telegram_received_cb = Mock()
@@ -377,7 +379,7 @@ class TestTelegramQueue:
 
         telegram_received_cb.assert_not_called()
 
-    async def test_callback_group_addresses(self):
+    async def test_callback_group_addresses(self) -> None:
         """Test telegram_received_callback after state of switch was changed."""
         xknx = XKNX()
         telegram_received_cb_one = Mock()
@@ -414,7 +416,9 @@ class TestTelegramQueue:
     #
     @patch("logging.Logger.exception")
     @patch("xknx.xknx.Devices.process", side_effect=Exception)
-    async def test_process_raising(self, process_mock, logging_exception_mock):
+    async def test_process_raising(
+        self, process_mock: MagicMock, logging_exception_mock: MagicMock
+    ) -> None:
         """Test unexpected exception handling in telegram queues."""
         xknx = XKNX()
         telegram_in = Telegram(
@@ -447,7 +451,7 @@ class TestTelegramQueue:
         logging_exception_mock.assert_has_calls(log_calls)
 
     @patch("logging.Logger.exception")
-    async def test_callback_raising(self, logging_exception_mock):
+    async def test_callback_raising(self, logging_exception_mock: MagicMock) -> None:
         """Test telegram_received_callback raising an exception."""
         xknx = XKNX()
         good_callback_1 = Mock()

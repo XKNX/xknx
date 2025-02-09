@@ -21,7 +21,7 @@ class TestDPT8ByteSigned:
             (b"\x80\x00\x00\x00\x00\x00\x00\x00", -9_223_372_036_854_775_808),
         ),
     )
-    def test_values(self, raw, expected):
+    def test_values(self, raw: bytes, expected: int) -> None:
         """Test valid values."""
         assert DPT8ByteSigned.to_knx(expected) == DPTArray(raw)
         assert DPT8ByteSigned.from_knx(DPTArray(raw)) == expected
@@ -29,7 +29,7 @@ class TestDPT8ByteSigned:
     @pytest.mark.parametrize(
         "value", (9_223_372_036_854_775_808, -9_223_372_036_854_775_809)
     )
-    def test_exceeding_limits(self, value):
+    def test_exceeding_limits(self, value: int) -> None:
         """Test invalid values."""
         with pytest.raises(ConversionError):
             DPT8ByteSigned.to_knx(value)

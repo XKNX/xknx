@@ -16,18 +16,20 @@ from xknx.io.routing import (
 from xknx.knxip import KNXIPFrame, RoutingBusy, RoutingIndication
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestRouting:
     """Test class for xknx/io/Routing objects."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
         self.cemi_received_mock = AsyncMock()
 
     @patch("xknx.io.Routing._send_knxipframe")
-    async def test_request_received_callback(self, send_knxipframe_mock):
+    async def test_request_received_callback(self, send_knxipframe_mock: Mock) -> None:
         """Test Routing for responding to a transport layer connection."""
         routing = Routing(
             self.xknx,
@@ -68,7 +70,7 @@ class TestRouting:
         await asyncio.sleep(0)  # await local L_Data.con
 
     @patch("logging.Logger.warning")
-    async def test_routing_lost_message(self, logging_mock):
+    async def test_routing_lost_message(self, logging_mock: Mock) -> None:
         """Test class for received RoutingLostMessage frames."""
         routing = Routing(
             self.xknx,
@@ -88,12 +90,12 @@ class TestRouting:
 class TestFlowControl:
     """Test class for KNXnet/IP routing flow control."""
 
-    async def test_basic_throttling(self, time_travel):
+    async def test_basic_throttling(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test throttling outgoing frames."""
         flow_control = _RoutingFlowControl()
         mock = Mock()
 
-        async def test_send():
+        async def test_send() -> None:
             async with flow_control.throttle():
                 mock()
 
@@ -124,14 +126,16 @@ class TestFlowControl:
         mock.reset_mock()
 
     @patch("random.random")
-    async def test_routing_busy(self, random_mock, time_travel):
+    async def test_routing_busy(
+        self, random_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test throttling on received RoutingBusy frame."""
         flow_control = _RoutingFlowControl()
         mock = Mock()
         test_wait_time_ms = 100
         random_mock.return_value = 0.5
 
-        async def test_send():
+        async def test_send() -> None:
             async with flow_control.throttle():
                 mock()
 

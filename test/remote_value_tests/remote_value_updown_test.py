@@ -13,42 +13,42 @@ from xknx.telegram.apci import GroupValueWrite
 class TestRemoteValueUpDown:
     """Test class for RemoteValueUpDown objects."""
 
-    def test_to_knx(self):
+    def test_to_knx(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
         assert remote_value.to_knx(RemoteValueUpDown.Direction.UP) == DPTBinary(0)
         assert remote_value.to_knx(RemoteValueUpDown.Direction.DOWN) == DPTBinary(1)
 
-    def test_from_knx(self):
+    def test_from_knx(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
         assert remote_value.from_knx(DPTBinary(0)) == RemoteValueUpDown.Direction.UP
         assert remote_value.from_knx(DPTBinary(1)) == RemoteValueUpDown.Direction.DOWN
 
-    def test_to_knx_invert(self):
+    def test_to_knx_invert(self) -> None:
         """Test to_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, invert=True)
         assert remote_value.to_knx(RemoteValueUpDown.Direction.UP) == DPTBinary(1)
         assert remote_value.to_knx(RemoteValueUpDown.Direction.DOWN) == DPTBinary(0)
 
-    def test_from_knx_invert(self):
+    def test_from_knx_invert(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, invert=True)
         assert remote_value.from_knx(DPTBinary(0)) == RemoteValueUpDown.Direction.DOWN
         assert remote_value.from_knx(DPTBinary(1)) == RemoteValueUpDown.Direction.UP
 
-    def test_to_knx_error(self):
+    def test_to_knx_error(self) -> None:
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx)
         with pytest.raises(ConversionError):
             remote_value.to_knx(1)
 
-    async def test_set(self):
+    async def test_set(self) -> None:
         """Test setting value."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
@@ -67,7 +67,7 @@ class TestRemoteValueUpDown:
             payload=GroupValueWrite(DPTBinary(0)),
         )
 
-    def test_process(self):
+    def test_process(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))
@@ -79,7 +79,7 @@ class TestRemoteValueUpDown:
         remote_value.process(telegram)
         assert remote_value.value == RemoteValueUpDown.Direction.DOWN
 
-    def test_to_process_error(self):
+    def test_to_process_error(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
         remote_value = RemoteValueUpDown(xknx, group_address=GroupAddress("1/2/3"))

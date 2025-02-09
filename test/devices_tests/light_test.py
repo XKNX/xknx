@@ -10,6 +10,8 @@ from xknx.dpt.dpt_242 import XYYColor
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestLight:
     """Class for testing Light objects."""
@@ -17,7 +19,7 @@ class TestLight:
     #
     # TEST SUPPORT DIMMING
     #
-    def test_supports_dimm_true(self):
+    def test_supports_dimm_true(self) -> None:
         """Test supports_dimm attribute with a light with dimmer."""
         xknx = XKNX()
         light = Light(
@@ -28,7 +30,7 @@ class TestLight:
         )
         assert light.supports_brightness
 
-    def test_supports_dimm_false(self):
+    def test_supports_dimm_false(self) -> None:
         """Test supports_dimm attribute with a Light without dimmer."""
         xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
@@ -37,7 +39,7 @@ class TestLight:
     #
     # TEST SUPPORT COLOR
     #
-    def test_supports_color_true(self):
+    def test_supports_color_true(self) -> None:
         """Test supports_color true."""
         xknx = XKNX()
         light = Light(
@@ -48,13 +50,13 @@ class TestLight:
         )
         assert light.supports_color
 
-    def test_supports_color_false(self):
+    def test_supports_color_false(self) -> None:
         """Test supports_color false."""
         xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
         assert not light.supports_color
 
-    def test_supports_individual_color_true(self):
+    def test_supports_individual_color_true(self) -> None:
         """Test supports_color true."""
         xknx = XKNX()
         light = Light(
@@ -75,7 +77,7 @@ class TestLight:
         )
         assert light.supports_color
 
-    def test_supports_individual_color_only_brightness_true(self):
+    def test_supports_individual_color_only_brightness_true(self) -> None:
         """Test supports_color true."""
         xknx = XKNX()
         light = Light(
@@ -87,7 +89,7 @@ class TestLight:
         )
         assert light.supports_color
 
-    def test_supports_individual_color_false(self):
+    def test_supports_individual_color_false(self) -> None:
         """Test supports_color false."""
         xknx = XKNX()
         light = Light(
@@ -107,7 +109,7 @@ class TestLight:
     #
     # TEST SUPPORT COLOR RGBW
     #
-    def test_supports_rgbw_true(self):
+    def test_supports_rgbw_true(self) -> None:
         """Test supports_rgbw true."""
         xknx = XKNX()
         light = Light(
@@ -119,7 +121,7 @@ class TestLight:
         )
         assert light.supports_rgbw
 
-    def test_supports_rgbw_false(self):
+    def test_supports_rgbw_false(self) -> None:
         """Test supports_color false."""
         xknx = XKNX()
         light = Light(
@@ -130,7 +132,7 @@ class TestLight:
         )
         assert not light.supports_rgbw
 
-    def test_supports_individual_rgbw_true(self):
+    def test_supports_individual_rgbw_true(self) -> None:
         """Test supports_rgbw true."""
         xknx = XKNX()
         light = Light(
@@ -155,7 +157,7 @@ class TestLight:
         )
         assert light.supports_rgbw
 
-    def test_supports_individual_color_only_brightness_rgbw_true(self):
+    def test_supports_individual_color_only_brightness_rgbw_true(self) -> None:
         """Test supports_color true."""
         xknx = XKNX()
         light = Light(
@@ -168,7 +170,7 @@ class TestLight:
         )
         assert light.supports_rgbw
 
-    def test_supports_individual_rgbw_false(self):
+    def test_supports_individual_rgbw_false(self) -> None:
         """Test supports_color false."""
         xknx = XKNX()
         light = Light(
@@ -189,7 +191,7 @@ class TestLight:
         )
         assert not light.supports_rgbw
 
-    def test_supports_hs_color_true(self):
+    def test_supports_hs_color_true(self) -> None:
         """Test supports_hs_color true."""
         xknx = XKNX()
         light = Light(
@@ -201,7 +203,7 @@ class TestLight:
         )
         assert light.supports_hs_color
 
-    def test_supports_hs_color_false(self):
+    def test_supports_hs_color_false(self) -> None:
         """Test supports_hs_color false."""
         xknx = XKNX()
         light_hue = Light(
@@ -220,7 +222,7 @@ class TestLight:
         )
         assert not light_saturation.supports_hs_color
 
-    def test_supports_xyy_color_true(self):
+    def test_supports_xyy_color_true(self) -> None:
         """Test supports_xyy_color true."""
         xknx = XKNX()
         light = Light(
@@ -231,7 +233,7 @@ class TestLight:
         )
         assert light.supports_xyy_color
 
-    def test_supports_xyy_color_false(self):
+    def test_supports_xyy_color_false(self) -> None:
         """Test supports_xyy_color false."""
         xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
@@ -240,7 +242,7 @@ class TestLight:
     #
     # TEST SUPPORT TUNABLE WHITE
     #
-    def test_supports_tw_yes(self):
+    def test_supports_tw_yes(self) -> None:
         """Test supports_tw attribute with a light with tunable white function."""
         xknx = XKNX()
         light = Light(
@@ -251,7 +253,7 @@ class TestLight:
         )
         assert light.supports_tunable_white
 
-    def test_supports_tw_no(self):
+    def test_supports_tw_no(self) -> None:
         """Test supports_tw attribute with a Light without tunable white function."""
         xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
@@ -260,7 +262,7 @@ class TestLight:
     #
     # TEST SUPPORT COLOR TEMPERATURE
     #
-    def test_supports_color_temp_true(self):
+    def test_supports_color_temp_true(self) -> None:
         """Test supports_color_temp attribute with a light with color temperature function."""
         xknx = XKNX()
         light = Light(
@@ -271,7 +273,7 @@ class TestLight:
         )
         assert light.supports_color_temperature
 
-    def test_supports_color_temp_false(self):
+    def test_supports_color_temp_false(self) -> None:
         """Test supports_color_temp attribute with a Light without color temperature function."""
         xknx = XKNX()
         light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
@@ -280,7 +282,7 @@ class TestLight:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         light = Light(
@@ -327,7 +329,7 @@ class TestLight:
         for test_telegram in test_telegrams:
             assert test_telegram in telegrams
 
-    async def test_sync_individual_color(self):
+    async def test_sync_individual_color(self) -> None:
         """Test sync function / sending group reads to KNX bus. Testing with a Light without dimm functionality."""
         xknx = XKNX()
         light = Light(
@@ -396,7 +398,7 @@ class TestLight:
     #
     # TEST SET ON
     #
-    async def test_set_on(self):
+    async def test_set_on(self) -> None:
         """Test switching on a Light."""
         xknx = XKNX()
         light = Light(
@@ -413,7 +415,7 @@ class TestLight:
             payload=GroupValueWrite(DPTBinary(1)),
         )
 
-    async def test_set_on_individual_color(self):
+    async def test_set_on_individual_color(self) -> None:
         """Test switching on a Light."""
         xknx = XKNX()
         light = Light(
@@ -473,7 +475,7 @@ class TestLight:
         for color in light._iter_individual_colors():
             assert color.is_on is True
 
-    async def test_set_on_individual_color_only_brightness(self):
+    async def test_set_on_individual_color_only_brightness(self) -> None:
         """Test switching on a Light."""
         xknx = XKNX()
         light = Light(
@@ -528,7 +530,7 @@ class TestLight:
     #
     # TEST SET OFF
     #
-    async def test_set_off(self):
+    async def test_set_off(self) -> None:
         """Test switching off a Light."""
         xknx = XKNX()
         light = Light(
@@ -548,7 +550,7 @@ class TestLight:
         light.process(telegram)
         assert light.state is False
 
-    async def test_set_off_individual_color(self):
+    async def test_set_off_individual_color(self) -> None:
         """Test switching off a Light."""
         xknx = XKNX()
         light = Light(
@@ -603,7 +605,7 @@ class TestLight:
         for color in light._iter_individual_colors():
             assert color.is_on is False
 
-    async def test_set_off_individual_color_only_brightness(self):
+    async def test_set_off_individual_color_only_brightness(self) -> None:
         """Test switching off a Light."""
         xknx = XKNX()
         light = Light(
@@ -653,7 +655,7 @@ class TestLight:
     #
     # TEST SET BRIGHTNESS
     #
-    async def test_set_brightness(self):
+    async def test_set_brightness(self) -> None:
         """Test setting the brightness of a Light."""
         xknx = XKNX()
         light = Light(
@@ -670,7 +672,7 @@ class TestLight:
             payload=GroupValueWrite(DPTArray(23)),
         )
 
-    async def test_set_brightness_not_dimmable(self):
+    async def test_set_brightness_not_dimmable(self) -> None:
         """Test setting the brightness of a non dimmable Light."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
@@ -683,7 +685,7 @@ class TestLight:
                 "Dimming not supported for device %s", "TestLight"
             )
 
-    async def test_set_individual_color_with_gloabl_switch(self):
+    async def test_set_individual_color_with_gloabl_switch(self) -> None:
         """Test switching on and dimming a Light with global addresses."""
         xknx = XKNX()
         light = Light(
@@ -732,7 +734,7 @@ class TestLight:
     #
     # TEST SET COLOR
     #
-    async def test_set_color(self):
+    async def test_set_color(self) -> None:
         """Test setting the color of a Light."""
         xknx = XKNX()
         light = Light(
@@ -753,7 +755,7 @@ class TestLight:
         xknx.devices.process(telegram)
         assert light.current_color == ((23, 24, 25), None)
 
-    async def test_set_color_not_possible(self):
+    async def test_set_color_not_possible(self) -> None:
         """Test setting the color of a non light without color."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
@@ -766,7 +768,7 @@ class TestLight:
                 "Colors not supported for device %s", "TestLight"
             )
 
-    async def test_set_individual_color(self):
+    async def test_set_individual_color(self) -> None:
         """Test setting the color of a Light."""
         xknx = XKNX()
         light = Light(
@@ -828,7 +830,7 @@ class TestLight:
         )
         assert light.current_color == ((23, 24, 25), None)
 
-    async def test_set_individual_color_not_possible(self):
+    async def test_set_individual_color_not_possible(self) -> None:
         """Test setting the color of a non light without color."""
         xknx = XKNX()
         light = Light(
@@ -848,7 +850,7 @@ class TestLight:
     #
     # TEST SET COLOR AS RGBW
     #
-    async def test_set_color_rgbw(self):
+    async def test_set_color_rgbw(self) -> None:
         """Test setting RGBW value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -870,7 +872,7 @@ class TestLight:
         xknx.devices.process(telegram)
         assert light.current_color == ((23, 24, 25), 26)
 
-    async def test_set_color_rgbw_not_possible(self):
+    async def test_set_color_rgbw_not_possible(self) -> None:
         """Test setting RGBW value of a non light without color."""
         xknx = XKNX()
         light = Light(
@@ -889,7 +891,7 @@ class TestLight:
                 "RGBW not supported for device %s", "TestLight"
             )
 
-    async def test_set_individual_color_rgbw(self):
+    async def test_set_individual_color_rgbw(self) -> None:
         """Test setting RGBW value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -965,7 +967,7 @@ class TestLight:
         )
         assert light.current_color == ((23, 24, 25), 26)
 
-    async def test_set_individual_color_rgbw_not_possible(self):
+    async def test_set_individual_color_rgbw_not_possible(self) -> None:
         """Test setting RGBW value of a non light without color."""
         xknx = XKNX()
         light = Light(
@@ -997,7 +999,7 @@ class TestLight:
     #
     # TEST SET COLOR AS HS
     #
-    async def test_set_hs_color(self):
+    async def test_set_hs_color(self) -> None:
         """Test setting HS value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -1065,7 +1067,7 @@ class TestLight:
         )
         xknx.devices.process(telegram)
 
-    async def test_set_hs_color_not_possible(self):
+    async def test_set_hs_color_not_possible(self) -> None:
         """Test setting HS value of a light not supporting it."""
         xknx = XKNX()
         light = Light(
@@ -1087,7 +1089,7 @@ class TestLight:
     #
     # TEST SET COLOR AS XYY
     #
-    async def test_set_xyy_color(self):
+    async def test_set_xyy_color(self) -> None:
         """Test setting XYY value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -1108,7 +1110,7 @@ class TestLight:
         xknx.devices.process(telegram)
         assert light.current_xyy_color == XYYColor((0.52, 0.31), 25)
 
-    async def test_set_xyy_color_not_possible(self):
+    async def test_set_xyy_color_not_possible(self) -> None:
         """Test setting XYY value of a light not supporting it."""
         xknx = XKNX()
         light = Light(
@@ -1130,7 +1132,7 @@ class TestLight:
     #
     # TEST SET TUNABLE WHITE
     #
-    async def test_set_tw(self):
+    async def test_set_tw(self) -> None:
         """Test setting the tunable white value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -1149,7 +1151,7 @@ class TestLight:
             payload=GroupValueWrite(DPTArray(23)),
         )
 
-    async def test_set_tw_unsupported(self):
+    async def test_set_tw_unsupported(self) -> None:
         """Test setting the tunable white value of a non tw Light."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
@@ -1165,7 +1167,7 @@ class TestLight:
     #
     # TEST SET COLOR TEMPERATURE
     #
-    async def test_set_color_temp(self):
+    async def test_set_color_temp(self) -> None:
         """Test setting the color temperature value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -1191,7 +1193,7 @@ class TestLight:
             ),
         )
 
-    async def test_set_color_temp_float(self):
+    async def test_set_color_temp_float(self) -> None:
         """Test setting the float color temperature value of a Light."""
         xknx = XKNX()
         light = Light(
@@ -1218,7 +1220,7 @@ class TestLight:
             ),
         )
 
-    async def test_set_color_temp_unsupported(self):
+    async def test_set_color_temp_unsupported(self) -> None:
         """Test setting the color temperature value of an unsupported Light."""
         xknx = XKNX()
         light = Light(xknx, name="TestLight", group_address_switch="1/2/3")
@@ -1234,7 +1236,7 @@ class TestLight:
     #
     # TEST PROCESS
     #
-    async def test_process_switch(self):
+    async def test_process_switch(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if switch position is processed correctly."""
         xknx = XKNX()
         light = Light(
@@ -1261,7 +1263,7 @@ class TestLight:
         light.process(telegram)
         assert light.state is False
 
-    async def test_process_color_switch(self):
+    async def test_process_color_switch(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if switch position is processed correctly."""
         xknx = XKNX()
         light = Light(
@@ -1298,7 +1300,7 @@ class TestLight:
         light.process(telegram)
         assert light.state is False
 
-    async def test_process_switch_callback(self):
+    async def test_process_switch_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
@@ -1320,7 +1322,7 @@ class TestLight:
         light.process(telegram)
         after_update_callback.assert_called_with(light)
 
-    async def test_process_dimm(self):
+    async def test_process_dimm(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if brightness is processed."""
         xknx = XKNX()
         light = Light(
@@ -1340,7 +1342,7 @@ class TestLight:
         light.process(telegram)
         assert light.current_brightness == 23
 
-    async def test_process_dimm_wrong_payload(self):
+    async def test_process_dimm_wrong_payload(self) -> None:
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -1362,7 +1364,7 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
-    async def test_process_dimm_payload_invalid_length(self):
+    async def test_process_dimm_payload_invalid_length(self) -> None:
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -1384,7 +1386,7 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
-    async def test_process_color(self):
+    async def test_process_color(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
         light = Light(
@@ -1403,7 +1405,7 @@ class TestLight:
         light.process(telegram)
         assert light.current_color == ((23, 24, 25), None)
 
-    async def test_process_individual_color(self):
+    async def test_process_individual_color(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
         light = Light(
@@ -1445,7 +1447,7 @@ class TestLight:
             light.process(telegram)
         assert light.current_color == ((42, 43, 44), None)
 
-    async def test_process_color_rgbw(self):
+    async def test_process_color_rgbw(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
         xknx = XKNX()
         light = Light(
@@ -1465,7 +1467,7 @@ class TestLight:
         light.process(telegram)
         assert light.current_color == ((23, 24, 25), 26)
 
-    async def test_process_individual_color_rgbw(self):
+    async def test_process_individual_color_rgbw(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if RGBW is processed."""
         xknx = XKNX()
         light = Light(
@@ -1498,7 +1500,9 @@ class TestLight:
         light.process(telegram)
         assert light.current_color == (None, 42)
 
-    async def test_process_individual_color_debouncer(self, time_travel):
+    async def test_process_individual_color_debouncer(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test the debouncer for individual color lights."""
         xknx = XKNX()
         rgb_callback = Mock()
@@ -1592,7 +1596,7 @@ class TestLight:
         assert rgb_light.current_color == ((42, 43, 44), None)
         assert rgbw_light.current_color == ((42, 43, 44), 50)
 
-    async def test_process_hs_color(self):
+    async def test_process_hs_color(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
         light = Light(
@@ -1622,7 +1626,7 @@ class TestLight:
         )
         assert light.current_hs_color == (65, 33)
 
-    async def test_process_xyy_color(self):
+    async def test_process_xyy_color(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if color is processed."""
         xknx = XKNX()
         light = Light(
@@ -1673,7 +1677,7 @@ class TestLight:
         )
         assert light.current_xyy_color == XYYColor((0.18, 0.25), 165)
 
-    async def test_process_tunable_white(self):
+    async def test_process_tunable_white(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if tunable white is processed."""
         xknx = XKNX()
         light = Light(
@@ -1691,7 +1695,7 @@ class TestLight:
         light.process(telegram)
         assert light.current_tunable_white == 23
 
-    async def test_process_tunable_white_wrong_payload(self):
+    async def test_process_tunable_white_wrong_payload(self) -> None:
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -1711,7 +1715,7 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
-    async def test_process_tunable_white_payload_invalid_length(self):
+    async def test_process_tunable_white_payload_invalid_length(self) -> None:
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -1731,7 +1735,7 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
-    async def test_process_color_temperature(self):
+    async def test_process_color_temperature(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if color temperature is processed."""
         xknx = XKNX()
         light = Light(
@@ -1756,7 +1760,7 @@ class TestLight:
         light.process(telegram)
         assert light.current_color_temperature == 4000
 
-    async def test_process_color_temperature_wrong_payload(self):
+    async def test_process_color_temperature_wrong_payload(self) -> None:
         """Test process wrong telegrams. (wrong payload type)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -1776,7 +1780,7 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
-    async def test_process_color_temperature_payload_invalid_length(self):
+    async def test_process_color_temperature_payload_invalid_length(self) -> None:
         """Test process wrong telegrams. (wrong payload length)."""
         xknx = XKNX()
         cb_mock = Mock()
@@ -1796,7 +1800,7 @@ class TestLight:
             log_mock.assert_called_once()
             cb_mock.assert_not_called()
 
-    def test_has_group_address(self):
+    def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
         light = Light(

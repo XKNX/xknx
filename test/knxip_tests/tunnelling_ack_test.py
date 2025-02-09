@@ -9,7 +9,7 @@ from xknx.knxip import ErrorCode, KNXIPFrame, TunnellingAck
 class TestKNXIPTunnellingAck:
     """Test class for KNX/IP TunnellingAck objects."""
 
-    def test_tunnelling_ack(self):
+    def test_tunnelling_ack(self) -> None:
         """Test parsing and streaming tunneling ACK KNX/IP packet."""
         raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x0A, 0x04, 0x2A, 0x17, 0x00))
         knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -27,13 +27,13 @@ class TestKNXIPTunnellingAck:
 
         assert knxipframe2.to_knx() == raw
 
-    def test_from_knx_wrong_ack_information(self):
+    def test_from_knx_wrong_ack_information(self) -> None:
         """Test parsing and streaming wrong TunnellingAck (wrong length byte)."""
         raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x0A, 0x03, 0x2A, 0x17, 0x00))
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
-    def test_from_knx_wrong_ack_information2(self):
+    def test_from_knx_wrong_ack_information2(self) -> None:
         """Test parsing and streaming wrong TunnellingAck (wrong length)."""
         raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x0A, 0x04, 0x2A, 0x17))
         with pytest.raises(CouldNotParseKNXIP):

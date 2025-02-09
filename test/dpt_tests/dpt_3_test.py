@@ -1,5 +1,7 @@
 """Unit test for DPT 3 objects."""
 
+from typing import Any
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTBinary, DPTControlBlinds, DPTControlDimming
@@ -32,7 +34,7 @@ class TestControlData:
             ),
         ],
     )
-    def test_dict(self, data, dict_value):
+    def test_dict(self, data: ControlBlinds, dict_value: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         test_dataclass = data.__class__
         assert test_dataclass.from_dict(dict_value) == data
@@ -50,7 +52,7 @@ class TestControlData:
             {"control": 2, "step_code": 4},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             ControlBlinds.from_dict(data)
@@ -68,7 +70,12 @@ class TestControlData:
 class TestDPTControlStepCode:
     """Test class for DPT 3 objects."""
 
-    def test_to_knx(self, dpt, dpt_data, control_enum):
+    def test_to_knx(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test serializing values."""
         for rawref in range(16):
             control = 1 if rawref >> 3 else 0
@@ -80,7 +87,12 @@ class TestDPTControlStepCode:
             )
             assert raw == DPTBinary(rawref)
 
-    def test_to_knx_dict(self, dpt, dpt_data, control_enum):
+    def test_to_knx_dict(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test serializing values from dict."""
         for rawref in range(16):
             control = 1 if rawref >> 3 else 0
@@ -92,28 +104,48 @@ class TestDPTControlStepCode:
             )
             assert raw == DPTBinary(rawref)
 
-    def test_to_knx_wrong_type(self, dpt, dpt_data, control_enum):
+    def test_to_knx_wrong_type(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test serializing wrong type."""
         with pytest.raises(ConversionError):
             dpt.to_knx("")
         with pytest.raises(ConversionError):
             dpt.to_knx(0)
 
-    def test_to_knx_missing_keys(self, dpt, dpt_data, control_enum):
+    def test_to_knx_missing_keys(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test serializing map with missing keys."""
         with pytest.raises(ConversionError):
             dpt.to_knx({"control": 0})
         with pytest.raises(ConversionError):
             dpt.to_knx({"step_code": 0})
 
-    def test_to_knx_wrong_value_types(self, dpt, dpt_data, control_enum):
+    def test_to_knx_wrong_value_types(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test serializing map with keys of invalid type."""
         with pytest.raises(ConversionError):
             dpt.to_knx({"control": "", "step_code": 0})
         with pytest.raises(ConversionError):
             dpt.to_knx({"control": 0, "step_code": ""})
 
-    def test_to_knx_wrong_values(self, dpt, dpt_data, control_enum):
+    def test_to_knx_wrong_values(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test serializing with invalid values."""
         with pytest.raises(ConversionError):
             dpt.to_knx({"control": -1, "step_code": 0})
@@ -124,7 +156,12 @@ class TestDPTControlStepCode:
         with pytest.raises(ConversionError):
             dpt.to_knx(dpt_data(control=control_enum(0), step_code=8))
 
-    def test_from_knx(self, dpt, dpt_data, control_enum):
+    def test_from_knx(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test parsing from KNX."""
         for raw in range(16):
             control = 1 if raw >> 3 else 0
@@ -135,7 +172,12 @@ class TestDPTControlStepCode:
             value = dpt.from_knx(DPTBinary((raw,)))
             assert value == valueref
 
-    def test_from_knx_wrong_value(self, dpt, dpt_data, control_enum):
+    def test_from_knx_wrong_value(
+        self,
+        dpt: type[DPTControlDimming | DPTControlBlinds],
+        dpt_data: type[ControlDimming | ControlBlinds],
+        control_enum: type[Step | UpDown],
+    ) -> None:
         """Test parsing invalid values from KNX."""
         with pytest.raises(CouldNotParseTelegram):
             dpt.from_knx(DPTBinary((0x1F,)))

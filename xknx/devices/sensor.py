@@ -37,7 +37,7 @@ class Sensor(Device):
         always_callback: bool = False,
         value_type: int | str | None = None,
         device_updated_cb: DeviceCallbackType[Sensor] | None = None,
-    ):
+    ) -> None:
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
         self.sensor_value = RemoteValueSensor(

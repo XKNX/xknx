@@ -33,7 +33,7 @@ class UDPTransport(KNXIPTransport):
             self,
             data_received_callback: Callable[[bytes, tuple[str, int]], None]
             | None = None,
-        ):
+        ) -> None:
             """Initialize UDPTransportFactory class."""
             self.transport: asyncio.BaseTransport | None = None
             self.data_received_callback = data_received_callback
@@ -61,7 +61,7 @@ class UDPTransport(KNXIPTransport):
         local_addr: tuple[str, int],
         remote_addr: tuple[str, int],
         multicast: bool = False,
-    ):
+    ) -> None:
         """Initialize UDPTransport class."""
         if not isinstance(local_addr, tuple):
             raise TypeError()

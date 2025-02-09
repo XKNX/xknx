@@ -6,7 +6,7 @@ from xknx.secure.util import byte_pad, bytes_xor, sha256_hash
 
 
 @pytest.mark.parametrize(
-    "value_a,value_b,result",
+    ("value_a", "value_b", "result"),
     [
         (
             "01010101",
@@ -25,7 +25,11 @@ from xknx.secure.util import byte_pad, bytes_xor, sha256_hash
         ),
     ],
 )
-def test_byte_xor(value_a, value_b, result):
+def test_byte_xor(
+    value_a: tuple[str, str, str],
+    value_b: tuple[str, str, str],
+    result: tuple[str, str, str],
+) -> None:
     """Test byte xor."""
     len_a = (len(value_a) + 7) // 8
     len_b = (len(value_b) + 7) // 8
@@ -36,42 +40,30 @@ def test_byte_xor(value_a, value_b, result):
     ) == int(result, 2).to_bytes(len_res, "big")
 
 
-def test_byte_xor_error():
+def test_byte_xor_error() -> None:
     """Test byte xor error."""
     with pytest.raises(ValueError):
         bytes_xor(bytes([1]), bytes([0, 1]))
 
 
 @pytest.mark.parametrize(
-    "block_size,data,result",
+    ("block_size", "data", "result"),
     [
-        (
-            4,
-            bytes([23]),
-            bytes([23, 0, 0, 0]),
-        ),
-        (
-            4,
-            bytes([1, 23, 0, 0]),
-            bytes([1, 23, 0, 0]),
-        ),
-        (
-            16,
-            bytes([123]),
-            bytes([123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        ),
+        (4, bytes([23]), bytes([23, 0, 0, 0])),
+        (4, bytes([1, 23, 0, 0]), bytes([1, 23, 0, 0])),
+        (16, bytes([123]), bytes([123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])),
         (16, bytes(16), bytes(16)),
         (16, bytes(17), bytes(32)),
         (16, bytes(32), bytes(32)),
         (16, bytes(47), bytes(48)),
     ],
 )
-def test_byte_pad(block_size, data, result):
+def test_byte_pad(block_size: int, data: bytes, result: bytes) -> None:
     """Test byte pad."""
     assert byte_pad(data=data, block_size=block_size) == result
 
 
-def test_sha256_hash():
+def test_sha256_hash() -> None:
     """Test sha256 hash."""
     # Data from SessionResponse example in KNX specification AN159v06
     assert sha256_hash(

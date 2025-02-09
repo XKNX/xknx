@@ -12,13 +12,13 @@ class TestTelegram:
     #
     # EQUALITY
     #
-    def test_telegram_equal(self):
+    def test_telegram_equal(self) -> None:
         """Test equals operator."""
         assert Telegram(GroupAddress("1/2/3"), payload=GroupValueRead()) == Telegram(
             GroupAddress("1/2/3"), payload=GroupValueRead()
         )
 
-    def test_telegram_not_equal(self):
+    def test_telegram_not_equal(self) -> None:
         """Test not equals operator."""
         assert Telegram(GroupAddress("1/2/3"), payload=GroupValueRead()) != Telegram(
             GroupAddress("1/2/4"), payload=GroupValueRead()

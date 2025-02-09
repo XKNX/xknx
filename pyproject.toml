@@ -72,16 +72,17 @@ jobs = 0
 # too-many-* - are not enforced for the sake of readability
 # too-few-* - same as too-many-*
 disable = [
-  "format",                         # handled by ruff
-  "no-member",                      # handled by mypy - pylint has false positives sometimes
   "cyclic-import",                  # doesn't test if both import on load
   "duplicate-code",                 # unavoidable
   "fixme",                          # TODO
+  "format",                         # handled by ruff
   "inconsistent-return-statements", # doesn't handle raise
   "locally-disabled",               # it spams too much
+  "no-member",                      # handled by mypy - pylint has false positives sometimes
   "too-few-public-methods",
   "too-many-ancestors",             # it's too strict.
   "too-many-arguments",
+  "too-many-boolean-expressions",
   "too-many-branches",
   "too-many-instance-attributes",
   "too-many-lines",
@@ -90,7 +91,7 @@ disable = [
   "too-many-public-methods",
   "too-many-return-statements",
   "too-many-statements",
-  "too-many-boolean-expressions",
+  "ungrouped-imports",              # handled by ruff
   "unused-argument",                # generic callbacks and setup methods create a lot of warnings
   "wrong-import-order",             # handled by ruff
 ]
@@ -115,12 +116,15 @@ asyncio_mode = "auto"
 [tool.ruff]
 lint.select = [
   "A",     # builtins shadowing
+  "ANN",   # annotations
   "ASYNC", # async
   "B",     # bugbear
   "C4",    # comprehensions
   "D",     # pydocstyle
   "E",     # pycodestyle
   "F",     # pyflakes
+  "FLY",   # flynt
+  "FURB",  # refurb
   "G",     # logging
   "I",     # isort
   "LOG",   # logging
@@ -133,6 +137,7 @@ lint.select = [
   "W",     # pydocstyle warning
 ]
 lint.ignore = [
+  "ANN401", # any-type - mypy should handle this where necessary
   "D202",
   "D203",
   "D212",

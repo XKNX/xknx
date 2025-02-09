@@ -61,7 +61,7 @@ class GatewayDescriptor:
         supports_tunnelling_tcp: bool = False,
         supports_secure: bool = False,
         individual_address: IndividualAddress | None = None,
-    ):
+    ) -> None:
         """Initialize GatewayDescriptor class."""
         self.name = name
         self.ip_addr = ip_addr
@@ -150,7 +150,7 @@ class GatewayScanFilter:
         routing: bool | None = True,
         secure_tunnelling: bool | None = True,
         secure_routing: bool | None = True,
-    ):
+    ) -> None:
         """Initialize GatewayScanFilter class."""
         self.name = name
         self.tunnelling = tunnelling
@@ -206,7 +206,7 @@ class GatewayScanner:
         timeout_in_seconds: float = 3.0,
         stop_on_found: int | None = None,
         scan_filter: GatewayScanFilter | None = None,
-    ):
+    ) -> None:
         """Initialize GatewayScanner class."""
         self.xknx = xknx
         self.local_ip = local_ip

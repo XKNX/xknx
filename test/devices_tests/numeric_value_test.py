@@ -82,10 +82,10 @@ class TestNumericValue:
     )
     async def test_sensor_value_types(
         self,
-        value_type,
-        raw_payload,
-        expected_state,
-    ):
+        value_type: str,
+        raw_payload: DPTArray,
+        expected_state: int,
+    ) -> None:
         """Test sensor value types."""
         xknx = XKNX()
         sensor = NumericValue(
@@ -106,7 +106,7 @@ class TestNumericValue:
     #
     # TEST RESPOND
     #
-    async def test_respond_to_read(self):
+    async def test_respond_to_read(self) -> None:
         """Test respond_to_read function."""
         xknx = XKNX()
         responding = NumericValue(
@@ -174,7 +174,7 @@ class TestNumericValue:
     #
     # TEST SET
     #
-    async def test_set_percent(self):
+    async def test_set_percent(self) -> None:
         """Test set with percent numeric value."""
         xknx = XKNX()
         num_value = NumericValue(
@@ -189,7 +189,7 @@ class TestNumericValue:
             payload=GroupValueWrite(DPTArray((0xBF,))),
         )
 
-    async def test_set_temperature(self):
+    async def test_set_temperature(self) -> None:
         """Test set with temperature numeric value."""
         xknx = XKNX()
         num_value = NumericValue(
@@ -208,7 +208,7 @@ class TestNumericValue:
     #
     # SYNC
     #
-    async def test_sync(self):
+    async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         sensor = NumericValue(
@@ -224,7 +224,7 @@ class TestNumericValue:
     #
     # TEST PROCESS
     #
-    async def test_process(self):
+    async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
         sensor = NumericValue(
@@ -240,7 +240,7 @@ class TestNumericValue:
         assert sensor.sensor_value.telegram.payload.value == DPTArray((0x06, 0xA0))
         assert sensor.resolve_state() == 16.96
 
-    async def test_process_callback(self):
+    async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
@@ -262,7 +262,7 @@ class TestNumericValue:
         sensor.process(telegram)
         after_update_callback.assert_not_called()
 
-    async def test_process_callback_always(self):
+    async def test_process_callback_always(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
@@ -288,7 +288,7 @@ class TestNumericValue:
         sensor.process(telegram)
         after_update_callback.assert_called_with(sensor)
 
-    async def test_process_callback_set(self):
+    async def test_process_callback_set(self) -> None:
         """Test setting value. Test if callback is called."""
 
         xknx = XKNX()
@@ -303,7 +303,7 @@ class TestNumericValue:
         xknx.devices.process(xknx.telegrams.get_nowait())
         after_update_callback.assert_called_with(num_value)
 
-    def test_string(self):
+    def test_string(self) -> None:
         """Test NumericValue string representation."""
 
         xknx = XKNX()

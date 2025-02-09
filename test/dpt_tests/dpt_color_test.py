@@ -1,5 +1,7 @@
 """Unit test for KNX color objects."""
 
+from typing import Any
+
 import pytest
 
 from xknx.dpt import (
@@ -25,7 +27,7 @@ class TestRGBColor:
             ({"red": 0, "green": 0, "blue": 0}, RGBColor(0, 0, 0)),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, int], value: RGBColor) -> None:
         """Test from_dict and as_dict methods."""
         test_value = RGBColor.from_dict(data)
         assert test_value == value
@@ -48,7 +50,7 @@ class TestRGBColor:
             {"red": 128, "green": 128, "blue": "a"},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             RGBColor.from_dict(data)
@@ -65,7 +67,7 @@ class TestDPTColorRGB:
             (RGBColor(128, 128, 128), (0x80, 0x80, 0x80)),  # mid values
         ],
     )
-    def test_rgbcolor_value(self, value, raw):
+    def test_rgbcolor_value(self, value: RGBColor, raw: tuple[int]) -> None:
         """Test DPTColorRGB parsing and streaming."""
         knx_value = DPTColorRGB.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -78,7 +80,9 @@ class TestDPTColorRGB:
             ({"red": 255, "green": 255, "blue": 255}, (0xFF, 0xFF, 0xFF)),
         ],
     )
-    def test_rgbcolor_to_knx_from_dict(self, value, raw):
+    def test_rgbcolor_to_knx_from_dict(
+        self, value: dict[str, int], raw: tuple[int]
+    ) -> None:
         """Test DPTColorRGB parsing from a dict."""
         knx_value = DPTColorRGB.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -94,7 +98,7 @@ class TestDPTColorRGB:
             (0, 0, 256),
         ],
     )
-    def test_rgbcolor_to_knx_limits(self, red, green, blue):
+    def test_rgbcolor_to_knx_limits(self, red: int, green: int, blue: int) -> None:
         """Test initialization of DPTColorRGB with wrong value."""
         value = RGBColor(red=red, green=green, blue=blue)
         with pytest.raises(ConversionError):
@@ -115,12 +119,12 @@ class TestDPTColorRGB:
             RGBColor(red="a", green=0, blue=1),
         ],
     )
-    def test_rgbcolor_wrong_value_to_knx(self, value):
+    def test_rgbcolor_wrong_value_to_knx(self, value: Any) -> None:
         """Test DPTColorRGB parsing with wrong value."""
         with pytest.raises(ConversionError):
             DPTColorRGB.to_knx(value)
 
-    def test_rgbcolor_wrong_value_from_knx(self):
+    def test_rgbcolor_wrong_value_from_knx(self) -> None:
         """Test DPTColorRGB parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTColorRGB.from_knx(DPTArray((0xFF, 0x4E, 0x12, 0x23)))
@@ -163,7 +167,7 @@ class TestRGBWColor:
             ({"blue": 128, "white": 128}, RGBWColor(None, None, 128, 128)),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, int], value: RGBWColor) -> None:
         """Test from_dict and as_dict methods."""
         test_value = RGBWColor.from_dict(data)
         assert test_value == value
@@ -181,12 +185,12 @@ class TestRGBWColor:
             {"red": 128, "green": 128, "blue": 128, "white": "a"},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             RGBWColor.from_dict(data)
 
-    def test_merge(self):
+    def test_merge(self) -> None:
         """Test merging two RGBWColor objects."""
         color1 = RGBWColor(1, 1, 1, None)
         color2 = RGBWColor(None, None, None, 2)
@@ -214,7 +218,7 @@ class TestDPTColorRGBW:
             (RGBWColor(204, 204, 204, 204), (0xCC, 0xCC, 0xCC, 0xCC, 0, 0b1111)),
         ],
     )
-    def test_rgbwcolor_value(self, value, raw):
+    def test_rgbwcolor_value(self, value: RGBWColor, raw: tuple[int]) -> None:
         """Test DPTColorRGBW parsing and streaming."""
         knx_value = DPTColorRGBW.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -237,7 +241,9 @@ class TestDPTColorRGBW:
             ),
         ],
     )
-    def test_rgbwcolor_to_knx_from_dict(self, value, raw):
+    def test_rgbwcolor_to_knx_from_dict(
+        self, value: dict[str, int], raw: tuple[int]
+    ) -> None:
         """Test DPTColorRGBW parsing from a dict."""
         knx_value = DPTColorRGBW.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -255,7 +261,9 @@ class TestDPTColorRGBW:
             (0, 0, 0, 256),
         ],
     )
-    def test_rgbwcolor_to_knx_limits(self, red, green, blue, white):
+    def test_rgbwcolor_to_knx_limits(
+        self, red: int, green: int, blue: int, white: int
+    ) -> None:
         """Test initialization of DPTColorRGBW with wrong value."""
         value = RGBWColor(red=red, green=green, blue=blue, white=white)
         with pytest.raises(ConversionError):
@@ -276,12 +284,12 @@ class TestDPTColorRGBW:
             RGBWColor(red="a", green=0, blue=0, white=1),
         ],
     )
-    def test_rgbwcolor_wrong_value_to_knx(self, value):
+    def test_rgbwcolor_wrong_value_to_knx(self, value: Any) -> None:
         """Test DPTColorRGBW parsing with wrong value."""
         with pytest.raises(ConversionError):
             DPTColorRGBW.to_knx(value)
 
-    def test_rgbwcolor_wrong_value_from_knx(self):
+    def test_rgbwcolor_wrong_value_from_knx(self) -> None:
         """Test DPTColorRGBW parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTColorRGBW.from_knx(DPTArray((0xFF, 0x4E, 0x12)))
@@ -331,7 +339,7 @@ class TestXYYColor:
             ),
         ],
     )
-    def test_dict(self, data, value):
+    def test_dict(self, data: dict[str, Any], value: XYYColor) -> None:
         """Test from_dict and as_dict methods."""
         test_value = XYYColor.from_dict(data)
         assert test_value == value
@@ -353,12 +361,12 @@ class TestXYYColor:
             {"x_axis": 0.1, "y_axis": 0.1, "brightness": "a"},
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         with pytest.raises(ValueError):
             XYYColor.from_dict(data)
 
-    def test_merge(self):
+    def test_merge(self) -> None:
         """Test merging two XYYColor objects."""
         color1 = XYYColor((1, 1), None)
         color2 = XYYColor(None, 2)
@@ -386,7 +394,7 @@ class TestDPTColorXYY:
             (XYYColor((0.8, 0.8), 204), (0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0x03)),
         ],
     )
-    def test_xyycolor_value(self, value, raw):
+    def test_xyycolor_value(self, value: XYYColor, raw: tuple[int]) -> None:
         """Test DPTColorXYY parsing and streaming."""
         knx_value = DPTColorXYY.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -405,7 +413,9 @@ class TestDPTColorXYY:
             ),
         ],
     )
-    def test_xyycolor_to_knx_from_dict(self, value, raw):
+    def test_xyycolor_to_knx_from_dict(
+        self, value: dict[str, Any], raw: tuple[int]
+    ) -> None:
         """Test DPTColorXYY parsing from a dict."""
         knx_value = DPTColorXYY.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -421,7 +431,9 @@ class TestDPTColorXYY:
             ((0, 0), 256),
         ],
     )
-    def test_xyycolor_to_knx_limits(self, color, brightness):
+    def test_xyycolor_to_knx_limits(
+        self, color: tuple[float, float], brightness: int
+    ) -> None:
         """Test initialization of DPTColorXYY with wrong value."""
         value = XYYColor(color=color, brightness=brightness)
         with pytest.raises(ConversionError):
@@ -442,12 +454,12 @@ class TestDPTColorXYY:
             XYYColor(color=("a", 0), brightness=1),
         ],
     )
-    def test_xyycolor_wrong_value_to_knx(self, value):
+    def test_xyycolor_wrong_value_to_knx(self, value: Any) -> None:
         """Test DPTColorXYY parsing with wrong value."""
         with pytest.raises(ConversionError):
             DPTColorXYY.to_knx(value)
 
-    def test_xyycolor_wrong_value_from_knx(self):
+    def test_xyycolor_wrong_value_from_knx(self) -> None:
         """Test DPTColorXYY parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTColorXYY.from_knx(DPTArray((0xFF, 0x4E, 0x12)))

@@ -20,7 +20,16 @@ from xknx.telegram.apci import GroupValueRead
 from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataGroup
 
 
-def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
+def get_data(
+    code: int,
+    adil: int,
+    flags: int,
+    src: int,
+    dst: int,
+    npdu_len: int,
+    tpci_apci: int,
+    payload: list[int],
+) -> bytes:
     """Encode to cemi data raw bytes."""
     return bytes(
         [
@@ -40,7 +49,7 @@ def get_data(code, adil, flags, src, dst, npdu_len, tpci_apci, payload):
     )
 
 
-def test_valid_command():
+def test_valid_command() -> None:
     """Test for valid frame parsing."""
     raw = get_data(0x29, 0, 0x0080, 1, 1, 1, 0, [])
     frame = CEMIFrame.from_knx(raw)
@@ -56,7 +65,7 @@ def test_valid_command():
     assert frame.to_knx() == raw
 
 
-def test_valid_tpci_control():
+def test_valid_tpci_control() -> None:
     """Test for valid tpci control."""
     raw = bytes((0x29, 0, 0, 0, 0, 0, 0, 0, 0, 0x80))
     frame = CEMIFrame.from_knx(raw)
@@ -81,7 +90,7 @@ def test_valid_tpci_control():
         ),
     ],
 )
-def test_invalid_tpci_apci(raw, err_msg):
+def test_invalid_tpci_apci(raw: bytes, err_msg: str) -> None:
     """Test for invalid APCIService."""
     with pytest.raises(CouldNotParseCEMI, match=err_msg):
         CEMIFrame.from_knx(raw)
@@ -100,19 +109,19 @@ def test_invalid_tpci_apci(raw, err_msg):
         ),
     ],
 )
-def test_unsupported_tpci_apci(raw, err_msg):
+def test_unsupported_tpci_apci(raw: bytes, err_msg: str) -> None:
     """Test for invalid APCIService."""
     with pytest.raises(UnsupportedCEMIMessage, match=err_msg):
         CEMIFrame.from_knx(raw)
 
 
-def test_invalid_apdu_len():
+def test_invalid_apdu_len() -> None:
     """Test for invalid apdu len."""
     with pytest.raises(CouldNotParseCEMI, match=r".*APDU LEN should be .*"):
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, []))
 
 
-def test_invalid_payload():
+def test_invalid_payload() -> None:
     """Test for having wrong payload set."""
     frame = CEMIFrame(
         code=CEMIMessageCode.L_DATA_IND,
@@ -132,7 +141,7 @@ def test_invalid_payload():
         frame.to_knx()
 
 
-def test_missing_data():
+def test_missing_data() -> None:
     """Test for having no data set."""
     frame = CEMIFrame(
         code=CEMIMessageCode.L_DATA_IND,
@@ -146,7 +155,7 @@ def test_missing_data():
         frame.to_knx()
 
 
-def test_from_knx_with_not_handleable_cemi():
+def test_from_knx_with_not_handleable_cemi() -> None:
     """Test for having unhandlebale cemi set."""
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*CEMIMessageCode not implemented:.*"
@@ -154,7 +163,7 @@ def test_from_knx_with_not_handleable_cemi():
         CEMIFrame.from_knx(get_data(0x30, 0, 0, 0, 0, 2, 0, []))
 
 
-def test_from_knx_with_not_implemented_cemi():
+def test_from_knx_with_not_implemented_cemi() -> None:
     """Test for having not implemented CEMI set."""
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*Could not handle CEMIMessageCode:.*"
@@ -164,27 +173,27 @@ def test_from_knx_with_not_implemented_cemi():
         )
 
 
-def test_invalid_invalid_len():
+def test_invalid_invalid_len() -> None:
     """Test for invalid cemi len."""
     with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
 
 
-def test_from_knx_group_address():
+def test_from_knx_group_address() -> None:
     """Test conversion for a cemi with a group address as destination."""
     frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
     assert isinstance(frame.data, CEMILData)
     assert frame.data.dst_addr == GroupAddress(0)
 
 
-def test_from_knx_individual_address():
+def test_from_knx_individual_address() -> None:
     """Test conversion for a cemi with a individual address as destination."""
     frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x00, 0, 0, 1, 0, []))
     assert isinstance(frame.data, CEMILData)
     assert frame.data.dst_addr == IndividualAddress(0)
 
 
-def test_telegram_group_address():
+def test_telegram_group_address() -> None:
     """Test telegram conversion flags with a group address."""
     _telegram = Telegram(destination_address=GroupAddress(1))
     frame = CEMIFrame(
@@ -198,7 +207,7 @@ def test_telegram_group_address():
     assert frame.data.telegram() == _telegram
 
 
-def test_telegram_broadcast():
+def test_telegram_broadcast() -> None:
     """Test telegram conversion flags with a group address."""
     _telegram = Telegram(destination_address=GroupAddress(0))
     frame = CEMIFrame(
@@ -213,7 +222,7 @@ def test_telegram_broadcast():
     assert frame.data.telegram() == _telegram
 
 
-def test_telegram_individual_address():
+def test_telegram_individual_address() -> None:
     """Test telegram conversion flags with a individual address."""
     _telegram = Telegram(destination_address=IndividualAddress(0), tpci=TConnect())
     frame = CEMIFrame(
@@ -228,7 +237,7 @@ def test_telegram_individual_address():
     assert frame.data.telegram() == _telegram
 
 
-def test_telegram_unsupported_address():
+def test_telegram_unsupported_address() -> None:
     """Test telegram conversion flags with an unsupported address."""
     with pytest.raises(TypeError):
         CEMIFrame(
@@ -237,7 +246,15 @@ def test_telegram_unsupported_address():
         )
 
 
-def get_prop(code, obj_id, obj_inst, prop_id, num, six, payload):
+def get_prop(
+    code: int,
+    obj_id: int,
+    obj_inst: int,
+    prop_id: int,
+    num: int,
+    six: int,
+    payload: list[int],
+) -> bytes:
     """Encode to cemi prop raw bytes."""
     return bytes(
         [
@@ -253,7 +270,7 @@ def get_prop(code, obj_id, obj_inst, prop_id, num, six, payload):
     )
 
 
-def test_valid_read_req():
+def test_valid_read_req() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xFC, 0x000B, 1, 52, 1, 1, [])
     frame = CEMIFrame.from_knx(raw)
@@ -276,7 +293,7 @@ def test_valid_read_req():
         frame.data.telegram()
 
 
-def test_valid_read_con():
+def test_valid_read_con() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xFB, 0x000B, 1, 52, 1, 1, [0x12, 0x03])
     frame = CEMIFrame.from_knx(raw)
@@ -299,7 +316,7 @@ def test_valid_read_con():
     assert frame.to_knx() == raw
 
 
-def test_valid_error_read_con():
+def test_valid_error_read_con() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xFB, 0x000B, 1, 52, 0, 1, [0x07])
     frame = CEMIFrame.from_knx(raw)
@@ -321,7 +338,7 @@ def test_valid_error_read_con():
     assert frame.to_knx() == raw
 
 
-def test_valid_write_req():
+def test_valid_write_req() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xF6, 0x000B, 1, 52, 1, 1, [0x12, 0x03])
     frame = CEMIFrame.from_knx(raw)
@@ -343,7 +360,7 @@ def test_valid_write_req():
     assert frame.to_knx() == raw
 
 
-def test_valid_empty_write_con():
+def test_valid_empty_write_con() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xF5, 0x000B, 1, 52, 1, 1, [])
     frame = CEMIFrame.from_knx(raw)
@@ -365,7 +382,7 @@ def test_valid_empty_write_con():
     assert frame.to_knx() == raw
 
 
-def test_valid_error_write_con():
+def test_valid_error_write_con() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xF5, 0x000B, 1, 52, 0, 1, [0x07])
     frame = CEMIFrame.from_knx(raw)
@@ -420,13 +437,13 @@ def test_valid_error_write_con():
         ),
     ],
 )
-def test_invalid_length(raw, err_msg):
+def test_invalid_length(raw: bytes, err_msg: str) -> None:
     """Test for invalid frame parsing."""
     with pytest.raises(CouldNotParseCEMI, match=err_msg):
         CEMIFrame.from_knx(raw)
 
 
-def test_invalid_resource_object():
+def test_invalid_resource_object() -> None:
     """Test for invalid frame parsing."""
     with pytest.raises(
         UnsupportedCEMIMessage, match=r".*CEMIMProp Object Type not supported:.*"

@@ -1,5 +1,7 @@
 """Unit test for KNX DPT HVAC Operation modes."""
 
+from typing import Any
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
@@ -10,7 +12,7 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 class TestDPTHVACMode:
     """Test class for KNX DPT HVAC Operation modes."""
 
-    def test_mode_to_knx(self):
+    def test_mode_to_knx(self) -> None:
         """Test parsing DPTHVACMode to KNX."""
         assert DPTHVACMode.to_knx(HVACOperationMode.AUTO) == DPTArray((0x00,))
         assert DPTHVACMode.to_knx(HVACOperationMode.COMFORT) == DPTArray((0x01,))
@@ -20,7 +22,7 @@ class TestDPTHVACMode:
             (0x04,)
         )
 
-    def test_mode_to_knx_by_string(self):
+    def test_mode_to_knx_by_string(self) -> None:
         """Test parsing DPTHVACMode string values to KNX."""
         assert DPTHVACMode.to_knx("auto") == DPTArray((0x00,))
         assert DPTHVACMode.to_knx("Comfort") == DPTArray((0x01,))
@@ -28,12 +30,12 @@ class TestDPTHVACMode:
         assert DPTHVACMode.to_knx("ECONOMY") == DPTArray((0x03,))
         assert DPTHVACMode.to_knx("Building_Protection") == DPTArray((0x04,))
 
-    def test_mode_to_knx_wrong_value(self):
+    def test_mode_to_knx_wrong_value(self) -> None:
         """Test serializing DPTHVACMode to KNX with wrong value."""
         with pytest.raises(ConversionError):
             DPTHVACMode.to_knx(5)
 
-    def test_mode_from_knx(self):
+    def test_mode_from_knx(self) -> None:
         """Test parsing DPTHVACMode from KNX."""
         assert DPTHVACMode.from_knx(DPTArray((0x00,))) == HVACOperationMode.AUTO
         assert DPTHVACMode.from_knx(DPTArray((0x01,))) == HVACOperationMode.COMFORT
@@ -44,7 +46,7 @@ class TestDPTHVACMode:
             == HVACOperationMode.BUILDING_PROTECTION
         )
 
-    def test_mode_from_knx_wrong_value(self):
+    def test_mode_from_knx_wrong_value(self) -> None:
         """Test parsing of DPTHVACMode with wrong value)."""
         with pytest.raises(CouldNotParseTelegram):
             DPTHVACMode.from_knx(DPTArray((1, 2)))
@@ -55,7 +57,7 @@ class TestDPTHVACMode:
 class TestDPTHVACControllerMode:
     """Test class for KNX DPT HVAC Controller modes."""
 
-    def test_mode_to_knx(self):
+    def test_mode_to_knx(self) -> None:
         """Test parsing DPTHVACContrMode to KNX."""
         assert DPTHVACContrMode.to_knx(HVACControllerMode.AUTO) == DPTArray((0x00,))
         assert DPTHVACContrMode.to_knx(HVACControllerMode.HEAT) == DPTArray((0x01,))
@@ -65,7 +67,7 @@ class TestDPTHVACControllerMode:
             (0x0E,)
         )
 
-    def test_mode_to_knx_by_string(self):
+    def test_mode_to_knx_by_string(self) -> None:
         """Test parsing DPTHVACMode string values to KNX."""
         assert DPTHVACContrMode.to_knx("morning_warmup") == DPTArray((0x02,))
         assert DPTHVACContrMode.to_knx("NIGHT_PURGE") == DPTArray((0x04,))
@@ -73,7 +75,7 @@ class TestDPTHVACControllerMode:
         assert DPTHVACContrMode.to_knx("Test") == DPTArray((0x07,))
         assert DPTHVACContrMode.to_knx("NODEM") == DPTArray((0x14,))
 
-    def test_mode_to_knx_wrong_value(self):
+    def test_mode_to_knx_wrong_value(self) -> None:
         """Test serializing DPTHVACMode to KNX with wrong value."""
         with pytest.raises(ConversionError):
             DPTHVACContrMode.to_knx(18)
@@ -92,11 +94,11 @@ class TestDPTHVACControllerMode:
             (0x0B, HVACControllerMode.ICE),
         ],
     )
-    def test_mode_from_knx(self, raw, value):
+    def test_mode_from_knx(self, raw: int, value: HVACControllerMode) -> None:
         """Test parsing DPTHVACMode from KNX."""
         assert DPTHVACContrMode.from_knx(DPTArray((raw,))) is value
 
-    def test_mode_from_knx_wrong_value(self):
+    def test_mode_from_knx_wrong_value(self) -> None:
         """Test parsing of DPTHVACMode with wrong value)."""
         with pytest.raises(CouldNotParseTelegram):
             DPTHVACContrMode.from_knx(DPTArray((1, 2)))
@@ -144,7 +146,7 @@ class TestHVACStatus:
             ),
         ],
     )
-    def test_dict(self, data, dict_value):
+    def test_dict(self, data: HVACStatus, dict_value: dict[str, Any]) -> None:
         """Test from_dict and as_dict methods."""
         assert HVACStatus.from_dict(dict_value) == data
         assert data.as_dict() == dict_value
@@ -182,7 +184,7 @@ class TestHVACStatus:
             },
         ],
     )
-    def test_dict_invalid(self, data):
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             HVACStatus.from_dict(data)
@@ -226,7 +228,7 @@ class TestDPTHVACStatus:
             ),
         ],
     )
-    def test_dpt_encoding_decoding(self, value, raw):
+    def test_dpt_encoding_decoding(self, value: HVACStatus, raw: tuple[int]) -> None:
         """Test DPTHVACStatus parsing and streaming."""
         knx_value = DPTHVACStatus.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -257,7 +259,7 @@ class TestDPTHVACStatus:
             ),
         ],
     )
-    def test_dpt_to_knx_from_dict(self, value, raw):
+    def test_dpt_to_knx_from_dict(self, value: dict[str, Any], raw: tuple[int]) -> None:
         """Test DPTHVACStatus parsing from a dict."""
         knx_value = DPTHVACStatus.to_knx(value)
         assert knx_value == DPTArray(raw)
@@ -270,12 +272,12 @@ class TestDPTHVACStatus:
             "cool",
         ],
     )
-    def test_dpt_wrong_value_to_knx(self, value):
+    def test_dpt_wrong_value_to_knx(self, value: Any) -> None:
         """Test DPTHVACStatus parsing with wrong value."""
         with pytest.raises(ConversionError):
             DPTHVACStatus.to_knx(value)
 
-    def test_dpt_wrong_value_from_knx(self):
+    def test_dpt_wrong_value_from_knx(self) -> None:
         """Test DPTHVACStatus parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTHVACStatus.from_knx(DPTArray((0xFF, 0x4E)))

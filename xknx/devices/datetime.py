@@ -57,7 +57,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType[Self] | None = None,
-    ):
+    ) -> None:
         """Initialize DateTime class."""
         super().__init__(xknx, name, device_updated_cb)
         self.localtime = localtime
