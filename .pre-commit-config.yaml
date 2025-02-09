@@ -63,6 +63,7 @@ repos:
       language: python
       types: [python]
       pass_filenames: true
+      require_serial: true
       files: ^(xknx/|examples/)
 
     - id: pylint-test
@@ -71,5 +72,6 @@ repos:
       language: python
       types: [python]
       pass_filenames: true
+      require_serial: true
       files: ^test/
 
