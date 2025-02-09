@@ -13,7 +13,14 @@ from xknx.exceptions import (
     ManagementConnectionTimeout,
 )
 from xknx.management.management import MANAGAMENT_ACK_TIMEOUT
-from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+from xknx.telegram import (
+    GroupAddress,
+    IndividualAddress,
+    Telegram,
+    TelegramDirection,
+    apci,
+    tpci,
+)
 
 
 async def test_connect():
@@ -214,15 +221,16 @@ async def test_broadcast_message():
     """Test broadcast message sending."""
     xknx = XKNX()
 
-    connect = Telegram(
-        source_address=IndividualAddress("4.0.10"),
-        destination_address=IndividualAddress("4.0.11"),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TConnect(),
+    test_telegram = Telegram(
+        source_address=IndividualAddress("0.0.0"),
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.OUTGOING,
+        tpci=tpci.TDataBroadcast(),
+        payload=apci.IndividualAddressRead(),
     )
-
-    with pytest.raises(TypeError):
-        await xknx.management.broadcast(connect)
+    with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
+        await xknx.management.send_broadcast(apci.IndividualAddressRead())
+        assert send_telegram.call_args_list == [call(test_telegram)]
 
 
 @pytest.mark.parametrize("rate_limit", [0, 1])
