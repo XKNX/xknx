@@ -16,7 +16,7 @@ from xknx.knxip import (
 class TestDisconnect:
     """Test class for xknx/io/Disconnect objects."""
 
-    async def test_disconnect(self):
+    async def test_disconnect(self) -> None:
         """Test disconnecting from KNX bus."""
         communication_channel_id = 23
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
@@ -68,7 +68,7 @@ class TestDisconnect:
         disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
         assert disconnect.success
 
-    async def test_disconnect_route_back_true(self):
+    async def test_disconnect_route_back_true(self) -> None:
         """Test disconnecting from KNX bus."""
         communication_channel_id = 23
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))

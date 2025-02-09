@@ -39,11 +39,13 @@ from xknx.telegram import (
 )
 from xknx.telegram.apci import GroupValueWrite
 
+from ..conftest import EventLoopClockAdvancer
+
 
 class TestUDPTunnel:
     """Test class for xknx/io/Tunnel objects."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
@@ -75,7 +77,9 @@ class TestUDPTunnel:
         ],
     )
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
-    async def test_tunnel_request_received(self, send_ack_mock, raw):
+    async def test_tunnel_request_received(
+        self, send_ack_mock: Mock, raw: bytes
+    ) -> None:
         """Test Tunnel for calling send_ack on frames."""
         raw_cemi = raw[10:]
         self.tunnel.expected_sequence_number = 0x21
@@ -89,9 +93,9 @@ class TestUDPTunnel:
     @patch("xknx.io.UDPTunnel.send_cemi")
     async def test_tunnel_request_received_callback(
         self,
-        send_cemi_mock,
-        send_ack_mock,
-    ):
+        send_cemi_mock: Mock,
+        send_ack_mock: Mock,
+    ) -> None:
         """Test Tunnel for responding to point-to-point connection."""
         self.tunnel.cemi_received_callback = self.xknx.knxip_interface.cemi_received
         self.xknx.knxip_interface._interface = self.tunnel
@@ -125,7 +129,9 @@ class TestUDPTunnel:
         ]
         send_ack_mock.assert_called_once_with(raw_ind[7], raw_ind[8])
 
-    async def test_repeated_tunnel_request(self, time_travel):
+    async def test_repeated_tunnel_request(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test Tunnel for receiving repeated TunnellingRequest frames."""
         self.tunnel.transport.send = Mock()
         self.tunnel.communication_channel = 1
@@ -174,7 +180,7 @@ class TestUDPTunnel:
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
 
-    async def test_tunnel_send_retry(self, time_travel):
+    async def test_tunnel_send_retry(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test tunnel resends the telegram when no ACK was received."""
         self.tunnel.transport.send = Mock()
         self.tunnel.communication_channel = 1
@@ -246,15 +252,19 @@ class TestUDPTunnel:
             await task
 
     @pytest.mark.parametrize(
-        "route_back,data_endpoint_addr,local_endpoint",
+        ("route_back", "data_endpoint_addr", "local_endpoint"),
         [
             (False, ("192.168.1.2", 56789), HPAI("192.168.1.1", 12345)),
             (True, None, HPAI()),
         ],
     )
     async def test_tunnel_connect_send_disconnect(
-        self, time_travel, route_back, data_endpoint_addr, local_endpoint
-    ):
+        self,
+        time_travel: EventLoopClockAdvancer,
+        route_back: bool,
+        data_endpoint_addr: tuple[str, int] | None,
+        local_endpoint: HPAI,
+    ) -> None:
         """Test initiating a tunnelling connection."""
         local_addr = ("192.168.1.1", 12345)
         remote_addr = ("192.168.1.2", 3671)
@@ -339,7 +349,9 @@ class TestUDPTunnel:
         assert self.tunnel._data_endpoint_addr is None
         self.tunnel.transport.stop.assert_called_once()
 
-    async def test_tunnel_request_description(self, time_travel):
+    async def test_tunnel_request_description(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test tunnel requesting and returning description of connected interface."""
         local_addr = ("192.168.1.1", 12345)
         self.tunnel.transport.send = Mock()
@@ -364,7 +376,7 @@ class TestUDPTunnel:
 class TestTCPTunnel:
     """Test class for xknx/io/TCPTunnel objects."""
 
-    def setup_method(self):
+    def setup_method(self) -> None:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.xknx = XKNX()
@@ -378,7 +390,7 @@ class TestTCPTunnel:
             auto_reconnect_wait=3,
         )
 
-    async def test_tunnel_heartbeat(self, time_travel):
+    async def test_tunnel_heartbeat(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test tunnel sends heartbeat frame."""
         local_addr = ("192.168.1.1", 12345)
         remote_hpai = HPAI(
@@ -432,7 +444,9 @@ class TestTCPTunnel:
         self.tunnel.transport.send.reset_mock()
         self.tunnel._tunnel_lost.assert_not_called()
 
-    async def test_tunnel_heartbeat_no_answer(self, time_travel):
+    async def test_tunnel_heartbeat_no_answer(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test tunnel sends heartbeat frame."""
         local_addr = ("192.168.1.1", 12345)
         remote_hpai = HPAI(
@@ -484,7 +498,9 @@ class TestTCPTunnel:
         # no answer - tunnel lost
         self.tunnel._tunnel_lost.assert_called_once()
 
-    async def test_tunnel_heartbeat_error(self, time_travel):
+    async def test_tunnel_heartbeat_error(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
         """Test tunnel sends heartbeat frame."""
         local_addr = ("192.168.1.1", 12345)
         remote_hpai = HPAI(

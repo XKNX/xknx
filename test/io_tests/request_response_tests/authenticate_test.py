@@ -16,7 +16,7 @@ from xknx.knxip.knxip_enum import SecureSessionStatusCode
 class TestAuthenticate:
     """Test class for xknx/io/Authenticate objects."""
 
-    async def test_authenticate(self):
+    async def test_authenticate(self) -> None:
         """Test authenticating to secure KNX device."""
         transport_mock = Mock()
         user_id = 123

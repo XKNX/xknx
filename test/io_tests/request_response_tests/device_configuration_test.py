@@ -20,7 +20,7 @@ from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 class TestDeviceConfiguration:
     """Test class for xknx/io/DeviceConfiguration objects."""
 
-    async def test_device_configuration(self):
+    async def test_device_configuration(self) -> None:
         """Test device_configuration from KNX bus."""
         data_endpoint = ("192.168.1.2", 4567)
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))

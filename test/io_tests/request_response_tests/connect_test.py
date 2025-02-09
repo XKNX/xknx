@@ -19,7 +19,7 @@ from xknx.telegram import IndividualAddress
 class TestConnect:
     """Test class for xknx/io/Connect objects."""
 
-    async def test_connect(self):
+    async def test_connect(self) -> None:
         """Test connecting from KNX bus."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI(ip_addr="192.168.1.3", port=4321)
@@ -75,7 +75,7 @@ class TestConnect:
         assert connect.communication_channel == 23
         assert connect.crd.individual_address.raw == 7
 
-    async def test_connect_route_back_true(self):
+    async def test_connect_route_back_true(self) -> None:
         """Test connecting from KNX bus."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         local_hpai = HPAI()  # route_back: No IP address, no port, UDP
