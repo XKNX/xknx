@@ -126,7 +126,8 @@ class TestKNXIPConnectRequest:
     def test_from_knx_wrong_length_of_cri2(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = bytes.fromhex(
-            "06 10 02 05 00 18 08 01 C0 A8 2A 01 84 95 08 01 C0 A8 2A 01 CC A9 03 03"
+            "06 10 02 05 00 18 08 01 C0 A8 2A 01 84 95 08 01"
+            + "C0 A8 2A 01 CC A9 03 03"
         )
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
@@ -134,7 +135,8 @@ class TestKNXIPConnectRequest:
     def test_from_knx_wrong_length_of_cri3(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = bytes.fromhex(
-            "06 10 02 05 00 18 08 01 C0 A8 2A 01 84 95 08 01 C0 A8 2A 01 CC A9 01 03"
+            "06 10 02 05 00 18 08 01 C0 A8 2A 01 84 95 08 01"
+            + "C0 A8 2A 01 CC A9 01 03"
         )
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
@@ -142,7 +144,8 @@ class TestKNXIPConnectRequest:
     def test_from_knx_wrong_length_of_cri4(self):
         """Test parsing and streaming wrong ConnectRequest."""
         raw = bytes.fromhex(
-            "06 10 02 05 00 19 08 01 C0 A8 2A 01 84 95 08 01 C0 A8 2A 01 CC A9 03 03 01"
+            "06 10 02 05 00 19 08 01 C0 A8 2A 01 84 95 08 01"
+            + "C0 A8 2A 01 CC A9 03 03 01"
         )
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
@@ -151,7 +154,7 @@ class TestKNXIPConnectRequest:
         """Test parsing and streaming wrong ConnectRequest."""
         raw = bytes.fromhex(
             "06 10 02 05 00 1A 08 01 C0 A8 2A 01 84 95 08 01"
-            "C0 A8 2A 01 CC A9 04 04 02"
+            + "C0 A8 2A 01 CC A9 04 04 02"
         )
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)

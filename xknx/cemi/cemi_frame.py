@@ -478,11 +478,7 @@ class CEMIMPropWriteRequest(CEMIData):
 
     def __repr__(self) -> str:
         """Return object as readable string."""
-        return (
-            f"CEMIMPropWriteRequest("
-            f"{self.property_info}"
-            f'data="{self.data.hex()}" )'
-        )
+        return f'CEMIMPropWriteRequest({self.property_info}data="{self.data.hex()}" )'
 
 
 class CEMIMPropWriteResponse(CEMIData):

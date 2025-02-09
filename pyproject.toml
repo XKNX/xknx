@@ -166,3 +166,6 @@ combine-as-imports = true
   "RUF012",
   "SLF",    # private member access
 ] # Mutable class attributes should be annotated with `typing.ClassVar`
+
+[tool.ruff.lint.flake8-builtins]
+builtins-allowed-modules = ["datetime"]

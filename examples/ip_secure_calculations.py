@@ -268,7 +268,7 @@ def main() -> None:
     )
     session_authenticate = bytes.fromhex(
         "06 10 09 53 00 18 00 01"
-        "1f 1d 59 ea 9f 12 a1 52 e5 d9 72 7f 08 46 2c de"  # MAC
+        + "1f 1d 59 ea 9f 12 a1 52 e5 d9 72 7f 08 46 2c de"  # MAC
     )
     mac_cbc_authenticate = calculate_message_authentication_code_cbc(
         password_hash,
