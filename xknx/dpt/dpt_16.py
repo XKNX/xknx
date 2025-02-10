@@ -41,7 +41,7 @@ class DPTString(DPTBase):
                 raise ValueError("Value out of range")
         except ValueError as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
         # replace invalid characters with question marks
         raw_bytes = knx_value.encode(cls._encoding, errors="replace")

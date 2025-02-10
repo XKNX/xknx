@@ -1,5 +1,6 @@
 """Unit test for KNX binary/integer objects."""
 
+from inspect import isabstract
 from typing import Any
 
 import pytest
@@ -11,6 +12,7 @@ from xknx.dpt import (
     DPTBinary,
     DPTColorRGBW,
     DPTComplex,
+    DPTConsumerProducer,
     DPTEnum,
     DPTHVACContrMode,
     DPTNumeric,
@@ -28,6 +30,8 @@ class TestDPTBase:
         """Test if abstract base classes are ignored by dpt_class_tree and __recursive_subclasses__."""
         for dpt in DPTBase.dpt_class_tree():
             assert dpt not in (DPTBase, DPTNumeric, DPTEnum, DPTComplex)
+            assert not isabstract(dpt)
+            assert dpt()  # test for abstract class - to be removed if instantiation is not allowed anymore
 
     def test_dpt_concrete_subclasses_included(self) -> None:
         """Test if concrete subclasses are included by dpt_class_tree."""
@@ -38,6 +42,7 @@ class TestDPTBase:
             DPTScaling,
             DPTHVACContrMode,
             DPTColorRGBW,
+            DPTConsumerProducer,
         ):
             assert dpt in DPTBase.dpt_class_tree()
 
@@ -51,18 +56,21 @@ class TestDPTBase:
     def test_dpt_subclasses_definition_types(self) -> None:
         """Test value_type and dpt_*_number values for correct type in subclasses of DPTBase."""
         for dpt in DPTBase.dpt_class_tree():
-            if dpt.value_type is not None:
-                assert isinstance(dpt.value_type, str), (
-                    f"Wrong type for value_type in {dpt} : {type(dpt.value_type)} - str `None` expected"
-                )
-            if dpt.dpt_main_number is not None:
-                assert isinstance(dpt.dpt_main_number, int), (
-                    f"Wrong type for dpt_main_number in {dpt} : {type(dpt.dpt_main_number)} - int or `None` expected"
-                )
-            if dpt.dpt_sub_number is not None:
-                assert isinstance(dpt.dpt_sub_number, int), (
-                    f"Wrong type for dpt_sub_number in {dpt} : {type(dpt.dpt_sub_number)} - int or `None` expected"
-                )
+            assert isinstance(dpt.value_type, str), (
+                f"Wrong type for value_type in {dpt} : {type(dpt.value_type)} - str expected"
+            )
+            assert dpt.value_type, f"Empty string for value_type in {dpt} not allowed"
+
+            assert isinstance(dpt.dpt_main_number, int), (
+                f"Wrong type for dpt_main_number in {dpt} : {type(dpt.dpt_main_number)} - int expected"
+            )
+            assert dpt.dpt_main_number, (
+                f"Zero value for dpt_main_number in {dpt} not allowed"
+            )
+
+            assert isinstance(dpt.dpt_sub_number, int | type(None)), (
+                f"Wrong type for dpt_sub_number in {dpt} : {type(dpt.dpt_sub_number)} - int or `None` expected"
+            )
 
     def test_dpt_subclasses_no_duplicate_value_types(self) -> None:
         """Test for duplicate value_type values in subclasses of DPTBase."""
@@ -71,16 +79,19 @@ class TestDPTBase:
             for dpt in DPTBase.dpt_class_tree()
             if dpt.value_type is not None
         ]
-        assert len(value_types) == len(set(value_types))
+        assert len(value_types) == len(set(value_types)), (
+            f"Duplicate DPT value_types found: { {item for item in value_types if value_types.count(item) > 1} }"
+        )
 
     def test_dpt_subclasses_no_duplicate_dpt_number(self) -> None:
         """Test for duplicate value_type values in subclasses of DPTBase."""
         dpt_tuples = [
             (dpt.dpt_main_number, dpt.dpt_sub_number)
             for dpt in DPTBase.dpt_class_tree()
-            if dpt.dpt_main_number is not None and dpt.dpt_sub_number is not None
         ]
-        assert len(dpt_tuples) == len(set(dpt_tuples))
+        assert len(dpt_tuples) == len(set(dpt_tuples)), (
+            f"Duplicate DPT numbers found: { {item for item in dpt_tuples if dpt_tuples.count(item) > 1} }"
+        )
 
     @pytest.mark.parametrize(
         "equal_dpts",
@@ -89,6 +100,7 @@ class TestDPTBase:
             ["2byte_unsigned", 7, "DPT-7", {"main": 7}, {"main": "7", "sub": None}],
             ["temperature", "9.001", {"main": 9, "sub": 1}, {"main": "9", "sub": "1"}],
             ["active_energy", "13.010", {"main": 13, "sub": 10}],
+            ["consumer_producer", "1.1200", {"main": 1, "sub": 1200}],
         ],
     )
     def test_dpt_alternative_notations(self, equal_dpts: list[Any]) -> None:
@@ -131,6 +143,15 @@ class TestDPTBase:
         """Test parsing invalid data."""
         assert DPTBase.parse_transcoder(value) is None
 
+    def test_dpt_name(self) -> None:
+        """Test DPT name."""
+        assert DPTBase.dpt_name() == "DPTBase (abstract)"
+        assert DPTNumeric.dpt_name() == "DPTNumeric (abstract)"
+        assert DPT2ByteFloat.dpt_name() == "DPT2ByteFloat (9)"
+        assert DPTString.dpt_name() == "DPTString (16.000)"
+        assert DPTColorRGBW.dpt_name() == "DPTColorRGBW (251.600)"
+        assert DPTConsumerProducer.dpt_name() == "DPTConsumerProducer (1.1200)"
+
 
 class TestDPTBaseSubclass:
     """Test subclass of transcoder base object."""
@@ -139,7 +160,13 @@ class TestDPTBaseSubclass:
     def test_required_values(self, dpt_class: type[DPTBase]) -> None:
         """Test required class variables are set for definitions."""
         assert dpt_class.payload_type in (DPTArray, DPTBinary)
-        assert dpt_class.payload_length is not None
+        assert isinstance(dpt_class.payload_length, int)
+        assert dpt_class.payload_length, "Payload_length 0 is invalid"
+        assert isinstance(dpt_class.dpt_main_number, int)
+        assert dpt_class.dpt_main_number, "DPT main number 0 is invalid"
+        assert isinstance(dpt_class.dpt_sub_number, int | type(None))
+        assert isinstance(dpt_class.value_type, str)
+        assert dpt_class.value_type, "Empty string for value_type is invalid"
 
     def test_validate_payload_array(self) -> None:
         """Test validate_payload method."""

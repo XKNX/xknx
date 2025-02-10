@@ -44,7 +44,7 @@ class DPT4ByteFloat(DPTNumeric):
         try:
             raw_float = cast(float, struct.unpack(">f", bytes(raw))[0])
         except struct.error as err:
-            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
+            raise ConversionError(f"Could not parse {cls.dpt_name()}", raw=raw) from err
         try:
             # round to 7 digit precision independent of exponent - same value as ETS 5.7 group monitor
             return round(raw_float, 7 - ceil(log10(abs(raw_float))))
@@ -62,7 +62,7 @@ class DPT4ByteFloat(DPTNumeric):
             return DPTArray(struct.pack(">f", knx_value))
         except (ValueError, struct.error) as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
 
 

@@ -88,7 +88,7 @@ class DPTDate(DPTComplex[KNXDate]):
             if 1990 <= year < 2000:
                 return year - 1900
             raise ConversionError(
-                f"Could not serialize {cls.__name__}. Year out of range 1990..2089",
+                f"Could not serialize {cls.dpt_name()}. Year out of range 1990..2089",
                 year=year,
             )
 
@@ -96,7 +96,7 @@ class DPTDate(DPTComplex[KNXDate]):
 
         if not DPTDate._test_range(value.day, value.month, knx_year):
             raise ConversionError(
-                f"Could not serialize {cls.__name__}. Value out of range", value=value
+                f"Could not serialize {cls.dpt_name()}. Value out of range", value=value
             )
 
         return DPTArray(

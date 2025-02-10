@@ -92,7 +92,7 @@ class DPTTime(DPTComplex[KNXTime]):
         try:
             DPTTime._test_range(hours, minutes, seconds)
         except ValueError as err:
-            raise ConversionError(f"Could not parse {cls.__name__}: {err}") from err
+            raise ConversionError(f"Could not parse {cls.dpt_name()}: {err}") from err
         return KNXTime(
             hour=hours, minutes=minutes, seconds=seconds, day=KNXDay(weekday)
         )
@@ -103,7 +103,9 @@ class DPTTime(DPTComplex[KNXTime]):
         try:
             DPTTime._test_range(value.hour, value.minutes, value.seconds)
         except ValueError as err:
-            raise ConversionError(f"Could not serialize {cls.__name__}: {err}") from err
+            raise ConversionError(
+                f"Could not serialize {cls.dpt_name()}: {err}"
+            ) from err
         return DPTArray(
             (
                 value.day.value << 5 | value.hour,

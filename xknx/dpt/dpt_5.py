@@ -31,7 +31,7 @@ class DPTValue1ByteUnsigned(DPTNumeric):
 
         if not cls._test_boundaries(value):
             raise ConversionError(
-                f"Could not parse {cls.__name__}", value=value, payload=payload
+                f"Could not parse {cls.dpt_name()}", value=value, payload=payload
             )
 
         return value
@@ -46,7 +46,7 @@ class DPTValue1ByteUnsigned(DPTNumeric):
             return DPTArray(knx_value)
         except ValueError as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
 
     @classmethod
@@ -81,7 +81,7 @@ class DPTScaling(DPTNumeric):
 
         if not cls._test_boundaries(value):
             raise ConversionError(
-                f"Could not parse {cls.__name__}", value=value, payload=payload
+                f"Could not parse {cls.dpt_name()}", value=value, payload=payload
             )
         return value
 
@@ -98,7 +98,7 @@ class DPTScaling(DPTNumeric):
             return DPTArray(knx_value)
         except ValueError as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
 
     @classmethod

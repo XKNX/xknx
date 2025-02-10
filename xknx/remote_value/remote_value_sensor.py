@@ -46,7 +46,7 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         )
         if _dpt_class is None:
             raise ConversionError(
-                f"invalid value type for base class {self.dpt_base_class.__name__}",
+                f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
                 value_type=value_type,
                 device_name=device_name,
             )

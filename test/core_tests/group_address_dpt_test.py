@@ -45,9 +45,9 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface: XKNX) -> N
         assert test_telegram.decoded_data is None
 
 
-@patch("logging.Logger.warning")
+@patch("logging.Logger.debug")
 async def test_get_invalid_payload(
-    logger_warning_mock: Mock, xknx_no_interface: XKNX
+    logger_debug_mock: Mock, xknx_no_interface: XKNX
 ) -> None:
     """Test processing when DPT doesn't fit payload."""
     xknx = xknx_no_interface
@@ -62,12 +62,13 @@ async def test_get_invalid_payload(
     )
     async with xknx:
         xknx.telegrams.put_nowait(telegram)
+        logger_debug_mock.reset_mock()
         await xknx.telegrams.join()
         assert telegram_callback.call_count == 1
         test_telegram = telegram_callback.call_args[0][0]
         assert test_telegram.decoded_data is None
-        assert logger_warning_mock.call_count == 1
-        assert "DPT decoding error" in logger_warning_mock.call_args[0][0]
+        assert logger_debug_mock.call_count == 2
+        assert "DPT decoding error" in logger_debug_mock.call_args_list[0][0][0]
 
 
 def test_set(xknx_no_interface: XKNX) -> None:
