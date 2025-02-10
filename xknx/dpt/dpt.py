@@ -127,9 +127,9 @@ class DPTBase(ABC):
     def __recursive_subclasses__(cls: type[Self]) -> Iterator[type[Self]]:
         """Yield all subclasses and their subclasses."""
         for subclass in cls.__subclasses__():
-            yield from subclass.__recursive_subclasses__()
             if not isabstract(subclass):
                 yield subclass
+            yield from subclass.__recursive_subclasses__()
 
     @classmethod
     def dpt_class_tree(cls: type[Self]) -> Iterator[type[Self]]:
