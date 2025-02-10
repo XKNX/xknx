@@ -76,7 +76,7 @@ class GroupAddressDPT:
                 telegram.source_address,
                 telegram.destination_address,
                 telegram.payload.value,
-                transcoder.__name__,
+                transcoder.dpt_name(),
                 err,
             )
             return

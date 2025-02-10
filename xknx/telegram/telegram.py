@@ -45,7 +45,7 @@ class TelegramDecodedData:
         """Return object as readable string."""
         return (
             f"{self.value}{' ' + self.transcoder.unit if self.transcoder.unit is not None else ''}"
-            f" ({self.transcoder.__name__})"
+            f" ({self.transcoder.dpt_name()})"
         )
 
 
