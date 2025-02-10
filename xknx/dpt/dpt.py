@@ -106,7 +106,7 @@ class DPTBase(ABC):
                 return payload.value
 
             raise CouldNotParseTelegram(
-                f"Invalid payload length for {cls.__name__}",
+                f"Invalid payload length for {cls.dpt_name()}",
                 payload=payload,
                 expected_length=cls.payload_length,
             )
@@ -115,7 +115,7 @@ class DPTBase(ABC):
             if payload.value >= 2**cls.payload_length:
                 # >= 0 is already checked by DPTBinary
                 raise CouldNotParseTelegram(
-                    f"Invalid payload bitlength for {cls.__name__}",
+                    f"Invalid payload bitlength for {cls.dpt_name()}",
                     payload=payload,
                     expected_length=cls.payload_length,
                 )
@@ -123,7 +123,7 @@ class DPTBase(ABC):
             return (payload.value,)
 
         raise CouldNotParseTelegram(
-            f"Invalid payload type for {cls.__name__}",
+            f"Invalid payload type for {cls.dpt_name()}",
             payload=payload,
             expected_type=cls.payload_type.__name__,
         )
@@ -264,7 +264,7 @@ class DPTStructIntMixin:
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0]  # type: ignore[no-any-return]
         except struct.error as err:
-            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
+            raise ConversionError(f"Could not parse {cls.dpt_name()}", raw=raw) from err  # type: ignore[attr-defined]
 
     @classmethod
     def to_knx(cls, value: int | float) -> DPTArray:
@@ -276,7 +276,8 @@ class DPTStructIntMixin:
             return DPTArray(struct.pack(cls._struct_format, knx_value))
         except (ValueError, struct.error) as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}",  # type: ignore[attr-defined]
+                value=value,
             ) from err
 
 
@@ -325,7 +326,7 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
             return cls.data_type(raw[0])  # type: ignore[no-any-return]
         except ValueError:
             raise ConversionError(
-                f"Payload not supported for {cls.__name__}", raw=raw
+                f"Payload not supported for {cls.dpt_name()}", raw=raw
             ) from None
 
     @classmethod
@@ -335,7 +336,7 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
             return cls._to_knx(cls.data_type.parse(value))
         except ValueError as err:
             raise ConversionError(
-                f"Value not supported for {cls.data_type.__name__} in {cls.__name__}",
+                f"Value not supported for {cls.data_type.__name__} in {cls.dpt_name()}",
                 value=value,
                 valid_values=cls.get_valid_values(),
             ) from err
@@ -391,7 +392,7 @@ class DPTComplex(DPTBase, Generic[_ComplexDataT]):
             return cls._to_knx(cls.data_type.from_dict(value))
         except (ValueError, TypeError, AttributeError, ConversionError) as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}: {err}", value=value
+                f"Could not serialize {cls.dpt_name()}: {err}", value=value
             ) from err
 
     @classmethod

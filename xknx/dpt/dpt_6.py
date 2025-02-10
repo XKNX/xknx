@@ -44,7 +44,7 @@ class DPTSignedRelativeValue(DPTNumeric):
             return DPTArray(knx_value & 0xFF)
         except ValueError as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
 
     @classmethod

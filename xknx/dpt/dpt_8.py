@@ -42,7 +42,7 @@ class DPT2ByteSigned(DPTNumeric):
         try:
             return struct.unpack(cls._struct_format, bytes(raw))[0] * cls.resolution  # type: ignore[no-any-return]
         except struct.error as err:
-            raise ConversionError(f"Could not parse {cls.__name__}", raw=raw) from err
+            raise ConversionError(f"Could not parse {cls.dpt_name()}", raw=raw) from err
 
     @classmethod
     def to_knx(cls, value: int | float) -> DPTArray:
@@ -54,7 +54,7 @@ class DPT2ByteSigned(DPTNumeric):
             return DPTArray(struct.pack(cls._struct_format, knx_value))
         except (ValueError, struct.error) as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
 
 

@@ -43,7 +43,7 @@ class DPT2ByteFloat(DPTNumeric):
         value = float(significand << exponent) / 100
 
         if not cls._test_boundaries(value):
-            raise ConversionError(f"Could not parse {cls.__name__}", value=value)
+            raise ConversionError(f"Could not parse {cls.dpt_name()}", value=value)
 
         return value
 
@@ -77,7 +77,7 @@ class DPT2ByteFloat(DPTNumeric):
             return DPTArray((msb, mantisse & 0xFF))
         except ValueError as err:
             raise ConversionError(
-                f"Could not serialize {cls.__name__}", value=value
+                f"Could not serialize {cls.dpt_name()}", value=value
             ) from err
 
     @classmethod

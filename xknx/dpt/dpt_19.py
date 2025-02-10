@@ -150,7 +150,7 @@ class DPTDateTime(DPTComplex[KNXDateTime]):
         try:
             cls._test_range(knx_date_time)
         except ValueError as err:
-            raise ConversionError(f"Could not parse {cls.__name__}: {err}") from err
+            raise ConversionError(f"Could not parse {cls.dpt_name()}: {err}") from err
         return knx_date_time
 
     @classmethod
@@ -159,7 +159,9 @@ class DPTDateTime(DPTComplex[KNXDateTime]):
         try:
             cls._test_range(value)
         except ValueError as err:
-            raise ConversionError(f"Could not serialize {cls.__name__}: {err}") from err
+            raise ConversionError(
+                f"Could not serialize {cls.dpt_name()}: {err}"
+            ) from err
 
         knx_year = (value.year - 1900) & 0xFF if value.year is not None else 0
 
