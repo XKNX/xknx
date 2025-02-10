@@ -12,6 +12,7 @@ from xknx.dpt import (
     DPTBinary,
     DPTColorRGBW,
     DPTComplex,
+    DPTConsumerProducer,
     DPTEnum,
     DPTHVACContrMode,
     DPTNumeric,
@@ -41,6 +42,7 @@ class TestDPTBase:
             DPTScaling,
             DPTHVACContrMode,
             DPTColorRGBW,
+            DPTConsumerProducer,
         ):
             assert dpt in DPTBase.dpt_class_tree()
 
@@ -98,6 +100,7 @@ class TestDPTBase:
             ["2byte_unsigned", 7, "DPT-7", {"main": 7}, {"main": "7", "sub": None}],
             ["temperature", "9.001", {"main": 9, "sub": 1}, {"main": "9", "sub": "1"}],
             ["active_energy", "13.010", {"main": 13, "sub": 10}],
+            ["consumer_producer", "1.1200", {"main": 1, "sub": 1200}],
         ],
     )
     def test_dpt_alternative_notations(self, equal_dpts: list[Any]) -> None:
@@ -139,6 +142,15 @@ class TestDPTBase:
     def test_parse_transcoder_invalid_data(self, value: Any) -> None:
         """Test parsing invalid data."""
         assert DPTBase.parse_transcoder(value) is None
+
+    def test_dpt_name(self) -> None:
+        """Test DPT name."""
+        assert DPTBase.dpt_name() == "DPTBase (abstract)"
+        assert DPTNumeric.dpt_name() == "DPTNumeric (abstract)"
+        assert DPT2ByteFloat.dpt_name() == "DPT2ByteFloat (9)"
+        assert DPTString.dpt_name() == "DPTString (16.000)"
+        assert DPTColorRGBW.dpt_name() == "DPTColorRGBW (251.600)"
+        assert DPTConsumerProducer.dpt_name() == "DPTConsumerProducer (1.1200)"
 
 
 class TestDPTBaseSubclass:
