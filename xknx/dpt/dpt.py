@@ -69,6 +69,20 @@ class DPTBase(ABC):
     ha_device_class: str | None = None
 
     @classmethod
+    def dpt_number_str(cls) -> str:
+        """Return DPT number string representation."""
+        if cls.dpt_sub_number is not None:
+            return f"{cls.dpt_main_number}.{cls.dpt_sub_number:03d}"
+        return f"{cls.dpt_main_number or ''}"
+
+    @classmethod
+    def dpt_name(cls) -> str:
+        """Return string representation of class name and DPT number."""
+        if cls.dpt_main_number is not None:
+            return f"{cls.__name__} ({cls.dpt_number_str()})"
+        return f"{cls.__name__} (abstract)"  # concrete classes have dpt_main_number
+
+    @classmethod
     @abstractmethod
     def from_knx(cls, payload: DPTArray | DPTBinary) -> Any:
         """
