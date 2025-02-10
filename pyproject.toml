@@ -159,4 +159,10 @@ combine-as-imports = true
 ] # Mutable class attributes should be annotated with `typing.ClassVar`
 
 [tool.ruff.lint.flake8-builtins]
-builtins-allowed-modules = ["datetime"]
+builtins-allowed-modules = [
+  # been there before ruff check A005 was added - backwards compatibility
+  "datetime",
+  "io",
+  "profile",
+  "typing",
+]
