@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
+from xknx.dpt import DPTString
 from xknx.remote_value import GroupAddressesType, RemoteValueString
+from xknx.typing import DPTParsable
 
 from .device import Device, DeviceCallbackType
 
@@ -25,7 +27,7 @@ class Notification(Device):
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
-        value_type: int | str | None = None,
+        value_type: DPTParsable | type[DPTString] | None = None,
         device_updated_cb: DeviceCallbackType[Notification] | None = None,
     ) -> None:
         """Initialize notification class."""

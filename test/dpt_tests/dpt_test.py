@@ -7,6 +7,8 @@ import pytest
 
 from xknx.dpt import (
     DPT2ByteFloat,
+    DPT2ByteUnsigned,
+    DPTActiveEnergy,
     DPTArray,
     DPTBase,
     DPTBinary,
@@ -109,6 +111,59 @@ class TestDPTBase:
         assert issubclass(parsed[0], DPTBase)
         assert all(parsed[0] == dpt for dpt in parsed)
 
+    @pytest.mark.parametrize(
+        "equal_dpts",
+        [
+            # strings in dictionaries would fail type checking, but should work nevertheless
+            [
+                "2byte_unsigned",
+                7,
+                "DPT-7",
+                {"main": 7},
+                {"main": "7", "sub": None},
+                DPT2ByteUnsigned,
+            ],
+            [
+                "temperature",
+                "9.001",
+                {"main": 9, "sub": 1},
+                {"main": "9", "sub": "1"},
+                DPTTemperature,
+            ],
+            ["active_energy", "13.010", {"main": 13, "sub": 10}, DPTActiveEnergy],
+        ],
+    )
+    def test_get_dpt_alternative_notations(self, equal_dpts: list[Any]) -> None:
+        """Test the parser for accepting alternative notations for the same DPT class."""
+        parsed = [DPTBase.get_dpt(dpt) for dpt in equal_dpts]
+        assert issubclass(parsed[0], DPTBase)
+        assert all(parsed[0] == dpt for dpt in parsed)
+
+    INVALID_DPT_IDENTIFIERS = [
+        None,
+        0,
+        999999999,
+        9.001,  # float is not valid
+        "invalid_string",
+        {"sub": 1},
+        {"main": None, "sub": None},
+        {"main": "invalid"},
+        {"main": 9, "sub": "invalid"},
+        [9, 1],
+        (9,),
+    ]
+
+    @pytest.mark.parametrize("value", INVALID_DPT_IDENTIFIERS)
+    def test_parse_transcoder_invalid_data(self, value: Any) -> None:
+        """Test parsing invalid data."""
+        assert DPTBase.parse_transcoder(value) is None
+
+    @pytest.mark.parametrize("value", INVALID_DPT_IDENTIFIERS)
+    def test_get_dpt_invalid_data(self, value: Any) -> None:
+        """Test parsing invalid data."""
+        with pytest.raises(ValueError):
+            DPTBase.get_dpt(value)
+
     def test_parse_transcoder_from_subclass(self) -> None:
         """Test parsing only subclasses of a DPT class."""
         assert DPTBase.parse_transcoder("string") == DPTString
@@ -123,25 +178,18 @@ class TestDPTBase:
         assert DPTNumeric.parse_transcoder("temperature") == DPTTemperature
         assert DPT2ByteFloat.parse_transcoder("temperature") == DPTTemperature
 
-    @pytest.mark.parametrize(
-        "value",
-        [
-            None,
-            0,
-            999999999,
-            9.001,  # float is not valid
-            "invalid_string",
-            {"sub": 1},
-            {"main": None, "sub": None},
-            {"main": "invalid"},
-            {"main": 9, "sub": "invalid"},
-            [9, 1],
-            (9,),
-        ],
-    )
-    def test_parse_transcoder_invalid_data(self, value: Any) -> None:
-        """Test parsing invalid data."""
-        assert DPTBase.parse_transcoder(value) is None
+    def test_get_dpt_from_subclass(self) -> None:
+        """Test parsing only subclasses of a DPT class."""
+        assert DPTBase.get_dpt("string") == DPTString
+        with pytest.raises(ValueError):
+            DPTNumeric.get_dpt("string")
+
+        assert DPTBase.get_dpt("percent") == DPTScaling
+        assert DPTNumeric.get_dpt("percent") == DPTScaling
+
+        assert DPTBase.get_dpt("temperature") == DPTTemperature
+        assert DPTNumeric.get_dpt("temperature") == DPTTemperature
+        assert DPT2ByteFloat.get_dpt("temperature") == DPTTemperature
 
     def test_dpt_name(self) -> None:
         """Test DPT name."""

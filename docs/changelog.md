@@ -9,6 +9,7 @@ nav_order: 2
 ### DPT
 
 - Add `DPTBase.dpt_number_str` and `DPTBase.dpt_name` classmethods for human readable DPT number (eg. "9.001") and class name (eg. "DPTTemperature (9.001)").
+- Add `DPTBase.get_dpt` classmethod to get a DPT class by its number, name or DPTBase type.
 
 # 3.5.0 Swing it 2025-01-28
 
