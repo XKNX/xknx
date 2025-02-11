@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
-from xknx.dpt import DPTBase
+from xknx.dpt import DPTNumeric
 from xknx.remote_value import GroupAddressesType, RemoteValueNumeric
 from xknx.typing import DPTParsable
 
@@ -35,7 +35,7 @@ class NumericValue(Device):
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
-        value_type: DPTParsable | type[DPTBase] | None = None,
+        value_type: DPTParsable | type[DPTNumeric] | None = None,
         always_callback: bool = False,
         device_updated_cb: DeviceCallbackType[NumericValue] | None = None,
     ) -> None:
