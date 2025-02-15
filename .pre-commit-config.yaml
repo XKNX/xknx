@@ -1,14 +1,14 @@
 ---
 repos:
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         additional_dependencies:
           - tomli
         exclude_types: [csv, json]
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.9.1'
+    rev: 'v0.9.6'
     hooks:
       - id: ruff
         # in CI it is directly run by tox to allow dependency upgrade checks
