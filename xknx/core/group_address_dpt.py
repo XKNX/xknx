@@ -24,12 +24,13 @@ _GA_DPT_LOGGER = logging.getLogger("xknx.ga_dpt")
 class GroupAddressDPT:
     """Class for mapping group addresses to data point types for eager decoding."""
 
-    __slots__ = ("_ga_dpts",)
+    __slots__ = ("_ga_dpts", "ga_decoding_error")
 
     def __init__(self) -> None:
         """Initialize GADataTypes class."""
         # using dict[int | str] instead of dict[DeviceGroupAddress] is faster.
         self._ga_dpts: dict[int | str, type[DPTBase]] = {}
+        self.ga_decoding_error: set[GroupAddress | InternalGroupAddress] = set()
 
     def set(
         self,
@@ -72,7 +73,12 @@ class GroupAddressDPT:
         try:
             value = transcoder.from_knx(telegram.payload.value)
         except (CouldNotParseTelegram, ConversionError) as err:
-            _GA_DPT_LOGGER.debug(
+            if telegram.destination_address in self.ga_decoding_error:
+                _logger_fn = _GA_DPT_LOGGER.debug
+            else:
+                _logger_fn = _GA_DPT_LOGGER.warning
+            self.ga_decoding_error.add(telegram.destination_address)
+            _logger_fn(
                 "DPT decoding error. Telegram from %s to %s with payload %s can't be decoded by %s: %s",
                 telegram.source_address,
                 telegram.destination_address,

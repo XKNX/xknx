@@ -45,9 +45,10 @@ async def test_group_address_dpt_in_telegram_queue(xknx_no_interface: XKNX) -> N
         assert test_telegram.decoded_data is None
 
 
+@patch("logging.Logger.warning")
 @patch("logging.Logger.debug")
 async def test_get_invalid_payload(
-    logger_debug_mock: Mock, xknx_no_interface: XKNX
+    logger_debug_mock: Mock, logger_warning_mock: Mock, xknx_no_interface: XKNX
 ) -> None:
     """Test processing when DPT doesn't fit payload."""
     xknx = xknx_no_interface
@@ -61,14 +62,30 @@ async def test_get_invalid_payload(
         payload=apci.GroupValueWrite(DPTArray((0x01, 0x02))),  # wrong payload size
     )
     async with xknx:
-        xknx.telegrams.put_nowait(telegram)
         logger_debug_mock.reset_mock()
+        logger_warning_mock.reset_mock()
+        assert len(xknx.group_address_dpt.ga_decoding_error) == 0
+
+        xknx.telegrams.put_nowait(telegram)
         await xknx.telegrams.join()
+        assert len(xknx.group_address_dpt.ga_decoding_error) == 1
         assert telegram_callback.call_count == 1
         test_telegram = telegram_callback.call_args[0][0]
         assert test_telegram.decoded_data is None
-        assert logger_debug_mock.call_count == 2
+        assert logger_debug_mock.call_count == 1  # telegram log
+        assert logger_warning_mock.call_count == 1  # first occurrence goes to warning
+        assert "DPT decoding error" in logger_warning_mock.call_args_list[0][0][0]
+        # second telegram with same GA should go to debug
+        logger_debug_mock.reset_mock()
+        logger_warning_mock.reset_mock()
+        xknx.telegrams.put_nowait(telegram)
+        await xknx.telegrams.join()
+        assert len(xknx.group_address_dpt.ga_decoding_error) == 1  # still 1 - same GA
+        assert logger_warning_mock.call_count == 0
+        assert logger_debug_mock.call_count == 2  # second occurrence goes to debug
         assert "DPT decoding error" in logger_debug_mock.call_args_list[0][0][0]
+
+        assert xknx.group_address_dpt.ga_decoding_error == {GroupAddress("1/2/3")}
 
 
 def test_set(xknx_no_interface: XKNX) -> None:
