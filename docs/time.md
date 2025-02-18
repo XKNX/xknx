@@ -28,7 +28,7 @@ await xknx.devices['TimeTest'].sync()
 * `xknx` is the XKNX object.
 * `name` is the name of the object.
 * `group_address` is the KNX group address of the sensor device.
-* `localtime` If set `True` sync() and GroupValueRead requests always return the current local time and it is also sent every 60 minutes. On `False` the set value will be sent. Default: `True`
+* `localtime` If set `True` sync() and GroupValueRead requests always return the current systems local time and it is also sent every 60 minutes. Same if set to a `datetime.tzinfo` object, but the time for that timezone information will be used. On `False` the set value will be sent, no automatic sending will be scheduled. Default: `True`
 * `device_updated_cb` Callback for each update.
 
 ## [](#header-2)Local time

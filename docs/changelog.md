@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### Devices
+
+- Datetime: Accept `datetime.tzinfo` for `timezone` argument to send time information for specific timezone. Boolean works like before: If `True` use system localtime. If `False` an arbitrary time can be sent.
+
 ### DPT
 
 - Add `DPTBase.dpt_number_str` and `DPTBase.dpt_name` classmethods for human readable DPT number (eg. "9.001") and class name (eg. "DPTTemperature (9.001)").

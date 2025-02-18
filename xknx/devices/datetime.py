@@ -51,7 +51,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
         self,
         xknx: XKNX,
         name: str,
-        localtime: bool = True,
+        localtime: bool | datetime.tzinfo = True,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
@@ -169,7 +169,8 @@ class TimeDevice(_DateTimeBase[RemoteValueTime]):
 
     def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local time to KNX bus."""
-        now = datetime.datetime.now()
+        zone = self.localtime if isinstance(self.localtime, datetime.tzinfo) else None
+        now = datetime.datetime.now(zone)
         knx_time = KNXTime.from_time(now.time())
         knx_time.day = KNXDay(now.weekday() + 1)
         self.remote_value.set(knx_time, response=response)
@@ -193,7 +194,8 @@ class DateDevice(_DateTimeBase[RemoteValueDate]):
 
     def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local date to KNX bus."""
-        now = datetime.datetime.now()
+        zone = self.localtime if isinstance(self.localtime, datetime.tzinfo) else None
+        now = datetime.datetime.now(zone)
         self.remote_value.set(KNXDate.from_date(now.date()), response=response)
 
 
@@ -219,11 +221,16 @@ class DateTimeDevice(_DateTimeBase[RemoteValueDateTime]):
 
     def broadcast_localtime(self, response: bool = False) -> None:
         """Broadcast the local date/time to KNX bus."""
-        time_now = time.localtime()
-        now = datetime.datetime.now()
+        zone = self.localtime if isinstance(self.localtime, datetime.tzinfo) else None
+        now = datetime.datetime.now(zone)
         knx_datetime = KNXDateTime.from_datetime(now)
         knx_datetime.day_of_week = KNXDayOfWeek(now.weekday() + 1)
-        knx_datetime.dst = time_now.tm_isdst > 0
+        if zone:
+            dst = zone.dst(now)
+            knx_datetime.dst = dst > datetime.timedelta(0) if dst is not None else False
+        else:
+            time_now = time.localtime()
+            knx_datetime.dst = time_now.tm_isdst > 0
         knx_datetime.external_sync = True
         knx_datetime.source_reliable = True
         self.remote_value.set(knx_datetime, response=response)
