@@ -6,6 +6,8 @@ nav_order: 2
 
 # Changelog
 
+# 3.6.0 DPT helpers and timezone 2025-02-19
+
 ### Devices
 
 - Datetime: Accept `datetime.tzinfo` for `timezone` argument to send time information for specific timezone. Boolean works like before: If `True` use system localtime. If `False` an arbitrary time can be sent.
@@ -15,7 +17,7 @@ nav_order: 2
 - Add `DPTBase.dpt_number_str` and `DPTBase.dpt_name` classmethods for human readable DPT number (eg. "9.001") and class name (eg. "DPTTemperature (9.001)").
 - Add `DPTBase.get_dpt` classmethod to get a DPT class by its number, name or DPTBase type.
 
-### Features
+### Internal
 
 - Collect group addresses with decoding errors at eager decoder in `xknx.group_address_dpt.ga_decoding_error` set.
 
