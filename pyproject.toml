@@ -111,6 +111,8 @@ output-format = "colorized"
 [tool.pytest.ini_options]
 testpaths = "test"
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--durations=10"
 
 
 [tool.ruff]
