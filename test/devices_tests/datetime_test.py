@@ -2,6 +2,7 @@
 
 import datetime as dt
 from unittest.mock import AsyncMock, patch
+from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
 import pytest
@@ -104,10 +105,21 @@ class TestDateTime:
         assert telegram.destination_address == GroupAddress("1/2/4")
         assert isinstance(telegram.payload, GroupValueRead)
 
-    async def test_process_read_localtime(self) -> None:
+    @pytest.mark.parametrize(
+        ("expected", "localtime"),
+        [
+            ((0xC9, 0xD, 0xE), True),
+            ((0xCA, 0xD, 0xE), ZoneInfo("Europe/Vienna")),
+        ],
+    )
+    async def test_process_read_localtime_time(
+        self, expected: tuple[int, int, int], localtime: bool | dt.tzinfo
+    ) -> None:
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
-        test_device = TimeDevice(xknx, "TestDateTime", group_address="1/2/3")
+        test_device = TimeDevice(
+            xknx, "TestTime", group_address="1/2/3", localtime=localtime
+        )
 
         telegram_read = Telegram(
             destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
@@ -118,7 +130,41 @@ class TestDateTime:
         telegram = xknx.telegrams.get_nowait()
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueResponse(DPTArray((0xC9, 0xD, 0xE))),
+            payload=GroupValueResponse(DPTArray(expected)),
+        )
+
+    @pytest.mark.parametrize(
+        ("expected", "localtime"),
+        [
+            (
+                (0x75, 0x07, 0x0B, 0x49, 0x0D, 0x0E, 0x20, 0xC0),
+                True,
+            ),
+            (
+                (0x75, 0x07, 0x0B, 0x4B, 0x0D, 0x0E, 0x21, 0xC0),
+                ZoneInfo("Europe/Vienna"),
+            ),
+        ],
+    )
+    async def test_process_read_localtime_datetime(
+        self, expected: tuple[int, int, int], localtime: bool | dt.tzinfo
+    ) -> None:
+        """Test test process a read telegram from KNX bus."""
+        xknx = XKNX()
+        test_device = DateTimeDevice(
+            xknx, "TestDateTime", group_address="1/2/3", localtime=localtime
+        )
+
+        telegram_read = Telegram(
+            destination_address=GroupAddress("1/2/3"), payload=GroupValueRead()
+        )
+        with freeze_time("2017-07-11 09:13:14"):  # summer time
+            test_device.process(telegram_read)
+
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTArray(expected)),
         )
 
     async def test_process_read_custom_time(self) -> None:
