@@ -69,7 +69,7 @@ class DPT2ByteFloat(DPTNumeric):
                 exponent += 1
                 knx_value /= 2
 
-            mantisse = int(round(knx_value)) & 0x7FF
+            mantisse = round(knx_value) & 0x7FF
             msb = exponent << 3 | mantisse >> 8
             if knx_value < 0:
                 msb |= 0x80
