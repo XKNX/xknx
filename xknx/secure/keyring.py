@@ -384,9 +384,12 @@ class Keyring(AttributeReader):
         Sequence numbers are sourced from devices list or default to 0.
         """
         ia_seq_table: dict[IndividualAddress, int] = {}
-        for interface in self.interfaces:
-            for senders in interface.group_addresses.values():
-                ia_seq_table |= {sender: 0 for sender in senders}
+        ia_seq_table = {
+            _ia: 0
+            for interface in self.interfaces
+            for senders in interface.group_addresses.values()
+            for _ia in senders
+        }
         # devices are only available if the full project was exported
         for device in self.devices:
             ia_seq_table[device.individual_address] = device.sequence_number

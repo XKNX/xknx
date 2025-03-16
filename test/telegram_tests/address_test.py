@@ -38,9 +38,9 @@ device_group_addresses_valid: dict[Any, int] = {
     GroupAddress("1/1/111"): 2415,
 }
 
-group_addresses_valid = {
-    bc_addr: 0 for bc_addr in _broadcast_group_addresses
-} | device_group_addresses_valid
+group_addresses_valid = (
+    dict.fromkeys(_broadcast_group_addresses, 0) | device_group_addresses_valid
+)
 
 group_addresses_invalid: list[Any] = [
     "0/2049",
