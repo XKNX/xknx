@@ -6,6 +6,10 @@ nav_order: 2
 
 # Changelog
 
+### Routing
+
+- Fix routing flow control wait time update on multiple RoutingBusy frames.
+
 # 3.6.0 DPT helpers and timezone 2025-02-19
 
 ### Devices

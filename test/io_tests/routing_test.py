@@ -9,6 +9,7 @@ from xknx.io import Routing
 from xknx.io.routing import (
     BUSY_DECREMENT_TIME,
     BUSY_INCREMENT_COOLDOWN,
+    BUSY_RANDOM_TIME_FACTOR,
     BUSY_SLOWDURATION_TIME_FACTOR,
     ROUTING_INDICATION_WAIT_TIME,
     _RoutingFlowControl,
@@ -158,16 +159,25 @@ class TestFlowControl:
         # not counting one frame due to cooldown time
         await time_travel(BUSY_INCREMENT_COOLDOWN)
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
+        assert flow_control._received_busy_frames == 1
+        assert flow_control._wait_time_ms == test_wait_time_ms
+        # doesn't count in same 10 ms window but updates wait time
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms * 2))
         assert flow_control._received_busy_frames == 1
+        assert flow_control._wait_time_ms == test_wait_time_ms * 2
         # add second busy frame after cooldown has passed
         await time_travel(BUSY_INCREMENT_COOLDOWN)
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
+        assert flow_control._wait_time_ms == test_wait_time_ms * 2
         assert flow_control._received_busy_frames == 2
 
         task = asyncio.create_task(test_send())
         assert mock.call_count == 0
-        await time_travel(test_wait_time_ms * 2 / 1000 + 2 * 0.5)  # add random time
+        await time_travel(test_wait_time_ms * 2 / 1000 - BUSY_INCREMENT_COOLDOWN)
+        assert mock.call_count == 0  # not yet resolved, wait for additional random time
+        await time_travel(
+            flow_control._received_busy_frames * BUSY_RANDOM_TIME_FACTOR * random_mock()
+        )
         assert mock.call_count == 1
         assert task.done()
         # slowduration

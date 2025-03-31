@@ -104,7 +104,8 @@ class _RoutingFlowControl:
                 self._received_busy_frames,
             )
             # discard frame if wait time is lower than remaining time
-            remaining_ms = (now - self._wait_start_time) * 1000
+            elapsed_ms = (now - self._wait_start_time) * 1000
+            remaining_ms = self._wait_time_ms - elapsed_ms
             if remaining_ms >= routing_busy.wait_time:
                 return
         self._wait_time_ms = routing_busy.wait_time
