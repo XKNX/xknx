@@ -10,10 +10,31 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - python-version: "3.10"
+            os: ubuntu-latest
+            envlist: "py310"
+          - python-version: "3.11"
+            os: ubuntu-latest
+            envlist: "py311"
+          - python-version: "3.12"
+            os: ubuntu-latest
+            envlist: "py312"
+          - python-version: "3.13"
+            os: ubuntu-latest
+            envlist: "py313,ruff,typing,lint,pylint"
+
+          - python-version: "3.13"
+            os: macos-latest
+            envlist: "py313"
+
+          - python-version: "3.13"
+            os: windows-latest
+            envlist: "py313"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -30,11 +51,11 @@ jobs:
           pip install -r requirements/testing.txt
       - name: CI
         run: |
-          tox
+          tox run -e "${{ matrix.envlist }}"
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.python-version }}
+          name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
           path: .coverage
           include-hidden-files: true
 
