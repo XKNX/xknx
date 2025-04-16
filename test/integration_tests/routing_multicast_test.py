@@ -1,6 +1,7 @@
 """Tests for KNX/IP routing indications using multicast."""
 
 import asyncio
+from typing import Final
 from unittest.mock import Mock
 
 from xknx import XKNX
@@ -11,6 +12,8 @@ from xknx.telegram.apci import GroupValueWrite
 from xknx.telegram.telegram import TelegramDirection
 from xknx.telegram.tpci import TDataGroup
 from xknx.util import asyncio_timeout
+
+EXPERIMENTAL_MCAST_GRP: Final = "224.0.0.254"
 
 
 async def test_routing_indication_multicast() -> None:
@@ -36,14 +39,14 @@ async def test_routing_indication_multicast() -> None:
         XKNX(
             connection_config=ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
-                local_ip="127.0.0.1",
+                multicast_group=EXPERIMENTAL_MCAST_GRP,
             ),
             telegram_received_cb=routing1_mock,
         ) as xknx1,
         XKNX(
             connection_config=ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
-                local_ip="127.0.0.1",
+                multicast_group=EXPERIMENTAL_MCAST_GRP,
             ),
             telegram_received_cb=routing2_callback,
         ),
