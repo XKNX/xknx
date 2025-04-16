@@ -34,11 +34,17 @@ async def test_routing_indication_multicast() -> None:
 
     async with (
         XKNX(
-            connection_config=ConnectionConfig(connection_type=ConnectionType.ROUTING),
+            connection_config=ConnectionConfig(
+                connection_type=ConnectionType.ROUTING,
+                local_ip="127.0.0.1",
+            ),
             telegram_received_cb=routing1_mock,
         ) as xknx1,
         XKNX(
-            connection_config=ConnectionConfig(connection_type=ConnectionType.ROUTING),
+            connection_config=ConnectionConfig(
+                connection_type=ConnectionType.ROUTING,
+                local_ip="127.0.0.1",
+            ),
             telegram_received_cb=routing2_callback,
         ),
     ):
