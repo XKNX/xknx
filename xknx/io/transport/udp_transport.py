@@ -72,10 +72,16 @@ class UDPTransport(KNXIPTransport):
         self.multicast = multicast
 
         self.callbacks = []
+        self.local_addr_assigned: tuple[str, int] | None = None
         self.transport: asyncio.DatagramTransport | None = None
+        self.multicast_listener: asyncio.DatagramTransport | None = None
 
     def data_received_callback(self, raw: bytes, source: tuple[str, int]) -> None:
         """Parse and process KNXIP frame. Callback for having received an UDP packet."""
+        if self.multicast and source == self.local_addr_assigned:
+            raw_socket_logger.debug("Discarded echoed datagram")
+            return
+
         if raw:
             try:
                 knxipframe, _ = KNXIPFrame.from_knx(raw)
@@ -127,31 +133,28 @@ class UDPTransport(KNXIPTransport):
         else:
             sock.bind((remote_addr[0], remote_addr[1]))
 
-        # ignore multicast datagrams sent by the host itself
-        # don't use when running multiple routing instances on a single host (interface)
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
-
         return sock
 
     async def connect(self) -> None:
         """Connect UDP socket. Open UDP port and build multicast socket if necessary."""
+        loop = asyncio.get_running_loop()
         udp_transport_factory = UDPTransport.UDPTransportFactory(
             data_received_callback=self.data_received_callback,
         )
-        loop = asyncio.get_running_loop()
         if self.multicast:
             sock = UDPTransport.create_multicast_sock(
                 self.local_addr[0], self.remote_addr
             )
-            (self.transport, _) = await loop.create_datagram_endpoint(
+            (self.multicast_listener, _) = await loop.create_datagram_endpoint(
                 lambda: udp_transport_factory,
                 sock=sock,
             )
-        else:
-            (self.transport, _) = await loop.create_datagram_endpoint(
-                lambda: udp_transport_factory,
-                local_addr=self.local_addr,
-            )
+
+        (self.transport, _) = await loop.create_datagram_endpoint(
+            lambda: udp_transport_factory,
+            local_addr=self.local_addr,
+        )
+        self.local_addr_assigned = self.getsockname()
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket."""
@@ -169,3 +172,11 @@ class UDPTransport(KNXIPTransport):
             self.transport.sendto(knxipframe.to_knx(), self.remote_addr)
         else:
             self.transport.sendto(knxipframe.to_knx(), addr=_addr)
+
+    def stop(self) -> None:
+        """Stop socket."""
+        if self.multicast_listener is not None:
+            self.multicast_listener.close()
+            self.multicast_listener = None
+
+        return super().stop()
