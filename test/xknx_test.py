@@ -1,6 +1,8 @@
 """Unit test for XKNX Module."""
 
+import logging
 from pathlib import Path
+import tempfile
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -15,10 +17,14 @@ class TestXknxModule:
 
     def test_log_to_file(self) -> None:
         """Test logging enable."""
-        XKNX(log_directory="/tmp/")
-        _path = Path("/tmp/xknx.log")
-        assert _path.is_file()
-        _path.unlink()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            XKNX(log_directory=tmpdir)
+            _path = Path(f"{tmpdir}/xknx.log")
+            assert _path.is_file()
+
+            # Needed for Windows to release the logging file
+            logging.shutdown()
+            _path.unlink()
 
     def test_log_to_file_when_dir_does_not_exist(self) -> None:
         """Test logging enable with non existent directory."""
