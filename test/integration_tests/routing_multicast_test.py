@@ -13,6 +13,8 @@ from xknx.telegram.telegram import TelegramDirection
 from xknx.telegram.tpci import TDataGroup
 from xknx.util import asyncio_timeout
 
+# RFC 4727 multicast group for testing purposes
+# to not mess with live installations when running tests
 EXPERIMENTAL_MCAST_GRP: Final = "224.0.0.254"
 
 
