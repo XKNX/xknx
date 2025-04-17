@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# 3.7.0 DPT helpers and timezone 2025-04-17
+# 3.7.0 Routing improvements 2025-04-17
 
 ### Routing
 
