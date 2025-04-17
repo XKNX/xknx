@@ -6,8 +6,11 @@ nav_order: 2
 
 # Changelog
 
+# 3.7.0 DPT helpers and timezone 2025-04-17
+
 ### Routing
 
+- Use separate socket for outgoing Multicast (Routing) datagrams. Source port will be different - this is used to filter loopback packets while still be able to have multiple instances of xknx on the same host communicating with each other via routing.
 - Fix routing flow control wait time update on multiple RoutingBusy frames.
 
 # 3.6.0 DPT helpers and timezone 2025-02-19
