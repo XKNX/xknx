@@ -118,6 +118,7 @@ class SecureConfig:
         user_password: str | None = None,
         knxkeys_file_path: str | os.PathLike[Any] | None = None,
         knxkeys_password: str | None = None,
+        keyring = None,
     ) -> None:
         """Initialize SecureConfig class."""
         self.backbone_key = bytes.fromhex(backbone_key) if backbone_key else None
@@ -127,6 +128,7 @@ class SecureConfig:
         self.user_password = user_password
         self.knxkeys_file_path = knxkeys_file_path
         self.knxkeys_password = knxkeys_password
+        self.keyring = keyring
 
     def __eq__(self, other: object) -> bool:
         """Equality for SecureConfig class (used in unit tests)."""
