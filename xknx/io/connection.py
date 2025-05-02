@@ -6,6 +6,7 @@ from enum import Enum, auto
 import os
 from typing import Any
 
+from xknx.secure import Keyring
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
@@ -106,6 +107,7 @@ class SecureConfig:
     * user_password: the user password for knx secure.
     * knxkeys_file_path: Full path to the knxkeys file including the file name.
     * knxkeys_password: Password to decrypt the knxkeys file.
+    * keyring: Already-loaded keyring if it shouldn't be read from the knxkeys file.
     """
 
     def __init__(
@@ -118,6 +120,7 @@ class SecureConfig:
         user_password: str | None = None,
         knxkeys_file_path: str | os.PathLike[Any] | None = None,
         knxkeys_password: str | None = None,
+        keyring: Keyring | None = None,
     ) -> None:
         """Initialize SecureConfig class."""
         self.backbone_key = bytes.fromhex(backbone_key) if backbone_key else None
@@ -127,6 +130,7 @@ class SecureConfig:
         self.user_password = user_password
         self.knxkeys_file_path = knxkeys_file_path
         self.knxkeys_password = knxkeys_password
+        self.keyring = keyring
 
     def __eq__(self, other: object) -> bool:
         """Equality for SecureConfig class (used in unit tests)."""

@@ -80,7 +80,9 @@ class KNXIPInterface:
             local_ip = await util.validate_ip(local_ip, address_name="Local IP")
         keyring: Keyring | None = None
         if secure_config := self.connection_config.secure_config:
-            if (
+            if secure_config.keyring is not None:
+                keyring = secure_config.keyring
+            elif (
                 secure_config.knxkeys_file_path is not None
                 and secure_config.knxkeys_password is not None
             ):

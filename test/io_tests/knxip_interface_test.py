@@ -20,6 +20,7 @@ from xknx.io import (
 from xknx.io.routing import Routing, SecureGroup, SecureRouting
 from xknx.io.tunnel import SecureTunnel, TCPTunnel, UDPTunnel
 from xknx.knxip.dib import TunnelingSlotStatus
+from xknx.secure import load_keyring
 from xknx.telegram import IndividualAddress
 
 
@@ -667,6 +668,32 @@ class TestKNXIPInterface:
             assert isinstance(interface._interface, SecureRouting)
             assert interface._interface.backbone_key == backbone_key
             assert interface._interface.latency_ms == 2000
+            assert isinstance(interface._interface.transport, SecureGroup)
+            assert interface._interface.transport.remote_addr == (
+                "224.0.23.12",
+                3671,
+            )
+            assert (  # pylint: disable=comparison-with-callable
+                interface._interface.cemi_received_callback == interface.cemi_received
+            )
+            connect_secure.assert_called_once_with()
+
+    async def test_start_secure_routing_explicit_keyring(self) -> None:
+        """Test starting a secure routing connection with a pre-loaded keyring."""
+        backbone_key = bytes.fromhex("cf89fd0f18f4889783c7ef44ee1f5e14")
+        explicit_keyring = await load_keyring(
+            path=self.knxkeys_file,
+            password="password")
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING_SECURE,
+            secure_config=SecureConfig(keyring=explicit_keyring)
+        )
+        with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, SecureRouting)
+            assert interface._interface.backbone_key == backbone_key
+            assert interface._interface.latency_ms == 1000
             assert isinstance(interface._interface.transport, SecureGroup)
             assert interface._interface.transport.remote_addr == (
                 "224.0.23.12",
