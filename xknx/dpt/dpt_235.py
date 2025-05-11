@@ -65,8 +65,8 @@ class DPTTariffActiveEnergy(DPTComplex[TariffActiveEnergy]):
     def from_knx(cls, payload: DPTArray | DPTBinary) -> TariffActiveEnergy:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        energy_valid = raw[5] >> 1 & 0b1
-        tariff_valid = raw[5] & 0b1
+        energy_valid = (raw[5] >> 1 & 0b1) == 0
+        tariff_valid = (raw[5] & 0b1) == 0
         return TariffActiveEnergy(
             energy=(
                 DPTActiveEnergy.from_knx(DPTArray(raw[:4])) if energy_valid else None
