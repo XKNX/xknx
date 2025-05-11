@@ -89,6 +89,6 @@ class DPTTariffActiveEnergy(DPTComplex[TariffActiveEnergy]):
             (
                 *energy,
                 *tariff,
-                (value.energy is not None) << 1 | (value.tariff is not None),
+                (value.energy is None) << 1 | (value.tariff is None),
             )
         )
