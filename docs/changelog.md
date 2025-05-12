@@ -6,6 +6,16 @@ nav_order: 2
 
 # Changelog
 
+# 3.8.0 Valid energy 2025-05-12
+
+### Connection
+
+- Support passing a `Keyring` object to `SecureConfig` instead of a path to a keyring file
+
+### DPT
+
+- Fix flipped DPT 235.001 (Tariff and ActiveEnergy) data validity bits
+
 # 3.7.0 Routing improvements 2025-04-17
 
 ### Routing
