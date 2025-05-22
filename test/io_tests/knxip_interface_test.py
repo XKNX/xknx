@@ -682,11 +682,11 @@ class TestKNXIPInterface:
         """Test starting a secure routing connection with a pre-loaded keyring."""
         backbone_key = bytes.fromhex("cf89fd0f18f4889783c7ef44ee1f5e14")
         explicit_keyring = await load_keyring(
-            path=self.knxkeys_file,
-            password="password")
+            path=self.knxkeys_file, password="password"
+        )
         connection_config = ConnectionConfig(
             connection_type=ConnectionType.ROUTING_SECURE,
-            secure_config=SecureConfig(keyring=explicit_keyring)
+            secure_config=SecureConfig(keyring=explicit_keyring),
         )
         with patch("xknx.io.routing.SecureRouting.connect") as connect_secure:
             interface = knx_interface_factory(self.xknx, connection_config)

@@ -413,7 +413,7 @@ class TestStringRepresentations:
         exception = CouldNotParseTelegram(description="Fnord", one="one", two="two")
         assert (
             str(exception)
-            == '<CouldNotParseTelegram description="Fnord" one="one" two="two"/>'
+            == "<CouldNotParseTelegram description=\"Fnord\" one='one' two='two'/>"
         )
 
     def test_could_not_parse_knxip_exception(self) -> None:
@@ -431,20 +431,20 @@ class TestStringRepresentations:
         exception = ConversionError(description="Fnord", one="one", two="two")
         assert (
             str(exception)
-            == '<ConversionError description="Fnord" one="one" two="two"/>'
+            == "<ConversionError description=\"Fnord\" one='one' two='two'/>"
         )
 
     def test_could_not_parse_address_exception(self) -> None:
         """Test string representation of CouldNotParseAddress exception."""
         exception = CouldNotParseAddress(address="1/2/1000")
-        assert str(exception) == '<CouldNotParseAddress address="1/2/1000" />'
+        assert str(exception) == "<CouldNotParseAddress address='1/2/1000' />"
 
     def test_device_illegal_value_exception(self) -> None:
         """Test string representation of DeviceIllegalValue exception."""
         exception = DeviceIllegalValue(value=12, description="Fnord exceeded")
         assert (
             str(exception)
-            == '<DeviceIllegalValue description="12" value="Fnord exceeded" />'
+            == '<DeviceIllegalValue description="Fnord exceeded" value=12 />'
         )
 
     def test_incomplete_knxip_frame_excetpion(self) -> None:

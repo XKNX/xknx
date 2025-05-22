@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internal
+
+- Use `repr()` for values in exceptions.
+
 # 3.8.0 Valid energy 2025-05-12
 
 ### Connection

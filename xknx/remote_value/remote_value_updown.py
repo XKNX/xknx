@@ -69,7 +69,7 @@ class RemoteValueUpDown(RemoteValue["RemoteValueUpDown.Direction"]):
             return self.Direction.UP if self.invert else self.Direction.DOWN
         raise CouldNotParseTelegram(
             "Payload invalid",
-            payload=payload,
+            payload=str(payload),
             device_name=self.device_name,
             feature_name=self.feature_name,
         )
