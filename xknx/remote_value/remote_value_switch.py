@@ -62,7 +62,7 @@ class RemoteValueSwitch(RemoteValue[bool]):
             return not self.invert
         raise CouldNotParseTelegram(
             "Payload invalid",
-            payload=payload,
+            payload=str(payload),
             device_name=self.device_name,
             feature_name=self.feature_name,
         )

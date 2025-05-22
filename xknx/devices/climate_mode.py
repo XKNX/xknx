@@ -229,7 +229,7 @@ class ClimateMode(Device):
             or operation_mode not in self._operation_modes
         ):
             raise DeviceIllegalValue(
-                "operation (preset) mode not supported", str(operation_mode)
+                "operation (preset) mode not supported", operation_mode
             )
 
         for rv in self._iter_remote_values():
@@ -245,7 +245,7 @@ class ClimateMode(Device):
             or controller_mode not in self._controller_modes
         ):
             raise DeviceIllegalValue(
-                "controller (HVAC) mode not supported", str(controller_mode)
+                "controller (HVAC) mode not supported", controller_mode
             )
 
         for rv in self._iter_remote_values():

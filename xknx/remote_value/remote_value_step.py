@@ -73,7 +73,7 @@ class RemoteValueStep(RemoteValue["RemoteValueStep.Direction"]):
             return self.Direction.INCREASE if self.invert else self.Direction.DECREASE
         raise CouldNotParseTelegram(
             "Payload invalid",
-            payload=payload,
+            payload=str(payload),
             device_name=self.device_name,
             feature_name=self.feature_name,
         )

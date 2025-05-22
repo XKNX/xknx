@@ -55,7 +55,7 @@ class CouldNotParseTelegram(XKNXException):
 
     def _format_parameter(self) -> str:
         return " ".join(
-            [f'{key}="{value}"' for (key, value) in sorted(self.parameter.items())]
+            [f"{key}={value!r}" for (key, value) in sorted(self.parameter.items())]
         )
 
     def __str__(self) -> str:
@@ -137,7 +137,7 @@ class ConversionError(XKNXException):
 
     def _format_parameter(self) -> str:
         return " ".join(
-            [f'{key}="{value}"' for (key, value) in sorted(self.parameter.items())]
+            [f"{key}={value!r}" for (key, value) in sorted(self.parameter.items())]
         )
 
     def __str__(self) -> str:
@@ -157,13 +157,13 @@ class CouldNotParseAddress(XKNXException):
     def __str__(self) -> str:
         """Return object as readable string."""
         _msg = f'message="{self.message}" ' if self.message else ""
-        return f'<CouldNotParseAddress address="{self.address}" {_msg}/>'
+        return f"<CouldNotParseAddress address={self.address!r} {_msg}/>"
 
 
 class DeviceIllegalValue(XKNXException):
     """Exception class for setting a value of a device with an illegal value."""
 
-    def __init__(self, value: Any, description: str) -> None:
+    def __init__(self, description: str, value: Any) -> None:
         """Initialize DeviceIllegalValue class."""
         super().__init__()
         self.value = value
@@ -171,7 +171,7 @@ class DeviceIllegalValue(XKNXException):
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<DeviceIllegalValue description="{self.value}" value="{self.description}" />'
+        return f'<DeviceIllegalValue description="{self.description}" value={self.value!r} />'
 
 
 class DataSecureError(XKNXException):
