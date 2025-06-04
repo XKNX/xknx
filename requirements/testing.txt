@@ -1,6 +1,6 @@
 -r production.txt
 freezegun==1.5.2
-mypy==1.15.0
+mypy==1.16.0
 pre-commit==4.2.0
 pylint==3.3.7
 pytest==8.3.5

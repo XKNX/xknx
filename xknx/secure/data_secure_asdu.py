@@ -142,7 +142,7 @@ class SecureData:
     @staticmethod
     def init_from_plain_apdu(
         key: bytes,
-        apdu: bytes,
+        apdu: bytes | bytearray,
         scf: SecurityControlField,
         sequence_number: int,
         address_fields_raw: bytes,
@@ -164,7 +164,7 @@ class SecureData:
                     payload_length=0,
                 ),
             )[:4]
-            secured_apdu = apdu
+            secured_apdu = bytes(apdu)
         elif scf.algorithm == SecurityAlgorithmIdentifier.CCM_ENCRYPTION:
             mac_cbc = calculate_message_authentication_code_cbc(
                 key=key,

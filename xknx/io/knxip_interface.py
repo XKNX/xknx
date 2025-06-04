@@ -10,10 +10,10 @@ KNXIPInterface manages KNX/IP Tunneling or Routing connections.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Coroutine
 import logging
 import threading
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from xknx.cemi import CEMIFrame
 from xknx.exceptions import (
@@ -524,7 +524,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         loop_loaded.set()
         self._thread_loop.run_forever()
 
-    async def _await_from_connection_thread(self, coro: Awaitable[T]) -> T:
+    async def _await_from_connection_thread(self, coro: Coroutine[Any, Any, T]) -> T:
         """Await coroutine in different thread."""
         if self._thread_loop is None:
             raise CommunicationError("KNX connection thread not initialized.")
