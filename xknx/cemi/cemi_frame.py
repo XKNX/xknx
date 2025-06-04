@@ -173,6 +173,7 @@ class CEMILData(CEMIData):
 
     def to_knx(self) -> bytes:
         """Serialize to KNX/IP raw data."""
+        tpdu: bytes | bytearray
         if self.tpci.control:
             tpdu = self.tpci.to_knx().to_bytes(1, "big")
             npdu_len = 0

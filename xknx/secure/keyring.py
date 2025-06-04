@@ -10,7 +10,7 @@ from itertools import chain
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 from xml.dom.minidom import Attr, Document, Element, parse
 from xml.etree.ElementTree import ElementTree
 import xml.sax
@@ -62,25 +62,27 @@ class AttributeReader(ABC):
 class XMLAssignedGroupAddress(AttributeReader):
     """Assigned Group Addresses to an interface in a knxkeys file."""
 
+    NODE_NAME: Final = "Group"
+
     address: GroupAddress
     senders: list[IndividualAddress]
 
     def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
-        self.address = GroupAddress(
-            self.get_attribute_value(attributes.get("Address", None))
-        )
+        self.address = GroupAddress(self.get_attribute_value(attributes.get("Address")))
         self.senders = [
             IndividualAddress(sender)
             for sender in (
-                self.get_attribute_value(attributes.get("Senders", ""))
+                self.get_attribute_value(attributes.get("Senders")) or ""
             ).split()
         ]
 
 
 class XMLInterface(AttributeReader):
     """Interface in a knxkeys file."""
+
+    NODE_NAME: Final = "Interface"
 
     type: InterfaceType
     individual_address: IndividualAddress
@@ -107,7 +109,11 @@ class XMLInterface(AttributeReader):
         self.authentication = self.get_attribute_value(attributes.get("Authentication"))
 
         self.group_addresses = {}
-        for assigned_ga in filter(lambda x: x.nodeType != 3, node.childNodes):
+        for assigned_ga in node.childNodes:
+            if assigned_ga.nodeType != Element.ELEMENT_NODE:
+                continue
+            if assigned_ga.nodeName != XMLAssignedGroupAddress.NODE_NAME:
+                continue
             xml_group_address: XMLAssignedGroupAddress = XMLAssignedGroupAddress()
             xml_group_address.parse_xml(assigned_ga)
             self.group_addresses[xml_group_address.address] = xml_group_address.senders
@@ -145,6 +151,8 @@ class XMLInterface(AttributeReader):
 class XMLBackbone(AttributeReader):
     """Backbone in a knxkeys file."""
 
+    NODE_NAME: Final = "Backbone"
+
     decrypted_key: bytes | None = None
     key: str | None = None
     latency: int | None = None
@@ -173,6 +181,8 @@ class XMLBackbone(AttributeReader):
 class XMLGroupAddress(AttributeReader):
     """Group Address in a knxkeys file."""
 
+    NODE_NAME: Final = "Group"
+
     address: GroupAddress
     decrypted_key: bytes | None = None
     key: str
@@ -196,6 +206,8 @@ class XMLGroupAddress(AttributeReader):
 class XMLDevice(AttributeReader):
     """Device in a knxkeys file."""
 
+    NODE_NAME: Final = "Device"
+
     individual_address: IndividualAddress
     tool_key: str
     decrypted_tool_key: bytes | None = None
@@ -217,7 +229,7 @@ class XMLDevice(AttributeReader):
         )
         self.authentication = self.get_attribute_value(attributes.get("Authentication"))
         self.sequence_number = int(
-            self.get_attribute_value(attributes.get("SequenceNumber", 0))
+            self.get_attribute_value(attributes.get("SequenceNumber")) or 0
         )
 
     def decrypt_attributes(
@@ -408,27 +420,33 @@ class Keyring(AttributeReader):
         )
         self.xmlns = self.get_attribute_value(attributes.get("xmlns"))
 
-        for sub_node in filter(lambda x: x.nodeType != 3, node.childNodes):
-            if sub_node.nodeName == "Interface":
+        for sub_node in node.childNodes:
+            if sub_node.nodeType != Element.ELEMENT_NODE:
+                continue
+            if sub_node.nodeName == XMLInterface.NODE_NAME:
                 interface: XMLInterface = XMLInterface()
                 interface.parse_xml(sub_node)
                 self.interfaces.append(interface)
-            if sub_node.nodeName == "Backbone":
+            if sub_node.nodeName == XMLBackbone.NODE_NAME:
                 backbone: XMLBackbone = XMLBackbone()
                 backbone.parse_xml(sub_node)
                 self.backbone = backbone
             if sub_node.nodeName == "Devices":
-                device_doc: Element
-                for device_doc in filter(
-                    lambda x: x.nodeType != 3, sub_node.childNodes
-                ):
+                for device_doc in sub_node.childNodes:
+                    if device_doc.nodeType != Element.ELEMENT_NODE:
+                        continue
+                    if device_doc.nodeName != XMLDevice.NODE_NAME:
+                        continue
                     device: XMLDevice = XMLDevice()
                     device.parse_xml(device_doc)
                     self.devices.append(device)
 
             elif sub_node.nodeName == "GroupAddresses":
-                ga_doc: Element
-                for ga_doc in filter(lambda x: x.nodeType != 3, sub_node.childNodes):
+                for ga_doc in sub_node.childNodes:
+                    if ga_doc.nodeType != Element.ELEMENT_NODE:
+                        continue
+                    if ga_doc.nodeName != XMLGroupAddress.NODE_NAME:
+                        continue
                     xml_ga: XMLGroupAddress = XMLGroupAddress()
                     xml_ga.parse_xml(ga_doc)
                     self.group_addresses.append(xml_ga)
@@ -532,7 +550,7 @@ def verify_keyring_signature(path: str | os.PathLike[Any], password: str) -> boo
     with _path.open(encoding="utf-8") as file:
         parser = xml.sax.make_parser()
         parser.setContentHandler(handler)
-        parser.parse(file)  # type: ignore[no-untyped-call]
+        parser.parse(file)
 
     return sha256_hash(handler.output)[:16] == signature
 
@@ -554,7 +572,6 @@ def hash_keyring_password(password: bytes) -> bytes:
         salt=b"1.keyring.ets.knx.org",
         iterations=65_536,
     )
-
     return kdf.derive(password)
 
 
