@@ -23,7 +23,7 @@ class EventLoopClockAdvancer:
         self.loop = loop
 
         # incorporate offset timing into the event loop
-        self.loop.time = self.time  # type: ignore[assignment]
+        self.loop.time = self.time  # type: ignore[method-assign]
 
     def time(self) -> float:
         """Return loop time adjusted by offset."""
@@ -31,7 +31,7 @@ class EventLoopClockAdvancer:
 
     async def _exhaust_callbacks(self) -> None:
         """Run the loop until all ready callbacks are executed."""
-        while self.loop._ready:  # noqa: ASYNC110  # type: ignore[attr-defined]
+        while self.loop._ready:  # type: ignore[attr-defined] # noqa: ASYNC110
             await asyncio.sleep(0)
 
     async def __call__(self, seconds: float) -> None:
@@ -49,8 +49,9 @@ class EventLoopClockAdvancer:
 
 
 @pytest.fixture
-def time_travel(event_loop: asyncio.AbstractEventLoop) -> EventLoopClockAdvancer:
+async def time_travel() -> EventLoopClockAdvancer:
     """Advance loop time and run callbacks."""
+    event_loop = asyncio.get_running_loop()
     return EventLoopClockAdvancer(event_loop)
 
 
