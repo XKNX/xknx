@@ -11,11 +11,9 @@ from xknx.telegram import IndividualAddress, apci
 
 async def read_serial_number(
     xknx: XKNX, individual_address: IndividualAddress
-) -> str | None:
+) -> bytes | None:
     """Read the serial number of a KNX device."""
-    async with xknx.management.connection(
-        address=IndividualAddress(individual_address)
-    ) as connection:
+    async with xknx.management.connection(address=individual_address) as connection:
         response = await connection.request(
             payload=apci.PropertyValueRead(
                 property_id=ResourceGenericPropertyId.PID_SERIAL_NUMBER
@@ -27,9 +25,7 @@ async def read_serial_number(
         return None
 
     assert isinstance(response.payload, apci.PropertyValueResponse)
-
-    serial_number: bytes = response.payload.data
-    return f"{serial_number[:2].hex()}:{serial_number[2:].hex()}"
+    return response.payload.data
 
 
 async def main(argv: list[str]) -> int:
@@ -61,11 +57,12 @@ async def main(argv: list[str]) -> int:
                 f"Found device in programming mode with individual address {individual_address}."
             )
 
-        serial_string = await read_serial_number(xknx, individual_address)
-        if serial_string is None:
+        serial_number = await read_serial_number(xknx, individual_address)
+        if serial_number is None:
             print("Failed to read serial number.")
             return 1
-
+        # format the serial number in same style as ETS
+        serial_string = f"{serial_number[:2].hex()}:{serial_number[2:].hex()}"
         print(f"Serial number of {individual_address} is {serial_string}.")
 
     return 0
