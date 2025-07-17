@@ -96,6 +96,16 @@ class TestClimate:
         assert climate.has_group_address(GroupAddress("1/2/16"))
         assert not climate.has_group_address(GroupAddress("1/2/99"))
 
+        assert climate.group_addresses() == {
+            GroupAddress("1/2/1"),
+            GroupAddress("1/2/2"),
+            GroupAddress("1/2/3"),
+            GroupAddress("1/2/4"),
+            GroupAddress("1/2/11"),
+            GroupAddress("1/2/12"),
+            GroupAddress("1/2/16"),
+        }
+
     #
     # TEST HAS GROUP ADDRESS
     #
@@ -134,6 +144,21 @@ class TestClimate:
         assert climate.has_group_address(GroupAddress("1/2/14"))
         assert climate.has_group_address(GroupAddress("1/2/15"))
         assert not climate.has_group_address(GroupAddress("1/2/99"))
+
+        assert climate.group_addresses() == {
+            GroupAddress("1/2/4"),
+            GroupAddress("1/2/5"),
+            GroupAddress("1/2/6"),
+            GroupAddress("1/2/7"),
+            GroupAddress("1/2/8"),
+            GroupAddress("1/2/9"),
+            GroupAddress("1/2/10"),
+            GroupAddress("1/2/11"),
+            GroupAddress("1/2/12"),
+            GroupAddress("1/2/13"),
+            GroupAddress("1/2/14"),
+            GroupAddress("1/2/15"),
+        }
 
     #
     # TEST CALLBACK

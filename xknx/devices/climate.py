@@ -215,6 +215,12 @@ class Climate(Device):
         yield self.horizontal_swing
         yield self.humidity
 
+    def group_addresses(self) -> set[DeviceGroupAddress]:
+        """Return all group addresses of this Device."""
+        if self.mode is None:
+            return super().group_addresses()
+        return super().group_addresses() | self.mode.group_addresses()
+
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
         return super().has_group_address(group_address) or (
