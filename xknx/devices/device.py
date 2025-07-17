@@ -64,6 +64,10 @@ class Device(ABC):
         # yield from (<list all used RemoteValue instances>)
         yield from ()
 
+    def group_addresses(self) -> set[DeviceGroupAddress]:
+        """Return all group addresses of this Device."""
+        return {ga for rv in self._iter_remote_values() for ga in rv.group_addresses()}
+
     def register_device_updated_cb(
         self, device_updated_cb: DeviceCallbackType[Self]
     ) -> None:
@@ -127,7 +131,7 @@ class Device(ABC):
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
         return any(
-            remote_value.has_group_address(group_address)
+            group_address in remote_value.group_addresses()
             for remote_value in self._iter_remote_values()
         )
 

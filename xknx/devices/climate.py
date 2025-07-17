@@ -217,9 +217,11 @@ class Climate(Device):
 
     def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
         """Test if device has given group address."""
-        if self.mode is not None and self.mode.has_group_address(group_address):
-            return True
-        return super().has_group_address(group_address)
+        return super().has_group_address(group_address) or (
+            self.mode.has_group_address(group_address)
+            if self.mode is not None
+            else False
+        )
 
     @property
     def is_on(self) -> bool:

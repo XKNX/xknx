@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- Add `group_addresses()` method to `Device` (and `RemoteValue`) to get all configured group addresses.
+
 ### Internal
 
 - Use `repr()` for values in exceptions.

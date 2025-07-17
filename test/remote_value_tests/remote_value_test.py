@@ -90,37 +90,28 @@ class TestRemoteValue:
     async def test_process_unsupported_payload_type(self) -> None:
         """Test if exception is raised when processing telegram with unsupported payload type."""
         xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        with patch(
-            "xknx.remote_value.RemoteValue.has_group_address"
-        ) as patch_has_group_address:
-            patch_has_group_address.return_value = True
+        remote_value = RemoteValue(xknx, group_address="1/2/1")
 
-            telegram = Telegram(
-                destination_address=GroupAddress("1/2/1"), payload=object()
-            )
-            with pytest.raises(
-                CouldNotParseTelegram,
-                match=r".*payload not a GroupValueWrite or GroupValueResponse.*",
-            ):
-                remote_value.process(telegram)
+        telegram = Telegram(destination_address=GroupAddress("1/2/1"), payload=object())
+        with pytest.raises(
+            CouldNotParseTelegram,
+            match=r".*payload not a GroupValueWrite or GroupValueResponse.*",
+        ):
+            remote_value.process(telegram)
 
     def test_process_unsupported_payload(self) -> None:
         """Test warning is logged when processing telegram with unsupported payload."""
         xknx = XKNX()
-        remote_value = RemoteValue(xknx)
+        remote_value = RemoteValue(xknx, group_address="1/2/1")
+
         telegram = Telegram(
             destination_address=GroupAddress("1/2/1"),
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
         with (
-            patch(
-                "xknx.remote_value.RemoteValue.has_group_address"
-            ) as patch_has_group_address,
             patch("xknx.remote_value.RemoteValue.from_knx") as patch_from,
             patch("logging.Logger.warning") as mock_warning,
         ):
-            patch_has_group_address.return_value = True
             patch_from.side_effect = ConversionError("TestError")
 
             assert remote_value.process(telegram) is False
@@ -176,15 +167,15 @@ class TestRemoteValue:
         assert remote_value_1.group_address == GroupAddress("1/2/3")
         assert remote_value_1.group_address_state is None
         assert remote_value_1.passive_group_addresses == [GroupAddress("1/1/1")]
-        assert remote_value_1.has_group_address(GroupAddress("1/2/3"))
-        assert remote_value_1.has_group_address(GroupAddress("1/1/1"))
+        assert GroupAddress("1/2/3") in remote_value_1.group_addresses()
+        assert GroupAddress("1/1/1") in remote_value_1.group_addresses()
 
         remote_value_2 = RemoteValue(xknx, group_address_state=["1/2/3", "1/1/1"])
         assert remote_value_2.group_address is None
         assert remote_value_2.group_address_state == GroupAddress("1/2/3")
         assert remote_value_2.passive_group_addresses == [GroupAddress("1/1/1")]
-        assert remote_value_2.has_group_address(GroupAddress("1/2/3"))
-        assert remote_value_2.has_group_address(GroupAddress("1/1/1"))
+        assert GroupAddress("1/2/3") in remote_value_2.group_addresses()
+        assert GroupAddress("1/1/1") in remote_value_2.group_addresses()
 
         remote_value_3 = RemoteValue(
             xknx,
@@ -199,13 +190,13 @@ class TestRemoteValue:
             GroupAddress("2/2/2"),
             GroupAddress("2/2/20"),
         ]
-        assert remote_value_3.has_group_address(GroupAddress("1/2/3"))
-        assert remote_value_3.has_group_address(GroupAddress("1/1/1"))
-        assert remote_value_3.has_group_address(GroupAddress("1/1/10"))
-        assert remote_value_3.has_group_address(GroupAddress("2/3/4"))
-        assert remote_value_3.has_group_address(GroupAddress("2/2/2"))
-        assert remote_value_3.has_group_address(GroupAddress("2/2/20"))
-        assert not remote_value_3.has_group_address(GroupAddress("0/0/1"))
+        assert GroupAddress("1/2/3") in remote_value_3.group_addresses()
+        assert GroupAddress("1/1/1") in remote_value_3.group_addresses()
+        assert GroupAddress("1/1/10") in remote_value_3.group_addresses()
+        assert GroupAddress("2/3/4") in remote_value_3.group_addresses()
+        assert GroupAddress("2/2/2") in remote_value_3.group_addresses()
+        assert GroupAddress("2/2/20") in remote_value_3.group_addresses()
+        assert GroupAddress("0/0/1") not in remote_value_3.group_addresses()
         # test empty list
         remote_value_4 = RemoteValue(xknx, group_address=[])
         assert remote_value_4.group_address is None
