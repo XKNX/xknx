@@ -86,6 +86,14 @@ class RemoteValue(ABC, Generic[ValueT]):
         self.after_update_cb: RVCallbackType[ValueT] | None = after_update_cb
         self._sync_state = sync_state
 
+    def group_addresses(self) -> Iterator[DeviceGroupAddress]:
+        """Return all configured group addresses of this RemoteValue."""
+        if self.group_address is not None:
+            yield self.group_address
+        if self.group_address_state is not None:
+            yield self.group_address_state
+        yield from self.passive_group_addresses
+
     def register_state_updater(self) -> None:
         """Register RemoteValue for state updates."""
         sync_state = (
@@ -144,17 +152,6 @@ class RemoteValue(ABC, Generic[ValueT]):
         """Evaluate if remote value has a group_address set."""
         return bool(self.group_address)
 
-    def has_group_address(self, group_address: DeviceGroupAddress) -> bool:
-        """Test if device has given group address."""
-
-        def remote_value_addresses() -> Iterator[DeviceGroupAddress | None]:
-            """Yield all group_addresses."""
-            yield self.group_address
-            yield self.group_address_state
-            yield from self.passive_group_addresses
-
-        return group_address in remote_value_addresses()
-
     def from_knx(self, payload: DPTArray | DPTBinary) -> ValueT:
         """Convert current payload to value - to be implemented in derived class when `dpt_class` can't be used."""
         if self.dpt_class is None:
@@ -173,9 +170,12 @@ class RemoteValue(ABC, Generic[ValueT]):
 
     def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
         """Process incoming or outgoing telegram."""
-        if not isinstance(
-            telegram.destination_address, GroupAddress | InternalGroupAddress
-        ) or not self.has_group_address(telegram.destination_address):
+        if (
+            not isinstance(
+                telegram.destination_address, GroupAddress | InternalGroupAddress
+            )
+            or telegram.destination_address not in self.group_addresses()
+        ):
             return False
         if not isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
             raise CouldNotParseTelegram(

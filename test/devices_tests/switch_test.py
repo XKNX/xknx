@@ -367,6 +367,8 @@ class TestSwitch:
         assert switch.has_group_address(GroupAddress("1/2/3"))
         assert not switch.has_group_address(GroupAddress("2/2/2"))
 
+        assert switch.group_addresses() == {GroupAddress("1/2/3")}
+
     #
     # TEST passive group addresses
     #
@@ -377,6 +379,11 @@ class TestSwitch:
         assert switch.has_group_address(GroupAddress("1/2/3"))
         assert switch.has_group_address(GroupAddress("4/4/4"))
         assert not switch.has_group_address(GroupAddress("2/2/2"))
+
+        assert switch.group_addresses() == {
+            GroupAddress("1/2/3"),
+            GroupAddress("4/4/4"),
+        }
 
     async def test_process_passive(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if device was updated."""

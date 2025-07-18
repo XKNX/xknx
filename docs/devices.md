@@ -19,6 +19,7 @@ An instantiated device can be added to `xknx.devices` to receive telegrams and s
 * `device_updated_cb` List of callbacks for each update.
 * `group_address*` Group address for a specific function. If a list is passed the first element is used for sending / reading,  the rest are passively updating state (listening group address).
 
+* `group_addresses()` Returns a set of all configured group addresses of this Device.
 * `has_group_address(group_address)` Test if device has given group address.
 * `sync(wait_for_result)` Read states of device from KNX bus via GroupValueRead requests.
 * `register_device_updated_cb(device_updated_cb)` Register device updated callback.

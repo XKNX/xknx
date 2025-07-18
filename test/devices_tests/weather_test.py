@@ -368,5 +368,5 @@ class TestWeather:
         """Test sensor has group address."""
         xknx = XKNX()
         weather = Weather(name="weather", xknx=xknx, group_address_temperature="1/3/4")
-        assert weather._temperature.has_group_address(GroupAddress("1/3/4"))
-        assert not weather._temperature.has_group_address(GroupAddress("1/2/4"))
+        assert weather.has_group_address(GroupAddress("1/3/4"))
+        assert not weather.has_group_address(GroupAddress("1/2/4"))
