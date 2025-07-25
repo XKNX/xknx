@@ -27,6 +27,7 @@ Shutters are simple representations of blind/roller cover actuators. With XKNX y
 - `travel_time_down` seconds to reach lower end position. Default: 22
 - `travel_time_up` seconds to reach upper end position. Default: 22
 - `invert_updown` invert up/down binary payload. Default: False
+- `invert_stop` invert stop binary payload. Default: False
 - `invert_position` invert position percentage from / to KNX bus. Default: False
 - `invert_angle` invert angle from / to KNX bus. Default: False
 - `device_updated_cb` Callback for each update.
