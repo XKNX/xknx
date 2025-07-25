@@ -58,6 +58,7 @@ class Cover(Device):
         travel_time_down: float = DEFAULT_TRAVEL_TIME,
         travel_time_up: float = DEFAULT_TRAVEL_TIME,
         invert_updown: bool = False,
+        invert_stop: bool = False,
         invert_position: bool = False,
         invert_angle: bool = False,
         device_updated_cb: DeviceCallbackType[Cover] | None = None,
@@ -88,6 +89,7 @@ class Cover(Device):
             group_address=group_address_stop,
             sync_state=False,
             device_name=self.name,
+            invert=invert_stop,
             after_update_cb=None,
         )
 
