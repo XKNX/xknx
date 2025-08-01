@@ -49,11 +49,11 @@ def get_ip_for_adapter_name(name: str) -> str | None:
     """Return the ip for the given interface name."""
     return next(
         (
-            ip.ip  # type: ignore[misc] # IPv6 would return tuple
+            ip.ip
             for iface in ifaddr.get_adapters()
             if name in (iface.name, iface.nice_name)
             for ip in iface.ips
-            if ip.is_IPv4
+            if isinstance(ip.ip, str)  # IPv6 would return tuple
         ),
         None,
     )
