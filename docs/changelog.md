@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.9.0 Scene callbacks 2025-08-26
 
 ### Devices
 
