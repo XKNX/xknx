@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Devices
 
+- Scene: Fire device callback if scene number is activated (from xknx or bus).
 - Add `group_addresses()` method to `Device` (and `RemoteValue`) to get all configured group addresses.
 
 ### Internal

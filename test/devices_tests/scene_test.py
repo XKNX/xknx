@@ -1,5 +1,7 @@
 """Unit test for Scene objects."""
 
+from unittest.mock import Mock
+
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray
@@ -44,3 +46,33 @@ class TestScene:
         scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
         assert scene.has_group_address(GroupAddress("1/2/1"))
         assert not scene.has_group_address(GroupAddress("2/2/2"))
+
+    async def test_process_callback(self) -> None:
+        """Test process / reading telegrams from telegram queue. Test if callback is called."""
+
+        xknx = XKNX()
+        after_update_callback = Mock()
+        scene = Scene(
+            xknx,
+            "TestScene",
+            group_address="1/2/3",
+            scene_number=1,
+            device_updated_cb=after_update_callback,
+        )
+
+        scene.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x00,))),
+            )
+        )
+        after_update_callback.assert_called_with(scene)
+
+        after_update_callback.reset_mock()
+        scene.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x01,))),  # different scene number
+            )
+        )
+        after_update_callback.assert_not_called()

@@ -11,6 +11,7 @@ from xknx.remote_value import GroupAddressesType, RemoteValueSceneNumber
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
+    from xknx.telegram import Telegram
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -36,7 +37,7 @@ class Scene(Device):
             group_address=group_address,
             device_name=self.name,
             feature_name="Scene number",
-            after_update_cb=self.after_update,
+            after_update_cb=self._scene_activation_from_rv,
         )
         self.scene_number = int(scene_number)
 
@@ -47,6 +48,15 @@ class Scene(Device):
     async def run(self) -> None:
         """Activate scene."""
         self.scene_value.set(self.scene_number)
+
+    def process_group_write(self, telegram: Telegram) -> None:
+        """Process incoming and outgoing GROUP WRITE telegram."""
+        self.scene_value.process(telegram, always_callback=True)
+
+    def _scene_activation_from_rv(self, called_scene_number: int) -> None:
+        """Check the scene number from RemoteValue (Callback)."""
+        if called_scene_number == self.scene_number:
+            self.after_update()
 
     def __str__(self) -> str:
         """Return object as readable string."""
