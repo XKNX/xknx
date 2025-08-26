@@ -29,7 +29,7 @@ jobs:
             envlist: "py313,ruff,typing,lint,pylint"
 
           - python-version: "3.13"
-            os: macos-latest
+            os: macos-14
             envlist: "py313"
 
           - python-version: "3.13"
