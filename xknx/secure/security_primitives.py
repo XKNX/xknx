@@ -1,12 +1,12 @@
 """Encryption and Decryption functions for KNX Secure."""
 
 from __future__ import annotations
+from typing import ByteString
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.utils import Buffer
 
 from .util import byte_pad
 
@@ -14,7 +14,7 @@ from .util import byte_pad
 def calculate_message_authentication_code_cbc(
     key: bytes,
     additional_data: bytes,
-    payload: Buffer = b"",
+    payload: ByteString = b"",
     block_0: bytes = bytes(16),
 ) -> bytes:
     """Calculate the message authentication code (MAC) for a message with AES-CBC."""
@@ -34,7 +34,7 @@ def decrypt_ctr(
     key: bytes,
     counter_0: bytes,
     mac: bytes,
-    payload: Buffer = b"",
+    payload: ByteString = b"",
 ) -> tuple[bytes, bytes]:
     """
     Decrypt data from SecureWrapper.
@@ -54,7 +54,7 @@ def encrypt_data_ctr(
     key: bytes,
     counter_0: bytes,
     mac_cbc: bytes,
-    payload: Buffer = b"",
+    payload: ByteString = b"",
 ) -> tuple[bytes, bytes]:
     """
     Encrypt data with AES-CTR.
