@@ -1,7 +1,9 @@
 """Utilities for KNX Secure."""
 
 from cryptography.hazmat.primitives import hashes
-from cryptography.utils import Buffer
+
+# py3.12 collections.abc.Buffer can be used instead
+Buffer = bytes | bytearray | memoryview
 
 
 def bytes_xor(a: bytes, b: bytes) -> bytes:  # pylint: disable=invalid-name
