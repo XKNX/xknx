@@ -3,6 +3,7 @@
 from cryptography.hazmat.primitives import hashes
 
 
+# py3.12 collections.abc.Buffer can be used instead
 Buffer = bytes | bytearray | memoryview
 
 
