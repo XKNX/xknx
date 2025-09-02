@@ -77,9 +77,8 @@ jobs:
             requirements/production.txt
             requirements/testing.txt
             .pre-commit-config.yaml
-      - name: Install dependencies
-        run: |
-          pip install -r requirements/testing.txt
+      - name: Install coverage.py
+        run: pip install coverage
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v4
       - name: Create coverage report
@@ -90,4 +89,5 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
+          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
