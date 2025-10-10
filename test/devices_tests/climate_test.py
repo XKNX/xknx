@@ -1,5 +1,6 @@
 """Unit test for Climate objects."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -69,6 +70,26 @@ class TestClimate:
             xknx, "TestClimate", group_address_operation_mode_protection="1/2/4"
         )
         assert climate_mode.supports_operation_mode
+
+    @pytest.mark.parametrize(
+        ("address", "state", "expected"),
+        [
+            ("1/2/4", None, True),
+            (None, "1/2/5", True),
+            (None, None, False),
+            ([], [], False),
+        ],
+    )
+    def test_supports_on_off(self, address: Any, state: Any, expected: bool) -> None:
+        """Test supports_on_off flag."""
+        xknx = XKNX()
+        climate = Climate(
+            xknx,
+            "TestClimate",
+            group_address_on_off=address,
+            group_address_on_off_state=state,
+        )
+        assert climate.supports_on_off == expected
 
     #
     # TEST HAS GROUP ADDRESS

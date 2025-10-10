@@ -114,10 +114,6 @@ class Climate(Device):
             setpoint_shift_step=self.temperature_step,
         )
 
-        self.supports_on_off = (
-            group_address_on_off is not None or group_address_on_off_state is not None
-        )
-
         self.on = RemoteValueSwitch(  # pylint: disable=invalid-name
             xknx,
             group_address_on_off,
@@ -127,6 +123,7 @@ class Climate(Device):
             after_update_cb=self.after_update,
             invert=on_off_invert,
         )
+        self.supports_on_off = self.on.initialized
 
         self.active = RemoteValueSwitch(
             xknx,

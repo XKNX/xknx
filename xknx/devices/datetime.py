@@ -64,7 +64,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
         self._localtime_zone = (
             localtime if isinstance(localtime, datetime.tzinfo) else None
         )
-        if localtime and group_address_state is not None:
+        if localtime and bool(group_address_state):
             logger.warning(
                 "State address invalid in %s device when using `localtime=True`. Ignoring `group_address_state=%s` argument.",
                 self.__class__.__name__,
