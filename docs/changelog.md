@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Devices
+
+- Climate: Fix `supports_on_off` flag when empty list passed as group address.
+
 # 3.9.0 Scene callbacks 2025-08-26
 
 ### Devices
