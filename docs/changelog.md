@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internal
+
+- Add support and test for Python 3.14
+
 # 3.9.1 Fix Climate initialization 2025-10-10
 
 ### Devices

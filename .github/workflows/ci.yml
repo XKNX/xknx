@@ -26,7 +26,10 @@ jobs:
             envlist: "py312"
           - python-version: "3.13"
             os: ubuntu-latest
-            envlist: "py313,ruff,typing,lint,pylint"
+            envlist: "py313"
+          - python-version: "3.14"
+            os: ubuntu-latest
+            envlist: "py314,ruff,typing,lint,pylint"
 
           - python-version: "3.13"
             os: macos-14
@@ -65,7 +68,7 @@ jobs:
     needs: ["build"]
     strategy:
       matrix:
-        python-version: ["3.13"]
+        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v5
       - name: Set up Python ${{ matrix.python-version }}
