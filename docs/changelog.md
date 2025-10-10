@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.9.1 Fix Climate initialization 2025-10-10
 
 ### Devices
 
