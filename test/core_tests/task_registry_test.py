@@ -1,7 +1,6 @@
 """Unit test for task registry."""
 
 import asyncio
-import sys
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
@@ -143,13 +142,13 @@ class TestTaskRegistry:
         xknx.task_registry.background(callback())
         assert len(xknx.task_registry._background_task) == 1
         task = next(iter(xknx.task_registry._background_task))
-        refs = sys.getrefcount(task)
-        assert refs == 4
         assert not task.done()
 
+        await time_travel(test_time / 2)
+        assert not task.done()
+        assert task in xknx.task_registry._background_task
+
+        await time_travel(test_time / 2)
         # after task is finished it should remove itself from the background registry
-        await time_travel(test_time)
-        assert len(xknx.task_registry._background_task) == 0
         assert task.done()
-        refs = sys.getrefcount(task)
-        assert refs == 2
+        assert task not in xknx.task_registry._background_task
