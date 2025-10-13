@@ -156,7 +156,7 @@ class TestBinarySensor:
     # TEST PROCESS CALLBACK
     #
     async def test_process_callback(self) -> None:
-        """Test after_update_callback after state of switch was changed."""
+        """Test after_update_callback after state of binary sensor was changed."""
         xknx = XKNX()
         switch = BinarySensor(
             xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=False
@@ -179,15 +179,18 @@ class TestBinarySensor:
         switch.process(telegram)
         after_update_callback.assert_not_called()
 
-    async def test_process_callback_ignore_internal_state(self) -> None:
-        """Test after_update_callback after state of switch was changed."""
+    async def test_process_callback_context_timeout(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test after_update_callback after context_timeout."""
+        _timeout = 3
         xknx = XKNX()
         switch = BinarySensor(
             xknx,
             "TestInput",
             group_address_state="1/2/3",
             ignore_internal_state=True,
-            context_timeout=0.001,
+            context_timeout=_timeout,
         )
         after_update_callback = Mock()
 
@@ -202,7 +205,7 @@ class TestBinarySensor:
         switch.process(telegram)
         after_update_callback.assert_not_called()
         assert switch.counter == 1
-        await switch._context_task
+        await time_travel(_timeout)
         after_update_callback.assert_called_with(switch)
         # once with counter 1 and once with counter 0
         assert after_update_callback.call_count == 2
@@ -211,11 +214,14 @@ class TestBinarySensor:
         # send same telegram again
         switch.process(telegram)
         assert switch.counter == 1
+        await time_travel(_timeout / 2)  # not yet timed out
         switch.process(telegram)
         assert switch.counter == 2
+        # incoming telegram resets timer (not sure if this is what we actually want)
+        await time_travel(_timeout / 2)  # not yet timed out
         after_update_callback.assert_not_called()
 
-        await switch._context_task
+        await time_travel(_timeout / 2)
         after_update_callback.assert_called_with(switch)
         # once with counter 2 and once with counter 0
         assert after_update_callback.call_count == 2
@@ -286,6 +292,44 @@ class TestBinarySensor:
         after_update_callback.reset_mock()
         switch.process(response_telegram)
         after_update_callback.assert_not_called()
+
+    async def test_process_always_callback(self) -> None:
+        """Test process of GroupValueResponse telegrams."""
+        xknx = XKNX()
+        switch = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            always_callback=True,
+        )
+        after_update_callback = Mock()
+
+        switch.register_device_updated_cb(after_update_callback)
+
+        write_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        response_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(
+                DPTBinary(1),
+            ),
+        )
+        assert switch.state is None
+        # initial GroupValueResponse changes state and runs callback
+        switch.process(response_telegram)
+        assert switch.state
+        after_update_callback.assert_called_once_with(switch)
+        # GroupValueWrite with same payload runs callback because of `always_callback`
+        after_update_callback.reset_mock()
+        switch.process(write_telegram)
+        assert switch.state
+        after_update_callback.assert_called_once_with(switch)
+        # GroupValueResponse should run callback because of `always_callback`
+        after_update_callback.reset_mock()
+        switch.process(response_telegram)
+        after_update_callback.assert_called_once_with(switch)
 
     #
     # TEST COUNTER
