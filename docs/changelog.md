@@ -6,11 +6,11 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.10.0 Always callback Sensor and BinarySensor 2025-10-13
 
 ### Devices
 
-- Sensor: Fire callback when `always_callback` is set to `True` for write and response telegrams.
+- Sensor: Fire callback when `always_callback` is `True` for write as well as for response telegrams.
 - BinarySensor: Add `always_callback` attribute to fire callbacks for every telegram.
 
 ### Internal
