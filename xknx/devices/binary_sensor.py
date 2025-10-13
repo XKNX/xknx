@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, cast
 
 from xknx.core import Task
 from xknx.remote_value import GroupAddressesType, RemoteValueSwitch
+from xknx.telegram.apci import GroupValueWrite
 
 from .device import Device, DeviceCallbackType
 
@@ -39,11 +40,13 @@ class BinarySensor(Device):
         reset_after: float | None = None,
         context_timeout: float | None = None,
         device_updated_cb: DeviceCallbackType[BinarySensor] | None = None,
+        always_callback: bool = False,
     ) -> None:
         """Initialize BinarySensor class."""
         super().__init__(xknx, name, device_updated_cb)
 
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
+        self.always_callback = always_callback
         self.reset_after = reset_after
         self.state: bool | None = None
 
@@ -61,7 +64,7 @@ class BinarySensor(Device):
             sync_state=sync_state,
             device_name=self.name,
             # after_update called internally
-            after_update_cb=self._state_from_remote_value,
+            after_update_cb=self._set_internal_state,
         )
 
     def _iter_remote_values(self) -> Iterator[RemoteValueSwitch]:
@@ -82,13 +85,13 @@ class BinarySensor(Device):
         """Return the last telegram received from the RemoteValue."""
         return self.remote_value.telegram
 
-    def _state_from_remote_value(self, state: bool) -> None:
-        """Update the internal state from RemoteValue (Callback)."""
-        self._set_internal_state(state)
-
     def _set_internal_state(self, state: bool) -> None:
-        """Set the internal state of the device. If state was changed after_update hooks and connected Actions are executed."""
-        if state != self.state or self.ignore_internal_state:
+        """Set the internal state of the device and schedule callbacks."""
+        if state != self.state or (
+            self.ignore_internal_state
+            and self.remote_value.telegram is not None
+            and isinstance(self.remote_value.telegram.payload, GroupValueWrite)
+        ):
             self.state = state
 
             if self.ignore_internal_state and self._context_timeout:
@@ -99,9 +102,11 @@ class BinarySensor(Device):
                 ).start()
             else:
                 self.after_update()
+        elif self.always_callback:
+            self.after_update()
 
     async def _counter_task(self, wait_seconds: float) -> None:
-        """Trigger after 1 second to prevent double triggers."""
+        """Trigger when context window has passed once with counter values and once reset."""
         await asyncio.sleep(wait_seconds)
         self.after_update()
 
@@ -117,7 +122,7 @@ class BinarySensor(Device):
         return None
 
     def bump_and_get_counter(self, state: bool) -> int:
-        """Bump counter and return the number of times a state was set to the same value within CONTEXT_TIMEOUT."""
+        """Bump counter and return the number of times a state was set to the same value within context_timeout."""
 
         def within_same_context() -> bool:
             """Check if state change was within same context (e.g. 'Button was pressed twice')."""
@@ -145,13 +150,13 @@ class BinarySensor(Device):
         return 1
 
     def process_group_write(self, telegram: Telegram) -> None:
-        """Process incoming and outgoing GROUP WRITE telegram."""
+        """Process incoming and outgoing GroupValueWrite telegram."""
         if self.remote_value.process(telegram, always_callback=True):
             self._process_reset_after()
 
     def process_group_response(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
-        if self.remote_value.process(telegram, always_callback=False):
+        if self.remote_value.process(telegram, always_callback=self.always_callback):
             self._process_reset_after()
 
     def _process_reset_after(self) -> None:

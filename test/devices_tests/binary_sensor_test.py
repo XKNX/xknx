@@ -287,6 +287,44 @@ class TestBinarySensor:
         switch.process(response_telegram)
         after_update_callback.assert_not_called()
 
+    async def test_process_always_callback(self) -> None:
+        """Test process of GroupValueResponse telegrams."""
+        xknx = XKNX()
+        switch = BinarySensor(
+            xknx,
+            "TestInput",
+            group_address_state="1/2/3",
+            always_callback=True,
+        )
+        after_update_callback = Mock()
+
+        switch.register_device_updated_cb(after_update_callback)
+
+        write_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        response_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(
+                DPTBinary(1),
+            ),
+        )
+        assert switch.state is None
+        # initial GroupValueResponse changes state and runs callback
+        switch.process(response_telegram)
+        assert switch.state
+        after_update_callback.assert_called_once_with(switch)
+        # GroupValueWrite with same payload runs callback because of `always_callback`
+        after_update_callback.reset_mock()
+        switch.process(write_telegram)
+        assert switch.state
+        after_update_callback.assert_called_once_with(switch)
+        # GroupValueResponse should run callback because of `always_callback`
+        after_update_callback.reset_mock()
+        switch.process(response_telegram)
+        after_update_callback.assert_called_once_with(switch)
+
     #
     # TEST COUNTER
     #

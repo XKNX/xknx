@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- Sensor: Fire callback when `always_callback` is set to `True` for write and response telegrams.
+- BinarySensor: Add `always_callback` attribute to fire callbacks for every telegram.
+
 ### Internal
 
 - Add support and test for Python 3.14

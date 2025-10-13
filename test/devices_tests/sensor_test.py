@@ -720,15 +720,20 @@ class TestSensor:
         after_update_callback.assert_not_called()
         after_update_callback.reset_mock()
 
+        # verify not called when processing read responses
+        sensor.process(response_telegram)
+        after_update_callback.assert_not_called()
+        after_update_callback.reset_mock()
+
         sensor.always_callback = True
         # verify called when always_callback is True
         sensor.process(telegram)
         after_update_callback.assert_called_once()
         after_update_callback.reset_mock()
 
-        # verify not called when processing read responses
+        # verify called when processing read responses
         sensor.process(response_telegram)
-        after_update_callback.assert_not_called()
+        after_update_callback.assert_called_once()
 
     #
     # SYNC
