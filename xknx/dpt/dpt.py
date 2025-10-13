@@ -331,7 +331,7 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         try:
-            return cls.data_type(raw[0])  # type: ignore[no-any-return]
+            return cls.data_type(raw[0])
         except ValueError:
             raise ConversionError(
                 f"Payload not supported for {cls.dpt_name()}", raw=raw
@@ -360,7 +360,7 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
     @classmethod
     def get_valid_values(cls) -> list[EnumDataT]:
         """Return list of valid values."""
-        return list(cls.data_type)  # type: ignore[call-overload, no-any-return]
+        return list(cls.data_type)
 
 
 @dataclass(slots=True)
@@ -397,7 +397,7 @@ class DPTComplex(DPTBase, Generic[_ComplexDataT]):
         try:
             if isinstance(value, cls.data_type):
                 return cls._to_knx(value)
-            return cls._to_knx(cls.data_type.from_dict(value))
+            return cls._to_knx(cls.data_type.from_dict(value))  # type: ignore[arg-type]
         except (ValueError, TypeError, AttributeError, ConversionError) as err:
             raise ConversionError(
                 f"Could not serialize {cls.dpt_name()}: {err}", value=value
