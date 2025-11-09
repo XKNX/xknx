@@ -309,7 +309,7 @@ class Cover(Device):
         if self._auto_stop_task:
             self._auto_stop_task.cancel()
             self._auto_stop_task = None
-        self._auto_stop_requested = False
+            self._auto_stop_requested = False
 
     def _target_position_from_rv(self, new_target_postion: int) -> None:
         """Update the target position from RemoteValue (Callback)."""
