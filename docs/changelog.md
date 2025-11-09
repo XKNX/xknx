@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased
+
+### Devices
+
+- Cover: Fix race condition for cover auto-stopper.
+
 # 3.10.0 Always callback Sensor and BinarySensor 2025-10-13
 
 ### Devices

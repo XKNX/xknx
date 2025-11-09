@@ -141,6 +141,7 @@ class Cover(Device):
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
 
         self._auto_stop_task: Task | None = None
+        self._auto_stop_requested: bool = False
         self._periodic_update_task: Task | None = None
         self._travel_direction_tilt: TravelStatus | None = None
 
@@ -159,6 +160,7 @@ class Cover(Device):
         if self._auto_stop_task is not None:
             self.xknx.task_registry.unregister(self._auto_stop_task.name)
             self._auto_stop_task = None
+            self._auto_stop_requested = False
         if self._periodic_update_task is not None:
             self.xknx.task_registry.unregister(self._periodic_update_task.name)
             self._periodic_update_task = None
@@ -238,30 +240,12 @@ class Cover(Device):
             self.updown.up()
         elif position > current_position:
             self.updown.down()
+        else:
+            return  # already in position
         self._start_position_update(target_position=position)
-        # If device does not support auto_positioning,
-        # we have to stop the device when position is reached,
-        # unless device was traveling to fully open
-        # or fully closed state.
-        if (
-            self.supports_stop
-            and self.travelcalculator.position_open
-            < position
-            < self.travelcalculator.position_closed
-        ):
-            stop_in_seconds = self.travelcalculator.calculate_travel_time(
-                from_position=current_position, to_position=position
-            )
-
-            async def auto_stopper() -> None:
-                await asyncio.sleep(stop_in_seconds)
-                # stop() calls stop_position_update() which cancels this task
-                asyncio.shield(self.stop())
-
-            self._auto_stop_task = self.xknx.task_registry.register(
-                name=f"cover.auto_stopper_{id(self)}",
-                async_func=auto_stopper,
-            ).start()
+        if self.supports_stop:
+            # If device does not support positioning, we stop the device when position is reached
+            self._start_auto_stopper(current_position, position)
 
     def _start_position_update(self, target_position: int) -> None:
         """Start the travel calculator and run device callbacks."""
@@ -295,10 +279,37 @@ class Cover(Device):
         if self._periodic_update_task:
             self._periodic_update_task.cancel()
             self._periodic_update_task = None
+        self.after_update()
+
+    def _start_auto_stopper(self, current_position: int, target_position: int) -> None:
+        """Start or restart the auto stopper task."""
+        # Unless traveling to fully open or fully closed state, send stop command
+        if target_position in (
+            self.travelcalculator.position_open,
+            self.travelcalculator.position_closed,
+        ):
+            return
+
+        stop_in_seconds = self.travelcalculator.calculate_travel_time(
+            from_position=current_position, to_position=target_position
+        )
+
+        async def auto_stopper() -> None:
+            await asyncio.sleep(stop_in_seconds)
+            await self.stop()
+
+        self._auto_stop_task = self.xknx.task_registry.register(
+            name=f"cover.auto_stopper_{id(self)}",
+            async_func=auto_stopper,
+        ).start()
+        self._auto_stop_requested = True
+
+    def _cancel_auto_stopper(self) -> None:
+        """Cancel the auto stopper task."""
         if self._auto_stop_task:
             self._auto_stop_task.cancel()
             self._auto_stop_task = None
-        self.after_update()
+            self._auto_stop_requested = False
 
     def _target_position_from_rv(self, new_target_postion: int) -> None:
         """Update the target position from RemoteValue (Callback)."""
@@ -340,6 +351,11 @@ class Cover(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         # call after_update to account for travelcalculator changes
         if self.updown.process(telegram):
+            if self._auto_stop_requested:
+                # Don't cancel auto stopper if we initiated the up/down telegram for it
+                self._auto_stop_requested = False
+            else:
+                self._cancel_auto_stopper()
             if (
                 not self.is_opening()
                 and self.updown.value == RemoteValueUpDown.Direction.UP
@@ -356,6 +372,7 @@ class Cover(Device):
                 )
         # stop from bus
         if self.stop_.process(telegram) or self.step.process(telegram):
+            self._cancel_auto_stopper()
             if self.is_traveling():
                 self._stop_position_update()
 
