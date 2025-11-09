@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased
+# 3.10.1 Fix cover auto-stop 2025-11-09
 
 ### Devices
 
