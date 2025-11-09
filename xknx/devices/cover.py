@@ -242,30 +242,9 @@ class Cover(Device):
         else:
             return  # already in position
         self._start_position_update(target_position=position)
-        # If device does not support positioning,
-        # we have to stop the device when position is reached,
-        # unless device was traveling to fully open
-        # or fully closed state.
-        if not self.supports_stop:
-            return
-        if (
-            self.travelcalculator.position_open
-            < position
-            < self.travelcalculator.position_closed
-        ):
-            stop_in_seconds = self.travelcalculator.calculate_travel_time(
-                from_position=current_position, to_position=position
-            )
-
-            async def auto_stopper() -> None:
-                await asyncio.sleep(stop_in_seconds)
-                await self.stop()
-
-            self._auto_stop_task = self.xknx.task_registry.register(
-                name=f"cover.auto_stopper_{id(self)}",
-                async_func=auto_stopper,
-            ).start()
-            self._auto_stop_requested = True
+        if self.supports_stop:
+            # If device does not support positioning, we stop the device when position is reached
+            self._start_auto_stopper(current_position, position)
 
     def _start_position_update(self, target_position: int) -> None:
         """Start the travel calculator and run device callbacks."""
@@ -300,6 +279,29 @@ class Cover(Device):
             self._periodic_update_task.cancel()
             self._periodic_update_task = None
         self.after_update()
+
+    def _start_auto_stopper(self, current_position: int, target_position: int) -> None:
+        """Start or restart the auto stopper task."""
+        # Unless traveling to fully open or fully closed state, send stop command
+        if target_position in (
+            self.travelcalculator.position_open,
+            self.travelcalculator.position_closed,
+        ):
+            return
+
+        stop_in_seconds = self.travelcalculator.calculate_travel_time(
+            from_position=current_position, to_position=target_position
+        )
+
+        async def auto_stopper() -> None:
+            await asyncio.sleep(stop_in_seconds)
+            await self.stop()
+
+        self._auto_stop_task = self.xknx.task_registry.register(
+            name=f"cover.auto_stopper_{id(self)}",
+            async_func=auto_stopper,
+        ).start()
+        self._auto_stop_requested = True
 
     def _cancel_auto_stopper(self) -> None:
         """Cancel the auto stopper task."""
