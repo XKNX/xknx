@@ -160,6 +160,7 @@ class Cover(Device):
         if self._auto_stop_task is not None:
             self.xknx.task_registry.unregister(self._auto_stop_task.name)
             self._auto_stop_task = None
+            self._auto_stop_requested = False
         if self._periodic_update_task is not None:
             self.xknx.task_registry.unregister(self._periodic_update_task.name)
             self._periodic_update_task = None
@@ -308,6 +309,7 @@ class Cover(Device):
         if self._auto_stop_task:
             self._auto_stop_task.cancel()
             self._auto_stop_task = None
+        self._auto_stop_requested = False
 
     def _target_position_from_rv(self, new_target_postion: int) -> None:
         """Update the target position from RemoteValue (Callback)."""
