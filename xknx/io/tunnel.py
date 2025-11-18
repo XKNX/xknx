@@ -145,7 +145,9 @@ class _Tunnel(Interface):
         )
         self._data_endpoint_addr = None
         if self.auto_reconnect:
-            self._reconnect_task = asyncio.create_task(self._reconnect())
+            # Prevent multiple concurrent reconnection attempts
+            if self._reconnect_task is None or self._reconnect_task.done():
+                self._reconnect_task = asyncio.create_task(self._reconnect())
         else:
             raise CommunicationError("Tunnel connection closed.")
 

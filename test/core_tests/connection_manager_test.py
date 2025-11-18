@@ -152,3 +152,25 @@ class TestConnectionManager:
         assert (
             xknx.connection_manager.connection_type is XknxConnectionType.NOT_CONNECTED
         )
+
+    async def test_closed_event_loop(self) -> None:
+        """Test connection_state_changed with closed event loop doesn't crash."""
+        xknx = XKNX()
+
+        # Register the loop
+        await xknx.connection_manager.register_loop()
+
+        # Close the event loop by mocking it
+        closed_loop = Mock()
+        closed_loop.call_soon_threadsafe.side_effect = RuntimeError(
+            "Event loop is closed"
+        )
+        xknx.connection_manager._main_loop = closed_loop
+
+        # This should not raise an exception
+        xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+
+        # Verify call_soon_threadsafe was called
+        closed_loop.call_soon_threadsafe.assert_called_once()

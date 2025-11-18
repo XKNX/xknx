@@ -51,9 +51,14 @@ class ConnectionManager:
     ) -> None:
         """Run registered callbacks in main loop. Set internal state flag."""
         if self._main_loop:
-            self._main_loop.call_soon_threadsafe(
-                self._connection_state_changed, state, connection_type
-            )
+            try:
+                self._main_loop.call_soon_threadsafe(
+                    self._connection_state_changed, state, connection_type
+                )
+            except RuntimeError:
+                # Event loop is closed, likely during shutdown
+                # Silently ignore as the application is shutting down
+                pass
         else:
             self._connection_state_changed(state, connection_type)
 

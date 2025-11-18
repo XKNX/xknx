@@ -372,6 +372,39 @@ class TestUDPTunnel:
         assert self.tunnel.transport.send.call_count == 1
         await task
 
+    async def test_tunnel_lost_prevents_multiple_reconnections(self) -> None:
+        """Test that _tunnel_lost doesn't create multiple reconnection tasks."""
+        tunnel = UDPTunnel(
+            self.xknx,
+            gateway_ip="192.168.1.2",
+            gateway_port=3671,
+            local_ip="192.168.1.1",
+            local_port=0,
+            cemi_received_callback=Mock(),
+            auto_reconnect=True,
+            auto_reconnect_wait=3,
+            route_back=False,
+        )
+
+        with patch("xknx.io.tunnel.asyncio.create_task") as mock_create_task:
+            mock_task = Mock()
+            mock_task.done.return_value = False
+            mock_create_task.return_value = mock_task
+
+            # First call to _tunnel_lost should create a task
+            tunnel._tunnel_lost()
+            assert mock_create_task.call_count == 1
+
+            # Second call to _tunnel_lost should NOT create another task
+            # because the first one is still running
+            tunnel._tunnel_lost()
+            assert mock_create_task.call_count == 1
+
+            # If the task is done, a new one should be created
+            mock_task.done.return_value = True
+            tunnel._tunnel_lost()
+            assert mock_create_task.call_count == 2
+
 
 class TestTCPTunnel:
     """Test class for xknx/io/TCPTunnel objects."""
