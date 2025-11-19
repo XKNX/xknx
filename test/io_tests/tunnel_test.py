@@ -296,7 +296,9 @@ class TestUDPTunnel:
                 crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
-        self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_addr)
+        self.tunnel.transport.handle_knxipframe(
+            connect_response_frame, HPAI(*remote_addr)
+        )
         await connection_task
         assert self.tunnel._data_endpoint_addr == data_endpoint_addr
         assert self.tunnel._src_address == IndividualAddress(7)
@@ -344,10 +346,74 @@ class TestUDPTunnel:
         disconnect_response_frame = KNXIPFrame.init_from_body(
             DisconnectResponse(communication_channel_id=23)
         )
-        self.tunnel.transport.handle_knxipframe(disconnect_response_frame, remote_addr)
+        self.tunnel.transport.handle_knxipframe(
+            disconnect_response_frame, HPAI(*remote_addr)
+        )
         await disconnection_task
         assert self.tunnel._data_endpoint_addr is None
         self.tunnel.transport.stop.assert_called_once()
+
+    async def test_tunnel_reconnect(self, time_travel: EventLoopClockAdvancer) -> None:
+        """Test tunnel reconnection."""
+        local_addr = ("192.168.1.1", 12345)
+        remote_addr = ("192.168.1.2", 3671)
+
+        # prepare and initialize transport
+        def transport_connect_success_side_effect() -> None:
+            self.tunnel.transport.transport = Mock()
+
+        def transport_connect_error_side_effect() -> None:
+            raise CommunicationError("test")
+
+        def transport_stop_side_effect() -> None:
+            self.tunnel.transport.transport = None
+
+        self.tunnel.transport.connect = AsyncMock()
+        self.tunnel.transport.connect.side_effect = transport_connect_error_side_effect
+        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
+        self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock(side_effect=transport_stop_side_effect)
+        transport_connect_success_side_effect()
+
+        # prepare and initialize tunnel
+        self.tunnel.auto_reconnect = True
+        self.tunnel.communication_channel = 1
+        # no need to wait for ConnectResponse in this test, so mock connect request
+        self.tunnel._connect_request = AsyncMock()
+
+        # server sends disconnect request
+        disconnect_request_frame = KNXIPFrame.init_from_body(
+            DisconnectRequest(
+                communication_channel_id=1, control_endpoint=HPAI(*remote_addr)
+            )
+        )
+        self.tunnel.transport.handle_knxipframe(
+            disconnect_request_frame, HPAI(*remote_addr)
+        )
+        disconnect_response_frame = KNXIPFrame.init_from_body(
+            DisconnectResponse(communication_channel_id=1)
+        )
+        self.tunnel.transport.send.assert_called_once_with(disconnect_response_frame)
+        assert self.tunnel.communication_channel is None
+
+        assert self.tunnel.transport.stop.call_count == 0
+        # reconnect task will start next loop iteration
+        await asyncio.sleep(0)
+        # once for initial stop before reconnect and once after first
+        # reconnect attempt fails due to CommunicationError
+        assert self.tunnel.transport.stop.call_count == 2
+        # first reconnect attempt sent immediately... fails due to side effect
+        self.tunnel.transport.connect.assert_called_once()
+        self.tunnel.transport.connect.reset_mock()
+        assert not self.tunnel._reconnect_task.done()
+
+        # second reconnect attempt after wait time
+        self.tunnel.transport.connect.side_effect = (
+            transport_connect_success_side_effect
+        )
+        await time_travel(self.tunnel.auto_reconnect_wait)
+        self.tunnel.transport.connect.assert_called_once()
+        assert self.tunnel._reconnect_task.done()
 
     async def test_tunnel_request_description(
         self, time_travel: EventLoopClockAdvancer

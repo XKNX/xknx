@@ -167,6 +167,7 @@ class _Tunnel(Interface):
             XknxConnectionState.DISCONNECTED
         )
         if self.transport.transport:
+            # when server issued DisconnectRequest communication_channel is already None so this is a no-op
             await self._disconnect_request(ignore_error=True)
             self._data_endpoint_addr = None
             self.transport.stop()
