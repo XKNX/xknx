@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased
+
+### Connection
+
+- Tunneling: Refactor reconnection logic. Immediate first reconnection attempt, prevent reconnect task leak.
+
 # 3.10.1 Fix cover auto-stop 2025-11-09
 
 ### Devices

@@ -65,13 +65,10 @@ class _Tunnel(Interface):
         self.cemi_received_callback = cemi_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
         self._heartbeat_task: asyncio.Task[None] | None = None
-        self._initial_connection = True
-        self._is_reconnecting = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._requested_address: IndividualAddress | None = None
         self._src_address = IndividualAddress(0)
         self._send_lock = asyncio.Lock()
-        # self._tunnelling_request_confirmation_event = asyncio.Event()
 
         self._init_transport()
         self.transport.register_callback(
@@ -98,8 +95,12 @@ class _Tunnel(Interface):
     #
     ####################
 
-    async def connect(self) -> bool:
-        """Connect to a KNX tunneling interface. Returns True on success."""
+    async def connect(self) -> None:
+        """
+        Connect to a KNX tunneling interface.
+
+        Raise CommunicationError when not successful.
+        """
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTING, self.connection_type
         )
@@ -116,9 +117,6 @@ class _Tunnel(Interface):
             self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
-            if not self._initial_connection and self.auto_reconnect:
-                self._reconnect_task = asyncio.create_task(self._reconnect())
-                return False
             # close transport to prevent open file descriptors
             self.transport.stop()
             raise CommunicationError(
@@ -129,34 +127,65 @@ class _Tunnel(Interface):
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED, self.connection_type
         )
-        return True
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
-        self._initial_connection = False
         self.sequence_number = 0
         self.start_heartbeat()
 
     def _tunnel_lost(self) -> None:
         """Prepare for reconnection or shutdown when the connection is lost. Callback."""
+        if self.auto_reconnect:
+            # _tunnel_lost might be called multiple times when the transport receives
+            # multiple invalid frames - ensure only one reconnect task is started
+            if self._reconnect_task is None or self._reconnect_task.done():
+                self._reconnect_task = asyncio.create_task(self._reconnect())
+            else:
+                logger.debug("Reconnect already in progress.")
+            return
+
+        # no reconnect - clean up, close transport, raise
         self.stop_heartbeat()
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
-        self._data_endpoint_addr = None
-        if self.auto_reconnect:
-            self._reconnect_task = asyncio.create_task(self._reconnect())
-        else:
-            raise CommunicationError("Tunnel connection closed.")
+        if self.transport.transport:
+            if self.communication_channel is not None:
+                # Don't wait for DisconnectResponse (no async here anyway)
+                disconnect_request = DisconnectRequest(
+                    communication_channel_id=self.communication_channel,
+                    control_endpoint=self.local_hpai,
+                )
+                self.transport.send(KNXIPFrame.init_from_body(disconnect_request))
+            self.transport.stop()
+        raise CommunicationError("Tunnel connection closed.")
 
     async def _reconnect(self) -> None:
         """Reconnect to tunnel device."""
+        self.stop_heartbeat()
+        self.xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
         if self.transport.transport:
-            await self._disconnect_request(True)
+            await self._disconnect_request(ignore_error=True)
+            self._data_endpoint_addr = None
             self.transport.stop()
-        await asyncio.sleep(self.auto_reconnect_wait)
-        if await self.connect():
-            logger.info("Successfully reconnected to KNX bus.")
+
+        attempt = 1
+        while True:
+            try:
+                logger.debug("Reconnecting to KNX bus... (attempt %s)", attempt)
+                await self.connect()
+            except CommunicationError:
+                attempt += 1
+                logger.debug(
+                    "Reconnection to KNX bus failed. Trying again in %s seconds.",
+                    self.auto_reconnect_wait,
+                )
+                await asyncio.sleep(self.auto_reconnect_wait)
+            else:
+                logger.info("Successfully reconnected to KNX bus.")
+                break
 
     def _stop_reconnect(self) -> None:
         """Stop reconnect task if running."""
@@ -172,8 +201,10 @@ class _Tunnel(Interface):
         )
         self._data_endpoint_addr = None
         self._stop_reconnect()
-        await self._disconnect_request(False)
-        self.transport.stop()
+        try:
+            await self._disconnect_request(ignore_error=False)
+        finally:
+            self.transport.stop()
 
     ####################
     #
@@ -445,25 +476,37 @@ class UDPTunnel(_Tunnel):
                 try:
                     await self._tunnelling_request(raw_cemi)
                 except TunnellingAckError as err:
-                    logger.debug("%s. Retrying a second time.", err)
+                    logger.debug("First TunnellingRequest try failed. %s", err)
                 else:
                     return
 
                 try:
                     await self._tunnelling_request(raw_cemi)
                 except TunnellingAckError as err:
-                    logger.debug("%s. Reconnecting tunnel.", err)
+                    logger.debug("Second TunnellingRequest try failed. %s", err)
                 else:
                     return
 
                 if self._reconnect_task is None or self._reconnect_task.done():
                     self._tunnel_lost()
-                await self.xknx.connection_manager.connected.wait()
+                try:
+                    # _tunnel_lost() sets self._reconnect_task when auto-reconnect is True
+                    # and would raise if auto-reconnect was False. So we can be sure we
+                    # have a _reconnect_task here
+                    assert self._reconnect_task is not None
+                    await self._reconnect_task
+                except asyncio.CancelledError:
+                    raise CommunicationError(
+                        "Sending TunnellingRequest failed twice. Reconnect was cancelled.",
+                        True,
+                    ) from None
+
                 try:
                     await self._tunnelling_request(raw_cemi)
                 except TunnellingAckError as err:
                     raise CommunicationError(
-                        f"Resending the telegram repeatedly failed. {err}", True
+                        f"Third TunnellingRequest try failed after reconnect. {err}",
+                        True,
                     ) from None
 
             finally:
