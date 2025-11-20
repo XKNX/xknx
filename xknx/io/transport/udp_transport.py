@@ -30,9 +30,7 @@ class UDPTransport(KNXIPTransport):
         """Abstraction for managing the asyncio-udp transports."""
 
         def __init__(
-            self,
-            data_received_callback: Callable[[bytes, tuple[str, int]], None]
-            | None = None,
+            self, data_received_callback: Callable[[bytes, tuple[str, int]], None]
         ) -> None:
             """Initialize UDPTransportFactory class."""
             self.transport: asyncio.BaseTransport | None = None
@@ -45,8 +43,7 @@ class UDPTransport(KNXIPTransport):
         def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
             """Call assigned callback. Callback for datagram received."""
             raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
-            if self.data_received_callback is not None:
-                self.data_received_callback(data, addr)
+            self.data_received_callback(data, addr)
 
         def error_received(self, exc: Exception) -> None:
             """Call when a send or receive operation raises an OSError."""

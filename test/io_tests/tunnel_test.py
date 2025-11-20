@@ -57,7 +57,7 @@ class TestUDPTunnel:
             local_ip="192.168.1.1",
             local_port=0,
             cemi_received_callback=self.cemi_received_mock,
-            auto_reconnect=False,
+            auto_reconnect=False,  # for easier testing
             auto_reconnect_wait=3,
             route_back=False,
         )
@@ -133,7 +133,9 @@ class TestUDPTunnel:
         self, time_travel: EventLoopClockAdvancer
     ) -> None:
         """Test Tunnel for receiving repeated TunnellingRequest frames."""
+        self.tunnel.transport.transport = Mock()
         self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock()
         self.tunnel.communication_channel = 1
         self.tunnel.expected_sequence_number = 10
 
@@ -171,18 +173,22 @@ class TestUDPTunnel:
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
         # wrong sequence number - no ACK, not processed
-        # reconnect if `auto_reconnect` was True
-        with pytest.raises(CommunicationError):
-            self.tunnel._request_received(test_frame_9, None, None)
-        await time_travel(0)
+        # reconnect if `auto_reconnect` was True, disconnect if False
+        self.tunnel._request_received(test_frame_9, None, None)
         self.tunnel.transport.send.assert_not_called()
-        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.stop.assert_not_called()
+        # Disconnect after 2 seconds of no valid frame
+        await time_travel(2)
+        self.tunnel.transport.stop.assert_called_once()
+
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
 
     async def test_tunnel_send_retry(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test tunnel resends the telegram when no ACK was received."""
+        self.tunnel.transport.transport = Mock()
         self.tunnel.transport.send = Mock()
+        self.tunnel.transport.stop = Mock()
         self.tunnel.communication_channel = 1
         self.tunnel.sequence_number = 23
         self.tunnel.expected_sequence_number = 15
@@ -241,14 +247,16 @@ class TestUDPTunnel:
         ]
         self.tunnel.transport.send.reset_mock()
 
-        # Test raise after 2 missed ACKs (reconnect if `auto_reconnect` was True)
+        # Test raise after 2 missed ACKs (`auto_reconnect` is False)
+        task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
+        # no ACKs received, for 2x wait time (with advancing the loop in between)
+        await time_travel(1)
+        await time_travel(1)
+        # 2x TunnellingRequest  + 1x DisconnectRequest
+        assert self.tunnel.transport.send.call_count == 3
+        self.tunnel.transport.send.reset_mock()
+        self.tunnel.transport.stop.assert_called_once()
         with pytest.raises(CommunicationError):
-            task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
-            # no ACKs received, for 2x wait time (with advancing the loop in between)
-            await time_travel(1)
-            await time_travel(1)
-            assert self.tunnel.transport.send.call_count == 2
-            self.tunnel.transport.send.reset_mock()
             await task
 
     @pytest.mark.parametrize(
@@ -350,7 +358,6 @@ class TestUDPTunnel:
             disconnect_response_frame, HPAI(*remote_addr)
         )
         await disconnection_task
-        assert self.tunnel._data_endpoint_addr is None
         self.tunnel.transport.stop.assert_called_once()
 
     async def test_tunnel_reconnect(self, time_travel: EventLoopClockAdvancer) -> None:

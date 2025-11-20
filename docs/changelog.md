@@ -12,6 +12,7 @@ nav_order: 2
 
 - Tunneling: Refactor reconnection logic. Immediate first reconnection attempt, prevent reconnect task leak.
 - Tunneling: Mitigate dropping frames while reconnecting.
+- Tunnelling UDP: Schedule disconnect when receiving frames with invalid sequence numbers.
 
 # 3.10.1 Fix cover auto-stop 2025-11-09
 
