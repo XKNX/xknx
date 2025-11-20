@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING
 
@@ -285,6 +287,19 @@ class _Tunnel(Interface):
         await description.start()
         return description.gateway_descriptor
 
+    @asynccontextmanager
+    async def _send_ready(self) -> AsyncGenerator[None, None]:
+        """Lock for sending frames sequentially and waiting for reconnect if applicable."""
+        async with self._send_lock:
+            # don't drop frames when reconnecting - wait for reconnect to finish
+            if self._reconnect_task is not None:
+                try:
+                    await self._reconnect_task
+                except asyncio.CancelledError:
+                    pass
+                self._reconnect_task = None
+            yield
+
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """
         Send CEMI Frame to tunnelling server.
@@ -292,7 +307,7 @@ class _Tunnel(Interface):
         A transport layer confirmation shall be awaited before sending the next telegram.
         """
         raw_cemi = cemi.to_knx()
-        async with self._send_lock:
+        async with self._send_ready():
             try:
                 await self._tunnelling_request(raw_cemi)
             finally:
@@ -472,7 +487,7 @@ class UDPTunnel(_Tunnel):
         control endpoint.
         """
         raw_cemi = cemi.to_knx()
-        async with self._send_lock:
+        async with self._send_ready():
             try:
                 try:
                     await self._tunnelling_request(raw_cemi)
@@ -496,6 +511,7 @@ class UDPTunnel(_Tunnel):
                     # have a _reconnect_task here
                     assert self._reconnect_task is not None
                     await self._reconnect_task
+                    self._reconnect_task = None
                 except asyncio.CancelledError:
                     raise CommunicationError(
                         "Sending TunnellingRequest failed twice. Reconnect was cancelled.",

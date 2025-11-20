@@ -11,6 +11,7 @@ nav_order: 2
 ### Connection
 
 - Tunneling: Refactor reconnection logic. Immediate first reconnection attempt, prevent reconnect task leak.
+- Tunneling: Mitigate dropping frames while reconnecting.
 
 # 3.10.1 Fix cover auto-stop 2025-11-09
 
