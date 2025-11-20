@@ -20,8 +20,8 @@ class Interface(ABC):
     """Abstract base class for KNX/IP connections."""
 
     @abstractmethod
-    async def connect(self) -> bool:
-        """Connect to KNX bus. Returns True on success."""
+    async def connect(self) -> None:
+        """Connect to KNX bus. Raise CommunicationError when not successful."""
 
     @abstractmethod
     async def disconnect(self) -> None:

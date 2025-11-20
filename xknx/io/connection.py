@@ -47,8 +47,8 @@ class ConnectionConfig:
         as the target IP address or port number for the response to the KNXnet/IP Client.
     * multicast_group: Multicast group for KNXnet/IP routing.
     * multicast_port: Multicast port for KNXnet/IP routing.
-    * auto_reconnect: Auto reconnect to KNX/IP tunneling device if connection cannot be established.
-    * auto_reconnect_wait: Wait n seconds before trying to reconnect to KNX/IP tunneling device.
+    * auto_reconnect: Auto reconnect to KNX/IP tunneling device if open connection was lost.
+    * auto_reconnect_wait: Delay in seconds before attempting subsequent reconnects after an initial reconnect attempt fails.
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     * threaded: Run connection logic in separate thread to avoid concurrency issues in HA
     * secure_config: KNX Secure config to use

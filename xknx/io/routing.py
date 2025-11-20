@@ -179,7 +179,7 @@ class Routing(Interface):
     #
     ####################
 
-    async def connect(self) -> bool:
+    async def connect(self) -> None:
         """Start routing."""
         self.xknx.current_address = self.individual_address
         self.xknx.connection_manager.connection_state_changed(
@@ -202,7 +202,6 @@ class Routing(Interface):
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.CONNECTED, self.connection_type
         )
-        return True
 
     async def disconnect(self) -> None:
         """Stop routing."""
