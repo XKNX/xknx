@@ -292,8 +292,9 @@ class _Tunnel(Interface):
         """Lock for sending frames sequentially and waiting for reconnect if applicable."""
         async with self._send_lock:
             # don't drop frames when reconnecting - wait for reconnect to finish
-            if self._reconnect_task is not None and not self._reconnect_task.done():
+            if self._reconnect_task is not None:
                 await self._reconnect_task
+                self._reconnect_task = None
             yield
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
@@ -507,6 +508,7 @@ class UDPTunnel(_Tunnel):
                     # have a _reconnect_task here
                     assert self._reconnect_task is not None
                     await self._reconnect_task
+                    self._reconnect_task = None
                 except asyncio.CancelledError:
                     raise CommunicationError(
                         "Sending TunnellingRequest failed twice. Reconnect was cancelled.",
