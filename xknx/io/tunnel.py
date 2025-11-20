@@ -293,7 +293,10 @@ class _Tunnel(Interface):
         async with self._send_lock:
             # don't drop frames when reconnecting - wait for reconnect to finish
             if self._reconnect_task is not None:
-                await self._reconnect_task
+                try:
+                    await self._reconnect_task
+                except asyncio.CancelledError:
+                    pass
                 self._reconnect_task = None
             yield
 
