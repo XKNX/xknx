@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased
+# 3.11.0 Reconnect 2025-11-22
 
 ### Connection
 
