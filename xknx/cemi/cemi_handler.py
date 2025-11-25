@@ -119,8 +119,17 @@ class CEMIHandler:
             self.xknx.connection_manager.cemi_count_incoming_error += 1
             return
         logger.debug("Incoming CEMI: %s", cemi)
+        self.xknx.connection_manager.cemi_count_incoming += 1
 
-        if self.data_secure:
+        if self.data_secure is None:
+            # if no keys are initialized, drop DataSecure frames
+            if is_data_secure(cemi.data):
+                data_secure_logger.debug(
+                    "Received DataSecure encrypted CEMI frame but no keys for DataSecure are initialized: %s",
+                    cemi,
+                )
+                return
+        else:
             try:
                 cemi.data = self.data_secure.received_cemi(cemi_data=cemi.data)
             except DataSecureError as err:
@@ -130,15 +139,7 @@ class CEMIHandler:
                     err,
                 )
                 return
-        else:
-            # if no keys are initialized, drop DataSecure frames
-            if is_data_secure(cemi.data):
-                data_secure_logger.debug(
-                    "Received DataSecure encrypted CEMI frame but no keys for DataSecure are initialized: %s",
-                    cemi,
-                )
-                return
-        self.xknx.connection_manager.cemi_count_incoming += 1
+
         telegram = cemi.data.telegram()
         telegram.direction = TelegramDirection.INCOMING
         self.telegram_received(telegram)
