@@ -187,3 +187,37 @@ def test_incoming_from_own_ia() -> None:
         mock_telegram_received.assert_called_once()
         assert xknx.connection_manager.cemi_count_incoming == 1
         assert xknx.connection_manager.cemi_count_incoming_error == 0
+
+
+@pytest.mark.parametrize(
+    "raw_cemi_data_secure",
+    [
+        # src = 4.0.9; dst = 0/4/0; GroupValueResponse; value=(116, 41, 41)
+        # A+C; seq_num=155806854986
+        bytes.fromhex("29003ce0400904001103f110002446cfef4ac085e7092ab062b44d"),
+        # Property Value Write PID_GRP_KEY_TABLE connectionless
+        # Object Idx = 5, PropId = 35h, Element Count = 1, Index = 1
+        # Data = 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+        # A+C
+        # from AN158 v07 KNX Data Security AS - Annex A example
+        bytes.fromhex(
+            "29 00 b0 60 ff 67 ff 00 22 03 f1 90 00 00 00 00"
+            "00 04 67 67 24 2a 23 08 ca 76 a1 17 74 21 4e e4"
+            "cf 5d 94 90 9f 74 3d 05 0d 8f c1 68"
+        ),
+    ],
+)
+def test_incoming_cemi_no_data_secure_keys(raw_cemi_data_secure: bytes) -> None:
+    """Test incoming DataSecure CEMI when no DataSecure keys are initialized."""
+    xknx = XKNX()
+    xknx.current_address = IndividualAddress("5.0.1")
+
+    with (
+        patch("logging.Logger.debug") as mock_debug,
+        patch.object(xknx.cemi_handler, "telegram_received") as mock_telegram_received,
+    ):
+        xknx.cemi_handler.handle_raw_cemi(raw_cemi_data_secure)
+        assert mock_debug.call_count == 2  # one for reception, one for DataSecure debug
+        mock_telegram_received.assert_not_called()
+        assert xknx.connection_manager.cemi_count_incoming == 0
+        assert xknx.connection_manager.cemi_count_incoming_error == 0
