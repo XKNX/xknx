@@ -36,6 +36,11 @@ def _initial_sequence_number() -> int:
     return int((time.time() - _SEQUENCE_NUMBER_INIT_TIMESTAMP) * 1000)
 
 
+def is_data_secure(cemi_data: CEMILData) -> bool:
+    """Return True if the payload frame is DataSecure encrypted / authenticated."""
+    return isinstance(cemi_data.payload, SecureAPDU)
+
+
 class DataSecure:
     """Class for KNX Data Secure handling."""
 

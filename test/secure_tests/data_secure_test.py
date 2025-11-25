@@ -10,6 +10,7 @@ from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import DataSecureError
+from xknx.secure.data_secure import is_data_secure
 from xknx.secure.data_secure_asdu import (
     SecurityAlgorithmIdentifier,
     SecurityALService,
@@ -172,11 +173,13 @@ class TestDataSecure:
             == 155806854915
         )
         assert isinstance(test_group_response_cemi.data, CEMILData)
+        assert is_data_secure(test_group_response_cemi.data)
         assert test_group_response_cemi.data.src_addr == IndividualAddress("4.0.9")
         assert isinstance(test_group_response_cemi.data.payload, apci.SecureAPDU)
 
         plain_frame_data = self.data_secure.received_cemi(test_group_response_cemi.data)
         assert isinstance(plain_frame_data, CEMILData)
+        assert not is_data_secure(plain_frame_data)
         assert plain_frame_data.payload == apci.GroupValueResponse(
             DPTArray((116, 41, 41))
         )

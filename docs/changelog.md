@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased
+
+### Data Secure
+
+- Drop Data Secure frames when no keys are initialized in CEMIHandler.
+
 # 3.11.0 Reconnect 2025-11-22
 
 ### Connection
