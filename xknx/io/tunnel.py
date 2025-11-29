@@ -140,8 +140,14 @@ class _Tunnel(Interface):
         if self.auto_reconnect:
             # _tunnel_lost might be called multiple times when the transport receives
             # multiple invalid frames - ensure only one reconnect task is started
-            if self._reconnect_task is None or self._reconnect_task.done():
+            if self._reconnect_task is None:
+
+                def _reconnect_task_cleanup(_: asyncio.Task[None]) -> None:
+                    """Cleanup task so we don't need to check `done()` or do it explicitly everywhere."""
+                    self._reconnect_task = None
+
                 self._reconnect_task = asyncio.create_task(self._reconnect())
+                self._reconnect_task.add_done_callback(_reconnect_task_cleanup)
             else:
                 logger.debug("Reconnect already in progress.")
             return
@@ -195,7 +201,6 @@ class _Tunnel(Interface):
         """Stop reconnect task if running."""
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
-            self._reconnect_task = None
 
     async def disconnect(self) -> None:
         """Disconnect tunneling connection."""
@@ -294,7 +299,6 @@ class _Tunnel(Interface):
                     await self._reconnect_task
                 except asyncio.CancelledError:
                     pass
-                self._reconnect_task = None
             yield
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
@@ -510,7 +514,7 @@ class UDPTunnel(_Tunnel):
                 else:
                     return
 
-                if self._reconnect_task is None or self._reconnect_task.done():
+                if self._reconnect_task is None:
                     self._tunnel_lost()
                 if self._reconnect_task is None:
                     # _tunnel_lost() sets self._reconnect_task when auto-reconnect is True
@@ -519,7 +523,6 @@ class UDPTunnel(_Tunnel):
                     )
                 try:
                     await self._reconnect_task
-                    self._reconnect_task = None
                 except asyncio.CancelledError:
                     raise CommunicationError(
                         "Sending TunnellingRequest failed twice. Reconnect was cancelled.",
@@ -583,9 +586,15 @@ class UDPTunnel(_Tunnel):
                 self.expected_sequence_number,
                 seconds,
             )
+            # Clear the stored task reference before calling _tunnel_lost() so
+            # that the reconnect logic does not cancel this running task itself.
+            self._invalid_sequence_number_reconnect_task = None
             self._tunnel_lost()
 
-        if self._invalid_sequence_number_reconnect_task is None:
+        if (
+            self._invalid_sequence_number_reconnect_task is None
+            and self._reconnect_task is None
+        ):
             self._invalid_sequence_number_reconnect_task = asyncio.create_task(
                 _schedule_tunnel_lost()
             )

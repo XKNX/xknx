@@ -420,7 +420,7 @@ class TestUDPTunnel:
         )
         await time_travel(self.tunnel.auto_reconnect_wait)
         self.tunnel.transport.connect.assert_called_once()
-        assert self.tunnel._reconnect_task.done()
+        assert self.tunnel._reconnect_task is None
 
     async def test_tunnel_request_description(
         self, time_travel: EventLoopClockAdvancer

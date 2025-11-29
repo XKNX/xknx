@@ -12,6 +12,10 @@ nav_order: 2
 
 - Drop Data Secure frames when no keys are initialized in CEMIHandler.
 
+### Connection
+
+- Tunnelling UDP: Cleanup reconnection task logic for invalid sequence number reconnect.
+
 # 3.11.0 Reconnect 2025-11-22
 
 ### Connection
