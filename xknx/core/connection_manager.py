@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
+from functools import partial
+import logging
 
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.typing import ConnectionChangeCallbackType
+
+logger = logging.getLogger("xknx.log")
 
 
 class ConnectionManager:
@@ -24,6 +29,7 @@ class ConnectionManager:
         self.cemi_count_incoming_error: int = 0
         self.cemi_count_outgoing: int = 0
         self.cemi_count_outgoing_error: int = 0
+        self.undecoded_data_secure: int = 0
         self.connected_since: datetime | None = None
         self.connection_type: XknxConnectionType = XknxConnectionType.NOT_CONNECTED
 
@@ -33,9 +39,12 @@ class ConnectionManager:
 
     def register_connection_state_changed_cb(
         self, connection_state_changed_cb: ConnectionChangeCallbackType
-    ) -> None:
-        """Register callback for connection state being updated."""
+    ) -> Callable[[], None]:
+        """Register callback for connection state being updated. Returns unregister function."""
         self._connection_state_changed_cbs.append(connection_state_changed_cb)
+        return partial(
+            self.unregister_connection_state_changed_cb, connection_state_changed_cb
+        )
 
     def unregister_connection_state_changed_cb(
         self, connection_state_changed_cb: ConnectionChangeCallbackType
@@ -87,4 +96,5 @@ class ConnectionManager:
         self.cemi_count_incoming_error = 0
         self.cemi_count_outgoing = 0
         self.cemi_count_outgoing_error = 0
+        self.undecoded_data_secure = 0
         self.connected_since = datetime.now().astimezone()

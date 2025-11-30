@@ -9,7 +9,7 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection
-from xknx.telegram.address import GroupAddress, InternalGroupAddress
+from xknx.telegram.address import GroupAddress, IndividualAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueWrite
 
 
@@ -477,3 +477,47 @@ class TestTelegramQueue:
             "Unexpected error while processing telegram_received_cb for %s",
             telegram,
         )
+
+    @pytest.mark.parametrize(
+        ("raw_cemi_data_secure", "should_callback_called"),
+        [
+            # src = 4.0.9; dst = 0/4/0; GroupValueResponse; value=(116, 41, 41)
+            # A+C; seq_num=155806854986
+            (
+                bytes.fromhex("29003ce0400904001103f110002446cfef4ac085e7092ab062b44d"),
+                True,  # for GroupValueResponse
+            ),
+            # Property Value Write PID_GRP_KEY_TABLE connectionless
+            # Object Idx = 5, PropId = 35h, Element Count = 1, Index = 1
+            # Data = 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+            # A+C
+            # from AN158 v07 KNX Data Security AS - Annex A example
+            (
+                bytes.fromhex(
+                    "29 00 b0 60 ff 67 ff 00 22 03 f1 90 00 00 00 00"
+                    "00 04 67 67 24 2a 23 08 ca 76 a1 17 74 21 4e e4"
+                    "cf 5d 94 90 9f 74 3d 05 0d 8f c1 68"
+                ),
+                False,  # for destination address is IndividualAddress
+            ),
+        ],
+    )
+    def test_data_secure_group_key_issue_callback(
+        self, raw_cemi_data_secure: bytes, should_callback_called: bool
+    ) -> None:
+        """Test incoming undecodeable DataSecure Telegram callback."""
+        xknx = XKNX()
+        xknx.current_address = IndividualAddress("5.0.1")
+
+        data_secure_issue_cb = Mock()
+        unsub = xknx.telegram_queue.register_data_secure_group_key_issue_cb(
+            data_secure_issue_cb
+        )
+
+        xknx.cemi_handler.handle_raw_cemi(raw_cemi_data_secure)
+        assert data_secure_issue_cb.called == should_callback_called
+        data_secure_issue_cb.reset_mock()
+
+        unsub()
+        xknx.cemi_handler.handle_raw_cemi(raw_cemi_data_secure)
+        data_secure_issue_cb.assert_not_called()

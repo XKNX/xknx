@@ -12,7 +12,8 @@ Telegrams addressed to IndividualAddresses are not processed by this queue.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
+from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -72,6 +73,8 @@ class TelegramQueue:
         """Initialize TelegramQueue class."""
         self.xknx = xknx
         self.telegram_received_cbs: list[TelegramQueue.Callback] = []
+        self._data_secure_group_key_issue_cbs: list[TelegramCallbackType] = []
+
         self.outgoing_queue: asyncio.Queue[Telegram | None] = asyncio.Queue()
         self._consumer_task: Awaitable[tuple[None, None]] | None = None
         self._rate_limiter: asyncio.Task[None] | None = None
@@ -227,3 +230,39 @@ class TelegramQueue:
                     "Unexpected error while processing telegram_received_cb for %s",
                     telegram,
                 )
+
+    # DataSecure Telegrams that could not be decrypted due to missing or invalid keys
+    # are handled separately so they don't interfere with normal telegram processing.
+    # This is handled besides of TelegramQueue, but here for convenient callback management.
+    def register_data_secure_group_key_issue_cb(
+        self, data_secure_group_key_issue_cb: TelegramCallbackType
+    ) -> Callable[[], None]:
+        """
+        Register callback for data secure group key issues. Returns unregister function.
+
+        Only Group telegrams with DataSecure issues are forwarded to the callbacks.
+        """
+        self._data_secure_group_key_issue_cbs.append(data_secure_group_key_issue_cb)
+        return partial(
+            self.unregister_data_secure_group_key_issue_cb,
+            data_secure_group_key_issue_cb,
+        )
+
+    def unregister_data_secure_group_key_issue_cb(
+        self, data_secure_group_key_issue_cb: TelegramCallbackType
+    ) -> None:
+        """Unregister callback for data secure group key issues."""
+        if data_secure_group_key_issue_cb in self._data_secure_group_key_issue_cbs:
+            self._data_secure_group_key_issue_cbs.remove(data_secure_group_key_issue_cb)
+
+    def received_data_secure_group_key_issue(self, telegram: Telegram) -> None:
+        """
+        Run registered callbacks for data secure group key issues.
+
+        Only TDataGroup telegrams with undecodable DataSecure payloads are forwarded.
+        """
+        for data_secure_group_key_issue_cb in self._data_secure_group_key_issue_cbs:
+            try:
+                data_secure_group_key_issue_cb(telegram)
+            except Exception as e:  # pylint: disable=broad-except
+                logger.error("Error in data secure group key issue callback: %s", e)

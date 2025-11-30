@@ -122,12 +122,12 @@ class CEMIHandler:
         self.xknx.connection_manager.cemi_count_incoming += 1
 
         if self.data_secure is None:
-            # if no keys are initialized, drop DataSecure frames
             if is_data_secure(cemi.data):
                 data_secure_logger.debug(
                     "Received DataSecure encrypted CEMI frame but no keys for DataSecure are initialized: %s",
                     cemi,
                 )
+                self.handle_data_secure_key_issue(cemi.data)
                 return
         else:
             try:
@@ -138,6 +138,7 @@ class CEMIHandler:
                     "Could not decrypt CEMI frame: %s",
                     err,
                 )
+                self.handle_data_secure_key_issue(cemi.data)
                 return
 
         telegram = cemi.data.telegram()
@@ -155,3 +156,11 @@ class CEMIHandler:
         ):
             return
         self.xknx.management.process(telegram)
+
+    def handle_data_secure_key_issue(self, cemi_data: CEMILData) -> None:
+        """Handle DataSecure telegrams with missing or invalid keys."""
+        self.xknx.connection_manager.undecoded_data_secure += 1
+        if isinstance(cemi_data.tpci, tpci.TDataGroup):
+            telegram = cemi_data.telegram()
+            telegram.direction = TelegramDirection.INCOMING
+            self.xknx.telegram_queue.received_data_secure_group_key_issue(telegram)

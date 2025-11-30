@@ -219,6 +219,7 @@ def test_incoming_cemi_no_data_secure_keys(raw_cemi_data_secure: bytes) -> None:
         xknx.cemi_handler.handle_raw_cemi(raw_cemi_data_secure)
         assert mock_debug.call_count == 2  # one for reception, one for DataSecure debug
         mock_telegram_received.assert_not_called()
-        # not having a key isn't an error per se, so no incoming_error count
-        assert xknx.connection_manager.cemi_count_incoming == 1
-        assert xknx.connection_manager.cemi_count_incoming_error == 0
+    # not having a key isn't an error per se, so no incoming_error count
+    assert xknx.connection_manager.cemi_count_incoming == 1
+    assert xknx.connection_manager.cemi_count_incoming_error == 0
+    assert xknx.connection_manager.undecoded_data_secure == 1
