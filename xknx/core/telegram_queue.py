@@ -233,7 +233,7 @@ class TelegramQueue:
 
     # DataSecure Telegrams that could not be decrypted due to missing or invalid keys
     # are handled separately so they don't interfere with normal telegram processing.
-    # This is handled besides of TelegramQueue, but here for convenient callback management.
+    # This is not going through xknx.telegrams, but here for convenient callback management.
     def register_data_secure_group_key_issue_cb(
         self, data_secure_group_key_issue_cb: TelegramCallbackType
     ) -> Callable[[], None]:
@@ -265,4 +265,4 @@ class TelegramQueue:
             try:
                 data_secure_group_key_issue_cb(telegram)
             except Exception as e:  # pylint: disable=broad-except
-                logger.error("Error in data secure group key issue callback: %s", e)
+                logger.exception("Error in data secure group key issue callback: %s", e)

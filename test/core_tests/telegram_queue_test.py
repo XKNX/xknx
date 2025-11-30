@@ -505,7 +505,7 @@ class TestTelegramQueue:
     def test_data_secure_group_key_issue_callback(
         self, raw_cemi_data_secure: bytes, should_callback_called: bool
     ) -> None:
-        """Test incoming undecodeable DataSecure Telegram callback."""
+        """Test incoming undecodable DataSecure Telegram callback."""
         xknx = XKNX()
         xknx.current_address = IndividualAddress("5.0.1")
 
