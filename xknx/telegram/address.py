@@ -94,7 +94,7 @@ class BaseAddress(ABC):
         """Implement less than operator for sorting addresses."""
         if not isinstance(other, self.__class__):
             raise TypeError(
-                f"'<'' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+                f"'<' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
             )
         return self.raw < other.raw
 
@@ -396,7 +396,7 @@ class InternalGroupAddress:
         """Implement less than operator for sorting addresses."""
         if not isinstance(other, self.__class__):
             raise TypeError(
-                f"'<'' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+                f"'<' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
             )
         return self.raw < other.raw
 

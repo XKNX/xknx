@@ -186,7 +186,7 @@ class TestIndividualAddress:
         assert IndividualAddress("1.1.0") < IndividualAddress("2.0.0")
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'IndividualAddress' and 'GroupAddress'",
+            match=r"'<' not supported between instances of 'IndividualAddress' and 'GroupAddress'",
         ):
             _ = IndividualAddress("1.0.0") < GroupAddress("1/0")
 
@@ -306,17 +306,17 @@ class TestGroupAddress:
         assert GroupAddress("1/2047") < GroupAddress("2/0")
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'GroupAddress' and 'IndividualAddress'",
+            match=r"'<' not supported between instances of 'GroupAddress' and 'IndividualAddress'",
         ):
             _ = GroupAddress("1/0") < IndividualAddress("1.0.0")
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'GroupAddress' and 'int'",
+            match=r"'<' not supported between instances of 'GroupAddress' and 'int'",
         ):
             _ = GroupAddress("1/0") < 100
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'GroupAddress' and 'InternalGroupAddress'",
+            match=r"'<' not supported between instances of 'GroupAddress' and 'InternalGroupAddress'",
         ):
             _ = GroupAddress("1/0") < InternalGroupAddress("i-0")
 
@@ -395,17 +395,17 @@ class TestInternalGroupAddress:
         assert InternalGroupAddress("i-1") < InternalGroupAddress("i-a")
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'InternalGroupAddress' and 'GroupAddress'",
+            match=r"'<' not supported between instances of 'InternalGroupAddress' and 'GroupAddress'",
         ):
             _ = InternalGroupAddress("i-1") < GroupAddress("1/0")
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'InternalGroupAddress' and 'IndividualAddress'",
+            match=r"'<' not supported between instances of 'InternalGroupAddress' and 'IndividualAddress'",
         ):
             _ = InternalGroupAddress("i-1") < IndividualAddress("1.0.0")
         with pytest.raises(
             TypeError,
-            match=r"'<'' not supported between instances of 'InternalGroupAddress' and 'str'",
+            match=r"'<' not supported between instances of 'InternalGroupAddress' and 'str'",
         ):
             _ = InternalGroupAddress("i-1") < "i-2"
 
