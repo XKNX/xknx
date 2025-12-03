@@ -179,6 +179,17 @@ class TestIndividualAddress:
         assert IndividualAddress(250) != GroupAddress(250)
         assert IndividualAddress(250) != 250
 
+    def test_comparison(self) -> None:
+        """Test if the less than operator works in all cases."""
+        assert IndividualAddress("1.0.0") < IndividualAddress("1.0.1")
+        assert IndividualAddress("1.1.1") < IndividualAddress("1.10.0")
+        assert IndividualAddress("1.1.0") < IndividualAddress("2.0.0")
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'IndividualAddress' and 'GroupAddress'",
+        ):
+            _ = IndividualAddress("1.0.0") < GroupAddress("1/0")
+
     def test_representation(self) -> None:
         """Test string representation of address."""
         assert repr(IndividualAddress("2.3.4")) == 'IndividualAddress("2.3.4")'
@@ -288,6 +299,32 @@ class TestGroupAddress:
         assert GroupAddress(1) != IndividualAddress(1)
         assert GroupAddress(1) != 1
 
+    def test_comparison(self) -> None:
+        """Test if the less than operator works in all cases."""
+        assert GroupAddress("1/0/4") < GroupAddress("1/1/0")
+        assert GroupAddress("1/1/1") < GroupAddress("10/0/0")
+        assert GroupAddress("1/2047") < GroupAddress("2/0")
+        assert GroupAddress("1/0/1") >= GroupAddress("1/0/1")
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'GroupAddress' and 'IndividualAddress'",
+        ):
+            _ = GroupAddress("1/0") < IndividualAddress("1.0.0")
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'GroupAddress' and 'int'",
+        ):
+            _ = GroupAddress("1/0") < 100
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'GroupAddress' and 'InternalGroupAddress'",
+        ):
+            _ = GroupAddress("1/0") < InternalGroupAddress("i-0")
+
+        assert sorted(
+            [GroupAddress("1/0/1"), GroupAddress("1/0/0"), GroupAddress("0/20")]
+        ) == [GroupAddress("0/20"), GroupAddress("1/0/0"), GroupAddress("1/0/1")]
+
     @pytest.mark.parametrize(
         ("initializer", "string_free", "string_short", "string_long"),
         [
@@ -351,6 +388,28 @@ class TestInternalGroupAddress:
         assert InternalGroupAddress("i-0") != GroupAddress(0)
         assert InternalGroupAddress("i-1") != IndividualAddress(1)
         assert InternalGroupAddress("i-1") != 1
+
+    def test_comparison(self) -> None:
+        """Test if the less than operator works in all cases."""
+        assert InternalGroupAddress("i-1") < InternalGroupAddress("i-2")
+        assert InternalGroupAddress("i-abc") < InternalGroupAddress("i-def")
+        assert InternalGroupAddress("i-1") < InternalGroupAddress("i-a")
+        assert InternalGroupAddress("i-7") >= InternalGroupAddress("i-7")
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'InternalGroupAddress' and 'GroupAddress'",
+        ):
+            _ = InternalGroupAddress("i-1") < GroupAddress("1/0")
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'InternalGroupAddress' and 'IndividualAddress'",
+        ):
+            _ = InternalGroupAddress("i-1") < IndividualAddress("1.0.0")
+        with pytest.raises(
+            TypeError,
+            match=r"'<' not supported between instances of 'InternalGroupAddress' and 'str'",
+        ):
+            _ = InternalGroupAddress("i-1") < "i-2"
 
     def test_representation(self) -> None:
         """Test string representation of address."""

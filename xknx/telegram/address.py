@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
+from functools import total_ordering
 from re import compile as re_compile
 from typing import ClassVar, Union
 
@@ -55,6 +56,7 @@ def parse_device_group_address(
     return group_address
 
 
+@total_ordering
 class BaseAddress(ABC):
     """Base class for all knx address types."""
 
@@ -89,6 +91,14 @@ class BaseAddress(ABC):
         raw Value matches.
         """
         return isinstance(other, self.__class__) and self.raw == other.raw
+
+    def __lt__(self, other: object) -> bool:
+        """Implement less than operator for sorting addresses."""
+        if not isinstance(other, self.__class__):
+            raise TypeError(
+                f"'<' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+            )
+        return self.raw < other.raw
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
@@ -341,6 +351,7 @@ class GroupAddress(BaseAddress):
         return f'GroupAddress("{self}")'
 
 
+@total_ordering
 class InternalGroupAddress:
     """Class for handling addresses used internally in xknx devices only."""
 
@@ -383,6 +394,14 @@ class InternalGroupAddress:
         raw Value matches.
         """
         return isinstance(other, self.__class__) and self.raw == other.raw
+
+    def __lt__(self, other: object) -> bool:
+        """Implement less than operator for sorting addresses."""
+        if not isinstance(other, self.__class__):
+            raise TypeError(
+                f"'<' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+            )
+        return self.raw < other.raw
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""

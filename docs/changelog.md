@@ -14,13 +14,14 @@ nav_order: 2
 - Add a callback for undecodable Data Secure telegrams for diagnostics/monitoring: `xknx.telegram_queue.register_data_secure_group_key_issue_cb`.
 - Add a counter for undecodable Data Secure telegrams: `xknx.connection_manager.undecoded_data_secure`.
 
-### Other
-
-- `xknx.connection_manager.register_connection_state_changed_cb` now returns an unsubscribe callable instead of `None`.
-
 ### Connection
 
 - Tunnelling UDP: Cleanup reconnection task logic for invalid sequence number reconnect.
+
+### Other
+
+- `xknx.connection_manager.register_connection_state_changed_cb` now returns an unsubscribe callable instead of `None`.
+- Make GroupAddress, IndividualAddress and InternalGroupAddress sortable and comparable.
 
 # 3.11.0 Reconnect 2025-11-22
 
