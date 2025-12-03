@@ -17,6 +17,7 @@ nav_order: 2
 ### Other
 
 - `xknx.connection_manager.register_connection_state_changed_cb` now returns an unsubscribe callable instead of `None`.
+- Make GroupAddress, IndividualAddress and InternalGroupAddress sortable by implementing `__lt__` method.
 
 ### Connection
 

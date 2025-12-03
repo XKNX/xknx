@@ -90,6 +90,14 @@ class BaseAddress(ABC):
         """
         return isinstance(other, self.__class__) and self.raw == other.raw
 
+    def __lt__(self, other: object) -> bool:
+        """Implement less than operator for sorting addresses."""
+        if not isinstance(other, self.__class__):
+            raise TypeError(
+                f"'<'' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+            )
+        return self.raw < other.raw
+
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
         return hash((self.__class__, self.raw))
@@ -383,6 +391,14 @@ class InternalGroupAddress:
         raw Value matches.
         """
         return isinstance(other, self.__class__) and self.raw == other.raw
+
+    def __lt__(self, other: object) -> bool:
+        """Implement less than operator for sorting addresses."""
+        if not isinstance(other, self.__class__):
+            raise TypeError(
+                f"'<'' not supported between instances of '{self.__class__.__name__}' and '{other.__class__.__name__}'"
+            )
+        return self.raw < other.raw
 
     def __hash__(self) -> int:
         """Hash Address so it can be used as dict key."""
