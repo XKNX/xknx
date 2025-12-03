@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased
+# 3.12.0 Data Secure diagnostics 2025-12-03
 
 ### Data Secure
 
