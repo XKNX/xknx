@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
+from functools import total_ordering
 from re import compile as re_compile
 from typing import ClassVar, Union
 
@@ -55,6 +56,7 @@ def parse_device_group_address(
     return group_address
 
 
+@total_ordering
 class BaseAddress(ABC):
     """Base class for all knx address types."""
 
@@ -349,6 +351,7 @@ class GroupAddress(BaseAddress):
         return f'GroupAddress("{self}")'
 
 
+@total_ordering
 class InternalGroupAddress:
     """Class for handling addresses used internally in xknx devices only."""
 

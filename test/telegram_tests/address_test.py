@@ -304,6 +304,7 @@ class TestGroupAddress:
         assert GroupAddress("1/0/4") < GroupAddress("1/1/0")
         assert GroupAddress("1/1/1") < GroupAddress("10/0/0")
         assert GroupAddress("1/2047") < GroupAddress("2/0")
+        assert GroupAddress("1/0/1") >= GroupAddress("1/0/1")
         with pytest.raises(
             TypeError,
             match=r"'<' not supported between instances of 'GroupAddress' and 'IndividualAddress'",
@@ -393,6 +394,7 @@ class TestInternalGroupAddress:
         assert InternalGroupAddress("i-1") < InternalGroupAddress("i-2")
         assert InternalGroupAddress("i-abc") < InternalGroupAddress("i-def")
         assert InternalGroupAddress("i-1") < InternalGroupAddress("i-a")
+        assert InternalGroupAddress("i-7") >= InternalGroupAddress("i-7")
         with pytest.raises(
             TypeError,
             match=r"'<' not supported between instances of 'InternalGroupAddress' and 'GroupAddress'",
