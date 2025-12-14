@@ -114,3 +114,21 @@ class DPTLongDeltaTimeSec(DPT4ByteSigned):
     dpt_sub_number = 100
     value_type = "long_delta_timesec"
     unit = "s"
+
+
+class DPTDeltaVolumeLiquidLitre(DPT4ByteSigned):
+    """DPT 13.1200 DPT_DeltaVolumeLiquid_Litre (water/gas total consumption)."""
+
+    dpt_main_number = 13
+    dpt_sub_number = 1200
+    value_type = "delta_volume_liquid_litre"
+    unit = "L"
+
+
+class DPTDeltaVolumeM3(DPT4ByteSigned):
+    """DPT 13.1201 DPT_DeltaVolume_m3 (water/gas total consumption volume)."""
+
+    dpt_main_number = 13
+    dpt_sub_number = 1201
+    value_type = "delta_volume_m3"
+    unit = "m³"

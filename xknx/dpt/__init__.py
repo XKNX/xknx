@@ -118,6 +118,8 @@ from .dpt_13 import (
     DPTActiveEnergyMWh,
     DPTApparantEnergy,
     DPTApparantEnergykVAh,
+    DPTDeltaVolumeLiquidLitre,
+    DPTDeltaVolumeM3,
     DPTFlowRateM3H,
     DPTLongDeltaTimeSec,
     DPTReactiveEnergy,
@@ -205,6 +207,8 @@ from .dpt_14 import (
     DPTTorque,
     DPTVolume,
     DPTVolumeFlux,
+    DPTVolumeFluxLs,
+    DPTVolumeFluxMeter,
     DPTWeight,
     DPTWork,
 )
