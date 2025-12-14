@@ -800,3 +800,21 @@ class DPTApparentPower(DPT4ByteFloat):
     value_type = "apparent_power"
     unit = "VA"
     ha_device_class = "apparent_power"
+
+
+class DPTVolumeFluxMeter(DPT4ByteFloat):
+    """DPT 14.1200 DPT_Volume_Flux_Meter (volume flux for meters)."""
+
+    dpt_main_number = 14
+    dpt_sub_number = 1200
+    value_type = "volume_flux_meter"
+    unit = "m³/h"
+
+
+class DPTVolumeFluxLs(DPT4ByteFloat):
+    """DPT 14.1201 DPT_Volume_Flux_ls (volume flux for meters)."""
+
+    dpt_main_number = 14
+    dpt_sub_number = 1201
+    value_type = "volume_flux_ls"
+    unit = "L/s"
