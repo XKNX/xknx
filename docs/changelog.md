@@ -12,6 +12,10 @@ nav_order: 2
 
 - Add numeric metering DPTs 13.1200, 13.1201, 14.1200, 14.1201
 
+### Devices
+
+- Fan: Fix turn_on default speed when step-mode is used.
+
 # 3.12.0 Data Secure diagnostics 2025-12-03
 
 ### Data Secure

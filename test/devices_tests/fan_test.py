@@ -219,6 +219,23 @@ class TestFan:
             payload=GroupValueWrite(DPTArray(2)),
         )
 
+    async def test_set_speed_step_turn_on(self) -> None:
+        """Test turning on a fan in step mode."""
+        xknx = XKNX()
+        fan = Fan(
+            xknx,
+            name="TestFan",
+            group_address_speed="1/2/3",
+            max_step=5,
+        )
+        await fan.turn_on()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray(3)),
+        )
+
     #
     # TEST SET OSCILLATION
     #

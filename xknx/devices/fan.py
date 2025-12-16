@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from enum import Enum
 import logging
+from math import ceil
 from typing import TYPE_CHECKING, Any
 
 from xknx.remote_value import (
@@ -135,7 +136,13 @@ class Fan(Device):
             if speed is not None:
                 await self.set_speed(speed)
         else:
-            await self.set_speed(speed or DEFAULT_TURN_ON_SPEED)
+            if speed is None:
+                speed = (
+                    DEFAULT_TURN_ON_SPEED
+                    if self.max_step is None  # FanSpeedMode.PERCENT
+                    else ceil(self.max_step / 2)
+                )
+            await self.set_speed(speed)
 
     async def turn_off(self) -> None:
         """Turn off fan."""
