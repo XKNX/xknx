@@ -26,6 +26,8 @@ class TCPTransport(KNXIPTransport):
     class TCPTransportFactory(asyncio.Protocol):
         """Abstraction for managing the asyncio-tcp protocol."""
 
+        __slots__ = ("connection_lost_callback", "data_received_callback", "transport")
+
         def __init__(
             self,
             data_received_callback: Callable[[bytes], None],

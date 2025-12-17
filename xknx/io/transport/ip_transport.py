@@ -32,6 +32,8 @@ class KNXIPTransport(ABC):
     class Callback:
         """Callback class for handling callbacks for different 'KNX service types' of received packets."""
 
+        __slots__ = ("callback", "service_types")
+
         def __init__(
             self,
             callback: TransportCallbackType,

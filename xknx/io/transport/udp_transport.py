@@ -29,6 +29,8 @@ class UDPTransport(KNXIPTransport):
     class UDPTransportFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
+        __slots__ = ("data_received_callback", "transport")
+
         def __init__(
             self, data_received_callback: Callable[[bytes, tuple[str, int]], None]
         ) -> None:
