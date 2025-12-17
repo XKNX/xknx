@@ -417,7 +417,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
 class SecureGroup(UDPTransport, _IPSecureTransportLayer):
     """Class for secure KNXnet/IP multicast communication."""
 
-    ___slots__ = ("secures_timer", "_key")
+    __slots__ = ("_key", "secure_timer")
     session_id = 0  # Routing uses fixed session id 0
 
     def __init__(
