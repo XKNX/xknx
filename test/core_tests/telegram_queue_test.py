@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 import pytest
 
 from xknx import XKNX
+from xknx.cemi.cemi_handler import CEMIHandler
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CommunicationError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection
@@ -236,7 +237,12 @@ class TestTelegramQueue:
         assert received.decoded_data is not None
         assert received.decoded_data.value == 50
 
-    async def test_outgoing(self) -> None:
+    @patch(
+        "xknx.cemi.cemi_handler.CEMIHandler.send_telegram",
+        wraps=CEMIHandler.send_telegram,
+        autospec=True,
+    )
+    async def test_outgoing(self, cemi_send_telegram_mock: MagicMock) -> None:
         """Test outgoing telegrams in telegram queue."""
         xknx = XKNX()
 
@@ -247,13 +253,12 @@ class TestTelegramQueue:
         )
 
         # log a warning if there is no KNXIP interface instantiated
-        with pytest.raises(CommunicationError):
+        with pytest.raises(CommunicationError):  # from xknx.knxip_interface.send_cemi
             await xknx.telegram_queue.process_telegram_outgoing(telegram)
-
-        # if we have an interface send the telegram (doesn't raise)
-        xknx.cemi_handler.send_telegram = AsyncMock()
-        await xknx.telegram_queue.process_telegram_outgoing(telegram)
-        xknx.cemi_handler.send_telegram.assert_called_once_with(telegram)
+        cemi_send_telegram_mock.assert_called_once_with(
+            xknx.cemi_handler,  # account for self
+            telegram,
+        )
 
     @patch("logging.Logger.error")
     @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=MagicMock)
