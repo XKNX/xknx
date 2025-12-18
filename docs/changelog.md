@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.13.0 Numeric metering 2025-12-18
 
 ### DPT
 
