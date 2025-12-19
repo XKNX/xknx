@@ -20,6 +20,8 @@ logger = logging.getLogger("xknx.log")
 class Task:
     """Handles a given task."""
 
+    __slots__ = ("_task", "async_func", "name", "restart_after_reconnect")
+
     def __init__(
         self,
         name: str,
@@ -70,6 +72,8 @@ class Task:
 
 class TaskRegistry:
     """Manages async tasks in XKNX."""
+
+    __slots__ = ("_background_task", "tasks", "xknx")
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TaskRegistry class."""

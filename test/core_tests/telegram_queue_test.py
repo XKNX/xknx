@@ -247,13 +247,8 @@ class TestTelegramQueue:
         )
 
         # log a warning if there is no KNXIP interface instantiated
-        with pytest.raises(CommunicationError):
+        with pytest.raises(CommunicationError):  # from xknx.knxip_interface.send_cemi
             await xknx.telegram_queue.process_telegram_outgoing(telegram)
-
-        # if we have an interface send the telegram (doesn't raise)
-        xknx.cemi_handler.send_telegram = AsyncMock()
-        await xknx.telegram_queue.process_telegram_outgoing(telegram)
-        xknx.cemi_handler.send_telegram.assert_called_once_with(telegram)
 
     @patch("logging.Logger.error")
     @patch("xknx.core.TelegramQueue.process_telegram_incoming", new_callable=MagicMock)

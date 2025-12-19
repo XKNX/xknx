@@ -13,11 +13,17 @@ from collections.abc import Callable
 
 from xknx.cemi import CEMIFrame
 
+from .transport.ip_transport import KNXIPTransport
+
 CEMIBytesCallbackType = Callable[[bytes], None]
 
 
 class Interface(ABC):
     """Abstract base class for KNX/IP connections."""
+
+    __slots__ = ("transport",)
+
+    transport: KNXIPTransport
 
     @abstractmethod
     async def connect(self) -> None:

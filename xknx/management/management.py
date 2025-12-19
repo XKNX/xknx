@@ -39,6 +39,8 @@ MANAGAMENT_CONNECTION_TIMEOUT = 6
 class Management:
     """Class for management procedures as described in KNX-Standard 3.5.2."""
 
+    __slots__ = ("_broadcast_contexts", "_connections", "xknx")
+
     def __init__(self, xknx: XKNX) -> None:
         """Initialize Management class."""
         self.xknx = xknx
@@ -156,6 +158,8 @@ class Management:
 class BroadcastContext:
     """Class providing broadcast contexts."""
 
+    __slots__ = ("queue",)
+
     def __init__(self) -> None:
         """Initialize BroadcastContext class."""
         self.queue: asyncio.Queue[Telegram] = asyncio.Queue()
@@ -178,6 +182,19 @@ class BroadcastContext:
 
 class P2PConnection:
     """Class to manage a point-to-point connection with a KNX device."""
+
+    __slots__ = (
+        "_ack_waiter",
+        "_connected",
+        "_expected_sequence_number",
+        "_last_response_time",
+        "_response_waiter",
+        "address",
+        "disconnect_hook",
+        "rate_limit",
+        "sequence_number",
+        "xknx",
+    )
 
     def __init__(
         self, xknx: XKNX, address: IndividualAddress, rate_limit: int = 20

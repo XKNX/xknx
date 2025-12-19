@@ -60,6 +60,8 @@ MESSAGE_TAG_TUNNELLING = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
 class _IPSecureTransportLayer(ABC):
     """Abstract for Secure transport layer."""
 
+    __slots__ = ()
+
     session_id: int
     _key: bytes
 
@@ -165,6 +167,22 @@ class _IPSecureTransportLayer(ABC):
 
 class SecureSession(TCPTransport, _IPSecureTransportLayer):
     """Class for handling a KNXnet/IP Secure tunnelling session."""
+
+    __slots__ = (
+        "_device_authentication_code",
+        "_keepalive_task",
+        "_key",
+        "_peer_public_key",
+        "_private_key",
+        "_sequence_number",
+        "_sequence_number_received",
+        "_session_status_handler",
+        "_user_password",
+        "initialized",
+        "public_key",
+        "session_id",
+        "user_id",
+    )
 
     def __init__(
         self,
@@ -401,6 +419,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
 class SecureGroup(UDPTransport, _IPSecureTransportLayer):
     """Class for secure KNXnet/IP multicast communication."""
 
+    __slots__ = ("_key", "secure_timer")
     session_id = 0  # Routing uses fixed session id 0
 
     def __init__(
@@ -498,11 +517,31 @@ class SecureSequenceTimer:
     According to AN159 v06 KNXnet-IP Secure AS §2.2.2.3 Timer synchronizing
     """
 
+    __slots__ = (
+        "_backbone_key",
+        "_clock_difference",
+        "_expected_notify_handler",
+        "_loop",
+        "_notify_timer_handle",
+        "_transport_send",
+        "latency_tolerance_ms",
+        "max_delay_time_follower_periodic_notify",
+        "max_delay_time_follower_update_notify",
+        "max_delay_time_keeper_periodic_notify",
+        "max_delay_time_keeper_update_notify",
+        "min_delay_time_follower_periodic_notify",
+        "min_delay_time_follower_update_notify",
+        "sched_update",
+        "sync_latency_tolerance_ms",
+        "timekeeper",
+        "timer_authenticated",
+    )
+
     TIMER_NOTIFY_HEADER = bytes.fromhex("06 10 09 55 00 24")
 
-    min_delay_time_keeper_periodic_notify: Final = 10  # pylint: disable=invalid-name
-    min_delay_time_keeper_update_notify: Final = 0.1  # pylint: disable=invalid-name
-    sync_latency_fraction: int = 10  # 10%
+    MIN_DELAY_TIME_KEEPER_PERIODIC_NOTIFY: Final = 10  # seconds
+    MIN_DELAY_TIME_KEEPER_UPDATE_NOTIFY: Final = 0.1  # seconds
+    SYNC_LATENCY_FRACTION: Final = 10  # 10%
 
     def __init__(
         self,
@@ -527,11 +566,11 @@ class SecureSequenceTimer:
 
         self.latency_tolerance_ms = latency_ms
         self.sync_latency_tolerance_ms: int = round(
-            latency_ms / 100 * self.sync_latency_fraction
+            latency_ms / 100 * self.SYNC_LATENCY_FRACTION
         )
         _sync_latency_tolerance_seconds = self.sync_latency_tolerance_ms / 1000
         self.max_delay_time_keeper_periodic_notify = (
-            self.min_delay_time_keeper_periodic_notify
+            self.MIN_DELAY_TIME_KEEPER_PERIODIC_NOTIFY
             + _sync_latency_tolerance_seconds * 3
         )
         self.min_delay_time_follower_periodic_notify = (
@@ -543,7 +582,7 @@ class SecureSequenceTimer:
             + _sync_latency_tolerance_seconds * 10
         )
         self.max_delay_time_keeper_update_notify = (
-            self.min_delay_time_keeper_update_notify
+            self.MIN_DELAY_TIME_KEEPER_UPDATE_NOTIFY
             + _sync_latency_tolerance_seconds * 1
         )
         self.min_delay_time_follower_update_notify = (
@@ -590,13 +629,13 @@ class SecureSequenceTimer:
         max_delay: float
         if self.sched_update:
             if self.timekeeper:
-                min_delay = self.min_delay_time_keeper_update_notify
+                min_delay = self.MIN_DELAY_TIME_KEEPER_UPDATE_NOTIFY
                 max_delay = self.max_delay_time_keeper_update_notify
             else:
                 min_delay = self.min_delay_time_follower_update_notify
                 max_delay = self.max_delay_time_follower_update_notify
         elif self.timekeeper:
-            min_delay = self.min_delay_time_keeper_periodic_notify
+            min_delay = self.MIN_DELAY_TIME_KEEPER_PERIODIC_NOTIFY
             max_delay = self.max_delay_time_keeper_periodic_notify
         else:
             min_delay = self.min_delay_time_follower_periodic_notify
@@ -686,7 +725,7 @@ class SecureSequenceTimer:
         self._expected_notify_handler = message_tag, waiter_fut
         self.send_timer_notify(message_tag=message_tag)
         try:
-            async with asyncio_timeout(  # 3.3 seconds at latency_ms=1000, sync_latency_fraction=10%
+            async with asyncio_timeout(  # 3.3 seconds at latency_ms=1000, SYNC_LATENCY_FRACTION=10%
                 self.max_delay_time_follower_update_notify
                 + 2 * self.latency_tolerance_ms / 1000
             ):

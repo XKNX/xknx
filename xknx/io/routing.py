@@ -52,6 +52,17 @@ class _RoutingFlowControl:
     See KNX Specifications 3.8.5 Routing §2.3.5 Flow control handling
     """
 
+    __slots__ = (
+        "_last_busy_frame_time",
+        "_last_sent_routing_indication_time",
+        "_loop",
+        "_ready",
+        "_received_busy_frames",
+        "_timer_task",
+        "_wait_start_time",
+        "_wait_time_ms",
+    )
+
     def __init__(self) -> None:
         self._last_busy_frame_time: float = 0.0
         self._last_sent_routing_indication_time: float = 0.0
@@ -133,6 +144,16 @@ class _RoutingFlowControl:
 
 class Routing(Interface):
     """Class for handling KNXnet/IP multicast communication."""
+
+    __slots__ = (
+        "_flow_control",
+        "cemi_received_callback",
+        "individual_address",
+        "local_ip",
+        "multicast_group",
+        "multicast_port",
+        "xknx",
+    )
 
     connection_type = XknxConnectionType.ROUTING
     transport: UDPTransport
@@ -263,6 +284,11 @@ class Routing(Interface):
 
 class SecureRouting(Routing):
     """Class for handling KNXnet/IP secure multicast communication."""
+
+    __slots__ = (
+        "backbone_key",
+        "latency_ms",
+    )
 
     connection_type = XknxConnectionType.ROUTING_SECURE
     transport: SecureGroup

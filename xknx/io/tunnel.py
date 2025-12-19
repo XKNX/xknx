@@ -46,6 +46,22 @@ logger = logging.getLogger("xknx.log")
 class _Tunnel(Interface):
     """Class for handling KNX/IP tunnels."""
 
+    __slots__ = (
+        "_data_endpoint_addr",
+        "_heartbeat_task",
+        "_reconnect_task",
+        "_requested_address",
+        "_send_lock",
+        "_src_address",
+        "auto_reconnect",
+        "auto_reconnect_wait",
+        "cemi_received_callback",
+        "communication_channel",
+        "local_hpai",
+        "sequence_number",
+        "xknx",
+    )
+
     connection_type: XknxConnectionType
     transport: KNXIPTransport
 
@@ -421,6 +437,16 @@ class _Tunnel(Interface):
 class UDPTunnel(_Tunnel):
     """Class for handling KNX/IP UDP tunnels."""
 
+    __slots__ = (
+        "_invalid_sequence_number_reconnect_task",
+        "expected_sequence_number",
+        "gateway_ip",
+        "gateway_port",
+        "local_ip",
+        "local_port",
+        "route_back",
+    )
+
     connection_type = XknxConnectionType.TUNNEL_UDP
     transport: UDPTransport
 
@@ -663,6 +689,8 @@ class UDPTunnel(_Tunnel):
 class TCPTunnel(_Tunnel):
     """Class for handling KNX/IP TCP tunnels."""
 
+    __slots__ = ("gateway_ip", "gateway_port")
+
     connection_type = XknxConnectionType.TUNNEL_TCP
     transport: TCPTransport
 
@@ -706,6 +734,8 @@ class TCPTunnel(_Tunnel):
 
 class SecureTunnel(TCPTunnel):
     """Class for handling KNX/IP secure TCP tunnels."""
+
+    __slots__ = ("_device_authentication_password", "_user_id", "_user_password")
 
     connection_type = XknxConnectionType.TUNNEL_SECURE
     transport: SecureSession

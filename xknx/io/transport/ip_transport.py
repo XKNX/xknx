@@ -24,6 +24,8 @@ knx_logger = logging.getLogger("xknx.knx")
 class KNXIPTransport(ABC):
     """Abstract base class for KNX/IP transports."""
 
+    __slots__ = ("callbacks", "local_hpai", "remote_addr", "transport")
+
     callbacks: list[KNXIPTransport.Callback]
     local_hpai: HPAI
     remote_addr: tuple[str, int]
@@ -31,6 +33,8 @@ class KNXIPTransport(ABC):
 
     class Callback:
         """Callback class for handling callbacks for different 'KNX service types' of received packets."""
+
+        __slots__ = ("callback", "service_types")
 
         def __init__(
             self,

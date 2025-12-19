@@ -41,6 +41,27 @@ logger = logging.getLogger("xknx.log")
 class XKNX:
     """Class for reading and writing KNX/IP packets."""
 
+    __slots__ = (
+        "cemi_handler",
+        "connection_manager",
+        "current_address",
+        "daemon_mode",
+        "devices",
+        "group_address_dpt",
+        "knxip_interface",
+        "management",
+        "multicast_group",
+        "multicast_port",
+        "rate_limit",
+        "sigint_received",
+        "started",
+        "state_updater",
+        "task_registry",
+        "telegram_queue",
+        "telegrams",
+        "version",
+    )
+
     def __init__(
         self,
         address_format: GroupAddressType = GroupAddressType.LONG,

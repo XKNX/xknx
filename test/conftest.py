@@ -1,6 +1,7 @@
 """Conftest for XKNX."""
 
 import asyncio
+import sys
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -69,3 +70,10 @@ def xknx_no_interface() -> XKNX:
 
     with patch("xknx.xknx.knx_interface_factory", return_value=knx_ip_interface_mock()):
         return XKNX()
+
+
+# py3.10 doesn't properly support patch() with wraps and autospec https://github.com/python/cpython/pull/117124
+skip_3_10 = pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="requires Python 3.11 or higher",
+)

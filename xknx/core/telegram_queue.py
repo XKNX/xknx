@@ -35,6 +35,14 @@ class TelegramQueue:
     class Callback:
         """Callback class for handling telegram received callbacks."""
 
+        __slots__ = (
+            "_match_all",
+            "_match_outgoing",
+            "address_filters",
+            "callback",
+            "group_addresses",
+        )
+
         def __init__(
             self,
             callback: TelegramCallbackType,
@@ -68,6 +76,15 @@ class TelegramQueue:
                     if telegram.destination_address == group_address:
                         return True
             return False
+
+    __slots__ = (
+        "_consumer_task",
+        "_data_secure_group_key_issue_cbs",
+        "_rate_limiter",
+        "outgoing_queue",
+        "telegram_received_cbs",
+        "xknx",
+    )
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TelegramQueue class."""

@@ -57,6 +57,8 @@ def knx_interface_factory(
 class KNXIPInterface:
     """Class for managing KNX/IP Tunneling or Routing connections."""
 
+    __slots__ = ("_gateway_info", "_interface", "connection_config", "xknx")
+
     def __init__(
         self,
         xknx: XKNX,
@@ -493,6 +495,8 @@ class KNXIPInterface:
 
 class KNXIPInterfaceThreaded(KNXIPInterface):
     """Class for managing KNX/IP Tunneling or Routing connections."""
+
+    __slots__ = ("_connection_thread", "_main_loop", "_thread_loop")
 
     def __init__(
         self,

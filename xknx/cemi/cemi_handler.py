@@ -41,6 +41,8 @@ REQUEST_TO_CONFIRMATION_TIMEOUT = 3
 class CEMIHandler:
     """Class for handling CEMI frames from/to the TelegramQueue."""
 
+    __slots__ = ("_l_data_confirmation_event", "data_secure", "xknx")
+
     def __init__(self, xknx: XKNX) -> None:
         """Initialize CEMIHandler class."""
         self.xknx = xknx
