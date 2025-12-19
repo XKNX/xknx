@@ -65,6 +65,8 @@ class TCPTransport(KNXIPTransport):
             logger.debug("Closing TCP transport. %s", exc)
             self.connection_lost_callback()
 
+    __slots__ = ("_buffer", "_connection_lost_cb", "remote_hpai")
+
     def __init__(
         self,
         remote_addr: tuple[str, int],

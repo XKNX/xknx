@@ -60,6 +60,8 @@ MESSAGE_TAG_TUNNELLING = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
 class _IPSecureTransportLayer(ABC):
     """Abstract for Secure transport layer."""
 
+    __slots__ = ()
+
     session_id: int
     _key: bytes
 

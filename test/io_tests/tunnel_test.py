@@ -2,7 +2,7 @@
 
 import asyncio
 from copy import deepcopy
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 
@@ -129,13 +129,16 @@ class TestUDPTunnel:
         ]
         send_ack_mock.assert_called_once_with(raw_ind[7], raw_ind[8])
 
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
     async def test_repeated_tunnel_request(
-        self, time_travel: EventLoopClockAdvancer
+        self,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
     ) -> None:
         """Test Tunnel for receiving repeated TunnellingRequest frames."""
         self.tunnel.transport.transport = Mock()
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock()
         self.tunnel.communication_channel = 1
         self.tunnel.expected_sequence_number = 10
 
@@ -161,34 +164,39 @@ class TestUDPTunnel:
         # first frame - ACK and processed
         self.tunnel._request_received(test_frame, None, None)
         await time_travel(0)
-        assert self.tunnel.transport.send.call_args_list == [call(test_ack, addr=None)]
-        self.tunnel.transport.send.reset_mock()
+        assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
+        mock_transport_send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
         # same sequence number as before - ACK, not processed
         self.tunnel._request_received(test_frame, None, None)
         await time_travel(0)
-        assert self.tunnel.transport.send.call_args_list == [call(test_ack, addr=None)]
-        self.tunnel.transport.send.reset_mock()
+        assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
+        mock_transport_send.reset_mock()
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
         # wrong sequence number - no ACK, not processed
         # reconnect if `auto_reconnect` was True, disconnect if False
         self.tunnel._request_received(test_frame_9, None, None)
-        self.tunnel.transport.send.assert_not_called()
-        self.tunnel.transport.stop.assert_not_called()
+        mock_transport_send.assert_not_called()
+        mock_transport_stop.assert_not_called()
         # Disconnect after 2 seconds of no valid frame
         await time_travel(2)
-        self.tunnel.transport.stop.assert_called_once()
+        mock_transport_stop.assert_called_once()
 
         assert self.tunnel.expected_sequence_number == 11
         assert self.cemi_received_mock.call_count == 1
 
-    async def test_tunnel_send_retry(self, time_travel: EventLoopClockAdvancer) -> None:
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    async def test_tunnel_send_retry(
+        self,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test tunnel resends the telegram when no ACK was received."""
         self.tunnel.transport.transport = Mock()
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock()
         self.tunnel.communication_channel = 1
         self.tunnel.sequence_number = 23
         self.tunnel.expected_sequence_number = 15
@@ -229,12 +237,12 @@ class TestUDPTunnel:
 
         task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
         await time_travel(0)
-        assert self.tunnel.transport.send.call_args_list == [call(request, addr=None)]
-        self.tunnel.transport.send.reset_mock()
+        assert mock_transport_send.call_args_list == [call(request, addr=None)]
+        mock_transport_send.reset_mock()
         # no ACK received, resend same telegram
         await time_travel(1)
-        assert self.tunnel.transport.send.call_args_list == [call(request, addr=None)]
-        self.tunnel.transport.send.reset_mock()
+        assert mock_transport_send.call_args_list == [call(request, addr=None)]
+        mock_transport_send.reset_mock()
         self.tunnel.transport.handle_knxipframe(test_ack, HPAI())
         await time_travel(0)
         assert task.done()
@@ -242,10 +250,8 @@ class TestUDPTunnel:
         # L_Data.con ACK for UDP tunneling
         self.tunnel.transport.handle_knxipframe(confirmation, HPAI())
         await time_travel(0)
-        assert self.tunnel.transport.send.call_args_list == [
-            call(confirmation_ack, addr=None)
-        ]
-        self.tunnel.transport.send.reset_mock()
+        assert mock_transport_send.call_args_list == [call(confirmation_ack, addr=None)]
+        mock_transport_send.reset_mock()
 
         # Test raise after 2 missed ACKs (`auto_reconnect` is False)
         task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
@@ -253,9 +259,9 @@ class TestUDPTunnel:
         await time_travel(1)
         await time_travel(1)
         # 2x TunnellingRequest  + 1x DisconnectRequest
-        assert self.tunnel.transport.send.call_count == 3
-        self.tunnel.transport.send.reset_mock()
-        self.tunnel.transport.stop.assert_called_once()
+        assert mock_transport_send.call_count == 3
+        mock_transport_send.reset_mock()
+        mock_transport_stop.assert_called_once()
         with pytest.raises(CommunicationError):
             await task
 
@@ -266,8 +272,16 @@ class TestUDPTunnel:
             (True, None, HPAI()),
         ],
     )
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
     async def test_tunnel_connect_send_disconnect(
         self,
+        mock_transport_connect: Mock,
+        mock_transport_getsockname: Mock,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
         time_travel: EventLoopClockAdvancer,
         route_back: bool,
         data_endpoint_addr: tuple[str, int] | None,
@@ -280,10 +294,7 @@ class TestUDPTunnel:
         gateway_data_endpoint = (
             HPAI(*data_endpoint_addr) if data_endpoint_addr else HPAI()
         )
-        self.tunnel.transport.connect = AsyncMock()
-        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock()
+        mock_transport_getsockname.return_value = local_addr
 
         # Connect
         connect_request = ConnectRequest(
@@ -294,8 +305,8 @@ class TestUDPTunnel:
 
         connection_task = asyncio.create_task(self.tunnel.connect())
         await time_travel(0)
-        self.tunnel.transport.connect.assert_called_once()
-        self.tunnel.transport.send.assert_called_once_with(connect_frame)
+        mock_transport_connect.assert_called_once()
+        mock_transport_send.assert_called_once_with(connect_frame)
 
         connect_response_frame = KNXIPFrame.init_from_body(
             ConnectResponse(
@@ -312,7 +323,7 @@ class TestUDPTunnel:
         assert self.tunnel._src_address == IndividualAddress(7)
 
         # Send - use data endpoint
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.reset_mock()
         test_telegram = Telegram(
             destination_address=GroupAddress(1),
             payload=GroupValueWrite(DPTArray((1,))),
@@ -333,14 +344,14 @@ class TestUDPTunnel:
         )
         send_task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
         await time_travel(0)
-        self.tunnel.transport.send.assert_called_once_with(
+        mock_transport_send.assert_called_once_with(
             test_telegram_frame, addr=data_endpoint_addr
         )
         # skip ack and confirmation
         assert not send_task.done()
 
         # Disconnect
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.reset_mock()
         disconnect_request = DisconnectRequest(
             communication_channel_id=23,
             control_endpoint=local_endpoint,
@@ -349,7 +360,7 @@ class TestUDPTunnel:
 
         disconnection_task = asyncio.create_task(self.tunnel.disconnect())
         await time_travel(0)
-        self.tunnel.transport.send.assert_called_once_with(disconnect_frame)
+        mock_transport_send.assert_called_once_with(disconnect_frame)
 
         disconnect_response_frame = KNXIPFrame.init_from_body(
             DisconnectResponse(communication_channel_id=23)
@@ -358,9 +369,20 @@ class TestUDPTunnel:
             disconnect_response_frame, HPAI(*remote_addr)
         )
         await disconnection_task
-        self.tunnel.transport.stop.assert_called_once()
+        mock_transport_stop.assert_called_once()
 
-    async def test_tunnel_reconnect(self, time_travel: EventLoopClockAdvancer) -> None:
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+    async def test_tunnel_reconnect(
+        self,
+        mock_transport_connect: Mock,
+        mock_transport_getsockname: Mock,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test tunnel reconnection."""
         local_addr = ("192.168.1.1", 12345)
         remote_addr = ("192.168.1.2", 3671)
@@ -375,11 +397,9 @@ class TestUDPTunnel:
         def transport_stop_side_effect() -> None:
             self.tunnel.transport.transport = None
 
-        self.tunnel.transport.connect = AsyncMock()
-        self.tunnel.transport.connect.side_effect = transport_connect_error_side_effect
-        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock(side_effect=transport_stop_side_effect)
+        mock_transport_connect.side_effect = transport_connect_error_side_effect
+        mock_transport_getsockname.return_value = local_addr
+        mock_transport_stop.side_effect = transport_stop_side_effect
         transport_connect_success_side_effect()
 
         # prepare and initialize tunnel
@@ -400,35 +420,37 @@ class TestUDPTunnel:
         disconnect_response_frame = KNXIPFrame.init_from_body(
             DisconnectResponse(communication_channel_id=1)
         )
-        self.tunnel.transport.send.assert_called_once_with(disconnect_response_frame)
+        mock_transport_send.assert_called_once_with(disconnect_response_frame)
         assert self.tunnel.communication_channel is None
 
-        assert self.tunnel.transport.stop.call_count == 0
+        assert mock_transport_stop.call_count == 0
         # reconnect task will start next loop iteration
         await asyncio.sleep(0)
         # once for initial stop before reconnect and once after first
         # reconnect attempt fails due to CommunicationError
-        assert self.tunnel.transport.stop.call_count == 2
+        assert mock_transport_stop.call_count == 2
         # first reconnect attempt sent immediately... fails due to side effect
-        self.tunnel.transport.connect.assert_called_once()
-        self.tunnel.transport.connect.reset_mock()
+        mock_transport_connect.assert_called_once()
+        mock_transport_connect.reset_mock()
         assert not self.tunnel._reconnect_task.done()
 
         # second reconnect attempt after wait time
-        self.tunnel.transport.connect.side_effect = (
-            transport_connect_success_side_effect
-        )
+        mock_transport_connect.side_effect = transport_connect_success_side_effect
         await time_travel(self.tunnel.auto_reconnect_wait)
-        self.tunnel.transport.connect.assert_called_once()
+        mock_transport_connect.assert_called_once()
         assert self.tunnel._reconnect_task is None
 
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
     async def test_tunnel_request_description(
-        self, time_travel: EventLoopClockAdvancer
+        self,
+        mock_transport_getsockname: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
     ) -> None:
         """Test tunnel requesting and returning description of connected interface."""
         local_addr = ("192.168.1.1", 12345)
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.getsockname = Mock(return_value=local_addr)
+        mock_transport_getsockname.return_value = local_addr
 
         description_request = KNXIPFrame.init_from_body(
             DescriptionRequest(control_endpoint=self.tunnel.local_hpai)
@@ -437,12 +459,12 @@ class TestUDPTunnel:
 
         task = asyncio.create_task(self.tunnel.request_description())
         await time_travel(0)
-        self.tunnel.transport.send.assert_called_once_with(description_request)
+        mock_transport_send.assert_called_once_with(description_request)
         self.tunnel.transport.handle_knxipframe(description_response, HPAI())
         await time_travel(0)
         assert task.done()
         assert isinstance(task.result(), GatewayDescriptor)
-        assert self.tunnel.transport.send.call_count == 1
+        assert mock_transport_send.call_count == 1
         await task
 
 
@@ -463,22 +485,31 @@ class TestTCPTunnel:
             auto_reconnect_wait=3,
         )
 
-    async def test_tunnel_heartbeat(self, time_travel: EventLoopClockAdvancer) -> None:
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.getsockname")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
+    @patch("xknx.io.tunnel.TCPTunnel._tunnel_lost")
+    async def test_tunnel_heartbeat(
+        self,
+        mock_tunnel_lost: MagicMock,
+        mock_transport_stop: MagicMock,
+        mock_transport_send: MagicMock,
+        mock_transport_getsockname: MagicMock,
+        mock_transport_connect: MagicMock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
         """Test tunnel sends heartbeat frame."""
         local_addr = ("192.168.1.1", 12345)
         remote_hpai = HPAI(
             ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
         )
-        self.tunnel.transport.connect = AsyncMock()
-        self.tunnel.transport.getsockname = Mock(return_value=(local_addr))
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock()
-        self.tunnel._tunnel_lost = Mock()
+        mock_transport_getsockname.return_value = local_addr
 
         # Connect
         connection_task = asyncio.create_task(self.tunnel.connect())
         await time_travel(0)
-        self.tunnel.transport.connect.assert_called_once()
+        mock_transport_connect.assert_called_once()
 
         connect_response_frame = KNXIPFrame.init_from_body(
             ConnectResponse(
@@ -489,7 +520,7 @@ class TestTCPTunnel:
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
         await connection_task
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.reset_mock()
 
         # Send heartbeat
         heartbeat_request = KNXIPFrame.init_from_body(
@@ -505,36 +536,43 @@ class TestTCPTunnel:
             )
         )
         await time_travel(HEARTBEAT_RATE)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         self.tunnel.transport.handle_knxipframe(heartbeat_response, remote_hpai)
         # test no retry-heartbeat was sent
         await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
-        self.tunnel.transport.send.assert_not_called()
+        mock_transport_send.assert_not_called()
         # next regular heartbeat
         await time_travel(HEARTBEAT_RATE - CONNECTIONSTATE_REQUEST_TIMEOUT)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
-        self.tunnel._tunnel_lost.assert_not_called()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
+        mock_tunnel_lost.assert_not_called()
 
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.getsockname")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
+    @patch("xknx.io.tunnel.TCPTunnel._tunnel_lost")
     async def test_tunnel_heartbeat_no_answer(
-        self, time_travel: EventLoopClockAdvancer
+        self,
+        mock_tunnel_lost: MagicMock,
+        mock_transport_stop: MagicMock,
+        mock_transport_send: MagicMock,
+        mock_transport_getsockname: MagicMock,
+        mock_transport_connect: MagicMock,
+        time_travel: EventLoopClockAdvancer,
     ) -> None:
         """Test tunnel sends heartbeat frame."""
         local_addr = ("192.168.1.1", 12345)
         remote_hpai = HPAI(
             ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
         )
-        self.tunnel.transport.connect = AsyncMock()
-        self.tunnel.transport.getsockname = Mock(return_value=(local_addr))
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock()
-        self.tunnel._tunnel_lost = Mock()
+        mock_transport_getsockname.return_value = local_addr
 
         # Connect
         connection_task = asyncio.create_task(self.tunnel.connect())
         await time_travel(0)
-        self.tunnel.transport.connect.assert_called_once()
+        mock_transport_connect.assert_called_once()
 
         connect_response_frame = KNXIPFrame.init_from_body(
             ConnectResponse(
@@ -545,7 +583,7 @@ class TestTCPTunnel:
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
         await connection_task
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.reset_mock()
 
         # Send heartbeat
         heartbeat_request = KNXIPFrame.init_from_body(
@@ -555,40 +593,48 @@ class TestTCPTunnel:
             )
         )
         await time_travel(HEARTBEAT_RATE)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         # no answer - repeat 3 times
         await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
+        mock_tunnel_lost.assert_not_called()
         await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
         # no answer - tunnel lost
-        self.tunnel._tunnel_lost.assert_called_once()
+        mock_tunnel_lost.assert_called_once()
 
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.getsockname")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
+    @patch("xknx.io.tunnel.TCPTunnel._tunnel_lost")
     async def test_tunnel_heartbeat_error(
-        self, time_travel: EventLoopClockAdvancer
+        self,
+        mock_tunnel_lost: MagicMock,
+        mock_transport_stop: MagicMock,
+        mock_transport_send: MagicMock,
+        mock_transport_getsockname: MagicMock,
+        mock_transport_connect: MagicMock,
+        time_travel: EventLoopClockAdvancer,
     ) -> None:
         """Test tunnel sends heartbeat frame."""
         local_addr = ("192.168.1.1", 12345)
         remote_hpai = HPAI(
             ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
         )
-        self.tunnel.transport.connect = AsyncMock()
-        self.tunnel.transport.getsockname = Mock(return_value=(local_addr))
-        self.tunnel.transport.send = Mock()
-        self.tunnel.transport.stop = Mock()
-        self.tunnel._tunnel_lost = Mock()
+        mock_transport_getsockname.return_value = local_addr
 
         # Connect
         connection_task = asyncio.create_task(self.tunnel.connect())
         await time_travel(0)
-        self.tunnel.transport.connect.assert_called_once()
+        mock_transport_connect.assert_called_once()
 
         connect_response_frame = KNXIPFrame.init_from_body(
             ConnectResponse(
@@ -599,7 +645,7 @@ class TestTCPTunnel:
         )
         self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
         await connection_task
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.reset_mock()
 
         # Send heartbeat
         heartbeat_request = KNXIPFrame.init_from_body(
@@ -615,22 +661,23 @@ class TestTCPTunnel:
             )
         )
         await time_travel(HEARTBEAT_RATE)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
         # repeat 3 times
         await time_travel(0)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
         await time_travel(0)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
         self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
         await time_travel(0)
-        self.tunnel.transport.send.assert_called_once_with(heartbeat_request)
-        self.tunnel.transport.send.reset_mock()
+        mock_transport_send.assert_called_once_with(heartbeat_request)
+        mock_transport_send.reset_mock()
+        mock_tunnel_lost.assert_not_called()
         self.tunnel.transport.handle_knxipframe(heartbeat_error_response, remote_hpai)
         await time_travel(0)
         # third retry had an error - tunnel lost
-        self.tunnel._tunnel_lost.assert_called_once()
+        mock_tunnel_lost.assert_called_once()

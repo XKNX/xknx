@@ -311,8 +311,13 @@ class TestSecureGroup:
     @patch("xknx.io.ip_secure.SecureSequenceTimer._notify_timer_expired")
     @patch("xknx.io.ip_secure.SecureSequenceTimer._monotonic_ms")
     @patch("xknx.io.transport.udp_transport.UDPTransport.handle_knxipframe")
+    @patch(
+        "xknx.io.ip_secure.SecureGroup.decrypt_frame",
+        return_value=True,  # we are only interested in timer value
+    )
     async def test_received_secure_wrapper(
         self,
+        mock_decrypt_frame: Mock,
         mock_super_handle_knxipframe: Mock,
         mock_monotonic_ms: Mock,
         _mock_notify_timer_expired: Mock,  # we don't want to actually send here
@@ -332,103 +337,101 @@ class TestSecureGroup:
         secure_timer = secure_group.secure_timer
         secure_timer.timer_authenticated = True
 
-        with patch.object(secure_group, "decrypt_frame") as mock_decrypt:
-            mock_decrypt.return_value = True  # we are only interested in timer value
-            # E5
-            wrapper_newer = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    sequence_information=ONE_HOUR_MS.to_bytes(6, "big"),
-                )
+        # E5
+        wrapper_newer = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                sequence_information=ONE_HOUR_MS.to_bytes(6, "big"),
             )
+        )
 
-            secure_group.handle_knxipframe(wrapper_newer, HPAI(*self.mock_addr))
-            mock_super_handle_knxipframe.assert_called_once()
-            mock_super_handle_knxipframe.reset_mock()
-            mock_reschedule.assert_called_once()
-            assert secure_timer.current_timer_value() == ONE_HOUR_MS
-            assert not secure_timer.sched_update
-            mock_reschedule.reset_mock()
-            # E6
-            wrapper_exact = KNXIPFrame.init_from_body(
-                SecureWrapper(sequence_information=ONE_HOUR_MS.to_bytes(6, "big"))
+        secure_group.handle_knxipframe(wrapper_newer, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_called_once()
+        mock_super_handle_knxipframe.reset_mock()
+        mock_reschedule.assert_called_once()
+        assert secure_timer.current_timer_value() == ONE_HOUR_MS
+        assert not secure_timer.sched_update
+        mock_reschedule.reset_mock()
+        # E6
+        wrapper_exact = KNXIPFrame.init_from_body(
+            SecureWrapper(sequence_information=ONE_HOUR_MS.to_bytes(6, "big"))
+        )
+
+        secure_group.handle_knxipframe(wrapper_exact, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_called_once()
+        mock_super_handle_knxipframe.reset_mock()
+        mock_reschedule.assert_called_once()
+        assert secure_timer.current_timer_value() == ONE_HOUR_MS
+        assert not secure_timer.timekeeper
+        assert not secure_timer.sched_update
+        mock_reschedule.reset_mock()
+
+        wrapper_valid = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms + 1
+                ).to_bytes(6, "big")
             )
+        )
 
-            secure_group.handle_knxipframe(wrapper_exact, HPAI(*self.mock_addr))
-            mock_super_handle_knxipframe.assert_called_once()
-            mock_super_handle_knxipframe.reset_mock()
-            mock_reschedule.assert_called_once()
-            assert secure_timer.current_timer_value() == ONE_HOUR_MS
-            assert not secure_timer.timekeeper
-            assert not secure_timer.sched_update
-            mock_reschedule.reset_mock()
-
-            wrapper_valid = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    sequence_information=(
-                        ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms + 1
-                    ).to_bytes(6, "big")
-                )
+        secure_group.handle_knxipframe(wrapper_valid, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_called_once()
+        mock_super_handle_knxipframe.reset_mock()
+        mock_reschedule.assert_called_once()
+        assert secure_timer.current_timer_value() == ONE_HOUR_MS
+        assert not secure_timer.timekeeper
+        assert not secure_timer.sched_update
+        mock_reschedule.reset_mock()
+        # E7
+        wrapper_tolerable_1 = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms
+                ).to_bytes(6, "big"),
             )
+        )
 
-            secure_group.handle_knxipframe(wrapper_valid, HPAI(*self.mock_addr))
-            mock_super_handle_knxipframe.assert_called_once()
-            mock_super_handle_knxipframe.reset_mock()
-            mock_reschedule.assert_called_once()
-            assert secure_timer.current_timer_value() == ONE_HOUR_MS
-            assert not secure_timer.timekeeper
-            assert not secure_timer.sched_update
-            mock_reschedule.reset_mock()
-            # E7
-            wrapper_tolerable_1 = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    sequence_information=(
-                        ONE_HOUR_MS - secure_timer.sync_latency_tolerance_ms
-                    ).to_bytes(6, "big"),
-                )
+        secure_group.handle_knxipframe(wrapper_tolerable_1, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_called_once()
+        mock_super_handle_knxipframe.reset_mock()
+        mock_reschedule.assert_not_called()
+
+        wrapper_tolerable_2 = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.latency_tolerance_ms + 1
+                ).to_bytes(6, "big"),
+                serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                message_tag=bytes.fromhex("12 34"),
             )
+        )
 
-            secure_group.handle_knxipframe(wrapper_tolerable_1, HPAI(*self.mock_addr))
-            mock_super_handle_knxipframe.assert_called_once()
-            mock_super_handle_knxipframe.reset_mock()
-            mock_reschedule.assert_not_called()
-
-            wrapper_tolerable_2 = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    sequence_information=(
-                        ONE_HOUR_MS - secure_timer.latency_tolerance_ms + 1
-                    ).to_bytes(6, "big"),
-                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
-                    message_tag=bytes.fromhex("12 34"),
-                )
+        secure_group.handle_knxipframe(wrapper_tolerable_2, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_called_once()
+        mock_super_handle_knxipframe.reset_mock()
+        mock_reschedule.assert_not_called()
+        # E8
+        wrapper_invalid = KNXIPFrame.init_from_body(
+            SecureWrapper(
+                sequence_information=(
+                    ONE_HOUR_MS - secure_timer.latency_tolerance_ms
+                ).to_bytes(6, "big"),
+                serial_number=bytes.fromhex("00 fa 12 34 56 78"),
+                message_tag=bytes.fromhex("12 34"),
             )
+        )
 
-            secure_group.handle_knxipframe(wrapper_tolerable_2, HPAI(*self.mock_addr))
-            mock_super_handle_knxipframe.assert_called_once()
-            mock_super_handle_knxipframe.reset_mock()
-            mock_reschedule.assert_not_called()
-            # E8
-            wrapper_invalid = KNXIPFrame.init_from_body(
-                SecureWrapper(
-                    sequence_information=(
-                        ONE_HOUR_MS - secure_timer.latency_tolerance_ms
-                    ).to_bytes(6, "big"),
-                    serial_number=bytes.fromhex("00 fa 12 34 56 78"),
-                    message_tag=bytes.fromhex("12 34"),
-                )
-            )
-
-            secure_group.handle_knxipframe(wrapper_invalid, HPAI(*self.mock_addr))
-            mock_reschedule.assert_called_once_with(
-                secure_timer,  # self for Mock
-                update=(bytes.fromhex("12 34"), bytes.fromhex("00 fa 12 34 56 78")),
-            )
-            assert not secure_timer.timekeeper
-            assert secure_timer.sched_update
-            mock_reschedule.reset_mock()
-            # E8 from sched_update
-            secure_group.handle_knxipframe(wrapper_invalid, HPAI(*self.mock_addr))
-            mock_super_handle_knxipframe.assert_not_called()
-            mock_reschedule.assert_not_called()
+        secure_group.handle_knxipframe(wrapper_invalid, HPAI(*self.mock_addr))
+        mock_reschedule.assert_called_once_with(
+            secure_timer,  # self for Mock
+            update=(bytes.fromhex("12 34"), bytes.fromhex("00 fa 12 34 56 78")),
+        )
+        assert not secure_timer.timekeeper
+        assert secure_timer.sched_update
+        mock_reschedule.reset_mock()
+        # E8 from sched_update
+        secure_group.handle_knxipframe(wrapper_invalid, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_not_called()
+        mock_reschedule.assert_not_called()
 
     @patch(  # keep implementation of reschedule
         "xknx.io.ip_secure.SecureSequenceTimer.reschedule",

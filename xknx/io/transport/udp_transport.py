@@ -55,6 +55,13 @@ class UDPTransport(KNXIPTransport):
             """Log error. Callback for connection lost."""
             logger.debug("Closing UDP transport.")
 
+    __slots__ = (
+        "local_addr",
+        "local_addr_assigned",
+        "multicast",
+        "multicast_listener",
+    )
+
     def __init__(
         self,
         local_addr: tuple[str, int],
