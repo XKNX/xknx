@@ -19,6 +19,8 @@ CEMIBytesCallbackType = Callable[[bytes], None]
 class Interface(ABC):
     """Abstract base class for KNX/IP connections."""
 
+    __slots__ = ()
+
     @abstractmethod
     async def connect(self) -> None:
         """Connect to KNX bus. Raise CommunicationError when not successful."""
