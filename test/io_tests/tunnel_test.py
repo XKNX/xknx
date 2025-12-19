@@ -375,8 +375,11 @@ class TestUDPTunnel:
     @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
     @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
     @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+    # no need to wait for ConnectResponse in this test, so mock connect request
+    @patch("xknx.io.tunnel.UDPTunnel._connect_request")
     async def test_tunnel_reconnect(
         self,
+        mock_connect_request: Mock,
         mock_transport_connect: Mock,
         mock_transport_getsockname: Mock,
         mock_transport_stop: Mock,
@@ -405,8 +408,6 @@ class TestUDPTunnel:
         # prepare and initialize tunnel
         self.tunnel.auto_reconnect = True
         self.tunnel.communication_channel = 1
-        # no need to wait for ConnectResponse in this test, so mock connect request
-        self.tunnel._connect_request = AsyncMock()
 
         # server sends disconnect request
         disconnect_request_frame = KNXIPFrame.init_from_body(

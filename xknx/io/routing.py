@@ -152,7 +152,6 @@ class Routing(Interface):
         "local_ip",
         "multicast_group",
         "multicast_port",
-        "transport",
         "xknx",
     )
 
