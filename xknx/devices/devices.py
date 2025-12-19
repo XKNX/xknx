@@ -19,6 +19,8 @@ from .device import Device
 class Devices:
     """Class for handling a vector/array of devices."""
 
+    __slots__ = ("__devices", "device_updated_cbs", "started")
+
     def __init__(self, started: asyncio.Event) -> None:
         """Initialize Devices class."""
         self.started = started  # xknx.started
