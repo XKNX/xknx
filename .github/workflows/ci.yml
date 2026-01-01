@@ -83,7 +83,7 @@ jobs:
       - name: Install coverage.py
         run: pip install coverage
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
       - name: Create coverage report
         run: |
           coverage combine coverage-*/.coverage
