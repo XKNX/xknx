@@ -10,4 +10,4 @@ pytest-icdiff==0.9
 ruff==0.14.10
 setuptools==80.9.0
 tox==4.32.0
-tzdata==2025.2
+tzdata==2025.3
