@@ -186,7 +186,7 @@ class _Tunnel(Interface):
         self._prepare_disconnect()
         if self.transport.transport:
             # when server issued DisconnectRequest communication_channel is already None so this is a no-op
-            await self._disconnect_request(ignore_error=True)
+            await self._disconnect_request()
             self._data_endpoint_addr = None
             self.transport.stop()
 
@@ -223,7 +223,7 @@ class _Tunnel(Interface):
         self._prepare_disconnect()
         self._stop_reconnect()
         try:
-            await self._disconnect_request(ignore_error=False)
+            await self._disconnect_request()
         finally:
             self.transport.stop()
 
@@ -278,7 +278,7 @@ class _Tunnel(Interface):
             status_code = error_code.name
         return conn_state.success, status_code
 
-    async def _disconnect_request(self, ignore_error: bool = False) -> None:
+    async def _disconnect_request(self) -> None:
         """Disconnect from tunnel device. Delete communication_channel."""
         if self.communication_channel is not None:
             disconnect = Disconnect(
@@ -287,12 +287,16 @@ class _Tunnel(Interface):
                 local_hpai=self.local_hpai,
             )
             await disconnect.start()
-            if not disconnect.success and not ignore_error:
-                self.communication_channel = None
-                raise CommunicationError("Could not disconnect channel")
-            logger.debug(
-                "Tunnel disconnected (communication_channel: %s)",
+            error_message = ""
+            if not disconnect.success and disconnect.response_status_code is not None:
+                error_message = (
+                    f" with error code: {disconnect.response_status_code.name}"
+                )
+            logger.log(
+                logging.WARNING if error_message else logging.DEBUG,
+                "Tunnel disconnected (communication_channel: %s)%s",
                 self.communication_channel,
+                error_message,
             )
         self.communication_channel = None
 
