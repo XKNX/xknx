@@ -56,7 +56,7 @@ jobs:
         run: |
           tox run -e "${{ matrix.envlist }}"
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ matrix.os }}-${{ matrix.python-version }}
           path: .coverage
