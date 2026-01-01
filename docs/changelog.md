@@ -11,6 +11,7 @@ nav_order: 2
 ### Internal
 
 - Add `__slots__` to various classes.
+- Unsuccessful tunnel disconnects don't raise anymore.
 
 # 3.13.0 Numeric metering 2025-12-18
 
