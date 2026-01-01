@@ -293,19 +293,16 @@ class _Tunnel(Interface):
                     self.communication_channel,
                 )
             else:
-                if disconnect.response_status_code is not None:
-                    logger.warning(
-                        "Tunnel disconnect failed (communication_channel: %s) "
-                        "with error code: %s",
-                        self.communication_channel,
-                        disconnect.response_status_code.name,
-                    )
-                else:
-                    logger.warning(
-                        "Tunnel disconnect failed (communication_channel: %s) "
-                        "- no response from device (timeout?)",
-                        self.communication_channel,
-                    )
+                error_msg = (
+                    f"with error code: {disconnect.response_status_code}"
+                    if disconnect.response_status_code is not None
+                    else "- no response from device (timeout)"
+                )
+                logger.warning(
+                    "Tunnel disconnect failed (communication_channel: %s) %s",
+                    self.communication_channel,
+                    error_msg,
+                )
         self.communication_channel = None
 
     async def request_description(self) -> GatewayDescriptor | None:
