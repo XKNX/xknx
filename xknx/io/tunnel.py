@@ -287,17 +287,25 @@ class _Tunnel(Interface):
                 local_hpai=self.local_hpai,
             )
             await disconnect.start()
-            error_message = ""
-            if not disconnect.success and disconnect.response_status_code is not None:
-                error_message = (
-                    f" with error code: {disconnect.response_status_code.name}"
+            if disconnect.success:
+                logger.debug(
+                    "Tunnel disconnect succeeded (communication_channel: %s)",
+                    self.communication_channel,
                 )
-            logger.log(
-                logging.WARNING if error_message else logging.DEBUG,
-                "Tunnel disconnected (communication_channel: %s)%s",
-                self.communication_channel,
-                error_message,
-            )
+            else:
+                if disconnect.response_status_code is not None:
+                    logger.warning(
+                        "Tunnel disconnect failed (communication_channel: %s) "
+                        "with error code: %s",
+                        self.communication_channel,
+                        disconnect.response_status_code.name,
+                    )
+                else:
+                    logger.warning(
+                        "Tunnel disconnect failed (communication_channel: %s) "
+                        "- no response from device (timeout?)",
+                        self.communication_channel,
+                    )
         self.communication_channel = None
 
     async def request_description(self) -> GatewayDescriptor | None:
