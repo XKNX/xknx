@@ -77,8 +77,12 @@ class TestDataSecure:
 
     @patch("xknx.secure.data_secure.DataSecure.outgoing_cemi")
     @patch("xknx.secure.data_secure.DataSecure.received_cemi")
+    @patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
     async def test_data_secure_init(
-        self, mock_ds_received_cemi: MagicMock, mock_ds_outgoing_cemi: MagicMock
+        self,
+        mock_telegram_received: MagicMock,  # suppress forwarding to telegrams/management
+        mock_ds_received_cemi: MagicMock,
+        mock_ds_outgoing_cemi: MagicMock,
     ) -> None:
         """Test DataSecure init and passing frames from CEMIHandler to DataSecure."""
         assert self.data_secure is not None
@@ -96,6 +100,7 @@ class TestDataSecure:
         # this is based on clock milliseconds
         assert self.data_secure._sequence_number_sending > 0
 
+        # Outgoing
         test_telegram = Telegram(
             destination_address=GroupAddress("0/4/0"),
             payload=apci.GroupValueRead(),
@@ -111,21 +116,20 @@ class TestDataSecure:
         self.xknx.cemi_handler._l_data_confirmation_event.set()
         await task
 
+        # Incoming
         test_cemi = CEMIFrame(
             code=CEMIMessageCode.L_DATA_IND,
             data=CEMILData.init_from_telegram(test_telegram),
         )
         # Reuse incoming plain APDU. Decryption is not tested here
         mock_ds_received_cemi.return_value = test_cemi.data
-        with patch.object(
-            self.xknx.cemi_handler, "telegram_received"
-        ) as mock_telegram_received:  # suppress forwarding to telegras/management
-            self.xknx.cemi_handler.handle_cemi_frame(test_cemi)
-            mock_ds_received_cemi.assert_called_once()
-            assert isinstance(
-                mock_ds_received_cemi.call_args.kwargs["cemi_data"], CEMILData
-            )
-            mock_telegram_received.assert_called_once()
+
+        self.xknx.cemi_handler.handle_cemi_frame(test_cemi)
+        mock_ds_received_cemi.assert_called_once()
+        assert isinstance(
+            mock_ds_received_cemi.call_args.kwargs["cemi_data"], CEMILData
+        )
+        mock_telegram_received.assert_called_once()
 
     def test_data_secure_init_invalid_system_time(self) -> None:
         """Test DataSecure init with invalid system time."""

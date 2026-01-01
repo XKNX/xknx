@@ -34,6 +34,15 @@ TrackerOptionType = bool | int | float | str | TrackerOptions
 class StateUpdater:
     """Class for keeping the states of RemoteValues up to date."""
 
+    __slots__ = (
+        "_default_tracker_option",
+        "_semaphore",
+        "_workers",
+        "default_use_updater",
+        "started",
+        "xknx",
+    )
+
     def __init__(
         self,
         xknx: XKNX,
@@ -222,6 +231,8 @@ class StateTrackerType(Enum):
 
 class _StateTracker:
     """Keeps track of the age of the state from one RemoteValue."""
+
+    __slots__ = ("_read_state", "_task", "tracker_type", "update_interval")
 
     def __init__(
         self,

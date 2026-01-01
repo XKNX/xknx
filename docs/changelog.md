@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internal
+
+- Add `__slots__` to various classes.
+
 # 3.13.0 Numeric metering 2025-12-18
 
 ### DPT

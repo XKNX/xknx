@@ -29,6 +29,8 @@ class UDPTransport(KNXIPTransport):
     class UDPTransportFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
+        __slots__ = ("data_received_callback", "transport")
+
         def __init__(
             self, data_received_callback: Callable[[bytes, tuple[str, int]], None]
         ) -> None:
@@ -52,6 +54,13 @@ class UDPTransport(KNXIPTransport):
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
             logger.debug("Closing UDP transport.")
+
+    __slots__ = (
+        "local_addr",
+        "local_addr_assigned",
+        "multicast",
+        "multicast_listener",
+    )
 
     def __init__(
         self,

@@ -1,7 +1,7 @@
 """Test for CEMIHandler."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -59,7 +59,8 @@ async def test_wait_for_l2_confirmation(time_travel: EventLoopClockAdvancer) -> 
         assert xknx.connection_manager.cemi_count_outgoing_error == 1
 
 
-def test_incoming_cemi() -> None:
+@patch("xknx.management.management.Management.process")
+def test_incoming_cemi(mock_management_process: MagicMock) -> None:
     """Test incoming CEMI."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.1")
@@ -75,23 +76,25 @@ def test_incoming_cemi() -> None:
     )
     xknx.cemi_handler.handle_cemi_frame(test_group_cemi)
     assert xknx.telegrams.qsize() == 1
+    mock_management_process.assert_not_called()
+    xknx.telegrams.get_nowait()  # remove telegram from queue
 
     # L_DATA_CON and L_DATA_REQ should not be forwarded to the telegram queue or management
-    with patch.object(xknx.cemi_handler, "telegram_received") as mock_telegram_received:
-        test_incoming_l_data_con = CEMIFrame(
-            code=CEMIMessageCode.L_DATA_CON,
-            data=CEMILData.init_from_telegram(test_telegram),
-        )
-        xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_con)
-        mock_telegram_received.assert_not_called()
-
-        test_incoming_l_data_req = CEMIFrame(
-            code=CEMIMessageCode.L_DATA_REQ,
-            data=CEMILData.init_from_telegram(test_telegram),
-        )
-        xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_req)
-        mock_telegram_received.assert_not_called()
-        assert xknx.connection_manager.cemi_count_incoming == 1
+    test_incoming_l_data_con = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_CON,
+        data=CEMILData.init_from_telegram(test_telegram),
+    )
+    xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_con)
+    assert not xknx.telegrams.qsize()
+    mock_management_process.assert_not_called()
+    test_incoming_l_data_req = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(test_telegram),
+    )
+    xknx.cemi_handler.handle_cemi_frame(test_incoming_l_data_req)
+    assert not xknx.telegrams.qsize()
+    mock_management_process.assert_not_called()
+    assert xknx.connection_manager.cemi_count_incoming == 1
 
 
 @pytest.mark.parametrize(
@@ -111,20 +114,22 @@ def test_incoming_cemi() -> None:
         ),
     ],
 )
-def test_incoming_management_telegram(telegram: Telegram) -> None:
+@patch("xknx.management.management.Management.process")
+def test_incoming_management_telegram(
+    mock_management_process: MagicMock, telegram: Telegram
+) -> None:
     """Test incoming management CEMI."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.1")
 
-    with patch.object(xknx.management, "process") as mock_management_process:
-        test_cemi = CEMIFrame(
-            code=CEMIMessageCode.L_DATA_IND,
-            data=CEMILData.init_from_telegram(telegram),
-        )
-        xknx.cemi_handler.handle_cemi_frame(test_cemi)
-        mock_management_process.assert_called_once()
-        assert xknx.telegrams.qsize() == 0
-        assert xknx.connection_manager.cemi_count_incoming == 1
+    test_cemi = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(telegram),
+    )
+    xknx.cemi_handler.handle_cemi_frame(test_cemi)
+    mock_management_process.assert_called_once()
+    assert xknx.telegrams.qsize() == 0
+    assert xknx.connection_manager.cemi_count_incoming == 1
 
 
 @pytest.mark.parametrize(
@@ -135,18 +140,18 @@ def test_incoming_management_telegram(telegram: Telegram) -> None:
         bytes.fromhex("2900b06010fa10ff00"),
     ],
 )
-def test_invalid_cemi(raw: bytes) -> None:
+@patch("xknx.cemi.cemi_handler.CEMIHandler.handle_cemi_frame")
+@patch("logging.Logger.warning")
+def test_invalid_cemi(
+    mock_warning: MagicMock, mock_handle_cemi_frame: MagicMock, raw: bytes
+) -> None:
     """Test incoming invalid CEMI Frames."""
     xknx = XKNX()
 
-    with (
-        patch("logging.Logger.warning") as mock_info,
-        patch.object(xknx.cemi_handler, "handle_cemi_frame") as mock_handle_cemi_frame,
-    ):
-        xknx.cemi_handler.handle_raw_cemi(raw)
-        mock_info.assert_called_once()
-        mock_handle_cemi_frame.assert_not_called()
-        assert xknx.connection_manager.cemi_count_incoming_error == 1
+    xknx.cemi_handler.handle_raw_cemi(raw)
+    mock_warning.assert_called_once()
+    mock_handle_cemi_frame.assert_not_called()
+    assert xknx.connection_manager.cemi_count_incoming_error == 1
 
 
 @pytest.mark.parametrize(
@@ -157,36 +162,36 @@ def test_invalid_cemi(raw: bytes) -> None:
         bytes.fromhex("2900b0d0000100000103f8"),
     ],
 )
-def test_unsupported_cemi(raw: bytes) -> None:
+@patch("xknx.cemi.cemi_handler.CEMIHandler.handle_cemi_frame")
+@patch("logging.Logger.info")
+def test_unsupported_cemi(
+    mock_info: MagicMock, mock_handle_cemi_frame: MagicMock, raw: bytes
+) -> None:
     """Test incoming unsupported CEMI Frames."""
     xknx = XKNX()
 
-    with (
-        patch("logging.Logger.info") as mock_info,
-        patch.object(xknx.cemi_handler, "handle_cemi_frame") as mock_handle_cemi_frame,
-    ):
-        xknx.cemi_handler.handle_raw_cemi(raw)
-        mock_info.assert_called_once()
-        mock_handle_cemi_frame.assert_not_called()
-        assert xknx.connection_manager.cemi_count_incoming_error == 1
+    xknx.cemi_handler.handle_raw_cemi(raw)
+    mock_info.assert_called_once()
+    mock_handle_cemi_frame.assert_not_called()
+    assert xknx.connection_manager.cemi_count_incoming_error == 1
 
 
-def test_incoming_from_own_ia() -> None:
+@patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
+@patch("logging.Logger.debug")
+def test_incoming_from_own_ia(
+    mock_debug: MagicMock, mock_telegram_received: MagicMock
+) -> None:
     """Test incoming CEMI from own IA."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("1.1.22")
     # L_Data.ind GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
     raw = bytes.fromhex("2900bcd011162916030080 0c 3f")
 
-    with (
-        patch("logging.Logger.debug") as mock_debug,
-        patch.object(xknx.cemi_handler, "telegram_received") as mock_telegram_received,
-    ):
-        xknx.cemi_handler.handle_raw_cemi(raw)
-        mock_debug.assert_called_once()
-        mock_telegram_received.assert_called_once()
-        assert xknx.connection_manager.cemi_count_incoming == 1
-        assert xknx.connection_manager.cemi_count_incoming_error == 0
+    xknx.cemi_handler.handle_raw_cemi(raw)
+    mock_debug.assert_called_once()
+    mock_telegram_received.assert_called_once()
+    assert xknx.connection_manager.cemi_count_incoming == 1
+    assert xknx.connection_manager.cemi_count_incoming_error == 0
 
 
 @pytest.mark.parametrize(
@@ -207,18 +212,22 @@ def test_incoming_from_own_ia() -> None:
         ),
     ],
 )
-def test_incoming_cemi_no_data_secure_keys(raw_cemi_data_secure: bytes) -> None:
+@patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
+def test_incoming_cemi_no_data_secure_keys(
+    mock_telegram_received: MagicMock,
+    raw_cemi_data_secure: bytes,
+) -> None:
     """Test incoming DataSecure CEMI when no DataSecure keys are initialized."""
     xknx = XKNX()
     xknx.current_address = IndividualAddress("5.0.1")
 
     with (
         patch("logging.Logger.debug") as mock_debug,
-        patch.object(xknx.cemi_handler, "telegram_received") as mock_telegram_received,
     ):
         xknx.cemi_handler.handle_raw_cemi(raw_cemi_data_secure)
-        assert mock_debug.call_count == 2  # one for reception, one for DataSecure debug
-        mock_telegram_received.assert_not_called()
+    assert mock_debug.call_count == 2  # one for reception, one for DataSecure debug
+    # frame is dropped because no keys are available
+    mock_telegram_received.assert_not_called()
     # not having a key isn't an error per se, so no incoming_error count
     assert xknx.connection_manager.cemi_count_incoming == 1
     assert xknx.connection_manager.cemi_count_incoming_error == 0

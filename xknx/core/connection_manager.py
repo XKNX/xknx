@@ -17,6 +17,20 @@ logger = logging.getLogger("xknx.log")
 class ConnectionManager:
     """Manages connection state changes XKNX."""
 
+    __slots__ = (
+        "_connection_state_changed_cbs",
+        "_main_loop",
+        "_state",
+        "cemi_count_incoming",
+        "cemi_count_incoming_error",
+        "cemi_count_outgoing",
+        "cemi_count_outgoing_error",
+        "connected",
+        "connected_since",
+        "connection_type",
+        "undecoded_data_secure",
+    )
+
     def __init__(self) -> None:
         """Initialize ConnectionState class."""
         self._main_loop: asyncio.AbstractEventLoop | None = None

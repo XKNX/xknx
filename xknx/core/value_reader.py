@@ -28,6 +28,14 @@ logger = logging.getLogger("xknx.log")
 class ValueReader:
     """Class for reading the value of a specific KNX group address from KNX bus."""
 
+    __slots__ = (
+        "group_address",
+        "received_telegram",
+        "response_received_event",
+        "timeout_in_seconds",
+        "xknx",
+    )
+
     def __init__(
         self,
         xknx: XKNX,
