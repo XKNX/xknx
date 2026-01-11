@@ -213,7 +213,6 @@ class RemoteValue(ABC, Generic[ValueT]):
                 err,
             )
             return False
-        # TODO use for comparison - make a method that takes value and returns bool if encoded is same
         self._payload = telegram.payload.value
         self.xknx.state_updater.update_received(self)
         if self._value is None or always_callback or self._value != decoded_payload:

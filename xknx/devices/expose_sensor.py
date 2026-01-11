@@ -69,7 +69,7 @@ class ExposeSensor(Device):
                 after_update_cb=self.after_update,
                 value_type=value_type,
             )
-        # the next payload to be sent after cooldown or the the last sent payload
+        # the next payload to be sent after cooldown or the last sent payload
         self._payload_after_cooldown: DPTArray | DPTBinary | None = None
         self._cooldown_task: Task | None = None
         self._cooldown_task_name = f"expose_sensor.cooldown_{id(self)}"
