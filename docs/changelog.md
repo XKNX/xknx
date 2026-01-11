@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- ExposeSensor: Add `skip_unchanged` argument to `set` method to skip sending when the encoded payload matches the last one.
+
 ### Internal
 
 - Add `__slots__` to various classes.

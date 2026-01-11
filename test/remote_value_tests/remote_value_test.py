@@ -31,9 +31,9 @@ class TestRemoteValue:
             remote_value.value = "a"
         # new value is used in response Telegram
         test_payload = remote_value.to_knx(2.2)
-        remote_value._send = Mock()
+        remote_value.send_raw = Mock()
         remote_value.respond()
-        remote_value._send.assert_called_with(test_payload, response=True)
+        remote_value.send_raw.assert_called_with(test_payload, response=True)
         # callback is not called when setting value programmatically
         remote_value.after_update_cb.assert_not_called()
         # no Telegram was sent to the queue
@@ -59,10 +59,10 @@ class TestRemoteValue:
         """Test for info if RemoteValue is not initialized."""
         xknx = XKNX()
         remote_value = RemoteValue(xknx)
-        with patch("logging.Logger.info") as mock_info:
+        with patch("logging.Logger.warning") as mock_warning:
             remote_value.set(23)
-            mock_info.assert_called_with(
-                "Setting value of uninitialized device: %s - %s (value: %s)",
+            mock_warning.assert_called_with(
+                "Attempted to set value for non-writable device: %s - %s (value: %s)",
                 "Unknown",
                 "Unknown",
                 23,
