@@ -18,7 +18,7 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
 from xknx.core import Task
-from xknx.dpt import DPTBase
+from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -58,7 +58,7 @@ class ExposeSensor(Device):
                 group_address=group_address,
                 sync_state=False,
                 device_name=self.name,
-                after_update_cb=self.expose_after_update,
+                after_update_cb=self.after_update,
             )
         else:
             self.sensor_value = RemoteValueSensor(
@@ -66,17 +66,13 @@ class ExposeSensor(Device):
                 group_address=group_address,
                 sync_state=False,
                 device_name=self.name,
-                after_update_cb=self.expose_after_update,
+                after_update_cb=self.after_update,
                 value_type=value_type,
             )
-        self._cooldown_latest_value: Any | None = None
+        # the next payload to be sent after cooldown or the the last sent payload
+        self._payload_after_cooldown: DPTArray | DPTBinary | None = None
         self._cooldown_task: Task | None = None
         self._cooldown_task_name = f"expose_sensor.cooldown_{id(self)}"
-
-    def expose_after_update(self, value: int | float | str | bool) -> None:
-        """Call after state was updated."""
-        self._cooldown_latest_value = value
-        super().after_update()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""
@@ -96,30 +92,38 @@ class ExposeSensor(Device):
         """Process incoming GROUP READ telegram."""
         if not self.respond_to_read:
             return
-        if self._cooldown_latest_value is not None:
-            self.sensor_value.set(self._cooldown_latest_value, response=True)
+        if self._payload_after_cooldown is not None:
+            self.sensor_value.send_raw(self._payload_after_cooldown, response=True)
             return
         self.sensor_value.respond()
 
-    async def set(self, value: Any) -> None:
-        """Set new value."""
+    async def set(self, value: Any, skip_unchanged: bool = False) -> None:
+        """
+        Set new value.
+
+        Set `skip_unchanged` to skip sending when the encoded payload matches the last one.
+        """
+        payload = self.sensor_value.to_knx(value)
+        if skip_unchanged and self._payload_after_cooldown == payload:
+            return
+        self._payload_after_cooldown = payload
+
         if self.cooldown:
-            self._cooldown_latest_value = value
             if self._cooldown_task is not None and not self._cooldown_task.done():
                 return
             self._cooldown_task = self.xknx.task_registry.register(
                 name=self._cooldown_task_name,
                 async_func=self._cooldown_wait,
             ).start()
-        self.sensor_value.set(value)
+        self.sensor_value.send_raw(payload)
 
     async def _cooldown_wait(self) -> None:
         """Send value after cooldown if it differs from last processed value."""
         while True:
             await asyncio.sleep(self.cooldown)
-            if self.sensor_value.value == self._cooldown_latest_value:
+            if self.sensor_value.last_payload == self._payload_after_cooldown:
                 break
-            self.sensor_value.set(self._cooldown_latest_value)  # type: ignore[arg-type]
+            self.sensor_value.send_raw(self._payload_after_cooldown)  # type: ignore[arg-type]
 
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
