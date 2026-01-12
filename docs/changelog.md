@@ -11,6 +11,7 @@ nav_order: 2
 ### Devices
 
 - ExposeSensor: Add `skip_unchanged` argument to `set` method to skip sending when the encoded payload matches the last one.
+- ExposeSensor: Add `periodic_send` argument to re-send value in a time interval (seconds). Disabled on `0` (default).
 
 ### Internal
 

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, call
 from xknx import XKNX
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from ..conftest import EventLoopClockAdvancer
@@ -361,6 +361,52 @@ class TestExposeSensor:
         #   after cooldown - new value not sent again (already in GroupValueResponse)
         await time_travel(10)
         xknx.cemi_handler.send_telegram.assert_not_called()
+
+        await xknx.stop()
+
+    async def test_cooldown_read_request(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test cooldown for read requests."""
+        xknx = XKNX()
+        xknx.cemi_handler = AsyncMock()
+        await xknx.telegram_queue.start()
+
+        expose_sensor_cd = ExposeSensor(
+            xknx,
+            "TestSensor",
+            group_address="1/2/3",
+            value_type="temperature",
+            cooldown=10,
+        )
+        xknx.devices.async_add(expose_sensor_cd)
+        expose_sensor_no_cd = ExposeSensor(
+            xknx,
+            "TestSensor",
+            group_address="1/2/4",
+            value_type="temperature",
+        )
+        xknx.devices.async_add(expose_sensor_no_cd)
+        # reading during cooldown sends immediately, response starts cooldown
+        await expose_sensor_cd.set(15)
+        await time_travel(0)  # 0 after GroupValueWrite
+        assert expose_sensor_cd._cooldown_task.done() is False
+        xknx.cemi_handler.send_telegram.assert_called_once()
+        xknx.cemi_handler.send_telegram.reset_mock()
+        await time_travel(5)  # 5 after GroupValueWrite
+        #   in cooldown - read request
+        expose_sensor_cd.process(
+            Telegram(GroupAddress("1/2/3"), payload=GroupValueRead())
+        )
+        await time_travel(0)  # 5 after GroupValueWrite (0 after GroupValueResponse)
+        xknx.cemi_handler.send_telegram.assert_called_once()
+        xknx.cemi_handler.send_telegram.reset_mock()
+        assert expose_sensor_cd._cooldown_task.done() is False
+        await time_travel(7)  # 12 after GroupValueWrite, 7 after GroupValueResponse
+        assert expose_sensor_cd._cooldown_task.done() is False
+        await time_travel(3)  # 15 after GroupValueWrite, 10 after GroupValueResponse
+        assert expose_sensor_cd._cooldown_task.done() is True
+
         await xknx.stop()
 
     async def test_set_same_payload(self, time_travel: EventLoopClockAdvancer) -> None:
@@ -413,3 +459,92 @@ class TestExposeSensor:
         await expose_sensor.set(22.0, skip_unchanged=True)
         await time_travel(10)
         assert xknx.telegrams.empty()
+
+    async def test_periodic_send(
+        self,
+        xknx_no_interface: XKNX,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test periodic send of expose sensor."""
+        xknx = xknx_no_interface
+        xknx.cemi_handler = AsyncMock()
+        expose_sensor = ExposeSensor(
+            xknx,
+            "TestSensor",
+            group_address="1/2/3",
+            value_type="switch",
+            cooldown=2,
+            periodic_send=10,
+        )
+        xknx.devices.async_add(expose_sensor)
+        await xknx.start()
+
+        test_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(True)),
+        )
+
+        # uninitialized doesn't send anything
+        await time_travel(10)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+
+        # set a value - send immediately
+        await expose_sensor.set(True)
+        await time_travel(0)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+
+        # no resend before periodic time
+        await time_travel(9)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+
+        # resend after periodic time
+        await time_travel(1)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+
+        # incoming update doesn't reset periodic timer
+        await time_travel(7)
+        expose_sensor.process(
+            Telegram(
+                direction=TelegramDirection.INCOMING,
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
+        await time_travel(2)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+        await time_travel(1)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+
+        # outgoing cooldown telegram resets periodic timer
+        await time_travel(7)
+        await expose_sensor.set(False)
+        await expose_sensor.set(True)  # within cooldown
+        await time_travel(0)
+        xknx.cemi_handler.send_telegram.assert_called_once()  # with False, second is in cooldown
+        xknx.cemi_handler.send_telegram.reset_mock()
+        await time_travel(2)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+        #    after cooldown, periodic timer reset - wait full periodic time
+        await time_travel(9)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+        await time_travel(1)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+        #    periodic telegram triggers cooldown
+        await expose_sensor.set(False)
+        await time_travel(0)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+        xknx.cemi_handler.send_telegram.reset_mock()
+        await time_travel(2)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            )
+        )
+
+        await xknx.stop()
