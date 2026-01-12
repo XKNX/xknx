@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.14.0 ExposeSensor improvements 2026-01-12
 
 ### Devices
 
