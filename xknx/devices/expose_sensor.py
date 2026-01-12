@@ -49,7 +49,25 @@ class ExposeSensor(Device):
         periodic_send: float = 0,
         device_updated_cb: DeviceCallbackType[ExposeSensor] | None = None,
     ) -> None:
-        """Initialize Sensor class."""
+        """
+        Initialize ExposeSensor class.
+
+        Args:
+        xknx: XKNX instance to use for communication.
+        name: Name of the device.
+        group_address: KNX group address to send the value to.
+        respond_to_read: If True, respond to GroupValueRead telegrams with the
+            current value.
+        value_type: DPT type or identifier used to encode the sensor value.
+        cooldown: Minimum time in seconds between sending values to the KNX
+            bus. If multiple updates occur during this period, only the last
+            value is sent when the cooldown ends. ``0`` (default) disables cooldown.
+        periodic_send: Interval in seconds for automatically re-sending the
+            current value. A value of ``0`` (default) disables periodic sending.
+        device_updated_cb: Callback invoked when the device has been
+            updated.
+
+        """
         super().__init__(xknx, name, device_updated_cb)
         self.respond_to_read = respond_to_read
         self.sensor_value: RemoteValueSensor | RemoteValueSwitch
