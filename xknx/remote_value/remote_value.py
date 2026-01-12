@@ -82,6 +82,7 @@ class RemoteValue(ABC, Generic[ValueT]):
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
         self._value: ValueT | None = None
+        self._payload: DPTArray | DPTBinary | None = None
         self.telegram: Telegram | None = None
         self.after_update_cb: RVCallbackType[ValueT] | None = after_update_cb
         self._sync_state = sync_state
@@ -124,8 +125,15 @@ class RemoteValue(ABC, Generic[ValueT]):
         """Set new value without creating a Telegram or calling after_update_cb. Raises ConversionError on invalid value."""
         if value is not None:
             # raises ConversionError on invalid value
-            self.to_knx(value)
+            self._payload = self.to_knx(value)
+        else:
+            self._payload = None
         self._value = value
+
+    @property
+    def last_payload(self) -> DPTArray | DPTBinary | None:
+        """Get last payload."""
+        return self._payload
 
     def update_value(self, value: ValueT) -> None:
         """Set new value without creating a Telegram. Calls after_update_cb. Raises ConversionError on invalid value."""
@@ -205,6 +213,7 @@ class RemoteValue(ABC, Generic[ValueT]):
                 err,
             )
             return False
+        self._payload = telegram.payload.value
         self.xknx.state_updater.update_received(self)
         if self._value is None or always_callback or self._value != decoded_payload:
             self._value = decoded_payload
@@ -213,9 +222,15 @@ class RemoteValue(ABC, Generic[ValueT]):
                 self.after_update_cb(decoded_payload)
         return True
 
-    def _send(self, payload: DPTArray | DPTBinary, response: bool = False) -> None:
+    def send_raw(self, payload: DPTArray | DPTBinary, response: bool = False) -> None:
         """Send payload as telegram to KNX bus."""
         if self.group_address is None:
+            logger.warning(
+                "Attempted to set payload for non-writable device: %s - %s (payload: %s)",
+                self.device_name,
+                self.feature_name,
+                payload,
+            )
             return
         telegram = Telegram(
             destination_address=self.group_address,
@@ -228,14 +243,6 @@ class RemoteValue(ABC, Generic[ValueT]):
 
     def set(self, value: ValueT, response: bool = False) -> None:
         """Set new value."""
-        if not self.initialized:
-            logger.info(
-                "Setting value of uninitialized device: %s - %s (value: %s)",
-                self.device_name,
-                self.feature_name,
-                value,
-            )
-            return
         if not self.writable:
             logger.warning(
                 "Attempted to set value for non-writable device: %s - %s (value: %s)",
@@ -245,15 +252,15 @@ class RemoteValue(ABC, Generic[ValueT]):
             )
             return
         payload = self.to_knx(value)
-        self._send(payload, response)
         # self._value is set and after_update_cb() called when the outgoing telegram is processed.
+        self.send_raw(payload, response)
 
     def respond(self) -> None:
         """Send current payload as GroupValueResponse telegram to KNX bus."""
         if self._value is None:
             return
         payload = self.to_knx(self._value)
-        self._send(payload, response=True)
+        self.send_raw(payload, response=True)
 
     async def read_state(self, wait_for_result: bool = False) -> None:
         """Send GroupValueRead telegram for state address to KNX bus."""
