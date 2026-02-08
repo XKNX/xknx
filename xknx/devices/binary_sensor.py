@@ -98,7 +98,7 @@ class BinarySensor(Device):
                 self.bump_and_get_counter(state)
                 self._context_task = self.xknx.task_registry.register(
                     name=f"binary_sensor.context_{id(self)}",
-                    async_func=partial(self._counter_task, self._context_timeout),
+                    target=partial(self._counter_task, self._context_timeout),
                 ).start()
             else:
                 self.after_update()
@@ -164,8 +164,7 @@ class BinarySensor(Device):
         if self.reset_after is not None and self.state:
             self._reset_task = self.xknx.task_registry.register(
                 name=f"binary_sensor.reset_{id(self)}",
-                async_func=partial(self._reset_state, self.reset_after),
-                track_task=True,
+                target=partial(self._reset_state, self.reset_after),
             ).start()
 
     async def _reset_state(self, wait_seconds: float) -> None:

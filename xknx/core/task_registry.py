@@ -20,24 +20,64 @@ logger = logging.getLogger("xknx.log")
 class Task:
     """Handles a given task."""
 
-    __slots__ = ("_task", "async_func", "name", "restart_after_reconnect")
+    __slots__ = (
+        "_task",
+        "name",
+        "restart_after_reconnect",
+        "target",
+        "wait_before_start",
+        "wait_for_connection",
+        "xknx",
+    )
 
     def __init__(
         self,
+        xknx: XKNX,
         name: str,
-        async_func: AsyncCallbackType,
+        target: AsyncCallbackType | Callable[[], None],
         restart_after_reconnect: bool = False,
+        wait_before_start: float = 0,
+        wait_for_connection: bool = False,
     ) -> None:
-        """Initialize Task class."""
+        """
+        Initialize a task that can be managed by the TaskRegistry.
+
+        The task execution order is: wait_before_start delay → wait_for_connection (if enabled) → execute target.
+
+        Args:
+            xknx: The XKNX instance managing this task.
+            name: Unique identifier for the task, used in logging and task management.
+            target: The function to execute. Can be async or sync. Sync functions will run in the main
+                event loop thread so shall not perform blocking operations.
+            restart_after_reconnect: When True, automatically cancels and restarts the task when the
+                KNX bus connection is lost and reestablished.
+            wait_before_start: Initial delay in seconds before the task begins execution. Applied before
+                checking for connection if wait_for_connection is also enabled.
+            wait_for_connection: When True, blocks task execution until a KNX bus connection is established.
+                The task will wait indefinitely until connected.
+
+        """
+        self.xknx = xknx
         self.name = name
-        self.async_func = async_func
+        self.target = target
         self.restart_after_reconnect = restart_after_reconnect
+        self.wait_before_start = wait_before_start
+        self.wait_for_connection = wait_for_connection
         self._task: asyncio.Task[None] | None = None
 
     def start(self) -> Task:
         """Start a task."""
-        self._task = asyncio.create_task(self.async_func(), name=self.name)
+        self._task = asyncio.create_task(self._start(), name=self.name)
         return self
+
+    async def _start(self) -> None:
+        if self.wait_before_start:
+            await asyncio.sleep(self.wait_before_start)
+        if self.wait_for_connection:
+            await self.xknx.connection_manager.connected.wait()
+        job = self.target()
+        if asyncio.iscoroutine(job):
+            await job
 
     def __await__(self) -> Generator[None, None, None]:
         """Wait for task to be finished."""
@@ -85,22 +125,23 @@ class TaskRegistry:
     def register(
         self,
         name: str,
-        async_func: AsyncCallbackType,
-        track_task: bool = True,
+        target: AsyncCallbackType | Callable[[], None],
         restart_after_reconnect: bool = False,
+        wait_before_start: float = 0,
+        wait_for_connection: bool = False,
     ) -> Task:
         """Register new task."""
         self.unregister(name)
 
-        _task: Task = Task(
+        _task = Task(
+            xknx=self.xknx,
             name=name,
-            async_func=async_func,
+            target=target,
             restart_after_reconnect=restart_after_reconnect,
+            wait_before_start=wait_before_start,
+            wait_for_connection=wait_for_connection,
         )
-
-        if track_task:
-            self.tasks.append(_task)
-
+        self.tasks.append(_task)
         return _task
 
     def unregister(self, name: str) -> None:
@@ -140,7 +181,12 @@ class TaskRegistry:
                 task.connection_lost()
 
     def background(self, async_func: Coroutine[Any, Any, None]) -> None:
-        """Run a task in the background. This task will not be tracked by the TaskRegistry."""
+        """
+        Run an async task in the background. Task will not be tracked by the TaskRegistry.
+
+        This is a helper method for keeping references to asyncio tasks to prevent
+        them from being garbage collected while they are still running.
+        """
         # Add task to the set. This creates a strong reference so it can't be garbage collected.
         task = asyncio.create_task(async_func)
         # To prevent keeping references to finished tasks forever,

@@ -105,7 +105,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
 
         self._broadcast_task = self.xknx.task_registry.register(
             name=f"datetime.broadcast_{id(self)}",
-            async_func=partial(broadcast_loop, self, BROADCAST_MINUTES),
+            target=partial(broadcast_loop, self, BROADCAST_MINUTES),
             restart_after_reconnect=True,
         ).start()
 

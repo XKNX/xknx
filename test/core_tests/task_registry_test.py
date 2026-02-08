@@ -1,6 +1,9 @@
 """Unit test for task registry."""
 
 import asyncio
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
@@ -14,39 +17,38 @@ class TestTaskRegistry:
     #
     # TEST REGISTER/UNREGISTER
     #
-    async def test_register(self) -> None:
+    @pytest.mark.parametrize("target", ["async", "sync"])
+    async def test_register(self, target: str) -> None:
         """Test register."""
-
         xknx = XKNX()
-
-        async def callback() -> None:
-            """Reset tasks."""
-            xknx.task_registry.tasks = []
+        mock = AsyncMock() if target == "async" else Mock()
 
         task = xknx.task_registry.register(
             name="test",
-            async_func=callback,
+            target=mock,
         )
         assert len(xknx.task_registry.tasks) == 1
 
         task.start()
         assert not task.done()
+        assert mock.call_count == 0
+        if target == "async":
+            assert mock.await_count == 0
 
         await xknx.task_registry.block_till_done()
         assert task.done()
-        assert len(xknx.task_registry.tasks) == 0
+        assert mock.call_count == 1
+        if target == "async":
+            assert mock.await_count == 1
 
     async def test_unregister(self) -> None:
         """Test unregister after register."""
-
         xknx = XKNX()
-
-        async def callback() -> None:
-            """Do nothing."""
+        mock = Mock()
 
         task = xknx.task_registry.register(
             name="test",
-            async_func=callback,
+            target=mock,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -54,21 +56,23 @@ class TestTaskRegistry:
         assert len(xknx.task_registry.tasks) == 0
         assert task.done()
 
+        assert mock.call_count == 0
+
     #
     # TEST START/STOP
     #
     async def test_stop(self) -> None:
         """Test stop."""
-
         xknx = XKNX()
 
         async def callback() -> None:
             """Reset tasks."""
-            await asyncio.sleep(100)
+            await asyncio.sleep(1)
+            raise AssertionError("Task should have been cancelled")
 
         task = xknx.task_registry.register(
             name="test",
-            async_func=callback,
+            target=callback,
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -87,48 +91,111 @@ class TestTaskRegistry:
         xknx.task_registry.start()
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 1
         xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
-        # pylint: disable=attribute-defined-outside-init
-        self.test = 0
+
+        test = 0
 
         async def callback() -> None:
             """Reset tasks."""
+            nonlocal test
             try:
                 while True:
                     await asyncio.sleep(100)
-                    self.test += 1
+                    test += 1
             except asyncio.CancelledError:
-                self.test -= 1
+                test -= 1
 
         task = xknx.task_registry.register(
-            name="test", async_func=callback, restart_after_reconnect=True
+            name="test", target=callback, restart_after_reconnect=True
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
         assert task._task is not None
         await time_travel(100)
-        assert self.test == 1
+        assert test == 1
 
         xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         await asyncio.sleep(0)  # iterate loop to cancel task
         assert task._task is None
-        assert self.test == 0
+        assert test == 0
 
         xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         assert task._task is not None
-        assert self.test == 0
+        assert test == 0
 
         await time_travel(100)
-        assert self.test == 1
+        assert test == 1
         assert len(xknx.task_registry.tasks) == 1
 
         xknx.task_registry.stop()
         assert len(xknx.task_registry.tasks) == 0
         assert task._task is None
         await asyncio.sleep(0)  # iterate loop to cancel task
-        assert self.test == 0
+        assert test == 0
         assert len(xknx.connection_manager._connection_state_changed_cbs) == 0
+
+    async def test_wait_before_start(self, time_travel: EventLoopClockAdvancer) -> None:
+        """Test wait_before_start argument."""
+        xknx = XKNX()
+        mock = AsyncMock()
+        wait_time = 5
+
+        task = xknx.task_registry.register(
+            name="test",
+            target=mock,
+            wait_before_start=wait_time,
+        )
+        task.start()
+
+        # Task should not be called immediately
+        assert mock.call_count == 0
+        assert mock.await_count == 0
+        assert not task.done()
+
+        # Task should not be called after half the wait time
+        await time_travel(wait_time / 2)
+        assert mock.call_count == 0
+        assert mock.await_count == 0
+        assert not task.done()
+
+        # Task should be called after the full wait time
+        await time_travel(wait_time / 2)
+        assert mock.call_count == 1
+        assert mock.await_count == 1
+        assert task.done()
+
+        # run again - verify target can be called again and wait_before_start applies again
+        task.start()
+        await time_travel(wait_time / 2)
+        assert mock.call_count == 1
+        await time_travel(wait_time / 2)
+        assert mock.call_count == 2
+        assert mock.await_count == 2
+        assert task.done()
+
+    async def test_wait_for_connection(self) -> None:
+        """Test wait_for_connection argument."""
+        xknx = XKNX()
+        mock = Mock()
+
+        task = xknx.task_registry.register(
+            name="test",
+            target=mock,
+            wait_for_connection=True,
+        )
+        task.start()
+
+        # Task should not be called immediately when not connected
+        await asyncio.sleep(0)
+        assert mock.call_count == 0
+        assert not task.done()
+
+        # Task should be called after connection is established
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        await asyncio.sleep(0)
+        assert mock.call_count == 1
+        assert task.done()
 
     async def test_background(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test running background task."""

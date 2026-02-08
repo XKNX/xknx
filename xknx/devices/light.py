@@ -374,7 +374,7 @@ class Light(Device):
             # task registry cancels existing task
             self.xknx.task_registry.register(
                 name=self._individual_color_debounce_task_name,
-                async_func=debouncer,
+                target=debouncer,
             ).start()
             return
         self.xknx.task_registry.unregister(self._individual_color_debounce_task_name)

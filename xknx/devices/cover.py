@@ -269,7 +269,7 @@ class Cover(Device):
         # restarts when already running
         self._periodic_update_task = self.xknx.task_registry.register(
             name=f"cover.periodic_update_{id(self)}",
-            async_func=periodic_updater,
+            target=periodic_updater,
         ).start()
 
     def _stop_position_update(self) -> None:
@@ -300,7 +300,7 @@ class Cover(Device):
 
         self._auto_stop_task = self.xknx.task_registry.register(
             name=f"cover.auto_stopper_{id(self)}",
-            async_func=auto_stopper,
+            target=auto_stopper,
         ).start()
         self._auto_stop_requested = True
 

@@ -106,7 +106,7 @@ class ExposeSensor(Device):
         if self._periodic_send_time > 0:
             self._periodic_send_task = self.xknx.task_registry.register(
                 name=f"expose_sensor.periodic_send_{id(self)}",
-                async_func=self._periodic_send_loop,
+                target=self._periodic_send_loop,
                 restart_after_reconnect=True,
             ).start()
 
@@ -157,7 +157,7 @@ class ExposeSensor(Device):
                 return
             self._cooldown_task = self.xknx.task_registry.register(
                 name=self._cooldown_task_name,
-                async_func=self._cooldown_wait,
+                target=self._cooldown_wait,
             ).start()
         self.sensor_value.send_raw(payload)
 
@@ -179,7 +179,7 @@ class ExposeSensor(Device):
             return
         self._cooldown_task = self.xknx.task_registry.register(
             name=self._cooldown_task_name,
-            async_func=self._cooldown_wait,
+            target=self._cooldown_wait,
         ).start()
 
     async def _periodic_send_loop(self) -> None:

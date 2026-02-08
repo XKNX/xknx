@@ -87,8 +87,7 @@ class Switch(Device):
             if self.reset_after is not None and self.switch.value:
                 self._reset_task = self.xknx.task_registry.register(
                     name=f"switch.reset_{id(self)}",
-                    async_func=partial(self._reset_state, self.reset_after),
-                    track_task=True,
+                    target=partial(self._reset_state, self.reset_after),
                 ).start()
 
     def process_group_read(self, telegram: Telegram) -> None:
