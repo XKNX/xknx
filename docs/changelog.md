@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased
 
+### Devices
+
+- ExposeSensor: `cooldown` is extended to wait for connection if not established.
+
 ### Internals
 
 - Replace `TaskRegistry.register()` with `TaskRegistry.start_task()` for better readability and easier handling.
