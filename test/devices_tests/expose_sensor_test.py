@@ -330,6 +330,7 @@ class TestExposeSensor:
         xknx.cemi_handler.send_telegram.reset_mock()
         assert expose_sensor_cd.resolve_state() == 3.11
         await time_travel(10)
+        assert expose_sensor_cd._cooldown_task.done()  # done after no change
         xknx.cemi_handler.send_telegram.assert_not_called()
 
         # reading unsent value
@@ -370,11 +371,12 @@ class TestExposeSensor:
         xknx.cemi_handler.send_telegram.assert_called_once()
         xknx.cemi_handler.send_telegram.reset_mock()
         await expose_sensor_cd.set(30)
-        await time_travel(8)
+        await time_travel(5)
         xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
-        await time_travel(2)
+        await time_travel(5)
+        await time_travel(10)
         xknx.cemi_handler.send_telegram.assert_not_called()
         assert not expose_sensor_cd._cooldown_task.done()
         await expose_sensor_cd.set(40)
