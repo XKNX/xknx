@@ -9,7 +9,6 @@ It provides functionality for
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING
@@ -99,10 +98,6 @@ class Switch(Device):
             and telegram.destination_address == self.switch.group_address
         ):
             self.switch.respond()
-
-    async def _reset_state(self, wait_seconds: float) -> None:
-        await asyncio.sleep(wait_seconds)
-        await self.set_off()
 
     def __str__(self) -> str:
         """Return object as readable string."""
