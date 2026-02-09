@@ -217,9 +217,9 @@ class TestSwitch:
             )
             switch.process(telegram_on)
             assert switch.state
-            assert switch._reset_task is not None
+            assert not switch._reset_task.done()
             xknx.devices.async_remove(switch)
-            assert switch._reset_task is None
+            assert switch._reset_task.done()
 
     async def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""

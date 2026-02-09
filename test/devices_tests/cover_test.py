@@ -1030,7 +1030,7 @@ class TestCover:
             await time_travel(2.4)
             assert callback_mock.call_count == 5
             assert cover.position_reached()
-            assert cover._periodic_update_task is None
+            assert cover._periodic_update_task.done()
 
     @patch("xknx.core.TelegramQueue.process_telegram_outgoing", new_callable=AsyncMock)
     async def test_remove_task_cancel(
@@ -1056,11 +1056,11 @@ class TestCover:
             cover.process(telegram)
             assert cover.current_position() == 0
             await cover.set_position(50)
-            assert cover._periodic_update_task is not None
-            assert cover._auto_stop_task is not None
+            assert not cover._periodic_update_task.done()
+            assert not cover._auto_stop_task.done()
             xknx.devices.async_remove(cover)
-            assert cover._periodic_update_task is None
-            assert cover._auto_stop_task is None
+            assert cover._periodic_update_task.done()
+            assert cover._auto_stop_task.done()
 
     #
     # HAS GROUP ADDRESS

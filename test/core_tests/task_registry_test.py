@@ -7,6 +7,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState
+from xknx.core.task_registry import Task
 
 from ..conftest import EventLoopClockAdvancer
 
@@ -24,8 +25,10 @@ class TestTaskRegistry:
         mock = AsyncMock() if target == "async" else Mock()
 
         task = xknx.task_registry.register(
-            name="test",
-            target=mock,
+            Task(
+                name="test",
+                target=mock,
+            )
         )
         assert len(xknx.task_registry.tasks) == 1
 
@@ -47,12 +50,14 @@ class TestTaskRegistry:
         mock = Mock()
 
         task = xknx.task_registry.register(
-            name="test",
-            target=mock,
+            Task(
+                name="test",
+                target=mock,
+            )
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
-        xknx.task_registry.unregister(task.name)
+        xknx.task_registry.unregister(task)
         assert len(xknx.task_registry.tasks) == 0
         assert task.done()
 
@@ -71,8 +76,10 @@ class TestTaskRegistry:
             raise AssertionError("Task should have been cancelled")
 
         task = xknx.task_registry.register(
-            name="test",
-            target=callback,
+            Task(
+                name="test",
+                target=callback,
+            )
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -105,7 +112,11 @@ class TestTaskRegistry:
                 test -= 1
 
         task = xknx.task_registry.register(
-            name="test", target=callback, restart_after_reconnect=True
+            Task(
+                name="test",
+                target=callback,
+                restart_after_reconnect=True,
+            )
         )
         assert len(xknx.task_registry.tasks) == 1
         task.start()
@@ -142,9 +153,11 @@ class TestTaskRegistry:
         wait_time = 5
 
         task = xknx.task_registry.register(
-            name="test",
-            target=mock,
-            wait_before_start=wait_time,
+            Task(
+                name="test",
+                target=mock,
+                wait_before_start=wait_time,
+            )
         )
         task.start()
 
@@ -180,9 +193,11 @@ class TestTaskRegistry:
         mock = Mock()
 
         task = xknx.task_registry.register(
-            name="test",
-            target=mock,
-            wait_for_connection=True,
+            Task(
+                name="test",
+                target=mock,
+                wait_for_connection=True,
+            )
         )
         task.start()
 
@@ -204,9 +219,11 @@ class TestTaskRegistry:
         repeat_after = 5
 
         task = xknx.task_registry.register(
-            name="test",
-            target=mock,
-            repeat_after=repeat_after,
+            Task(
+                name="test",
+                target=mock,
+                repeat_after=repeat_after,
+            )
         )
         task.start()
 
@@ -236,11 +253,13 @@ class TestTaskRegistry:
         wait_time = 5
 
         task = xknx.task_registry.register(
-            name="test",
-            target=mock,
-            restart_after_reconnect=True,
-            wait_before_start=wait_time,
-            wait_for_connection=True,
+            Task(
+                name="test",
+                target=mock,
+                restart_after_reconnect=True,
+                wait_before_start=wait_time,
+                wait_for_connection=True,
+            )
         )
         task.start()
 
@@ -259,6 +278,16 @@ class TestTaskRegistry:
         await asyncio.sleep(0)
         assert mock.call_count == 1
         assert task.done()
+
+    async def test_start_before_register(self) -> None:
+        """Test that start() before register() raises RuntimeError."""
+        task = Task(
+            name="test",
+            target=Mock(),
+        )
+
+        with pytest.raises(RuntimeError, match="Task must be registered before start"):
+            task.start()
 
     async def test_background(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test running background task."""

@@ -104,15 +104,17 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
                 await asyncio.sleep(minutes * 60)
 
         self._broadcast_task = self.xknx.task_registry.register(
-            name=f"datetime.broadcast_{id(self)}",
-            target=partial(broadcast_loop, self, BROADCAST_MINUTES),
-            restart_after_reconnect=True,
+            Task(
+                name=f"datetime.broadcast_{id(self)}",
+                target=partial(broadcast_loop, self, BROADCAST_MINUTES),
+                restart_after_reconnect=True,
+            )
         ).start()
 
     def async_remove_tasks(self) -> None:
         """Stop background tasks of device."""
         if self._broadcast_task is not None:
-            self.xknx.task_registry.unregister(self._broadcast_task.name)
+            self.xknx.task_registry.unregister(self._broadcast_task)
             self._broadcast_task = None
 
     @abstractmethod

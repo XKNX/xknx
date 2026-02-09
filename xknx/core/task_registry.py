@@ -33,9 +33,9 @@ class Task:
 
     def __init__(
         self,
-        xknx: XKNX,
         name: str,
         target: AsyncCallbackType | Callable[[], None],
+        *,
         restart_after_reconnect: bool = False,
         wait_before_start: float = 0,
         wait_for_connection: bool = False,
@@ -50,7 +50,6 @@ class Task:
         → repeat_after interval (if enabled).
 
         Args:
-            xknx: The XKNX instance managing this task.
             name: Unique identifier for the task, used in logging and task management.
             target: The function to execute. Can be async or sync. Sync functions will run in the main
                 event loop thread so shall not perform blocking operations.
@@ -64,7 +63,7 @@ class Task:
             repeat_after: Interval in seconds to repeat the task execution. If None, the task will run only once.
 
         """
-        self.xknx = xknx
+        self.xknx: XKNX | None = None  # used as flag for registration in TaskRegistry
         self.name = name
         self.target = target
         self.restart_after_reconnect = restart_after_reconnect
@@ -75,6 +74,8 @@ class Task:
 
     def start(self) -> Task:
         """Start a task."""
+        if self.xknx is None:
+            raise RuntimeError("Task must be registered before start().")
         self._task = asyncio.create_task(self._start(), name=self.name)
         return self
 
@@ -84,6 +85,7 @@ class Task:
             if self.wait_before_start:
                 await asyncio.sleep(self.wait_before_start)
             if self.wait_for_connection:
+                assert self.xknx is not None
                 if not self.xknx.connection_manager.connected.is_set():
                     if self.restart_after_reconnect:
                         # self.reconnected() will restart the task when connection is
@@ -139,40 +141,24 @@ class TaskRegistry:
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TaskRegistry class."""
         self.xknx = xknx
-        self.tasks: list[Task] = []
+        self.tasks: set[Task] = set()
 
         self._background_task: set[asyncio.Task[None]] = set()
 
-    def register(
-        self,
-        name: str,
-        target: AsyncCallbackType | Callable[[], None],
-        restart_after_reconnect: bool = False,
-        wait_before_start: float = 0,
-        wait_for_connection: bool = False,
-        repeat_after: float | None = None,
-    ) -> Task:
+    def register(self, task: Task) -> Task:
         """Register new task."""
-        self.unregister(name)
-
-        _task = Task(
-            xknx=self.xknx,
-            name=name,
-            target=target,
-            restart_after_reconnect=restart_after_reconnect,
-            wait_before_start=wait_before_start,
-            wait_for_connection=wait_for_connection,
-            repeat_after=repeat_after,
-        )
-        self.tasks.append(_task)
+        self.unregister(task)
+        _task = task
+        # set xknx to flag registration and allow starting the task
+        _task.xknx = self.xknx
+        self.tasks.add(_task)
         return _task
 
-    def unregister(self, name: str) -> None:
+    def unregister(self, task: Task) -> None:
         """Unregister task."""
-        for task in self.tasks:
-            if task.name == name:
-                task.cancel()
-                self.tasks.remove(task)
+        if task in self.tasks:
+            task.cancel()
+            self.tasks.remove(task)
 
     def start(self) -> None:
         """Start task registry."""
@@ -188,8 +174,7 @@ class TaskRegistry:
 
         for task in self.tasks:
             task.cancel()
-
-        self.tasks = []
+        self.tasks = set()
 
     async def block_till_done(self) -> None:
         """Await all tracked tasks."""

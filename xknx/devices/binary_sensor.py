@@ -9,7 +9,6 @@ A binary sensor can be:
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 from functools import partial
 import time
@@ -47,15 +46,28 @@ class BinarySensor(Device):
 
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.always_callback = always_callback
-        self.reset_after = reset_after
         self.state: bool | None = None
 
         self._context_timeout = context_timeout
         self._count_set_on = 0
         self._count_set_off = 0
         self._last_set: float | None = None
-        self._reset_task: Task | None = None
-        self._context_task: Task | None = None
+        if reset_after is not None:
+            self._reset_task: Task | None = Task(
+                name=f"binary_sensor.reset_{id(self)}",
+                target=partial(self._set_internal_state, False),
+                wait_before_start=reset_after,
+            )
+        else:
+            self._reset_task = None
+        if context_timeout:
+            self._context_task: Task | None = Task(
+                name=f"binary_sensor.context_{id(self)}",
+                target=partial(self._counter_task, context_timeout),
+                wait_before_start=context_timeout,
+            )
+        else:
+            self._context_task = None
 
         self.remote_value = RemoteValueSwitch(
             xknx,
@@ -74,11 +86,9 @@ class BinarySensor(Device):
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         if self._context_task:
-            self.xknx.task_registry.unregister(self._context_task.name)
-            self._context_task = None
+            self.xknx.task_registry.unregister(self._context_task)
         if self._reset_task:
-            self.xknx.task_registry.unregister(self._reset_task.name)
-            self._reset_task = None
+            self.xknx.task_registry.unregister(self._reset_task)
 
     @property
     def last_telegram(self) -> Telegram | None:
@@ -94,12 +104,9 @@ class BinarySensor(Device):
         ):
             self.state = state
 
-            if self.ignore_internal_state and self._context_timeout:
+            if self.ignore_internal_state and self._context_task:
                 self.bump_and_get_counter(state)
-                self._context_task = self.xknx.task_registry.register(
-                    name=f"binary_sensor.context_{id(self)}",
-                    target=partial(self._counter_task, self._context_timeout),
-                ).start()
+                self.xknx.task_registry.register(self._context_task).start()
             else:
                 self.after_update()
         elif self.always_callback:
@@ -107,7 +114,6 @@ class BinarySensor(Device):
 
     async def _counter_task(self, wait_seconds: float) -> None:
         """Trigger when context window has passed once with counter values and once reset."""
-        await asyncio.sleep(wait_seconds)
         self.after_update()
 
         self._count_set_on = 0
@@ -161,15 +167,8 @@ class BinarySensor(Device):
 
     def _process_reset_after(self) -> None:
         """Create Task for resetting state if 'reset_after' is configured."""
-        if self.reset_after is not None and self.state:
-            self._reset_task = self.xknx.task_registry.register(
-                name=f"binary_sensor.reset_{id(self)}",
-                target=partial(self._reset_state, self.reset_after),
-            ).start()
-
-    async def _reset_state(self, wait_seconds: float) -> None:
-        await asyncio.sleep(wait_seconds)
-        self._set_internal_state(False)
+        if self._reset_task is not None and self.state:
+            self.xknx.task_registry.register(self._reset_task).start()
 
     def is_on(self) -> bool:
         """Return if binary sensor is 'on'."""

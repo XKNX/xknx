@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -45,8 +44,15 @@ class Switch(Device):
         """Initialize Switch class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self.reset_after = reset_after
-        self._reset_task: Task | None = None
+        self._reset_task: Task | None = (
+            Task(
+                name=f"switch.reset_{id(self)}",
+                target=self.set_off,
+                wait_before_start=reset_after,
+            )
+            if reset_after is not None
+            else None
+        )
         self.respond_to_read = respond_to_read
         self.switch = RemoteValueSwitch(
             xknx,
@@ -65,8 +71,7 @@ class Switch(Device):
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         if self._reset_task is not None:
-            self._reset_task.cancel()
-            self._reset_task = None
+            self.xknx.task_registry.unregister(self._reset_task)
 
     @property
     def state(self) -> bool | None:
@@ -84,11 +89,8 @@ class Switch(Device):
     def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.switch.process(telegram):
-            if self.reset_after is not None and self.switch.value:
-                self._reset_task = self.xknx.task_registry.register(
-                    name=f"switch.reset_{id(self)}",
-                    target=partial(self._reset_state, self.reset_after),
-                ).start()
+            if self._reset_task is not None and self.switch.value:
+                self.xknx.task_registry.register(self._reset_task).start()
 
     def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""

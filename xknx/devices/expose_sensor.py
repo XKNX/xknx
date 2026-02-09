@@ -105,18 +105,20 @@ class ExposeSensor(Device):
         """Start async background tasks of device."""
         if self._periodic_send_time > 0:
             self._periodic_send_task = self.xknx.task_registry.register(
-                name=f"expose_sensor.periodic_send_{id(self)}",
-                target=self._periodic_send_loop,
-                restart_after_reconnect=True,
+                Task(
+                    name=f"expose_sensor.periodic_send_{id(self)}",
+                    target=self._periodic_send_loop,
+                    restart_after_reconnect=True,
+                )
             ).start()
 
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         if self._cooldown_task is not None:
-            self.xknx.task_registry.unregister(self._cooldown_task.name)
+            self.xknx.task_registry.unregister(self._cooldown_task)
             self._cooldown_task = None
         if self._periodic_send_task is not None:
-            self.xknx.task_registry.unregister(self._periodic_send_task.name)
+            self.xknx.task_registry.unregister(self._periodic_send_task)
             self._periodic_send_task = None
 
     def process_group_write(self, telegram: Telegram) -> None:
@@ -156,8 +158,10 @@ class ExposeSensor(Device):
             if self._cooldown_task is not None and not self._cooldown_task.done():
                 return
             self._cooldown_task = self.xknx.task_registry.register(
-                name=self._cooldown_task_name,
-                target=self._cooldown_wait,
+                Task(
+                    name=self._cooldown_task_name,
+                    target=self._cooldown_wait,
+                )
             ).start()
         self.sensor_value.send_raw(payload)
 
@@ -178,8 +182,10 @@ class ExposeSensor(Device):
             self._cooldown_task.start()
             return
         self._cooldown_task = self.xknx.task_registry.register(
-            name=self._cooldown_task_name,
-            target=self._cooldown_wait,
+            Task(
+                name=self._cooldown_task_name,
+                target=self._cooldown_wait,
+            )
         ).start()
 
     async def _periodic_send_loop(self) -> None:

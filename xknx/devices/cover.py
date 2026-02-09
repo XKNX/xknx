@@ -140,9 +140,15 @@ class Cover(Device):
         self.travel_time_up = travel_time_up
         self.travelcalculator = TravelCalculator(travel_time_down, travel_time_up)
 
-        self._auto_stop_task: Task | None = None
+        self._auto_stop_task = Task(
+            name=f"cover.auto_stopper_{id(self)}",
+            target=self.stop,
+        )
         self._auto_stop_requested: bool = False
-        self._periodic_update_task: Task | None = None
+        self._periodic_update_task = Task(
+            name=f"cover.periodic_update_{id(self)}",
+            target=self._periodic_updater,
+        )
         self._travel_direction_tilt: TravelStatus | None = None
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
@@ -157,13 +163,9 @@ class Cover(Device):
 
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
-        if self._auto_stop_task is not None:
-            self.xknx.task_registry.unregister(self._auto_stop_task.name)
-            self._auto_stop_task = None
-            self._auto_stop_requested = False
-        if self._periodic_update_task is not None:
-            self.xknx.task_registry.unregister(self._periodic_update_task.name)
-            self._periodic_update_task = None
+        self.xknx.task_registry.unregister(self._auto_stop_task)
+        self._auto_stop_requested = False
+        self.xknx.task_registry.unregister(self._periodic_update_task)
 
     async def set_down(self) -> None:
         """Move cover down."""
@@ -252,33 +254,23 @@ class Cover(Device):
         self.travelcalculator.start_travel(target_position)
         self.after_update()
         if self.travelcalculator.is_traveling():
-            self._start_auto_updater()
+            # restarts when already running
+            self.xknx.task_registry.register(self._periodic_update_task).start()
 
-    def _start_auto_updater(self) -> None:
-        """Start calling callback periodically while traveling."""
-
-        async def periodic_updater() -> None:
-            """Run callback periodically while traveling."""
-            while self.travelcalculator.is_traveling():
-                await asyncio.sleep(TRAVELING_CALLBACK_INTERVAL)
-                if self.travelcalculator.is_traveling():
-                    # else _stop_position_update will call after_update a second time
-                    self.after_update()
-            self._stop_position_update()
-
-        # restarts when already running
-        self._periodic_update_task = self.xknx.task_registry.register(
-            name=f"cover.periodic_update_{id(self)}",
-            target=periodic_updater,
-        ).start()
+    async def _periodic_updater(self) -> None:
+        """Run callback periodically while traveling."""
+        while self.travelcalculator.is_traveling():
+            await asyncio.sleep(TRAVELING_CALLBACK_INTERVAL)
+            if self.travelcalculator.is_traveling():
+                # else _stop_position_update will call after_update a second time
+                self.after_update()
+        self._stop_position_update()
 
     def _stop_position_update(self) -> None:
         """Stop the travel calculator and periodic device callbacks."""
         if not self.travelcalculator.position_reached():
             self.travelcalculator.stop()
-        if self._periodic_update_task:
-            self._periodic_update_task.cancel()
-            self._periodic_update_task = None
+        self._periodic_update_task.cancel()
         self.after_update()
 
     def _start_auto_stopper(self, current_position: int, target_position: int) -> None:
@@ -293,23 +285,14 @@ class Cover(Device):
         stop_in_seconds = self.travelcalculator.calculate_travel_time(
             from_position=current_position, to_position=target_position
         )
-
-        async def auto_stopper() -> None:
-            await asyncio.sleep(stop_in_seconds)
-            await self.stop()
-
-        self._auto_stop_task = self.xknx.task_registry.register(
-            name=f"cover.auto_stopper_{id(self)}",
-            target=auto_stopper,
-        ).start()
+        self._auto_stop_task.wait_before_start = stop_in_seconds
+        self.xknx.task_registry.register(self._auto_stop_task).start()
         self._auto_stop_requested = True
 
     def _cancel_auto_stopper(self) -> None:
         """Cancel the auto stopper task."""
-        if self._auto_stop_task:
-            self._auto_stop_task.cancel()
-            self._auto_stop_task = None
-            self._auto_stop_requested = False
+        self._auto_stop_task.cancel()
+        self._auto_stop_requested = False
 
     def _target_position_from_rv(self, new_target_postion: int) -> None:
         """Update the target position from RemoteValue (Callback)."""
@@ -324,7 +307,8 @@ class Cover(Device):
             self.travelcalculator.set_position(new_position)
         if position_before_update != self.travelcalculator.current_position():
             if position_before_update is not None:  # None on first move
-                self._start_auto_updater()  # to restart the periodic updater
+                # restarts when already running
+                self.xknx.task_registry.register(self._periodic_update_task).start()
             self.after_update()
 
     async def set_angle(self, angle: int) -> None:
