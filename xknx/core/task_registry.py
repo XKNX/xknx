@@ -23,6 +23,7 @@ class Task:
     __slots__ = (
         "_task",
         "name",
+        "repeat_after",
         "restart_after_reconnect",
         "target",
         "wait_before_start",
@@ -38,11 +39,15 @@ class Task:
         restart_after_reconnect: bool = False,
         wait_before_start: float = 0,
         wait_for_connection: bool = False,
+        repeat_after: float | None = None,
     ) -> None:
         """
         Initialize a task that can be managed by the TaskRegistry.
 
-        The task execution order is: wait_before_start delay → wait_for_connection (if enabled) → execute target.
+        The task execution order is: wait_before_start delay
+        → wait_for_connection (if enabled)
+        → execute target
+        → repeat_after interval (if enabled).
 
         Args:
             xknx: The XKNX instance managing this task.
@@ -50,11 +55,13 @@ class Task:
             target: The function to execute. Can be async or sync. Sync functions will run in the main
                 event loop thread so shall not perform blocking operations.
             restart_after_reconnect: When True, automatically cancels and restarts the task when the
-                KNX bus connection is lost and reestablished.
+                KNX bus connection is lost and reestablished. Wait_before_start and wait_for_connection options
+                will apply on each restart.
             wait_before_start: Initial delay in seconds before the task begins execution. Applied before
                 checking for connection if wait_for_connection is also enabled.
             wait_for_connection: When True, blocks task execution until a KNX bus connection is established.
                 The task will wait indefinitely until connected.
+            repeat_after: Interval in seconds to repeat the task execution. If None, the task will run only once.
 
         """
         self.xknx = xknx
@@ -63,6 +70,7 @@ class Task:
         self.restart_after_reconnect = restart_after_reconnect
         self.wait_before_start = wait_before_start
         self.wait_for_connection = wait_for_connection
+        self.repeat_after = repeat_after
         self._task: asyncio.Task[None] | None = None
 
     def start(self) -> Task:
@@ -71,13 +79,25 @@ class Task:
         return self
 
     async def _start(self) -> None:
-        if self.wait_before_start:
-            await asyncio.sleep(self.wait_before_start)
-        if self.wait_for_connection:
-            await self.xknx.connection_manager.connected.wait()
-        job = self.target()
-        if asyncio.iscoroutine(job):
-            await job
+        """Start a task and handle options."""
+        while True:
+            if self.wait_before_start:
+                await asyncio.sleep(self.wait_before_start)
+            if self.wait_for_connection:
+                if not self.xknx.connection_manager.connected.is_set():
+                    if self.restart_after_reconnect:
+                        # self.reconnected() will restart the task when connection is
+                        # reestablished. This will trigger wait_before_start again.
+                        return
+                    await self.xknx.connection_manager.connected.wait()
+
+            job = self.target()
+            if asyncio.iscoroutine(job):
+                await job
+
+            if self.repeat_after is None:
+                break
+            await asyncio.sleep(self.repeat_after)
 
     def __await__(self) -> Generator[None, None, None]:
         """Wait for task to be finished."""
@@ -102,11 +122,12 @@ class Task:
 
     def reconnected(self) -> None:
         """Restart when reconnected to bus."""
-        if self.restart_after_reconnect and not self._task:
+        if self.restart_after_reconnect:
             logger.debug(
                 "Restarting task %s as the connection to the bus was reestablished.",
                 self.name,
             )
+            self.cancel()
             self.start()
 
 
@@ -129,6 +150,7 @@ class TaskRegistry:
         restart_after_reconnect: bool = False,
         wait_before_start: float = 0,
         wait_for_connection: bool = False,
+        repeat_after: float | None = None,
     ) -> Task:
         """Register new task."""
         self.unregister(name)
@@ -140,6 +162,7 @@ class TaskRegistry:
             restart_after_reconnect=restart_after_reconnect,
             wait_before_start=wait_before_start,
             wait_for_connection=wait_for_connection,
+            repeat_after=repeat_after,
         )
         self.tasks.append(_task)
         return _task

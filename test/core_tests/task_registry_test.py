@@ -197,6 +197,69 @@ class TestTaskRegistry:
         assert mock.call_count == 1
         assert task.done()
 
+    async def test_repeat_after(self, time_travel: EventLoopClockAdvancer) -> None:
+        """Test repeat_after argument."""
+        xknx = XKNX()
+        mock = Mock()
+        repeat_after = 5
+
+        task = xknx.task_registry.register(
+            name="test",
+            target=mock,
+            repeat_after=repeat_after,
+        )
+        task.start()
+
+        await asyncio.sleep(0)
+        assert mock.call_count == 1
+        assert not task.done()
+
+        await time_travel(repeat_after)
+        assert mock.call_count == 2
+        assert not task.done()
+
+        await time_travel(repeat_after)
+        assert mock.call_count == 3
+        assert not task.done()
+
+        task.cancel()
+        await asyncio.sleep(0)
+        assert task.done()
+
+    async def test_wait_before_start_no_connection_with_restart(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test restart_after_reconnect when wait_before_start ends without connection."""
+        xknx = XKNX()
+        xknx.task_registry.start()
+        mock = Mock()
+        wait_time = 5
+
+        task = xknx.task_registry.register(
+            name="test",
+            target=mock,
+            restart_after_reconnect=True,
+            wait_before_start=wait_time,
+            wait_for_connection=True,
+        )
+        task.start()
+
+        await time_travel(wait_time)
+        await asyncio.sleep(0)
+        assert mock.call_count == 0
+        assert task.done()
+
+        # restarted when connection is reestablished - wait_before_start should apply again
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        await asyncio.sleep(0)
+        assert not task.done()
+        assert mock.call_count == 0
+
+        await time_travel(wait_time)
+        await asyncio.sleep(0)
+        assert mock.call_count == 1
+        assert task.done()
+
     async def test_background(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test running background task."""
         test_time = 10
