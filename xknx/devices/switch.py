@@ -9,9 +9,7 @@ It provides functionality for
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -45,8 +43,15 @@ class Switch(Device):
         """Initialize Switch class."""
         super().__init__(xknx, name, device_updated_cb)
 
-        self.reset_after = reset_after
-        self._reset_task: Task | None = None
+        self._reset_task: Task | None = (
+            Task(
+                name=f"switch.reset_{id(self)}",
+                target=self.set_off,
+                wait_before_start=reset_after,
+            )
+            if reset_after is not None
+            else None
+        )
         self.respond_to_read = respond_to_read
         self.switch = RemoteValueSwitch(
             xknx,
@@ -65,8 +70,7 @@ class Switch(Device):
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         if self._reset_task is not None:
-            self._reset_task.cancel()
-            self._reset_task = None
+            self.xknx.task_registry.remove_task(self._reset_task)
 
     @property
     def state(self) -> bool | None:
@@ -84,12 +88,8 @@ class Switch(Device):
     def process_group_write(self, telegram: Telegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.switch.process(telegram):
-            if self.reset_after is not None and self.switch.value:
-                self._reset_task = self.xknx.task_registry.register(
-                    name=f"switch.reset_{id(self)}",
-                    async_func=partial(self._reset_state, self.reset_after),
-                    track_task=True,
-                ).start()
+            if self._reset_task is not None and self.switch.value:
+                self.xknx.task_registry.start_task(self._reset_task)
 
     def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
@@ -98,10 +98,6 @@ class Switch(Device):
             and telegram.destination_address == self.switch.group_address
         ):
             self.switch.respond()
-
-    async def _reset_state(self, wait_seconds: float) -> None:
-        await asyncio.sleep(wait_seconds)
-        await self.set_off()
 
     def __str__(self) -> str:
         """Return object as readable string."""

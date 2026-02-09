@@ -382,5 +382,5 @@ class TestBinarySensor:
             assert switch._context_task
             assert switch._reset_task
             xknx.devices.async_remove(switch)
-            assert switch._context_task is None
-            assert switch._reset_task is None
+            assert switch._context_task.done()
+            assert switch._reset_task.done()

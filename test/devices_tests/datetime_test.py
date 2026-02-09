@@ -8,6 +8,7 @@ from freezegun import freeze_time
 import pytest
 
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.devices.datetime import (
     BROADCAST_MINUTES,
     DateDevice,
@@ -239,6 +240,7 @@ class TestDateTime:
     ) -> None:
         """Test if background task works."""
         xknx = xknx_no_interface
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         test_device = TimeDevice(xknx, "TestDateTime", group_address="1/2/3")
         xknx.devices.async_add(test_device)
         async with xknx:
