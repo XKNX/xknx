@@ -255,7 +255,7 @@ class Cover(Device):
         self.after_update()
         if self.travelcalculator.is_traveling():
             # restarts when already running
-            self.xknx.task_registry.register(self._periodic_update_task).start()
+            self.xknx.task_registry.start_task(self._periodic_update_task)
 
     async def _periodic_updater(self) -> None:
         """Run callback periodically while traveling."""
@@ -286,7 +286,7 @@ class Cover(Device):
             from_position=current_position, to_position=target_position
         )
         self._auto_stop_task.wait_before_start = stop_in_seconds
-        self.xknx.task_registry.register(self._auto_stop_task).start()
+        self.xknx.task_registry.start_task(self._auto_stop_task)
         self._auto_stop_requested = True
 
     def _cancel_auto_stopper(self) -> None:
@@ -308,7 +308,7 @@ class Cover(Device):
         if position_before_update != self.travelcalculator.current_position():
             if position_before_update is not None:  # None on first move
                 # restarts when already running
-                self.xknx.task_registry.register(self._periodic_update_task).start()
+                self.xknx.task_registry.start_task(self._periodic_update_task)
             self.after_update()
 
     async def set_angle(self, angle: int) -> None:

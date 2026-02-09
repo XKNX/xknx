@@ -380,9 +380,7 @@ class Light(Device):
         self._individual_color_debounce_telegram_counter -= 1
         if self._individual_color_debounce_telegram_counter > 0:
             # task registry cancels existing task
-            self.xknx.task_registry.register(
-                self._individual_color_debounce_task
-            ).start()
+            self.xknx.task_registry.start_task(self._individual_color_debounce_task)
             return
         self._individual_color_debounce_task.cancel()
         self._debouncer_finished()

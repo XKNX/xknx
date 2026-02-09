@@ -15,16 +15,13 @@ from ..conftest import EventLoopClockAdvancer
 class TestTaskRegistry:
     """Test class for task registry."""
 
-    #
-    # TEST REGISTER/UNREGISTER
-    #
     @pytest.mark.parametrize("target", ["async", "sync"])
-    async def test_register(self, target: str) -> None:
-        """Test register."""
+    async def test_start_task(self, target: str) -> None:
+        """Test start_task."""
         xknx = XKNX()
         mock = AsyncMock() if target == "async" else Mock()
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=mock,
@@ -32,7 +29,6 @@ class TestTaskRegistry:
         )
         assert len(xknx.task_registry.tasks) == 1
 
-        task.start()
         assert not task.done()
         assert mock.call_count == 0
         if target == "async":
@@ -45,18 +41,17 @@ class TestTaskRegistry:
             assert mock.await_count == 1
 
     async def test_unregister(self) -> None:
-        """Test unregister after register."""
+        """Test unregister after starting task."""
         xknx = XKNX()
         mock = Mock()
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=mock,
             )
         )
         assert len(xknx.task_registry.tasks) == 1
-        task.start()
         xknx.task_registry.unregister(task)
         assert len(xknx.task_registry.tasks) == 0
         assert task.done()
@@ -75,16 +70,16 @@ class TestTaskRegistry:
             await asyncio.sleep(1)
             raise AssertionError("Task should have been cancelled")
 
-        task = xknx.task_registry.register(
-            Task(
-                name="test",
-                target=callback,
-            )
+        task = Task(
+            name="test",
+            target=callback,
         )
+        xknx.task_registry.start_task(task)
+
         assert len(xknx.task_registry.tasks) == 1
-        task.start()
         xknx.task_registry.stop()
         assert len(xknx.task_registry.tasks) == 0
+        assert task.done()
 
     #
     # TEST CONNECTION HANDLING
@@ -111,7 +106,7 @@ class TestTaskRegistry:
             except asyncio.CancelledError:
                 test -= 1
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=callback,
@@ -119,7 +114,6 @@ class TestTaskRegistry:
             )
         )
         assert len(xknx.task_registry.tasks) == 1
-        task.start()
         assert task._task is not None
         await time_travel(100)
         assert test == 1
@@ -152,14 +146,13 @@ class TestTaskRegistry:
         mock = AsyncMock()
         wait_time = 5
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=mock,
                 wait_before_start=wait_time,
             )
         )
-        task.start()
 
         # Task should not be called immediately
         assert mock.call_count == 0
@@ -192,14 +185,13 @@ class TestTaskRegistry:
         xknx = XKNX()
         mock = Mock()
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=mock,
                 wait_for_connection=True,
             )
         )
-        task.start()
 
         # Task should not be called immediately when not connected
         await asyncio.sleep(0)
@@ -218,14 +210,13 @@ class TestTaskRegistry:
         mock = Mock()
         repeat_after = 5
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=mock,
                 repeat_after=repeat_after,
             )
         )
-        task.start()
 
         await asyncio.sleep(0)
         assert mock.call_count == 1
@@ -252,7 +243,7 @@ class TestTaskRegistry:
         mock = Mock()
         wait_time = 5
 
-        task = xknx.task_registry.register(
+        task = xknx.task_registry.start_task(
             Task(
                 name="test",
                 target=mock,
@@ -261,7 +252,6 @@ class TestTaskRegistry:
                 wait_for_connection=True,
             )
         )
-        task.start()
 
         await time_travel(wait_time)
         await asyncio.sleep(0)
@@ -280,7 +270,7 @@ class TestTaskRegistry:
         assert task.done()
 
     async def test_start_before_register(self) -> None:
-        """Test that start() before register() raises RuntimeError."""
+        """Test that start() without registration in TaskRegistry raises RuntimeError."""
         task = Task(
             name="test",
             target=Mock(),

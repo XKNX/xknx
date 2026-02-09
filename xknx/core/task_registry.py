@@ -145,14 +145,14 @@ class TaskRegistry:
 
         self._background_task: set[asyncio.Task[None]] = set()
 
-    def register(self, task: Task) -> Task:
-        """Register new task."""
+    def start_task(self, task: Task) -> Task:
+        """Register a task and start it. If it is already running, it will be restarted."""
         self.unregister(task)
         _task = task
         # set xknx to flag registration and allow starting the task
         _task.xknx = self.xknx
         self.tasks.add(_task)
-        return _task
+        return _task.start()
 
     def unregister(self, task: Task) -> None:
         """Unregister task."""

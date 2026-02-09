@@ -90,7 +90,7 @@ class Switch(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         if self.switch.process(telegram):
             if self._reset_task is not None and self.switch.value:
-                self.xknx.task_registry.register(self._reset_task).start()
+                self.xknx.task_registry.start_task(self._reset_task)
 
     def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GroupValueResponse telegrams."""

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from xknx.core import Task
@@ -88,11 +89,16 @@ class ExposeSensor(Device):
                 after_update_cb=self.after_update,
                 value_type=value_type,
             )
-        self.cooldown = cooldown
         # the next payload to be sent after cooldown or the last sent payload
         self._payload_after_cooldown: DPTArray | DPTBinary | None = None
-        self._cooldown_task: Task | None = None
-        self._cooldown_task_name = f"expose_sensor.cooldown_{id(self)}"
+        self._cooldown_task = (
+            Task(
+                name=f"expose_sensor.cooldown_{id(self)}",
+                target=partial(self._cooldown_wait, cooldown),
+            )
+            if cooldown and cooldown > 0
+            else None
+        )
 
         self._periodic_send_time = periodic_send
         self._periodic_send_task: Task | None = None
@@ -104,13 +110,12 @@ class ExposeSensor(Device):
     def async_start_tasks(self) -> None:
         """Start async background tasks of device."""
         if self._periodic_send_time > 0:
-            self._periodic_send_task = self.xknx.task_registry.register(
-                Task(
-                    name=f"expose_sensor.periodic_send_{id(self)}",
-                    target=self._periodic_send_loop,
-                    restart_after_reconnect=True,
-                )
-            ).start()
+            self._periodic_send_task = Task(
+                name=f"expose_sensor.periodic_send_{id(self)}",
+                target=self._periodic_send_loop,
+                restart_after_reconnect=True,
+            )
+            self.xknx.task_registry.start_task(self._periodic_send_task)
 
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
@@ -154,39 +159,25 @@ class ExposeSensor(Device):
             return
         self._payload_after_cooldown = payload
 
-        if self.cooldown:
-            if self._cooldown_task is not None and not self._cooldown_task.done():
+        if self._cooldown_task is not None:
+            if not self._cooldown_task.done():
                 return
-            self._cooldown_task = self.xknx.task_registry.register(
-                Task(
-                    name=self._cooldown_task_name,
-                    target=self._cooldown_wait,
-                )
-            ).start()
+            self.xknx.task_registry.start_task(self._cooldown_task)
         self.sensor_value.send_raw(payload)
 
-    async def _cooldown_wait(self) -> None:
+    async def _cooldown_wait(self, cooldown_time: float) -> None:
         """Send value after cooldown if it differs from last processed value."""
         while True:
-            await asyncio.sleep(self.cooldown)
+            await asyncio.sleep(cooldown_time)
             if self.sensor_value.last_payload == self._payload_after_cooldown:
                 break
             self.sensor_value.send_raw(self._payload_after_cooldown)  # type: ignore[arg-type]
 
     def _restart_cooldown(self) -> None:
         """Reset cooldown task."""
-        if not self.cooldown:
+        if self._cooldown_task is None:
             return
-        if self._cooldown_task is not None and not self._cooldown_task.done():
-            self._cooldown_task.cancel()
-            self._cooldown_task.start()
-            return
-        self._cooldown_task = self.xknx.task_registry.register(
-            Task(
-                name=self._cooldown_task_name,
-                target=self._cooldown_wait,
-            )
-        ).start()
+        self.xknx.task_registry.start_task(self._cooldown_task)
 
     async def _periodic_send_loop(self) -> None:
         """Endless loop for periodic sending of sensor value."""

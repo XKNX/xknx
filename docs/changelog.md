@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Internals
 
+- Replace `TaskRegistry.register()` with `TaskRegistry.start_task()` for better readability and easier handling.
 - Allow TaskRegistry Tasks to call regular functions as well as async functions. Rename TaskRegistry.register and Task `async_func` attribute to `target`.
 - Add TaskRegistry Task `wait_before_start` and `wait_for_connection` options to delay task start and wait for an established connection before running the target function.
 - Add TaskRegistry Task `repeat_after` option to automatically restart the task periodically.

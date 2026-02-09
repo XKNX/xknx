@@ -106,7 +106,7 @@ class BinarySensor(Device):
 
             if self.ignore_internal_state and self._context_task:
                 self.bump_and_get_counter(state)
-                self.xknx.task_registry.register(self._context_task).start()
+                self.xknx.task_registry.start_task(self._context_task)
             else:
                 self.after_update()
         elif self.always_callback:
@@ -168,7 +168,7 @@ class BinarySensor(Device):
     def _process_reset_after(self) -> None:
         """Create Task for resetting state if 'reset_after' is configured."""
         if self._reset_task is not None and self.state:
-            self.xknx.task_registry.register(self._reset_task).start()
+            self.xknx.task_registry.start_task(self._reset_task)
 
     def is_on(self) -> bool:
         """Return if binary sensor is 'on'."""
