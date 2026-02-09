@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import Iterator
 import datetime
-from functools import partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
@@ -97,16 +95,12 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
         if not self.localtime:
             return None
 
-        async def broadcast_loop(self: Self, minutes: int) -> None:
-            """Endless loop for broadcasting local time."""
-            while True:
-                self.broadcast_localtime()
-                await asyncio.sleep(minutes * 60)
-
         self._broadcast_task = Task(
             name=f"datetime.broadcast_{id(self)}",
-            target=partial(broadcast_loop, self, BROADCAST_MINUTES),
+            target=self.broadcast_localtime,
             restart_after_reconnect=True,
+            wait_for_connection=True,
+            repeat_after=BROADCAST_MINUTES * 60,
         )
         self.xknx.task_registry.start_task(self._broadcast_task)
 

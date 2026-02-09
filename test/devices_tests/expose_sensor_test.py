@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, call
 
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection
@@ -225,6 +226,7 @@ class TestExposeSensor:
     async def test_cooldown(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test cooldown."""
         xknx = XKNX()
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         xknx.cemi_handler = AsyncMock()
         await xknx.telegram_queue.start()
 
@@ -362,6 +364,36 @@ class TestExposeSensor:
         await time_travel(10)
         xknx.cemi_handler.send_telegram.assert_not_called()
 
+        # no connection blocks cooldown to avoid queueing unsent telegrams
+        await expose_sensor_cd.set(20)
+        await time_travel(1)
+        xknx.cemi_handler.send_telegram.assert_called_once()
+        xknx.cemi_handler.send_telegram.reset_mock()
+        await expose_sensor_cd.set(30)
+        await time_travel(8)
+        xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+        await time_travel(2)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+        assert not expose_sensor_cd._cooldown_task.done()
+        await expose_sensor_cd.set(40)
+        await time_travel(1)
+        await expose_sensor_cd.set(50)
+        await time_travel(1)
+        await expose_sensor_cd.set(10)
+        await time_travel(1)
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        await time_travel(0)
+        assert xknx.cemi_handler.send_telegram.call_args_list == [
+            call(
+                Telegram(
+                    destination_address=GroupAddress("1/2/3"),
+                    payload=GroupValueWrite(DPTArray((0x03, 0xE8))),
+                )
+            ),
+        ]
+
         await xknx.stop()
 
     async def test_cooldown_read_request(
@@ -369,6 +401,7 @@ class TestExposeSensor:
     ) -> None:
         """Test cooldown for read requests."""
         xknx = XKNX()
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         xknx.cemi_handler = AsyncMock()
         await xknx.telegram_queue.start()
 
@@ -412,6 +445,7 @@ class TestExposeSensor:
     async def test_set_same_payload(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test expose sensor with similar payloads in cooldown."""
         xknx = XKNX()
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         expose_sensor = ExposeSensor(
             xknx,
             "TestSensor",
@@ -467,6 +501,7 @@ class TestExposeSensor:
     ) -> None:
         """Test periodic send of expose sensor."""
         xknx = xknx_no_interface
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         xknx.cemi_handler = AsyncMock()
         expose_sensor = ExposeSensor(
             xknx,
@@ -546,5 +581,12 @@ class TestExposeSensor:
                 payload=GroupValueWrite(DPTBinary(False)),
             )
         )
+        xknx.cemi_handler.send_telegram.reset_mock()
+        # don't try to send without connection
+        xknx.connection_manager.connection_state_changed(
+            XknxConnectionState.DISCONNECTED
+        )
+        await time_travel(10)
+        xknx.cemi_handler.send_telegram.assert_not_called()
 
         await xknx.stop()
