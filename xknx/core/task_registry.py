@@ -162,6 +162,7 @@ class TaskRegistry:
         """Cancel and unregister task."""
         if task in self.tasks:
             task.cancel()
+            task.xknx = None  # reset xknx to flag unregistration
             self.tasks.remove(task)
 
     def start(self) -> None:
