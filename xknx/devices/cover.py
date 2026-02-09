@@ -163,9 +163,9 @@ class Cover(Device):
 
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
-        self.xknx.task_registry.unregister(self._auto_stop_task)
+        self.xknx.task_registry.remove_task(self._auto_stop_task)
         self._auto_stop_requested = False
-        self.xknx.task_registry.unregister(self._periodic_update_task)
+        self.xknx.task_registry.remove_task(self._periodic_update_task)
 
     async def set_down(self) -> None:
         """Move cover down."""

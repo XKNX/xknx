@@ -120,10 +120,10 @@ class ExposeSensor(Device):
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         if self._cooldown_task is not None:
-            self.xknx.task_registry.unregister(self._cooldown_task)
+            self.xknx.task_registry.remove_task(self._cooldown_task)
             self._cooldown_task = None
         if self._periodic_send_task is not None:
-            self.xknx.task_registry.unregister(self._periodic_send_task)
+            self.xknx.task_registry.remove_task(self._periodic_send_task)
             self._periodic_send_task = None
 
     def process_group_write(self, telegram: Telegram) -> None:
@@ -134,8 +134,7 @@ class ExposeSensor(Device):
             telegram.direction is TelegramDirection.OUTGOING
             and self._periodic_send_task is not None
         ):
-            self._periodic_send_task.cancel()
-            self._periodic_send_task.start()
+            self._periodic_send_task.restart()
 
     def process_group_read(self, telegram: Telegram) -> None:
         """Process incoming GROUP READ telegram."""

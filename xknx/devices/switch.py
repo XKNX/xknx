@@ -71,7 +71,7 @@ class Switch(Device):
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         if self._reset_task is not None:
-            self.xknx.task_registry.unregister(self._reset_task)
+            self.xknx.task_registry.remove_task(self._reset_task)
 
     @property
     def state(self) -> bool | None:

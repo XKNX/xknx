@@ -113,7 +113,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
     def async_remove_tasks(self) -> None:
         """Stop background tasks of device."""
         if self._broadcast_task is not None:
-            self.xknx.task_registry.unregister(self._broadcast_task)
+            self.xknx.task_registry.remove_task(self._broadcast_task)
             self._broadcast_task = None
 
     @abstractmethod

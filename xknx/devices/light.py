@@ -355,7 +355,7 @@ class Light(Device):
 
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
-        self.xknx.task_registry.unregister(self._individual_color_debounce_task)
+        self.xknx.task_registry.remove_task(self._individual_color_debounce_task)
 
     def _initial_individual_color_debounce_telegrams(self) -> int:
         """Reset individual color debounce telegram counter."""

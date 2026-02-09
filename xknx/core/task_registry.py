@@ -72,14 +72,13 @@ class Task:
         self.repeat_after = repeat_after
         self._task: asyncio.Task[None] | None = None
 
-    def start(self) -> Task:
-        """Start a task."""
+    def _start(self) -> None:
+        """Start a task. Shall be called by TaskRegistry.start_task() to ensure proper registration."""
         if self.xknx is None:
             raise RuntimeError("Task must be registered before start().")
-        self._task = asyncio.create_task(self._start(), name=self.name)
-        return self
+        self._task = asyncio.create_task(self._start_internal(), name=self.name)
 
-    async def _start(self) -> None:
+    async def _start_internal(self) -> None:
         """Start a task and handle options."""
         while True:
             if self.wait_before_start:
@@ -112,6 +111,11 @@ class Task:
             self._task.cancel()
             self._task = None
 
+    def restart(self) -> None:
+        """Restart a task."""
+        self.cancel()
+        self._start()
+
     def done(self) -> bool:
         """Return if task is finished."""
         return self._task is None or self._task.done()
@@ -129,8 +133,7 @@ class Task:
                 "Restarting task %s as the connection to the bus was reestablished.",
                 self.name,
             )
-            self.cancel()
-            self.start()
+            self.restart()
 
 
 class TaskRegistry:
@@ -145,17 +148,18 @@ class TaskRegistry:
 
         self._background_task: set[asyncio.Task[None]] = set()
 
-    def start_task(self, task: Task) -> Task:
+    def start_task(self, task: Task) -> None:
         """Register a task and start it. If it is already running, it will be restarted."""
-        self.unregister(task)
+        self.remove_task(task)
         _task = task
         # set xknx to flag registration and allow starting the task
         _task.xknx = self.xknx
         self.tasks.add(_task)
-        return _task.start()
+        # ruff: noqa: SLF001
+        _task._start()  # pylint: disable=protected-access
 
-    def unregister(self, task: Task) -> None:
-        """Unregister task."""
+    def remove_task(self, task: Task) -> None:
+        """Cancel and unregister task."""
         if task in self.tasks:
             task.cancel()
             self.tasks.remove(task)
