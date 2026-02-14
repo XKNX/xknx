@@ -59,7 +59,7 @@ class Telegram:
     source_address: IndividualAddress = field(
         default_factory=lambda: IndividualAddress(0)
     )
-    tpci: TPCI = None  # type: ignore[assignment]  # set initializer or in __post_init__
+    tpci: TPCI = None  # type: ignore[assignment]  # set by initializer or in __post_init__
     # set by GroupAddressDPT
     decoded_data: TelegramDecodedData | None = field(
         init=False, default=None, compare=False, hash=False
