@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased
 
+### Telegram
+
+- Add `data_secure` flag to Telegram to indicate if it was sent or received as Data Secure.
+
 ### Devices
 
 - ExposeSensor: `cooldown` is extended to wait for connection if not established.

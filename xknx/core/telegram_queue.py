@@ -276,7 +276,8 @@ class TelegramQueue:
         """
         Run registered callbacks for data secure group key issues.
 
-        Only TDataGroup telegrams with undecodable DataSecure payloads are forwarded.
+        TDataGroup telegrams with undecodable DataSecure payloads
+        or unexpected plain payloads are forwarded.
         """
         for data_secure_group_key_issue_cb in self._data_secure_group_key_issue_cbs:
             try:

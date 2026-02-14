@@ -59,8 +59,15 @@ class Telegram:
     source_address: IndividualAddress = field(
         default_factory=lambda: IndividualAddress(0)
     )
-    tpci: TPCI = None  # type: ignore[assignment]  # set in __post_init__
-    decoded_data: TelegramDecodedData | None = None
+    tpci: TPCI = None  # type: ignore[assignment]  # set initializer or in __post_init__
+    # set by GroupAddressDPT
+    decoded_data: TelegramDecodedData | None = field(
+        init=False, default=None, compare=False, hash=False
+    )
+    # flag if telegram was sent or received as DataSecure, set by CEMIHandler
+    data_secure: bool | None = field(
+        init=False, default=None, compare=False, hash=False
+    )
 
     def __post_init__(self) -> None:
         """Initialize Telegram class."""
@@ -74,17 +81,6 @@ class Telegram:
                 self.tpci = TDataIndividual()
             else:  # InternalGroupAddress
                 self.tpci = TDataGroup()
-
-    def __eq__(self, other: object) -> bool:
-        """Equal operator. Omit decoded_data for comparison."""
-        return (
-            isinstance(other, Telegram)
-            and self.destination_address == other.destination_address
-            and self.direction == other.direction
-            and self.payload == other.payload
-            and self.source_address == other.source_address
-            and self.tpci == other.tpci
-        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
