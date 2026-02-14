@@ -29,7 +29,7 @@ dependencies = [
 description = "An Asynchronous Library for the KNX protocol. Documentation: https://xknx.io/"
 dynamic = ["version"]
 keywords = ["KNX", "EIB", "Home Assistant", "home automation"]
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.10.0"
 
