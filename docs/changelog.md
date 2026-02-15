@@ -15,6 +15,7 @@ nav_order: 2
 ### Devices
 
 - ExposeSensor: `cooldown` is extended to wait for connection if not established.
+- Weather: Add `invert_day_night` option to invert day/night value.
 
 ### Internals
 

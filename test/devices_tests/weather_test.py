@@ -320,11 +320,15 @@ class TestWeather:
             == WeatherCondition.CLOUDY
         )
 
-    async def test_day_night(self) -> None:
+    @pytest.mark.parametrize("invert_day_night", [False, True])
+    async def test_day_night(self, invert_day_night: bool) -> None:
         """Test day night mapping."""
         xknx = XKNX()
         weather: Weather = Weather(
-            name="weather", xknx=xknx, group_address_day_night="1/3/20"
+            name="weather",
+            xknx=xknx,
+            group_address_day_night="1/3/20",
+            invert_day_night=invert_day_night,
         )
 
         weather.process(
@@ -333,8 +337,10 @@ class TestWeather:
                 payload=GroupValueWrite(value=DPTBinary(0)),
             )
         )
-
-        assert weather.ha_current_state() == WeatherCondition.CLEAR_NIGHT
+        if invert_day_night:
+            assert weather.ha_current_state() == WeatherCondition.EXCEPTIONAL
+        else:
+            assert weather.ha_current_state() == WeatherCondition.CLEAR_NIGHT
 
     def test_weather_default(self) -> None:
         """Test default state mapping."""

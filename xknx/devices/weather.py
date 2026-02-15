@@ -99,6 +99,7 @@ class Weather(Device):
         group_address_frost_alarm: GroupAddressesType = None,
         group_address_wind_alarm: GroupAddressesType = None,
         group_address_day_night: GroupAddressesType = None,
+        invert_day_night: bool = False,
         group_address_air_pressure: GroupAddressesType = None,
         group_address_humidity: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
@@ -211,6 +212,7 @@ class Weather(Device):
             device_name=self.name,
             feature_name="Day/Night",
             after_update_cb=self.after_update,
+            invert=invert_day_night,
         )
 
         self._air_pressure = RemoteValueByLength(
@@ -314,7 +316,7 @@ class Weather(Device):
 
     @property
     def day_night(self) -> bool | None:
-        """Return day or night."""
+        """Return day or night. `True` for day and `False` for night."""
         return self._day_night.value
 
     @property
