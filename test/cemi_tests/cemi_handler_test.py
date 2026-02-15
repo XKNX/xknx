@@ -45,6 +45,7 @@ async def test_wait_for_l2_confirmation(time_travel: EventLoopClockAdvancer) -> 
     await task
     assert xknx.connection_manager.cemi_count_outgoing == 1
     assert xknx.connection_manager.cemi_count_outgoing_error == 0
+    assert test_telegram.data_secure is False
 
     # no L_DATA.con received -> raise ConfirmationError
     xknx.knxip_interface.send_cemi.reset_mock()

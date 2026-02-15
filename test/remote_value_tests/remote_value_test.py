@@ -275,8 +275,8 @@ class TestRemoteValue:
         telegram = Telegram(
             destination_address=GroupAddress("1/1/1"),
             payload=GroupValueWrite(test_payload),
-            decoded_data=TelegramDecodedData(transcoder=DPT2ByteFloat, value=3.3),
         )
+        telegram.decoded_data = TelegramDecodedData(transcoder=DPT2ByteFloat, value=3.3)
         assert remote_value.process(telegram)
         assert remote_value.value == 3.3
 

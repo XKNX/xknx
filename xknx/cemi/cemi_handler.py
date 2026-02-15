@@ -72,6 +72,10 @@ class CEMIHandler:
         logger.debug("Outgoing CEMI: %s", cemi)
         if self.data_secure is not None:
             cemi.data = self.data_secure.outgoing_cemi(cemi_data=cemi_data)
+            telegram.data_secure = is_data_secure(cemi.data)
+        else:
+            telegram.data_secure = False
+
         self._l_data_confirmation_event.clear()
         try:
             await self.xknx.knxip_interface.send_cemi(cemi)
@@ -123,13 +127,14 @@ class CEMIHandler:
         logger.debug("Incoming CEMI: %s", cemi)
         self.xknx.connection_manager.cemi_count_incoming += 1
 
+        _cemi_data_is_data_secure = is_data_secure(cemi.data)
         if self.data_secure is None:
-            if is_data_secure(cemi.data):
+            if _cemi_data_is_data_secure:
                 data_secure_logger.debug(
                     "Received DataSecure encrypted CEMI frame but no keys for DataSecure are initialized: %s",
                     cemi,
                 )
-                self.handle_data_secure_key_issue(cemi.data)
+                self.handle_data_secure_key_issue(cemi.data, _cemi_data_is_data_secure)
                 return
         else:
             try:
@@ -140,11 +145,12 @@ class CEMIHandler:
                     "Could not decrypt CEMI frame: %s",
                     err,
                 )
-                self.handle_data_secure_key_issue(cemi.data)
+                self.handle_data_secure_key_issue(cemi.data, _cemi_data_is_data_secure)
                 return
 
         telegram = cemi.data.telegram()
         telegram.direction = TelegramDirection.INCOMING
+        telegram.data_secure = _cemi_data_is_data_secure
         self.telegram_received(telegram)
 
     def telegram_received(self, telegram: Telegram) -> None:
@@ -159,10 +165,13 @@ class CEMIHandler:
             return
         self.xknx.management.process(telegram)
 
-    def handle_data_secure_key_issue(self, cemi_data: CEMILData) -> None:
+    def handle_data_secure_key_issue(
+        self, cemi_data: CEMILData, received_data_secure: bool
+    ) -> None:
         """Handle DataSecure telegrams with missing or invalid keys."""
         self.xknx.connection_manager.undecoded_data_secure += 1
         if isinstance(cemi_data.tpci, tpci.TDataGroup):
             telegram = cemi_data.telegram()
             telegram.direction = TelegramDirection.INCOMING
+            telegram.data_secure = received_data_secure
             self.xknx.telegram_queue.received_data_secure_group_key_issue(telegram)
