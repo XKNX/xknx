@@ -1,19 +1,4 @@
-"""
-Module for KNX Telegrams.
-
-The telegram class is the lightweight data transfer object between
-
-* business logic (Lights, Covers, etc) and
-* underlying KNX/IP abstraction (CEMIHandler).
-
-It contains
-
-* the group address (e.g. GroupAddress("1/2/3"))
-* the direction (Incoming or Outgoing)
-* and the payload (e.g. GroupValueWrite(DPTBinary(False)))
-* the source address (e.g. IndividualAddress("1.2.3"))
-* the TPCI (Transport Layer Control Information) (e.g. TDataGroup())
-"""
+"""Module for KNX Telegrams."""
 
 from __future__ import annotations
 
@@ -51,7 +36,30 @@ class TelegramDecodedData:
 
 @dataclass(slots=True)
 class Telegram:
-    """Class for KNX telegrams."""
+    """
+    Data transfer object for KNX telegrams.
+
+    Represents a message exchanged on the KNX bus between the business logic
+    (Devices, Management, etc.) and the underlying KNX/IP abstraction layer.
+
+    Attributes:
+        destination_address: Target GroupAddress, IndividualAddress, or
+            InternalGroupAddress.
+        direction: Communication direction (INCOMING or OUTGOING).
+        payload: APCi payload containing the actual data (e.g., GroupValueWrite,
+            GroupValueResponse). None for control information only telegrams.
+        source_address: IndividualAddress of the sender. When default of 0.0.0 is
+            used, it will be set automatically when sent.
+        tpci: Transport Layer Control Information (TDataBroadcast, TDataGroup, or
+            TDataIndividual). If not provided, it will be automatically inferred
+            based on destination_address type.
+        decoded_data: Optional decoded version of the payload including the
+            transcoder class and decoded value. Set externally by GroupAddressDPT
+            for convenience when the payload has already been decoded.
+        data_secure: Flag indicating if the telegram was sent or received as
+            DataSecure. Set externally by CEMIHandler. None if not yet processed.
+
+    """
 
     destination_address: GroupAddress | IndividualAddress | InternalGroupAddress
     direction: TelegramDirection = TelegramDirection.OUTGOING
