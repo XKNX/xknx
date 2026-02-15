@@ -339,8 +339,10 @@ class TestWeather:
         )
         if invert_day_night:
             assert weather.ha_current_state() == WeatherCondition.EXCEPTIONAL
+            assert weather.day_night is True
         else:
             assert weather.ha_current_state() == WeatherCondition.CLEAR_NIGHT
+            assert weather.day_night is False
 
     def test_weather_default(self) -> None:
         """Test default state mapping."""
