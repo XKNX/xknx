@@ -39,20 +39,21 @@ The weather device is basically a set of sensors that you can obtain from your w
 
 - **xknx** is the XKNX object.
 - **name** is the name of the object.
-- **group_address_temperature** KNX address of current outside temperature.
+- **group_address_temperature** KNX address of current outside temperature. **DPT 9.001**
 - **group_address_brightness_south** KNX address for the brightness to south **DPT 9.004**.
 - **group_address_brightness_west** KNX address for the brightness to west **DPT 9.004**.
 - **group_address_brightness_east** KNX address for the brightness to east **DPT 9.004**.
 - **group_address_wind_speed** KNX address for current wind speed. **DPT 9.005**
 - **group_address_wind_bearing** KNX address for current wind bearing. **DPT 5.003**
-- **group_address_rain_alarm** KNX address for reading if rain alarm is on/off.
-- **group_address_wind_alarm** KNX address for reading if wind alarm is on/off.
-- **group_address_frost_alarm** KNX address for reading if frost alarm is on/off.
-- **group_address_day_night** KNX address for reading a day/night object.
+- **group_address_rain_alarm** KNX address for reading if rain alarm is on/off. **DPT 1**
+- **group_address_wind_alarm** KNX address for reading if wind alarm is on/off. **DPT 1**
+- **group_address_frost_alarm** KNX address for reading if frost alarm is on/off. **DPT 1**
+- **group_address_day_night** KNX address for reading day/night state. By default the value True represents day and False represents night. **DPT 1**
 - **group_address_air_pressure** KNX address reading current air pressure. **DPT 9.006 or 14.058**
 - **group_address_humidity** KNX address for reading current humidity. **DPT 9.007**
 - **sync_state** Periodically sync the state.
 - **device_updated_cb** Callback for each update.
+- **invert_day_night** Invert the day/night state.
 
 ```python
 
