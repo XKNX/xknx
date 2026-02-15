@@ -99,11 +99,11 @@ class Weather(Device):
         group_address_frost_alarm: GroupAddressesType = None,
         group_address_wind_alarm: GroupAddressesType = None,
         group_address_day_night: GroupAddressesType = None,
-        invert_day_night: bool = False,
         group_address_air_pressure: GroupAddressesType = None,
         group_address_humidity: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         device_updated_cb: DeviceCallbackType[Weather] | None = None,
+        invert_day_night: bool = False,
     ) -> None:
         """Initialize Weather class."""
         super().__init__(xknx, name, device_updated_cb)
