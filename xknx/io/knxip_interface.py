@@ -94,7 +94,9 @@ class KNXIPInterface:
                 )
         self.xknx.cemi_handler.data_secure_init(keyring=keyring)
 
-        if self.connection_config.connection_type == ConnectionType.ROUTING:
+        if self.connection_config.connection_type == ConnectionType.CUSTOM:
+            await self._start_custom()
+        elif self.connection_config.connection_type == ConnectionType.ROUTING:
             await self._start_routing(local_ip=local_ip)
         elif self.connection_config.connection_type == ConnectionType.ROUTING_SECURE:
             await self._start_secure_routing(local_ip=local_ip, keyring=keyring)
@@ -203,6 +205,18 @@ class KNXIPInterface:
             raise CommunicationError(
                 f"No usable KNX/IP device found{' in keyring file' if keyring_host_filter else ''}."
             )
+
+    async def _start_custom(self) -> None:
+        """Start a custom KNX/IP interface using the configured interface_factory."""
+        if self.connection_config.interface_factory is None:
+            raise CommunicationError(
+                "ConnectionType.CUSTOM requires an interface_factory in ConnectionConfig"
+            )
+        logger.debug("Starting custom KNX/IP interface")
+        self._interface = self.connection_config.interface_factory(
+            self.xknx, self.cemi_received
+        )
+        await self._interface.connect()
 
     async def _start_tunnelling_tcp(
         self,
