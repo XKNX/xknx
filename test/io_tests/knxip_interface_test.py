@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 import threading
 from typing import Any
-from unittest.mock import DEFAULT, Mock, patch
+from unittest.mock import AsyncMock, DEFAULT, Mock, patch
 
 import pytest
 
@@ -703,3 +703,62 @@ class TestKNXIPInterface:
                 interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
+
+    async def test_start_custom_connection(self) -> None:
+        """Test starting a custom connection with interface_factory."""
+        mock_interface = Mock()
+        mock_interface.connect = AsyncMock()
+        mock_interface.disconnect = AsyncMock()
+        mock_interface.send_cemi = AsyncMock()
+
+        def factory(xknx, cemi_received_callback):
+            mock_interface.cemi_received_callback = cemi_received_callback
+            return mock_interface
+
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.CUSTOM,
+            interface_factory=factory,
+        )
+        interface = knx_interface_factory(self.xknx, connection_config)
+        await interface.start()
+        assert interface._interface is mock_interface
+        assert (  # pylint: disable=comparison-with-callable
+            mock_interface.cemi_received_callback == interface.cemi_received
+        )
+        mock_interface.connect.assert_called_once_with()
+
+        await interface.stop()
+        mock_interface.disconnect.assert_called_once_with()
+        assert interface._interface is None
+
+    async def test_start_custom_connection_without_factory_raises(self) -> None:
+        """Test that CUSTOM connection type without factory raises CommunicationError."""
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.CUSTOM,
+        )
+        interface = knx_interface_factory(self.xknx, connection_config)
+        with pytest.raises(CommunicationError):
+            await interface.start()
+
+    def test_connection_config_interface_factory_default_none(self) -> None:
+        """Test that interface_factory defaults to None."""
+        config = ConnectionConfig()
+        assert config.interface_factory is None
+
+    def test_connection_config_equality_with_factory(self) -> None:
+        """Test ConnectionConfig equality includes interface_factory."""
+        factory = lambda xknx, cb: Mock()  # noqa: E731
+        config_a = ConnectionConfig(
+            connection_type=ConnectionType.CUSTOM,
+            interface_factory=factory,
+        )
+        config_b = ConnectionConfig(
+            connection_type=ConnectionType.CUSTOM,
+            interface_factory=factory,
+        )
+        assert config_a == config_b
+
+        config_c = ConnectionConfig(
+            connection_type=ConnectionType.CUSTOM,
+        )
+        assert config_a != config_c
