@@ -147,12 +147,10 @@ class Routing(Interface):
 
     __slots__ = (
         "_flow_control",
-        "cemi_received_callback",
         "individual_address",
         "local_ip",
         "multicast_group",
         "multicast_port",
-        "xknx",
     )
 
     connection_type = XknxConnectionType.ROUTING
@@ -202,8 +200,8 @@ class Routing(Interface):
 
     async def connect(self) -> None:
         """Start routing."""
-        self.xknx.current_address = self.individual_address
-        self.xknx.connection_manager.connection_state_changed(
+        self.current_address = self.individual_address
+        self.connection_state_changed(
             XknxConnectionState.CONNECTING, self.connection_type
         )
         try:
@@ -214,20 +212,20 @@ class Routing(Interface):
                 type(ex).__name__,
                 ex,
             )
-            self.xknx.connection_manager.connection_state_changed(
+            self.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
             # close udp transport to prevent open file descriptors
             self.transport.stop()
             raise CommunicationError("Routing could not be started") from ex
-        self.xknx.connection_manager.connection_state_changed(
+        self.connection_state_changed(
             XknxConnectionState.CONNECTED, self.connection_type
         )
 
     async def disconnect(self) -> None:
         """Stop routing."""
         self.transport.stop()
-        self.xknx.connection_manager.connection_state_changed(
+        self.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
         self._flow_control.cancel()

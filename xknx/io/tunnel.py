@@ -55,11 +55,9 @@ class _Tunnel(Interface):
         "_src_address",
         "auto_reconnect",
         "auto_reconnect_wait",
-        "cemi_received_callback",
         "communication_channel",
         "local_hpai",
         "sequence_number",
-        "xknx",
     )
 
     connection_type: XknxConnectionType
@@ -119,7 +117,7 @@ class _Tunnel(Interface):
 
         Raise CommunicationError when not successful.
         """
-        self.xknx.connection_manager.connection_state_changed(
+        self.connection_state_changed(
             XknxConnectionState.CONNECTING, self.connection_type
         )
         try:
@@ -132,7 +130,7 @@ class _Tunnel(Interface):
                 type(ex).__name__,
                 ex,
             )
-            self.xknx.connection_manager.connection_state_changed(
+            self.connection_state_changed(
                 XknxConnectionState.DISCONNECTED
             )
             # close transport to prevent open file descriptors
@@ -142,7 +140,7 @@ class _Tunnel(Interface):
             ) from ex
 
         self._tunnel_established()
-        self.xknx.connection_manager.connection_state_changed(
+        self.connection_state_changed(
             XknxConnectionState.CONNECTED, self.connection_type
         )
 
@@ -209,7 +207,7 @@ class _Tunnel(Interface):
     def _prepare_disconnect(self) -> None:
         """Prepare for disconnect. Stop tunnel related tasks and set connection state."""
         self.stop_heartbeat()
-        self.xknx.connection_manager.connection_state_changed(
+        self.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
 
@@ -251,7 +249,7 @@ class _Tunnel(Interface):
             )
             # Use the individual address provided by the tunnelling server
             self._src_address = connect.crd.individual_address or IndividualAddress(0)
-            self.xknx.current_address = self._src_address
+            self.current_address = self._src_address
             logger.debug(
                 "Tunnel established. communication_channel=%s, address=%s",
                 connect.communication_channel,
