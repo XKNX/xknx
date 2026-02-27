@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from xknx.cemi import CEMIFrame
 from xknx.core import XknxConnectionState, XknxConnectionType
@@ -29,6 +29,7 @@ class Interface(ABC):
 
     __slots__ = ("cemi_received_callback", "transport", "xknx")
 
+    connection_type: ClassVar[XknxConnectionType]
     cemi_received_callback: CEMIBytesCallbackType
     transport: KNXIPTransport
     xknx: XKNX
@@ -45,14 +46,10 @@ class Interface(ABC):
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """Send CEMIFrame to KNX bus."""
 
-    def connection_state_changed(
-        self,
-        state: XknxConnectionState,
-        connection_type: XknxConnectionType = XknxConnectionType.NOT_CONNECTED,
-    ) -> None:
+    def connection_state_changed(self, state: XknxConnectionState) -> None:
         """Update connection state via connection manager."""
         self.xknx.connection_manager.connection_state_changed(
-            state, connection_type
+            state, self.connection_type
         )
 
     @property

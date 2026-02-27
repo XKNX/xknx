@@ -11,7 +11,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from xknx.cemi import CEMIFrame
 from xknx.core import XknxConnectionState, XknxConnectionType
@@ -60,7 +60,7 @@ class _Tunnel(Interface):
         "sequence_number",
     )
 
-    connection_type: XknxConnectionType
+    connection_type: ClassVar[XknxConnectionType]
     transport: KNXIPTransport
 
     def __init__(
@@ -117,9 +117,7 @@ class _Tunnel(Interface):
 
         Raise CommunicationError when not successful.
         """
-        self.connection_state_changed(
-            XknxConnectionState.CONNECTING, self.connection_type
-        )
+        self.connection_state_changed(XknxConnectionState.CONNECTING)
         try:
             await self.transport.connect()
             await self.setup_tunnel()
@@ -130,9 +128,7 @@ class _Tunnel(Interface):
                 type(ex).__name__,
                 ex,
             )
-            self.connection_state_changed(
-                XknxConnectionState.DISCONNECTED
-            )
+            self.connection_state_changed(XknxConnectionState.DISCONNECTED)
             # close transport to prevent open file descriptors
             self.transport.stop()
             raise CommunicationError(
@@ -140,9 +136,7 @@ class _Tunnel(Interface):
             ) from ex
 
         self._tunnel_established()
-        self.connection_state_changed(
-            XknxConnectionState.CONNECTED, self.connection_type
-        )
+        self.connection_state_changed(XknxConnectionState.CONNECTED)
 
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
@@ -454,7 +448,7 @@ class UDPTunnel(_Tunnel):
         "route_back",
     )
 
-    connection_type = XknxConnectionType.TUNNEL_UDP
+    connection_type: ClassVar[XknxConnectionType] = XknxConnectionType.TUNNEL_UDP
     transport: UDPTransport
 
     def __init__(
@@ -698,7 +692,7 @@ class TCPTunnel(_Tunnel):
 
     __slots__ = ("gateway_ip", "gateway_port")
 
-    connection_type = XknxConnectionType.TUNNEL_TCP
+    connection_type: ClassVar[XknxConnectionType] = XknxConnectionType.TUNNEL_TCP
     transport: TCPTransport
 
     def __init__(
@@ -744,7 +738,7 @@ class SecureTunnel(TCPTunnel):
 
     __slots__ = ("_device_authentication_password", "_user_id", "_user_password")
 
-    connection_type = XknxConnectionType.TUNNEL_SECURE
+    connection_type: ClassVar[XknxConnectionType] = XknxConnectionType.TUNNEL_SECURE
     transport: SecureSession
 
     def __init__(
