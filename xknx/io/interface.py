@@ -52,12 +52,6 @@ class Interface(ABC):
             state, self.connection_type
         )
 
-    @property
-    def current_address(self) -> IndividualAddress:
-        """Get current individual address."""
-        return self.xknx.current_address
-
-    @current_address.setter
-    def current_address(self, address: IndividualAddress) -> None:
+    def _set_individual_address(self, address: IndividualAddress) -> None:
         """Set current individual address."""
         self.xknx.current_address = address
