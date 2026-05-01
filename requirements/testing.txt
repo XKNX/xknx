@@ -9,5 +9,5 @@ pytest-cov==7.1.0
 pytest-icdiff==0.9
 ruff==0.15.12
 setuptools==82.0.1
-tox==4.52.0
+tox==4.53.0
 tzdata==2025.3
