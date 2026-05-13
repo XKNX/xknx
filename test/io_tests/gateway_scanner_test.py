@@ -337,9 +337,12 @@ class TestGatewayScanner:
         )
         assert len(gateway_scanner.found_gateways) == 1
 
-        assert str(
-            gateway_scanner.found_gateways[test_search_response.body.control_endpoint]
-        ) == str(self.gateway_desc_both)
+        found_gateway = gateway_scanner.found_gateways[
+            test_search_response.body.control_endpoint
+        ]
+        assert str(found_gateway) == str(self.gateway_desc_both)
+        assert found_gateway.serial_number == "11:22:33:44:55:66"
+        assert found_gateway.mac_address == "01:02:03:04:05:06"
 
     @patch("xknx.io.gateway_scanner.UDPTransport.connect")
     @patch("xknx.io.gateway_scanner.UDPTransport.send")
