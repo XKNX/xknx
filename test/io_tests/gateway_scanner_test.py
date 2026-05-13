@@ -50,6 +50,9 @@ class TestGatewayDescriptor:
                     "supports_secure": True,
                     "routing_requires_secure": False,
                     "tunnelling_requires_secure": True,
+                    "serial_number": "00:83:7b:40:05:45",
+                    "mac_address": "cc:1b:e0:80:b8:01",
+                    "multicast_address": "0.0.0.0",
                 },
             ),
             (
@@ -66,6 +69,9 @@ class TestGatewayDescriptor:
                     "supports_secure": False,
                     "routing_requires_secure": None,
                     "tunnelling_requires_secure": None,
+                    "serial_number": "00:83:47:7f:01:24",
+                    "mac_address": "cc:1b:e0:80:04:c4",
+                    "multicast_address": "224.0.23.12",
                 },
             ),
             (
@@ -83,6 +89,9 @@ class TestGatewayDescriptor:
                     "supports_secure": True,
                     "routing_requires_secure": None,
                     "tunnelling_requires_secure": None,
+                    "serial_number": "00:08:11:71:01:26",
+                    "mac_address": "00:0a:b3:29:0b:13",
+                    "multicast_address": "0.0.0.0",
                 },
             ),
             (
@@ -100,6 +109,9 @@ class TestGatewayDescriptor:
                     "supports_secure": True,
                     "routing_requires_secure": None,
                     "tunnelling_requires_secure": None,
+                    "serial_number": "00:08:2d:40:83:4d",
+                    "mac_address": "00:0a:b3:27:4a:32",
+                    "multicast_address": "224.0.23.12",
                 },
             ),
             (
@@ -117,6 +129,9 @@ class TestGatewayDescriptor:
                     "supports_secure": True,
                     "routing_requires_secure": None,
                     "tunnelling_requires_secure": None,
+                    "serial_number": "00:a6:15:00:00:37",
+                    "mac_address": "00:22:d1:04:00:37",
+                    "multicast_address": "224.0.23.12",
                 },
             ),
             (
@@ -135,6 +150,9 @@ class TestGatewayDescriptor:
                     "supports_secure": True,
                     "routing_requires_secure": True,
                     "tunnelling_requires_secure": True,
+                    "serial_number": "00:a6:15:00:00:37",
+                    "mac_address": "00:22:d1:04:00:37",
+                    "multicast_address": "224.0.23.12",
                 },
             ),
         ],
@@ -161,6 +179,9 @@ class TestGatewayDescriptor:
             descriptor.tunnelling_requires_secure
             is expected["tunnelling_requires_secure"]
         )
+        assert descriptor.serial_number == expected["serial_number"]
+        assert descriptor.mac_address == expected["mac_address"]
+        assert descriptor.multicast_address == expected["multicast_address"]
 
 
 class TestGatewayScanner:
@@ -341,6 +362,7 @@ class TestGatewayScanner:
             test_search_response.body.control_endpoint
         ]
         assert str(found_gateway) == str(self.gateway_desc_both)
+        assert found_gateway.multicast_address == "224.0.23.12"
         assert found_gateway.serial_number == "11:22:33:44:55:66"
         assert found_gateway.mac_address == "01:02:03:04:05:06"
 
