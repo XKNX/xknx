@@ -12,8 +12,14 @@ async def main() -> None:
     gatewayscanner = GatewayScanner(xknx)
 
     async for gateway in gatewayscanner.async_scan():
-        print(f"{gateway.individual_address} {gateway.name}")
-        print(f"  {gateway.ip_addr}:{gateway.port}")
+        print(f"{gateway.name}")
+        print(f"  {'Individual address:':<19} {gateway.individual_address}")
+        print(f"  {'IP:':<19} {gateway.ip_addr}:{gateway.port}")
+        print(f"  {'Serial number:':<19} {gateway.serial_number}")
+        print(f"  {'MAC address:':<19} {gateway.mac_address}")
+        print(
+            f"  {'Supports secure:':<19} {'Yes' if gateway.supports_secure else 'No'}"
+        )
         tunnelling = (
             "Secure"
             if gateway.tunnelling_requires_secure
@@ -21,17 +27,20 @@ async def main() -> None:
             if gateway.supports_tunnelling_tcp
             else "UDP"
             if gateway.supports_tunnelling
-            else "No"
+            else "Not supported"
         )
-        print(f"  Tunnelling: {tunnelling}")
+        print(f"  {'Tunnelling:':<19} {tunnelling}")
         routing = (
             "Secure"
             if gateway.routing_requires_secure
-            else "Yes"
+            else "Plain"
             if gateway.supports_routing
-            else "No"
+            else "Not supported"
         )
-        print(f"  Routing: {routing}")
+        print(f"  {'Routing:':<19} {routing}")
+        if gateway.supports_routing:
+            print(f"  {'Multicast group:':<19} {gateway.multicast_address}")
+        print()
 
     if not gatewayscanner.found_gateways:
         print("No Gateways found")

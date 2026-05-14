@@ -61,6 +61,9 @@ class GatewayDescriptor:
         supports_tunnelling_tcp: bool = False,
         supports_secure: bool = False,
         individual_address: IndividualAddress | None = None,
+        multicast_address: str = "",
+        serial_number: str = "",
+        mac_address: str = "",
     ) -> None:
         """Initialize GatewayDescriptor class."""
         self.name = name
@@ -73,6 +76,9 @@ class GatewayDescriptor:
         self.supports_tunnelling = supports_tunnelling
         self.supports_tunnelling_tcp = supports_tunnelling_tcp
         self.supports_secure = supports_secure
+        self.multicast_address = multicast_address
+        self.serial_number = serial_number
+        self.mac_address = mac_address
 
         self.core_version: int = 0
         self.routing_requires_secure: bool | None = None
@@ -85,6 +91,9 @@ class GatewayDescriptor:
             if isinstance(dib, DIBDeviceInformation):
                 self.name = dib.name
                 self.individual_address = dib.individual_address
+                self.serial_number = dib.serial_number
+                self.mac_address = dib.mac_address
+                self.multicast_address = dib.multicast_address
                 continue
             if isinstance(dib, DIBSuppSVCFamilies):
                 self.core_version = dib.version(DIBServiceFamily.CORE) or 0
@@ -116,6 +125,9 @@ class GatewayDescriptor:
             f"    individual_address={self.individual_address}\n"
             f"    local_interface={self.local_interface},\n"
             f"    local_ip={self.local_ip},\n"
+            f"    multicast_address={self.multicast_address},\n"
+            f"    serial_number={self.serial_number},\n"
+            f"    mac_address={self.mac_address},\n"
             f"    core_version={self.core_version},\n"
             f"    supports_routing={self.supports_routing},\n"
             f"    supports_tunnelling={self.supports_tunnelling},\n"
