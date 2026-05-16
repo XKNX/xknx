@@ -1,4 +1,4 @@
-"""Test management procedures."""
+"""Tests for nm_individual_address_write — KNX 03.05.02 §2.3 NM_IndividualAddress_Write."""
 
 import asyncio
 from unittest.mock import AsyncMock, call
@@ -7,8 +7,10 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management import procedures
 from xknx.management.management import MANAGAMENT_CONNECTION_TIMEOUT
+from xknx.management.procedures.nm.nm_individual_address_write import (
+    nm_individual_address_write,
+)
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,
@@ -18,184 +20,7 @@ from xknx.telegram import (
     tpci,
 )
 
-from ..conftest import EventLoopClockAdvancer
-
-
-async def test_dm_restart() -> None:
-    """Test dm_restart."""
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    individual_address = IndividualAddress("4.0.10")
-
-    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
-    restart = Telegram(
-        destination_address=individual_address,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.Restart(),
-    )
-    disconnect = Telegram(
-        destination_address=individual_address,
-        tpci=tpci.TDisconnect(),
-    )
-    await procedures.dm_restart(xknx, individual_address)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(connect),
-        call(restart),
-        call(disconnect),
-    ]
-
-
-async def test_nm_individual_address_check_success() -> None:
-    """Test nm_individual_address_check."""
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    individual_address = IndividualAddress("4.0.10")
-
-    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
-    device_desc_read = Telegram(
-        destination_address=individual_address,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.DeviceDescriptorRead(descriptor=0),
-    )
-    ack = Telegram(
-        source_address=individual_address,
-        destination_address=IndividualAddress(0),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
-    device_desc_resp = Telegram(
-        source_address=individual_address,
-        destination_address=IndividualAddress(0),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.DeviceDescriptorResponse(),
-    )
-    task = asyncio.create_task(
-        procedures.nm_individual_address_check(xknx, individual_address)
-    )
-    await asyncio.sleep(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(connect),
-        call(device_desc_read),
-    ]
-    # receive response
-    xknx.management.process(ack)
-    xknx.management.process(device_desc_resp)
-    assert await task
-
-
-async def test_nm_individual_address_check_refused() -> None:
-    """Test nm_individual_address_check."""
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    individual_address = IndividualAddress("4.0.10")
-
-    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
-    device_desc_read = Telegram(
-        destination_address=individual_address,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.DeviceDescriptorRead(descriptor=0),
-    )
-    ack = Telegram(
-        source_address=individual_address,
-        destination_address=IndividualAddress(0),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
-    disconnect = Telegram(
-        source_address=individual_address,
-        destination_address=IndividualAddress(0),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TDisconnect(),
-    )
-    task = asyncio.create_task(
-        procedures.nm_individual_address_check(xknx, individual_address)
-    )
-    await asyncio.sleep(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(connect),
-        call(device_desc_read),
-    ]
-    xknx.management.process(disconnect)
-    xknx.management.process(ack)
-    assert await task
-
-
-async def test_nm_individual_address_read(time_travel: EventLoopClockAdvancer) -> None:
-    """Test nm_individual_address_read."""
-    _timeout = 2
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    individual_address_1 = IndividualAddress("1.1.4")
-    individual_address_2 = IndividualAddress("15.15.255")
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_read(xknx=xknx, timeout=_timeout)
-    )
-    address_broadcast = Telegram(
-        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
-    )
-
-    address_reply_message_1 = Telegram(
-        source_address=individual_address_1,
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressResponse(),
-    )
-
-    address_reply_message_2 = Telegram(
-        source_address=individual_address_2,
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressResponse(),
-    )
-
-    await asyncio.sleep(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(address_broadcast),
-    ]
-    xknx.management.process(address_reply_message_1)
-    xknx.management.process(address_reply_message_2)
-    await time_travel(_timeout)
-    assert await task
-
-
-async def test_nm_individual_address_read_multiple() -> None:
-    """Test nm_individual_address_read."""
-    _timeout = 2
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    individual_address_1 = IndividualAddress("1.1.4")
-    individual_address_2 = IndividualAddress("15.15.255")
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_read(
-            xknx=xknx, timeout=_timeout, raise_if_multiple=True
-        )
-    )
-    address_broadcast = Telegram(
-        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
-    )
-
-    address_reply_message_1 = Telegram(
-        source_address=individual_address_1,
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressResponse(),
-    )
-
-    address_reply_message_2 = Telegram(
-        source_address=individual_address_2,
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressResponse(),
-    )
-
-    await asyncio.sleep(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(address_broadcast),
-    ]
-    xknx.management.process(address_reply_message_1)
-    xknx.management.process(address_reply_message_2)
-    # no need to wait for _timeout due to `raise_if_multiple=True``
-    with pytest.raises(ManagementConnectionError):
-        await task
+from ....conftest import EventLoopClockAdvancer
 
 
 async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) -> None:
@@ -251,7 +76,7 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        nm_individual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -313,7 +138,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        nm_individual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -364,7 +189,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        nm_individual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -436,9 +261,7 @@ async def test_nm_individual_address_write_address_found(
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address
-        )
+        nm_individual_address_write(xknx=xknx, individual_address=individual_address)
     )
 
     # first request (address check) succeeds
@@ -500,7 +323,7 @@ async def test_nm_individual_address_write_programming_failed(
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
+        nm_individual_address_write(
             xknx=xknx, individual_address=individual_address_new
         )
     )
@@ -582,9 +405,7 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
     )
 
     task = asyncio.create_task(
-        procedures.nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address
-        )
+        nm_individual_address_write(xknx=xknx, individual_address=individual_address)
     )
 
     # make sure first request (address check) times out
@@ -603,199 +424,5 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         call(individual_address_read),
     ]
 
-    with pytest.raises(ManagementConnectionError):
-        await task
-
-
-async def test_nm_individual_address_serial_number_read(
-    time_travel: EventLoopClockAdvancer,
-) -> None:
-    """Test nm_individual_address_serial_number_read."""
-
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    individual_address = IndividualAddress("1.1.5")
-    serial_number = b"aabbccddeeff"
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_read(
-            xknx=xknx, serial=serial_number
-        )
-    )
-
-    read_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialRead(serial=serial_number),
-    )
-    address_reply = Telegram(
-        source_address=individual_address,
-        destination_address=GroupAddress("0/0/0"),
-        direction=TelegramDirection.INCOMING,
-        payload=apci.IndividualAddressSerialResponse(
-            address=individual_address, serial=serial_number
-        ),
-    )
-
-    await time_travel(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(read_address),
-    ]
-    xknx.management.process(address_reply)
-
-    assert await task == individual_address
-
-
-async def test_nm_individual_address_serial_number_read_fail(
-    time_travel: EventLoopClockAdvancer,
-) -> None:
-    """Test nm_individual_address_serial_number_read."""
-
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    serial_number = b"aabbccddeeff"
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_read(
-            xknx=xknx, serial=serial_number
-        )
-    )
-
-    read_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialRead(serial=serial_number),
-    )
-
-    await time_travel(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(read_address),
-    ]
-    await time_travel(3)
-
-    assert await task is None
-
-
-async def test_nm_individual_address_serial_number_write(
-    time_travel: EventLoopClockAdvancer,
-) -> None:
-    """Test nm_individual_address_serial_number_write."""
-
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    serial_number = b"aabbccddeeff"
-    individual_address = IndividualAddress("1.1.5")
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_write(
-            xknx=xknx, serial=serial_number, individual_address=individual_address
-        )
-    )
-
-    write_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialWrite(
-            serial=serial_number, address=individual_address
-        ),
-    )
-    read_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialRead(serial=serial_number),
-    )
-    address_reply = Telegram(
-        source_address=individual_address,
-        destination_address=GroupAddress("0/0/0"),
-        direction=TelegramDirection.INCOMING,
-        payload=apci.IndividualAddressSerialResponse(
-            address=individual_address, serial=serial_number
-        ),
-    )
-
-    await time_travel(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(write_address),
-        call(read_address),
-    ]
-    xknx.management.process(address_reply)
-    await task
-
-
-async def test_nm_individual_address_serial_number_write_fail_no_response(
-    time_travel: EventLoopClockAdvancer,
-) -> None:
-    """Test nm_individual_address_serial_number_write."""
-
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    serial_number = b"aabbccddeeff"
-    individual_address = IndividualAddress("1.1.5")
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_write(
-            xknx=xknx, serial=serial_number, individual_address=individual_address
-        )
-    )
-
-    write_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialWrite(
-            serial=serial_number, address=individual_address
-        ),
-    )
-    read_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialRead(serial=serial_number),
-    )
-
-    await time_travel(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(write_address),
-        call(read_address),
-    ]
-    await time_travel(3)
-    with pytest.raises(ManagementConnectionError):
-        await task
-
-
-async def test_nm_individual_address_serial_number_write_fail_wrong_address(
-    time_travel: EventLoopClockAdvancer,
-) -> None:
-    """Test nm_individual_address_serial_number_write."""
-
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    serial_number = b"aabbccddeeff"
-    individual_address_tx = IndividualAddress("1.1.5")
-    individual_address_rx = IndividualAddress("1.1.6")
-
-    task = asyncio.create_task(
-        procedures.nm_individual_address_serial_number_write(
-            xknx=xknx, serial=serial_number, individual_address=individual_address_tx
-        )
-    )
-
-    write_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialWrite(
-            serial=serial_number, address=individual_address_tx
-        ),
-    )
-    read_address = Telegram(
-        destination_address=GroupAddress("0/0/0"),
-        payload=apci.IndividualAddressSerialRead(serial=serial_number),
-    )
-    address_reply = Telegram(
-        source_address=individual_address_rx,
-        destination_address=GroupAddress("0/0/0"),
-        direction=TelegramDirection.INCOMING,
-        payload=apci.IndividualAddressSerialResponse(
-            address=individual_address_rx, serial=serial_number
-        ),
-    )
-
-    await time_travel(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(write_address),
-        call(read_address),
-    ]
-    xknx.management.process(address_reply)
     with pytest.raises(ManagementConnectionError):
         await task

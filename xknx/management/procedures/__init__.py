@@ -1,0 +1,36 @@
+"""
+Management procedures grouped by KNX spec family.
+
+Subpackages are created when their first procedure lands. Naming mirrors
+the KNX spec prefix:
+
+  - ``nm/`` for NM_* procedures (KNX 03.05.02 Network Management)
+  - ``dm/`` for DM_* procedures (KNX 03.05.02 Device Management)
+  - ``dmp/`` for DMP_* procedures (KNX 03.05.02 Device Management Procedures)
+  - ``ftp/`` for FTP_* procedures (KNX 03.05.02 §8 File Transfer)
+  - ``configuration/`` for Configuration Procedures (KNX 03.05.03)
+
+Per-procedure files inside each subpackage host a single public ``async def``
+function. This module re-exports every implemented procedure so callers that
+imported ``xknx.management.procedures.<name>`` continue to work.
+
+When adding a new procedure follow the workflow:
+
+  1. Create ``procedures/<family>/<spec_name>.py`` with the spec text embedded
+     in the module docstring and ``raise NotImplementedError`` until impl lands.
+  2. Mirror under ``test/management_tests/procedures/<family>/test_<name>.py``.
+  3. Replace ``NotImplementedError`` with the implementation and un-skip tests.
+"""
+
+# ruff: noqa: F401
+from .dm import dm_restart
+from .nm import (
+    nm_individual_address_check,
+    nm_individual_address_read,
+    nm_individual_address_serial_number_read,
+    nm_individual_address_serial_number_write,
+    nm_individual_address_write,
+)
+
+# Backwards-compatibility typo alias (the original module exposed both spellings).
+nm_invididual_address_write = nm_individual_address_write
