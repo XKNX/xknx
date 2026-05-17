@@ -6,9 +6,7 @@ the KNX spec prefix:
 
   - ``network/`` for NM_* procedures (KNX 03.05.02 Network Management)
   - ``device/`` for DM_* procedures (KNX 03.05.02 Device Management)
-  - ``dmp/`` for DMP_* procedures (KNX 03.05.02 Device Management Procedures)
   - ``ftp/`` for FTP_* procedures (KNX 03.05.02 §8 File Transfer)
-  - ``configuration/`` for Configuration Procedures (KNX 03.05.03)
 
 Per-procedure files inside each subpackage host a single public ``async def``
 function. This package re-exports every implemented procedure so callers can
