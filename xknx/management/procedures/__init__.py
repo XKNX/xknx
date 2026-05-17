@@ -4,8 +4,8 @@ Management procedures grouped by KNX spec family.
 Subpackages are created when their first procedure lands. Naming mirrors
 the KNX spec prefix:
 
-  - ``nm/`` for NM_* procedures (KNX 03.05.02 Network Management)
-  - ``dm/`` for DM_* procedures (KNX 03.05.02 Device Management)
+  - ``network/`` for NM_* procedures (KNX 03.05.02 Network Management)
+  - ``device/`` for DM_* procedures (KNX 03.05.02 Device Management)
   - ``dmp/`` for DMP_* procedures (KNX 03.05.02 Device Management Procedures)
   - ``ftp/`` for FTP_* procedures (KNX 03.05.02 §8 File Transfer)
   - ``configuration/`` for Configuration Procedures (KNX 03.05.03)
@@ -23,8 +23,8 @@ When adding a new procedure follow the workflow:
 """
 
 # ruff: noqa: F401
-from .dm import dm_restart
-from .nm import (
+from .device import dm_restart
+from .network import (
     nm_individual_address_check,
     nm_individual_address_read,
     nm_individual_address_serial_number_read,

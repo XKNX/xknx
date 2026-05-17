@@ -7,7 +7,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.procedures.nm.nm_individual_address_read import (
+from xknx.management.procedures.network.nm_individual_address_read import (
     nm_individual_address_read,
 )
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, apci

@@ -8,7 +8,7 @@ import pytest
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import MANAGAMENT_CONNECTION_TIMEOUT
-from xknx.management.procedures.nm.nm_individual_address_write import (
+from xknx.management.procedures.network.nm_individual_address_write import (
     nm_individual_address_write,
 )
 from xknx.telegram import (

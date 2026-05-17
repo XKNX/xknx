@@ -6,10 +6,10 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.exceptions import ManagementConnectionError, ManagementConnectionTimeout
-from xknx.management.procedures.nm.nm_individual_address_check import (
+from xknx.management.procedures.network.nm_individual_address_check import (
     nm_individual_address_check,
 )
-from xknx.management.procedures.nm.nm_individual_address_read import (
+from xknx.management.procedures.network.nm_individual_address_read import (
     nm_individual_address_read,
 )
 from xknx.telegram import Telegram, apci, tpci

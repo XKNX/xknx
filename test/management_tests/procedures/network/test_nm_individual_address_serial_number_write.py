@@ -7,7 +7,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.procedures.nm.nm_individual_address_serial_number_write import (
+from xknx.management.procedures.network.nm_individual_address_serial_number_write import (
     nm_individual_address_serial_number_write,
 )
 from xknx.telegram import (

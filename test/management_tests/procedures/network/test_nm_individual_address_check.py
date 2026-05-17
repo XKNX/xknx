@@ -4,7 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock, call
 
 from xknx import XKNX
-from xknx.management.procedures.nm.nm_individual_address_check import (
+from xknx.management.procedures.network.nm_individual_address_check import (
     nm_individual_address_check,
 )
 from xknx.telegram import (
