@@ -11,8 +11,10 @@ the KNX spec prefix:
   - ``configuration/`` for Configuration Procedures (KNX 03.05.03)
 
 Per-procedure files inside each subpackage host a single public ``async def``
-function. This module re-exports every implemented procedure so callers that
-imported ``xknx.management.procedures.<name>`` continue to work.
+function. This package re-exports every implemented procedure so callers can
+import ``procedures`` via ``from xknx.management import procedures``, import
+individual functions via ``from xknx.management.procedures import <func>``, or
+access them as attributes such as ``procedures.<func>``.
 
 When adding a new procedure follow the workflow:
 
