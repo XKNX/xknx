@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, call
 
 from xknx import XKNX
-from xknx.management.procedures.device.dm_restart_rco import dm_restart
+from xknx.management.procedures.device.dm_restart_r_co import dm_restart
 from xknx.telegram import IndividualAddress, Telegram, apci, tpci
 
 
