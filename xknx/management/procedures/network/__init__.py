@@ -1,6 +1,13 @@
 """KNX 03.05.02 Network Management (NM_*) procedures."""
 
 # ruff: noqa: F401
+from .legacy import (
+    nm_individual_address_check_legacy,
+    nm_individual_address_read_legacy,
+    nm_individual_address_serial_number_read_legacy,
+    nm_individual_address_serial_number_write_legacy,
+    nm_individual_address_write_legacy,
+)
 from .nm_individual_address_check import nm_individual_address_check
 from .nm_individual_address_read import nm_individual_address_read
 from .nm_individual_address_serial_number_read import (

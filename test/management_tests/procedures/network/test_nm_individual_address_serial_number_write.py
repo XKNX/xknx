@@ -32,7 +32,7 @@ async def test_nm_individual_address_serial_number_write(
 
     task = asyncio.create_task(
         nm_individual_address_serial_number_write(
-            xknx=xknx, serial=serial_number, individual_address=individual_address
+            xknx.management, serial=serial_number, individual_address=individual_address
         )
     )
 
@@ -75,7 +75,7 @@ async def test_nm_individual_address_serial_number_write_fail_no_response(
 
     task = asyncio.create_task(
         nm_individual_address_serial_number_write(
-            xknx=xknx, serial=serial_number, individual_address=individual_address
+            xknx.management, serial=serial_number, individual_address=individual_address
         )
     )
 
@@ -112,7 +112,9 @@ async def test_nm_individual_address_serial_number_write_fail_wrong_address(
 
     task = asyncio.create_task(
         nm_individual_address_serial_number_write(
-            xknx=xknx, serial=serial_number, individual_address=individual_address_tx
+            xknx.management,
+            serial=serial_number,
+            individual_address=individual_address_tx,
         )
     )
 

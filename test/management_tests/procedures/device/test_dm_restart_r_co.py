@@ -23,7 +23,8 @@ async def test_dm_restart() -> None:
         destination_address=individual_address,
         tpci=tpci.TDisconnect(),
     )
-    await dm_restart(xknx, individual_address)
+    async with xknx.management.connection(individual_address) as conn:
+        await dm_restart(conn)
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
         call(restart),

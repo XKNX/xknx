@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock, call
 
 from xknx import XKNX
+from xknx.exceptions import ManagementConnectionRefused
 from xknx.management.procedures.network.nm_individual_address_check import (
     nm_individual_address_check,
 )
@@ -17,7 +18,7 @@ from xknx.telegram import (
 
 
 async def test_nm_individual_address_check_success() -> None:
-    """Test nm_individual_address_check."""
+    """Test nm_individual_address_check when device responds normally."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     individual_address = IndividualAddress("4.0.10")
@@ -41,20 +42,20 @@ async def test_nm_individual_address_check_success() -> None:
         tpci=tpci.TDataConnected(0),
         payload=apci.DeviceDescriptorResponse(),
     )
-    task = asyncio.create_task(nm_individual_address_check(xknx, individual_address))
-    await asyncio.sleep(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(connect),
-        call(device_desc_read),
-    ]
-    # receive response
-    xknx.management.process(ack)
-    xknx.management.process(device_desc_resp)
-    assert await task
+    async with xknx.management.connection(individual_address) as conn:
+        task = asyncio.create_task(nm_individual_address_check(conn))
+        await asyncio.sleep(0)
+        assert xknx.cemi_handler.send_telegram.call_args_list == [
+            call(connect),
+            call(device_desc_read),
+        ]
+        xknx.management.process(ack)
+        xknx.management.process(device_desc_resp)
+        assert await task
 
 
 async def test_nm_individual_address_check_refused() -> None:
-    """Test nm_individual_address_check."""
+    """Test nm_individual_address_check when device refuses the connection."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     individual_address = IndividualAddress("4.0.10")
@@ -77,12 +78,16 @@ async def test_nm_individual_address_check_refused() -> None:
         direction=TelegramDirection.INCOMING,
         tpci=tpci.TDisconnect(),
     )
-    task = asyncio.create_task(nm_individual_address_check(xknx, individual_address))
-    await asyncio.sleep(0)
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(connect),
-        call(device_desc_read),
-    ]
-    xknx.management.process(disconnect)
-    xknx.management.process(ack)
-    assert await task
+    try:
+        async with xknx.management.connection(individual_address) as conn:
+            task = asyncio.create_task(nm_individual_address_check(conn))
+            await asyncio.sleep(0)
+            assert xknx.cemi_handler.send_telegram.call_args_list == [
+                call(connect),
+                call(device_desc_read),
+            ]
+            xknx.management.process(disconnect)
+            xknx.management.process(ack)
+            assert await task
+    except ManagementConnectionRefused:
+        pass

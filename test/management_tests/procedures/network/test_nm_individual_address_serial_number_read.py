@@ -28,7 +28,7 @@ async def test_nm_individual_address_serial_number_read(
     serial_number = b"aabbccddeeff"
 
     task = asyncio.create_task(
-        nm_individual_address_serial_number_read(xknx=xknx, serial=serial_number)
+        nm_individual_address_serial_number_read(xknx.management, serial=serial_number)
     )
 
     read_address = Telegram(
@@ -62,7 +62,7 @@ async def test_nm_individual_address_serial_number_read_fail(
     serial_number = b"aabbccddeeff"
 
     task = asyncio.create_task(
-        nm_individual_address_serial_number_read(xknx=xknx, serial=serial_number)
+        nm_individual_address_serial_number_read(xknx.management, serial=serial_number)
     )
 
     read_address = Telegram(
