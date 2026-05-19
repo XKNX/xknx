@@ -23,7 +23,9 @@ async def test_nm_individual_address_read(time_travel: EventLoopClockAdvancer) -
     individual_address_1 = IndividualAddress("1.1.4")
     individual_address_2 = IndividualAddress("15.15.255")
 
-    task = asyncio.create_task(nm_individual_address_read(xknx=xknx, timeout=_timeout))
+    task = asyncio.create_task(
+        nm_individual_address_read(xknx.management, timeout=_timeout)
+    )
     address_broadcast = Telegram(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
     )
@@ -59,7 +61,9 @@ async def test_nm_individual_address_read_multiple() -> None:
     individual_address_2 = IndividualAddress("15.15.255")
 
     task = asyncio.create_task(
-        nm_individual_address_read(xknx=xknx, timeout=_timeout, raise_if_multiple=True)
+        nm_individual_address_read(
+            xknx.management, timeout=_timeout, raise_if_multiple=True
+        )
     )
     address_broadcast = Telegram(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()

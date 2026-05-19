@@ -225,7 +225,13 @@ class P2PConnection:
             seq_num = seq_num + 1 & 0xF
 
     async def connect(self) -> None:
-        """Connect to the KNX device."""
+        """
+        Connect to the KNX device.
+
+        Sends T_Connect-PDU (= A_Connect at wire level). KNX 03.03.07 §3.5.1: "T_Connect.ind and
+        T_Disconnect.ind are mapped transparently to A_Connect.ind and A_Disconnect.ind service
+        and passed to the user of Application Layer."
+        """
         connect = Telegram(
             destination_address=self.address,
             source_address=self.xknx.current_address,
@@ -244,7 +250,7 @@ class P2PConnection:
         self._connected = True
 
     async def disconnect(self) -> None:
-        """Disconnect from the KNX device."""
+        """Disconnect from the KNX device. Sends T_Disconnect-PDU (= A_Disconnect, see connect())."""
         if not self._connected:
             self.disconnect_hook()  # remove connection from management class
             raise ManagementConnectionRefused(
@@ -303,6 +309,21 @@ class P2PConnection:
             return
         self._response_waiter.set_result(telegram)
         self._expected_sequence_number = self._expected_sequence_number + 1 & 0xF
+
+    async def send_data_no_ack(self, payload: APCI) -> None:
+        """Send a TDataConnected telegram without waiting for an ACK (for commands that don't ACK back)."""
+        if not self._connected:
+            raise ManagementConnectionRefused(
+                "Management connection disconnected by the peer."
+            )
+        seq_num = next(self.sequence_number)
+        telegram = Telegram(
+            destination_address=self.address,
+            source_address=self.xknx.current_address,
+            payload=payload,
+            tpci=TDataConnected(sequence_number=seq_num),
+        )
+        await self.xknx.cemi_handler.send_telegram(telegram)
 
     async def _send_data(self, payload: APCI) -> None:
         """

@@ -77,7 +77,7 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
     )
     task = asyncio.create_task(
         nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
+            xknx.management, xknx.management, individual_address_new
         )
     )
 
@@ -139,7 +139,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
 
     task = asyncio.create_task(
         nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
+            xknx.management, xknx.management, individual_address_new
         )
     )
 
@@ -190,7 +190,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
 
     task = asyncio.create_task(
         nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
+            xknx.management, xknx.management, individual_address_new
         )
     )
 
@@ -261,7 +261,9 @@ async def test_nm_individual_address_write_address_found(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(xknx=xknx, individual_address=individual_address)
+        nm_individual_address_write(
+            xknx.management, xknx.management, individual_address
+        )
     )
 
     # first request (address check) succeeds
@@ -324,7 +326,7 @@ async def test_nm_individual_address_write_programming_failed(
     )
     task = asyncio.create_task(
         nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
+            xknx.management, xknx.management, individual_address_new
         )
     )
 
@@ -405,7 +407,9 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(xknx=xknx, individual_address=individual_address)
+        nm_individual_address_write(
+            xknx.management, xknx.management, individual_address
+        )
     )
 
     # make sure first request (address check) times out

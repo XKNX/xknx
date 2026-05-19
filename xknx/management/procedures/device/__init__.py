@@ -2,3 +2,4 @@
 
 # ruff: noqa: F401
 from .dm_restart_r_co import dm_restart
+from .legacy import dm_restart_legacy
