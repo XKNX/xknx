@@ -21,11 +21,9 @@ class P2PConnection(Protocol):
 
     async def request(self, payload: APCI, expected: type[APCI] | None) -> Telegram:
         """Send payload and wait for an expected response."""
-        ...
 
     async def send_data_no_ack(self, payload: APCI) -> None:
         """Send payload without waiting for an ACK."""
-        ...
 
 
 @runtime_checkable
@@ -36,7 +34,6 @@ class ConnectionManager(Protocol):
         self, address: IndividualAddress
     ) -> AbstractAsyncContextManager[P2PConnection]:
         """Return an async context manager that opens a P2P connection to address."""
-        ...
 
 
 @runtime_checkable
@@ -45,7 +42,6 @@ class BroadcastContext(Protocol):
 
     def receive(self, timeout: float | None = 3) -> AsyncGenerator[Telegram, None]:
         """Yield incoming broadcast telegrams until timeout."""
-        ...
 
 
 @runtime_checkable
@@ -54,8 +50,6 @@ class Broadcaster(Protocol):
 
     async def send_broadcast(self, payload: APCI) -> None:
         """Send a broadcast telegram."""
-        ...
 
     def broadcast(self) -> AbstractAsyncContextManager[BroadcastContext]:
         """Return an async context manager for receiving broadcast responses."""
-        ...

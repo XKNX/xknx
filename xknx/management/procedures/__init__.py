@@ -22,24 +22,25 @@ When adding a new procedure follow the workflow:
   3. Replace ``NotImplementedError`` with the implementation and un-skip tests.
 """
 
-# ruff: noqa: F401
 
 # Legacy API — backward-compatible re-exports under original names.
 # For the new API, import directly from the procedure modules, e.g.:
 #   from xknx.management.procedures.device.dm_restart_r_co import dm_restart
-from .device.legacy import dm_restart_legacy, dm_restart_legacy as dm_restart
+from .device.legacy import dm_restart_legacy
 from .network.legacy import (
     nm_individual_address_check_legacy,
-    nm_individual_address_check_legacy as nm_individual_address_check,
     nm_individual_address_read_legacy,
-    nm_individual_address_read_legacy as nm_individual_address_read,
     nm_individual_address_serial_number_read_legacy,
-    nm_individual_address_serial_number_read_legacy as nm_individual_address_serial_number_read,
     nm_individual_address_serial_number_write_legacy,
-    nm_individual_address_serial_number_write_legacy as nm_individual_address_serial_number_write,
     nm_individual_address_write_legacy,
-    nm_individual_address_write_legacy as nm_individual_address_write,
 )
+
+dm_restart = dm_restart_legacy
+nm_individual_address_check = nm_individual_address_check_legacy
+nm_individual_address_read = nm_individual_address_read_legacy
+nm_individual_address_serial_number_read = nm_individual_address_serial_number_read_legacy
+nm_individual_address_serial_number_write = nm_individual_address_serial_number_write_legacy
+nm_individual_address_write = nm_individual_address_write_legacy
 
 # Backwards-compatibility typo alias (the original module exposed both spellings).
 nm_invididual_address_write = nm_individual_address_write
