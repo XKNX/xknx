@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.protocols import P2PConnection
+from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
 # nr_of_elem field is 4 bits (KNX 03.03.07 v02.01.01 §3.4.4 Figure 46), max value 2^4 - 1
