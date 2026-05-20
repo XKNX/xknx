@@ -85,6 +85,7 @@ nav_order: 2
 - Add `DeviceManagement` to acknowledge `DeviceConfigurationRequest` frames received over a device management connection - the counterpart to `DeviceConfiguration`, which covers the other direction.
 - `DeviceConfiguration` now waits `DEVICE_CONFIGURATION_REQUEST_TIMEOUT` (10 seconds) for its acknowledgement instead of the one second inherited from `RequestResponse`, and takes a `timeout_in_seconds` argument to override it.
 - Add `dmp_authorize_r_co(conn, key)`, `dmp_authorize2_r_co(conn, client_key)` and `dmp_connect_r_co(conn)` to `xknx.management.procedures`, running on an already-open `P2PConnection`. `dmp_authorize2_r_co` authorizes with `FREE_ACCESS_KEY` first, then `client_key`, and keeps whichever gives the better access level. `dmp_connect_r_co` reads Device Descriptor Type 0 to confirm the connection is live and returns the mask version.
+- Add `dmp_interface_object_read_r(conn, ...)` and `dmp_interface_object_write_r(conn, ...)` to `xknx.management.procedures` — KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.2/§3.25.2 DMP_InterfaceObjectRead_R/DMP_InterfaceObjectWrite_R, reading/writing Property values on an already-open `P2PConnection`. Both transparently chunk requests exceeding the 4-bit `nr_of_elem` field's 15-element limit (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4) into multiple `A_PropertyValue_Read`/`_Write` exchanges.
 
 ### Internals
 
