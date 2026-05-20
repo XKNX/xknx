@@ -35,7 +35,8 @@ async def dmp_interface_object_read_r(
     # callers supply object_index/property_id/count/start_index explicitly, so the
     # property is always known at this level. Discovery belongs to the Configuration
     # Procedure above (per spec: "shall not interpret ... at the level of this
-    # Management Procedure").
+    # Management Procedure"). Use dmp_interface_object_scan_r to discover properties
+    # (type, max_count, access) before calling this function.
     if count <= 0:
         return b""
 
