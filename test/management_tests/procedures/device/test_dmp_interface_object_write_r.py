@@ -13,8 +13,8 @@ from xknx.management.procedures.device.dmp_interface_object_write_r import (
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
 
-@pytest.fixture
-def xknx_setup() -> XKNX:
+@pytest.fixture(name="xknx_setup")
+def fixture_xknx_setup() -> XKNX:
     """Set up XKNX with mocked cemi_handler."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
