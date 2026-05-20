@@ -12,6 +12,7 @@ nav_order: 2
 
 - Split `xknx/management/procedures.py` into the `xknx/management/procedures/` package. Each procedure lives in its own file under a family subdirectory (`network/`, `device/`, etc.) with the KNX spec prefix in the filename. Public API and behaviour unchanged.
 - Refactor management procedure API: simple procedures (`dm_restart`, `nm_individual_address_check`) now accept a `P2PConnection` directly instead of `XKNX`; complex procedures (`nm_individual_address_write`) retain `ConnectionManager`/`Broadcaster` signatures. Legacy wrappers preserve the old `XKNX`-based API.
+- Add `dmp_interface_object_read_r` (KNX 03.05.02 §3.27.2) and `dmp_interface_object_write_r` (§3.25.2) to the `device/` procedure package. Both procedures take a `P2PConnection` and transparently handle chunking for reads/writes exceeding 15 elements (4-bit `nr_of_elem` limit).
 
 # 3.15.0 Task improvements 2026-02-15
 
