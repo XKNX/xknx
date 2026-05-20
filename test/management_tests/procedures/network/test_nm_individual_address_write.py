@@ -220,6 +220,76 @@ async def test_nm_individual_address_write_no_device_programming_mode(
     assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
 
 
+async def test_nm_individual_address_write_address_occupied_by_disconnect(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """
+    Test nm_individual_address_write when device refuses connection during address check.
+
+    Device sends TDisconnect → nm_individual_address_check returns True internally →
+    context manager finally raises ManagementConnectionRefused from disconnect() (peer already
+    disconnected) → outer except swallows it → address_found remains True.
+    """
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("1.1.4")
+
+    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    disconnect_from_device = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDisconnect(),
+    )
+    ack_from_device = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(0),
+    )
+    individual_address_read = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+
+    task = asyncio.create_task(
+        nm_individual_address_write(
+            xknx.management, xknx.management, individual_address
+        )
+    )
+
+    # advance until address check is awaiting ACK
+    await time_travel(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+    ]
+
+    # device sends disconnect (address occupied) then ACK for the DeviceDescriptorRead
+    xknx.management.process(disconnect_from_device)
+    xknx.management.process(ack_from_device)
+
+    # nm_individual_address_check returns True; context manager finally raises
+    # ManagementConnectionRefused (peer already disconnected, no TDisconnect sent by us);
+    # except swallows it; IndividualAddressRead broadcast is sent
+    await time_travel(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[2:] == [
+        call(individual_address_read),
+    ]
+
+    # no device in programming mode → timeout → error
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    with pytest.raises(
+        ManagementConnectionError, match="No device in programming mode"
+    ):
+        await task
+    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 3
+
+
 async def test_nm_individual_address_write_address_found(
     time_travel: EventLoopClockAdvancer,
 ) -> None:
