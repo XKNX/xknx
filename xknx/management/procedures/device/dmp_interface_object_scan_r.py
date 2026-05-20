@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.protocols import P2PConnection
+from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
 # KNX 03.04.01: PID_OBJECT_TYPE is always property ID 1 on every interface object
