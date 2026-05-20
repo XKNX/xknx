@@ -12,7 +12,7 @@ FREE_ACCESS_KEY = 0xFFFFFFFF
 __all__ = ["FREE_ACCESS_KEY", "dmp_authorize2_r_co", "dmp_authorize_r_co"]
 
 
-async def dmp_authorize_r_co(connection: P2PConnection, key: int) -> int:
+async def dmp_authorize_r_co(connection: P2PConnection, key: int = FREE_ACCESS_KEY) -> int:
     """
     Authorize with a KNX device to obtain access rights.
 
