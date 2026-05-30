@@ -51,3 +51,15 @@ class TestAllDPTComplexSchemas:
         """Test that the schema is JSON-serializable."""
         schema = dpt_class.get_dict_schema()
         json.dumps(schema)  # must not raise
+
+    def test_integer_fields_have_value_range(self, dpt_class: type[DPTComplex]) -> None:  # type: ignore[type-arg]
+        """Test that all integer-typed fields define value_min and value_max."""
+        schema = dpt_class.get_dict_schema()
+        for field in schema:
+            if field["type"] == "integer":
+                assert "value_min" in field, (
+                    f"{dpt_class.__name__}: integer field '{field['name']}' missing value_min"
+                )
+                assert "value_max" in field, (
+                    f"{dpt_class.__name__}: integer field '{field['name']}' missing value_max"
+                )

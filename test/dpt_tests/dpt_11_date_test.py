@@ -100,3 +100,29 @@ class TestDPTDate:
         """Test Exception when parsing DPTDate from KNX with wrong year."""
         with pytest.raises(ConversionError):
             DPTDate.from_knx(DPTArray((0x04, 0x01, 0x64)))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTDate."""
+        assert DPTDate.get_dict_schema() == [
+            {
+                "name": "year",
+                "type": "integer",
+                "required": True,
+                "value_min": 1990,
+                "value_max": 2089,
+            },
+            {
+                "name": "month",
+                "type": "integer",
+                "required": True,
+                "value_min": 1,
+                "value_max": 12,
+            },
+            {
+                "name": "day",
+                "type": "integer",
+                "required": True,
+                "value_min": 1,
+                "value_max": 31,
+            },
+        ]
