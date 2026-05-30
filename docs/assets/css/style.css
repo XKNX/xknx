@@ -18,7 +18,16 @@ a {
   color: #93a1a1;
 }
 
-pre.highlight, figure.highlight {
+div.highlighter-rouge,
+pre.highlight,
+figure.highlight {
+  background-color: #44444a;
+}
+
+div.highlighter-rouge div.highlight,
+figure.highlight pre,
+figure.highlight :not(pre) > code {
+  border: none;
   background-color: #44444a;
 }
 
