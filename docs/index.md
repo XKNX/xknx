@@ -62,4 +62,4 @@ For questions, feature requests, bugreports either join the [XKNX chat on Discor
 
 # [](#header-1)Attributions
 
-Many thanks to [Enertex Bayern GmbH](https://enertex.de), [Weinzierl Engineering GmbH](https://weinzierl.de) and [MDT technologies GmbH](https://www.mdt.de) for providing us each a device to support testing and development of xknx.
+Many thanks to [Enertex Bayern GmbH](https://enertex.de), [Weinzierl Engineering GmbH](https://weinzierl.de) and [MDT technologies GmbH](https://www.mdt.de) for providing us a device to support testing and development of xknx.
