@@ -131,6 +131,32 @@ class TestDPTColorRGB:
         with pytest.raises(CouldNotParseTelegram):
             DPTColorRGB.from_knx(DPTArray((0xFF, 0x4E)))
 
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTColorRGB."""
+        assert DPTColorRGB.get_dict_schema() == [
+            {
+                "name": "red",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 255,
+            },
+            {
+                "name": "green",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 255,
+            },
+            {
+                "name": "blue",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 255,
+            },
+        ]
+
 
 class TestRGBWColor:
     """Test RGBWColor class."""
@@ -293,6 +319,39 @@ class TestDPTColorRGBW:
         """Test DPTColorRGBW parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTColorRGBW.from_knx(DPTArray((0xFF, 0x4E, 0x12)))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTColorRGBW."""
+        assert DPTColorRGBW.get_dict_schema() == [
+            {
+                "name": "red",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 255,
+            },
+            {
+                "name": "green",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 255,
+            },
+            {
+                "name": "blue",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 255,
+            },
+            {
+                "name": "white",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 255,
+            },
+        ]
 
 
 class TestXYYColor:
@@ -463,3 +522,29 @@ class TestDPTColorXYY:
         """Test DPTColorXYY parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTColorXYY.from_knx(DPTArray((0xFF, 0x4E, 0x12)))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTColorXYY."""
+        assert DPTColorXYY.get_dict_schema() == [
+            {
+                "name": "x_axis",
+                "type": "float",
+                "required": False,
+                "value_min": 0.0,
+                "value_max": 1.0,
+            },
+            {
+                "name": "y_axis",
+                "type": "float",
+                "required": False,
+                "value_min": 0.0,
+                "value_max": 1.0,
+            },
+            {
+                "name": "brightness",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 255,
+            },
+        ]

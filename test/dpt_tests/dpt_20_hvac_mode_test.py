@@ -281,3 +281,29 @@ class TestDPTHVACStatus:
         """Test DPTHVACStatus parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTHVACStatus.from_knx(DPTArray((0xFF, 0x4E)))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTHVACStatus."""
+        assert DPTHVACStatus.get_dict_schema() == [
+            {
+                "name": "mode",
+                "type": "enum",
+                "required": True,
+                "options": [
+                    "auto",
+                    "comfort",
+                    "standby",
+                    "economy",
+                    "building_protection",
+                ],
+            },
+            {"name": "dew_point", "type": "boolean", "required": True},
+            {
+                "name": "heat_cool",
+                "type": "enum",
+                "required": True,
+                "options": ["cool", "heat"],
+            },
+            {"name": "inactive", "type": "boolean", "required": True},
+            {"name": "frost_alarm", "type": "boolean", "required": True},
+        ]

@@ -107,3 +107,45 @@ class TestDPTTime:
             DPTTime.to_knx("fnord")
         with pytest.raises(ConversionError):
             DPTTime.to_knx((1, 2, 3))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTTime."""
+        assert DPTTime.get_dict_schema() == [
+            {
+                "name": "hour",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 23,
+            },
+            {
+                "name": "minutes",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 59,
+            },
+            {
+                "name": "seconds",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 59,
+            },
+            {
+                "name": "day",
+                "type": "enum",
+                "required": False,
+                "default": "no_day",
+                "options": [
+                    "no_day",
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                ],
+            },
+        ]

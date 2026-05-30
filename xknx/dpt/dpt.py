@@ -4,14 +4,29 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import MISSING, dataclass, fields as dataclass_fields
 from enum import Enum
 from inspect import isabstract
 import struct
-from typing import Any, Generic, TypeVar, cast, final
+import types
+from typing import (
+    Any,
+    ClassVar,
+    Final,
+    Generic,
+    Literal,
+    TypedDict,
+    TypeVar,
+    Union,
+    cast,
+    final,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.typing import DPTParsable, Self
+from xknx.typing import DPTParsable, NotRequired, Self
 
 from .payload import DPTArray, DPTBinary
 
@@ -363,9 +378,31 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
         return list(cls.data_type)
 
 
+RANGE_UINT8: Final[dict[str, int]] = {"value_min": 0, "value_max": 255}
+RANGE_INT32: Final[dict[str, int]] = {
+    "value_min": -2_147_483_648,
+    "value_max": 2_147_483_647,
+}
+
+
+class DPTComplexFieldSchema(TypedDict):
+    """Schema description for a single field in a DPTComplexData dict representation."""
+
+    name: str
+    type: Literal["integer", "string", "float", "boolean", "enum"]
+    required: bool
+    default: NotRequired[int | float | bool | str]
+    options: NotRequired[list[str]]
+    value_min: NotRequired[int | float]
+    value_max: NotRequired[int | float]
+
+
 @dataclass(slots=True)
 class DPTComplexData(ABC):
     """Base class for KNX data point types decoding complex values."""
+
+    _dict_schema_fields_class: ClassVar[type | None] = None
+    """Set to a dataclass to use its fields for get_dict_schema() instead of this class."""
 
     @classmethod
     @abstractmethod
@@ -375,6 +412,75 @@ class DPTComplexData(ABC):
     @abstractmethod
     def as_dict(self) -> dict[str, Any]:
         """Create a JSON serializable dictionary."""
+
+    @classmethod
+    def get_dict_schema(cls) -> list[DPTComplexFieldSchema]:
+        """Return schema for the dict used in as_dict() / from_dict()."""
+        schema_cls = (
+            cls._dict_schema_fields_class
+            if cls._dict_schema_fields_class is not None
+            else cls
+        )
+        result: list[DPTComplexFieldSchema] = []
+        hints = get_type_hints(schema_cls)
+        for field in dataclass_fields(schema_cls):
+            hint = hints[field.name]
+            nullable = False
+            inner_type = hint
+            origin = get_origin(hint)
+            if isinstance(hint, types.UnionType) or origin is Union:
+                args = get_args(hint)
+                non_none = [a for a in args if a is not types.NoneType]
+                if len(non_none) == 1:
+                    inner_type = non_none[0]
+                    nullable = True
+
+            if inner_type is bool:
+                type_str = "boolean"
+            elif inner_type is int:
+                type_str = "integer"
+            elif inner_type is float:
+                type_str = "float"
+            elif inner_type is str:
+                type_str = "string"
+            elif isinstance(inner_type, type) and issubclass(inner_type, DPTEnumData):
+                type_str = "enum"
+            else:
+                raise NotImplementedError(
+                    f"Cannot auto-generate schema for field '{field.name}' "
+                    f"with type {hint!r} in {cls.__name__}. "
+                    "Override get_dict_schema() or set _dict_schema_fields_class in the subclass."
+                )
+
+            has_plain_default = field.default is not MISSING
+            has_factory_default = field.default_factory is not MISSING
+            required = not (nullable or has_plain_default or has_factory_default)
+
+            entry: DPTComplexFieldSchema = {
+                "name": field.name,
+                "type": type_str,  # type: ignore[typeddict-item]
+                "required": required,
+            }
+
+            if field.default is not MISSING and field.default is not None:
+                entry["default"] = (
+                    field.default.name.lower() if type_str == "enum" else field.default
+                )
+            elif has_factory_default:
+                factory_val = field.default_factory()  # type: ignore[misc]
+                if factory_val is not None:
+                    entry["default"] = factory_val
+
+            if type_str == "enum":
+                entry["options"] = [m.name.lower() for m in inner_type]
+
+            if "value_min" in field.metadata:
+                entry["value_min"] = field.metadata["value_min"]
+            if "value_max" in field.metadata:
+                entry["value_max"] = field.metadata["value_max"]
+
+            result.append(entry)
+        return result
 
 
 _ComplexDataT = TypeVar("_ComplexDataT", bound=DPTComplexData)
@@ -407,3 +513,8 @@ class DPTComplex(DPTBase, Generic[_ComplexDataT]):
     @abstractmethod
     def _to_knx(cls, value: _ComplexDataT) -> DPTArray | DPTBinary:
         """Serialize to KNX/IP raw data."""
+
+    @classmethod
+    def get_dict_schema(cls) -> list[DPTComplexFieldSchema]:
+        """Return schema for the dict used in to_knx() / from_knx()."""
+        return cls.data_type.get_dict_schema()
