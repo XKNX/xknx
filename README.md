@@ -64,4 +64,4 @@ asyncio.run(main())
 
 ## Attributions
 
-Many thanks to [Weinzierl Engineering GmbH](https://weinzierl.de) and [MDT technologies GmbH](https://www.mdt.de) for providing us each an IP Secure Router to support testing and development of xknx.
+Many thanks to [Enertex Bayern GmbH](https://enertex.de), [Weinzierl Engineering GmbH](https://weinzierl.de) and [MDT technologies GmbH](https://www.mdt.de) for providing us each a device to support testing and development of xknx.
