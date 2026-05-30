@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import datetime
 from typing import Any
 
@@ -17,9 +17,9 @@ from .payload import DPTArray, DPTBinary
 class KNXDate(DPTComplexData):
     """Class for KNX Date."""
 
-    year: int
-    month: int
-    day: int
+    year: int = field(metadata={"min": 1990, "max": 2089})
+    month: int = field(metadata={"min": 1, "max": 12})
+    day: int = field(metadata={"min": 1, "max": 31})
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> KNXDate:

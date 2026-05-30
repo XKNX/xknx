@@ -153,3 +153,22 @@ class TestDPTTariffActiveEnergy:
         """Test DPTTariffActiveEnergy parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTTariffActiveEnergy.from_knx(DPTArray((0xFF, 0x4E)))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTTariffActiveEnergy."""
+        assert DPTTariffActiveEnergy.get_dict_schema() == [
+            {
+                "name": "energy",
+                "type": "integer",
+                "required": False,
+                "value_min": -2_147_483_648,
+                "value_max": 2_147_483_647,
+            },
+            {
+                "name": "tariff",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 254,
+            },
+        ]

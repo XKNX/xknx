@@ -194,3 +194,80 @@ class TestDPTDateTime:
             DPTDateTime.to_knx("hello")
         with pytest.raises(ConversionError):
             DPTDateTime.to_knx((1, 2, 3))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTDateTime."""
+        assert DPTDateTime.get_dict_schema() == [
+            {
+                "name": "year",
+                "type": "integer",
+                "required": False,
+                "value_min": 1900,
+                "value_max": 2155,
+            },
+            {
+                "name": "month",
+                "type": "integer",
+                "required": False,
+                "value_min": 1,
+                "value_max": 12,
+            },
+            {
+                "name": "day",
+                "type": "integer",
+                "required": False,
+                "value_min": 1,
+                "value_max": 31,
+            },
+            {
+                "name": "hour",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 24,
+            },
+            {
+                "name": "minutes",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 59,
+            },
+            {
+                "name": "seconds",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 59,
+            },
+            {
+                "name": "day_of_week",
+                "type": "enum",
+                "required": False,
+                "options": [
+                    "any_day",
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                ],
+            },
+            {"name": "fault", "type": "boolean", "required": False, "default": False},
+            {"name": "working_day", "type": "boolean", "required": False},
+            {"name": "dst", "type": "boolean", "required": False, "default": False},
+            {
+                "name": "external_sync",
+                "type": "boolean",
+                "required": False,
+                "default": False,
+            },
+            {
+                "name": "source_reliable",
+                "type": "boolean",
+                "required": False,
+                "default": False,
+            },
+        ]

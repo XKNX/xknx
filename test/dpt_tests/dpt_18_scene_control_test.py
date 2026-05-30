@@ -100,3 +100,16 @@ class TestDPTSceneControl:
             DPTSceneControl.from_knx(DPTArray((0xFF, 0x4E)))
         with pytest.raises(CouldNotParseTelegram):
             DPTSceneControl.from_knx(DPTBinary(True))
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTSceneControl."""
+        assert DPTSceneControl.get_dict_schema() == [
+            {
+                "name": "scene_number",
+                "type": "integer",
+                "required": True,
+                "value_min": 1,
+                "value_max": 64,
+            },
+            {"name": "learn", "type": "boolean", "required": False, "default": False},
+        ]

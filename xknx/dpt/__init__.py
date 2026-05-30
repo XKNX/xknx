@@ -6,7 +6,17 @@ Module for encoding and decoding KNX datatypes.
 """
 
 # ruff: noqa: F401
-from .dpt import DPTBase, DPTComplex, DPTComplexData, DPTEnum, DPTEnumData, DPTNumeric
+from .dpt import (
+    RANGE_INT32,
+    RANGE_UINT8,
+    DPTBase,
+    DPTComplex,
+    DPTComplexData,
+    DPTComplexFieldSchema,
+    DPTEnum,
+    DPTEnumData,
+    DPTNumeric,
+)
 from .dpt_1 import (
     DPTAck,
     DPTAlarm,

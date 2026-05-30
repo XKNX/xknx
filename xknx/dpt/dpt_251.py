@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import RANGE_UINT8, DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
 
@@ -20,10 +20,10 @@ class RGBWColor(DPTComplexData):
     `white`: int 0..255; None if invalid
     """
 
-    red: int | None = None
-    green: int | None = None
-    blue: int | None = None
-    white: int | None = None
+    red: int | None = field(default=None, metadata=RANGE_UINT8)
+    green: int | None = field(default=None, metadata=RANGE_UINT8)
+    blue: int | None = field(default=None, metadata=RANGE_UINT8)
+    white: int | None = field(default=None, metadata=RANGE_UINT8)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, int]) -> RGBWColor:
