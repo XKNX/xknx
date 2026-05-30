@@ -23,7 +23,7 @@ class ControlDimming(DPTComplexData):
 
     control: Step
     step_code: int = field(
-        metadata={"min": 0, "max": 7}
+        metadata={"value_min": 0, "value_max": 7}
     )  # 1..7 higher is more intervals -> slower; 0 stop
 
     @classmethod
@@ -85,7 +85,7 @@ class ControlBlinds(DPTComplexData):
 
     control: UpDown
     step_code: int = field(
-        metadata={"min": 0, "max": 7}
+        metadata={"value_min": 0, "value_max": 7}
     )  # 1..7 higher is more intervals -> slower; 0 stop
 
     @classmethod

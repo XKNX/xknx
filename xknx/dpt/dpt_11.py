@@ -17,9 +17,9 @@ from .payload import DPTArray, DPTBinary
 class KNXDate(DPTComplexData):
     """Class for KNX Date."""
 
-    year: int = field(metadata={"min": 1990, "max": 2089})
-    month: int = field(metadata={"min": 1, "max": 12})
-    day: int = field(metadata={"min": 1, "max": 31})
+    year: int = field(metadata={"value_min": 1990, "value_max": 2089})
+    month: int = field(metadata={"value_min": 1, "value_max": 12})
+    day: int = field(metadata={"value_min": 1, "value_max": 31})
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> KNXDate:
