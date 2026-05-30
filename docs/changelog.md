@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased
 
+### DPT
+
+- Add DPTComplex dict schema descriptions.
+
 ### Internals
 
 - Split `xknx/management/procedures.py` into the `xknx/management/procedures/` package. Each procedure lives in its own file under a family subdirectory (`network/`, `device/`, etc.) with the KNX spec prefix in the filename. Public API and behaviour unchanged.
