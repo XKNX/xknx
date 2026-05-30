@@ -88,7 +88,11 @@ class ConnectionManager:
             return
 
         self._state = state
-        self.connection_type = connection_type
+        self.connection_type = (
+            XknxConnectionType.NOT_CONNECTED
+            if state == XknxConnectionState.DISCONNECTED
+            else connection_type
+        )
         if state == XknxConnectionState.CONNECTED:
             self.connected.set()
             self._reset_counters()

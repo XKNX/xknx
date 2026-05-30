@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import Enum, auto
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from xknx.secure import Keyring
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter
+
+if TYPE_CHECKING:
+    from xknx.xknx import XKNX
+
+    from .interface import CEMIBytesCallbackType, Interface
+
+InterfaceFactoryType = Callable[["XKNX", "CEMIBytesCallbackType"], "Interface"]
 
 
 class ConnectionType(Enum):
@@ -22,6 +30,7 @@ class ConnectionType(Enum):
     TUNNELING = auto()
     TUNNELING_TCP = auto()
     TUNNELING_TCP_SECURE = auto()
+    CUSTOM = auto()
 
 
 class ConnectionConfig:
@@ -34,6 +43,7 @@ class ConnectionConfig:
         * ROUTING use KNX/IP multicast routing.
         * TUNNELING connect to a specific KNX/IP tunneling device via UDP.
         * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
+        * CUSTOM use a user-provided Interface implementation via interface_factory.
     * individual address:
         * AUTOMATIC use a specific tunnel endpoint from a given knxkeys file
         * ROUTING the individual address used as source address for routing
@@ -52,6 +62,9 @@ class ConnectionConfig:
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     * threaded: Run connection logic in separate thread to avoid concurrency issues in HA
     * secure_config: KNX Secure config to use
+    * interface_factory: For CUSTOM connection, a callable that creates an Interface instance.
+        The factory receives the XKNX instance and a CEMI received callback, and must return
+        an Interface implementation. This allows injecting custom transport implementations.
     """
 
     def __init__(
@@ -71,6 +84,7 @@ class ConnectionConfig:
         scan_filter: GatewayScanFilter | None = None,
         threaded: bool = False,
         secure_config: SecureConfig | None = None,
+        interface_factory: InterfaceFactoryType | None = None,
     ) -> None:
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
@@ -89,6 +103,7 @@ class ConnectionConfig:
         self.scan_filter = scan_filter or GatewayScanFilter()
         self.threaded = threaded
         self.secure_config = secure_config
+        self.interface_factory = interface_factory
 
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
