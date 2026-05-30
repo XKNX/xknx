@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import datetime
 from typing import Any
 
@@ -30,9 +30,9 @@ class KNXDay(DPTEnumData):
 class KNXTime(DPTComplexData):
     """Class for KNX Time."""
 
-    hour: int
-    minutes: int
-    seconds: int
+    hour: int = field(metadata={"value_min": 0, "value_max": 23})
+    minutes: int = field(metadata={"value_min": 0, "value_max": 59})
+    seconds: int = field(metadata={"value_min": 0, "value_max": 59})
     day: KNXDay = KNXDay.NO_DAY
 
     @classmethod

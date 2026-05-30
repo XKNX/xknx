@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import DPTComplex, DPTComplexData, DPTComplexFieldSchema
 from .payload import DPTArray, DPTBinary
 
 
@@ -62,6 +62,33 @@ class XYYColor(DPTComplexData):
             if other.brightness is not None
             else self.brightness,
         )
+
+    @classmethod
+    def get_dict_schema(cls) -> list[DPTComplexFieldSchema]:
+        """Return schema - overridden because color is a tuple, not a primitive."""
+        return [
+            {
+                "name": "x_axis",
+                "type": "float",
+                "required": False,
+                "value_min": 0.0,
+                "value_max": 1.0,
+            },
+            {
+                "name": "y_axis",
+                "type": "float",
+                "required": False,
+                "value_min": 0.0,
+                "value_max": 1.0,
+            },
+            {
+                "name": "brightness",
+                "type": "integer",
+                "required": False,
+                "value_min": 0,
+                "value_max": 255,
+            },
+        ]
 
 
 class DPTColorXYY(DPTComplex[XYYColor]):

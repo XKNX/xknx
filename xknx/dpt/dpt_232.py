@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import RANGE_UINT8, DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
 
@@ -20,9 +20,9 @@ class RGBColor(DPTComplexData):
     `blue`: int 0..255
     """
 
-    red: int
-    green: int
-    blue: int
+    red: int = field(metadata=RANGE_UINT8)
+    green: int = field(metadata=RANGE_UINT8)
+    blue: int = field(metadata=RANGE_UINT8)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> RGBColor:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from .dpt import DPTComplex, DPTComplexData
@@ -15,7 +15,7 @@ from .payload import DPTArray, DPTBinary
 class SceneControl(DPTComplexData):
     """Class for scene control."""
 
-    scene_number: int
+    scene_number: int = field(metadata={"value_min": 1, "value_max": 64})
     learn: bool = False
 
     @classmethod
