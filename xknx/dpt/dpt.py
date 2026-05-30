@@ -11,6 +11,7 @@ import struct
 import types
 from typing import (
     Any,
+    ClassVar,
     Final,
     Generic,
     Literal,
@@ -400,6 +401,9 @@ class DPTComplexFieldSchema(TypedDict):
 class DPTComplexData(ABC):
     """Base class for KNX data point types decoding complex values."""
 
+    _dict_schema_fields_class: ClassVar[type | None] = None
+    """Set to a dataclass to use its fields for get_dict_schema() instead of this class."""
+
     @classmethod
     @abstractmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
@@ -412,9 +416,14 @@ class DPTComplexData(ABC):
     @classmethod
     def get_dict_schema(cls) -> list[DPTComplexFieldSchema]:
         """Return schema for the dict used in as_dict() / from_dict()."""
+        schema_cls = (
+            cls._dict_schema_fields_class
+            if cls._dict_schema_fields_class is not None
+            else cls
+        )
         result: list[DPTComplexFieldSchema] = []
-        hints = get_type_hints(cls)
-        for field in dataclass_fields(cls):
+        hints = get_type_hints(schema_cls)
+        for field in dataclass_fields(schema_cls):
             hint = hints[field.name]
             nullable = False
             inner_type = hint
@@ -440,7 +449,7 @@ class DPTComplexData(ABC):
                 raise NotImplementedError(
                     f"Cannot auto-generate schema for field '{field.name}' "
                     f"with type {hint!r} in {cls.__name__}. "
-                    "Override get_dict_schema() in the subclass."
+                    "Override get_dict_schema() or set _dict_schema_fields_class in the subclass."
                 )
 
             has_plain_default = field.default is not MISSING
