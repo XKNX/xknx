@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import RANGE_INT32, DPTComplex, DPTComplexData
 from .dpt_5 import DPTTariff
 from .dpt_13 import DPTActiveEnergy
 from .payload import DPTArray, DPTBinary
@@ -20,8 +20,10 @@ class TariffActiveEnergy(DPTComplexData):
     `tariff`: int 0..254; None if invalid
     """
 
-    energy: int | None = None
-    tariff: int | None = None
+    energy: int | None = field(default=None, metadata=RANGE_INT32)
+    tariff: int | None = field(
+        default=None, metadata={"value_min": 0, "value_max": 254}
+    )
 
     @classmethod
     def from_dict(cls, data: Mapping[str, int]) -> TariffActiveEnergy:

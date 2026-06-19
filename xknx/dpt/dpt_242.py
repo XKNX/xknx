@@ -3,11 +3,24 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import RANGE_UINT8, DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
+
+
+@dataclass
+class _XYYColorDictSchemaFields:
+    """Flat field definitions used for XYYColor.get_dict_schema()."""
+
+    x_axis: float | None = field(
+        default=None, metadata={"value_min": 0.0, "value_max": 1.0}
+    )
+    y_axis: float | None = field(
+        default=None, metadata={"value_min": 0.0, "value_max": 1.0}
+    )
+    brightness: int | None = field(default=None, metadata=RANGE_UINT8)
 
 
 @dataclass(slots=True)
@@ -21,6 +34,8 @@ class XYYColor(DPTComplexData):
 
     color: tuple[float, float] | None = None
     brightness: int | None = None
+
+    _dict_schema_fields_class = _XYYColorDictSchemaFields
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> XYYColor:

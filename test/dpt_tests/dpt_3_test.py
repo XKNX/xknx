@@ -183,3 +183,43 @@ class TestDPTControlStepCode:
             dpt.from_knx(DPTBinary((0x1F,)))
         with pytest.raises(CouldNotParseTelegram):
             dpt.from_knx(DPTArray((1,)))
+
+
+class TestDPTControlSchema:
+    """Test get_dict_schema for DPT 3 classes."""
+
+    def test_get_dict_schema_dimming(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTControlDimming."""
+        assert DPTControlDimming.get_dict_schema() == [
+            {
+                "name": "control",
+                "type": "enum",
+                "required": True,
+                "options": ["decrease", "increase"],
+            },
+            {
+                "name": "step_code",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 7,
+            },
+        ]
+
+    def test_get_dict_schema_blinds(self) -> None:
+        """Test get_dict_schema returns correct schema for DPTControlBlinds."""
+        assert DPTControlBlinds.get_dict_schema() == [
+            {
+                "name": "control",
+                "type": "enum",
+                "required": True,
+                "options": ["up", "down"],
+            },
+            {
+                "name": "step_code",
+                "type": "integer",
+                "required": True,
+                "value_min": 0,
+                "value_max": 7,
+            },
+        ]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from xknx.exceptions import ConversionError
@@ -22,7 +22,9 @@ class ControlDimming(DPTComplexData):
     """
 
     control: Step
-    step_code: int  # 1..7 higher is more intervals -> slower; 0 stop
+    step_code: int = field(
+        metadata={"value_min": 0, "value_max": 7}
+    )  # 1..7 higher is more intervals -> slower; 0 stop
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ControlDimming:
@@ -82,7 +84,9 @@ class ControlBlinds(DPTComplexData):
     """
 
     control: UpDown
-    step_code: int  # 1..7 higher is more intervals -> slower; 0 stop
+    step_code: int = field(
+        metadata={"value_min": 0, "value_max": 7}
+    )  # 1..7 higher is more intervals -> slower; 0 stop
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ControlBlinds:

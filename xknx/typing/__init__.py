@@ -5,9 +5,9 @@ import sys
 from typing import TYPE_CHECKING, TypedDict, TypeVar
 
 if sys.version_info >= (3, 11):
-    from typing import Self as Self
+    from typing import NotRequired as NotRequired, Self as Self
 else:
-    from typing_extensions import Self as Self
+    from typing_extensions import NotRequired as NotRequired, Self as Self
 
 if TYPE_CHECKING:
     from xknx.core.connection_manager import XknxConnectionState

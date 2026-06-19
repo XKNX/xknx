@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import datetime
 from typing import Any
 
@@ -36,12 +36,18 @@ class KNXDateTime(DPTComplexData):
     `hour`, `minutes` and `seconds` all have to be either int or None (invalid).
     """
 
-    year: int | None = None
-    month: int | None = None
-    day: int | None = None
-    hour: int | None = None
-    minutes: int | None = None
-    seconds: int | None = None
+    year: int | None = field(
+        default=None, metadata={"value_min": 1900, "value_max": 2155}
+    )
+    month: int | None = field(default=None, metadata={"value_min": 1, "value_max": 12})
+    day: int | None = field(default=None, metadata={"value_min": 1, "value_max": 31})
+    hour: int | None = field(default=None, metadata={"value_min": 0, "value_max": 24})
+    minutes: int | None = field(
+        default=None, metadata={"value_min": 0, "value_max": 59}
+    )
+    seconds: int | None = field(
+        default=None, metadata={"value_min": 0, "value_max": 59}
+    )
 
     day_of_week: KNXDayOfWeek | None = None
 
