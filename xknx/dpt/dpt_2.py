@@ -205,6 +205,7 @@ class DPTSwitchControl(_DPTBinaryControlBase[SwitchControl]):
     """Abstraction for KNX 2-bit switch control. DPT 2.001."""
 
     data_type = SwitchControl
+    dpt_main_number = 2
     dpt_sub_number = 1
     value_type = "switch_control"
 
@@ -217,6 +218,7 @@ class DPTBoolControl(_DPTBinaryControlBase[BoolControl]):
     """Abstraction for KNX 2-bit bool control. DPT 2.002."""
 
     data_type = BoolControl
+    dpt_main_number = 2
     dpt_sub_number = 2
     value_type = "bool_control"
 
@@ -229,6 +231,7 @@ class DPTEnableControl(_DPTBinaryControlBase[EnableControl]):
     """Abstraction for KNX 2-bit enable control. DPT 2.003."""
 
     data_type = EnableControl
+    dpt_main_number = 2
     dpt_sub_number = 3
     value_type = "enable_control"
 
@@ -241,6 +244,7 @@ class DPTRampControl(_DPTBinaryControlBase[RampControl]):
     """Abstraction for KNX 2-bit ramp control. DPT 2.004."""
 
     data_type = RampControl
+    dpt_main_number = 2
     dpt_sub_number = 4
     value_type = "ramp_control"
 
@@ -253,6 +257,7 @@ class DPTAlarmControl(_DPTBinaryControlBase[AlarmControl]):
     """Abstraction for KNX 2-bit alarm control. DPT 2.005."""
 
     data_type = AlarmControl
+    dpt_main_number = 2
     dpt_sub_number = 5
     value_type = "alarm_control"
 
@@ -265,6 +270,7 @@ class DPTBinaryValueControl(_DPTBinaryControlBase[BinaryValueControl]):
     """Abstraction for KNX 2-bit binary value control. DPT 2.006."""
 
     data_type = BinaryValueControl
+    dpt_main_number = 2
     dpt_sub_number = 6
     value_type = "binary_value_control"
 
@@ -277,6 +283,7 @@ class DPTStepControl(_DPTBinaryControlBase[StepControl]):
     """Abstraction for KNX 2-bit step control. DPT 2.007."""
 
     data_type = StepControl
+    dpt_main_number = 2
     dpt_sub_number = 7
     value_type = "step_control"
 
@@ -289,6 +296,7 @@ class DPTDirection1Control(_DPTBinaryControlBase[Direction1Control]):
     """Abstraction for KNX 2-bit direction1 control. DPT 2.008."""
 
     data_type = Direction1Control
+    dpt_main_number = 2
     dpt_sub_number = 8
     value_type = "direction1_control"
 
@@ -301,6 +309,7 @@ class DPTDirection2Control(_DPTBinaryControlBase[Direction2Control]):
     """Abstraction for KNX 2-bit direction2 control. DPT 2.009."""
 
     data_type = Direction2Control
+    dpt_main_number = 2
     dpt_sub_number = 9
     value_type = "direction2_control"
 
@@ -313,6 +322,7 @@ class DPTStartControl(_DPTBinaryControlBase[StartControl]):
     """Abstraction for KNX 2-bit start control. DPT 2.010."""
 
     data_type = StartControl
+    dpt_main_number = 2
     dpt_sub_number = 10
     value_type = "start_control"
 
@@ -325,6 +335,7 @@ class DPTStateControl(_DPTBinaryControlBase[StateControl]):
     """Abstraction for KNX 2-bit state control. DPT 2.011."""
 
     data_type = StateControl
+    dpt_main_number = 2
     dpt_sub_number = 11
     value_type = "state_control"
 
@@ -337,6 +348,7 @@ class DPTInvertControl(_DPTBinaryControlBase[InvertControl]):
     """Abstraction for KNX 2-bit invert control. DPT 2.012."""
 
     data_type = InvertControl
+    dpt_main_number = 2
     dpt_sub_number = 12
     value_type = "invert_control"
 
