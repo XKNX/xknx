@@ -45,6 +45,20 @@ from .dpt_1 import (
     DPTUpDown,
     DPTWindowDoor,
 )
+from .dpt_2 import (
+    DPTAlarmControl,
+    DPTBinaryValueControl,
+    DPTBoolControl,
+    DPTDirection1Control,
+    DPTDirection2Control,
+    DPTEnableControl,
+    DPTInvertControl,
+    DPTRampControl,
+    DPTStartControl,
+    DPTStateControl,
+    DPTStepControl,
+    DPTSwitchControl,
+)
 from .dpt_3 import DPTControlBlinds, DPTControlDimming
 from .dpt_5 import (
     DPTAngle,
