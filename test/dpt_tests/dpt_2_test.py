@@ -90,6 +90,7 @@ class TestBinaryControlData:
         ("cls", "dict_value"),
         [
             (SwitchControl, {"control": True, "value": "invalid"}),
+            (SwitchControl, {"control": True}),  # missing value
             (SwitchControl, {"value": "on"}),  # missing control
             (BoolControl, {"control": True, "value": "invalid"}),
             (
@@ -104,35 +105,6 @@ class TestBinaryControlData:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             cls.from_dict(dict_value)
-
-    @pytest.mark.parametrize(
-        ("cls", "dict_value", "expected"),
-        [
-            (
-                SwitchControl,
-                {"control": True},
-                SwitchControl(control=True, value=Switch.OFF),
-            ),
-            (
-                BoolControl,
-                {"control": False},
-                BoolControl(control=False, value=Bool.FALSE),
-            ),
-            (
-                EnableControl,
-                {"control": True},
-                EnableControl(control=True, value=Enable.DISABLE),
-            ),
-        ],
-    )
-    def test_dict_missing_value_defaults_false(
-        self,
-        cls: type[SwitchControl],
-        dict_value: dict[str, Any],
-        expected: SwitchControl,
-    ) -> None:
-        """Test from_dict defaults missing value to False-equivalent enum member."""
-        assert cls.from_dict(dict_value) == expected
 
 
 @pytest.mark.parametrize(

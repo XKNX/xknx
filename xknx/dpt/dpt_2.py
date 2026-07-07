@@ -52,10 +52,7 @@ class _BinaryControlDataMixin(Generic[_ValueT_co], DPTComplexData):
         """Init from a dictionary."""
         try:
             control = bool(data["control"])
-            value = cls._value_type.parse(
-                # default to False if not provided since no-control could ignore value anyway
-                data.get("value", False)
-            )
+            value = cls._value_type.parse(data["value"])
         except (KeyError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for {cls.__name__}: {err}") from err
         return cls(control=control, value=value)
