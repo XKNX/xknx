@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- Add DPT 2 definitions
+
 # 3.16.0 Complex schema 2026-06-19
 
 ### DPT
