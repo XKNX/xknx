@@ -90,6 +90,7 @@ class TestBinaryControlData:
         ("cls", "dict_value"),
         [
             (SwitchControl, {"control": True, "value": "invalid"}),
+            (SwitchControl, {"control": "invalid", "value": "on"}),
             (SwitchControl, {"control": True}),  # missing value
             (SwitchControl, {"value": "on"}),  # missing control
             (BoolControl, {"control": True, "value": "invalid"}),
