@@ -139,6 +139,29 @@ class TestDataSecure:
         ):
             self.xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
 
+    def test_get_sequence_number_overflow(self) -> None:
+        """Test outgoing_cemi raises DataSecureError when sequence number exceeds max."""
+        self.data_secure._sequence_number_sending = 0xFFFFFFFFFFFF
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("0/4/0"),
+                    payload=apci.GroupValueRead(),
+                ),
+                src_addr=self.xknx.current_address,
+            ),
+        )
+        # first send uses the max sequence number - ok
+        self.data_secure.outgoing_cemi(test_cemi.data)
+        assert self.data_secure._sequence_number_sending == 0xFFFFFFFFFFFF + 1
+        # second send overflows
+        with pytest.raises(
+            DataSecureError,
+            match=r"Sequence number sending overflow.*",
+        ):
+            self.data_secure.outgoing_cemi(test_cemi.data)
+
     def test_data_secure_group_send(self) -> None:
         """Test outgoing DataSecure group communication."""
         self.data_secure._sequence_number_sending = 160170101607

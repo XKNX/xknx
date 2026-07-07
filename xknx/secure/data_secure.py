@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger("xknx.data_secure")
 _SEQUENCE_NUMBER_INIT_TIMESTAMP = datetime.fromisoformat(
     "2018-01-05T00:00:00+00:00"
 ).timestamp()
+_SEQUENCE_NUMBER_MAX = 0xFFFFFFFFFFFF  # 48 bit max value
 
 
 def _initial_sequence_number() -> int:
@@ -66,7 +67,7 @@ class DataSecure:
         # Holds the last valid sequence number for each individual address.
         # Use sequence_number from keyfile as initial value or 0 from senders for all IAs ?
 
-        if not 0 < self._sequence_number_sending < 0xFFFFFFFFFFFF:
+        if not 0 < self._sequence_number_sending <= _SEQUENCE_NUMBER_MAX:
             _local_time_info = (
                 f" Local time not set properly? {datetime.now(timezone.utc).isoformat()}"
                 if not last_sequence_number_sending
@@ -109,6 +110,12 @@ class DataSecure:
     def get_sequence_number(self) -> int:
         """Return current sequence number sending and increment local stored value."""
         seq_nr = self._sequence_number_sending
+        if seq_nr > _SEQUENCE_NUMBER_MAX:
+            raise DataSecureError(
+                "Sequence number sending overflow. You have reached the end of KNX Data Secure. "
+                "Reset your devices individual address tables and re-initialize XKNX.",
+                log_level=logging.ERROR,
+            )
         self._sequence_number_sending += 1
         return seq_nr
 
