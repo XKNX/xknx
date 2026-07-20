@@ -340,6 +340,13 @@ class TestSystemNetworkParameterRead:
             object_type=0, property_id=0, operand=bytes.fromhex("00b001")
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 4 octets (TPCI/APCI, APCI, object_type, property_id) - the
+        # reserved/operand octet is missing.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01c80000"))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method round-trips the raw ETS frame."""
         payload = SystemNetworkParameterRead(
@@ -397,6 +404,13 @@ class TestSystemNetworkParameterResponse:
             property_id=5,
             test_info_and_result=bytes.fromhex("f099aabbcc"),
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 4 octets (TPCI/APCI, APCI, object_type, property_id) - the
+        # reserved octet is missing.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01c90b05"))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
