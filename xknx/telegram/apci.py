@@ -53,6 +53,7 @@ class APCIService(Enum):
     ADC_RESPONSE = 0x1C0
 
     SYSTEM_NETWORK_PARAMETER_READ = 0x1C8
+    SYSTEM_NETWORK_PARAMETER_RESPONSE = 0x1C9
 
     MEMORY_EXTENDED_WRITE = 0x1FB
     MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
@@ -164,6 +165,8 @@ class APCI(ABC):
         if service == APCIService.ADC_RESPONSE.value:
             if apci == APCIService.SYSTEM_NETWORK_PARAMETER_READ.value:
                 return SystemNetworkParameterRead.from_knx(raw)
+            if apci == APCIService.SYSTEM_NETWORK_PARAMETER_RESPONSE.value:
+                return SystemNetworkParameterResponse.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
                 return MemoryExtendedWrite.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
@@ -515,8 +518,8 @@ class SystemNetworkParameterRead(APCI):
     APCI 0x1C8 falls within the same 4 bit service nibble (0b0111) that is
     otherwise used for A_ADC_Response, but is a distinct, dedicated service.
     Payload contains the interface object type, the Property ID and a
-    PID-specific operand used eg. by ETS to discover devices and system
-    parameters via broadcast.
+    PID-specific, variable-length operand used eg. by ETS to discover
+    devices and system parameters via broadcast.
 
     The 4 bits directly following object_type/property_id are reserved
     (always 0) and are stripped from `operand` rather than exposed.
@@ -530,7 +533,7 @@ class SystemNetworkParameterRead(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 2 + len(self.operand)
+        return 3 + len(self.operand)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> SystemNetworkParameterRead:
@@ -563,6 +566,69 @@ class SystemNetworkParameterRead(APCI):
         return (
             f'<SystemNetworkParameterRead object_type="{self.object_type}" '
             f'property_id="{self.property_id}" operand="{self.operand.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class SystemNetworkParameterResponse(APCI):
+    """
+    SystemNetworkParameterResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.8
+    A_SystemNetworkParameter_Response.
+
+    Same header as SystemNetworkParameterRead (object_type, property_id,
+    then a byte whose upper 4 bits are reserved). Beyond that, the PDU
+    has two variable-length fields, operand and test_result, with no
+    length indicator on the wire separating them - the boundary is only
+    known if the original request's operand length is known. Since APCI
+    parsing here is stateless, both are kept together as
+    `test_info_and_result` instead of guessing a split.
+
+    NOTE: unlike SystemNetworkParameterRead, the reserved 4 bits here have
+    not been stripped out - `test_info_and_result[0]`'s upper nibble is
+    still the raw reserved value (expected 0), not masked off.
+    """
+
+    CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_RESPONSE
+
+    object_type: int
+    property_id: int
+    test_info_and_result: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 3 + len(self.test_info_and_result)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> SystemNetworkParameterResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_SystemNetworkParameter_Response in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!BB", raw[2:4])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info_and_result=raw[4:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!BB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info_and_result
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<SystemNetworkParameterResponse object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" '
+            f'test_info_and_result="{self.test_info_and_result.hex()}" />'
         )
 
 

@@ -39,6 +39,7 @@ from xknx.telegram.apci import (
     PropertyValueWrite,
     Restart,
     SystemNetworkParameterRead,
+    SystemNetworkParameterResponse,
     UserManufacturerInfoRead,
     UserManufacturerInfoResponse,
     UserMemoryRead,
@@ -313,7 +314,7 @@ class TestSystemNetworkParameterRead:
             object_type=0, property_id=0, operand=bytes.fromhex("00b001")
         )
 
-        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == 6
 
     def test_from_knx(self) -> None:
         """
@@ -356,6 +357,68 @@ class TestSystemNetworkParameterRead:
         assert str(payload) == (
             '<SystemNetworkParameterRead object_type="0" property_id="0" '
             'operand="00b001" />'
+        )
+
+
+class TestSystemNetworkParameterResponse:
+    """Test class for SystemNetworkParameterResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = SystemNetworkParameterResponse(
+            object_type=11,
+            property_id=5,
+            test_info_and_result=bytes.fromhex("0099aabbcc"),
+        )
+
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01c90b050099aabbcc"))
+
+        assert payload == SystemNetworkParameterResponse(
+            object_type=11,
+            property_id=5,
+            test_info_and_result=bytes.fromhex("0099aabbcc"),
+        )
+
+    def test_from_knx_does_not_strip_reserved_bits(self) -> None:
+        """
+        Test from_knx keeps the reserved 4 bits as-is in test_info_and_result.
+
+        Unlike SystemNetworkParameterRead, the reserved nibble here is not
+        masked out yet - see the NOTE in the class docstring.
+        """
+        payload = APCI.from_knx(bytes.fromhex("01c90b05f099aabbcc"))
+
+        assert payload == SystemNetworkParameterResponse(
+            object_type=11,
+            property_id=5,
+            test_info_and_result=bytes.fromhex("f099aabbcc"),
+        )
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = SystemNetworkParameterResponse(
+            object_type=11,
+            property_id=5,
+            test_info_and_result=bytes.fromhex("0099aabbcc"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01c90b050099aabbcc")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = SystemNetworkParameterResponse(
+            object_type=11,
+            property_id=5,
+            test_info_and_result=bytes.fromhex("0099aabbcc"),
+        )
+
+        assert str(payload) == (
+            '<SystemNetworkParameterResponse object_type="11" property_id="5" '
+            'test_info_and_result="0099aabbcc" />'
         )
 
 
