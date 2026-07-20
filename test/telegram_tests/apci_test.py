@@ -370,6 +370,23 @@ class TestSystemNetworkParameterRead:
 
         assert payload.to_knx() == bytes.fromhex("01c8000000b001")
 
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original ETS frame exactly."""
+        raw = bytes.fromhex("01c8000000b001")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_round_trip_normalizes_reserved_bits(self) -> None:
+        """Test a frame with garbage reserved bits reserializes to its canonical form."""
+        dirty = bytes.fromhex("01c8000000bf01")
+        canonical = bytes.fromhex("01c8000000b001")
+
+        payload = APCI.from_knx(dirty)
+        reserialized = payload.to_knx()
+
+        assert reserialized == canonical
+        assert APCI.from_knx(bytes(reserialized)) == payload
+
     def test_to_knx_object_type_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range object_type."""
         payload = SystemNetworkParameterRead(object_type=0x10000, property_id=0)
@@ -453,6 +470,23 @@ class TestSystemNetworkParameterResponse:
         )
 
         assert payload.to_knx() == bytes.fromhex("01c9000b0050aabbcc")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original bytes exactly."""
+        raw = bytes.fromhex("01c9000b0050aabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_round_trip_normalizes_reserved_bits(self) -> None:
+        """Test a frame with garbage reserved bits reserializes to its canonical form."""
+        dirty = bytes.fromhex("01c9000b005faabbcc")
+        canonical = bytes.fromhex("01c9000b0050aabbcc")
+
+        payload = APCI.from_knx(dirty)
+        reserialized = payload.to_knx()
+
+        assert reserialized == canonical
+        assert APCI.from_knx(bytes(reserialized)) == payload
 
     def test_to_knx_object_type_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range object_type."""
