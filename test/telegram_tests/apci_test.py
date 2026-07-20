@@ -38,6 +38,7 @@ from xknx.telegram.apci import (
     PropertyValueResponse,
     PropertyValueWrite,
     Restart,
+    SystemNetworkParameterRead,
     UserManufacturerInfoRead,
     UserManufacturerInfoResponse,
     UserMemoryRead,
@@ -301,6 +302,61 @@ class TestADCResponse:
         payload = ADCResponse(channel=1, count=3, value=456)
 
         assert str(payload) == '<ADCResponse channel="1" count="3" value="456" />'
+
+
+class TestSystemNetworkParameterRead:
+    """Test class for SystemNetworkParameterRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = SystemNetworkParameterRead(
+            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+        )
+
+        assert payload.calculated_length() == 5
+
+    def test_from_knx(self) -> None:
+        """
+        Test the from_knx method.
+
+        Real world frame observed via ETS bus monitor (system broadcast,
+        src 0.0.1, dst 0/0/0): APCI 0x1C8, object_type=0, property_id=0,
+        operand=00 b0 01.
+        """
+        payload = APCI.from_knx(bytes.fromhex("01c8000000b001"))
+
+        assert payload == SystemNetworkParameterRead(
+            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+        )
+
+    def test_from_knx_strips_reserved_bits(self) -> None:
+        """Test from_knx masks out the reserved 4 bits instead of exposing them."""
+        # upper nibble of the byte after object_type/property_id is reserved
+        # (0xF here) and must not leak into operand.
+        payload = APCI.from_knx(bytes.fromhex("01c80000f0b001"))
+
+        assert payload == SystemNetworkParameterRead(
+            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+        )
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method round-trips the raw ETS frame."""
+        payload = SystemNetworkParameterRead(
+            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01c8000000b001")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = SystemNetworkParameterRead(
+            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+        )
+
+        assert str(payload) == (
+            '<SystemNetworkParameterRead object_type="0" property_id="0" '
+            'operand="00b001" />'
+        )
 
 
 class TestMemoryExtendedWrite:

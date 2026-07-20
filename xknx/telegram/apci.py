@@ -52,6 +52,8 @@ class APCIService(Enum):
     ADC_READ = 0x0180
     ADC_RESPONSE = 0x1C0
 
+    SYSTEM_NETWORK_PARAMETER_READ = 0x1C8
+
     MEMORY_EXTENDED_WRITE = 0x1FB
     MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
     MEMORY_EXTENDED_READ = 0x1FD
@@ -160,6 +162,8 @@ class APCI(ABC):
         if service == APCIService.ADC_READ.value:
             return ADCRead.from_knx(raw)
         if service == APCIService.ADC_RESPONSE.value:
+            if apci == APCIService.SYSTEM_NETWORK_PARAMETER_READ.value:
+                return SystemNetworkParameterRead.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
                 return MemoryExtendedWrite.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
@@ -498,6 +502,68 @@ class ADCResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<ADCResponse channel="{self.channel}" count="{self.count}" value="{self.value}" />'
+
+
+@dataclass(slots=True)
+class SystemNetworkParameterRead(APCI):
+    """
+    SystemNetworkParameterRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.8
+    A_SystemNetworkParameter_Read.
+
+    APCI 0x1C8 falls within the same 4 bit service nibble (0b0111) that is
+    otherwise used for A_ADC_Response, but is a distinct, dedicated service.
+    Payload contains the interface object type, the Property ID and a
+    PID-specific operand used eg. by ETS to discover devices and system
+    parameters via broadcast.
+
+    The 4 bits directly following object_type/property_id are reserved
+    (always 0) and are stripped from `operand` rather than exposed.
+    """
+
+    CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_READ
+
+    object_type: int
+    property_id: int
+    operand: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 2 + len(self.operand)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> SystemNetworkParameterRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_SystemNetworkParameter_Read in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!BB", raw[2:4])
+        # raw[4]'s upper 4 bits are reserved (always 0); only the lower 4
+        # bits belong to operand.
+        operand = bytes([raw[4] & 0x0F]) + raw[5:]
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            operand=operand,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!BB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.operand
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<SystemNetworkParameterRead object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" operand="{self.operand.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
