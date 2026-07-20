@@ -311,7 +311,7 @@ class TestSystemNetworkParameterRead:
     def test_calculated_length(self) -> None:
         """Test the test_calculated_length method."""
         payload = SystemNetworkParameterRead(
-            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
         )
 
         assert payload.calculated_length() == 6
@@ -321,49 +321,78 @@ class TestSystemNetworkParameterRead:
         Test the from_knx method.
 
         Real world frame observed via ETS bus monitor (system broadcast,
-        src 0.0.1, dst 0/0/0): APCI 0x1C8, object_type=0, property_id=0,
-        operand=00 b0 01.
+        src 0.0.1, dst 0/0/0): APCI 0x1C8, object_type=0 (Device Object),
+        property_id=11 (PID_SERIAL_NUMBER), test_info=01 - the standard
+        "which devices are in programming mode" system broadcast.
         """
         payload = APCI.from_knx(bytes.fromhex("01c8000000b001"))
 
         assert payload == SystemNetworkParameterRead(
-            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
         )
 
     def test_from_knx_strips_reserved_bits(self) -> None:
-        """Test from_knx masks out the reserved 4 bits instead of exposing them."""
-        # upper nibble of the byte after object_type/property_id is reserved
-        # (0xF here) and must not leak into operand.
-        payload = APCI.from_knx(bytes.fromhex("01c80000f0b001"))
+        """Test from_knx discards the reserved 4 bits instead of exposing them."""
+        # raw[4]=0x00 (PID high byte), raw[5]=0xbf: upper nibble (0xb)
+        # completes property_id=11, lower nibble (0xf) is garbage reserved
+        # bits that must not leak into property_id or test_info.
+        payload = APCI.from_knx(bytes.fromhex("01c8000000bf01"))
 
         assert payload == SystemNetworkParameterRead(
-            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
+        )
+
+    def test_from_knx_no_test_info(self) -> None:
+        """
+        Test from_knx accepts the minimum 6 octet APDU with no test_info.
+
+        Eg. a device signalling "unsupported object type / PID" by
+        echoing object_type=0xFFFF, property_id=0xFFF with no test data.
+        """
+        payload = APCI.from_knx(bytes.fromhex("01c8fffffff0"))
+
+        assert payload == SystemNetworkParameterRead(
+            object_type=0xFFFF, property_id=0xFFF, test_info=b""
         )
 
     def test_from_knx_wrong_length(self) -> None:
         """Test from_knx raises ConversionError for a too-short APDU."""
-        # only 4 octets (TPCI/APCI, APCI, object_type, property_id) - the
-        # reserved/operand octet is missing.
+        # only 5 octets - the ASDU header (object_type + property_id +
+        # reserved) needs 4 octets after the 2 APCI header octets.
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
-            APCI.from_knx(bytes.fromhex("01c80000"))
+            APCI.from_knx(bytes.fromhex("01c8000000"))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method round-trips the raw ETS frame."""
         payload = SystemNetworkParameterRead(
-            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
         )
 
         assert payload.to_knx() == bytes.fromhex("01c8000000b001")
 
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = SystemNetworkParameterRead(object_type=0x10000, property_id=0)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = SystemNetworkParameterRead(object_type=0, property_id=0x1000)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = SystemNetworkParameterRead(
-            object_type=0, property_id=0, operand=bytes.fromhex("00b001")
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
         )
 
         assert str(payload) == (
-            '<SystemNetworkParameterRead object_type="0" property_id="0" '
-            'operand="00b001" />'
+            '<SystemNetworkParameterRead object_type="0" property_id="11" '
+            'test_info="01" />'
         )
 
 
@@ -373,66 +402,81 @@ class TestSystemNetworkParameterResponse:
     def test_calculated_length(self) -> None:
         """Test the test_calculated_length method."""
         payload = SystemNetworkParameterResponse(
-            object_type=11,
-            property_id=5,
-            test_info_and_result=bytes.fromhex("0099aabbcc"),
+            object_type=11, property_id=5, test_info_and_result=bytes.fromhex("aabbcc")
         )
 
         assert payload.calculated_length() == 8
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
-        payload = APCI.from_knx(bytes.fromhex("01c90b050099aabbcc"))
+        payload = APCI.from_knx(bytes.fromhex("01c9000b0050aabbcc"))
 
         assert payload == SystemNetworkParameterResponse(
-            object_type=11,
-            property_id=5,
-            test_info_and_result=bytes.fromhex("0099aabbcc"),
+            object_type=11, property_id=5, test_info_and_result=bytes.fromhex("aabbcc")
         )
 
-    def test_from_knx_does_not_strip_reserved_bits(self) -> None:
-        """
-        Test from_knx keeps the reserved 4 bits as-is in test_info_and_result.
-
-        Unlike SystemNetworkParameterRead, the reserved nibble here is not
-        masked out yet - see the NOTE in the class docstring.
-        """
-        payload = APCI.from_knx(bytes.fromhex("01c90b05f099aabbcc"))
+    def test_from_knx_strips_reserved_bits(self) -> None:
+        """Test from_knx discards the reserved 4 bits instead of exposing them."""
+        # raw[5]=0x5f: upper nibble (0x5) completes property_id=5, lower
+        # nibble (0xf) is garbage reserved bits that must not leak into
+        # property_id or test_info_and_result.
+        payload = APCI.from_knx(bytes.fromhex("01c9000b005faabbcc"))
 
         assert payload == SystemNetworkParameterResponse(
-            object_type=11,
-            property_id=5,
-            test_info_and_result=bytes.fromhex("f099aabbcc"),
+            object_type=11, property_id=5, test_info_and_result=bytes.fromhex("aabbcc")
+        )
+
+    def test_from_knx_no_test_info_and_result(self) -> None:
+        """
+        Test from_knx accepts the minimum 6 octet APDU with no trailing data.
+
+        Eg. a device signalling "unsupported object type / PID" by
+        echoing object_type=0xFFFF, property_id=0xFFF with no test data.
+        """
+        payload = APCI.from_knx(bytes.fromhex("01c9fffffff0"))
+
+        assert payload == SystemNetworkParameterResponse(
+            object_type=0xFFFF, property_id=0xFFF, test_info_and_result=b""
         )
 
     def test_from_knx_wrong_length(self) -> None:
         """Test from_knx raises ConversionError for a too-short APDU."""
-        # only 4 octets (TPCI/APCI, APCI, object_type, property_id) - the
-        # reserved octet is missing.
+        # only 5 octets - the ASDU header (object_type + property_id +
+        # reserved) needs 4 octets after the 2 APCI header octets.
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
-            APCI.from_knx(bytes.fromhex("01c90b05"))
+            APCI.from_knx(bytes.fromhex("01c9000b00"))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = SystemNetworkParameterResponse(
-            object_type=11,
-            property_id=5,
-            test_info_and_result=bytes.fromhex("0099aabbcc"),
+            object_type=11, property_id=5, test_info_and_result=bytes.fromhex("aabbcc")
         )
 
-        assert payload.to_knx() == bytes.fromhex("01c90b050099aabbcc")
+        assert payload.to_knx() == bytes.fromhex("01c9000b0050aabbcc")
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = SystemNetworkParameterResponse(object_type=-1, property_id=0)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = SystemNetworkParameterResponse(object_type=0, property_id=-1)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = SystemNetworkParameterResponse(
-            object_type=11,
-            property_id=5,
-            test_info_and_result=bytes.fromhex("0099aabbcc"),
+            object_type=11, property_id=5, test_info_and_result=bytes.fromhex("aabbcc")
         )
 
         assert str(payload) == (
             '<SystemNetworkParameterResponse object_type="11" property_id="5" '
-            'test_info_and_result="0099aabbcc" />'
+            'test_info_and_result="aabbcc" />'
         )
 
 

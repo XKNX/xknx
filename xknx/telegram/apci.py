@@ -507,6 +507,35 @@ class ADCResponse(APCI):
         return f'<ADCResponse channel="{self.channel}" count="{self.count}" value="{self.value}" />'
 
 
+def _pack_system_network_parameter_header(object_type: int, property_id: int) -> bytes:
+    """
+    Serialize the A_SystemNetworkParameter_Read/Response ASDU header.
+
+    16 bit object_type, then a 12 bit property_id followed by 4 reserved
+    bits (always emitted as 0). See KNX Specification 03_03_07
+    Application Layer §3.3.8.
+    """
+    if not 0 <= object_type <= 0xFFFF:
+        raise ConversionError("Object type out of range.")
+    if not 0 <= property_id <= 0xFFF:
+        raise ConversionError("Property ID out of range.")
+    return struct.pack("!HH", object_type, property_id << 4)
+
+
+def _unpack_system_network_parameter_header(raw: bytes) -> tuple[int, int]:
+    """
+    Parse the A_SystemNetworkParameter_Read/Response ASDU header.
+
+    `raw` shall be the complete APDU (raw[2:4] is the 16 bit object_type,
+    raw[4] and the upper nibble of raw[5] form the 12 bit property_id, the
+    lower nibble of raw[5] is reserved and discarded). See KNX
+    Specification 03_03_07 Application Layer §3.3.8.
+    """
+    object_type = (raw[2] << 8) | raw[3]
+    property_id = (raw[4] << 4) | (raw[5] >> 4)
+    return object_type, property_id
+
+
 @dataclass(slots=True)
 class SystemNetworkParameterRead(APCI):
     """
@@ -517,55 +546,51 @@ class SystemNetworkParameterRead(APCI):
 
     APCI 0x1C8 falls within the same 4 bit service nibble (0b0111) that is
     otherwise used for A_ADC_Response, but is a distinct, dedicated service.
-    Payload contains the interface object type, the Property ID and a
-    PID-specific, variable-length operand used eg. by ETS to discover
-    devices and system parameters via broadcast.
-
-    The 4 bits directly following object_type/property_id are reserved
-    (always 0) and are stripped from `operand` rather than exposed.
+    Payload contains a 16 bit interface object type, a 12 bit Property ID
+    and a PID-specific, variable-length test_info used eg. by ETS to
+    discover devices and system parameters via broadcast.
     """
 
     CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_READ
 
     object_type: int
     property_id: int
-    operand: bytes = b""
+    test_info: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 3 + len(self.operand)
+        return 5 + len(self.test_info)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> SystemNetworkParameterRead:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
+        if len(raw) < 6:
             raise ConversionError(
                 f"Invalid length for A_SystemNetworkParameter_Read in CEMI: {raw.hex()}"
             )
-        object_type, property_id = struct.unpack("!BB", raw[2:4])
-        # raw[4]'s upper 4 bits are reserved (always 0); only the lower 4
-        # bits belong to operand.
-        operand = bytes([raw[4] & 0x0F]) + raw[5:]
+        object_type, property_id = _unpack_system_network_parameter_header(raw)
 
         return cls(
             object_type=object_type,
             property_id=property_id,
-            operand=operand,
+            test_info=raw[6:],
         )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        payload = struct.pack("!BB", self.object_type, self.property_id)
+        payload = _pack_system_network_parameter_header(
+            self.object_type, self.property_id
+        )
 
         return encode_cmd_and_payload(
-            self.CODE, appended_payload=payload + self.operand
+            self.CODE, appended_payload=payload + self.test_info
         )
 
     def __str__(self) -> str:
         """Return object as readable string."""
         return (
             f'<SystemNetworkParameterRead object_type="{self.object_type}" '
-            f'property_id="{self.property_id}" operand="{self.operand.hex()}" />'
+            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
         )
 
 
@@ -577,17 +602,13 @@ class SystemNetworkParameterResponse(APCI):
     See KNX Specification 03_03_07 Application Layer §3.3.8
     A_SystemNetworkParameter_Response.
 
-    Same header as SystemNetworkParameterRead (object_type, property_id,
-    then a byte whose upper 4 bits are reserved). Beyond that, the PDU
-    has two variable-length fields, operand and test_result, with no
-    length indicator on the wire separating them - the boundary is only
-    known if the original request's operand length is known. Since APCI
-    parsing here is stateless, both are kept together as
-    `test_info_and_result` instead of guessing a split.
-
-    NOTE: unlike SystemNetworkParameterRead, the reserved 4 bits here have
-    not been stripped out - `test_info_and_result[0]`'s upper nibble is
-    still the raw reserved value (expected 0), not masked off.
+    Same header as SystemNetworkParameterRead (16 bit object_type, 12 bit
+    property_id, 4 reserved bits). Beyond that, the PDU has two
+    variable-length fields, test_info and test_result, with no length
+    indicator on the wire separating them - the boundary is only known if
+    the original request's test_info length is known. Since APCI parsing
+    here is stateless, both are kept together as `test_info_and_result`
+    instead of guessing a split.
     """
 
     CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_RESPONSE
@@ -598,26 +619,28 @@ class SystemNetworkParameterResponse(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 3 + len(self.test_info_and_result)
+        return 5 + len(self.test_info_and_result)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> SystemNetworkParameterResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
+        if len(raw) < 6:
             raise ConversionError(
                 f"Invalid length for A_SystemNetworkParameter_Response in CEMI: {raw.hex()}"
             )
-        object_type, property_id = struct.unpack("!BB", raw[2:4])
+        object_type, property_id = _unpack_system_network_parameter_header(raw)
 
         return cls(
             object_type=object_type,
             property_id=property_id,
-            test_info_and_result=raw[4:],
+            test_info_and_result=raw[6:],
         )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        payload = struct.pack("!BB", self.object_type, self.property_id)
+        payload = _pack_system_network_parameter_header(
+            self.object_type, self.property_id
+        )
 
         return encode_cmd_and_payload(
             self.CODE, appended_payload=payload + self.test_info_and_result
