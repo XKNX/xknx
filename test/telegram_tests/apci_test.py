@@ -40,6 +40,7 @@ from xknx.telegram.apci import (
     Restart,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
+    SystemNetworkParameterWrite,
     UserManufacturerInfoRead,
     UserManufacturerInfoResponse,
     UserMemoryRead,
@@ -511,6 +512,107 @@ class TestSystemNetworkParameterResponse:
         assert str(payload) == (
             '<SystemNetworkParameterResponse object_type="11" property_id="5" '
             'test_info_and_result="aabbcc" />'
+        )
+
+
+class TestSystemNetworkParameterWrite:
+    """Test class for SystemNetworkParameterWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = SystemNetworkParameterWrite(
+            object_type=11, property_id=5, value=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01ca000b0050aabbcc"))
+
+        assert payload == SystemNetworkParameterWrite(
+            object_type=11, property_id=5, value=bytes.fromhex("aabbcc")
+        )
+
+    def test_from_knx_strips_reserved_bits(self) -> None:
+        """Test from_knx discards the reserved 4 bits instead of exposing them."""
+        # raw[5]=0x5f: upper nibble (0x5) completes property_id=5, lower
+        # nibble (0xf) is garbage reserved bits that must not leak into
+        # property_id or value.
+        payload = APCI.from_knx(bytes.fromhex("01ca000b005faabbcc"))
+
+        assert payload == SystemNetworkParameterWrite(
+            object_type=11, property_id=5, value=bytes.fromhex("aabbcc")
+        )
+
+    def test_from_knx_no_value(self) -> None:
+        """
+        Test from_knx accepts the minimum 6 octet APDU with no value.
+
+        Eg. a device signalling "unsupported object type / PID" by
+        echoing object_type=0xFFFF, property_id=0xFFF with no value.
+        """
+        payload = APCI.from_knx(bytes.fromhex("01cafffffff0"))
+
+        assert payload == SystemNetworkParameterWrite(
+            object_type=0xFFFF, property_id=0xFFF, value=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 5 octets - the ASDU header (object_type + property_id +
+        # reserved) needs 4 octets after the 2 APCI header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01ca000b00"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = SystemNetworkParameterWrite(
+            object_type=11, property_id=5, value=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01ca000b0050aabbcc")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original bytes exactly."""
+        raw = bytes.fromhex("01ca000b0050aabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_round_trip_normalizes_reserved_bits(self) -> None:
+        """Test a frame with garbage reserved bits reserializes to its canonical form."""
+        dirty = bytes.fromhex("01ca000b005faabbcc")
+        canonical = bytes.fromhex("01ca000b0050aabbcc")
+
+        payload = APCI.from_knx(dirty)
+        reserialized = payload.to_knx()
+
+        assert reserialized == canonical
+        assert APCI.from_knx(bytes(reserialized)) == payload
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = SystemNetworkParameterWrite(object_type=-1, property_id=0)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = SystemNetworkParameterWrite(object_type=0, property_id=-1)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = SystemNetworkParameterWrite(
+            object_type=11, property_id=5, value=bytes.fromhex("aabbcc")
+        )
+
+        assert str(payload) == (
+            '<SystemNetworkParameterWrite object_type="11" property_id="5" '
+            'value="aabbcc" />'
         )
 
 

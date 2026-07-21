@@ -54,6 +54,7 @@ class APCIService(Enum):
 
     SYSTEM_NETWORK_PARAMETER_READ = 0x1C8
     SYSTEM_NETWORK_PARAMETER_RESPONSE = 0x1C9
+    SYSTEM_NETWORK_PARAMETER_WRITE = 0x1CA
 
     MEMORY_EXTENDED_WRITE = 0x1FB
     MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
@@ -167,6 +168,8 @@ class APCI(ABC):
                 return SystemNetworkParameterRead.from_knx(raw)
             if apci == APCIService.SYSTEM_NETWORK_PARAMETER_RESPONSE.value:
                 return SystemNetworkParameterResponse.from_knx(raw)
+            if apci == APCIService.SYSTEM_NETWORK_PARAMETER_WRITE.value:
+                return SystemNetworkParameterWrite.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
                 return MemoryExtendedWrite.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
@@ -652,6 +655,60 @@ class SystemNetworkParameterResponse(APCI):
             f'<SystemNetworkParameterResponse object_type="{self.object_type}" '
             f'property_id="{self.property_id}" '
             f'test_info_and_result="{self.test_info_and_result.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class SystemNetworkParameterWrite(APCI):
+    """
+    SystemNetworkParameterWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.9
+    A_SystemNetworkParameter_Write.
+
+    Same header as SystemNetworkParameterRead/Response (16 bit object_type,
+    12 bit property_id, 4 reserved bits), followed by a PID-specific,
+    variable-length value to write.
+    """
+
+    CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_WRITE
+
+    object_type: int
+    property_id: int
+    value: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.value)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> SystemNetworkParameterWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_SystemNetworkParameter_Write in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = _unpack_system_network_parameter_header(raw)
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            value=raw[6:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = _pack_system_network_parameter_header(
+            self.object_type, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.value)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<SystemNetworkParameterWrite object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" value="{self.value.hex()}" />'
         )
 
 
