@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Protocol
 
-- Add A_SystemNetworkParameter_Read and A_SystemNetworkParameter_Response APCI service parsing.
+- Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.
 
 ### DPT
 
