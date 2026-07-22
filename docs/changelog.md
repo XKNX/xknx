@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Breaking changes
+
+- Moved `ReturnCode` from `xknx.management.application_layer_enum` to `xknx.telegram.apci`; the old module is removed.
+
 ### Protocol
 
 - Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.

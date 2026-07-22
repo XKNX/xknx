@@ -12,7 +12,7 @@ from xknx.knxip import (
     TunnellingFeatureSet,
     TunnellingFeatureType,
 )
-from xknx.management.application_layer_enum import ReturnCode
+from xknx.telegram.apci import ReturnCode
 
 
 class TestKNXIPTunnellingFeature:

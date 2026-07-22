@@ -4,7 +4,6 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
-from xknx.management.application_layer_enum import ReturnCode
 from xknx.telegram.address import IndividualAddress
 from xknx.telegram.apci import (
     APCI,
@@ -42,6 +41,7 @@ from xknx.telegram.apci import (
     PropertyValueResponse,
     PropertyValueWrite,
     Restart,
+    ReturnCode,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
     SystemNetworkParameterWrite,

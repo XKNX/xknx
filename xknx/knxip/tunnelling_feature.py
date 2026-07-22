@@ -13,7 +13,7 @@ from __future__ import annotations
 import struct
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.management.application_layer_enum import ReturnCode
+from xknx.telegram.apci import ReturnCode
 
 from .body import KNXIPBody, KNXIPBodyResponse
 from .error_code import ErrorCode
