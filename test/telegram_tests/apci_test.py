@@ -14,6 +14,7 @@ from xknx.telegram.apci import (
     DeviceDescriptorRead,
     DeviceDescriptorResponse,
     FunctionPropertyCommand,
+    FunctionPropertyExtCommand,
     FunctionPropertyExtStateRead,
     FunctionPropertyStateRead,
     FunctionPropertyStateResponse,
@@ -305,6 +306,65 @@ class TestADCResponse:
         payload = ADCResponse(channel=1, count=3, value=456)
 
         assert str(payload) == '<ADCResponse channel="1" count="3" value="456" />'
+
+
+class TestFunctionPropertyExtCommand:
+    """Test class for FunctionPropertyExtCommand objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01d400110010330000"))
+
+        assert payload == FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 6 octets - the ASDU header (interface_object_type +
+        # object_instance + property_id) needs 5 octets after the 2 APCI
+        # header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d400110010"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d400110010330000")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert str(payload) == (
+            '<FunctionPropertyExtCommand interface_object_type="17" '
+            'object_instance="1" property_id="51" data="0000" />'
+        )
 
 
 class TestFunctionPropertyExtStateRead:

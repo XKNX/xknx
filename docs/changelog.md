@@ -11,7 +11,7 @@ nav_order: 2
 ### Protocol
 
 - Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.
-- Add A_FunctionPropertyExtState_Read APCI service parsing.
+- Add A_FunctionPropertyExtCommand and A_FunctionPropertyExtState_Read APCI service parsing.
 
 ### DPT
 
