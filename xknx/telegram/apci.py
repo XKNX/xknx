@@ -56,6 +56,8 @@ class APCIService(Enum):
     SYSTEM_NETWORK_PARAMETER_RESPONSE = 0x1C9
     SYSTEM_NETWORK_PARAMETER_WRITE = 0x1CA
 
+    FUNCTION_PROPERTY_EXT_STATE_READ = 0x1D5
+
     MEMORY_EXTENDED_WRITE = 0x1FB
     MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
     MEMORY_EXTENDED_READ = 0x1FD
@@ -178,6 +180,8 @@ class APCI(ABC):
                 return MemoryExtendedRead.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_READ_RESPONSE.value:
                 return MemoryExtendedReadResponse.from_knx(raw)
+            if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_READ.value:
+                return FunctionPropertyExtStateRead.from_knx(raw)
             return ADCResponse.from_knx(raw)
         if service == APCIService.MEMORY_READ.value:
             return MemoryRead.from_knx(raw)
@@ -508,6 +512,107 @@ class ADCResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<ADCResponse channel="{self.channel}" count="{self.count}" value="{self.value}" />'
+
+
+def _pack_function_property_ext_header(
+    interface_object_type: int, object_instance: int, property_id: int
+) -> bytes:
+    """
+    Serialize the A_FunctionPropertyExtState_Read ASDU header.
+
+    16 bit interface_object_type, then a 12 bit object_instance
+    followed by a 12 bit property_id, packed into 3 bytes. See KNX
+    Specification 03_03_07 Application Layer §3.4.8.2.
+    """
+    if not 0 <= interface_object_type <= 0xFFFF:
+        raise ConversionError("Interface object type out of range.")
+    if not 0 <= object_instance <= 0xFFF:
+        raise ConversionError("Object instance out of range.")
+    if not 0 <= property_id <= 0xFFF:
+        raise ConversionError("Property ID out of range.")
+    return struct.pack(
+        "!HBBB",
+        interface_object_type,
+        object_instance >> 4,
+        ((object_instance & 0xF) << 4) | (property_id >> 8),
+        property_id & 0xFF,
+    )
+
+
+def _unpack_function_property_ext_header(raw: bytes) -> tuple[int, int, int]:
+    """
+    Parse the A_FunctionPropertyExtState_Read ASDU header.
+
+    `raw` shall be the complete APDU (raw[2:4] is the 16 bit
+    interface_object_type, raw[4:7] packs the 12 bit object_instance and
+    12 bit property_id with no reserved bits). See KNX Specification
+    03_03_07 Application Layer §3.4.8.2.
+    """
+    interface_object_type = (raw[2] << 8) | raw[3]
+    object_instance = (raw[4] << 4) | (raw[5] >> 4)
+    property_id = ((raw[5] & 0x0F) << 8) | raw[6]
+    return interface_object_type, object_instance, property_id
+
+
+@dataclass(slots=True)
+class FunctionPropertyExtStateRead(APCI):
+    """
+    FunctionPropertyExtStateRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.8.2
+    A_FunctionPropertyExtState_Read.
+
+    Payload contains a 16 bit Interface Object Type, a 12 bit Object
+    Instance, a 12 bit Property ID, and function-specific input data of
+    variable length.
+    """
+
+    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_READ
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 6 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyExtStateRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 7:
+            raise ConversionError(
+                f"Invalid length for FunctionPropertyExtStateRead: {len(raw)} bytes."
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[7:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=header + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FunctionPropertyExtStateRead "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'data="{self.data.hex()}" />'
+        )
 
 
 def _pack_system_network_parameter_header(object_type: int, property_id: int) -> bytes:

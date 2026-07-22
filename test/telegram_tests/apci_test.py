@@ -14,6 +14,7 @@ from xknx.telegram.apci import (
     DeviceDescriptorRead,
     DeviceDescriptorResponse,
     FunctionPropertyCommand,
+    FunctionPropertyExtStateRead,
     FunctionPropertyStateRead,
     FunctionPropertyStateResponse,
     GroupValueRead,
@@ -304,6 +305,65 @@ class TestADCResponse:
         payload = ADCResponse(channel=1, count=3, value=456)
 
         assert str(payload) == '<ADCResponse channel="1" count="3" value="456" />'
+
+
+class TestFunctionPropertyExtStateRead:
+    """Test class for FunctionPropertyExtStateRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method - real frame captured from an ETS session."""
+        payload = APCI.from_knx(bytes.fromhex("01d500110010330000"))
+
+        assert payload == FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 6 octets - the ASDU header (interface_object_type +
+        # object_instance + property_id) needs 5 octets after the 2 APCI
+        # header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d500110010"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method round-trips the real captured frame exactly."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d500110010330000")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert str(payload) == (
+            '<FunctionPropertyExtStateRead interface_object_type="17" '
+            'object_instance="1" property_id="51" data="0000" />'
+        )
 
 
 class TestSystemNetworkParameterRead:
