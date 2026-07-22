@@ -637,7 +637,7 @@ class FunctionPropertyExtCommand(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < 7:
             raise ConversionError(
-                f"Invalid length for FunctionPropertyExtCommand: {len(raw)} bytes."
+                f"Invalid length for A_FunctionPropertyExtCommand in CEMI: {raw.hex()}"
             )
         interface_object_type, object_instance, property_id = (
             _unpack_function_property_ext_header(raw)
@@ -698,7 +698,7 @@ class FunctionPropertyExtStateRead(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < 7:
             raise ConversionError(
-                f"Invalid length for FunctionPropertyExtStateRead: {len(raw)} bytes."
+                f"Invalid length for A_FunctionPropertyExtState_Read in CEMI: {raw.hex()}"
             )
         interface_object_type, object_instance, property_id = (
             _unpack_function_property_ext_header(raw)
@@ -761,17 +761,23 @@ class FunctionPropertyExtStateResponse(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) < 8:
             raise ConversionError(
-                f"Invalid length for FunctionPropertyExtStateResponse: {len(raw)} bytes."
+                f"Invalid length for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
             )
         interface_object_type, object_instance, property_id = (
             _unpack_function_property_ext_header(raw)
         )
+        try:
+            return_code = ReturnCode(raw[7])
+        except ValueError:
+            raise ConversionError(
+                f"Invalid return code for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
+            ) from None
 
         return cls(
             interface_object_type=interface_object_type,
             object_instance=object_instance,
             property_id=property_id,
-            return_code=ReturnCode(raw[7]),
+            return_code=return_code,
             data=raw[8:],
         )
 
@@ -793,7 +799,7 @@ class FunctionPropertyExtStateResponse(APCI):
             f'interface_object_type="{self.interface_object_type}" '
             f'object_instance="{self.object_instance}" '
             f'property_id="{self.property_id}" '
-            f'return_code="{self.return_code}" '
+            f'return_code="{self.return_code.name}" '
             f'data="{self.data.hex()}" />'
         )
 

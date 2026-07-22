@@ -354,6 +354,39 @@ class TestFunctionPropertyExtCommand:
 
         assert payload.to_knx() == bytes.fromhex("01d400110010330000")
 
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01d400110010330000")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_interface_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range interface_object_type."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=0x10000, object_instance=1, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Interface object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17, object_instance=0x1000, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17, object_instance=1, property_id=0x1000
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = FunctionPropertyExtCommand(
@@ -413,6 +446,39 @@ class TestFunctionPropertyExtStateRead:
 
         assert payload.to_knx() == bytes.fromhex("01d500110010330000")
 
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original ETS frame exactly."""
+        raw = bytes.fromhex("01d500110010330000")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_interface_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range interface_object_type."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=0x10000, object_instance=1, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Interface object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17, object_instance=0x1000, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17, object_instance=1, property_id=0x1000
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = FunctionPropertyExtStateRead(
@@ -463,6 +529,13 @@ class TestFunctionPropertyExtStateResponse:
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
             APCI.from_knx(bytes.fromhex("01d60011001033"))
 
+    def test_from_knx_invalid_return_code(self) -> None:
+        """Test from_knx raises ConversionError for an unknown return code."""
+        # return_code byte 0x01 is in the "Generic positive" range (01-1F)
+        # reserved by the spec but not assigned to any ReturnCode member.
+        with pytest.raises(ConversionError, match=r".*[Ii]nvalid.*return code.*"):
+            APCI.from_knx(bytes.fromhex("01d6001100103301"))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = FunctionPropertyExtStateResponse(
@@ -474,6 +547,48 @@ class TestFunctionPropertyExtStateResponse:
         )
 
         assert payload.to_knx() == bytes.fromhex("01d60011001033ff0000")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01d60011001033000000")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_interface_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range interface_object_type."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=0x10000,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Interface object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=0x1000,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=0x1000,
+            return_code=ReturnCode.E_SUCCESS,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
@@ -488,7 +603,7 @@ class TestFunctionPropertyExtStateResponse:
         assert str(payload) == (
             '<FunctionPropertyExtStateResponse interface_object_type="17" '
             'object_instance="1" property_id="51" '
-            'return_code="ReturnCode.E_SUCCESS" data="0000" />'
+            'return_code="E_SUCCESS" data="0000" />'
         )
 
 

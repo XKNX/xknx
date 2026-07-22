@@ -130,3 +130,11 @@ class TestKNXIPTunnellingFeature:
         raw = bytes.fromhex("06 10 04 24 00 0c 04 01 17 00 03 00")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
+
+    def test_response_invalid_return_code(self) -> None:
+        """Test parsing wrong Response (unknown return code) raises CouldNotParseKNXIP."""
+        # return_code byte 0x01 is in the "Generic positive" range (01-1F)
+        # reserved by the spec but not assigned to any ReturnCode member.
+        raw = bytes.fromhex("06 10 04 23 00 0e 04 01 17 00 03 01 01 00")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
