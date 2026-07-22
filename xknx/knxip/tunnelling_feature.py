@@ -13,7 +13,7 @@ from __future__ import annotations
 import struct
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.management.application_layer_enum import ReturnCode
+from xknx.telegram.apci import ReturnCode
 
 from .body import KNXIPBody, KNXIPBodyResponse
 from .error_code import ErrorCode
@@ -188,7 +188,12 @@ class TunnellingFeatureResponse(_TunnellingFeature, KNXIPBodyResponse):
         self.sequence_counter = raw[2]
         self.status_code = ErrorCode(raw[3])
         self.feature_type = TunnellingFeatureType(raw[4])
-        self.return_code = ReturnCode(raw[5])
+        try:
+            self.return_code = ReturnCode(raw[5])
+        except ValueError:
+            raise CouldNotParseKNXIP(
+                f"TunnellingFeature invalid return code: {raw[5]:#x}"
+            ) from None
         self.data = raw[6:]
         if self.return_code is ReturnCode.E_SUCCESS and len(self.data) == 0:
             # Data may be omitted by some servers when an error occurred

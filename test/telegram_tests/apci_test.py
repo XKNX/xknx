@@ -14,6 +14,9 @@ from xknx.telegram.apci import (
     DeviceDescriptorRead,
     DeviceDescriptorResponse,
     FunctionPropertyCommand,
+    FunctionPropertyExtCommand,
+    FunctionPropertyExtStateRead,
+    FunctionPropertyExtStateResponse,
     FunctionPropertyStateRead,
     FunctionPropertyStateResponse,
     GroupValueRead,
@@ -38,6 +41,7 @@ from xknx.telegram.apci import (
     PropertyValueResponse,
     PropertyValueWrite,
     Restart,
+    ReturnCode,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
     SystemNetworkParameterWrite,
@@ -304,6 +308,303 @@ class TestADCResponse:
         payload = ADCResponse(channel=1, count=3, value=456)
 
         assert str(payload) == '<ADCResponse channel="1" count="3" value="456" />'
+
+
+class TestFunctionPropertyExtCommand:
+    """Test class for FunctionPropertyExtCommand objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01d400110010330000"))
+
+        assert payload == FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 6 octets - the ASDU header (interface_object_type +
+        # object_instance + property_id) needs 5 octets after the 2 APCI
+        # header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d400110010"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d400110010330000")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01d400110010330000")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_interface_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range interface_object_type."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=0x10000, object_instance=1, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Interface object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17, object_instance=0x1000, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17, object_instance=1, property_id=0x1000
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FunctionPropertyExtCommand(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert str(payload) == (
+            '<FunctionPropertyExtCommand interface_object_type="17" '
+            'object_instance="1" property_id="51" data="0000" />'
+        )
+
+
+class TestFunctionPropertyExtStateRead:
+    """Test class for FunctionPropertyExtStateRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.calculated_length() == 8
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method - real frame captured from an ETS session."""
+        payload = APCI.from_knx(bytes.fromhex("01d500110010330000"))
+
+        assert payload == FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 6 octets - the ASDU header (interface_object_type +
+        # object_instance + property_id) needs 5 octets after the 2 APCI
+        # header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d500110010"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method round-trips the real captured frame exactly."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d500110010330000")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original ETS frame exactly."""
+        raw = bytes.fromhex("01d500110010330000")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_interface_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range interface_object_type."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=0x10000, object_instance=1, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Interface object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17, object_instance=0x1000, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17, object_instance=1, property_id=0x1000
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FunctionPropertyExtStateRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert str(payload) == (
+            '<FunctionPropertyExtStateRead interface_object_type="17" '
+            'object_instance="1" property_id="51" data="0000" />'
+        )
+
+
+class TestFunctionPropertyExtStateResponse:
+    """Test class for FunctionPropertyExtStateResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.calculated_length() == 9
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01d60011001033000000"))
+
+        assert payload == FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            data=bytes.fromhex("0000"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 7 octets - the ASDU header (interface_object_type +
+        # object_instance + property_id) plus return_code needs 6
+        # octets after the 2 APCI header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d60011001033"))
+
+    def test_from_knx_invalid_return_code(self) -> None:
+        """Test from_knx raises ConversionError for an unknown return code."""
+        # return_code byte 0x01 is in the "Generic positive" range (01-1F)
+        # reserved by the spec but not assigned to any ReturnCode member.
+        with pytest.raises(ConversionError, match=r".*[Ii]nvalid.*return code.*"):
+            APCI.from_knx(bytes.fromhex("01d6001100103301"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_ERROR,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d60011001033ff0000")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01d60011001033000000")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_interface_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range interface_object_type."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=0x10000,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Interface object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=0x1000,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=0x1000,
+            return_code=ReturnCode.E_SUCCESS,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert str(payload) == (
+            '<FunctionPropertyExtStateResponse interface_object_type="17" '
+            'object_instance="1" property_id="51" '
+            'return_code="E_SUCCESS" data="0000" />'
+        )
 
 
 class TestSystemNetworkParameterRead:

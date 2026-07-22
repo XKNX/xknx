@@ -56,6 +56,10 @@ class APCIService(Enum):
     SYSTEM_NETWORK_PARAMETER_RESPONSE = 0x1C9
     SYSTEM_NETWORK_PARAMETER_WRITE = 0x1CA
 
+    FUNCTION_PROPERTY_EXT_COMMAND = 0x1D4
+    FUNCTION_PROPERTY_EXT_STATE_READ = 0x1D5
+    FUNCTION_PROPERTY_EXT_STATE_RESPONSE = 0x1D6
+
     MEMORY_EXTENDED_WRITE = 0x1FB
     MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
     MEMORY_EXTENDED_READ = 0x1FD
@@ -109,6 +113,54 @@ class APCIExtendedService(Enum):
 
     # DataSecure
     APCI_SEC = 0x03F1
+
+
+class ReturnCode(Enum):
+    """Enum class for Generic device management Return Codes."""
+
+    ## Basic positive Return Code
+    # The service, function or command is executed successfully, without additional information.
+    E_SUCCESS = 0x00
+    ## Generic negative Return Codes
+    # Memory cannot be accessed or only with fault(s).
+    E_MEMORY_ERROR = 0xF1
+    # The command is not supported by this server.
+    E_COMMAND_INVALID = 0xF2
+    # The command is supported and well formatted, but not possible to
+    # execute right now - there is a dependency that is not fulfilled.
+    E_COMMAND_IMPOSSIBLE = 0xF3
+    # Requested data will not fit into a Frame supported by this server.
+    # This shall be used for Device limitations of the maximum supported Frame length
+    # by accessing resources (Properties, Function Properties, memory…) of the device.
+    E_LENGTH_EXCEEDS_MAX_APDU_LENGTH = 0xF4
+    # Writing data beyond what is reserved for the addressed Resource.
+    E_DATA_OVERFLOW = 0xF5
+    # Write value too low. Preferable to give this instead of “Value not supported”.
+    E_DATA_MIN = 0xF6
+    # Write value too high. Preferable to give this instead of “Value not supported”.
+    E_DATA_MAX = 0xF7
+    # The service or function is supported, but request data is not valid for this receiver.
+    E_DATA_VOID = 0xF8
+    # Data could generally be written, but not possible at this time.
+    E_TEMPORARILY_NOT_AVAILABLE = 0xF9
+    # Read access attempted to a “write only” service or Resource.
+    E_ACCESS_WRITE_ONLY = 0xFA
+    # Write access attempted to a “read only” service or Resource.
+    E_ACCESS_READ_ONLY = 0xFB
+    # Access denied due to authorization reasons. A_Authorize as well as KNX Security
+    E_ACCESS_DENIED = 0xFC
+    # Interface Object or Property is not present, or index is out of range.
+    E_ADDRESS_VOID = 0xFD
+    # Write access with a wrong datatype (Datapoint length).
+    E_DATA_TYPE_CONFLICT = 0xFE
+    # The service, function or command has failed without a closer indication of the problem.
+    E_ERROR = 0xFF
+    ## Generic positive Return Codes
+    # (01h-1Fh - None proposed)
+    ## Specific positive Return Codes
+    # (20h-5Fh - None proposed)
+    ## Specific negative Return Codes
+    # (A0h-DFh - None proposed)
 
 
 @dataclass(slots=True)
@@ -178,6 +230,12 @@ class APCI(ABC):
                 return MemoryExtendedRead.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_READ_RESPONSE.value:
                 return MemoryExtendedReadResponse.from_knx(raw)
+            if apci == APCIService.FUNCTION_PROPERTY_EXT_COMMAND.value:
+                return FunctionPropertyExtCommand.from_knx(raw)
+            if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_READ.value:
+                return FunctionPropertyExtStateRead.from_knx(raw)
+            if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE.value:
+                return FunctionPropertyExtStateResponse.from_knx(raw)
             return ADCResponse.from_knx(raw)
         if service == APCIService.MEMORY_READ.value:
             return MemoryRead.from_knx(raw)
@@ -508,6 +566,242 @@ class ADCResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<ADCResponse channel="{self.channel}" count="{self.count}" value="{self.value}" />'
+
+
+def _pack_function_property_ext_header(
+    interface_object_type: int, object_instance: int, property_id: int
+) -> bytes:
+    """
+    Serialize the A_FunctionPropertyExt* ASDU header.
+
+    16 bit interface_object_type, then a 12 bit object_instance
+    followed by a 12 bit property_id, packed into 3 bytes. See KNX
+    Specification 03_03_07 Application Layer §3.4.8.2.
+    """
+    if not 0 <= interface_object_type <= 0xFFFF:
+        raise ConversionError("Interface object type out of range.")
+    if not 0 <= object_instance <= 0xFFF:
+        raise ConversionError("Object instance out of range.")
+    if not 0 <= property_id <= 0xFFF:
+        raise ConversionError("Property ID out of range.")
+    return struct.pack(
+        "!HBBB",
+        interface_object_type,
+        object_instance >> 4,
+        ((object_instance & 0xF) << 4) | (property_id >> 8),
+        property_id & 0xFF,
+    )
+
+
+def _unpack_function_property_ext_header(raw: bytes) -> tuple[int, int, int]:
+    """
+    Parse the A_FunctionPropertyExt* ASDU header.
+
+    `raw` shall be the complete APDU (raw[2:4] is the 16 bit
+    interface_object_type, raw[4:7] packs the 12 bit object_instance and
+    12 bit property_id with no reserved bits). See KNX Specification
+    03_03_07 Application Layer §3.4.8.
+    """
+    interface_object_type = (raw[2] << 8) | raw[3]
+    object_instance = (raw[4] << 4) | (raw[5] >> 4)
+    property_id = ((raw[5] & 0x0F) << 8) | raw[6]
+    return interface_object_type, object_instance, property_id
+
+
+@dataclass(slots=True)
+class FunctionPropertyExtCommand(APCI):
+    """
+    FunctionPropertyExtCommand service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.8.1
+    A_FunctionPropertyExtCommand.
+
+    Payload contains a 16 bit Interface Object Type, a 12 bit Object
+    Instance, a 12 bit Property ID, and function-specific input data of
+    variable length.
+    """
+
+    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_COMMAND
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 6 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyExtCommand:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 7:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyExtCommand in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[7:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=header + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FunctionPropertyExtCommand "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class FunctionPropertyExtStateRead(APCI):
+    """
+    FunctionPropertyExtStateRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.8.2
+    A_FunctionPropertyExtState_Read.
+
+    Payload contains a 16 bit Interface Object Type, a 12 bit Object
+    Instance, a 12 bit Property ID, and function-specific input data of
+    variable length.
+    """
+
+    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_READ
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 6 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyExtStateRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 7:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyExtState_Read in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[7:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=header + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FunctionPropertyExtStateRead "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class FunctionPropertyExtStateResponse(APCI):
+    """
+    FunctionPropertyExtStateResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.8.2
+    A_FunctionPropertyExtState_Response.
+
+    Same header as FunctionPropertyExtStateRead (16 bit
+    Interface Object Type, 12 bit Object Instance, 12 bit Property ID),
+    followed by a 1 byte return_code and function-specific output data
+    of variable length.
+    """
+
+    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    return_code: ReturnCode
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 7 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyExtStateResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 8:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        try:
+            return_code = ReturnCode(raw[7])
+        except ValueError:
+            raise ConversionError(
+                f"Invalid return code for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
+            ) from None
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            return_code=return_code,
+            data=raw[8:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(
+            self.CODE,
+            appended_payload=header + bytes([self.return_code.value]) + self.data,
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FunctionPropertyExtStateResponse "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'return_code="{self.return_code.name}" '
+            f'data="{self.data.hex()}" />'
+        )
 
 
 def _pack_system_network_parameter_header(object_type: int, property_id: int) -> bytes:
