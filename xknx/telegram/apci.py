@@ -13,12 +13,20 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 import struct
-from typing import ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
 from xknx.telegram.address import IndividualAddress
+
+if TYPE_CHECKING:
+    # xknx.management imports from xknx.telegram, so a module-level
+    # import here would be circular - apci.py loads very early via
+    # xknx.telegram.telegram. Only needed for the type annotation below;
+    # FunctionPropertyExtStateResponse imports it locally where it's
+    # actually constructed.
+    from xknx.management.application_layer_enum import ReturnCode
 
 
 def encode_cmd_and_payload(
@@ -58,6 +66,7 @@ class APCIService(Enum):
 
     FUNCTION_PROPERTY_EXT_COMMAND = 0x1D4
     FUNCTION_PROPERTY_EXT_STATE_READ = 0x1D5
+    FUNCTION_PROPERTY_EXT_STATE_RESPONSE = 0x1D6
 
     MEMORY_EXTENDED_WRITE = 0x1FB
     MEMORY_EXTENDED_WRITE_RESPONSE = 0x1FC
@@ -185,6 +194,8 @@ class APCI(ABC):
                 return FunctionPropertyExtCommand.from_knx(raw)
             if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_READ.value:
                 return FunctionPropertyExtStateRead.from_knx(raw)
+            if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE.value:
+                return FunctionPropertyExtStateResponse.from_knx(raw)
             return ADCResponse.from_knx(raw)
         if service == APCIService.MEMORY_READ.value:
             return MemoryRead.from_knx(raw)
@@ -675,6 +686,76 @@ class FunctionPropertyExtStateRead(APCI):
             f'interface_object_type="{self.interface_object_type}" '
             f'object_instance="{self.object_instance}" '
             f'property_id="{self.property_id}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class FunctionPropertyExtStateResponse(APCI):
+    """
+    FunctionPropertyExtStateResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.8.2
+    A_FunctionPropertyExtState_Response.
+
+    Same header as FunctionPropertyExtStateRead (16 bit
+    Interface Object Type, 12 bit Object Instance, 12 bit Property ID),
+    followed by a 1 byte return_code and function-specific output data
+    of variable length.
+    """
+
+    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    return_code: ReturnCode
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 7 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyExtStateResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        from xknx.management.application_layer_enum import ReturnCode
+
+        if len(raw) < 8:
+            raise ConversionError(
+                f"Invalid length for FunctionPropertyExtStateResponse: {len(raw)} bytes."
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            return_code=ReturnCode(raw[7]),
+            data=raw[8:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(
+            self.CODE,
+            appended_payload=header + bytes([self.return_code.value]) + self.data,
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FunctionPropertyExtStateResponse "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'return_code="{self.return_code}" '
             f'data="{self.data.hex()}" />'
         )
 

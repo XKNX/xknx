@@ -4,6 +4,7 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
+from xknx.management.application_layer_enum import ReturnCode
 from xknx.telegram.address import IndividualAddress
 from xknx.telegram.apci import (
     APCI,
@@ -16,6 +17,7 @@ from xknx.telegram.apci import (
     FunctionPropertyCommand,
     FunctionPropertyExtCommand,
     FunctionPropertyExtStateRead,
+    FunctionPropertyExtStateResponse,
     FunctionPropertyStateRead,
     FunctionPropertyStateResponse,
     GroupValueRead,
@@ -423,6 +425,70 @@ class TestFunctionPropertyExtStateRead:
         assert str(payload) == (
             '<FunctionPropertyExtStateRead interface_object_type="17" '
             'object_instance="1" property_id="51" data="0000" />'
+        )
+
+
+class TestFunctionPropertyExtStateResponse:
+    """Test class for FunctionPropertyExtStateResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.calculated_length() == 9
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01d60011001033000000"))
+
+        assert payload == FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            data=bytes.fromhex("0000"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        # only 7 octets - the ASDU header (interface_object_type +
+        # object_instance + property_id) plus return_code needs 6
+        # octets after the 2 APCI header octets.
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d60011001033"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_ERROR,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d60011001033ff0000")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            data=bytes.fromhex("0000"),
+        )
+
+        assert str(payload) == (
+            '<FunctionPropertyExtStateResponse interface_object_type="17" '
+            'object_instance="1" property_id="51" '
+            'return_code="ReturnCode.E_SUCCESS" data="0000" />'
         )
 
 

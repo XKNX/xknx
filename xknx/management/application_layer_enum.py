@@ -12,6 +12,11 @@ class ReturnCode(Enum):
     ## Generic negative Return Codes
     # Memory cannot be accessed or only with fault(s).
     E_MEMORY_ERROR = 0xF1
+    # The command is not supported by this server.
+    E_COMMAND_INVALID = 0xF2
+    # The command is supported and well formatted, but not possible to
+    # execute right now - there is a dependency that is not fulfilled.
+    E_COMMAND_IMPOSSIBLE = 0xF3
     # Requested data will not fit into a Frame supported by this server.
     # This shall be used for Device limitations of the maximum supported Frame length
     # by accessing resources (Properties, Function Properties, memory…) of the device.
