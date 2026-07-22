@@ -75,6 +75,8 @@ class APCIService(Enum):
     DEVICE_DESCRIPTOR_RESPONSE = 0x0340
 
     RESTART = 0x0380
+    RESTART_MASTER_RESET = 0x0381
+    RESTART_MASTER_RESET_RESPONSE = 0x03A1
 
     ESCAPE = 0x03C0
 
@@ -265,6 +267,10 @@ class APCI(ABC):
         if service == APCIService.DEVICE_DESCRIPTOR_RESPONSE.value:
             return DeviceDescriptorResponse.from_knx(raw)
         if service == APCIService.RESTART.value:
+            if apci == APCIService.RESTART_MASTER_RESET.value:
+                return RestartMasterReset.from_knx(raw)
+            if apci == APCIService.RESTART_MASTER_RESET_RESPONSE.value:
+                return RestartMasterResetResponse.from_knx(raw)
             return Restart.from_knx(raw)
         if service == APCIService.ESCAPE.value:
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
@@ -1445,11 +1451,13 @@ class Restart(APCI):
     """
     Restart service.
 
-    Does not take any payload.
+    See KNX Specification 03_03_07 Application Layer §3.4.2.2
+    A_Restart. The 10 bit APCI for the A_Restart family is 4 bits
+    (1110) selecting the service, 1 bit for request (0) vs response
+    (1), 4 reserved bits (0), and 1 bit for restart type: 0 for Basic
+    Restart (this class, no payload) or 1 for Master Reset (see
+    RestartMasterReset).
     """
-
-    # Requests a Basic Restart of the communication partner.
-    # Master reset is not implemented yet.
 
     CODE: ClassVar = APCIService.RESTART
 
@@ -1470,6 +1478,99 @@ class Restart(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<Restart />"
+
+
+@dataclass(slots=True)
+class RestartMasterReset(APCI):
+    """
+    RestartMasterReset service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.2.2
+    A_Restart_Master_Reset - the request variant (restart type bit set,
+    see Restart's docstring for the full APCI bit layout).
+
+    Payload contains a 1 byte erase_code and a 1 byte channel_number.
+    """
+
+    CODE: ClassVar = APCIService.RESTART_MASTER_RESET
+
+    erase_code: int
+    channel_number: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 3
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RestartMasterReset:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 4:
+            raise ConversionError(
+                f"Invalid length for RestartMasterReset: {len(raw)} bytes."
+            )
+        erase_code, channel_number = struct.unpack("!BB", raw[2:])
+
+        return cls(erase_code=erase_code, channel_number=channel_number)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!BB", self.erase_code, self.channel_number)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<RestartMasterReset erase_code="{self.erase_code}" '
+            f'channel_number="{self.channel_number}" />'
+        )
+
+
+@dataclass(slots=True)
+class RestartMasterResetResponse(APCI):
+    """
+    RestartMasterResetResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.2.2
+    A_Restart_Response - a Basic Restart (RestartMasterReset with
+    restart_type unset) is never confirmed at the application layer, so
+    this is only ever sent in reply to a Master Reset request.
+
+    Payload contains a 1 byte error_code and a 2 byte process_time.
+    """
+
+    CODE: ClassVar = APCIService.RESTART_MASTER_RESET_RESPONSE
+
+    error_code: int
+    process_time: int
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RestartMasterResetResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for RestartMasterResetResponse: {len(raw)} bytes."
+            )
+        error_code, process_time = struct.unpack("!BH", raw[2:])
+
+        return cls(error_code=error_code, process_time=process_time)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!BH", self.error_code, self.process_time)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<RestartMasterResetResponse error_code="{self.error_code}" '
+            f'process_time="{self.process_time}" />'
+        )
 
 
 @dataclass(slots=True)

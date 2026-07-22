@@ -41,6 +41,8 @@ from xknx.telegram.apci import (
     PropertyValueResponse,
     PropertyValueWrite,
     Restart,
+    RestartMasterReset,
+    RestartMasterResetResponse,
     ReturnCode,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
@@ -1543,6 +1545,76 @@ class TestRestart:
         payload = Restart()
 
         assert str(payload) == "<Restart />"
+
+
+class TestRestartMasterReset:
+    """Test class for RestartMasterReset objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = RestartMasterReset(erase_code=1, channel_number=0)
+
+        assert payload.calculated_length() == 3
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method - real frame captured from an ETS session."""
+        payload = APCI.from_knx(bytes.fromhex("03810100"))
+
+        assert payload == RestartMasterReset(erase_code=1, channel_number=0)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("038101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method round-trips the real captured frame exactly."""
+        payload = RestartMasterReset(erase_code=1, channel_number=0)
+
+        assert payload.to_knx() == bytes.fromhex("03810100")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = RestartMasterReset(erase_code=1, channel_number=0)
+
+        assert (
+            str(payload) == '<RestartMasterReset erase_code="1" channel_number="0" />'
+        )
+
+
+class TestRestartMasterResetResponse:
+    """Test class for RestartMasterResetResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = RestartMasterResetResponse(error_code=0, process_time=1000)
+
+        assert payload.calculated_length() == 4
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03a10003e8"))
+
+        assert payload == RestartMasterResetResponse(error_code=0, process_time=1000)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03a10003"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method round-trips exactly."""
+        payload = RestartMasterResetResponse(error_code=0, process_time=1000)
+
+        assert payload.to_knx() == bytes.fromhex("03a10003e8")
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = RestartMasterResetResponse(error_code=0, process_time=1000)
+
+        assert str(payload) == (
+            '<RestartMasterResetResponse error_code="0" process_time="1000" />'
+        )
 
 
 class TestUserManufacturerInfoRead:
