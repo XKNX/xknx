@@ -2417,6 +2417,11 @@ class TestUserMemoryBitWrite:
             # number=2 but only 1 octet of and_data/xor_data follows
             APCI.from_knx(bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0x11]))
 
+    def test_from_knx_too_short(self) -> None:
+        """Test from_knx raises ConversionError for an APDU shorter than the header."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC4, 0x02]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = UserMemoryBitWrite(
@@ -3299,6 +3304,11 @@ class TestMemoryBitWrite:
             # number=2 but only 1 octet of and_data/xor_data follows
             APCI.from_knx(bytes([0x03, 0xD0, 0x02, 0x12, 0x34, 0xAA, 0x11]))
 
+    def test_from_knx_too_short(self) -> None:
+        """Test from_knx raises ConversionError for an APDU shorter than the header."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD0, 0x02]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = MemoryBitWrite(
@@ -3324,6 +3334,15 @@ class TestMemoryBitWrite:
         )
 
         with pytest.raises(ConversionError, match=r".*Memory address.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError when and_data exceeds 255 octets."""
+        payload = MemoryBitWrite(
+            memory_address=0x1234, and_data=bytes(256), xor_data=bytes(256)
+        )
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
             payload.to_knx()
 
     def test_to_knx_mismatched_data_length(self) -> None:
@@ -3492,6 +3511,13 @@ class TestKeyResponse:
         raw = bytes.fromhex("03d47b")
 
         assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_level_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range level."""
+        payload = KeyResponse(level=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Level.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
@@ -3931,6 +3957,13 @@ class TestIndividualAddressSerialRead:
         assert payload.to_knx() == bytes(
             [0x03, 0xDC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]
         )
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = IndividualAddressSerialRead(b"\xaa\xbb\xcc")
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
