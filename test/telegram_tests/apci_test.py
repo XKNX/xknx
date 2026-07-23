@@ -2392,24 +2392,75 @@ class TestUserMemoryResponse:
 class TestUserMemoryBitWrite:
     """Test class for UserMemoryBitWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_UserMemoryBit_Write.*"):
-            APCI.from_knx(bytes((0x02, 0xC4)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_UserMemoryBit_Write.*"):
-            UserMemoryBitWrite().to_knx()
+        assert payload.calculated_length() == 7
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_UserMemoryBit_Write.*"):
-            UserMemoryBitWrite().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(
+            bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22])
+        )
+
+        assert payload == UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a mismatched number/length."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            # number=2 but only 1 octet of and_data/xor_data follows
+            APCI.from_knx(bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0x11]))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+        assert payload.to_knx() == bytes(
+            [0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22]
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22])
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = UserMemoryBitWrite(
+            address=0x10000, and_data=bytes([0xAA]), xor_data=bytes([0x11])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+    def test_to_knx_mismatched_data_length(self) -> None:
+        """Test to_knx raises ConversionError when and_data/xor_data lengths differ."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11])
+        )
+
+        with pytest.raises(
+            ConversionError, match=r".*and_data and xor_data.*same length.*"
+        ):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(UserMemoryBitWrite()) == "<UserMemoryBitWrite (not implemented) />"
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+        assert str(payload) == (
+            '<UserMemoryBitWrite address="0x1234" and_data="aabb" xor_data="1122" />'
+        )
 
 
 class TestRestart:
