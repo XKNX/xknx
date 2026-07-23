@@ -4,7 +4,14 @@ from typing import Any
 
 import pytest
 
-from xknx.dpt import DPTArray, DPTBinary, DPTBoolControl, DPTSwitchControl
+from xknx.dpt import (
+    DPT2BitBoolean,
+    DPTArray,
+    DPTBase,
+    DPTBinary,
+    DPTBoolControl,
+    DPTSwitchControl,
+)
 from xknx.dpt.dpt_1 import (
     Alarm,
     BinaryValue,
@@ -113,6 +120,7 @@ class TestBinaryControlData:
     [
         (DPTSwitchControl, SwitchControl, Switch.OFF, Switch.ON),
         (DPTBoolControl, BoolControl, Bool.FALSE, Bool.TRUE),
+        (DPT2BitBoolean, BoolControl, Bool.FALSE, Bool.TRUE),
         (DPTEnableControl, EnableControl, Enable.DISABLE, Enable.ENABLE),
         (DPTRampControl, RampControl, Ramp.NO_RAMP, Ramp.RAMP),
         (DPTAlarmControl, AlarmControl, Alarm.NO_ALARM, Alarm.ALARM),
@@ -222,3 +230,20 @@ class TestDPTBinaryControlSchema:
         schema = DPTBoolControl.get_dict_schema()
         value_field = next(f for f in schema if f["name"] == "value")
         assert value_field["options"] == ["false", "true"]
+
+
+class TestDPT2BitBoolean:
+    """Test the generic DPT 2 (2.*** boolean control) transcoder."""
+
+    def test_transcoder_lookup(self) -> None:
+        """Generic DPT 2 is found by main number and value_type; subtypes still win."""
+        assert DPTBase.parse_transcoder(2) is DPT2BitBoolean
+        assert DPTBase.parse_transcoder("2bit") is DPT2BitBoolean
+        assert DPTBase.parse_transcoder("2.001") is DPTSwitchControl
+        assert DPTBase.parse_transcoder("2.002") is DPTBoolControl
+
+    def test_generic_matches_dptboolcontrol(self) -> None:
+        """Generic DPT 2 decodes/encodes the same as DPTBoolControl (2.002)."""
+        value = BoolControl(control=True, value=Bool.TRUE)
+        assert DPT2BitBoolean.from_knx(DPTBinary(3)) == value
+        assert DPT2BitBoolean.to_knx(value) == DPTBoolControl.to_knx(value)

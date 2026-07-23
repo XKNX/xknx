@@ -45,6 +45,7 @@ from .dpt_1 import (
     DPTWindowDoor,
 )
 from .dpt_2 import (
+    DPT2BitBoolean,
     DPTAlarmControl,
     DPTBinaryValueControl,
     DPTBoolControl,
