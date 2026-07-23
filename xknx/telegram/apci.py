@@ -4166,28 +4166,57 @@ class NetworkParameterWrite(APCI):
     """
     NetworkParameterWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_NetworkParameter_Write.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.2.7
+    A_NetworkParameter_Write. Sent point-to-point or as broadcast to
+    set network configuration information in one or multiple
+    management servers.
+
+    Same header as NetworkParameterRead: a 16 bit object_type, an 8 bit
+    property_id and a PID-specific, variable-length value.
     """
 
     CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_WRITE
 
+    object_type: int
+    property_id: int
+    value: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_NetworkParameter_Write is not implemented yet.")
+        return 4 + len(self.value)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> NetworkParameterWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_NetworkParameter_Write is not implemented yet.")
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_NetworkParameter_Write in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            value=raw[5:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_NetworkParameter_Write is not implemented yet.")
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
+        payload = struct.pack("!HB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.value)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<NetworkParameterWrite (not implemented) />"
+        return (
+            f'<NetworkParameterWrite object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" value="{self.value.hex()}" />'
+        )
 
 
 @dataclass(slots=True)

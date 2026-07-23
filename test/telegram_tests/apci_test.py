@@ -4166,26 +4166,72 @@ class TestDomainAddressSelectiveRead:
 class TestNetworkParameterWrite:
     """Test class for NetworkParameterWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xE4)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Write.*"):
-            NetworkParameterWrite().to_knx()
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Write.*"):
-            NetworkParameterWrite().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e400000baabbcc"))
+
+        assert payload == NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+    def test_from_knx_no_value(self) -> None:
+        """Test from_knx accepts the minimum 5 octet APDU with no value."""
+        payload = APCI.from_knx(bytes.fromhex("03e4ffffff"))
+
+        assert payload == NetworkParameterWrite(
+            object_type=0xFFFF, property_id=0xFF, value=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e40000"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e400000baabbcc")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e400000baabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = NetworkParameterWrite(object_type=0x10000, property_id=11)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = NetworkParameterWrite(object_type=0, property_id=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(NetworkParameterWrite())
-            == "<NetworkParameterWrite (not implemented) />"
+        payload = NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+        assert str(payload) == (
+            '<NetworkParameterWrite object_type="0" property_id="11" value="aabbcc" />'
         )
 
 
