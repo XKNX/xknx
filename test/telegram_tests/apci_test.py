@@ -2770,24 +2770,29 @@ class TestFunctionPropertyStateResponse:
 class TestFilterTableOpen:
     """Test class for FilterTableOpen objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Open.*"):
-            APCI.from_knx(bytes((0x03, 0xC0)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FilterTableOpen()
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Open.*"):
-            FilterTableOpen().to_knx()
+        assert payload.calculated_length() == 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Open.*"):
-            FilterTableOpen().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes((0x03, 0xC0)))
+
+        assert payload == FilterTableOpen()
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FilterTableOpen()
+
+        assert payload.to_knx() == bytes((0x03, 0xC0))
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(FilterTableOpen()) == "<FilterTableOpen (not implemented) />"
+        payload = FilterTableOpen()
+
+        assert str(payload) == "<FilterTableOpen />"
 
 
 class TestFilterTableRead:

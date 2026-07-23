@@ -2793,28 +2793,31 @@ class FilterTableOpen(APCI):
     """
     FilterTableOpen service.
 
-    See KNX Specification 03_03_07 Application Layer A_FilterTable_Open.
-    Coupler specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.6.1
+    A_FilterTable_Open. Coupler specific service - opens access to the
+    remote Filter Table before A_FilterTable_Read/Write are used. No
+    payload.
     """
 
     CODE: ClassVar = APCIExtendedService.FILTER_TABLE_OPEN
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_FilterTable_Open is not implemented yet.")
+        return 1
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableOpen:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Open is not implemented yet.")
+        # Nothing to parse, but must be implemented explicitly.
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Open is not implemented yet.")
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<FilterTableOpen (not implemented) />"
+        return "<FilterTableOpen />"
 
 
 @dataclass(slots=True)
