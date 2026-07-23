@@ -12,6 +12,9 @@ from .dpt import DPTComplex, DPTComplexData
 from .dpt_1 import Step, UpDown
 from .payload import DPTArray, DPTBinary
 
+# 1..7 higher is more intervals -> slower; 0 stop
+RANGE_STEP_CODE: dict[str, int] = {"value_min": 0, "value_max": 7}
+
 
 @dataclass(slots=True)
 class ControlDimming(DPTComplexData):
@@ -22,9 +25,7 @@ class ControlDimming(DPTComplexData):
     """
 
     control: Step
-    step_code: int = field(
-        metadata={"value_min": 0, "value_max": 7}
-    )  # 1..7 higher is more intervals -> slower; 0 stop
+    step_code: int = field(metadata=RANGE_STEP_CODE)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ControlDimming:
@@ -42,6 +43,18 @@ class ControlDimming(DPTComplexData):
             "control": self.control.name.lower(),
             "step_code": self.step_code,
         }
+
+
+def pack_control_dimming(step: ControlDimming | None) -> int:
+    """Pack a ControlDimming into a single ``r4B1U3`` byte (``0`` if ``None``)."""
+    if step is None:
+        return 0
+    return step.control.value << 3 | step.step_code
+
+
+def unpack_control_dimming(raw: int) -> ControlDimming:
+    """Unpack a single ``r4B1U3`` byte into a ControlDimming."""
+    return ControlDimming(control=Step(raw >> 3 & 0b1), step_code=raw & 0b111)
 
 
 class DPTControlDimming(DPTComplex[ControlDimming]):
@@ -84,9 +97,7 @@ class ControlBlinds(DPTComplexData):
     """
 
     control: UpDown
-    step_code: int = field(
-        metadata={"value_min": 0, "value_max": 7}
-    )  # 1..7 higher is more intervals -> slower; 0 stop
+    step_code: int = field(metadata=RANGE_STEP_CODE)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ControlBlinds:

@@ -1,4 +1,4 @@
-"""Implementation of KNX XYY color data point type."""
+"""Implementation of KNX xyY color transition data point type."""
 
 from __future__ import annotations
 
@@ -9,11 +9,18 @@ from typing import Any
 from .dpt import RANGE_UINT8, DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
+RANGE_FADE_TIME_S: dict[str, float] = {
+    "value_min": 0.0,
+    "value_max": 6553.5,
+    "resolution": 0.1,
+}
+
 
 @dataclass
-class _XYYColorDictSchemaFields:
-    """Flat field definitions used for XYYColor.get_dict_schema()."""
+class _XYYColorTransitionDictSchemaFields:
+    """Flat field definitions used for XYYColorTransition.get_dict_schema()."""
 
+    fade_time: float = field(metadata=RANGE_FADE_TIME_S)
     x_axis: float | None = field(
         default=None, metadata={"value_min": 0.0, "value_max": 1.0}
     )
@@ -24,21 +31,23 @@ class _XYYColorDictSchemaFields:
 
 
 @dataclass(slots=True)
-class XYYColor(DPTComplexData):
+class XYYColorTransition(DPTComplexData):
     """
-    Representation of XY color with brightness.
+    Representation of a XY color transition with brightness.
 
+    `fade_time`: transition time in seconds 0..6553.5 (resolution 0.1 s).
     `color`: tuple(x-axis, y-axis) each 0..1; None if invalid.
     `brightness`: int 0..255; None if invalid.
     """
 
+    fade_time: float
     color: tuple[float, float] | None = None
     brightness: int | None = None
 
-    _dict_schema_fields_class = _XYYColorDictSchemaFields
+    _dict_schema_fields_class = _XYYColorTransitionDictSchemaFields
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> XYYColor:
+    def from_dict(cls, data: Mapping[str, Any]) -> XYYColorTransition:
         """Init from a dictionary."""
         color = None
         brightness = data.get("brightness")
@@ -59,62 +68,66 @@ class XYYColor(DPTComplexData):
             except ValueError as err:
                 raise ValueError(f"Invalid value for brightness: {err}") from err
 
-        return cls(color=color, brightness=brightness)
+        if "fade_time" not in data:
+            raise ValueError("`fade_time` is required")
+        try:
+            fade_time = float(data["fade_time"])
+        except (TypeError, ValueError) as err:
+            raise ValueError(f"Invalid value for fade_time: {err}") from err
+
+        return cls(color=color, brightness=brightness, fade_time=fade_time)
 
     def as_dict(self) -> dict[str, int | float | None]:
         """Create a JSON serializable dictionary."""
         return {
+            "fade_time": self.fade_time,
             "x_axis": self.color[0] if self.color is not None else None,
             "y_axis": self.color[1] if self.color is not None else None,
             "brightness": self.brightness,
         }
 
-    def __or__(self, other: XYYColor) -> XYYColor:
-        """Merge two XYYColor objects using only valid values."""
-        return XYYColor(
-            color=other.color if other.color is not None else self.color,
-            brightness=other.brightness
-            if other.brightness is not None
-            else self.brightness,
-        )
 
+class DPTColorXYYTransition(DPTComplex[XYYColorTransition]):
+    """Abstraction for KNX 8 octet xyY color transition (DPT 243.600)."""
 
-class DPTColorXYY(DPTComplex[XYYColor]):
-    """Abstraction for KNX 6 octet color xyY (DPT 242.600)."""
-
-    data_type = XYYColor
+    data_type = XYYColorTransition
     payload_type = DPTArray
-    payload_length = 6
-    dpt_main_number = 242
+    payload_length = 8
+    dpt_main_number = 243
     dpt_sub_number = 600
-    value_type = "color_xyy"
+    value_type = "color_xyy_transition"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> XYYColor:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> XYYColorTransition:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
 
-        x_axis_int = raw[0] << 8 | raw[1]
-        y_axis_int = raw[2] << 8 | raw[3]
-        brightness = raw[4]
+        fade_time = round((raw[0] << 8 | raw[1]) * 0.1, 1)
+        x_axis_int = raw[2] << 8 | raw[3]
+        y_axis_int = raw[4] << 8 | raw[5]
+        brightness = raw[6]
 
-        color_valid = raw[5] >> 1 & 0b1
-        brightness_valid = raw[5] & 0b1
+        color_valid = raw[7] >> 1 & 0b1
+        brightness_valid = raw[7] & 0b1
 
-        return XYYColor(
+        return XYYColorTransition(
             color=(
-                # round to 5 digits for better readability but still preserving precision
                 round(x_axis_int / 0xFFFF, 5),
                 round(y_axis_int / 0xFFFF, 5),
             )
             if color_valid
             else None,
             brightness=brightness if brightness_valid else None,
+            fade_time=fade_time,
         )
 
     @classmethod
-    def _to_knx(cls, value: XYYColor) -> DPTArray:
+    def _to_knx(cls, value: XYYColorTransition) -> DPTArray:
         """Serialize to KNX/IP raw data."""
+        if not 0 <= value.fade_time <= 6553.5:
+            raise ValueError(f"Fade time out of range 0..6553.5 s: {value.fade_time}")
+        fade_time_raw = round(value.fade_time * 10)
+
         x_axis, y_axis, brightness = 0, 0, 0
         color_valid = False
         brightness_valid = False
@@ -136,6 +149,8 @@ class DPTColorXYY(DPTComplex[XYYColor]):
 
         return DPTArray(
             (
+                fade_time_raw >> 8,
+                fade_time_raw & 0xFF,
                 x_axis >> 8,
                 x_axis & 0xFF,
                 y_axis >> 8,

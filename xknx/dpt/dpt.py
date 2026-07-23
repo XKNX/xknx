@@ -395,6 +395,8 @@ class DPTComplexFieldSchema(TypedDict):
     options: NotRequired[list[str]]
     value_min: NotRequired[int | float]
     value_max: NotRequired[int | float]
+    resolution: NotRequired[int | float]
+    """Smallest representable step. Omitted when the resolution is 1 (or undefined)."""
 
 
 @dataclass(slots=True)
@@ -478,6 +480,8 @@ class DPTComplexData(ABC):
                 entry["value_min"] = field.metadata["value_min"]
             if "value_max" in field.metadata:
                 entry["value_max"] = field.metadata["value_max"]
+            if "resolution" in field.metadata:
+                entry["resolution"] = field.metadata["resolution"]
 
             result.append(entry)
         return result
