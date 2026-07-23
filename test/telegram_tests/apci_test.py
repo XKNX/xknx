@@ -3409,47 +3409,95 @@ class TestAuthorizeResponse:
 class TestKeyWrite:
     """Test class for KeyWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Key_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xD3)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = KeyWrite(level=1, key=0x12345678)
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Key_Write.*"):
-            KeyWrite().to_knx()
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Key_Write.*"):
-            KeyWrite().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03d30112345678"))
+
+        assert payload == KeyWrite(level=1, key=0x12345678)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03d301123456"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = KeyWrite(level=1, key=0x12345678)
+
+        assert payload.to_knx() == bytes.fromhex("03d30112345678")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03d30112345678")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_level_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range level."""
+        payload = KeyWrite(level=0x100, key=0x12345678)
+
+        with pytest.raises(ConversionError, match=r".*Level.*"):
+            payload.to_knx()
+
+    def test_to_knx_key_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range key."""
+        payload = KeyWrite(level=1, key=0x100000000)
+
+        with pytest.raises(ConversionError, match=r".*Key.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(KeyWrite()) == "<KeyWrite (not implemented) />"
+        payload = KeyWrite(level=1, key=0x12345678)
+
+        assert str(payload) == '<KeyWrite level="1" key="0x12345678" />'
 
 
 class TestKeyResponse:
     """Test class for KeyResponse objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Key_Response.*"):
-            APCI.from_knx(bytes((0x03, 0xD4)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = KeyResponse(level=123)
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Key_Response.*"):
-            KeyResponse().to_knx()
+        assert payload.calculated_length() == 2
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Key_Response.*"):
-            KeyResponse().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03d47b"))
+
+        assert payload == KeyResponse(level=123)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03d4"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = KeyResponse(level=123)
+
+        assert payload.to_knx() == bytes.fromhex("03d47b")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03d47b")
+
+        assert APCI.from_knx(raw).to_knx() == raw
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(KeyResponse()) == "<KeyResponse (not implemented) />"
+        payload = KeyResponse(level=123)
+
+        assert str(payload) == '<KeyResponse level="123" />'
 
 
 class TestPropertyValueRead:

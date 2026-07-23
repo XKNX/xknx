@@ -3421,28 +3421,47 @@ class KeyWrite(APCI):
     """
     KeyWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_Key_Write.
-    Payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.5.8 A_Key_Write.
+    Modifies (or, with key=0xFFFFFFFF, deletes) the key associated to
+    an access level.
+
+    Payload contains a 1 byte level and a 4 byte key.
     """
 
     CODE: ClassVar = APCIExtendedService.KEY_WRITE
 
+    level: int
+    key: int
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_Key_Write is not implemented yet.")
+        return 6
 
     @classmethod
     def from_knx(cls, raw: bytes) -> KeyWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_Key_Write is not implemented yet.")
+        if len(raw) != 7:
+            raise ConversionError(
+                f"Invalid length for A_Key_Write in CEMI: {raw.hex()}"
+            )
+        level, key = struct.unpack("!BI", raw[2:])
+
+        return cls(level=level, key=key)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_Key_Write is not implemented yet.")
+        if not 0 <= self.level <= 0xFF:
+            raise ConversionError("Level out of range.")
+        if not 0 <= self.key <= 0xFFFFFFFF:
+            raise ConversionError("Key out of range.")
+
+        payload = struct.pack("!BI", self.level, self.key)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<KeyWrite (not implemented) />"
+        return f'<KeyWrite level="{self.level}" key="{self.key:#010x}" />'
 
 
 @dataclass(slots=True)
@@ -3450,28 +3469,45 @@ class KeyResponse(APCI):
     """
     KeyResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_Key_Response.
-    Payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.5.8
+    A_Key_Response (defined alongside A_Key_Write). Contains the access
+    level set for the key, or 0xFF if the current access level was
+    higher than the level being written.
+
+    Payload contains a 1 byte level.
     """
 
     CODE: ClassVar = APCIExtendedService.KEY_RESPONSE
 
+    level: int
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_Key_Response is not implemented yet.")
+        return 2
 
     @classmethod
     def from_knx(cls, raw: bytes) -> KeyResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_Key_Response is not implemented yet.")
+        if len(raw) != 3:
+            raise ConversionError(
+                f"Invalid length for A_Key_Response in CEMI: {raw.hex()}"
+            )
+        (level,) = struct.unpack("!B", raw[2:])
+
+        return cls(level=level)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_Key_Response is not implemented yet.")
+        if not 0 <= self.level <= 0xFF:
+            raise ConversionError("Level out of range.")
+
+        payload = struct.pack("!B", self.level)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<KeyResponse (not implemented) />"
+        return f'<KeyResponse level="{self.level}" />'
 
 
 @dataclass(slots=True)
