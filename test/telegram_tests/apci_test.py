@@ -1543,32 +1543,87 @@ class TestPropertyExtValueInfoReport:
 class TestPropertyExtDescriptionRead:
     """Test class for PropertyExtDescriptionRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtDescription_Read.*"
-        ):
-            APCI.from_knx(bytes.fromhex("01d2"))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = PropertyExtDescriptionRead(
+            interface_object_type=17, object_instance=1, property_id=51
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtDescription_Read.*"
-        ):
-            PropertyExtDescriptionRead().to_knx()
+        assert payload.calculated_length() == 7
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtDescription_Read.*"
-        ):
-            PropertyExtDescriptionRead().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01d200110010332005"))
+
+        assert payload == PropertyExtDescriptionRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            description_type=2,
+            property_index=5,
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01d2001100103320"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = PropertyExtDescriptionRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            description_type=2,
+            property_index=5,
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01d200110010332005")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01d200110010332005")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_description_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range description_type."""
+        payload = PropertyExtDescriptionRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            description_type=0x10,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property description type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_index."""
+        payload = PropertyExtDescriptionRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            property_index=0x1000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property index.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(PropertyExtDescriptionRead())
-            == "<PropertyExtDescriptionRead (not implemented) />"
+        payload = PropertyExtDescriptionRead(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            description_type=2,
+            property_index=5,
+        )
+
+        assert str(payload) == (
+            '<PropertyExtDescriptionRead interface_object_type="17" '
+            'object_instance="1" property_id="51" description_type="2" '
+            'property_index="5" />'
         )
 
 

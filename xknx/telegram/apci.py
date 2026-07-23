@@ -1500,33 +1500,73 @@ class PropertyExtDescriptionRead(APCI):
     PropertyExtDescriptionRead service.
 
     See KNX Specification 03_03_07 Application Layer §3.4.3.2
-    A_PropertyExtDescription_Read-service. Payload layout not implemented yet.
+    A_PropertyExtDescription_Read-service.
+
+    Same header as A_PropertyExtValue_* (16 bit Interface Object Type,
+    12 bit Object Instance, 12 bit Property ID), followed by a 4 bit
+    Property Description Type and a 12 bit Property Index.
     """
 
     CODE: ClassVar = APCIService.PROPERTY_EXT_DESCRIPTION_READ
 
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    description_type: int = 0
+    property_index: int = 0
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError(
-            "A_PropertyExtDescription_Read is not implemented yet."
-        )
+        return 7
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtDescriptionRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_PropertyExtDescription_Read is not implemented yet."
+        if len(raw) != 9:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtDescription_Read in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        description_type = raw[7] >> 4
+        property_index = ((raw[7] & 0x0F) << 8) | raw[8]
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            description_type=description_type,
+            property_index=property_index,
         )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_PropertyExtDescription_Read is not implemented yet."
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
         )
+        if not 0 <= self.description_type <= 0xF:
+            raise ConversionError("Property description type out of range.")
+        if not 0 <= self.property_index <= 0xFFF:
+            raise ConversionError("Property index out of range.")
+        payload = header + struct.pack(
+            "!BB",
+            (self.description_type << 4) | (self.property_index >> 8),
+            self.property_index & 0xFF,
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<PropertyExtDescriptionRead (not implemented) />"
+        return (
+            "<PropertyExtDescriptionRead "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'description_type="{self.description_type}" '
+            f'property_index="{self.property_index}" />'
+        )
 
 
 @dataclass(slots=True)
