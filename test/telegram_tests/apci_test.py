@@ -2829,7 +2829,14 @@ class TestFilterTableRead:
 
     def test_to_knx_number_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range number."""
-        payload = FilterTableRead(filter_table_address=0x1234, number=0x100)
+        payload = FilterTableRead(filter_table_address=0x1234, number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a read)."""
+        payload = FilterTableRead(filter_table_address=0x1234, number=0)
 
         with pytest.raises(ConversionError, match=r".*Number.*"):
             payload.to_knx()
@@ -2898,12 +2905,16 @@ class TestFilterTableResponse:
 
     def test_to_knx_number_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range number."""
-        payload = FilterTableResponse(
-            filter_table_address=0x1234, data=b"", number=0x100
-        )
+        payload = FilterTableResponse(filter_table_address=0x1234, data=b"", number=255)
 
         with pytest.raises(ConversionError, match=r".*Number.*"):
             payload.to_knx()
+
+    def test_to_knx_number_zero_error_response(self) -> None:
+        """Test to_knx accepts number=0 (the documented error response)."""
+        payload = FilterTableResponse(filter_table_address=0x1234, data=b"", number=0)
+
+        assert payload.to_knx() == bytes.fromhex("03c2001234")
 
     def test_to_knx_address_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range address."""

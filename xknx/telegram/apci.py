@@ -2855,7 +2855,7 @@ class FilterTableRead(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if not 0 <= self.number <= 0xFF:
+        if not 1 <= self.number <= 254:
             raise ConversionError("Number out of range.")
         if not 0 <= self.filter_table_address <= 0xFFFF:
             raise ConversionError("Filter table address out of range.")
@@ -2922,7 +2922,7 @@ class FilterTableResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if not 0 <= self.number <= 0xFF:
+        if not 0 <= self.number <= 254:
             raise ConversionError("Number out of range.")
         if not 0 <= self.filter_table_address <= 0xFFFF:
             raise ConversionError("Filter table address out of range.")
