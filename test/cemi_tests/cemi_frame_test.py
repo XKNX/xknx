@@ -104,7 +104,8 @@ def test_invalid_tpci_apci(raw: bytes, err_msg: str) -> None:
             r".*TPCI not supported.*",
         ),
         (
-            get_data(0x29, 0, 0, 0, 0, 1, 0x03C0, []),
+            # reserved gap between A_FilterTable_Write and A_RouterMemory_Read
+            get_data(0x29, 0, 0, 0, 0, 1, 0x03C4, []),
             r".*APDU not supported*",
         ),
     ],

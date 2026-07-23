@@ -13,12 +13,28 @@ from xknx.telegram.apci import (
     AuthorizeResponse,
     DeviceDescriptorRead,
     DeviceDescriptorResponse,
+    DomainAddressRead,
+    DomainAddressResponse,
+    DomainAddressSelectiveRead,
+    DomainAddressSerialNumberRead,
+    DomainAddressSerialNumberResponse,
+    DomainAddressSerialNumberWrite,
+    DomainAddressWrite,
+    FileStreamInfoReport,
+    FilterTableOpen,
+    FilterTableRead,
+    FilterTableResponse,
+    FilterTableWrite,
     FunctionPropertyCommand,
     FunctionPropertyExtCommand,
     FunctionPropertyExtStateRead,
     FunctionPropertyExtStateResponse,
     FunctionPropertyStateRead,
     FunctionPropertyStateResponse,
+    GroupPropValueInfoReport,
+    GroupPropValueRead,
+    GroupPropValueResponse,
+    GroupPropValueWrite,
     GroupValueRead,
     GroupValueResponse,
     GroupValueWrite,
@@ -28,6 +44,12 @@ from xknx.telegram.apci import (
     IndividualAddressSerialResponse,
     IndividualAddressSerialWrite,
     IndividualAddressWrite,
+    KeyResponse,
+    KeyWrite,
+    LinkRead,
+    LinkResponse,
+    LinkWrite,
+    MemoryBitWrite,
     MemoryExtendedRead,
     MemoryExtendedReadResponse,
     MemoryExtendedWrite,
@@ -35,6 +57,9 @@ from xknx.telegram.apci import (
     MemoryRead,
     MemoryResponse,
     MemoryWrite,
+    NetworkParameterRead,
+    NetworkParameterResponse,
+    NetworkParameterWrite,
     PropertyDescriptionRead,
     PropertyDescriptionResponse,
     PropertyExtDescriptionRead,
@@ -52,11 +77,18 @@ from xknx.telegram.apci import (
     RestartMasterReset,
     RestartMasterResetResponse,
     ReturnCode,
+    RouterMemoryRead,
+    RouterMemoryResponse,
+    RouterMemoryWrite,
+    RouterStatusRead,
+    RouterStatusResponse,
+    RouterStatusWrite,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
     SystemNetworkParameterWrite,
     UserManufacturerInfoRead,
     UserManufacturerInfoResponse,
+    UserMemoryBitWrite,
     UserMemoryRead,
     UserMemoryResponse,
     UserMemoryWrite,
@@ -78,8 +110,9 @@ class TestAPCI:
         with pytest.raises(
             ConversionError, match=r".*Class not implemented for APCI.*"
         ):
-            # Unsupported extended service.
-            APCI.from_knx(bytes((0x03, 0xC0)))
+            # Unsupported extended service (reserved gap between
+            # A_FilterTable_Write and A_RouterMemory_Read).
+            APCI.from_knx(bytes((0x03, 0xC4)))
 
 
 class TestGroupValueRead:
@@ -2356,6 +2389,29 @@ class TestUserMemoryResponse:
         )
 
 
+class TestUserMemoryBitWrite:
+    """Test class for UserMemoryBitWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_UserMemoryBit_Write.*"):
+            APCI.from_knx(bytes((0x02, 0xC4)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_UserMemoryBit_Write.*"):
+            UserMemoryBitWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_UserMemoryBit_Write.*"):
+            UserMemoryBitWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(UserMemoryBitWrite()) == "<UserMemoryBitWrite (not implemented) />"
+
+
 class TestRestart:
     """Test class for Restart objects."""
 
@@ -2660,6 +2716,263 @@ class TestFunctionPropertyStateResponse:
         )
 
 
+class TestFilterTableOpen:
+    """Test class for FilterTableOpen objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Open.*"):
+            APCI.from_knx(bytes((0x03, 0xC0)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Open.*"):
+            FilterTableOpen().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Open.*"):
+            FilterTableOpen().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(FilterTableOpen()) == "<FilterTableOpen (not implemented) />"
+
+
+class TestFilterTableRead:
+    """Test class for FilterTableRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xC1)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Read.*"):
+            FilterTableRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Read.*"):
+            FilterTableRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(FilterTableRead()) == "<FilterTableRead (not implemented) />"
+
+
+class TestFilterTableResponse:
+    """Test class for FilterTableResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xC2)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Response.*"):
+            FilterTableResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Response.*"):
+            FilterTableResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(FilterTableResponse()) == "<FilterTableResponse (not implemented) />"
+
+
+class TestFilterTableWrite:
+    """Test class for FilterTableWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xC3)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Write.*"):
+            FilterTableWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Write.*"):
+            FilterTableWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(FilterTableWrite()) == "<FilterTableWrite (not implemented) />"
+
+
+class TestRouterMemoryRead:
+    """Test class for RouterMemoryRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xC8)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Read.*"):
+            RouterMemoryRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Read.*"):
+            RouterMemoryRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterMemoryRead()) == "<RouterMemoryRead (not implemented) />"
+
+
+class TestRouterMemoryResponse:
+    """Test class for RouterMemoryResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xC9)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Response.*"):
+            RouterMemoryResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Response.*"):
+            RouterMemoryResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(RouterMemoryResponse()) == "<RouterMemoryResponse (not implemented) />"
+        )
+
+
+class TestRouterMemoryWrite:
+    """Test class for RouterMemoryWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xCA)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Write.*"):
+            RouterMemoryWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Write.*"):
+            RouterMemoryWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterMemoryWrite()) == "<RouterMemoryWrite (not implemented) />"
+
+
+class TestRouterStatusRead:
+    """Test class for RouterStatusRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xCD)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            RouterStatusRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            RouterStatusRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterStatusRead()) == "<RouterStatusRead (not implemented) />"
+
+
+class TestRouterStatusResponse:
+    """Test class for RouterStatusResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xCE)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            RouterStatusResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            RouterStatusResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(RouterStatusResponse()) == "<RouterStatusResponse (not implemented) />"
+        )
+
+
+class TestRouterStatusWrite:
+    """Test class for RouterStatusWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xCF)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            RouterStatusWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            RouterStatusWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterStatusWrite()) == "<RouterStatusWrite (not implemented) />"
+
+
+class TestMemoryBitWrite:
+    """Test class for MemoryBitWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_MemoryBit_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xD0)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_MemoryBit_Write.*"):
+            MemoryBitWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_MemoryBit_Write.*"):
+            MemoryBitWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(MemoryBitWrite()) == "<MemoryBitWrite (not implemented) />"
+
+
 class TestAuthorizeRequest:
     """Test class for AuthorizeRequest objects."""
 
@@ -2714,6 +3027,52 @@ class TestAuthorizeResponse:
         payload = AuthorizeResponse(level=123)
 
         assert str(payload) == '<AuthorizeResponse level="123"/>'
+
+
+class TestKeyWrite:
+    """Test class for KeyWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Key_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xD3)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Key_Write.*"):
+            KeyWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Key_Write.*"):
+            KeyWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(KeyWrite()) == "<KeyWrite (not implemented) />"
+
+
+class TestKeyResponse:
+    """Test class for KeyResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Key_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xD4)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Key_Response.*"):
+            KeyResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Key_Response.*"):
+            KeyResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(KeyResponse()) == "<KeyResponse (not implemented) />"
 
 
 class TestPropertyValueRead:
@@ -2980,6 +3339,63 @@ class TestPropertyDescriptionResponse:
         )
 
 
+class TestNetworkParameterRead:
+    """Test class for NetworkParameterRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xDA)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Read.*"):
+            NetworkParameterRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Read.*"):
+            NetworkParameterRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(NetworkParameterRead()) == "<NetworkParameterRead (not implemented) />"
+        )
+
+
+class TestNetworkParameterResponse:
+    """Test class for NetworkParameterResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_NetworkParameter_Response.*"
+        ):
+            APCI.from_knx(bytes((0x03, 0xDB)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_NetworkParameter_Response.*"
+        ):
+            NetworkParameterResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_NetworkParameter_Response.*"
+        ):
+            NetworkParameterResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(NetworkParameterResponse())
+            == "<NetworkParameterResponse (not implemented) />"
+        )
+
+
 class TestIndividualAddressSerialRead:
     """Test class for IndividualAddressSerialRead objects."""
 
@@ -3127,4 +3543,428 @@ class TestIndividualAddressSerialWrite:
         assert (
             str(payload)
             == '<IndividualAddressSerialWrite serial="aabbcc112233" address="1.2.3" />'
+        )
+
+
+class TestDomainAddressWrite:
+    """Test class for DomainAddressWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xE0)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Write.*"):
+            DomainAddressWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Write.*"):
+            DomainAddressWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(DomainAddressWrite()) == "<DomainAddressWrite (not implemented) />"
+
+
+class TestDomainAddressRead:
+    """Test class for DomainAddressRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xE1)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Read.*"):
+            DomainAddressRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Read.*"):
+            DomainAddressRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(DomainAddressRead()) == "<DomainAddressRead (not implemented) />"
+
+
+class TestDomainAddressResponse:
+    """Test class for DomainAddressResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xE2)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Response.*"):
+            DomainAddressResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Response.*"):
+            DomainAddressResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(DomainAddressResponse())
+            == "<DomainAddressResponse (not implemented) />"
+        )
+
+
+class TestDomainAddressSelectiveRead:
+    """Test class for DomainAddressSelectiveRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSelective_Read.*"
+        ):
+            APCI.from_knx(bytes((0x03, 0xE3)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSelective_Read.*"
+        ):
+            DomainAddressSelectiveRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSelective_Read.*"
+        ):
+            DomainAddressSelectiveRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(DomainAddressSelectiveRead())
+            == "<DomainAddressSelectiveRead (not implemented) />"
+        )
+
+
+class TestNetworkParameterWrite:
+    """Test class for NetworkParameterWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xE4)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Write.*"):
+            NetworkParameterWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_NetworkParameter_Write.*"):
+            NetworkParameterWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(NetworkParameterWrite())
+            == "<NetworkParameterWrite (not implemented) />"
+        )
+
+
+class TestLinkRead:
+    """Test class for LinkRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xE5)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Read.*"):
+            LinkRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Read.*"):
+            LinkRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(LinkRead()) == "<LinkRead (not implemented) />"
+
+
+class TestLinkResponse:
+    """Test class for LinkResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xE6)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Response.*"):
+            LinkResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Response.*"):
+            LinkResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(LinkResponse()) == "<LinkResponse (not implemented) />"
+
+
+class TestLinkWrite:
+    """Test class for LinkWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xE7)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Write.*"):
+            LinkWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_Link_Write.*"):
+            LinkWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(LinkWrite()) == "<LinkWrite (not implemented) />"
+
+
+class TestGroupPropValueRead:
+    """Test class for GroupPropValueRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xE8)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Read.*"):
+            GroupPropValueRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Read.*"):
+            GroupPropValueRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(GroupPropValueRead()) == "<GroupPropValueRead (not implemented) />"
+
+
+class TestGroupPropValueResponse:
+    """Test class for GroupPropValueResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xE9)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Response.*"):
+            GroupPropValueResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Response.*"):
+            GroupPropValueResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(GroupPropValueResponse())
+            == "<GroupPropValueResponse (not implemented) />"
+        )
+
+
+class TestGroupPropValueWrite:
+    """Test class for GroupPropValueWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xEA)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Write.*"):
+            GroupPropValueWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Write.*"):
+            GroupPropValueWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(GroupPropValueWrite()) == "<GroupPropValueWrite (not implemented) />"
+
+
+class TestGroupPropValueInfoReport:
+    """Test class for GroupPropValueInfoReport objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_GroupPropValue_InfoReport.*"
+        ):
+            APCI.from_knx(bytes((0x03, 0xEB)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_GroupPropValue_InfoReport.*"
+        ):
+            GroupPropValueInfoReport().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_GroupPropValue_InfoReport.*"
+        ):
+            GroupPropValueInfoReport().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(GroupPropValueInfoReport())
+            == "<GroupPropValueInfoReport (not implemented) />"
+        )
+
+
+class TestDomainAddressSerialNumberRead:
+    """Test class for DomainAddressSerialNumberRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Read.*"
+        ):
+            APCI.from_knx(bytes((0x03, 0xEC)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Read.*"
+        ):
+            DomainAddressSerialNumberRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Read.*"
+        ):
+            DomainAddressSerialNumberRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(DomainAddressSerialNumberRead())
+            == "<DomainAddressSerialNumberRead (not implemented) />"
+        )
+
+
+class TestDomainAddressSerialNumberResponse:
+    """Test class for DomainAddressSerialNumberResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Response.*"
+        ):
+            APCI.from_knx(bytes((0x03, 0xED)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Response.*"
+        ):
+            DomainAddressSerialNumberResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Response.*"
+        ):
+            DomainAddressSerialNumberResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(DomainAddressSerialNumberResponse())
+            == "<DomainAddressSerialNumberResponse (not implemented) />"
+        )
+
+
+class TestDomainAddressSerialNumberWrite:
+    """Test class for DomainAddressSerialNumberWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Write.*"
+        ):
+            APCI.from_knx(bytes((0x03, 0xEE)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Write.*"
+        ):
+            DomainAddressSerialNumberWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Write.*"
+        ):
+            DomainAddressSerialNumberWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(DomainAddressSerialNumberWrite())
+            == "<DomainAddressSerialNumberWrite (not implemented) />"
+        )
+
+
+class TestFileStreamInfoReport:
+    """Test class for FileStreamInfoReport objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FileStream_InfoReport.*"):
+            APCI.from_knx(bytes((0x03, 0xF0)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FileStream_InfoReport.*"):
+            FileStreamInfoReport().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_FileStream_InfoReport.*"):
+            FileStreamInfoReport().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(FileStreamInfoReport()) == "<FileStreamInfoReport (not implemented) />"
         )

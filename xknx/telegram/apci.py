@@ -97,6 +97,8 @@ class APCIUserService(Enum):
     USER_MEMORY_RESPONSE = 0x02C1
     USER_MEMORY_WRITE = 0x02C2
 
+    USER_MEMORY_BIT_WRITE = 0x02C4
+
     USER_MANUFACTURER_INFO_READ = 0x02C5
     USER_MANUFACTURER_INFO_RESPONSE = 0x02C6
 
@@ -108,8 +110,28 @@ class APCIUserService(Enum):
 class APCIExtendedService(Enum):
     """Enum class for extended APCI services."""
 
+    # Coupler specific services
+    FILTER_TABLE_OPEN = 0x03C0
+    FILTER_TABLE_READ = 0x03C1
+    FILTER_TABLE_RESPONSE = 0x03C2
+    FILTER_TABLE_WRITE = 0x03C3
+
+    ROUTER_MEMORY_READ = 0x03C8
+    ROUTER_MEMORY_RESPONSE = 0x03C9
+    ROUTER_MEMORY_WRITE = 0x03CA
+
+    ROUTER_STATUS_READ = 0x03CD
+    ROUTER_STATUS_RESPONSE = 0x03CE
+    ROUTER_STATUS_WRITE = 0x03CF
+
+    # not for future use
+    MEMORY_BIT_WRITE = 0x03D0
+
     AUTHORIZE_REQUEST = 0x03D1
     AUTHORIZE_RESPONSE = 0x03D2
+
+    KEY_WRITE = 0x03D3
+    KEY_RESPONSE = 0x03D4
 
     PROPERTY_VALUE_READ = 0x03D5
     PROPERTY_VALUE_RESPONSE = 0x03D6
@@ -118,9 +140,35 @@ class APCIExtendedService(Enum):
     PROPERTY_DESCRIPTION_READ = 0x03D8
     PROPERTY_DESCRIPTION_RESPONSE = 0x03D9
 
+    NETWORK_PARAMETER_READ = 0x03DA
+    NETWORK_PARAMETER_RESPONSE = 0x03DB
+
     INDIVIDUAL_ADDRESS_SERIAL_READ = 0x03DC
     INDIVIDUAL_ADDRESS_SERIAL_RESPONSE = 0x03DD
     INDIVIDUAL_ADDRESS_SERIAL_WRITE = 0x03DE
+
+    # Open media specific services
+    DOMAIN_ADDRESS_WRITE = 0x03E0
+    DOMAIN_ADDRESS_READ = 0x03E1
+    DOMAIN_ADDRESS_RESPONSE = 0x03E2
+    DOMAIN_ADDRESS_SELECTIVE_READ = 0x03E3
+
+    NETWORK_PARAMETER_WRITE = 0x03E4
+
+    LINK_READ = 0x03E5
+    LINK_RESPONSE = 0x03E6
+    LINK_WRITE = 0x03E7
+
+    GROUP_PROP_VALUE_READ = 0x03E8
+    GROUP_PROP_VALUE_RESPONSE = 0x03E9
+    GROUP_PROP_VALUE_WRITE = 0x03EA
+    GROUP_PROP_VALUE_INFO_REPORT = 0x03EB
+
+    DOMAIN_ADDRESS_SERIAL_NUMBER_READ = 0x03EC
+    DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE = 0x03ED
+    DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE = 0x03EE
+
+    FILE_STREAM_INFO_REPORT = 0x03F0
 
     # DataSecure
     APCI_SEC = 0x03F1
@@ -277,6 +325,8 @@ class APCI(ABC):
                 return UserMemoryResponse.from_knx(raw)
             if apci == APCIUserService.USER_MEMORY_WRITE.value:
                 return UserMemoryWrite.from_knx(raw)
+            if apci == APCIUserService.USER_MEMORY_BIT_WRITE.value:
+                return UserMemoryBitWrite.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
                 return UserManufacturerInfoRead.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
@@ -298,10 +348,36 @@ class APCI(ABC):
                 return RestartMasterResetResponse.from_knx(raw)
             return Restart.from_knx(raw)
         if service == APCIService.ESCAPE.value:
+            if apci == APCIExtendedService.FILTER_TABLE_OPEN.value:
+                return FilterTableOpen.from_knx(raw)
+            if apci == APCIExtendedService.FILTER_TABLE_READ.value:
+                return FilterTableRead.from_knx(raw)
+            if apci == APCIExtendedService.FILTER_TABLE_RESPONSE.value:
+                return FilterTableResponse.from_knx(raw)
+            if apci == APCIExtendedService.FILTER_TABLE_WRITE.value:
+                return FilterTableWrite.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_MEMORY_READ.value:
+                return RouterMemoryRead.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_MEMORY_RESPONSE.value:
+                return RouterMemoryResponse.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_MEMORY_WRITE.value:
+                return RouterMemoryWrite.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_STATUS_READ.value:
+                return RouterStatusRead.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_STATUS_RESPONSE.value:
+                return RouterStatusResponse.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_STATUS_WRITE.value:
+                return RouterStatusWrite.from_knx(raw)
+            if apci == APCIExtendedService.MEMORY_BIT_WRITE.value:
+                return MemoryBitWrite.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
                 return AuthorizeRequest.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
                 return AuthorizeResponse.from_knx(raw)
+            if apci == APCIExtendedService.KEY_WRITE.value:
+                return KeyWrite.from_knx(raw)
+            if apci == APCIExtendedService.KEY_RESPONSE.value:
+                return KeyResponse.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_READ.value:
                 return PropertyValueRead.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_WRITE.value:
@@ -312,12 +388,48 @@ class APCI(ABC):
                 return PropertyDescriptionRead.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value:
                 return PropertyDescriptionResponse.from_knx(raw)
+            if apci == APCIExtendedService.NETWORK_PARAMETER_READ.value:
+                return NetworkParameterRead.from_knx(raw)
+            if apci == APCIExtendedService.NETWORK_PARAMETER_RESPONSE.value:
+                return NetworkParameterResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
                 return IndividualAddressSerialRead.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
                 return IndividualAddressSerialResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
                 return IndividualAddressSerialWrite.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_WRITE.value:
+                return DomainAddressWrite.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_READ.value:
+                return DomainAddressRead.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_RESPONSE.value:
+                return DomainAddressResponse.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ.value:
+                return DomainAddressSelectiveRead.from_knx(raw)
+            if apci == APCIExtendedService.NETWORK_PARAMETER_WRITE.value:
+                return NetworkParameterWrite.from_knx(raw)
+            if apci == APCIExtendedService.LINK_READ.value:
+                return LinkRead.from_knx(raw)
+            if apci == APCIExtendedService.LINK_RESPONSE.value:
+                return LinkResponse.from_knx(raw)
+            if apci == APCIExtendedService.LINK_WRITE.value:
+                return LinkWrite.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_READ.value:
+                return GroupPropValueRead.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_RESPONSE.value:
+                return GroupPropValueResponse.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_WRITE.value:
+                return GroupPropValueWrite.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT.value:
+                return GroupPropValueInfoReport.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ.value:
+                return DomainAddressSerialNumberRead.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE.value:
+                return DomainAddressSerialNumberResponse.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE.value:
+                return DomainAddressSerialNumberWrite.from_knx(raw)
+            if apci == APCIExtendedService.FILE_STREAM_INFO_REPORT.value:
+                return FileStreamInfoReport.from_knx(raw)
             if apci == APCIExtendedService.APCI_SEC.value:
                 return SecureAPDU.from_knx(raw)
 
@@ -2424,6 +2536,35 @@ class UserMemoryResponse(APCI):
 
 
 @dataclass(slots=True)
+class UserMemoryBitWrite(APCI):
+    """
+    UserMemoryBitWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_UserMemoryBit_Write.
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIUserService.USER_MEMORY_BIT_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_UserMemoryBit_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserMemoryBitWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_UserMemoryBit_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_UserMemoryBit_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<UserMemoryBitWrite (not implemented) />"
+
+
+@dataclass(slots=True)
 class UserManufacturerInfoRead(APCI):
     """UserManufacturerInfoRead service."""
 
@@ -2608,6 +2749,326 @@ class FunctionPropertyStateResponse(APCI):
 
 
 @dataclass(slots=True)
+class FilterTableOpen(APCI):
+    """
+    FilterTableOpen service.
+
+    See KNX Specification 03_03_07 Application Layer A_FilterTable_Open.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_OPEN
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_FilterTable_Open is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableOpen:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Open is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Open is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<FilterTableOpen (not implemented) />"
+
+
+@dataclass(slots=True)
+class FilterTableRead(APCI):
+    """
+    FilterTableRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_FilterTable_Read.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_FilterTable_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<FilterTableRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class FilterTableResponse(APCI):
+    """
+    FilterTableResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_FilterTable_Response.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_FilterTable_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<FilterTableResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class FilterTableWrite(APCI):
+    """
+    FilterTableWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_FilterTable_Write.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_FilterTable_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_FilterTable_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<FilterTableWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterMemoryRead(APCI):
+    """
+    RouterMemoryRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_RouterMemory_Read.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_RouterMemory_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterMemoryRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_RouterMemory_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_RouterMemory_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterMemoryRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterMemoryResponse(APCI):
+    """
+    RouterMemoryResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_RouterMemory_Response.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_RouterMemory_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterMemoryResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_RouterMemory_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_RouterMemory_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterMemoryResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterMemoryWrite(APCI):
+    """
+    RouterMemoryWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_RouterMemory_Write.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_RouterMemory_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterMemoryWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_RouterMemory_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_RouterMemory_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterMemoryWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterStatusRead(APCI):
+    """
+    RouterStatusRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_RouterStatus_Read.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_RouterStatus_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterStatusRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_RouterStatus_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_RouterStatus_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterStatusRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterStatusResponse(APCI):
+    """
+    RouterStatusResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_RouterStatus_Response.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_RouterStatus_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterStatusResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_RouterStatus_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_RouterStatus_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterStatusResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterStatusWrite(APCI):
+    """
+    RouterStatusWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_RouterStatus_Write.
+    Coupler specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_RouterStatus_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterStatusWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_RouterStatus_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_RouterStatus_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterStatusWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class MemoryBitWrite(APCI):
+    """
+    MemoryBitWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_MemoryBit_Write.
+    Marked "not for future use" by the spec - payload layout not
+    implemented.
+    """
+
+    CODE: ClassVar = APCIExtendedService.MEMORY_BIT_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_MemoryBit_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryBitWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_MemoryBit_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_MemoryBit_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<MemoryBitWrite (not implemented) />"
+
+
+@dataclass(slots=True)
 class AuthorizeRequest(APCI):
     """AuthorizeRequest service."""
 
@@ -2663,6 +3124,64 @@ class AuthorizeResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<AuthorizeResponse level="{self.level}"/>'
+
+
+@dataclass(slots=True)
+class KeyWrite(APCI):
+    """
+    KeyWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_Key_Write.
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.KEY_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_Key_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> KeyWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_Key_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_Key_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<KeyWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class KeyResponse(APCI):
+    """
+    KeyResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_Key_Response.
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.KEY_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_Key_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> KeyResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_Key_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_Key_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<KeyResponse (not implemented) />"
 
 
 @dataclass(slots=True)
@@ -2964,6 +3483,64 @@ class PropertyDescriptionResponse(APCI):
 
 
 @dataclass(slots=True)
+class NetworkParameterRead(APCI):
+    """
+    NetworkParameterRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_NetworkParameter_Read.
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_NetworkParameter_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> NetworkParameterRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_NetworkParameter_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_NetworkParameter_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<NetworkParameterRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class NetworkParameterResponse(APCI):
+    """
+    NetworkParameterResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_NetworkParameter_Response.
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_NetworkParameter_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> NetworkParameterResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_NetworkParameter_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_NetworkParameter_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<NetworkParameterResponse (not implemented) />"
+
+
+@dataclass(slots=True)
 class IndividualAddressSerialRead(APCI):
     """IndividualAddressSerialRead service."""
 
@@ -3065,6 +3642,499 @@ class IndividualAddressSerialWrite(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<IndividualAddressSerialWrite serial="{self.serial.hex()}" address="{self.address}" />'
+
+
+@dataclass(slots=True)
+class DomainAddressWrite(APCI):
+    """
+    DomainAddressWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_DomainAddress_Write.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_DomainAddress_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_DomainAddress_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_DomainAddress_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class DomainAddressRead(APCI):
+    """
+    DomainAddressRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_DomainAddress_Read.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_DomainAddress_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_DomainAddress_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_DomainAddress_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class DomainAddressResponse(APCI):
+    """
+    DomainAddressResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_DomainAddress_Response.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_DomainAddress_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_DomainAddress_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_DomainAddress_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class DomainAddressSelectiveRead(APCI):
+    """
+    DomainAddressSelectiveRead service.
+
+    See KNX Specification 03_03_07 Application Layer
+    A_DomainAddressSelective_Read. Open media specific service - payload
+    layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_DomainAddressSelective_Read is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSelectiveRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSelective_Read is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSelective_Read is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressSelectiveRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class NetworkParameterWrite(APCI):
+    """
+    NetworkParameterWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_NetworkParameter_Write.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_NetworkParameter_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> NetworkParameterWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_NetworkParameter_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_NetworkParameter_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<NetworkParameterWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class LinkRead(APCI):
+    """
+    LinkRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_Link_Read.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.LINK_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_Link_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> LinkRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_Link_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_Link_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<LinkRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class LinkResponse(APCI):
+    """
+    LinkResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_Link_Response.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.LINK_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_Link_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> LinkResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_Link_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_Link_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<LinkResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class LinkWrite(APCI):
+    """
+    LinkWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_Link_Write.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.LINK_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_Link_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> LinkWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_Link_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_Link_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<LinkWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class GroupPropValueRead(APCI):
+    """
+    GroupPropValueRead service.
+
+    See KNX Specification 03_03_07 Application Layer A_GroupPropValue_Read.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_GroupPropValue_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<GroupPropValueRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class GroupPropValueResponse(APCI):
+    """
+    GroupPropValueResponse service.
+
+    See KNX Specification 03_03_07 Application Layer A_GroupPropValue_Response.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_GroupPropValue_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<GroupPropValueResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class GroupPropValueWrite(APCI):
+    """
+    GroupPropValueWrite service.
+
+    See KNX Specification 03_03_07 Application Layer A_GroupPropValue_Write.
+    Open media specific service - payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_GroupPropValue_Write is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_Write is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_Write is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<GroupPropValueWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class GroupPropValueInfoReport(APCI):
+    """
+    GroupPropValueInfoReport service.
+
+    See KNX Specification 03_03_07 Application Layer
+    A_GroupPropValue_InfoReport. Open media specific service - payload
+    layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_GroupPropValue_InfoReport is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueInfoReport:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_InfoReport is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_GroupPropValue_InfoReport is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<GroupPropValueInfoReport (not implemented) />"
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberRead(APCI):
+    """
+    DomainAddressSerialNumberRead service.
+
+    See KNX Specification 03_03_07 Application Layer
+    A_DomainAddressSerialNumber_Read. Open media specific service -
+    payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Read is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Read is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Read is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressSerialNumberRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberResponse(APCI):
+    """
+    DomainAddressSerialNumberResponse service.
+
+    See KNX Specification 03_03_07 Application Layer
+    A_DomainAddressSerialNumber_Response. Open media specific service -
+    payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Response is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Response is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Response is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressSerialNumberResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberWrite(APCI):
+    """
+    DomainAddressSerialNumberWrite service.
+
+    See KNX Specification 03_03_07 Application Layer
+    A_DomainAddressSerialNumber_Write. Open media specific service -
+    payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Write is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Write is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_DomainAddressSerialNumber_Write is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressSerialNumberWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class FileStreamInfoReport(APCI):
+    """
+    FileStreamInfoReport service.
+
+    See KNX Specification 03_03_07 Application Layer A_FileStream_InfoReport.
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILE_STREAM_INFO_REPORT
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_FileStream_InfoReport is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FileStreamInfoReport:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_FileStream_InfoReport is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_FileStream_InfoReport is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<FileStreamInfoReport (not implemented) />"
 
 
 @dataclass(slots=True)
