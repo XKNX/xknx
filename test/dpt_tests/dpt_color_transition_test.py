@@ -131,6 +131,45 @@ class TestXYYColorTransition:
             },
         ]
 
+    @pytest.mark.parametrize(
+        ("data", "value"),
+        [
+            (
+                {"fade_time": 1.0, "x_axis": 0.1, "y_axis": 0.2, "brightness": 128},
+                XYYColorTransition(color=(0.1, 0.2), brightness=128, fade_time=1.0),
+            ),
+            (
+                {"fade_time": 0.0},
+                XYYColorTransition(color=None, brightness=None, fade_time=0.0),
+            ),
+            (
+                {"fade_time": 2.5, "brightness": 50},
+                XYYColorTransition(color=None, brightness=50, fade_time=2.5),
+            ),
+        ],
+    )
+    def test_dict(self, data: dict[str, Any], value: XYYColorTransition) -> None:
+        """Test from_dict and as_dict methods."""
+        assert XYYColorTransition.from_dict(data) == value
+        default = {"fade_time": 0.0, "x_axis": None, "y_axis": None, "brightness": None}
+        assert value.as_dict() == default | data
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"fade_time": 1.0, "x_axis": "a", "y_axis": 0.2},  # invalid axis
+            {"fade_time": 1.0, "x_axis": 0.1},  # only x_axis
+            {"fade_time": 1.0, "y_axis": 0.1},  # only y_axis
+            {"fade_time": 1.0, "brightness": "a"},  # invalid brightness
+            {"fade_time": "a"},  # invalid fade_time
+            {},  # missing required fade_time
+        ],
+    )
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+        """Test from_dict with invalid data."""
+        with pytest.raises(ValueError):
+            XYYColorTransition.from_dict(data)
+
 
 class TestColorTemperatureTransition:
     """Test ColorTemperatureTransition class and DPTColorTemperatureTransition (249.600)."""
@@ -253,6 +292,43 @@ class TestColorTemperatureTransition:
             },
         ]
 
+    @pytest.mark.parametrize(
+        ("data", "value"),
+        [
+            (
+                {"fade_time": 0.5, "color_temperature": 3000, "brightness": 128},
+                ColorTemperatureTransition(
+                    fade_time=0.5, color_temperature=3000, brightness=128
+                ),
+            ),
+            ({}, ColorTemperatureTransition()),
+            (
+                {"color_temperature": 3000},
+                ColorTemperatureTransition(color_temperature=3000),
+            ),
+        ],
+    )
+    def test_dict(
+        self, data: dict[str, Any], value: ColorTemperatureTransition
+    ) -> None:
+        """Test from_dict and as_dict methods."""
+        assert ColorTemperatureTransition.from_dict(data) == value
+        default = {"fade_time": None, "color_temperature": None, "brightness": None}
+        assert value.as_dict() == default | data
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"color_temperature": "a"},  # invalid color_temperature
+            {"brightness": "a"},  # invalid brightness
+            {"fade_time": "a"},  # invalid fade_time
+        ],
+    )
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+        """Test from_dict with invalid data."""
+        with pytest.raises(ValueError):
+            ColorTemperatureTransition.from_dict(data)
+
 
 class TestColorTemperatureControl:
     """Test ColorTemperatureControl class and DPTColorTemperatureControl (250.600)."""
@@ -337,6 +413,58 @@ class TestColorTemperatureControl:
             },
         ]
 
+    @pytest.mark.parametrize(
+        ("data", "value"),
+        [
+            (
+                {
+                    "color_temperature_control": "increase",
+                    "color_temperature_step_code": 5,
+                    "brightness_control": "decrease",
+                    "brightness_step_code": 3,
+                },
+                ColorTemperatureControl(
+                    ControlDimming(Step.INCREASE, 5), ControlDimming(Step.DECREASE, 3)
+                ),
+            ),
+            (
+                {
+                    "color_temperature_control": "increase",
+                    "color_temperature_step_code": 5,
+                },
+                ColorTemperatureControl(ControlDimming(Step.INCREASE, 5), None),
+            ),
+            ({}, ColorTemperatureControl()),
+        ],
+    )
+    def test_dict(self, data: dict[str, Any], value: ColorTemperatureControl) -> None:
+        """Test from_dict and as_dict methods."""
+        assert ColorTemperatureControl.from_dict(data) == value
+        default = {
+            "color_temperature_control": None,
+            "color_temperature_step_code": None,
+            "brightness_control": None,
+            "brightness_step_code": None,
+        }
+        assert value.as_dict() == default | data
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            # invalid control enum
+            {"color_temperature_control": "sideways", "color_temperature_step_code": 5},
+            # invalid step_code
+            {
+                "color_temperature_control": "increase",
+                "color_temperature_step_code": "x",
+            },
+        ],
+    )
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+        """Test from_dict with invalid data."""
+        with pytest.raises(ValueError):
+            ColorTemperatureControl.from_dict(data)
+
 
 class TestRelativeControlRGBW:
     """Test RelativeControlRGBW class and DPTRelativeControlRGBW (252.600)."""
@@ -366,6 +494,27 @@ class TestRelativeControlRGBW:
         with pytest.raises(CouldNotParseTelegram):
             DPTRelativeControlRGBW.from_knx(DPTArray((0x00,) * 4))
 
+    def test_dict(self) -> None:
+        """Test from_dict and as_dict methods."""
+        value = RelativeControlRGBW(
+            red=ControlDimming(Step.INCREASE, 3),
+            green=None,
+            blue=ControlDimming(Step.DECREASE, 7),
+            white=None,
+        )
+        data = {
+            "red_control": "increase",
+            "red_step_code": 3,
+            "green_control": None,
+            "green_step_code": None,
+            "blue_control": "decrease",
+            "blue_step_code": 7,
+            "white_control": None,
+            "white_step_code": None,
+        }
+        assert value.as_dict() == data
+        assert RelativeControlRGBW.from_dict(data) == value
+
 
 class TestRelativeControlXYY:
     """Test RelativeControlXYY class and DPTRelativeControlXYY (253.600)."""
@@ -386,6 +535,24 @@ class TestRelativeControlXYY:
         """Test DPTRelativeControlXYY parsing with wrong payload."""
         with pytest.raises(CouldNotParseTelegram):
             DPTRelativeControlXYY.from_knx(DPTArray((0x00, 0x00, 0x00)))
+
+    def test_dict(self) -> None:
+        """Test from_dict and as_dict methods."""
+        value = RelativeControlXYY(
+            saturation=ControlDimming(Step.INCREASE, 1),
+            colour=None,
+            brightness=ControlDimming(Step.DECREASE, 4),
+        )
+        data = {
+            "saturation_control": "increase",
+            "saturation_step_code": 1,
+            "colour_control": None,
+            "colour_step_code": None,
+            "brightness_control": "decrease",
+            "brightness_step_code": 4,
+        }
+        assert value.as_dict() == data
+        assert RelativeControlXYY.from_dict(data) == value
 
 
 class TestRelativeControlRGB:
@@ -433,3 +600,21 @@ class TestRelativeControlRGB:
         """Test DPTRelativeControlRGB parsing with wrong payload."""
         with pytest.raises(CouldNotParseTelegram):
             DPTRelativeControlRGB.from_knx(DPTArray((0x00, 0x00)))
+
+    def test_dict(self) -> None:
+        """Test from_dict and as_dict methods."""
+        value = RelativeControlRGB(
+            red=ControlDimming(Step.INCREASE, 1),
+            green=ControlDimming(Step.DECREASE, 2),
+            blue=ControlDimming(Step.INCREASE, 7),
+        )
+        data = {
+            "red_control": "increase",
+            "red_step_code": 1,
+            "green_control": "decrease",
+            "green_step_code": 2,
+            "blue_control": "increase",
+            "blue_step_code": 7,
+        }
+        assert value.as_dict() == data
+        assert RelativeControlRGB.from_dict(data) == value
