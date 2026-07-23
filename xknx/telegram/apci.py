@@ -4164,35 +4164,36 @@ class DomainAddressSelectiveRead(APCI):
     """
     DomainAddressSelectiveRead service.
 
-    See KNX Specification 03_03_07 Application Layer
-    A_DomainAddressSelective_Read. Open media specific service - payload
-    layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.3.5
+    A_DomainAddressSelective_Read. Open media specific service - reads
+    the Domain Address from an identified communication partner, eg. to
+    check for open media devices with a given Domain Address in a
+    neighbouring installation. Only specified for the 2 octet
+    (KNX-PL110) Domain Address format.
+
+    Payload is a variable-length asdu.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ
 
+    asdu: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError(
-            "A_DomainAddressSelective_Read is not implemented yet."
-        )
+        return 1 + len(self.asdu)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressSelectiveRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSelective_Read is not implemented yet."
-        )
+        return cls(asdu=raw[2:])
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSelective_Read is not implemented yet."
-        )
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.asdu)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressSelectiveRead (not implemented) />"
+        return f'<DomainAddressSelectiveRead asdu="{self.asdu.hex()}" />'
 
 
 @dataclass(slots=True)

@@ -4201,33 +4201,42 @@ class TestDomainAddressResponse:
 class TestDomainAddressSelectiveRead:
     """Test class for DomainAddressSelectiveRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSelective_Read.*"
-        ):
-            APCI.from_knx(bytes((0x03, 0xE3)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSelective_Read.*"
-        ):
-            DomainAddressSelectiveRead().to_knx()
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSelective_Read.*"
-        ):
-            DomainAddressSelectiveRead().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e31234aabbcc"))
+
+        assert payload == DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+    def test_from_knx_no_asdu(self) -> None:
+        """Test from_knx accepts the minimum 2 octet APDU with no asdu."""
+        payload = APCI.from_knx(bytes((0x03, 0xE3)))
+
+        assert payload == DomainAddressSelectiveRead(asdu=b"")
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+        assert payload.to_knx() == bytes.fromhex("03e31234aabbcc")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e31234aabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(DomainAddressSelectiveRead())
-            == "<DomainAddressSelectiveRead (not implemented) />"
-        )
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+        assert str(payload) == ('<DomainAddressSelectiveRead asdu="1234aabbcc" />')
 
 
 class TestNetworkParameterWrite:
