@@ -4043,28 +4043,44 @@ class DomainAddressWrite(APCI):
     """
     DomainAddressWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_DomainAddress_Write.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.3.3
+    A_DomainAddress_Write. Open media specific service - the
+    destination is selected manually (eg. a button on the target
+    device), not addressed.
+
+    Payload is a 2 octet (KNX-PL110) or 6 octet (KNX-RF) domain_address.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_WRITE
 
+    domain_address: bytes
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_DomainAddress_Write is not implemented yet.")
+        return 1 + len(self.domain_address)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_DomainAddress_Write is not implemented yet.")
+        if len(raw) not in (4, 8):
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Write in CEMI: {raw.hex()}"
+            )
+
+        return cls(domain_address=raw[2:])
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_DomainAddress_Write is not implemented yet.")
+        if len(self.domain_address) not in (2, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110) or 6 (KNX-RF) octets long."
+            )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.domain_address)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressWrite (not implemented) />"
+        return f'<DomainAddressWrite domain_address="{self.domain_address.hex()}" />'
 
 
 @dataclass(slots=True)
@@ -4072,28 +4088,31 @@ class DomainAddressRead(APCI):
     """
     DomainAddressRead service.
 
-    See KNX Specification 03_03_07 Application Layer A_DomainAddress_Read.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.3.4
+    A_DomainAddress_Read. Open media specific service - the
+    destination is selected manually (eg. a button on the target
+    device), not addressed. No payload.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_DomainAddress_Read is not implemented yet.")
+        return 1
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_DomainAddress_Read is not implemented yet.")
+        # Nothing to parse, but must be implemented explicitly.
+        return cls()
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_DomainAddress_Read is not implemented yet.")
+        return encode_cmd_and_payload(self.CODE)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressRead (not implemented) />"
+        return "<DomainAddressRead />"
 
 
 @dataclass(slots=True)
@@ -4101,28 +4120,43 @@ class DomainAddressResponse(APCI):
     """
     DomainAddressResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_DomainAddress_Response.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.3.4
+    A_DomainAddress_Response (defined alongside A_DomainAddress_Read).
+
+    Same payload as DomainAddressWrite: a 2 octet (KNX-PL110) or 6
+    octet (KNX-RF) domain_address.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_RESPONSE
 
+    domain_address: bytes
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_DomainAddress_Response is not implemented yet.")
+        return 1 + len(self.domain_address)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_DomainAddress_Response is not implemented yet.")
+        if len(raw) not in (4, 8):
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Response in CEMI: {raw.hex()}"
+            )
+
+        return cls(domain_address=raw[2:])
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_DomainAddress_Response is not implemented yet.")
+        if len(self.domain_address) not in (2, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110) or 6 (KNX-RF) octets long."
+            )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.domain_address)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressResponse (not implemented) />"
+        return f'<DomainAddressResponse domain_address="{self.domain_address.hex()}" />'
 
 
 @dataclass(slots=True)

@@ -4062,73 +4062,140 @@ class TestIndividualAddressSerialWrite:
 class TestDomainAddressWrite:
     """Test class for DomainAddressWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xE0)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressWrite(domain_address=bytes.fromhex("1234"))
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Write.*"):
-            DomainAddressWrite().to_knx()
+        assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Write.*"):
-            DomainAddressWrite().calculated_length()
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e01234"))
+
+        assert payload == DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e0aabbccddeeff"))
+
+        assert payload == DomainAddressWrite(
+            domain_address=bytes.fromhex("aabbccddeeff")
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e0aabbcc"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+        assert payload.to_knx() == bytes.fromhex("03e01234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e0aabbccddeeff")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        payload = DomainAddressWrite(domain_address=b"\xaa")
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(DomainAddressWrite()) == "<DomainAddressWrite (not implemented) />"
+        payload = DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+        assert str(payload) == '<DomainAddressWrite domain_address="1234" />'
 
 
 class TestDomainAddressRead:
     """Test class for DomainAddressRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Read.*"):
-            APCI.from_knx(bytes((0x03, 0xE1)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressRead()
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Read.*"):
-            DomainAddressRead().to_knx()
+        assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Read.*"):
-            DomainAddressRead().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes((0x03, 0xE1)))
+
+        assert payload == DomainAddressRead()
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressRead()
+
+        assert payload.to_knx() == bytes((0x03, 0xE1))
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(DomainAddressRead()) == "<DomainAddressRead (not implemented) />"
+        payload = DomainAddressRead()
+
+        assert str(payload) == "<DomainAddressRead />"
 
 
 class TestDomainAddressResponse:
     """Test class for DomainAddressResponse objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Response.*"):
-            APCI.from_knx(bytes((0x03, 0xE2)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressResponse(domain_address=bytes.fromhex("1234"))
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Response.*"):
-            DomainAddressResponse().to_knx()
+        assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_DomainAddress_Response.*"):
-            DomainAddressResponse().calculated_length()
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e21234"))
+
+        assert payload == DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e2aabbccddeeff"))
+
+        assert payload == DomainAddressResponse(
+            domain_address=bytes.fromhex("aabbccddeeff")
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e2aabbcc"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+        assert payload.to_knx() == bytes.fromhex("03e21234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e2aabbccddeeff")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        payload = DomainAddressResponse(domain_address=b"\xaa")
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(DomainAddressResponse())
-            == "<DomainAddressResponse (not implemented) />"
-        )
+        payload = DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+        assert str(payload) == '<DomainAddressResponse domain_address="1234" />'
 
 
 class TestDomainAddressSelectiveRead:
