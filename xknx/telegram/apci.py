@@ -3813,28 +3813,60 @@ class NetworkParameterRead(APCI):
     """
     NetworkParameterRead service.
 
-    See KNX Specification 03_03_07 Application Layer A_NetworkParameter_Read.
-    Payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.2.6
+    A_NetworkParameter_Read. Sent point-to-point or as broadcast to
+    check the configuration of a network parameter.
+
+    Payload contains a 16 bit object_type, an 8 bit property_id and a
+    PID-specific, variable-length test_info. Unlike
+    A_SystemNetworkParameter_Read, property_id here is a full octet
+    with no reserved bits.
     """
 
     CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_READ
 
+    object_type: int
+    property_id: int
+    test_info: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_NetworkParameter_Read is not implemented yet.")
+        return 4 + len(self.test_info)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> NetworkParameterRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_NetworkParameter_Read is not implemented yet.")
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_NetworkParameter_Read in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info=raw[5:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_NetworkParameter_Read is not implemented yet.")
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
+        payload = struct.pack("!HB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<NetworkParameterRead (not implemented) />"
+        return (
+            f'<NetworkParameterRead object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -3842,28 +3874,64 @@ class NetworkParameterResponse(APCI):
     """
     NetworkParameterResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_NetworkParameter_Response.
-    Payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.2.6
+    A_NetworkParameter_Response (defined alongside
+    A_NetworkParameter_Read).
+
+    Same header as NetworkParameterRead (16 bit object_type, 8 bit
+    property_id). Beyond that, the PDU has two variable-length fields,
+    test_info and test_result, with no length indicator on the wire
+    separating them - the boundary is only known if the original
+    request's test_info length is known. Since APCI parsing here is
+    stateless, both are kept together as `test_info_and_result` instead
+    of guessing a split.
     """
 
     CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_RESPONSE
 
+    object_type: int
+    property_id: int
+    test_info_and_result: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_NetworkParameter_Response is not implemented yet.")
+        return 4 + len(self.test_info_and_result)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> NetworkParameterResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_NetworkParameter_Response is not implemented yet.")
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_NetworkParameter_Response in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info_and_result=raw[5:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_NetworkParameter_Response is not implemented yet.")
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
+        payload = struct.pack("!HB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info_and_result
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<NetworkParameterResponse (not implemented) />"
+        return (
+            f'<NetworkParameterResponse object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" '
+            f'test_info_and_result="{self.test_info_and_result.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
