@@ -4005,6 +4005,15 @@ class TestIndividualAddressSerialResponse:
             [0x03, 0xDD, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33, 0x12, 0x03, 0x00, 0x00]
         )
 
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = IndividualAddressSerialResponse(
+            serial=b"\xaa\xbb\xcc", address=IndividualAddress("1.2.3")
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = IndividualAddressSerialResponse(
@@ -4079,6 +4088,15 @@ class TestIndividualAddressSerialWrite:
                 0x00,
             ]
         )
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = IndividualAddressSerialWrite(
+            serial=b"\xaa\xbb\xcc", address=IndividualAddress("1.2.3")
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
@@ -5112,6 +5130,18 @@ class TestDomainAddressSerialNumberWrite:
         )
 
         with pytest.raises(ConversionError, match=r".*must be set together.*"):
+            payload.to_knx()
+
+    def test_to_knx_routing_security_version_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range version."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=0x100,
+            backbone_key=b"\x00" * 16,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Routing security version.*"):
             payload.to_knx()
 
     def test_to_knx_backbone_key_wrong_length(self) -> None:
