@@ -4947,28 +4947,58 @@ class FileStreamInfoReport(APCI):
     """
     FileStreamInfoReport service.
 
-    See KNX Specification 03_03_07 Application Layer A_FileStream_InfoReport.
-    Payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.4.2.3
+    A_FileStream_InfoReport. Unconfirmed - sends one file block to a
+    remote File Server client.
+
+    Payload contains a byte with a 4 bit file_handle followed by a 4
+    bit file_block_seq_number, and a variable-length file_block.
     """
 
     CODE: ClassVar = APCIExtendedService.FILE_STREAM_INFO_REPORT
 
+    file_handle: int
+    file_block_seq_number: int
+    file_block: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_FileStream_InfoReport is not implemented yet.")
+        return 2 + len(self.file_block)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FileStreamInfoReport:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_FileStream_InfoReport is not implemented yet.")
+        if len(raw) < 3:
+            raise ConversionError(
+                f"Invalid length for A_FileStream_InfoReport in CEMI: {raw.hex()}"
+            )
+        byte0 = raw[2]
+
+        return cls(
+            file_handle=byte0 >> 4,
+            file_block_seq_number=byte0 & 0x0F,
+            file_block=raw[3:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_FileStream_InfoReport is not implemented yet.")
+        if not 0 <= self.file_handle <= 0xF:
+            raise ConversionError("File handle out of range.")
+        if not 0 <= self.file_block_seq_number <= 0xF:
+            raise ConversionError("File block sequence number out of range.")
+
+        byte0 = (self.file_handle << 4) | self.file_block_seq_number
+        payload = bytes([byte0]) + self.file_block
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<FileStreamInfoReport (not implemented) />"
+        return (
+            f'<FileStreamInfoReport file_handle="{self.file_handle}" '
+            f'file_block_seq_number="{self.file_block_seq_number}" '
+            f'file_block="{self.file_block.hex()}" />'
+        )
 
 
 @dataclass(slots=True)

@@ -5110,23 +5110,71 @@ class TestDomainAddressSerialNumberWrite:
 class TestFileStreamInfoReport:
     """Test class for FileStreamInfoReport objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FileStream_InfoReport.*"):
-            APCI.from_knx(bytes((0x03, 0xF0)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FileStream_InfoReport.*"):
-            FileStreamInfoReport().to_knx()
+        assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FileStream_InfoReport.*"):
-            FileStreamInfoReport().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03f053aabb"))
+
+        assert payload == FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+    def test_from_knx_no_file_block(self) -> None:
+        """Test from_knx accepts the minimum 3 octet APDU with no file_block."""
+        payload = APCI.from_knx(bytes.fromhex("03f053"))
+
+        assert payload == FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03f0"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03f053aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03f053aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_file_handle_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range file_handle."""
+        payload = FileStreamInfoReport(file_handle=0x10, file_block_seq_number=3)
+
+        with pytest.raises(ConversionError, match=r".*File handle.*"):
+            payload.to_knx()
+
+    def test_to_knx_file_block_seq_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range seq number."""
+        payload = FileStreamInfoReport(file_handle=5, file_block_seq_number=0x10)
+
+        with pytest.raises(ConversionError, match=r".*sequence number.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(FileStreamInfoReport()) == "<FileStreamInfoReport (not implemented) />"
+        payload = FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+        assert str(payload) == (
+            '<FileStreamInfoReport file_handle="5" file_block_seq_number="3" '
+            'file_block="aabb" />'
         )
