@@ -56,6 +56,29 @@ class DPTBool(DPT1BitEnum[Bool]):
         return DPTBinary(value.value)
 
 
+class DPT1BitBoolean(DPT1BitEnum[Bool]):
+    """
+    Abstraction for a generic KNX 1-Bit boolean value (`FALSE`/`TRUE`).
+
+    This is the generic DPT 1 without a specific sub number. It behaves like
+    `DPTBool` and is used as fallback when an ETS project does not resolve to a
+    specific 1.yyy subtype. For semantic values (switch, up/down, …) use the
+    dedicated DPT 1.yyy classes.
+
+    DPT 1.***
+    """
+
+    dpt_main_number = 1
+    dpt_sub_number: int | None = None
+    value_type = "1bit"
+    data_type = Bool
+
+    @classmethod
+    def _to_knx(cls, value: Bool) -> DPTBinary:
+        """Return the raw KNX value for an Enum member."""
+        return DPTBinary(value.value)
+
+
 class Enable(DPTEnumData):
     """Enum for enable control."""
 

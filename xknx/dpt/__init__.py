@@ -16,6 +16,7 @@ from .dpt import (
     DPTNumeric,
 )
 from .dpt_1 import (
+    DPT1BitBoolean,
     DPTAck,
     DPTAlarm,
     DPTBinaryValue,

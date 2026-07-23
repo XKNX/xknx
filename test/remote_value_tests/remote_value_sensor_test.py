@@ -18,16 +18,19 @@ class TestRemoteValueSensor:
         assert RemoteValueSensor(xknx=xknx, value_type=9)
         assert RemoteValueSensor(xknx=xknx, value_type="9.021")
         assert RemoteValueSensor(xknx=xknx, value_type="string")
+        # generic DPT 1 (boolean) resolves by number and its "1bit" value_type,
+        # like the specific 1.yyy subtypes do
+        assert RemoteValueSensor(xknx=xknx, value_type=1)
+        assert RemoteValueSensor(xknx=xknx, value_type="1bit")
 
     def test_wrong_value_type(self) -> None:
         """Test initializing with wrong value_type."""
         xknx = XKNX()
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type="wrong_value_type")
+        # "binary" is the ExposeSensor raw-bool magic, not a RemoteValueSensor DPT
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type="binary")
-        with pytest.raises(ConversionError):
-            RemoteValueSensor(xknx=xknx, value_type=1)
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type=2)
         with pytest.raises(ConversionError):
