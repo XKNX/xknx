@@ -2560,7 +2560,7 @@ class UserMemoryBitWrite(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 3 + len(self.and_data) + len(self.xor_data)
+        return 4 + len(self.and_data) + len(self.xor_data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> UserMemoryBitWrite:
@@ -2902,7 +2902,7 @@ class FilterTableResponse(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 3 + len(self.data)
+        return 4 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableResponse:
@@ -2970,7 +2970,7 @@ class FilterTableWrite(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 3 + len(self.data)
+        return 4 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableWrite:

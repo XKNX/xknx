@@ -2398,7 +2398,8 @@ class TestUserMemoryBitWrite:
             address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
         )
 
-        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2775,6 +2776,7 @@ class TestFilterTableOpen:
         payload = FilterTableOpen()
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2803,6 +2805,7 @@ class TestFilterTableRead:
         payload = FilterTableRead(filter_table_address=0x1234, number=5)
 
         assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2866,7 +2869,8 @@ class TestFilterTableResponse:
             filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
         )
 
-        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2944,7 +2948,8 @@ class TestFilterTableWrite:
             filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
         )
 
-        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
