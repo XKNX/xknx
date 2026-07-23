@@ -56,6 +56,15 @@ class APCIService(Enum):
     SYSTEM_NETWORK_PARAMETER_RESPONSE = 0x1C9
     SYSTEM_NETWORK_PARAMETER_WRITE = 0x1CA
 
+    PROPERTY_EXT_VALUE_READ = 0x1CC
+    PROPERTY_EXT_VALUE_RESPONSE = 0x1CD
+    PROPERTY_EXT_VALUE_WRITE_CON = 0x1CE
+    PROPERTY_EXT_VALUE_WRITE_CON_RES = 0x1CF
+    PROPERTY_EXT_VALUE_WRITE_UNCON = 0x1D0
+    PROPERTY_EXT_VALUE_INFO_REPORT = 0x1D1
+    PROPERTY_EXT_DESCRIPTION_READ = 0x1D2
+    PROPERTY_EXT_DESCRIPTION_RESPONSE = 0x1D3
+
     FUNCTION_PROPERTY_EXT_COMMAND = 0x1D4
     FUNCTION_PROPERTY_EXT_STATE_READ = 0x1D5
     FUNCTION_PROPERTY_EXT_STATE_RESPONSE = 0x1D6
@@ -224,6 +233,22 @@ class APCI(ABC):
                 return SystemNetworkParameterResponse.from_knx(raw)
             if apci == APCIService.SYSTEM_NETWORK_PARAMETER_WRITE.value:
                 return SystemNetworkParameterWrite.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_READ.value:
+                return PropertyExtValueRead.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_RESPONSE.value:
+                return PropertyExtValueResponse.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON.value:
+                return PropertyExtValueWriteCon.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES.value:
+                return PropertyExtValueWriteConRes.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_UNCON.value:
+                return PropertyExtValueWriteUnCon.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_INFO_REPORT.value:
+                return PropertyExtValueInfoReport.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_DESCRIPTION_READ.value:
+                return PropertyExtDescriptionRead.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_DESCRIPTION_RESPONSE.value:
+                return PropertyExtDescriptionResponse.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
                 return MemoryExtendedWrite.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
@@ -1009,6 +1034,665 @@ class SystemNetworkParameterWrite(APCI):
         return (
             f'<SystemNetworkParameterWrite object_type="{self.object_type}" '
             f'property_id="{self.property_id}" value="{self.value.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtValueRead(APCI):
+    """
+    PropertyExtValueRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.1
+    A_PropertyExtValue_Read.
+
+    Payload contains a 16 bit Interface Object Type, a 12 bit Object
+    Instance, a 12 bit Property ID, a 1 byte Number of Elements and a
+    2 byte Start Index.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_READ
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    nr_of_elem: int = 1
+    start_index: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 9
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 10:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_Read in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = header + struct.pack("!BH", self.nr_of_elem, self.start_index)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtValueRead "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtValueResponse(APCI):
+    """
+    PropertyExtValueResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.1
+    A_PropertyExtValue_Response (defined alongside A_PropertyExtValue_Read).
+
+    Payload contains a 16 bit Interface Object Type, a 12 bit Object
+    Instance, a 12 bit Property ID, a 1 byte Number of Elements, a 2
+    byte Start Index and variable-length data.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_RESPONSE
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    nr_of_elem: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 9 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 10:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_Response in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+            data=raw[10:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header + struct.pack("!BH", self.nr_of_elem, self.start_index) + self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtValueResponse "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtValueWriteCon(APCI):
+    """
+    PropertyExtValueWriteCon service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.2
+    A_PropertyExtValue_WriteCon-service.
+
+    Same payload as PropertyExtValueResponse: a 16 bit Interface Object
+    Type, a 12 bit Object Instance, a 12 bit Property ID, a 1 byte
+    Number of Elements, a 2 byte Start Index and variable-length data.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_CON
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    nr_of_elem: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 9 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueWriteCon:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 10:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_WriteCon in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+            data=raw[10:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header + struct.pack("!BH", self.nr_of_elem, self.start_index) + self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtValueWriteCon "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtValueWriteConRes(APCI):
+    """
+    PropertyExtValueWriteConRes service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.2
+    A_PropertyExtValue_WriteConRes (defined alongside
+    A_PropertyExtValue_WriteCon-service).
+
+    Same payload as PropertyExtValueRead: a 16 bit Interface Object
+    Type, a 12 bit Object Instance, a 12 bit Property ID, a 1 byte
+    Number of Elements and a 2 byte Start Index, followed by a 1 byte
+    return_code.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    return_code: ReturnCode
+    nr_of_elem: int = 1
+    start_index: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 10
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueWriteConRes:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 11:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_WriteConRes in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+        try:
+            return_code = ReturnCode(raw[10])
+        except ValueError:
+            raise ConversionError(
+                f"Invalid return code for A_PropertyExtValue_WriteConRes in CEMI: {raw.hex()}"
+            ) from None
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            return_code=return_code,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header
+            + struct.pack("!BH", self.nr_of_elem, self.start_index)
+            + bytes([self.return_code.value])
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtValueWriteConRes "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'return_code="{self.return_code.name}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtValueWriteUnCon(APCI):
+    """
+    PropertyExtValueWriteUnCon service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.3
+    A_PropertyExtValue_WriteUnCon-service.
+
+    Same payload as PropertyExtValueWriteCon (and PropertyExtValueResponse):
+    a 16 bit Interface Object Type, a 12 bit Object Instance, a 12 bit
+    Property ID, a 1 byte Number of Elements, a 2 byte Start Index and
+    variable-length data. Unconfirmed - not followed by a response.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_UNCON
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    nr_of_elem: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 9 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueWriteUnCon:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 10:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_WriteUnCon in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+            data=raw[10:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header + struct.pack("!BH", self.nr_of_elem, self.start_index) + self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtValueWriteUnCon "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtValueInfoReport(APCI):
+    """
+    PropertyExtValueInfoReport service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.4
+    A_PropertyExtValue_InfoReport-service.
+
+    Same payload as PropertyExtValueResponse/WriteCon/WriteUnCon: a 16
+    bit Interface Object Type, a 12 bit Object Instance, a 12 bit
+    Property ID, a 1 byte Number of Elements, a 2 byte Start Index and
+    variable-length data. Unconfirmed - not followed by a response.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_INFO_REPORT
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    nr_of_elem: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 9 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueInfoReport:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 10:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_InfoReport in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+            data=raw[10:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header + struct.pack("!BH", self.nr_of_elem, self.start_index) + self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtValueInfoReport "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtDescriptionRead(APCI):
+    """
+    PropertyExtDescriptionRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.3.2
+    A_PropertyExtDescription_Read-service.
+
+    Same header as A_PropertyExtValue_* (16 bit Interface Object Type,
+    12 bit Object Instance, 12 bit Property ID), followed by a 4 bit
+    Property Description Type and a 12 bit Property Index.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_DESCRIPTION_READ
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    description_type: int = 0
+    property_index: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 8
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtDescriptionRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 9:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtDescription_Read in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        description_type = raw[7] >> 4
+        property_index = ((raw[7] & 0x0F) << 8) | raw[8]
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            description_type=description_type,
+            property_index=property_index,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.description_type <= 0xF:
+            raise ConversionError("Property description type out of range.")
+        if not 0 <= self.property_index <= 0xFFF:
+            raise ConversionError("Property index out of range.")
+        payload = header + struct.pack(
+            "!BB",
+            (self.description_type << 4) | (self.property_index >> 8),
+            self.property_index & 0xFF,
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtDescriptionRead "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'description_type="{self.description_type}" '
+            f'property_index="{self.property_index}" />'
+        )
+
+
+@dataclass(slots=True)
+class PropertyExtDescriptionResponse(APCI):
+    """
+    PropertyExtDescriptionResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.3.2
+    A_PropertyExtDescription_Response (defined alongside
+    A_PropertyExtDescription_Read-service).
+
+    Same header as A_PropertyExtDescription_Read (16 bit Interface
+    Object Type, 12 bit Object Instance, 12 bit Property ID, 4 bit
+    Property Description Type, 12 bit Property Index), followed by a
+    2 byte DPT main number, a 2 byte DPT sub number, a 1 bit writable
+    flag, a reserved bit (always 0), a 6 bit PDT, a 2 byte Max Number
+    of Elements, a 4 bit read level and a 4 bit write level.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_DESCRIPTION_RESPONSE
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    description_type: int = 0
+    property_index: int = 0
+    dpt_main: int = 0
+    dpt_sub: int = 0
+    writable: bool = False
+    pdt: int = 0
+    max_nr_of_elem: int = 0
+    read_level: int = 0
+    write_level: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 16
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtDescriptionResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 17:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtDescription_Response in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        description_type = raw[7] >> 4
+        property_index = ((raw[7] & 0x0F) << 8) | raw[8]
+        dpt_main, dpt_sub, writable_pdt, max_nr_of_elem, level = struct.unpack(
+            "!HHBHB", raw[9:17]
+        )
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            description_type=description_type,
+            property_index=property_index,
+            dpt_main=dpt_main,
+            dpt_sub=dpt_sub,
+            writable=bool(writable_pdt & 0x80),
+            pdt=writable_pdt & 0x3F,
+            max_nr_of_elem=max_nr_of_elem,
+            read_level=level >> 4,
+            write_level=level & 0x0F,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.description_type <= 0xF:
+            raise ConversionError("Property description type out of range.")
+        if not 0 <= self.property_index <= 0xFFF:
+            raise ConversionError("Property index out of range.")
+        if not 0 <= self.dpt_main <= 0xFFFF:
+            raise ConversionError("DPT main number out of range.")
+        if not 0 <= self.dpt_sub <= 0xFFFF:
+            raise ConversionError("DPT sub number out of range.")
+        if not 0 <= self.pdt <= 0x3F:
+            raise ConversionError("PDT out of range.")
+        if not 0 <= self.max_nr_of_elem <= 0xFFFF:
+            raise ConversionError("Max number of elements out of range.")
+        if not 0 <= self.read_level <= 0xF:
+            raise ConversionError("Read level out of range.")
+        if not 0 <= self.write_level <= 0xF:
+            raise ConversionError("Write level out of range.")
+
+        payload = (
+            header
+            + struct.pack(
+                "!BB",
+                (self.description_type << 4) | (self.property_index >> 8),
+                self.property_index & 0xFF,
+            )
+            + struct.pack(
+                "!HHBHB",
+                self.dpt_main,
+                self.dpt_sub,
+                (0x80 if self.writable else 0x00) | self.pdt,
+                self.max_nr_of_elem,
+                (self.read_level << 4) | self.write_level,
+            )
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyExtDescriptionResponse "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'description_type="{self.description_type}" '
+            f'property_index="{self.property_index}" '
+            f'dpt_main="{self.dpt_main}" '
+            f'dpt_sub="{self.dpt_sub}" '
+            f'writable="{self.writable}" '
+            f'pdt="{self.pdt}" '
+            f'max_nr_of_elem="{self.max_nr_of_elem}" '
+            f'read_level="{self.read_level}" '
+            f'write_level="{self.write_level}" />'
         )
 
 
