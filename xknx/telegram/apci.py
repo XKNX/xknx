@@ -2825,28 +2825,52 @@ class FilterTableRead(APCI):
     """
     FilterTableRead service.
 
-    See KNX Specification 03_03_07 Application Layer A_FilterTable_Read.
-    Coupler specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.6.2
+    A_FilterTable_Read. Coupler specific service - requires
+    A_FilterTable_Open first.
+
+    Payload contains a 1 byte number (octet count to read, 1-254) and
+    a 2 byte filter_table_address.
     """
 
     CODE: ClassVar = APCIExtendedService.FILTER_TABLE_READ
 
+    filter_table_address: int
+    number: int = 1
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_FilterTable_Read is not implemented yet.")
+        return 4
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Read is not implemented yet.")
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Read in CEMI: {raw.hex()}"
+            )
+        number, filter_table_address = struct.unpack("!BH", raw[2:])
+
+        return cls(filter_table_address=filter_table_address, number=number)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Read is not implemented yet.")
+        if not 0 <= self.number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.filter_table_address <= 0xFFFF:
+            raise ConversionError("Filter table address out of range.")
+
+        payload = struct.pack("!BH", self.number, self.filter_table_address)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<FilterTableRead (not implemented) />"
+        return (
+            "<FilterTableRead "
+            f'filter_table_address="{hex(self.filter_table_address)}" '
+            f'number="{self.number}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -2854,28 +2878,69 @@ class FilterTableResponse(APCI):
     """
     FilterTableResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_FilterTable_Response.
-    Coupler specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.6.2
+    A_FilterTable_Response (defined alongside A_FilterTable_Read).
+    Coupler specific service.
+
+    Payload contains a 1 byte number (octet count), a 2 byte
+    filter_table_address and `number` bytes of data. A device signals
+    an error (e.g. address space unreachable or protected, illegal
+    number of octets requested) by responding with number=0 and no
+    data.
     """
 
     CODE: ClassVar = APCIExtendedService.FILTER_TABLE_RESPONSE
 
+    filter_table_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_FilterTable_Response is not implemented yet.")
+        return 3 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Response is not implemented yet.")
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Response in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, filter_table_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            filter_table_address=filter_table_address,
+            data=data,
+            number=number,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Response is not implemented yet.")
+        if not 0 <= self.number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.filter_table_address <= 0xFFFF:
+            raise ConversionError("Filter table address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.filter_table_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<FilterTableResponse (not implemented) />"
+        return (
+            "<FilterTableResponse "
+            f'filter_table_address="{hex(self.filter_table_address)}" '
+            f'number="{self.number}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
