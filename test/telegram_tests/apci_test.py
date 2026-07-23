@@ -936,7 +936,8 @@ class TestPropertyExtValueRead:
             interface_object_type=17, object_instance=1, property_id=51
         )
 
-        assert payload.calculated_length() == 8
+        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1026,7 +1027,8 @@ class TestPropertyExtValueResponse:
             data=bytes.fromhex("aabb"),
         )
 
-        assert payload.calculated_length() == 10
+        assert payload.calculated_length() == 11
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1132,7 +1134,8 @@ class TestPropertyExtValueWriteCon:
             data=bytes.fromhex("aabb"),
         )
 
-        assert payload.calculated_length() == 10
+        assert payload.calculated_length() == 11
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1238,7 +1241,8 @@ class TestPropertyExtValueWriteConRes:
             return_code=ReturnCode.E_SUCCESS,
         )
 
-        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == 10
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1340,7 +1344,8 @@ class TestPropertyExtValueWriteUnCon:
             data=bytes.fromhex("aabb"),
         )
 
-        assert payload.calculated_length() == 10
+        assert payload.calculated_length() == 11
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1446,7 +1451,8 @@ class TestPropertyExtValueInfoReport:
             data=bytes.fromhex("aabb"),
         )
 
-        assert payload.calculated_length() == 10
+        assert payload.calculated_length() == 11
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1549,7 +1555,8 @@ class TestPropertyExtDescriptionRead:
             interface_object_type=17, object_instance=1, property_id=51
         )
 
-        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1636,7 +1643,8 @@ class TestPropertyExtDescriptionResponse:
             interface_object_type=17, object_instance=1, property_id=51
         )
 
-        assert payload.calculated_length() == 15
+        assert payload.calculated_length() == 16
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""

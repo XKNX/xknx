@@ -1056,11 +1056,11 @@ class PropertyExtValueRead(APCI):
     object_instance: int
     property_id: int
     nr_of_elem: int = 1
-    start_index: int = 1
+    start_index: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 8
+        return 9
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueRead:
@@ -1131,7 +1131,7 @@ class PropertyExtValueResponse(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 8 + len(self.data)
+        return 9 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueResponse:
@@ -1206,7 +1206,7 @@ class PropertyExtValueWriteCon(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 8 + len(self.data)
+        return 9 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueWriteCon:
@@ -1279,11 +1279,11 @@ class PropertyExtValueWriteConRes(APCI):
     property_id: int
     return_code: ReturnCode
     nr_of_elem: int = 1
-    start_index: int = 1
+    start_index: int = 0
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 9
+        return 10
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueWriteConRes:
@@ -1367,7 +1367,7 @@ class PropertyExtValueWriteUnCon(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 8 + len(self.data)
+        return 9 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueWriteUnCon:
@@ -1443,7 +1443,7 @@ class PropertyExtValueInfoReport(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 8 + len(self.data)
+        return 9 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueInfoReport:
@@ -1517,7 +1517,7 @@ class PropertyExtDescriptionRead(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 7
+        return 8
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtDescriptionRead:
@@ -1603,7 +1603,7 @@ class PropertyExtDescriptionResponse(APCI):
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 15
+        return 16
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtDescriptionResponse:
