@@ -4487,32 +4487,46 @@ class TestGroupPropValueInfoReport:
 class TestDomainAddressSerialNumberRead:
     """Test class for DomainAddressSerialNumberRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Read.*"
-        ):
-            APCI.from_knx(bytes((0x03, 0xEC)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Read.*"
-        ):
-            DomainAddressSerialNumberRead().to_knx()
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Read.*"
-        ):
-            DomainAddressSerialNumberRead().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes([0x03, 0xEC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]))
+
+        assert payload == DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+        assert payload.to_knx() == bytes(
+            [0x03, 0xEC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes([0x03, 0xEC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33])
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc")
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(DomainAddressSerialNumberRead())
-            == "<DomainAddressSerialNumberRead (not implemented) />"
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+        assert str(payload) == (
+            '<DomainAddressSerialNumberRead serial="aabbcc112233" />'
         )
 
 

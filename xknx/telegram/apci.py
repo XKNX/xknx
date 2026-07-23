@@ -4463,35 +4463,40 @@ class DomainAddressSerialNumberRead(APCI):
     """
     DomainAddressSerialNumberRead service.
 
-    See KNX Specification 03_03_07 Application Layer
+    See KNX Specification 03_03_07 Application Layer §3.3.6
     A_DomainAddressSerialNumber_Read. Open media specific service -
-    payload layout not implemented yet.
+    identifies the target by its unique 6 octet KNX Serial Number
+    rather than an address.
+
+    Payload is a 6 octet serial.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ
 
+    serial: bytes
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Read is not implemented yet."
-        )
+        return 7
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Read is not implemented yet."
-        )
+        (serial,) = struct.unpack("!6s", raw[2:])
+        return cls(serial=serial)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Read is not implemented yet."
-        )
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+
+        payload = struct.pack("!6s", self.serial)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressSerialNumberRead (not implemented) />"
+        return f'<DomainAddressSerialNumberRead serial="{self.serial.hex()}" />'
 
 
 @dataclass(slots=True)
