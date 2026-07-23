@@ -4,7 +4,7 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
-from xknx.telegram.address import IndividualAddress
+from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import (
     APCI,
     ADCRead,
@@ -4314,47 +4314,171 @@ class TestNetworkParameterWrite:
 class TestLinkRead:
     """Test class for LinkRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Read.*"):
-            APCI.from_knx(bytes((0x03, 0xE5)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = LinkRead(group_object_number=5, start_index=3)
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Read.*"):
-            LinkRead().to_knx()
+        assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Read.*"):
-            LinkRead().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e50503"))
+
+        assert payload == LinkRead(group_object_number=5, start_index=3)
+
+    def test_from_knx_strips_reserved_bits(self) -> None:
+        """Test from_knx discards the reserved upper nibble of byte1."""
+        payload = APCI.from_knx(bytes.fromhex("03e505f3"))
+
+        assert payload == LinkRead(group_object_number=5, start_index=3)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e505"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = LinkRead(group_object_number=5, start_index=3)
+
+        assert payload.to_knx() == bytes.fromhex("03e50503")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e50503")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_group_object_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range group_object_number."""
+        payload = LinkRead(group_object_number=0x100, start_index=3)
+
+        with pytest.raises(ConversionError, match=r".*Group object number.*"):
+            payload.to_knx()
+
+    def test_to_knx_start_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range start_index."""
+        payload = LinkRead(group_object_number=5, start_index=0x10)
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(LinkRead()) == "<LinkRead (not implemented) />"
+        payload = LinkRead(group_object_number=5, start_index=3)
+
+        assert str(payload) == ('<LinkRead group_object_number="5" start_index="3" />')
 
 
 class TestLinkResponse:
     """Test class for LinkResponse objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Response.*"):
-            APCI.from_knx(bytes((0x03, 0xE6)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Response.*"):
-            LinkResponse().to_knx()
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Response.*"):
-            LinkResponse().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e6052300010002"))
+
+        assert payload == LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+    def test_from_knx_negative_response(self) -> None:
+        """Test from_knx accepts the negative response (no addresses, start_index=0)."""
+        payload = APCI.from_knx(bytes.fromhex("03e60500"))
+
+        assert payload == LinkResponse(
+            group_object_number=5,
+            sending_address=0,
+            start_index=0,
+            group_address_list=[],
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an odd-length address list."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e60523000100"))
+
+    def test_from_knx_too_many_addresses(self) -> None:
+        """Test from_knx raises ConversionError for more than 6 addresses."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e60500") + b"\x00\x01" * 7)
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e6052300010002")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e6052300010002")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_too_many_addresses(self) -> None:
+        """Test to_knx raises ConversionError for more than 6 addresses."""
+        payload = LinkResponse(
+            group_object_number=5,
+            group_address_list=[GroupAddress(i) for i in range(1, 8)],
+        )
+
+        with pytest.raises(ConversionError, match=r".*at most 6.*"):
+            payload.to_knx()
+
+    def test_to_knx_group_object_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range group_object_number."""
+        payload = LinkResponse(group_object_number=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Group object number.*"):
+            payload.to_knx()
+
+    def test_to_knx_sending_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range sending_address."""
+        payload = LinkResponse(group_object_number=5, sending_address=0x10)
+
+        with pytest.raises(ConversionError, match=r".*Sending address.*"):
+            payload.to_knx()
+
+    def test_to_knx_start_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range start_index."""
+        payload = LinkResponse(group_object_number=5, start_index=0x10)
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(LinkResponse()) == "<LinkResponse (not implemented) />"
+        payload = LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+        assert str(payload) == (
+            '<LinkResponse group_object_number="5" sending_address="2" '
+            'start_index="3" group_address_list="0/0/1, 0/0/2" />'
+        )
 
 
 class TestLinkWrite:

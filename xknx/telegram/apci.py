@@ -10,7 +10,7 @@ is a service that takes a DPT as a value.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import struct
 from typing import ClassVar, cast
@@ -18,7 +18,7 @@ from typing import ClassVar, cast
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
-from xknx.telegram.address import IndividualAddress
+from xknx.telegram.address import GroupAddress, IndividualAddress
 
 
 def encode_cmd_and_payload(
@@ -4259,28 +4259,51 @@ class LinkRead(APCI):
     """
     LinkRead service.
 
-    See KNX Specification 03_03_07 Application Layer A_Link_Read.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.4.6.1
+    A_Link_Read. Reads the Group Addresses linked to a Group Object,
+    starting at start_index.
+
+    Payload contains a 1 byte group_object_number and a byte with 4
+    reserved bits followed by a 4 bit start_index.
     """
 
     CODE: ClassVar = APCIExtendedService.LINK_READ
 
+    group_object_number: int
+    start_index: int = 0
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_Link_Read is not implemented yet.")
+        return 3
 
     @classmethod
     def from_knx(cls, raw: bytes) -> LinkRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_Link_Read is not implemented yet.")
+        if len(raw) != 4:
+            raise ConversionError(
+                f"Invalid length for A_Link_Read in CEMI: {raw.hex()}"
+            )
+        group_object_number, byte1 = struct.unpack("!BB", raw[2:])
+
+        return cls(group_object_number=group_object_number, start_index=byte1 & 0x0F)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_Link_Read is not implemented yet.")
+        if not 0 <= self.group_object_number <= 0xFF:
+            raise ConversionError("Group object number out of range.")
+        if not 0 <= self.start_index <= 0xF:
+            raise ConversionError("Start index out of range.")
+
+        payload = struct.pack("!BB", self.group_object_number, self.start_index)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<LinkRead (not implemented) />"
+        return (
+            f'<LinkRead group_object_number="{self.group_object_number}" '
+            f'start_index="{self.start_index}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -4288,28 +4311,78 @@ class LinkResponse(APCI):
     """
     LinkResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_Link_Response.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.4.6.1
+    A_Link_Response (defined alongside A_Link_Read).
+
+    Payload contains a 1 byte group_object_number, a byte with a 4 bit
+    sending_address (the sending Group Address's index in the list,
+    1-15, 0 if none) followed by a 4 bit start_index, and 0-6 linked
+    Group Addresses (2 octets each). A negative response (addressed
+    Group Object does not exist, or no Group Addresses assigned from
+    the requested start index) is signalled with an empty
+    group_address_list and start_index=0.
     """
 
     CODE: ClassVar = APCIExtendedService.LINK_RESPONSE
 
+    group_object_number: int
+    sending_address: int = 0
+    start_index: int = 0
+    group_address_list: list[GroupAddress] = field(default_factory=list)
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_Link_Response is not implemented yet.")
+        return 3 + 2 * len(self.group_address_list)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> LinkResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_Link_Response is not implemented yet.")
+        remainder = len(raw) - 4
+        if remainder < 0 or remainder % 2 or remainder > 12:
+            raise ConversionError(
+                f"Invalid length for A_Link_Response in CEMI: {raw.hex()}"
+            )
+        group_object_number, byte1 = struct.unpack("!BB", raw[2:4])
+        group_address_list = [
+            GroupAddress.from_knx(raw[i : i + 2]) for i in range(4, len(raw), 2)
+        ]
+
+        return cls(
+            group_object_number=group_object_number,
+            sending_address=byte1 >> 4,
+            start_index=byte1 & 0x0F,
+            group_address_list=group_address_list,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_Link_Response is not implemented yet.")
+        if not 0 <= self.group_object_number <= 0xFF:
+            raise ConversionError("Group object number out of range.")
+        if not 0 <= self.sending_address <= 0xF:
+            raise ConversionError("Sending address out of range.")
+        if not 0 <= self.start_index <= 0xF:
+            raise ConversionError("Start index out of range.")
+        if len(self.group_address_list) > 6:
+            raise ConversionError(
+                "Group address list must contain at most 6 addresses."
+            )
+
+        byte1 = (self.sending_address << 4) | self.start_index
+        payload = struct.pack("!BB", self.group_object_number, byte1) + b"".join(
+            ga.to_knx() for ga in self.group_address_list
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<LinkResponse (not implemented) />"
+        addresses = ", ".join(str(ga) for ga in self.group_address_list)
+        return (
+            f'<LinkResponse group_object_number="{self.group_object_number}" '
+            f'sending_address="{self.sending_address}" '
+            f'start_index="{self.start_index}" '
+            f'group_address_list="{addresses}" />'
+        )
 
 
 @dataclass(slots=True)
