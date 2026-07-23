@@ -3134,24 +3134,66 @@ class TestRouterMemoryResponse:
 class TestRouterMemoryWrite:
     """Test class for RouterMemoryWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xCA)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Write.*"):
-            RouterMemoryWrite().to_knx()
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_RouterMemory_Write.*"):
-            RouterMemoryWrite().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03ca021234aabb"))
+
+        assert payload == RouterMemoryWrite(
+            memory_address=0x1234, number=2, data=bytes([0xAA, 0xBB])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03ca021234"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert payload.to_knx() == bytes.fromhex("03ca021234aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03ca021234aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=b"", number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a write)."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=b"", number=0)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = RouterMemoryWrite(memory_address=0x10000, data=bytes([0xAA]))
+
+        with pytest.raises(ConversionError, match=r".*Memory address.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(RouterMemoryWrite()) == "<RouterMemoryWrite (not implemented) />"
+        payload = RouterMemoryWrite(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert str(payload) == (
+            '<RouterMemoryWrite memory_address="0x1234" number="2" data="aabb" />'
+        )
 
 
 class TestRouterStatusRead:

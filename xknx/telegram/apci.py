@@ -3135,28 +3135,67 @@ class RouterMemoryWrite(APCI):
     """
     RouterMemoryWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_RouterMemory_Write.
-    Coupler specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.6.5
+    A_RouterMemory_Write. Coupler specific service - writes the memory
+    of the second controller of the remote communication controller.
+
+    Same payload as RouterMemoryResponse: a 1 byte number (octet count
+    to write, 1-254), a 2 byte memory_address and `number` bytes of
+    data.
     """
 
     CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_WRITE
 
+    memory_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_RouterMemory_Write is not implemented yet.")
+        return 4 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterMemoryWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_RouterMemory_Write is not implemented yet.")
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_RouterMemory_Write in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, memory_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            memory_address=memory_address,
+            data=data,
+            number=number,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_RouterMemory_Write is not implemented yet.")
+        if not 1 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.memory_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<RouterMemoryWrite (not implemented) />"
+        return (
+            "<RouterMemoryWrite "
+            f'memory_address="{hex(self.memory_address)}" number="{self.number}" '
+            f'data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
