@@ -8,9 +8,9 @@ nav_order: 2
 
 # Unreleased changes
 
-### Breaking changes
+### Deprecation notes
 
-- Moved `ReturnCode` from `xknx.management.application_layer_enum` to `xknx.telegram.apci`; the old module is removed.
+- Moved `ReturnCode` from `xknx.management.application_layer_enum` to `xknx.telegram.apci`. The old module still re-exports it for backwards compatibility but is deprecated and will be removed in a future release.
 
 ### Protocol
 
