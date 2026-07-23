@@ -6,14 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from .dpt import RANGE_UINT8, DPTComplex, DPTComplexData
+from .dpt import DPTComplex, DPTComplexData
+from .helpers.metadata import RANGE_FADE_TIME_S, RANGE_UINT8
 from .payload import DPTArray, DPTBinary
-
-RANGE_FADE_TIME_S: dict[str, float] = {
-    "value_min": 0.0,
-    "value_max": 6553.5,
-    "resolution": 0.1,
-}
 
 
 @dataclass

@@ -12,7 +12,6 @@ import types
 from typing import (
     Any,
     ClassVar,
-    Final,
     Generic,
     Literal,
     TypedDict,
@@ -376,13 +375,6 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
     def get_valid_values(cls) -> list[EnumDataT]:
         """Return list of valid values."""
         return list(cls.data_type)
-
-
-RANGE_UINT8: Final[dict[str, int]] = {"value_min": 0, "value_max": 255}
-RANGE_INT32: Final[dict[str, int]] = {
-    "value_min": -2_147_483_648,
-    "value_max": 2_147_483_647,
-}
 
 
 class DPTComplexFieldSchema(TypedDict):

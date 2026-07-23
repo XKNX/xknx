@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import DPTComplex
 from .dpt_1 import Step
-from .dpt_3 import (
-    RANGE_STEP_CODE,
-    ControlDimming,
+from .dpt_3 import ControlDimming
+from .helpers.metadata import RANGE_STEP_CODE
+from .helpers.relative_control import (
+    _RelativeControlDimming,
     pack_control_dimming,
     unpack_control_dimming,
 )
 from .payload import DPTArray, DPTBinary
-
-_FIELDS = ("red", "green", "blue")
 
 
 @dataclass
@@ -32,15 +29,15 @@ class _RelativeControlRGBDictSchemaFields:
 
 
 @dataclass(slots=True)
-class RelativeControlRGB(DPTComplexData):
+class RelativeControlRGB(_RelativeControlDimming):
     """
     Representation of a relative RGB color control.
 
     `red`, `green`, `blue`: ControlDimming.
 
     This DPT does not support marking single fields as invalid - all fields
-    are always transmitted. Use `RelativeControlRGBW` (DPT 252.600) if
-    per-field validity is needed.
+    are always transmitted (required). Use `RelativeControlRGBW`
+    (DPT 252.600) if per-field validity is needed.
     """
 
     red: ControlDimming
@@ -48,32 +45,6 @@ class RelativeControlRGB(DPTComplexData):
     blue: ControlDimming
 
     _dict_schema_fields_class = _RelativeControlRGBDictSchemaFields
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> RelativeControlRGB:
-        """Init from a dictionary."""
-        result: dict[str, ControlDimming] = {}
-        for key in _FIELDS:
-            try:
-                result[key] = ControlDimming(
-                    control=Step.parse(data[f"{key}_control"]),
-                    step_code=int(data[f"{key}_step_code"]),
-                )
-            except (KeyError, TypeError, ValueError) as err:
-                raise ValueError(f"Invalid value for {key}: {err}") from err
-        return cls(**result)
-
-    def as_dict(self) -> dict[str, int | str]:
-        """Create a JSON serializable dictionary."""
-        result: dict[str, int | str] = {}
-        for key, value in (
-            ("red", self.red),
-            ("green", self.green),
-            ("blue", self.blue),
-        ):
-            result[f"{key}_control"] = value.control.name.lower()
-            result[f"{key}_step_code"] = value.step_code
-        return result
 
 
 class DPTRelativeControlRGB(DPTComplex[RelativeControlRGB]):

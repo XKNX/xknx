@@ -7,8 +7,6 @@ Module for encoding and decoding KNX datatypes.
 
 # ruff: noqa: F401
 from .dpt import (
-    RANGE_INT32,
-    RANGE_UINT8,
     DPTBase,
     DPTComplex,
     DPTComplexData,

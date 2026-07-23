@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
 
-from .dpt import DPTComplex, DPTComplexData
+from .dpt import DPTComplex
 from .dpt_1 import Step
-from .dpt_3 import (
-    RANGE_STEP_CODE,
-    ControlDimming,
+from .dpt_3 import ControlDimming
+from .helpers.metadata import RANGE_STEP_CODE
+from .helpers.relative_control import (
+    _RelativeControlDimming,
     pack_control_dimming,
     unpack_control_dimming,
 )
@@ -30,7 +29,7 @@ class _ColorTemperatureControlDictSchemaFields:
 
 
 @dataclass(slots=True)
-class ColorTemperatureControl(DPTComplexData):
+class ColorTemperatureControl(_RelativeControlDimming):
     """
     Representation of a relative color temperature and brightness control.
 
@@ -42,41 +41,6 @@ class ColorTemperatureControl(DPTComplexData):
     brightness: ControlDimming | None = None
 
     _dict_schema_fields_class = _ColorTemperatureControlDictSchemaFields
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> ColorTemperatureControl:
-        """Init from a dictionary."""
-        result: dict[str, ControlDimming | None] = {}
-        for key in ("color_temperature", "brightness"):
-            control = data.get(f"{key}_control")
-            step_code = data.get(f"{key}_step_code")
-            if control is not None and step_code is not None:
-                try:
-                    result[key] = ControlDimming(
-                        control=Step.parse(control), step_code=int(step_code)
-                    )
-                except (TypeError, ValueError) as err:
-                    raise ValueError(f"Invalid value for {key}: {err}") from err
-            elif control is not None or step_code is not None:
-                raise ValueError(
-                    f"Provide both {key}_control and {key}_step_code, or neither"
-                )
-            else:
-                result[key] = None
-        return cls(**result)
-
-    def as_dict(self) -> dict[str, int | str | None]:
-        """Create a JSON serializable dictionary."""
-        result: dict[str, int | str | None] = {}
-        for key, value in (
-            ("color_temperature", self.color_temperature),
-            ("brightness", self.brightness),
-        ):
-            result[f"{key}_control"] = (
-                value.control.name.lower() if value is not None else None
-            )
-            result[f"{key}_step_code"] = value.step_code if value is not None else None
-        return result
 
 
 class DPTColorTemperatureControl(DPTComplex[ColorTemperatureControl]):
