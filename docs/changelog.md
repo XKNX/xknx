@@ -17,6 +17,7 @@ nav_order: 2
 - Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.
 - Add A_FunctionPropertyExtCommand, A_FunctionPropertyExtState_Read and A_FunctionPropertyExtState_Response APCI service parsing.
 - Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
+- Recognize A_PropertyExtValue_Read/Response/WriteCon/WriteConRes/WriteUnCon/InfoReport and A_PropertyExtDescription_Read/Response APCI services; payload parsing not implemented yet (raises `NotImplementedError`).
 
 ### DPT
 

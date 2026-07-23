@@ -37,6 +37,14 @@ from xknx.telegram.apci import (
     MemoryWrite,
     PropertyDescriptionRead,
     PropertyDescriptionResponse,
+    PropertyExtDescriptionRead,
+    PropertyExtDescriptionResponse,
+    PropertyExtValueInfoReport,
+    PropertyExtValueRead,
+    PropertyExtValueResponse,
+    PropertyExtValueWriteCon,
+    PropertyExtValueWriteConRes,
+    PropertyExtValueWriteUnCon,
     PropertyValueRead,
     PropertyValueResponse,
     PropertyValueWrite,
@@ -916,6 +924,255 @@ class TestSystemNetworkParameterWrite:
         assert str(payload) == (
             '<SystemNetworkParameterWrite object_type="11" property_id="5" '
             'value="aabbcc" />'
+        )
+
+
+class TestPropertyExtValueRead:
+    """Test class for PropertyExtValueRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_PropertyExtValue_Read.*"):
+            APCI.from_knx(bytes.fromhex("01cc"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_PropertyExtValue_Read.*"):
+            PropertyExtValueRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_PropertyExtValue_Read.*"):
+            PropertyExtValueRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtValueRead()) == "<PropertyExtValueRead (not implemented) />"
+        )
+
+
+class TestPropertyExtValueResponse:
+    """Test class for PropertyExtValueResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_Response.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01cd"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_Response.*"
+        ):
+            PropertyExtValueResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_Response.*"
+        ):
+            PropertyExtValueResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtValueResponse())
+            == "<PropertyExtValueResponse (not implemented) />"
+        )
+
+
+class TestPropertyExtValueWriteCon:
+    """Test class for PropertyExtValueWriteCon objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteCon.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01ce"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteCon.*"
+        ):
+            PropertyExtValueWriteCon().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteCon.*"
+        ):
+            PropertyExtValueWriteCon().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtValueWriteCon())
+            == "<PropertyExtValueWriteCon (not implemented) />"
+        )
+
+
+class TestPropertyExtValueWriteConRes:
+    """Test class for PropertyExtValueWriteConRes objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteConRes.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01cf"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteConRes.*"
+        ):
+            PropertyExtValueWriteConRes().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteConRes.*"
+        ):
+            PropertyExtValueWriteConRes().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtValueWriteConRes())
+            == "<PropertyExtValueWriteConRes (not implemented) />"
+        )
+
+
+class TestPropertyExtValueWriteUnCon:
+    """Test class for PropertyExtValueWriteUnCon objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteUnCon.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01d0"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteUnCon.*"
+        ):
+            PropertyExtValueWriteUnCon().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_WriteUnCon.*"
+        ):
+            PropertyExtValueWriteUnCon().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtValueWriteUnCon())
+            == "<PropertyExtValueWriteUnCon (not implemented) />"
+        )
+
+
+class TestPropertyExtValueInfoReport:
+    """Test class for PropertyExtValueInfoReport objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_InfoReport.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01d1"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_InfoReport.*"
+        ):
+            PropertyExtValueInfoReport().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtValue_InfoReport.*"
+        ):
+            PropertyExtValueInfoReport().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtValueInfoReport())
+            == "<PropertyExtValueInfoReport (not implemented) />"
+        )
+
+
+class TestPropertyExtDescriptionRead:
+    """Test class for PropertyExtDescriptionRead objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtDescription_Read.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01d2"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtDescription_Read.*"
+        ):
+            PropertyExtDescriptionRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtDescription_Read.*"
+        ):
+            PropertyExtDescriptionRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtDescriptionRead())
+            == "<PropertyExtDescriptionRead (not implemented) />"
+        )
+
+
+class TestPropertyExtDescriptionResponse:
+    """Test class for PropertyExtDescriptionResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
+        """Test the APCI is routed to the class, which raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtDescription_Response.*"
+        ):
+            APCI.from_knx(bytes.fromhex("01d3"))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtDescription_Response.*"
+        ):
+            PropertyExtDescriptionResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(
+            NotImplementedError, match=r".*A_PropertyExtDescription_Response.*"
+        ):
+            PropertyExtDescriptionResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(PropertyExtDescriptionResponse())
+            == "<PropertyExtDescriptionResponse (not implemented) />"
         )
 
 

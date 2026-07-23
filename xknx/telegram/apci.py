@@ -56,6 +56,15 @@ class APCIService(Enum):
     SYSTEM_NETWORK_PARAMETER_RESPONSE = 0x1C9
     SYSTEM_NETWORK_PARAMETER_WRITE = 0x1CA
 
+    PROPERTY_EXT_VALUE_READ = 0x1CC
+    PROPERTY_EXT_VALUE_RESPONSE = 0x1CD
+    PROPERTY_EXT_VALUE_WRITE_CON = 0x1CE
+    PROPERTY_EXT_VALUE_WRITE_CON_RES = 0x1CF
+    PROPERTY_EXT_VALUE_WRITE_UNCON = 0x1D0
+    PROPERTY_EXT_VALUE_INFO_REPORT = 0x1D1
+    PROPERTY_EXT_DESCRIPTION_READ = 0x1D2
+    PROPERTY_EXT_DESCRIPTION_RESPONSE = 0x1D3
+
     FUNCTION_PROPERTY_EXT_COMMAND = 0x1D4
     FUNCTION_PROPERTY_EXT_STATE_READ = 0x1D5
     FUNCTION_PROPERTY_EXT_STATE_RESPONSE = 0x1D6
@@ -224,6 +233,22 @@ class APCI(ABC):
                 return SystemNetworkParameterResponse.from_knx(raw)
             if apci == APCIService.SYSTEM_NETWORK_PARAMETER_WRITE.value:
                 return SystemNetworkParameterWrite.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_READ.value:
+                return PropertyExtValueRead.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_RESPONSE.value:
+                return PropertyExtValueResponse.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON.value:
+                return PropertyExtValueWriteCon.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES.value:
+                return PropertyExtValueWriteConRes.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_UNCON.value:
+                return PropertyExtValueWriteUnCon.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_VALUE_INFO_REPORT.value:
+                return PropertyExtValueInfoReport.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_DESCRIPTION_READ.value:
+                return PropertyExtDescriptionRead.from_knx(raw)
+            if apci == APCIService.PROPERTY_EXT_DESCRIPTION_RESPONSE.value:
+                return PropertyExtDescriptionResponse.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
                 return MemoryExtendedWrite.from_knx(raw)
             if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
@@ -1010,6 +1035,271 @@ class SystemNetworkParameterWrite(APCI):
             f'<SystemNetworkParameterWrite object_type="{self.object_type}" '
             f'property_id="{self.property_id}" value="{self.value.hex()}" />'
         )
+
+
+@dataclass(slots=True)
+class PropertyExtValueRead(APCI):
+    """
+    PropertyExtValueRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.1
+    A_PropertyExtValue_Read. Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_PropertyExtValue_Read is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_PropertyExtValue_Read is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_PropertyExtValue_Read is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtValueRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtValueResponse(APCI):
+    """
+    PropertyExtValueResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.1
+    A_PropertyExtValue_Response (defined alongside A_PropertyExtValue_Read).
+    Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_PropertyExtValue_Response is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_PropertyExtValue_Response is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_PropertyExtValue_Response is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtValueResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtValueWriteCon(APCI):
+    """
+    PropertyExtValueWriteCon service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.2
+    A_PropertyExtValue_WriteCon-service. Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_CON
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError("A_PropertyExtValue_WriteCon is not implemented yet.")
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueWriteCon:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError("A_PropertyExtValue_WriteCon is not implemented yet.")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError("A_PropertyExtValue_WriteCon is not implemented yet.")
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtValueWriteCon (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtValueWriteConRes(APCI):
+    """
+    PropertyExtValueWriteConRes service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.2
+    A_PropertyExtValue_WriteConRes (defined alongside
+    A_PropertyExtValue_WriteCon-service). Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_WriteConRes is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueWriteConRes:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_WriteConRes is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_WriteConRes is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtValueWriteConRes (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtValueWriteUnCon(APCI):
+    """
+    PropertyExtValueWriteUnCon service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.3
+    A_PropertyExtValue_WriteUnCon-service. Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_UNCON
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_WriteUnCon is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueWriteUnCon:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_WriteUnCon is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_WriteUnCon is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtValueWriteUnCon (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtValueInfoReport(APCI):
+    """
+    PropertyExtValueInfoReport service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.5.4
+    A_PropertyExtValue_InfoReport-service. Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_INFO_REPORT
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_InfoReport is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtValueInfoReport:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_InfoReport is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtValue_InfoReport is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtValueInfoReport (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtDescriptionRead(APCI):
+    """
+    PropertyExtDescriptionRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.3.2
+    A_PropertyExtDescription_Read-service. Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_DESCRIPTION_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_PropertyExtDescription_Read is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtDescriptionRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtDescription_Read is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtDescription_Read is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtDescriptionRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class PropertyExtDescriptionResponse(APCI):
+    """
+    PropertyExtDescriptionResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.3.2
+    A_PropertyExtDescription_Response (defined alongside
+    A_PropertyExtDescription_Read-service). Payload layout not implemented yet.
+    """
+
+    CODE: ClassVar = APCIService.PROPERTY_EXT_DESCRIPTION_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_PropertyExtDescription_Response is not implemented yet."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyExtDescriptionResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtDescription_Response is not implemented yet."
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_PropertyExtDescription_Response is not implemented yet."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<PropertyExtDescriptionResponse (not implemented) />"
 
 
 @dataclass(slots=True)
