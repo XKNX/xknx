@@ -19,8 +19,13 @@ nav_order: 2
 - Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
 - Add A_PropertyExtValue_Read, A_PropertyExtValue_Response, A_PropertyExtValue_WriteCon, A_PropertyExtValue_WriteConRes, A_PropertyExtValue_WriteUnCon, A_PropertyExtValue_InfoReport, A_PropertyExtDescription_Read and A_PropertyExtDescription_Response APCI service parsing.
 
+### Devices
+
+- Notification: crop the message to the configured DPT's payload length instead of a hardcoded 14 characters (enables single-character DPT 4 notifications).
+
 ### DPT
 
+- Add DPT 4 (`DPTCharacter` 4.001 ASCII, `DPTCharacterLatin1` 4.002 ISO 8859-1) for single characters
 - Add DPT 2 definitions
 - Add generic DPT 1 (`DPT1BitBoolean`, value_type `"1bit"`) and generic DPT 2 (`DPT2BitBoolean`, value_type `"2bit"`) as boolean fallbacks used when a value only resolves to the DPT 1 / DPT 2 main number (e.g. an ETS project without a specific 1.yyy / 2.yyy subtype). They behave like `DPTBool` / `DPTBoolControl`.
 - Add DPT 243.600 (`DPT_Colour_Transition_xyY`), 249.600 (`DPT_Brightness_Colour_Temperature_Transition`), 250.600 (`DPT_Brightness_Colour_Temperature_Control`), 252.600 (`DPT_Relative_Control_RGBW`), 253.600 (`DPT_Relative_Control_xyY`) and 254.600 (`DPT_Relative_Control_RGB`)

@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Notification
-from xknx.dpt import DPTArray, DPTBinary, DPTString
+from xknx.dpt import DPTArray, DPTBinary, DPTCharacter, DPTString
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -183,6 +183,21 @@ class TestNotification:
         assert telegram == Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTString().to_knx("This is too lo")),
+        )
+
+    async def test_set_character(self) -> None:
+        """Test that a DPT 4 (single character) notification crops to payload_length."""
+        xknx = XKNX()
+        notification = Notification(
+            xknx, "Warning", group_address="1/2/3", value_type="character"
+        )
+        # message longer than 1 char gets cropped to the DPT's payload_length (1)
+        await notification.set("Hello")
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTCharacter.to_knx("H")),
         )
 
     #

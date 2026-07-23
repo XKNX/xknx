@@ -60,6 +60,7 @@ from .dpt_2 import (
     DPTSwitchControl,
 )
 from .dpt_3 import DPTControlBlinds, DPTControlDimming
+from .dpt_4 import DPTCharacter, DPTCharacterLatin1
 from .dpt_5 import (
     DPTAngle,
     DPTDecimalFactor,
