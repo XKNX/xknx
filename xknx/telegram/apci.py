@@ -4390,28 +4390,64 @@ class LinkWrite(APCI):
     """
     LinkWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_Link_Write.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.4.6.2
+    A_Link_Write. Adds or removes a single Group Address to/from a
+    Group Object.
+
+    Payload contains a 1 byte group_object_number, a byte with 6
+    reserved bits followed by the d (delete) and s (sending) flags, and
+    a 2 octet group_address. `sending` is only meaningful when
+    `delete` is False - if delete is True, the Group Address is removed
+    from the Group Object regardless of `sending`.
     """
 
     CODE: ClassVar = APCIExtendedService.LINK_WRITE
 
+    group_object_number: int
+    group_address: GroupAddress
+    delete: bool = False
+    sending: bool = False
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_Link_Write is not implemented yet.")
+        return 5
 
     @classmethod
     def from_knx(cls, raw: bytes) -> LinkWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_Link_Write is not implemented yet.")
+        if len(raw) != 6:
+            raise ConversionError(
+                f"Invalid length for A_Link_Write in CEMI: {raw.hex()}"
+            )
+        group_object_number, flags = struct.unpack("!BB", raw[2:4])
+
+        return cls(
+            group_object_number=group_object_number,
+            group_address=GroupAddress.from_knx(raw[4:6]),
+            delete=bool(flags & 0b10),
+            sending=bool(flags & 0b01),
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_Link_Write is not implemented yet.")
+        if not 0 <= self.group_object_number <= 0xFF:
+            raise ConversionError("Group object number out of range.")
+
+        flags = (self.delete << 1) | self.sending
+        payload = (
+            struct.pack("!BB", self.group_object_number, flags)
+            + self.group_address.to_knx()
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<LinkWrite (not implemented) />"
+        return (
+            f'<LinkWrite group_object_number="{self.group_object_number}" '
+            f'delete="{self.delete}" sending="{self.sending}" '
+            f'group_address="{self.group_address}" />'
+        )
 
 
 @dataclass(slots=True)

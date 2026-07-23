@@ -4484,24 +4484,73 @@ class TestLinkResponse:
 class TestLinkWrite:
     """Test class for LinkWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xE7)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = LinkWrite(
+            group_object_number=5, group_address=GroupAddress(1), sending=True
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Write.*"):
-            LinkWrite().to_knx()
+        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_Link_Write.*"):
-            LinkWrite().calculated_length()
+    def test_from_knx_add_sending(self) -> None:
+        """Test the from_knx method for adding a sending Group Address."""
+        payload = APCI.from_knx(bytes.fromhex("03e705010001"))
+
+        assert payload == LinkWrite(
+            group_object_number=5,
+            group_address=GroupAddress(1),
+            delete=False,
+            sending=True,
+        )
+
+    def test_from_knx_delete(self) -> None:
+        """Test the from_knx method for deleting a Group Address."""
+        payload = APCI.from_knx(bytes.fromhex("03e705020001"))
+
+        assert payload == LinkWrite(
+            group_object_number=5,
+            group_address=GroupAddress(1),
+            delete=True,
+            sending=False,
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e7050100"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = LinkWrite(
+            group_object_number=5, group_address=GroupAddress(1), sending=True
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e705010001")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e705010001")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_group_object_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range group_object_number."""
+        payload = LinkWrite(group_object_number=0x100, group_address=GroupAddress(1))
+
+        with pytest.raises(ConversionError, match=r".*Group object number.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(LinkWrite()) == "<LinkWrite (not implemented) />"
+        payload = LinkWrite(
+            group_object_number=5, group_address=GroupAddress(1), sending=True
+        )
+
+        assert str(payload) == (
+            '<LinkWrite group_object_number="5" delete="False" sending="True" '
+            'group_address="0/0/1" />'
+        )
 
 
 class TestGroupPropValueRead:
