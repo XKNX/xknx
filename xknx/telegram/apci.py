@@ -3203,24 +3203,44 @@ class RouterStatusRead(APCI):
     """
     RouterStatusRead service.
 
-    See KNX Specification 03_03_07 Application Layer A_RouterStatus_Read.
-    Coupler specific service - payload layout not implemented yet.
+    APCI 0x3CD, A_RouterStatus_Read. NOT IMPLEMENTED - and not planned:
+    this is a legacy EIB/BCU1-era line coupler management service, not
+    part of the current Application Layer spec (03_03_07 lists the
+    APCI code with no PDU/payload definition - the coupler status byte
+    was a BCU1/BCU2 hardware memory register, documented only in
+    manufacturer-era EIB Bus Coupling Unit memory maps, not the KNX
+    standard). Modern ETS configures couplers exclusively through the
+    Router Object (Interface Object Type 6) properties
+    (PID_MAIN_LCGRPCONFIG/PID_SUB_LCGRPCONFIG, PID_MAIN_LCCONFIG/
+    PID_SUB_LCCONFIG, PID_ROUTETABLE_CONTROL, PID_LINE_STATUS - see
+    AN161 Coupler Model 2.0) via A_PropertyValue_Read/Write - implement
+    against that instead of this APCI. Kept as a stub only so the APCI
+    code table is complete and dispatch doesn't misroute it.
     """
 
     CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_READ
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_RouterStatus_Read is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Read is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterStatusRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_RouterStatus_Read is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Read is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_RouterStatus_Read is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Read is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -3232,24 +3252,36 @@ class RouterStatusResponse(APCI):
     """
     RouterStatusResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_RouterStatus_Response.
-    Coupler specific service - payload layout not implemented yet.
+    APCI 0x3CE, A_RouterStatus_Response. NOT IMPLEMENTED - see
+    RouterStatusRead's docstring: this is a legacy EIB/BCU1-era coupler
+    status readout with no current Application Layer PDU spec. Use the
+    Router Object's PID_LINE_STATUS (and related PIDs) via
+    A_PropertyValue_Read instead.
     """
 
     CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_RESPONSE
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_RouterStatus_Response is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Response is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterStatusResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_RouterStatus_Response is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Response is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_RouterStatus_Response is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Response is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
@@ -3261,24 +3293,39 @@ class RouterStatusWrite(APCI):
     """
     RouterStatusWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_RouterStatus_Write.
-    Coupler specific service - payload layout not implemented yet.
+    APCI 0x3CF, canonically A_Write_Router_Status_Request in the
+    coding table (BCU alias "LcGroupWrite" - Line Coupler Group config
+    write). NOT IMPLEMENTED - see RouterStatusRead's docstring: this
+    set a BCU1-generation coupler's group-telegram routing mode (route
+    all / block all / use filter table), a hardware register with no
+    current Application Layer PDU spec. Use the Router Object's
+    PID_MAIN_LCGRPCONFIG/PID_SUB_LCGRPCONFIG via A_PropertyValue_Write
+    instead.
     """
 
     CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_WRITE
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_RouterStatus_Write is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Write is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterStatusWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_RouterStatus_Write is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Write is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_RouterStatus_Write is not implemented yet.")
+        raise NotImplementedError(
+            "A_RouterStatus_Write is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
