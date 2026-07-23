@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from xknx.dpt import DPTArray, DPTBinary, DPTEnumData
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTEnumData
 from xknx.dpt.dpt_1 import (
     Ack,
     Alarm,
@@ -13,6 +13,7 @@ from xknx.dpt.dpt_1 import (
     ConsumerProducer,
     DayNight,
     DimSendStyle,
+    DPT1BitBoolean,
     DPT1BitEnum,
     DPTAck,
     DPTAlarm,
@@ -68,6 +69,7 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
     [
         (DPTSwitch, Switch.OFF, Switch.ON),
         (DPTBool, Bool.FALSE, Bool.TRUE),
+        (DPT1BitBoolean, Bool.FALSE, Bool.TRUE),
         (DPTEnable, Enable.DISABLE, Enable.ENABLE),
         (DPTRamp, Ramp.NO_RAMP, Ramp.RAMP),
         (DPTAlarm, Alarm.NO_ALARM, Alarm.ALARM),
@@ -164,3 +166,20 @@ class TestDPT1:
             dpt.from_knx(DPTArray((1,)))
         with pytest.raises(CouldNotParseTelegram):
             dpt.from_knx(DPTBinary(2))
+
+
+class TestDPT1BitBoolean:
+    """Test the generic DPT 1 (1.*** boolean) transcoder."""
+
+    def test_transcoder_lookup(self) -> None:
+        """Generic DPT 1 is found by main number and value_type; subtypes still win."""
+        assert DPTBase.parse_transcoder(1) is DPT1BitBoolean
+        assert DPTBase.parse_transcoder("1bit") is DPT1BitBoolean
+        assert DPTBase.parse_transcoder("1.001") is DPTSwitch
+        assert DPTBase.parse_transcoder("1.002") is DPTBool
+
+    def test_generic_matches_dptbool(self) -> None:
+        """Generic DPT 1 decodes to the same Bool enum as DPTBool (1.002)."""
+        assert DPT1BitBoolean.from_knx(DPTBinary(1)) is Bool.TRUE
+        assert DPT1BitBoolean.from_knx(DPTBinary(0)) is Bool.FALSE
+        assert DPT1BitBoolean.to_knx(Bool.TRUE) == DPTBool.to_knx(Bool.TRUE)

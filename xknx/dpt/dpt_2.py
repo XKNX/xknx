@@ -228,6 +228,28 @@ class DPTBoolControl(_DPTBinaryControlBase[BoolControl]):
         return cls._encode_binary_control(value)
 
 
+class DPT2BitBoolean(_DPTBinaryControlBase[BoolControl]):
+    """
+    Abstraction for a generic KNX 2-bit boolean control value.
+
+    This is the generic DPT 2 without a specific sub number. It behaves like
+    `DPTBoolControl` and is used as fallback when a value only resolves to the
+    DPT 2 main number (e.g. an ETS project without a specific 2.yyy subtype).
+    For semantic values (switch, up/down, …) use the dedicated DPT 2.yyy classes.
+
+    DPT 2.***
+    """
+
+    data_type = BoolControl
+    dpt_main_number = 2
+    dpt_sub_number: int | None = None
+    value_type = "2bit"
+
+    @classmethod
+    def _to_knx(cls, value: BoolControl) -> DPTBinary:
+        return cls._encode_binary_control(value)
+
+
 class DPTEnableControl(_DPTBinaryControlBase[EnableControl]):
     """Abstraction for KNX 2-bit enable control. DPT 2.003."""
 
