@@ -56,7 +56,7 @@ class Notification(Device):
 
     async def set(self, message: str) -> None:
         """Set message."""
-        cropped_message = message[:14]
+        cropped_message = message[: self.remote_value.dpt_class.payload_length]
         self.remote_value.set(cropped_message)
 
     def process_group_write(self, telegram: Telegram) -> None:
