@@ -4871,64 +4871,239 @@ class TestDomainAddressSerialNumberRead:
 class TestDomainAddressSerialNumberResponse:
     """Test class for DomainAddressSerialNumberResponse objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Response.*"
-        ):
-            APCI.from_knx(bytes((0x03, 0xED)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Response.*"
-        ):
-            DomainAddressSerialNumberResponse().to_knx()
+        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Response.*"
-        ):
-            DomainAddressSerialNumberResponse().calculated_length()
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03edaabbcc1122331234"))
+
+        assert payload == DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03edaabbcc112233445566778899"))
+
+        assert payload == DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("445566778899"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03edaabbcc112233112233"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03edaabbcc1122331234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03edaabbcc1122331234")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_serial_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
+    def test_to_knx_domain_address_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("112233"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(DomainAddressSerialNumberResponse())
-            == "<DomainAddressSerialNumberResponse (not implemented) />"
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert str(payload) == (
+            '<DomainAddressSerialNumberResponse serial="aabbcc112233" '
+            'domain_address="1234" />'
         )
 
 
 class TestDomainAddressSerialNumberWrite:
     """Test class for DomainAddressSerialNumberWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Write.*"
-        ):
-            APCI.from_knx(bytes((0x03, 0xEE)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Write.*"
-        ):
-            DomainAddressSerialNumberWrite().to_knx()
+        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_DomainAddressSerialNumber_Write.*"
-        ):
-            DomainAddressSerialNumberWrite().calculated_length()
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03eeaabbcc1122331234"))
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+    def test_from_knx_ip_multicast(self) -> None:
+        """Test the from_knx method for a 4 octet IP multicast domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03eeaabbcc11223311223344"))
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+        )
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03eeaabbcc112233445566778899"))
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("445566778899"),
+        )
+
+    def test_from_knx_ip_secure(self) -> None:
+        """Test the from_knx method for the KNX IP Secure variant."""
+        payload = APCI.from_knx(
+            bytes.fromhex("03eeaabbcc11223311223344") + b"\x01" + b"\x00" * 16
+        )
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+            backbone_key=b"\x00" * 16,
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an unsupported address length."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03eeaabbcc112233112233"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03eeaabbcc1122331234")
+
+    def test_to_knx_ip_secure(self) -> None:
+        """Test the to_knx method for the KNX IP Secure variant."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+            backbone_key=b"\x00" * 16,
+        )
+
+        assert payload.to_knx() == (
+            bytes.fromhex("03eeaabbcc11223311223344") + b"\x01" + b"\x00" * 16
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03eeaabbcc11223311223344") + b"\x01" + b"\x00" * 16
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_serial_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
+    def test_to_knx_domain_address_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for an unsupported address length."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("112233"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
+
+    def test_to_knx_secure_fields_require_4_byte_address(self) -> None:
+        """Test to_knx rejects secure fields with a non-4-byte domain address."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+            routing_security_version=1,
+            backbone_key=b"\x00" * 16,
+        )
+
+        with pytest.raises(ConversionError, match=r".*4 octet.*"):
+            payload.to_knx()
+
+    def test_to_knx_secure_fields_must_be_set_together(self) -> None:
+        """Test to_knx rejects a routing_security_version without a backbone_key."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+        )
+
+        with pytest.raises(ConversionError, match=r".*must be set together.*"):
+            payload.to_knx()
+
+    def test_to_knx_backbone_key_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-16-byte backbone_key."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+            backbone_key=b"\x00",
+        )
+
+        with pytest.raises(ConversionError, match=r".*Backbone key.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(DomainAddressSerialNumberWrite())
-            == "<DomainAddressSerialNumberWrite (not implemented) />"
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert str(payload) == (
+            '<DomainAddressSerialNumberWrite serial="aabbcc112233" '
+            'domain_address="1234" routing_security_version="None" '
+            'backbone_key="None" />'
         )
 
 

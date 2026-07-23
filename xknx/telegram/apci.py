@@ -4801,35 +4801,54 @@ class DomainAddressSerialNumberResponse(APCI):
     """
     DomainAddressSerialNumberResponse service.
 
-    See KNX Specification 03_03_07 Application Layer
-    A_DomainAddressSerialNumber_Response. Open media specific service -
-    payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.3.6
+    A_DomainAddressSerialNumber_Response (defined alongside
+    A_DomainAddressSerialNumber_Read).
+
+    Payload is a 6 octet serial followed by a 2 octet (KNX-PL110) or 6
+    octet (KNX-RF) domain_address.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE
 
+    serial: bytes
+    domain_address: bytes
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Response is not implemented yet."
-        )
+        return 7 + len(self.domain_address)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Response is not implemented yet."
-        )
+        domain_address = raw[8:]
+        if len(raw) < 8 or len(domain_address) not in (2, 6):
+            raise ConversionError(
+                "Invalid length for A_DomainAddressSerialNumber_Response in "
+                f"CEMI: {raw.hex()}"
+            )
+
+        return cls(serial=raw[2:8], domain_address=domain_address)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Response is not implemented yet."
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+        if len(self.domain_address) not in (2, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110) or 6 (KNX-RF) octets long."
+            )
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=self.serial + self.domain_address
         )
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressSerialNumberResponse (not implemented) />"
+        return (
+            f'<DomainAddressSerialNumberResponse serial="{self.serial.hex()}" '
+            f'domain_address="{self.domain_address.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -4837,35 +4856,90 @@ class DomainAddressSerialNumberWrite(APCI):
     """
     DomainAddressSerialNumberWrite service.
 
-    See KNX Specification 03_03_07 Application Layer
-    A_DomainAddressSerialNumber_Write. Open media specific service -
-    payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.3.7
+    A_DomainAddressSerialNumber_Write.
+
+    Payload is a 6 octet serial followed by a domain_address of one of:
+    - 2 octets (KNX-PL110)
+    - 6 octets (KNX-RF)
+    - 4 octets (IP multicast address, KNXnet/IP only)
+    - 4 octets (IP multicast address) + a 1 octet
+      routing_security_version + a 16 octet backbone_key, for KNX IP
+      Secure. `routing_security_version` and `backbone_key` are only
+      valid together with a 4 octet domain_address and are otherwise
+      `None`.
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE
 
+    serial: bytes
+    domain_address: bytes
+    routing_security_version: int | None = None
+    backbone_key: bytes | None = None
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Write is not implemented yet."
-        )
+        secure_length = 17 if self.routing_security_version is not None else 0
+        return 7 + len(self.domain_address) + secure_length
 
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Write is not implemented yet."
-        )
+        remainder = raw[8:]
+        if len(raw) < 8 or len(remainder) not in (2, 4, 6, 21):
+            raise ConversionError(
+                "Invalid length for A_DomainAddressSerialNumber_Write in "
+                f"CEMI: {raw.hex()}"
+            )
+        serial = raw[2:8]
+
+        if len(remainder) == 21:
+            return cls(
+                serial=serial,
+                domain_address=remainder[:4],
+                routing_security_version=remainder[4],
+                backbone_key=remainder[5:21],
+            )
+        return cls(serial=serial, domain_address=remainder)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_DomainAddressSerialNumber_Write is not implemented yet."
-        )
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+        if len(self.domain_address) not in (2, 4, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110), 4 (IP multicast) or "
+                "6 (KNX-RF) octets long."
+            )
+
+        payload = self.serial + self.domain_address
+
+        if self.routing_security_version is not None or self.backbone_key is not None:
+            if len(self.domain_address) != 4:
+                raise ConversionError(
+                    "Routing security version and backbone key are only valid "
+                    "with a 4 octet (IP multicast) domain address."
+                )
+            if self.routing_security_version is None or self.backbone_key is None:
+                raise ConversionError(
+                    "Routing security version and backbone key must be set together."
+                )
+            if not 0 <= self.routing_security_version <= 0xFF:
+                raise ConversionError("Routing security version out of range.")
+            if len(self.backbone_key) != 16:
+                raise ConversionError("Backbone key must be 16 bytes.")
+            payload += bytes([self.routing_security_version]) + self.backbone_key
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<DomainAddressSerialNumberWrite (not implemented) />"
+        return (
+            f'<DomainAddressSerialNumberWrite serial="{self.serial.hex()}" '
+            f'domain_address="{self.domain_address.hex()}" '
+            f'routing_security_version="{self.routing_security_version}" '
+            f'backbone_key="{self.backbone_key.hex() if self.backbone_key else None}" />'
+        )
 
 
 @dataclass(slots=True)
