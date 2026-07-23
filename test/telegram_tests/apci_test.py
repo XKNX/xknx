@@ -1123,64 +1123,208 @@ class TestPropertyExtValueResponse:
 class TestPropertyExtValueWriteCon:
     """Test class for PropertyExtValueWriteCon objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtValue_WriteCon.*"
-        ):
-            APCI.from_knx(bytes.fromhex("01ce"))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtValue_WriteCon.*"
-        ):
-            PropertyExtValueWriteCon().to_knx()
+        assert payload.calculated_length() == 10
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtValue_WriteCon.*"
-        ):
-            PropertyExtValueWriteCon().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01ce0011001033010001aabb"))
+
+        assert payload == PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            nr_of_elem=1,
+            start_index=1,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_no_data(self) -> None:
+        """Test from_knx accepts the minimum 10 octet APDU with no data."""
+        payload = APCI.from_knx(bytes.fromhex("01ce0011001033010001"))
+
+        assert payload == PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            nr_of_elem=1,
+            start_index=1,
+            data=b"",
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01ce00110010330100"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            nr_of_elem=1,
+            start_index=1,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01ce0011001033010001aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01ce0011001033010001aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_nr_of_elem_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range nr_of_elem."""
+        payload = PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            nr_of_elem=0x100,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Number of elements.*"):
+            payload.to_knx()
+
+    def test_to_knx_start_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range start_index."""
+        payload = PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            start_index=0x10000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(PropertyExtValueWriteCon())
-            == "<PropertyExtValueWriteCon (not implemented) />"
+        payload = PropertyExtValueWriteCon(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            nr_of_elem=1,
+            start_index=1,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<PropertyExtValueWriteCon interface_object_type="17" '
+            'object_instance="1" property_id="51" nr_of_elem="1" '
+            'start_index="1" data="aabb" />'
         )
 
 
 class TestPropertyExtValueWriteConRes:
     """Test class for PropertyExtValueWriteConRes objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtValue_WriteConRes.*"
-        ):
-            APCI.from_knx(bytes.fromhex("01cf"))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = PropertyExtValueWriteConRes(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtValue_WriteConRes.*"
-        ):
-            PropertyExtValueWriteConRes().to_knx()
+        assert payload.calculated_length() == 9
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_PropertyExtValue_WriteConRes.*"
-        ):
-            PropertyExtValueWriteConRes().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("01cf001100103301000100"))
+
+        assert payload == PropertyExtValueWriteConRes(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            nr_of_elem=1,
+            start_index=1,
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("01cf0011001033010001"))
+
+    def test_from_knx_invalid_return_code(self) -> None:
+        """Test from_knx raises ConversionError for an unknown return code."""
+        # return_code byte 0x01 is in the "Generic positive" range (01-1F)
+        # reserved by the spec but not assigned to any ReturnCode member.
+        with pytest.raises(ConversionError, match=r".*[Ii]nvalid.*return code.*"):
+            APCI.from_knx(bytes.fromhex("01cf001100103301000101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = PropertyExtValueWriteConRes(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            nr_of_elem=1,
+            start_index=1,
+        )
+
+        assert payload.to_knx() == bytes.fromhex("01cf001100103301000100")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("01cf001100103301000100")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_nr_of_elem_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range nr_of_elem."""
+        payload = PropertyExtValueWriteConRes(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            nr_of_elem=0x100,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Number of elements.*"):
+            payload.to_knx()
+
+    def test_to_knx_start_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range start_index."""
+        payload = PropertyExtValueWriteConRes(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            start_index=0x10000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(PropertyExtValueWriteConRes())
-            == "<PropertyExtValueWriteConRes (not implemented) />"
+        payload = PropertyExtValueWriteConRes(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_SUCCESS,
+            nr_of_elem=1,
+            start_index=1,
+        )
+
+        assert str(payload) == (
+            '<PropertyExtValueWriteConRes interface_object_type="17" '
+            'object_instance="1" property_id="51" nr_of_elem="1" '
+            'start_index="1" return_code="E_SUCCESS" />'
         )
 
 

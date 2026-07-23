@@ -1188,27 +1188,73 @@ class PropertyExtValueWriteCon(APCI):
     PropertyExtValueWriteCon service.
 
     See KNX Specification 03_03_07 Application Layer §3.4.5.2
-    A_PropertyExtValue_WriteCon-service. Payload layout not implemented yet.
+    A_PropertyExtValue_WriteCon-service.
+
+    Same payload as PropertyExtValueResponse: a 16 bit Interface Object
+    Type, a 12 bit Object Instance, a 12 bit Property ID, a 1 byte
+    Number of Elements, a 2 byte Start Index and variable-length data.
     """
 
     CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_CON
 
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    nr_of_elem: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_PropertyExtValue_WriteCon is not implemented yet.")
+        return 8 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueWriteCon:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_PropertyExtValue_WriteCon is not implemented yet.")
+        if len(raw) < 10:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_WriteCon in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
+            data=raw[10:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_PropertyExtValue_WriteCon is not implemented yet.")
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header + struct.pack("!BH", self.nr_of_elem, self.start_index) + self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<PropertyExtValueWriteCon (not implemented) />"
+        return (
+            "<PropertyExtValueWriteCon "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -1218,33 +1264,82 @@ class PropertyExtValueWriteConRes(APCI):
 
     See KNX Specification 03_03_07 Application Layer §3.4.5.2
     A_PropertyExtValue_WriteConRes (defined alongside
-    A_PropertyExtValue_WriteCon-service). Payload layout not implemented yet.
+    A_PropertyExtValue_WriteCon-service).
+
+    Same payload as PropertyExtValueRead: a 16 bit Interface Object
+    Type, a 12 bit Object Instance, a 12 bit Property ID, a 1 byte
+    Number of Elements and a 2 byte Start Index, followed by a 1 byte
+    return_code.
     """
 
     CODE: ClassVar = APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES
 
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    return_code: ReturnCode
+    nr_of_elem: int = 1
+    start_index: int = 1
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError(
-            "A_PropertyExtValue_WriteConRes is not implemented yet."
-        )
+        return 9
 
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyExtValueWriteConRes:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_PropertyExtValue_WriteConRes is not implemented yet."
+        if len(raw) != 11:
+            raise ConversionError(
+                f"Invalid length for A_PropertyExtValue_WriteConRes in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+        nr_of_elem, start_index = struct.unpack("!BH", raw[7:10])
+        try:
+            return_code = ReturnCode(raw[10])
+        except ValueError:
+            raise ConversionError(
+                f"Invalid return code for A_PropertyExtValue_WriteConRes in CEMI: {raw.hex()}"
+            ) from None
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            return_code=return_code,
+            nr_of_elem=nr_of_elem,
+            start_index=start_index,
         )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_PropertyExtValue_WriteConRes is not implemented yet."
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
         )
+        if not 0 <= self.nr_of_elem <= 0xFF:
+            raise ConversionError("Number of elements out of range.")
+        if not 0 <= self.start_index <= 0xFFFF:
+            raise ConversionError("Start index out of range.")
+        payload = (
+            header
+            + struct.pack("!BH", self.nr_of_elem, self.start_index)
+            + bytes([self.return_code.value])
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<PropertyExtValueWriteConRes (not implemented) />"
+        return (
+            "<PropertyExtValueWriteConRes "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
+            f'nr_of_elem="{self.nr_of_elem}" '
+            f'start_index="{self.start_index}" '
+            f'return_code="{self.return_code.name}" />'
+        )
 
 
 @dataclass(slots=True)
