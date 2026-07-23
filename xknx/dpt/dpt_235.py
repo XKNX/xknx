@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from .dpt import RANGE_INT32, DPTComplex, DPTComplexData
+from .dpt import DPTComplex, DPTComplexData
 from .dpt_5 import DPTTariff
 from .dpt_13 import DPTActiveEnergy
+from .helpers.metadata import RANGE_INT32
 from .payload import DPTArray, DPTBinary
 
 

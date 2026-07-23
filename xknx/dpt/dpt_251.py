@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-from .dpt import RANGE_UINT8, DPTComplex, DPTComplexData
+from .dpt import DPTComplex, DPTComplexData
+from .helpers.metadata import RANGE_UINT8
 from .payload import DPTArray, DPTBinary
 
 

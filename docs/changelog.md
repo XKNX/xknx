@@ -21,6 +21,7 @@ nav_order: 2
 ### DPT
 
 - Add DPT 2 definitions
+- Add DPT 243.600 (`DPT_Colour_Transition_xyY`), 249.600 (`DPT_Brightness_Colour_Temperature_Transition`), 250.600 (`DPT_Brightness_Colour_Temperature_Control`), 252.600 (`DPT_Relative_Control_RGBW`), 253.600 (`DPT_Relative_Control_xyY`) and 254.600 (`DPT_Relative_Control_RGB`)
 
 # 3.16.0 Complex schema 2026-06-19
 

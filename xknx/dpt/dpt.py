@@ -12,7 +12,6 @@ import types
 from typing import (
     Any,
     ClassVar,
-    Final,
     Generic,
     Literal,
     TypedDict,
@@ -378,13 +377,6 @@ class DPTEnum(DPTBase, Generic[EnumDataT]):
         return list(cls.data_type)
 
 
-RANGE_UINT8: Final[dict[str, int]] = {"value_min": 0, "value_max": 255}
-RANGE_INT32: Final[dict[str, int]] = {
-    "value_min": -2_147_483_648,
-    "value_max": 2_147_483_647,
-}
-
-
 class DPTComplexFieldSchema(TypedDict):
     """Schema description for a single field in a DPTComplexData dict representation."""
 
@@ -395,6 +387,8 @@ class DPTComplexFieldSchema(TypedDict):
     options: NotRequired[list[str]]
     value_min: NotRequired[int | float]
     value_max: NotRequired[int | float]
+    resolution: NotRequired[int | float]
+    """Smallest representable step. Omitted when the resolution is 1 (or undefined)."""
 
 
 @dataclass(slots=True)
@@ -478,6 +472,8 @@ class DPTComplexData(ABC):
                 entry["value_min"] = field.metadata["value_min"]
             if "value_max" in field.metadata:
                 entry["value_max"] = field.metadata["value_max"]
+            if "resolution" in field.metadata:
+                entry["resolution"] = field.metadata["resolution"]
 
             result.append(entry)
         return result

@@ -10,6 +10,7 @@ from xknx.exceptions import ConversionError
 
 from .dpt import DPTComplex, DPTComplexData
 from .dpt_1 import Step, UpDown
+from .helpers.metadata import RANGE_STEP_CODE
 from .payload import DPTArray, DPTBinary
 
 
@@ -22,9 +23,7 @@ class ControlDimming(DPTComplexData):
     """
 
     control: Step
-    step_code: int = field(
-        metadata={"value_min": 0, "value_max": 7}
-    )  # 1..7 higher is more intervals -> slower; 0 stop
+    step_code: int = field(metadata=RANGE_STEP_CODE)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ControlDimming:
@@ -84,9 +83,7 @@ class ControlBlinds(DPTComplexData):
     """
 
     control: UpDown
-    step_code: int = field(
-        metadata={"value_min": 0, "value_max": 7}
-    )  # 1..7 higher is more intervals -> slower; 0 stop
+    step_code: int = field(metadata=RANGE_STEP_CODE)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ControlBlinds:

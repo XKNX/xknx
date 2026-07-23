@@ -7,8 +7,6 @@ Module for encoding and decoding KNX datatypes.
 
 # ruff: noqa: F401
 from .dpt import (
-    RANGE_INT32,
-    RANGE_UINT8,
     DPTBase,
     DPTComplex,
     DPTComplexData,
@@ -250,5 +248,11 @@ from .dpt_29 import (
 from .dpt_232 import DPTColorRGB, RGBColor
 from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
 from .dpt_242 import DPTColorXYY, XYYColor
+from .dpt_243 import DPTColorXYYTransition, XYYColorTransition
+from .dpt_249 import ColorTemperatureTransition, DPTColorTemperatureTransition
+from .dpt_250 import ColorTemperatureControl, DPTColorTemperatureControl
 from .dpt_251 import DPTColorRGBW, RGBWColor
+from .dpt_252 import DPTRelativeControlRGBW, RelativeControlRGBW
+from .dpt_253 import DPTRelativeControlXYY, RelativeControlXYY
+from .dpt_254 import DPTRelativeControlRGB, RelativeControlRGB
 from .payload import DPTArray, DPTBinary
