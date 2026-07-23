@@ -4556,104 +4556,269 @@ class TestLinkWrite:
 class TestGroupPropValueRead:
     """Test class for GroupPropValueRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Read.*"):
-            APCI.from_knx(bytes((0x03, 0xE8)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueRead(object_type=17, object_instance=1, property_id=51)
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Read.*"):
-            GroupPropValueRead().to_knx()
+        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Read.*"):
-            GroupPropValueRead().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e800110133"))
+
+        assert payload == GroupPropValueRead(
+            object_type=17, object_instance=1, property_id=51
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e8001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueRead(object_type=17, object_instance=1, property_id=51)
+
+        assert payload.to_knx() == bytes.fromhex("03e800110133")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e800110133")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = GroupPropValueRead(
+            object_type=0x10000, object_instance=1, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = GroupPropValueRead(
+            object_type=17, object_instance=0x100, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = GroupPropValueRead(
+            object_type=17, object_instance=1, property_id=0x100
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(GroupPropValueRead()) == "<GroupPropValueRead (not implemented) />"
+        payload = GroupPropValueRead(object_type=17, object_instance=1, property_id=51)
+
+        assert str(payload) == (
+            '<GroupPropValueRead object_type="17" object_instance="1" '
+            'property_id="51" />'
+        )
 
 
 class TestGroupPropValueResponse:
     """Test class for GroupPropValueResponse objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Response.*"):
-            APCI.from_knx(bytes((0x03, 0xE9)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Response.*"):
-            GroupPropValueResponse().to_knx()
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Response.*"):
-            GroupPropValueResponse().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e900110133aabb"))
+
+        assert payload == GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_no_data(self) -> None:
+        """Test from_knx accepts the minimum 6 octet APDU with no data."""
+        payload = APCI.from_knx(bytes.fromhex("03e900110133"))
+
+        assert payload == GroupPropValueResponse(
+            object_type=17, object_instance=1, property_id=51, data=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e9001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e900110133aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e900110133aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(GroupPropValueResponse())
-            == "<GroupPropValueResponse (not implemented) />"
+        payload = GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<GroupPropValueResponse object_type="17" object_instance="1" '
+            'property_id="51" data="aabb" />'
         )
 
 
 class TestGroupPropValueWrite:
     """Test class for GroupPropValueWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xEA)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Write.*"):
-            GroupPropValueWrite().to_knx()
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_GroupPropValue_Write.*"):
-            GroupPropValueWrite().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03ea00110133aabb"))
+
+        assert payload == GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03ea001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03ea00110133aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03ea00110133aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(GroupPropValueWrite()) == "<GroupPropValueWrite (not implemented) />"
+        payload = GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<GroupPropValueWrite object_type="17" object_instance="1" '
+            'property_id="51" data="aabb" />'
+        )
 
 
 class TestGroupPropValueInfoReport:
     """Test class for GroupPropValueInfoReport objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_GroupPropValue_InfoReport.*"
-        ):
-            APCI.from_knx(bytes((0x03, 0xEB)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_GroupPropValue_InfoReport.*"
-        ):
-            GroupPropValueInfoReport().to_knx()
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(
-            NotImplementedError, match=r".*A_GroupPropValue_InfoReport.*"
-        ):
-            GroupPropValueInfoReport().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03eb00110133aabb"))
+
+        assert payload == GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03eb001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03eb00110133aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03eb00110133aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert (
-            str(GroupPropValueInfoReport())
-            == "<GroupPropValueInfoReport (not implemented) />"
+        payload = GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<GroupPropValueInfoReport object_type="17" object_instance="1" '
+            'property_id="51" data="aabb" />'
         )
 
 

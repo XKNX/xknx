@@ -4497,33 +4497,93 @@ class LinkWrite(APCI):
         )
 
 
+def _pack_group_prop_value_header(
+    object_type: int, object_instance: int, property_id: int
+) -> bytes:
+    """
+    Serialize the A_GroupPropValue* ASDU header.
+
+    16 bit object_type, 8 bit object_instance, 8 bit property_id. See
+    KNX Logical Tag Extended (LTE) Application Layer §7.6.4.
+    """
+    if not 0 <= object_type <= 0xFFFF:
+        raise ConversionError("Object type out of range.")
+    if not 0 <= object_instance <= 0xFF:
+        raise ConversionError("Object instance out of range.")
+    if not 0 <= property_id <= 0xFF:
+        raise ConversionError("Property ID out of range.")
+    return struct.pack("!HBB", object_type, object_instance, property_id)
+
+
+def _unpack_group_prop_value_header(raw: bytes) -> tuple[int, int, int]:
+    """
+    Parse the A_GroupPropValue* ASDU header.
+
+    `raw` shall be the complete APDU (raw[2:4] is the 16 bit
+    object_type, raw[4] is the 8 bit object_instance, raw[5] is the 8
+    bit property_id). See KNX Logical Tag Extended (LTE) Application
+    Layer §7.6.4.
+    """
+    object_type = (raw[2] << 8) | raw[3]
+    object_instance = raw[4]
+    property_id = raw[5]
+    return object_type, object_instance, property_id
+
+
 @dataclass(slots=True)
 class GroupPropValueRead(APCI):
     """
     GroupPropValueRead service.
 
-    See KNX Specification 03_03_07 Application Layer A_GroupPropValue_Read.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.4
+    A_GroupPropValue_Read. Not part of 03_03_07 - defined in the LTE
+    extension for reading Interface Object Server properties via group
+    communication.
+
+    Payload contains a 16 bit object_type, an 8 bit object_instance and
+    an 8 bit property_id.
     """
 
     CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_READ
 
+    object_type: int
+    object_instance: int
+    property_id: int
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_GroupPropValue_Read is not implemented yet.")
+        return 5
 
     @classmethod
     def from_knx(cls, raw: bytes) -> GroupPropValueRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_Read is not implemented yet.")
+        if len(raw) != 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_Read in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_Read is not implemented yet.")
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<GroupPropValueRead (not implemented) />"
+        return (
+            f'<GroupPropValueRead object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -4531,28 +4591,56 @@ class GroupPropValueResponse(APCI):
     """
     GroupPropValueResponse service.
 
-    See KNX Specification 03_03_07 Application Layer A_GroupPropValue_Response.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.4
+    A_GroupPropValue_Response (defined alongside A_GroupPropValue_Read).
+
+    Same header as GroupPropValueRead (16 bit object_type, 8 bit
+    object_instance, 8 bit property_id), followed by variable-length
+    data.
     """
 
     CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_RESPONSE
 
+    object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_GroupPropValue_Response is not implemented yet.")
+        return 5 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> GroupPropValueResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_Response is not implemented yet.")
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_Response in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[6:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_Response is not implemented yet.")
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.data)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<GroupPropValueResponse (not implemented) />"
+        return (
+            f'<GroupPropValueResponse object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -4560,28 +4648,55 @@ class GroupPropValueWrite(APCI):
     """
     GroupPropValueWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_GroupPropValue_Write.
-    Open media specific service - payload layout not implemented yet.
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.5
+    A_GroupPropValue_Write.
+
+    Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
+    bit object_instance, an 8 bit property_id and variable-length data.
     """
 
     CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_WRITE
 
+    object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_GroupPropValue_Write is not implemented yet.")
+        return 5 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> GroupPropValueWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_Write is not implemented yet.")
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_Write in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[6:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_Write is not implemented yet.")
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.data)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<GroupPropValueWrite (not implemented) />"
+        return (
+            f'<GroupPropValueWrite object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -4589,29 +4704,55 @@ class GroupPropValueInfoReport(APCI):
     """
     GroupPropValueInfoReport service.
 
-    See KNX Specification 03_03_07 Application Layer
-    A_GroupPropValue_InfoReport. Open media specific service - payload
-    layout not implemented yet.
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.6
+    A_GroupPropValue_InfoReport.
+
+    Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
+    bit object_instance, an 8 bit property_id and variable-length data.
     """
 
     CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT
 
+    object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_GroupPropValue_InfoReport is not implemented yet.")
+        return 5 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> GroupPropValueInfoReport:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_InfoReport is not implemented yet.")
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_InfoReport in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[6:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_GroupPropValue_InfoReport is not implemented yet.")
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.data)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<GroupPropValueInfoReport (not implemented) />"
+        return (
+            f'<GroupPropValueInfoReport object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
