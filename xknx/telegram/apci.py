@@ -1506,7 +1506,7 @@ class RestartMasterReset(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) != 4:
             raise ConversionError(
-                f"Invalid length for RestartMasterReset: {len(raw)} bytes."
+                f"Invalid length for A_Restart_Master_Reset in CEMI: {raw.hex()}"
             )
         erase_code, channel_number = struct.unpack("!BB", raw[2:])
 
@@ -1514,6 +1514,10 @@ class RestartMasterReset(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if not 0 <= self.erase_code <= 0xFF:
+            raise ConversionError("Erase code out of range.")
+        if not 0 <= self.channel_number <= 0xFF:
+            raise ConversionError("Channel number out of range.")
         payload = struct.pack("!BB", self.erase_code, self.channel_number)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
@@ -1553,7 +1557,7 @@ class RestartMasterResetResponse(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         if len(raw) != 5:
             raise ConversionError(
-                f"Invalid length for RestartMasterResetResponse: {len(raw)} bytes."
+                f"Invalid length for A_Restart_Response in CEMI: {raw.hex()}"
             )
         error_code, process_time = struct.unpack("!BH", raw[2:])
 
@@ -1561,6 +1565,10 @@ class RestartMasterResetResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if not 0 <= self.error_code <= 0xFF:
+            raise ConversionError("Error code out of range.")
+        if not 0 <= self.process_time <= 0xFFFF:
+            raise ConversionError("Process time out of range.")
         payload = struct.pack("!BH", self.error_code, self.process_time)
 
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)

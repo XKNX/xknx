@@ -1573,6 +1573,20 @@ class TestRestartMasterReset:
 
         assert payload.to_knx() == bytes.fromhex("03810100")
 
+    def test_to_knx_erase_code_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range erase_code."""
+        payload = RestartMasterReset(erase_code=0x100, channel_number=0)
+
+        with pytest.raises(ConversionError, match=r".*Erase code.*"):
+            payload.to_knx()
+
+    def test_to_knx_channel_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range channel_number."""
+        payload = RestartMasterReset(erase_code=1, channel_number=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Channel number.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = RestartMasterReset(erase_code=1, channel_number=0)
@@ -1607,6 +1621,20 @@ class TestRestartMasterResetResponse:
         payload = RestartMasterResetResponse(error_code=0, process_time=1000)
 
         assert payload.to_knx() == bytes.fromhex("03a10003e8")
+
+    def test_to_knx_error_code_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range error_code."""
+        payload = RestartMasterResetResponse(error_code=0x100, process_time=1000)
+
+        with pytest.raises(ConversionError, match=r".*Error code.*"):
+            payload.to_knx()
+
+    def test_to_knx_process_time_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range process_time."""
+        payload = RestartMasterResetResponse(error_code=0, process_time=0x10000)
+
+        with pytest.raises(ConversionError, match=r".*Process time.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
