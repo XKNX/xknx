@@ -2948,28 +2948,67 @@ class FilterTableWrite(APCI):
     """
     FilterTableWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_FilterTable_Write.
-    Coupler specific service - payload layout not implemented yet.
+    See KNX Specification 03_03_07 Application Layer §3.6.3
+    A_FilterTable_Write. Coupler specific service - requires
+    A_FilterTable_Open first.
+
+    Same payload as FilterTableResponse: a 1 byte number (octet count
+    to write, 1-254), a 2 byte filter_table_address and `number` bytes
+    of data.
     """
 
     CODE: ClassVar = APCIExtendedService.FILTER_TABLE_WRITE
 
+    filter_table_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_FilterTable_Write is not implemented yet.")
+        return 3 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Write is not implemented yet.")
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Write in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, filter_table_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            filter_table_address=filter_table_address,
+            data=data,
+            number=number,
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_FilterTable_Write is not implemented yet.")
+        if not 1 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.filter_table_address <= 0xFFFF:
+            raise ConversionError("Filter table address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.filter_table_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<FilterTableWrite (not implemented) />"
+        return (
+            "<FilterTableWrite "
+            f'filter_table_address="{hex(self.filter_table_address)}" '
+            f'number="{self.number}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)

@@ -2938,24 +2938,71 @@ class TestFilterTableResponse:
 class TestFilterTableWrite:
     """Test class for FilterTableWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Write.*"):
-            APCI.from_knx(bytes((0x03, 0xC3)))
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FilterTableWrite(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
 
-    def test_to_knx_raises_not_implemented(self) -> None:
-        """Test to_knx raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Write.*"):
-            FilterTableWrite().to_knx()
+        assert payload.calculated_length() == 5
 
-    def test_calculated_length_raises_not_implemented(self) -> None:
-        """Test calculated_length raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_FilterTable_Write.*"):
-            FilterTableWrite().calculated_length()
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03c3021234aabb"))
+
+        assert payload == FilterTableWrite(
+            filter_table_address=0x1234, number=2, data=bytes([0xAA, 0xBB])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03c3021234"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FilterTableWrite(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03c3021234aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03c3021234aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = FilterTableWrite(filter_table_address=0x1234, data=b"", number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a write)."""
+        payload = FilterTableWrite(filter_table_address=0x1234, data=b"", number=0)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = FilterTableWrite(filter_table_address=0x10000, data=bytes([0xAA]))
+
+        with pytest.raises(ConversionError, match=r".*Filter table address.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
-        assert str(FilterTableWrite()) == "<FilterTableWrite (not implemented) />"
+        payload = FilterTableWrite(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert str(payload) == (
+            '<FilterTableWrite filter_table_address="0x1234" number="2" data="aabb" />'
+        )
 
 
 class TestRouterMemoryRead:
