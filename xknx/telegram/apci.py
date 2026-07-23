@@ -3290,29 +3290,72 @@ class MemoryBitWrite(APCI):
     """
     MemoryBitWrite service.
 
-    See KNX Specification 03_03_07 Application Layer A_MemoryBit_Write.
-    Marked "not for future use" by the spec - payload layout not
-    implemented.
+    See KNX Specification 03_03_07 Application Layer §3.5.5
+    A_MemoryBit_Write. Marked "not for future use" by the coupler
+    services table, but fully defined - same layout as
+    A_UserMemoryBit_Write.
+
+    Payload contains a 1 byte number (octet count of the contiguous
+    block to modify, 1-5), a 2 byte memory_address, and_data and
+    xor_data - both `number` bytes long. Each result bit is computed as
+    (and_data_bit AND block_bit) XOR xor_data_bit, i.e. and_data=0/
+    xor_data=0 clears a bit, and_data=0/xor_data=1 sets it, and_data=1/
+    xor_data=0 leaves it unmodified and and_data=1/xor_data=1 inverts
+    it.
     """
 
     CODE: ClassVar = APCIExtendedService.MEMORY_BIT_WRITE
 
+    memory_address: int
+    and_data: bytes
+    xor_data: bytes
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        raise NotImplementedError("A_MemoryBit_Write is not implemented yet.")
+        return 4 + len(self.and_data) + len(self.xor_data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryBitWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError("A_MemoryBit_Write is not implemented yet.")
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        number = raw[2]
+        if len(raw) != 5 + 2 * number:
+            raise ConversionError(
+                f"Invalid length for A_MemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        memory_address = (raw[3] << 8) | raw[4]
+        and_data = raw[5 : 5 + number]
+        xor_data = raw[5 + number : 5 + 2 * number]
+
+        return cls(memory_address=memory_address, and_data=and_data, xor_data=xor_data)
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        raise NotImplementedError("A_MemoryBit_Write is not implemented yet.")
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+        number = len(self.and_data)
+        if not 0 <= number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if len(self.xor_data) != number:
+            raise ConversionError("and_data and xor_data must have the same length.")
+
+        payload = (
+            struct.pack("!BH", number, self.memory_address)
+            + self.and_data
+            + self.xor_data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return "<MemoryBitWrite (not implemented) />"
+        return (
+            f'<MemoryBitWrite memory_address="{hex(self.memory_address)}" '
+            f'and_data="{self.and_data.hex()}" xor_data="{self.xor_data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
