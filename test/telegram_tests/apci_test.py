@@ -90,6 +90,7 @@ class TestGroupValueRead:
         payload = GroupValueRead()
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -119,7 +120,9 @@ class TestGroupValueWrite:
         payload_b = GroupValueWrite(DPTBinary(1))
 
         assert payload_a.calculated_length() == 4
+        assert payload_a.calculated_length() == len(payload_a.to_knx()) - 1
         assert payload_b.calculated_length() == 1
+        assert payload_b.calculated_length() == len(payload_b.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -154,7 +157,9 @@ class TestGroupValueResponse:
         payload_b = GroupValueResponse(DPTBinary(1))
 
         assert payload_a.calculated_length() == 4
+        assert payload_a.calculated_length() == len(payload_a.to_knx()) - 1
         assert payload_b.calculated_length() == 1
+        assert payload_b.calculated_length() == len(payload_b.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -188,6 +193,7 @@ class TestIndividualAddressWrite:
         payload = IndividualAddressWrite(IndividualAddress("1.2.3"))
 
         assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -216,6 +222,7 @@ class TestIndividualAddressRead:
         payload = IndividualAddressRead()
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -244,6 +251,7 @@ class TestIndividualAddressResponse:
         payload = IndividualAddressResponse()
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -272,6 +280,7 @@ class TestADCRead:
         payload = ADCRead(channel=2, count=4)
 
         assert payload.calculated_length() == 2
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -300,6 +309,7 @@ class TestADCResponse:
         payload = ADCResponse(channel=2, count=4, value=1023)
 
         assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -333,6 +343,7 @@ class TestFunctionPropertyExtCommand:
         )
 
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -425,6 +436,7 @@ class TestFunctionPropertyExtStateRead:
         )
 
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method - real frame captured from an ETS session."""
@@ -518,6 +530,7 @@ class TestFunctionPropertyExtStateResponse:
         )
 
         assert payload.calculated_length() == 9
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -627,6 +640,7 @@ class TestSystemNetworkParameterRead:
         )
 
         assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """
@@ -735,6 +749,7 @@ class TestSystemNetworkParameterResponse:
         )
 
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -836,6 +851,7 @@ class TestSystemNetworkParameterWrite:
         )
 
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1765,6 +1781,7 @@ class TestMemoryExtendedWrite:
             address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1821,6 +1838,7 @@ class TestMemoryExtendedWriteResponse:
         """Test the test_calculated_length method."""
         payload = MemoryExtendedWriteResponse(return_code=0, address=0x123456)
         assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_calculated_lengt_with_confirmation_data(self) -> None:
         """Test the test_calculated_length method."""
@@ -1828,6 +1846,7 @@ class TestMemoryExtendedWriteResponse:
             return_code=0, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
         )
         assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1901,6 +1920,7 @@ class TestMemoryExtendedRead:
         """Test the test_calculated_length method."""
         payload = MemoryExtendedRead(address=0x123456, count=3)
         assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1942,6 +1962,7 @@ class TestMemoryExtendedReadResponse:
             return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
         )
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -1999,6 +2020,7 @@ class TestMemoryRead:
         payload = MemoryRead(address=0x1234, count=11)
 
         assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2039,6 +2061,7 @@ class TestMemoryWrite:
         payload = MemoryWrite(address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC]))
 
         assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2087,6 +2110,7 @@ class TestMemoryResponse:
         )
 
         assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2140,6 +2164,7 @@ class TestDeviceDescriptorRead:
         payload = DeviceDescriptorRead(0)
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2175,6 +2200,7 @@ class TestDeviceDescriptorResponse:
         payload = DeviceDescriptorResponse(descriptor=0, value=123)
 
         assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2210,6 +2236,7 @@ class TestUserMemoryRead:
         payload = UserMemoryRead()
 
         assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2252,6 +2279,7 @@ class TestUserMemoryWrite:
         )
 
         assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2309,6 +2337,7 @@ class TestUserMemoryResponse:
         )
 
         assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2364,6 +2393,7 @@ class TestRestart:
         payload = Restart()
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2392,6 +2422,7 @@ class TestRestartMasterReset:
         payload = RestartMasterReset(erase_code=1, channel_number=0)
 
         assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method - real frame captured from an ETS session."""
@@ -2441,6 +2472,7 @@ class TestRestartMasterResetResponse:
         payload = RestartMasterResetResponse(error_code=0, process_time=1000)
 
         assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2490,6 +2522,7 @@ class TestUserManufacturerInfoRead:
         payload = UserManufacturerInfoRead()
 
         assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2518,6 +2551,7 @@ class TestUserManufacturerInfoResponse:
         payload = UserManufacturerInfoResponse(manufacturer_id=123, data=b"\x12\x34")
 
         assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2553,6 +2587,7 @@ class TestFunctionPropertyCommand:
         )
 
         assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2592,6 +2627,7 @@ class TestFunctionPropertyStateRead:
         )
 
         assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2631,6 +2667,7 @@ class TestFunctionPropertyStateResponse:
         )
 
         assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2668,6 +2705,7 @@ class TestAuthorizeRequest:
         payload = AuthorizeRequest(key=12345678)
 
         assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2696,6 +2734,7 @@ class TestAuthorizeResponse:
         payload = AuthorizeResponse(level=123)
 
         assert payload.calculated_length() == 2
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2726,6 +2765,7 @@ class TestPropertyValueRead:
         )
 
         assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2774,6 +2814,7 @@ class TestPropertyValueWrite:
         )
 
         assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2824,6 +2865,7 @@ class TestPropertyValueResponse:
         )
 
         assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2874,6 +2916,7 @@ class TestPropertyDescriptionRead:
         )
 
         assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2918,6 +2961,7 @@ class TestPropertyDescriptionResponse:
         )
 
         assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -2988,6 +3032,7 @@ class TestIndividualAddressSerialRead:
         payload = IndividualAddressSerialRead(b"\xaa\xbb\xcc\x11\x22\x33")
 
         assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -3020,6 +3065,7 @@ class TestIndividualAddressSerialResponse:
         )
 
         assert payload.calculated_length() == 11
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
@@ -3065,6 +3111,7 @@ class TestIndividualAddressSerialWrite:
         )
 
         assert payload.calculated_length() == 13
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
 
     def test_from_knx(self) -> None:
         """Test the from_knx method."""
