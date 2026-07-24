@@ -4285,13 +4285,10 @@ class TestDomainAddressSelectiveRead:
 
         assert payload == DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
 
-    def test_from_knx_wrong_length(self) -> None:
-        """Test from_knx raises ConversionError for a non-5-octet asdu."""
+    def test_from_knx_empty_asdu(self) -> None:
+        """Test from_knx raises ConversionError for an empty asdu."""
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
             APCI.from_knx(bytes((0x03, 0xE3)))
-
-        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
-            APCI.from_knx(bytes.fromhex("03e31234aabbccdd"))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -4299,9 +4296,9 @@ class TestDomainAddressSelectiveRead:
 
         assert payload.to_knx() == bytes.fromhex("03e31234aabbcc")
 
-    def test_to_knx_wrong_length(self) -> None:
-        """Test to_knx raises ConversionError for a non-5-octet asdu."""
-        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234"))
+    def test_to_knx_empty_asdu(self) -> None:
+        """Test to_knx raises ConversionError for an empty asdu."""
+        payload = DomainAddressSelectiveRead(asdu=b"")
 
         with pytest.raises(ConversionError, match=r".*asdu.*"):
             payload.to_knx()
