@@ -4151,7 +4151,11 @@ class DomainAddressRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressRead:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Read in CEMI: {raw.hex()}"
+            )
+
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -4219,12 +4223,13 @@ class DomainAddressSelectiveRead(APCI):
     neighbouring installation. Only specified for the 2 octet
     (KNX-PL110) Domain Address format.
 
-    Payload is a variable-length asdu.
+    Payload is a fixed 5 octet asdu: domain_address (2 octets),
+    start address (2 octets) and range (1 octet).
     """
 
     CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ
 
-    asdu: bytes = b""
+    asdu: bytes
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -4233,10 +4238,18 @@ class DomainAddressSelectiveRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressSelectiveRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 7:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddressSelective_Read in CEMI: {raw.hex()}"
+            )
+
         return cls(asdu=raw[2:])
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if len(self.asdu) != 5:
+            raise ConversionError("asdu must be 5 bytes.")
+
         return encode_cmd_and_payload(self.CODE, appended_payload=self.asdu)
 
     def __str__(self) -> str:

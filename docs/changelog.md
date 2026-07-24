@@ -28,6 +28,7 @@ nav_order: 2
 - Add A_GroupPropValue_Read, A_GroupPropValue_Response, A_GroupPropValue_Write and A_GroupPropValue_InfoReport APCI service parsing (KNX Logical Tag Extended specification).
 - Add A_FileStream_InfoReport APCI service parsing.
 - Fix A_DomainAddressSerialNumber_Read parsing to raise ConversionError instead of a bare struct.error for a truncated frame.
+- Fix A_DomainAddress_Read parsing to raise ConversionError instead of silently ignoring trailing bytes. Fix A_DomainAddressSelective_Read parsing to raise ConversionError instead of silently accepting an incomplete asdu.
 
 ### DPT
 

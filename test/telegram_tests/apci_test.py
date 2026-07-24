@@ -4196,6 +4196,11 @@ class TestDomainAddressRead:
 
         assert payload == DomainAddressRead()
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for trailing bytes."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes((0x03, 0xE1, 0x00)))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = DomainAddressRead()
@@ -4280,17 +4285,26 @@ class TestDomainAddressSelectiveRead:
 
         assert payload == DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
 
-    def test_from_knx_no_asdu(self) -> None:
-        """Test from_knx accepts the minimum 2 octet APDU with no asdu."""
-        payload = APCI.from_knx(bytes((0x03, 0xE3)))
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a non-5-octet asdu."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes((0x03, 0xE3)))
 
-        assert payload == DomainAddressSelectiveRead(asdu=b"")
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e31234aabbccdd"))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
 
         assert payload.to_knx() == bytes.fromhex("03e31234aabbcc")
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-5-octet asdu."""
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234"))
+
+        with pytest.raises(ConversionError, match=r".*asdu.*"):
+            payload.to_knx()
 
     def test_round_trip(self) -> None:
         """Test from_knx().to_knx() reproduces the original frame exactly."""
