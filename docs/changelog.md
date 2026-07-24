@@ -19,6 +19,7 @@ nav_order: 2
 - Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
 - Add A_PropertyExtValue_Read, A_PropertyExtValue_Response, A_PropertyExtValue_WriteCon, A_PropertyExtValue_WriteConRes, A_PropertyExtValue_WriteUnCon, A_PropertyExtValue_InfoReport, A_PropertyExtDescription_Read and A_PropertyExtDescription_Response APCI service parsing.
 - Recognize A_RouterStatus_Read/Response/Write APCI services; these are a legacy EIB/BCU1-era coupler status service with no PDU definition in the current Application Layer spec and are not planned for implementation - configure couplers via the Router Object properties (`A_PropertyValue_Read`/`A_PropertyValue_Write`) instead.
+- Add A_UserMemoryBit_Write and A_MemoryBit_Write APCI service parsing.
 
 ### Devices
 

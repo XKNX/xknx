@@ -97,6 +97,8 @@ class APCIUserService(Enum):
     USER_MEMORY_RESPONSE = 0x02C1
     USER_MEMORY_WRITE = 0x02C2
 
+    USER_MEMORY_BIT_WRITE = 0x02C4
+
     USER_MANUFACTURER_INFO_READ = 0x02C5
     USER_MANUFACTURER_INFO_RESPONSE = 0x02C6
 
@@ -111,6 +113,9 @@ class APCIExtendedService(Enum):
     ROUTER_STATUS_READ = 0x03CD
     ROUTER_STATUS_RESPONSE = 0x03CE
     ROUTER_STATUS_WRITE = 0x03CF
+
+    # not for future use
+    MEMORY_BIT_WRITE = 0x03D0
 
     AUTHORIZE_REQUEST = 0x03D1
     AUTHORIZE_RESPONSE = 0x03D2
@@ -281,6 +286,8 @@ class APCI(ABC):
                 return UserMemoryResponse.from_knx(raw)
             if apci == APCIUserService.USER_MEMORY_WRITE.value:
                 return UserMemoryWrite.from_knx(raw)
+            if apci == APCIUserService.USER_MEMORY_BIT_WRITE.value:
+                return UserMemoryBitWrite.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
                 return UserManufacturerInfoRead.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
@@ -308,6 +315,8 @@ class APCI(ABC):
                 return RouterStatusResponse.from_knx(raw)
             if apci == APCIExtendedService.ROUTER_STATUS_WRITE.value:
                 return RouterStatusWrite.from_knx(raw)
+            if apci == APCIExtendedService.MEMORY_BIT_WRITE.value:
+                return MemoryBitWrite.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
                 return AuthorizeRequest.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
@@ -2434,6 +2443,75 @@ class UserMemoryResponse(APCI):
 
 
 @dataclass(slots=True)
+class UserMemoryBitWrite(APCI):
+    """
+    UserMemoryBitWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.5.6.4
+    A_UserMemoryBit_Write.
+
+    Payload contains a 1 byte number (octet count of the contiguous
+    block to modify, 1-5), a 2 byte memory_address, and_data and
+    xor_data - both `number` bytes long. Each result bit is computed as
+    (and_data_bit AND block_bit) XOR xor_data_bit, i.e. and_data=0/
+    xor_data=0 clears a bit, and_data=0/xor_data=1 sets it, and_data=1/
+    xor_data=0 leaves it unmodified and and_data=1/xor_data=1 inverts
+    it.
+    """
+
+    CODE: ClassVar = APCIUserService.USER_MEMORY_BIT_WRITE
+
+    address: int
+    and_data: bytes
+    xor_data: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.and_data) + len(self.xor_data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserMemoryBitWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_UserMemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        number = raw[2]
+        if len(raw) != 5 + 2 * number:
+            raise ConversionError(
+                f"Invalid length for A_UserMemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        address = (raw[3] << 8) | raw[4]
+        and_data = raw[5 : 5 + number]
+        xor_data = raw[5 + number : 5 + 2 * number]
+
+        return cls(address=address, and_data=and_data, xor_data=xor_data)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.address <= 0xFFFF:
+            raise ConversionError("Address out of range.")
+        number = len(self.and_data)
+        if not 0 <= number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if len(self.xor_data) != number:
+            raise ConversionError("and_data and xor_data must have the same length.")
+
+        payload = (
+            struct.pack("!BH", number, self.address) + self.and_data + self.xor_data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<UserMemoryBitWrite address="{hex(self.address)}" '
+            f'and_data="{self.and_data.hex()}" xor_data="{self.xor_data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
 class UserManufacturerInfoRead(APCI):
     """UserManufacturerInfoRead service."""
 
@@ -2750,6 +2828,79 @@ class RouterStatusWrite(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<RouterStatusWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class MemoryBitWrite(APCI):
+    """
+    MemoryBitWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.5.5
+    A_MemoryBit_Write. Marked "not for future use" by the coupler
+    services table, but fully defined - same layout as
+    A_UserMemoryBit_Write.
+
+    Payload contains a 1 byte number (octet count of the contiguous
+    block to modify, 1-5), a 2 byte memory_address, and_data and
+    xor_data - both `number` bytes long. Each result bit is computed as
+    (and_data_bit AND block_bit) XOR xor_data_bit, i.e. and_data=0/
+    xor_data=0 clears a bit, and_data=0/xor_data=1 sets it, and_data=1/
+    xor_data=0 leaves it unmodified and and_data=1/xor_data=1 inverts
+    it.
+    """
+
+    CODE: ClassVar = APCIExtendedService.MEMORY_BIT_WRITE
+
+    memory_address: int
+    and_data: bytes
+    xor_data: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.and_data) + len(self.xor_data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryBitWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        number = raw[2]
+        if len(raw) != 5 + 2 * number:
+            raise ConversionError(
+                f"Invalid length for A_MemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        memory_address = (raw[3] << 8) | raw[4]
+        and_data = raw[5 : 5 + number]
+        xor_data = raw[5 + number : 5 + 2 * number]
+
+        return cls(memory_address=memory_address, and_data=and_data, xor_data=xor_data)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+        number = len(self.and_data)
+        if not 0 <= number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if len(self.xor_data) != number:
+            raise ConversionError("and_data and xor_data must have the same length.")
+
+        payload = (
+            struct.pack("!BH", number, self.memory_address)
+            + self.and_data
+            + self.xor_data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<MemoryBitWrite memory_address="{hex(self.memory_address)}" '
+            f'and_data="{self.and_data.hex()}" xor_data="{self.xor_data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
