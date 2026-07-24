@@ -107,6 +107,23 @@ def test_invalid_tpci_apci(raw: bytes, err_msg: str) -> None:
             get_data(0x29, 0, 0, 0, 0, 1, 0x03C0, []),
             r".*APDU not supported*",
         ),
+        (
+            # A_RouterStatus_Read - legacy BCU coupler service, deliberately
+            # unimplemented; must be rejected cleanly, not crash the receive
+            # path with an uncaught NotImplementedError.
+            get_data(0x29, 0, 0, 0, 0, 1, 0x03CD, []),
+            r".*APDU not supported*",
+        ),
+        (
+            # A_RouterStatus_Response
+            get_data(0x29, 0, 0, 0, 0, 1, 0x03CE, []),
+            r".*APDU not supported*",
+        ),
+        (
+            # A_RouterStatus_Write
+            get_data(0x29, 0, 0, 0, 0, 1, 0x03CF, []),
+            r".*APDU not supported*",
+        ),
     ],
 )
 def test_unsupported_tpci_apci(raw: bytes, err_msg: str) -> None:

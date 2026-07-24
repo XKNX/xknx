@@ -52,6 +52,9 @@ from xknx.telegram.apci import (
     RestartMasterReset,
     RestartMasterResetResponse,
     ReturnCode,
+    RouterStatusRead,
+    RouterStatusResponse,
+    RouterStatusWrite,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
     SystemNetworkParameterWrite,
@@ -2695,6 +2698,92 @@ class TestFunctionPropertyStateResponse:
             str(payload)
             == '<FunctionPropertyStateResponse object_index="1" property_id="4" return_code="8" data="1234" />'
         )
+
+
+class TestRouterStatusRead:
+    """Test class for RouterStatusRead objects."""
+
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xCD)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            RouterStatusRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            RouterStatusRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterStatusRead()) == "<RouterStatusRead (not implemented) />"
+
+
+class TestRouterStatusResponse:
+    """Test class for RouterStatusResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xCE)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            RouterStatusResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            RouterStatusResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(RouterStatusResponse()) == "<RouterStatusResponse (not implemented) />"
+        )
+
+
+class TestRouterStatusWrite:
+    """Test class for RouterStatusWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xCF)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            RouterStatusWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            RouterStatusWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterStatusWrite()) == "<RouterStatusWrite (not implemented) />"
 
 
 class TestAuthorizeRequest:
