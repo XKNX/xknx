@@ -27,6 +27,7 @@ nav_order: 2
 - Add A_RouterMemory_Read, A_RouterMemory_Response and A_RouterMemory_Write APCI service parsing. Recognize A_RouterStatus_Read/Response/Write APCI services; these are a legacy EIB/BCU1-era coupler status service with no PDU definition in the current Application Layer spec and are not planned for implementation - configure couplers via the Router Object properties (`A_PropertyValue_Read`/`A_PropertyValue_Write`) instead.
 - Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.
 - Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
+- Fix `APCI.from_knx` to raise `ConversionError` for malformed or truncated APDUs instead of leaking `IndexError`/`struct.error`/`ValueError`, which could crash the CEMI receive path.
 
 ### Devices
 

@@ -257,8 +257,8 @@ class CEMILData(CEMIData):
             payload = APCI.from_knx(_apdu)
         except ConversionError as err:
             raise UnsupportedCEMIMessage(
-                f"APDU not supported from {src_addr} "
-                f"from {src_addr} in CEMI: {raw.hex()}"
+                f"APDU invalid from {src_addr} to {dst_addr} "
+                f"with TPCI {tpci} in CEMI: {raw.hex()}"
             ) from err
 
         return cls(

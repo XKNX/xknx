@@ -257,181 +257,191 @@ class APCI(ABC):
         `APCIService.USER_MESSAGE` and `APCIService.ESCAPE` service have
         several sub-services.
         """
+        if len(raw) < 2:
+            raise ConversionError(f"APDU too short: {raw.hex()}")
         apci = (raw[0] * 256 + raw[1]) & 0x03FF
         service = apci & 0x03C0
 
-        if service == APCIService.GROUP_READ.value:
-            return GroupValueRead.from_knx(raw)
-        if service == APCIService.GROUP_WRITE.value:
-            return GroupValueWrite.from_knx(raw)
-        if service == APCIService.GROUP_RESPONSE.value:
-            return GroupValueResponse.from_knx(raw)
-        if service == APCIService.INDIVIDUAL_ADDRESS_WRITE.value:
-            return IndividualAddressWrite.from_knx(raw)
-        if service == APCIService.INDIVIDUAL_ADDRESS_READ.value:
-            return IndividualAddressRead.from_knx(raw)
-        if service == APCIService.INDIVIDUAL_ADDRESS_RESPONSE.value:
-            return IndividualAddressResponse.from_knx(raw)
-        if service == APCIService.ADC_READ.value:
-            return ADCRead.from_knx(raw)
-        if service == APCIService.ADC_RESPONSE.value:
-            if apci == APCIService.SYSTEM_NETWORK_PARAMETER_READ.value:
-                return SystemNetworkParameterRead.from_knx(raw)
-            if apci == APCIService.SYSTEM_NETWORK_PARAMETER_RESPONSE.value:
-                return SystemNetworkParameterResponse.from_knx(raw)
-            if apci == APCIService.SYSTEM_NETWORK_PARAMETER_WRITE.value:
-                return SystemNetworkParameterWrite.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_VALUE_READ.value:
-                return PropertyExtValueRead.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_VALUE_RESPONSE.value:
-                return PropertyExtValueResponse.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON.value:
-                return PropertyExtValueWriteCon.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES.value:
-                return PropertyExtValueWriteConRes.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_UNCON.value:
-                return PropertyExtValueWriteUnCon.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_VALUE_INFO_REPORT.value:
-                return PropertyExtValueInfoReport.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_DESCRIPTION_READ.value:
-                return PropertyExtDescriptionRead.from_knx(raw)
-            if apci == APCIService.PROPERTY_EXT_DESCRIPTION_RESPONSE.value:
-                return PropertyExtDescriptionResponse.from_knx(raw)
-            if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
-                return MemoryExtendedWrite.from_knx(raw)
-            if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
-                return MemoryExtendedWriteResponse.from_knx(raw)
-            if apci == APCIService.MEMORY_EXTENDED_READ.value:
-                return MemoryExtendedRead.from_knx(raw)
-            if apci == APCIService.MEMORY_EXTENDED_READ_RESPONSE.value:
-                return MemoryExtendedReadResponse.from_knx(raw)
-            if apci == APCIService.FUNCTION_PROPERTY_EXT_COMMAND.value:
-                return FunctionPropertyExtCommand.from_knx(raw)
-            if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_READ.value:
-                return FunctionPropertyExtStateRead.from_knx(raw)
-            if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE.value:
-                return FunctionPropertyExtStateResponse.from_knx(raw)
-            return ADCResponse.from_knx(raw)
-        if service == APCIService.MEMORY_READ.value:
-            return MemoryRead.from_knx(raw)
-        if service == APCIService.MEMORY_WRITE.value:
-            return MemoryWrite.from_knx(raw)
-        if service == APCIService.MEMORY_RESPONSE.value:
-            return MemoryResponse.from_knx(raw)
-        if service == APCIService.USER_MESSAGE.value:
-            if apci == APCIUserService.USER_MEMORY_READ.value:
-                return UserMemoryRead.from_knx(raw)
-            if apci == APCIUserService.USER_MEMORY_RESPONSE.value:
-                return UserMemoryResponse.from_knx(raw)
-            if apci == APCIUserService.USER_MEMORY_WRITE.value:
-                return UserMemoryWrite.from_knx(raw)
-            if apci == APCIUserService.USER_MEMORY_BIT_WRITE.value:
-                return UserMemoryBitWrite.from_knx(raw)
-            if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
-                return UserManufacturerInfoRead.from_knx(raw)
-            if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
-                return UserManufacturerInfoResponse.from_knx(raw)
-            if apci == APCIUserService.FUNCTION_PROPERTY_COMMAND.value:
-                return FunctionPropertyCommand.from_knx(raw)
-            if apci == APCIUserService.FUNCTION_PROPERTY_STATE_READ.value:
-                return FunctionPropertyStateRead.from_knx(raw)
-            if apci == APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE.value:
-                return FunctionPropertyStateResponse.from_knx(raw)
-        if service == APCIService.DEVICE_DESCRIPTOR_READ.value:
-            return DeviceDescriptorRead.from_knx(raw)
-        if service == APCIService.DEVICE_DESCRIPTOR_RESPONSE.value:
-            return DeviceDescriptorResponse.from_knx(raw)
-        if service == APCIService.RESTART.value:
-            if apci == APCIService.RESTART_MASTER_RESET.value:
-                return RestartMasterReset.from_knx(raw)
-            if apci == APCIService.RESTART_MASTER_RESET_RESPONSE.value:
-                return RestartMasterResetResponse.from_knx(raw)
-            return Restart.from_knx(raw)
-        if service == APCIService.ESCAPE.value:
-            if apci == APCIExtendedService.FILTER_TABLE_OPEN.value:
-                return FilterTableOpen.from_knx(raw)
-            if apci == APCIExtendedService.FILTER_TABLE_READ.value:
-                return FilterTableRead.from_knx(raw)
-            if apci == APCIExtendedService.FILTER_TABLE_RESPONSE.value:
-                return FilterTableResponse.from_knx(raw)
-            if apci == APCIExtendedService.FILTER_TABLE_WRITE.value:
-                return FilterTableWrite.from_knx(raw)
-            if apci == APCIExtendedService.ROUTER_MEMORY_READ.value:
-                return RouterMemoryRead.from_knx(raw)
-            if apci == APCIExtendedService.ROUTER_MEMORY_RESPONSE.value:
-                return RouterMemoryResponse.from_knx(raw)
-            if apci == APCIExtendedService.ROUTER_MEMORY_WRITE.value:
-                return RouterMemoryWrite.from_knx(raw)
-            if apci == APCIExtendedService.ROUTER_STATUS_READ.value:
-                return RouterStatusRead.from_knx(raw)
-            if apci == APCIExtendedService.ROUTER_STATUS_RESPONSE.value:
-                return RouterStatusResponse.from_knx(raw)
-            if apci == APCIExtendedService.ROUTER_STATUS_WRITE.value:
-                return RouterStatusWrite.from_knx(raw)
-            if apci == APCIExtendedService.MEMORY_BIT_WRITE.value:
-                return MemoryBitWrite.from_knx(raw)
-            if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
-                return AuthorizeRequest.from_knx(raw)
-            if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
-                return AuthorizeResponse.from_knx(raw)
-            if apci == APCIExtendedService.KEY_WRITE.value:
-                return KeyWrite.from_knx(raw)
-            if apci == APCIExtendedService.KEY_RESPONSE.value:
-                return KeyResponse.from_knx(raw)
-            if apci == APCIExtendedService.PROPERTY_VALUE_READ.value:
-                return PropertyValueRead.from_knx(raw)
-            if apci == APCIExtendedService.PROPERTY_VALUE_WRITE.value:
-                return PropertyValueWrite.from_knx(raw)
-            if apci == APCIExtendedService.PROPERTY_VALUE_RESPONSE.value:
-                return PropertyValueResponse.from_knx(raw)
-            if apci == APCIExtendedService.PROPERTY_DESCRIPTION_READ.value:
-                return PropertyDescriptionRead.from_knx(raw)
-            if apci == APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value:
-                return PropertyDescriptionResponse.from_knx(raw)
-            if apci == APCIExtendedService.NETWORK_PARAMETER_READ.value:
-                return NetworkParameterRead.from_knx(raw)
-            if apci == APCIExtendedService.NETWORK_PARAMETER_RESPONSE.value:
-                return NetworkParameterResponse.from_knx(raw)
-            if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
-                return IndividualAddressSerialRead.from_knx(raw)
-            if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
-                return IndividualAddressSerialResponse.from_knx(raw)
-            if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
-                return IndividualAddressSerialWrite.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_WRITE.value:
-                return DomainAddressWrite.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_READ.value:
-                return DomainAddressRead.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_RESPONSE.value:
-                return DomainAddressResponse.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ.value:
-                return DomainAddressSelectiveRead.from_knx(raw)
-            if apci == APCIExtendedService.NETWORK_PARAMETER_WRITE.value:
-                return NetworkParameterWrite.from_knx(raw)
-            if apci == APCIExtendedService.LINK_READ.value:
-                return LinkRead.from_knx(raw)
-            if apci == APCIExtendedService.LINK_RESPONSE.value:
-                return LinkResponse.from_knx(raw)
-            if apci == APCIExtendedService.LINK_WRITE.value:
-                return LinkWrite.from_knx(raw)
-            if apci == APCIExtendedService.GROUP_PROP_VALUE_READ.value:
-                return GroupPropValueRead.from_knx(raw)
-            if apci == APCIExtendedService.GROUP_PROP_VALUE_RESPONSE.value:
-                return GroupPropValueResponse.from_knx(raw)
-            if apci == APCIExtendedService.GROUP_PROP_VALUE_WRITE.value:
-                return GroupPropValueWrite.from_knx(raw)
-            if apci == APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT.value:
-                return GroupPropValueInfoReport.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ.value:
-                return DomainAddressSerialNumberRead.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE.value:
-                return DomainAddressSerialNumberResponse.from_knx(raw)
-            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE.value:
-                return DomainAddressSerialNumberWrite.from_knx(raw)
-            if apci == APCIExtendedService.FILE_STREAM_INFO_REPORT.value:
-                return FileStreamInfoReport.from_knx(raw)
-            if apci == APCIExtendedService.APCI_SEC.value:
-                return SecureAPDU.from_knx(raw)
+        try:
+            if service == APCIService.GROUP_READ.value:
+                return GroupValueRead.from_knx(raw)
+            if service == APCIService.GROUP_WRITE.value:
+                return GroupValueWrite.from_knx(raw)
+            if service == APCIService.GROUP_RESPONSE.value:
+                return GroupValueResponse.from_knx(raw)
+            if service == APCIService.INDIVIDUAL_ADDRESS_WRITE.value:
+                return IndividualAddressWrite.from_knx(raw)
+            if service == APCIService.INDIVIDUAL_ADDRESS_READ.value:
+                return IndividualAddressRead.from_knx(raw)
+            if service == APCIService.INDIVIDUAL_ADDRESS_RESPONSE.value:
+                return IndividualAddressResponse.from_knx(raw)
+            if service == APCIService.ADC_READ.value:
+                return ADCRead.from_knx(raw)
+            if service == APCIService.ADC_RESPONSE.value:
+                if apci == APCIService.SYSTEM_NETWORK_PARAMETER_READ.value:
+                    return SystemNetworkParameterRead.from_knx(raw)
+                if apci == APCIService.SYSTEM_NETWORK_PARAMETER_RESPONSE.value:
+                    return SystemNetworkParameterResponse.from_knx(raw)
+                if apci == APCIService.SYSTEM_NETWORK_PARAMETER_WRITE.value:
+                    return SystemNetworkParameterWrite.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_VALUE_READ.value:
+                    return PropertyExtValueRead.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_VALUE_RESPONSE.value:
+                    return PropertyExtValueResponse.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON.value:
+                    return PropertyExtValueWriteCon.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_CON_RES.value:
+                    return PropertyExtValueWriteConRes.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_VALUE_WRITE_UNCON.value:
+                    return PropertyExtValueWriteUnCon.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_VALUE_INFO_REPORT.value:
+                    return PropertyExtValueInfoReport.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_DESCRIPTION_READ.value:
+                    return PropertyExtDescriptionRead.from_knx(raw)
+                if apci == APCIService.PROPERTY_EXT_DESCRIPTION_RESPONSE.value:
+                    return PropertyExtDescriptionResponse.from_knx(raw)
+                if apci == APCIService.MEMORY_EXTENDED_WRITE.value:
+                    return MemoryExtendedWrite.from_knx(raw)
+                if apci == APCIService.MEMORY_EXTENDED_WRITE_RESPONSE.value:
+                    return MemoryExtendedWriteResponse.from_knx(raw)
+                if apci == APCIService.MEMORY_EXTENDED_READ.value:
+                    return MemoryExtendedRead.from_knx(raw)
+                if apci == APCIService.MEMORY_EXTENDED_READ_RESPONSE.value:
+                    return MemoryExtendedReadResponse.from_knx(raw)
+                if apci == APCIService.FUNCTION_PROPERTY_EXT_COMMAND.value:
+                    return FunctionPropertyExtCommand.from_knx(raw)
+                if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_READ.value:
+                    return FunctionPropertyExtStateRead.from_knx(raw)
+                if apci == APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE.value:
+                    return FunctionPropertyExtStateResponse.from_knx(raw)
+                return ADCResponse.from_knx(raw)
+            if service == APCIService.MEMORY_READ.value:
+                return MemoryRead.from_knx(raw)
+            if service == APCIService.MEMORY_WRITE.value:
+                return MemoryWrite.from_knx(raw)
+            if service == APCIService.MEMORY_RESPONSE.value:
+                return MemoryResponse.from_knx(raw)
+            if service == APCIService.USER_MESSAGE.value:
+                if apci == APCIUserService.USER_MEMORY_READ.value:
+                    return UserMemoryRead.from_knx(raw)
+                if apci == APCIUserService.USER_MEMORY_RESPONSE.value:
+                    return UserMemoryResponse.from_knx(raw)
+                if apci == APCIUserService.USER_MEMORY_WRITE.value:
+                    return UserMemoryWrite.from_knx(raw)
+                if apci == APCIUserService.USER_MEMORY_BIT_WRITE.value:
+                    return UserMemoryBitWrite.from_knx(raw)
+                if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
+                    return UserManufacturerInfoRead.from_knx(raw)
+                if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
+                    return UserManufacturerInfoResponse.from_knx(raw)
+                if apci == APCIUserService.FUNCTION_PROPERTY_COMMAND.value:
+                    return FunctionPropertyCommand.from_knx(raw)
+                if apci == APCIUserService.FUNCTION_PROPERTY_STATE_READ.value:
+                    return FunctionPropertyStateRead.from_knx(raw)
+                if apci == APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE.value:
+                    return FunctionPropertyStateResponse.from_knx(raw)
+            if service == APCIService.DEVICE_DESCRIPTOR_READ.value:
+                return DeviceDescriptorRead.from_knx(raw)
+            if service == APCIService.DEVICE_DESCRIPTOR_RESPONSE.value:
+                return DeviceDescriptorResponse.from_knx(raw)
+            if service == APCIService.RESTART.value:
+                if apci == APCIService.RESTART_MASTER_RESET.value:
+                    return RestartMasterReset.from_knx(raw)
+                if apci == APCIService.RESTART_MASTER_RESET_RESPONSE.value:
+                    return RestartMasterResetResponse.from_knx(raw)
+                return Restart.from_knx(raw)
+            if service == APCIService.ESCAPE.value:
+                if apci == APCIExtendedService.FILTER_TABLE_OPEN.value:
+                    return FilterTableOpen.from_knx(raw)
+                if apci == APCIExtendedService.FILTER_TABLE_READ.value:
+                    return FilterTableRead.from_knx(raw)
+                if apci == APCIExtendedService.FILTER_TABLE_RESPONSE.value:
+                    return FilterTableResponse.from_knx(raw)
+                if apci == APCIExtendedService.FILTER_TABLE_WRITE.value:
+                    return FilterTableWrite.from_knx(raw)
+                if apci == APCIExtendedService.ROUTER_MEMORY_READ.value:
+                    return RouterMemoryRead.from_knx(raw)
+                if apci == APCIExtendedService.ROUTER_MEMORY_RESPONSE.value:
+                    return RouterMemoryResponse.from_knx(raw)
+                if apci == APCIExtendedService.ROUTER_MEMORY_WRITE.value:
+                    return RouterMemoryWrite.from_knx(raw)
+                if apci == APCIExtendedService.ROUTER_STATUS_READ.value:
+                    return RouterStatusRead.from_knx(raw)
+                if apci == APCIExtendedService.ROUTER_STATUS_RESPONSE.value:
+                    return RouterStatusResponse.from_knx(raw)
+                if apci == APCIExtendedService.ROUTER_STATUS_WRITE.value:
+                    return RouterStatusWrite.from_knx(raw)
+                if apci == APCIExtendedService.MEMORY_BIT_WRITE.value:
+                    return MemoryBitWrite.from_knx(raw)
+                if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
+                    return AuthorizeRequest.from_knx(raw)
+                if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
+                    return AuthorizeResponse.from_knx(raw)
+                if apci == APCIExtendedService.KEY_WRITE.value:
+                    return KeyWrite.from_knx(raw)
+                if apci == APCIExtendedService.KEY_RESPONSE.value:
+                    return KeyResponse.from_knx(raw)
+                if apci == APCIExtendedService.PROPERTY_VALUE_READ.value:
+                    return PropertyValueRead.from_knx(raw)
+                if apci == APCIExtendedService.PROPERTY_VALUE_WRITE.value:
+                    return PropertyValueWrite.from_knx(raw)
+                if apci == APCIExtendedService.PROPERTY_VALUE_RESPONSE.value:
+                    return PropertyValueResponse.from_knx(raw)
+                if apci == APCIExtendedService.PROPERTY_DESCRIPTION_READ.value:
+                    return PropertyDescriptionRead.from_knx(raw)
+                if apci == APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value:
+                    return PropertyDescriptionResponse.from_knx(raw)
+                if apci == APCIExtendedService.NETWORK_PARAMETER_READ.value:
+                    return NetworkParameterRead.from_knx(raw)
+                if apci == APCIExtendedService.NETWORK_PARAMETER_RESPONSE.value:
+                    return NetworkParameterResponse.from_knx(raw)
+                if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
+                    return IndividualAddressSerialRead.from_knx(raw)
+                if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
+                    return IndividualAddressSerialResponse.from_knx(raw)
+                if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
+                    return IndividualAddressSerialWrite.from_knx(raw)
+                if apci == APCIExtendedService.DOMAIN_ADDRESS_WRITE.value:
+                    return DomainAddressWrite.from_knx(raw)
+                if apci == APCIExtendedService.DOMAIN_ADDRESS_READ.value:
+                    return DomainAddressRead.from_knx(raw)
+                if apci == APCIExtendedService.DOMAIN_ADDRESS_RESPONSE.value:
+                    return DomainAddressResponse.from_knx(raw)
+                if apci == APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ.value:
+                    return DomainAddressSelectiveRead.from_knx(raw)
+                if apci == APCIExtendedService.NETWORK_PARAMETER_WRITE.value:
+                    return NetworkParameterWrite.from_knx(raw)
+                if apci == APCIExtendedService.LINK_READ.value:
+                    return LinkRead.from_knx(raw)
+                if apci == APCIExtendedService.LINK_RESPONSE.value:
+                    return LinkResponse.from_knx(raw)
+                if apci == APCIExtendedService.LINK_WRITE.value:
+                    return LinkWrite.from_knx(raw)
+                if apci == APCIExtendedService.GROUP_PROP_VALUE_READ.value:
+                    return GroupPropValueRead.from_knx(raw)
+                if apci == APCIExtendedService.GROUP_PROP_VALUE_RESPONSE.value:
+                    return GroupPropValueResponse.from_knx(raw)
+                if apci == APCIExtendedService.GROUP_PROP_VALUE_WRITE.value:
+                    return GroupPropValueWrite.from_knx(raw)
+                if apci == APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT.value:
+                    return GroupPropValueInfoReport.from_knx(raw)
+                if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ.value:
+                    return DomainAddressSerialNumberRead.from_knx(raw)
+                if (
+                    apci
+                    == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE.value
+                ):
+                    return DomainAddressSerialNumberResponse.from_knx(raw)
+                if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE.value:
+                    return DomainAddressSerialNumberWrite.from_knx(raw)
+                if apci == APCIExtendedService.FILE_STREAM_INFO_REPORT.value:
+                    return FileStreamInfoReport.from_knx(raw)
+                if apci == APCIExtendedService.APCI_SEC.value:
+                    return SecureAPDU.from_knx(raw)
+        except (IndexError, struct.error, ValueError) as err:
+            raise ConversionError(
+                f"Error parsing APCI {apci:#012b} from raw data: {raw.hex()}"
+            ) from err
 
         raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
 
