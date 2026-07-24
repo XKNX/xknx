@@ -4904,6 +4904,17 @@ class TestDomainAddressSerialNumberRead:
 
         assert payload == DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
 
+    def test_from_knx_wrong_length(self) -> None:
+        """
+        Test from_knx raises ConversionError for a truncated serial.
+
+        A real truncated frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path with a bare
+        struct.error.
+        """
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03ec0102"))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")

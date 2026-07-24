@@ -4780,6 +4780,10 @@ class DomainAddressSerialNumberRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 8:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddressSerialNumber_Read in CEMI: {raw.hex()}"
+            )
         (serial,) = struct.unpack("!6s", raw[2:])
         return cls(serial=serial)
 
