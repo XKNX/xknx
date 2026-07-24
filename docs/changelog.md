@@ -14,21 +14,19 @@ nav_order: 2
 
 ### Protocol
 
-- Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.
-- Add A_FunctionPropertyExtCommand, A_FunctionPropertyExtState_Read and A_FunctionPropertyExtState_Response APCI service parsing.
-- Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
-- Add A_PropertyExtValue_Read, A_PropertyExtValue_Response, A_PropertyExtValue_WriteCon, A_PropertyExtValue_WriteConRes, A_PropertyExtValue_WriteUnCon, A_PropertyExtValue_InfoReport, A_PropertyExtDescription_Read and A_PropertyExtDescription_Response APCI service parsing.
-- Add A_UserMemoryBit_Write and A_MemoryBit_Write APCI service parsing.
-- Add A_FilterTable_Open, A_FilterTable_Read, A_FilterTable_Response and A_FilterTable_Write APCI service parsing.
-- Add A_RouterMemory_Read, A_RouterMemory_Response and A_RouterMemory_Write APCI service parsing. Recognize A_RouterStatus_Read/Response/Write APCI services; these are a legacy EIB/BCU1-era coupler status service with no PDU definition in the current Application Layer spec and are not planned for implementation - configure couplers via the Router Object properties (`A_PropertyValue_Read`/`A_PropertyValue_Write`) instead.
-- Add A_Key_Write and A_Key_Response APCI service parsing.
-- Add A_NetworkParameter_Read, A_NetworkParameter_Response and A_NetworkParameter_Write APCI service parsing.
 - Add A_DomainAddress_Write, A_DomainAddress_Read, A_DomainAddress_Response, A_DomainAddressSelective_Read, A_DomainAddressSerialNumber_Read, A_DomainAddressSerialNumber_Response and A_DomainAddressSerialNumber_Write APCI service parsing.
-- Add A_Link_Read, A_Link_Response and A_Link_Write APCI service parsing.
-- Add A_GroupPropValue_Read, A_GroupPropValue_Response, A_GroupPropValue_Write and A_GroupPropValue_InfoReport APCI service parsing (KNX Logical Tag Extended specification).
 - Add A_FileStream_InfoReport APCI service parsing.
-- Fix A_DomainAddressSerialNumber_Read parsing to raise ConversionError instead of a bare struct.error for a truncated frame.
-- Fix A_DomainAddress_Read parsing to raise ConversionError instead of silently ignoring trailing bytes. Fix A_DomainAddressSelective_Read parsing to raise ConversionError instead of silently accepting an incomplete asdu.
+- Add A_FilterTable_Open, A_FilterTable_Read, A_FilterTable_Response and A_FilterTable_Write APCI service parsing.
+- Add A_FunctionPropertyExtCommand, A_FunctionPropertyExtState_Read and A_FunctionPropertyExtState_Response APCI service parsing.
+- Add A_GroupPropValue_Read, A_GroupPropValue_Response, A_GroupPropValue_Write and A_GroupPropValue_InfoReport APCI service parsing (KNX Logical Tag Extended specification).
+- Add A_Key_Write and A_Key_Response APCI service parsing.
+- Add A_Link_Read, A_Link_Response and A_Link_Write APCI service parsing.
+- Add A_MemoryBit_Write and A_UserMemoryBit_Write APCI service parsing.
+- Add A_NetworkParameter_Read, A_NetworkParameter_Response and A_NetworkParameter_Write APCI service parsing.
+- Add A_PropertyExtValue_Read, A_PropertyExtValue_Response, A_PropertyExtValue_WriteCon, A_PropertyExtValue_WriteConRes, A_PropertyExtValue_WriteUnCon, A_PropertyExtValue_InfoReport, A_PropertyExtDescription_Read and A_PropertyExtDescription_Response APCI service parsing.
+- Add A_RouterMemory_Read, A_RouterMemory_Response and A_RouterMemory_Write APCI service parsing. Recognize A_RouterStatus_Read/Response/Write APCI services; these are a legacy EIB/BCU1-era coupler status service with no PDU definition in the current Application Layer spec and are not planned for implementation - configure couplers via the Router Object properties (`A_PropertyValue_Read`/`A_PropertyValue_Write`) instead.
+- Add A_SystemNetworkParameter_Read, A_SystemNetworkParameter_Response and A_SystemNetworkParameter_Write APCI service parsing.
+- Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
 
 ### Devices
 
@@ -36,10 +34,15 @@ nav_order: 2
 
 ### DPT
 
-- Add DPT 4 (`DPTCharacter` 4.001 ASCII, `DPTCharacterLatin1` 4.002 ISO 8859-1) for single characters
-- Add DPT 2 definitions
 - Add generic DPT 1 (`DPT1BitBoolean`, value_type `"1bit"`) and generic DPT 2 (`DPT2BitBoolean`, value_type `"2bit"`) as boolean fallbacks used when a value only resolves to the DPT 1 / DPT 2 main number (e.g. an ETS project without a specific 1.yyy / 2.yyy subtype). They behave like `DPTBool` / `DPTBoolControl`.
-- Add DPT 243.600 (`DPT_Colour_Transition_xyY`), 249.600 (`DPT_Brightness_Colour_Temperature_Transition`), 250.600 (`DPT_Brightness_Colour_Temperature_Control`), 252.600 (`DPT_Relative_Control_RGBW`), 253.600 (`DPT_Relative_Control_xyY`) and 254.600 (`DPT_Relative_Control_RGB`)
+- Add DPT 2 definitions
+- Add DPT 4 (`DPTCharacter` 4.001 ASCII, `DPTCharacterLatin1` 4.002 ISO 8859-1) for single characters
+- Add DPT 243.600 (`DPT_Colour_Transition_xyY`)
+- Add DPT 249.600 (`DPT_Brightness_Colour_Temperature_Transition`)
+- Add DPT 250.600 (`DPT_Brightness_Colour_Temperature_Control`)
+- Add DPT 252.600 (`DPT_Relative_Control_RGBW`)
+- Add DPT 253.600 (`DPT_Relative_Control_xyY`)
+- Add DPT 254.600 (`DPT_Relative_Control_RGB`)
 
 # 3.16.0 Complex schema 2026-06-19
 
