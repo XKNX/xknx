@@ -18,6 +18,17 @@ nav_order: 2
 - Add A_FunctionPropertyExtCommand, A_FunctionPropertyExtState_Read and A_FunctionPropertyExtState_Response APCI service parsing.
 - Fix A_Restart parsing to distinguish Basic Restart from Master Reset (restart_type bit was ignored, silently dropping erase_code/channel_number on relay). Add A_Restart_Response parsing for the Master Reset confirmation.
 - Add A_PropertyExtValue_Read, A_PropertyExtValue_Response, A_PropertyExtValue_WriteCon, A_PropertyExtValue_WriteConRes, A_PropertyExtValue_WriteUnCon, A_PropertyExtValue_InfoReport, A_PropertyExtDescription_Read and A_PropertyExtDescription_Response APCI service parsing.
+- Add A_UserMemoryBit_Write and A_MemoryBit_Write APCI service parsing.
+- Add A_FilterTable_Open, A_FilterTable_Read, A_FilterTable_Response and A_FilterTable_Write APCI service parsing.
+- Add A_RouterMemory_Read, A_RouterMemory_Response and A_RouterMemory_Write APCI service parsing. Recognize A_RouterStatus_Read/Response/Write APCI services; these are a legacy EIB/BCU1-era coupler status service with no PDU definition in the current Application Layer spec and are not planned for implementation - configure couplers via the Router Object properties (`A_PropertyValue_Read`/`A_PropertyValue_Write`) instead.
+- Add A_Key_Write and A_Key_Response APCI service parsing.
+- Add A_NetworkParameter_Read, A_NetworkParameter_Response and A_NetworkParameter_Write APCI service parsing.
+- Add A_DomainAddress_Write, A_DomainAddress_Read, A_DomainAddress_Response, A_DomainAddressSelective_Read, A_DomainAddressSerialNumber_Read, A_DomainAddressSerialNumber_Response and A_DomainAddressSerialNumber_Write APCI service parsing.
+- Add A_Link_Read, A_Link_Response and A_Link_Write APCI service parsing.
+- Add A_GroupPropValue_Read, A_GroupPropValue_Response, A_GroupPropValue_Write and A_GroupPropValue_InfoReport APCI service parsing (KNX Logical Tag Extended specification).
+- Add A_FileStream_InfoReport APCI service parsing.
+- Fix A_DomainAddressSerialNumber_Read parsing to raise ConversionError instead of a bare struct.error for a truncated frame.
+- Fix A_DomainAddress_Read parsing to raise ConversionError instead of silently ignoring trailing bytes. Fix A_DomainAddressSelective_Read parsing to raise ConversionError instead of silently accepting an incomplete asdu.
 
 ### Devices
 

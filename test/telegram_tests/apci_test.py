@@ -4,7 +4,7 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
-from xknx.telegram.address import IndividualAddress
+from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import (
     APCI,
     ADCRead,
@@ -13,12 +13,28 @@ from xknx.telegram.apci import (
     AuthorizeResponse,
     DeviceDescriptorRead,
     DeviceDescriptorResponse,
+    DomainAddressRead,
+    DomainAddressResponse,
+    DomainAddressSelectiveRead,
+    DomainAddressSerialNumberRead,
+    DomainAddressSerialNumberResponse,
+    DomainAddressSerialNumberWrite,
+    DomainAddressWrite,
+    FileStreamInfoReport,
+    FilterTableOpen,
+    FilterTableRead,
+    FilterTableResponse,
+    FilterTableWrite,
     FunctionPropertyCommand,
     FunctionPropertyExtCommand,
     FunctionPropertyExtStateRead,
     FunctionPropertyExtStateResponse,
     FunctionPropertyStateRead,
     FunctionPropertyStateResponse,
+    GroupPropValueInfoReport,
+    GroupPropValueRead,
+    GroupPropValueResponse,
+    GroupPropValueWrite,
     GroupValueRead,
     GroupValueResponse,
     GroupValueWrite,
@@ -28,6 +44,12 @@ from xknx.telegram.apci import (
     IndividualAddressSerialResponse,
     IndividualAddressSerialWrite,
     IndividualAddressWrite,
+    KeyResponse,
+    KeyWrite,
+    LinkRead,
+    LinkResponse,
+    LinkWrite,
+    MemoryBitWrite,
     MemoryExtendedRead,
     MemoryExtendedReadResponse,
     MemoryExtendedWrite,
@@ -35,6 +57,9 @@ from xknx.telegram.apci import (
     MemoryRead,
     MemoryResponse,
     MemoryWrite,
+    NetworkParameterRead,
+    NetworkParameterResponse,
+    NetworkParameterWrite,
     PropertyDescriptionRead,
     PropertyDescriptionResponse,
     PropertyExtDescriptionRead,
@@ -52,11 +77,18 @@ from xknx.telegram.apci import (
     RestartMasterReset,
     RestartMasterResetResponse,
     ReturnCode,
+    RouterMemoryRead,
+    RouterMemoryResponse,
+    RouterMemoryWrite,
+    RouterStatusRead,
+    RouterStatusResponse,
+    RouterStatusWrite,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
     SystemNetworkParameterWrite,
     UserManufacturerInfoRead,
     UserManufacturerInfoResponse,
+    UserMemoryBitWrite,
     UserMemoryRead,
     UserMemoryResponse,
     UserMemoryWrite,
@@ -78,8 +110,9 @@ class TestAPCI:
         with pytest.raises(
             ConversionError, match=r".*Class not implemented for APCI.*"
         ):
-            # Unsupported extended service.
-            APCI.from_knx(bytes((0x03, 0xC0)))
+            # Unsupported extended service (reserved gap between
+            # A_FilterTable_Write and A_RouterMemory_Read).
+            APCI.from_knx(bytes((0x03, 0xC4)))
 
 
 class TestGroupValueRead:
@@ -2385,6 +2418,86 @@ class TestUserMemoryResponse:
         )
 
 
+class TestUserMemoryBitWrite:
+    """Test class for UserMemoryBitWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+        assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(
+            bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22])
+        )
+
+        assert payload == UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a mismatched number/length."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            # number=2 but only 1 octet of and_data/xor_data follows
+            APCI.from_knx(bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0x11]))
+
+    def test_from_knx_too_short(self) -> None:
+        """Test from_knx raises ConversionError for an APDU shorter than the header."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC4, 0x02]))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+        assert payload.to_knx() == bytes(
+            [0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22]
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes([0x02, 0xC4, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22])
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = UserMemoryBitWrite(
+            address=0x10000, and_data=bytes([0xAA]), xor_data=bytes([0x11])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+    def test_to_knx_mismatched_data_length(self) -> None:
+        """Test to_knx raises ConversionError when and_data/xor_data lengths differ."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11])
+        )
+
+        with pytest.raises(
+            ConversionError, match=r".*and_data and xor_data.*same length.*"
+        ):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11, 0x22])
+        )
+
+        assert str(payload) == (
+            '<UserMemoryBitWrite address="0x1234" and_data="aabb" xor_data="1122" />'
+        )
+
+
 class TestRestart:
     """Test class for Restart objects."""
 
@@ -2697,6 +2810,617 @@ class TestFunctionPropertyStateResponse:
         )
 
 
+class TestFilterTableOpen:
+    """Test class for FilterTableOpen objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FilterTableOpen()
+
+        assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes((0x03, 0xC0)))
+
+        assert payload == FilterTableOpen()
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FilterTableOpen()
+
+        assert payload.to_knx() == bytes((0x03, 0xC0))
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FilterTableOpen()
+
+        assert str(payload) == "<FilterTableOpen />"
+
+
+class TestFilterTableRead:
+    """Test class for FilterTableRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FilterTableRead(filter_table_address=0x1234, number=5)
+
+        assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03c1051234"))
+
+        assert payload == FilterTableRead(filter_table_address=0x1234, number=5)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03c10512"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FilterTableRead(filter_table_address=0x1234, number=5)
+
+        assert payload.to_knx() == bytes.fromhex("03c1051234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03c1051234")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = FilterTableRead(filter_table_address=0x1234, number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a read)."""
+        payload = FilterTableRead(filter_table_address=0x1234, number=0)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = FilterTableRead(filter_table_address=0x10000, number=5)
+
+        with pytest.raises(ConversionError, match=r".*Filter table address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FilterTableRead(filter_table_address=0x1234, number=5)
+
+        assert str(payload) == (
+            '<FilterTableRead filter_table_address="0x1234" number="5" />'
+        )
+
+
+class TestFilterTableResponse:
+    """Test class for FilterTableResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FilterTableResponse(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03c2021234aabb"))
+
+        assert payload == FilterTableResponse(
+            filter_table_address=0x1234, number=2, data=bytes([0xAA, 0xBB])
+        )
+
+    def test_from_knx_error_response(self) -> None:
+        """Test from_knx accepts the number=0/no-data error response."""
+        payload = APCI.from_knx(bytes.fromhex("03c2001234"))
+
+        assert payload == FilterTableResponse(
+            filter_table_address=0x1234, number=0, data=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03c20212"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FilterTableResponse(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03c2021234aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03c2021234aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = FilterTableResponse(filter_table_address=0x1234, data=b"", number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero_error_response(self) -> None:
+        """Test to_knx accepts number=0 (the documented error response)."""
+        payload = FilterTableResponse(filter_table_address=0x1234, data=b"", number=0)
+
+        assert payload.to_knx() == bytes.fromhex("03c2001234")
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = FilterTableResponse(filter_table_address=0x10000, data=b"")
+
+        with pytest.raises(ConversionError, match=r".*Filter table address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FilterTableResponse(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert str(payload) == (
+            '<FilterTableResponse filter_table_address="0x1234" number="2" '
+            'data="aabb" />'
+        )
+
+
+class TestFilterTableWrite:
+    """Test class for FilterTableWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FilterTableWrite(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03c3021234aabb"))
+
+        assert payload == FilterTableWrite(
+            filter_table_address=0x1234, number=2, data=bytes([0xAA, 0xBB])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03c3021234"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FilterTableWrite(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03c3021234aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03c3021234aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = FilterTableWrite(filter_table_address=0x1234, data=b"", number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a write)."""
+        payload = FilterTableWrite(filter_table_address=0x1234, data=b"", number=0)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = FilterTableWrite(filter_table_address=0x10000, data=bytes([0xAA]))
+
+        with pytest.raises(ConversionError, match=r".*Filter table address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FilterTableWrite(
+            filter_table_address=0x1234, data=bytes([0xAA, 0xBB])
+        )
+
+        assert str(payload) == (
+            '<FilterTableWrite filter_table_address="0x1234" number="2" data="aabb" />'
+        )
+
+
+class TestRouterMemoryRead:
+    """Test class for RouterMemoryRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = RouterMemoryRead(memory_address=0x1234, number=5)
+
+        assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03c8051234"))
+
+        assert payload == RouterMemoryRead(memory_address=0x1234, number=5)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03c80512"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = RouterMemoryRead(memory_address=0x1234, number=5)
+
+        assert payload.to_knx() == bytes.fromhex("03c8051234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03c8051234")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = RouterMemoryRead(memory_address=0x1234, number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a read)."""
+        payload = RouterMemoryRead(memory_address=0x1234, number=0)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = RouterMemoryRead(memory_address=0x10000, number=5)
+
+        with pytest.raises(ConversionError, match=r".*Memory address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = RouterMemoryRead(memory_address=0x1234, number=5)
+
+        assert str(payload) == (
+            '<RouterMemoryRead memory_address="0x1234" number="5" />'
+        )
+
+
+class TestRouterMemoryResponse:
+    """Test class for RouterMemoryResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = RouterMemoryResponse(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03c9021234aabb"))
+
+        assert payload == RouterMemoryResponse(
+            memory_address=0x1234, number=2, data=bytes([0xAA, 0xBB])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03c90212"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = RouterMemoryResponse(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert payload.to_knx() == bytes.fromhex("03c9021234aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03c9021234aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = RouterMemoryResponse(memory_address=0x1234, data=b"", number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = RouterMemoryResponse(memory_address=0x10000, data=b"")
+
+        with pytest.raises(ConversionError, match=r".*Memory address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = RouterMemoryResponse(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert str(payload) == (
+            '<RouterMemoryResponse memory_address="0x1234" number="2" data="aabb" />'
+        )
+
+
+class TestRouterMemoryWrite:
+    """Test class for RouterMemoryWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03ca021234aabb"))
+
+        assert payload == RouterMemoryWrite(
+            memory_address=0x1234, number=2, data=bytes([0xAA, 0xBB])
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03ca021234"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert payload.to_knx() == bytes.fromhex("03ca021234aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03ca021234aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range number."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=b"", number=255)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_zero(self) -> None:
+        """Test to_knx raises ConversionError for number=0 (not valid for a write)."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=b"", number=0)
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = RouterMemoryWrite(memory_address=0x10000, data=bytes([0xAA]))
+
+        with pytest.raises(ConversionError, match=r".*Memory address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = RouterMemoryWrite(memory_address=0x1234, data=bytes([0xAA, 0xBB]))
+
+        assert str(payload) == (
+            '<RouterMemoryWrite memory_address="0x1234" number="2" data="aabb" />'
+        )
+
+
+class TestRouterStatusRead:
+    """Test class for RouterStatusRead objects."""
+
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Read.*"):
+            APCI.from_knx(bytes((0x03, 0xCD)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            RouterStatusRead().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+            RouterStatusRead().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterStatusRead()) == "<RouterStatusRead (not implemented) />"
+
+
+class TestRouterStatusResponse:
+    """Test class for RouterStatusResponse objects."""
+
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Response.*"):
+            APCI.from_knx(bytes((0x03, 0xCE)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            RouterStatusResponse().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+            RouterStatusResponse().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert (
+            str(RouterStatusResponse()) == "<RouterStatusResponse (not implemented) />"
+        )
+
+
+class TestRouterStatusWrite:
+    """Test class for RouterStatusWrite objects."""
+
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Write.*"):
+            APCI.from_knx(bytes((0x03, 0xCF)))
+
+    def test_to_knx_raises_not_implemented(self) -> None:
+        """Test to_knx raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            RouterStatusWrite().to_knx()
+
+    def test_calculated_length_raises_not_implemented(self) -> None:
+        """Test calculated_length raises NotImplementedError."""
+        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+            RouterStatusWrite().calculated_length()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        assert str(RouterStatusWrite()) == "<RouterStatusWrite (not implemented) />"
+
+
+class TestMemoryBitWrite:
+    """Test class for MemoryBitWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = MemoryBitWrite(
+            memory_address=0x1234,
+            and_data=bytes([0xAA, 0xBB]),
+            xor_data=bytes([0x11, 0x22]),
+        )
+
+        assert payload.calculated_length() == 8
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(
+            bytes([0x03, 0xD0, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22])
+        )
+
+        assert payload == MemoryBitWrite(
+            memory_address=0x1234,
+            and_data=bytes([0xAA, 0xBB]),
+            xor_data=bytes([0x11, 0x22]),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a mismatched number/length."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            # number=2 but only 1 octet of and_data/xor_data follows
+            APCI.from_knx(bytes([0x03, 0xD0, 0x02, 0x12, 0x34, 0xAA, 0x11]))
+
+    def test_from_knx_too_short(self) -> None:
+        """Test from_knx raises ConversionError for an APDU shorter than the header."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD0, 0x02]))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = MemoryBitWrite(
+            memory_address=0x1234,
+            and_data=bytes([0xAA, 0xBB]),
+            xor_data=bytes([0x11, 0x22]),
+        )
+
+        assert payload.to_knx() == bytes(
+            [0x03, 0xD0, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22]
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes([0x03, 0xD0, 0x02, 0x12, 0x34, 0xAA, 0xBB, 0x11, 0x22])
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range address."""
+        payload = MemoryBitWrite(
+            memory_address=0x10000, and_data=bytes([0xAA]), xor_data=bytes([0x11])
+        )
+
+        with pytest.raises(ConversionError, match=r".*Memory address.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError when and_data exceeds 255 octets."""
+        payload = MemoryBitWrite(
+            memory_address=0x1234, and_data=bytes(256), xor_data=bytes(256)
+        )
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
+            payload.to_knx()
+
+    def test_to_knx_mismatched_data_length(self) -> None:
+        """Test to_knx raises ConversionError when and_data/xor_data lengths differ."""
+        payload = MemoryBitWrite(
+            memory_address=0x1234, and_data=bytes([0xAA, 0xBB]), xor_data=bytes([0x11])
+        )
+
+        with pytest.raises(
+            ConversionError, match=r".*and_data and xor_data.*same length.*"
+        ):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = MemoryBitWrite(
+            memory_address=0x1234,
+            and_data=bytes([0xAA, 0xBB]),
+            xor_data=bytes([0x11, 0x22]),
+        )
+
+        assert str(payload) == (
+            '<MemoryBitWrite memory_address="0x1234" and_data="aabb" xor_data="1122" />'
+        )
+
+
 class TestAuthorizeRequest:
     """Test class for AuthorizeRequest objects."""
 
@@ -2753,6 +3477,107 @@ class TestAuthorizeResponse:
         payload = AuthorizeResponse(level=123)
 
         assert str(payload) == '<AuthorizeResponse level="123"/>'
+
+
+class TestKeyWrite:
+    """Test class for KeyWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = KeyWrite(level=1, key=0x12345678)
+
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03d30112345678"))
+
+        assert payload == KeyWrite(level=1, key=0x12345678)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03d301123456"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = KeyWrite(level=1, key=0x12345678)
+
+        assert payload.to_knx() == bytes.fromhex("03d30112345678")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03d30112345678")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_level_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range level."""
+        payload = KeyWrite(level=0x100, key=0x12345678)
+
+        with pytest.raises(ConversionError, match=r".*Level.*"):
+            payload.to_knx()
+
+    def test_to_knx_key_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range key."""
+        payload = KeyWrite(level=1, key=0x100000000)
+
+        with pytest.raises(ConversionError, match=r".*Key.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = KeyWrite(level=1, key=0x12345678)
+
+        assert str(payload) == '<KeyWrite level="1" key="0x12345678" />'
+
+
+class TestKeyResponse:
+    """Test class for KeyResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = KeyResponse(level=123)
+
+        assert payload.calculated_length() == 2
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03d47b"))
+
+        assert payload == KeyResponse(level=123)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03d4"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = KeyResponse(level=123)
+
+        assert payload.to_knx() == bytes.fromhex("03d47b")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03d47b")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_level_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range level."""
+        payload = KeyResponse(level=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Level.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = KeyResponse(level=123)
+
+        assert str(payload) == '<KeyResponse level="123" />'
 
 
 class TestPropertyValueRead:
@@ -3024,6 +3849,151 @@ class TestPropertyDescriptionResponse:
         )
 
 
+class TestNetworkParameterRead:
+    """Test class for NetworkParameterRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = NetworkParameterRead(
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
+        )
+
+        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03da00000b01"))
+
+        assert payload == NetworkParameterRead(
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
+        )
+
+    def test_from_knx_no_test_info(self) -> None:
+        """Test from_knx accepts the minimum 5 octet APDU with no test_info."""
+        payload = APCI.from_knx(bytes.fromhex("03daffffff"))
+
+        assert payload == NetworkParameterRead(
+            object_type=0xFFFF, property_id=0xFF, test_info=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03da0000"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = NetworkParameterRead(
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03da00000b01")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03da00000b01")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = NetworkParameterRead(object_type=0x10000, property_id=11)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = NetworkParameterRead(object_type=0, property_id=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = NetworkParameterRead(
+            object_type=0, property_id=11, test_info=bytes.fromhex("01")
+        )
+
+        assert str(payload) == (
+            '<NetworkParameterRead object_type="0" property_id="11" test_info="01" />'
+        )
+
+
+class TestNetworkParameterResponse:
+    """Test class for NetworkParameterResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = NetworkParameterResponse(
+            object_type=0, property_id=11, test_info_and_result=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03db00000baabbcc"))
+
+        assert payload == NetworkParameterResponse(
+            object_type=0, property_id=11, test_info_and_result=bytes.fromhex("aabbcc")
+        )
+
+    def test_from_knx_no_data(self) -> None:
+        """Test from_knx accepts the minimum 5 octet APDU with no data."""
+        payload = APCI.from_knx(bytes.fromhex("03db00000b"))
+
+        assert payload == NetworkParameterResponse(
+            object_type=0, property_id=11, test_info_and_result=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03db0000"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = NetworkParameterResponse(
+            object_type=0, property_id=11, test_info_and_result=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03db00000baabbcc")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03db00000baabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = NetworkParameterResponse(object_type=0x10000, property_id=11)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = NetworkParameterResponse(object_type=0, property_id=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = NetworkParameterResponse(
+            object_type=0, property_id=11, test_info_and_result=bytes.fromhex("aabbcc")
+        )
+
+        assert str(payload) == (
+            '<NetworkParameterResponse object_type="0" property_id="11" '
+            'test_info_and_result="aabbcc" />'
+        )
+
+
 class TestIndividualAddressSerialRead:
     """Test class for IndividualAddressSerialRead objects."""
 
@@ -3047,6 +4017,13 @@ class TestIndividualAddressSerialRead:
         assert payload.to_knx() == bytes(
             [0x03, 0xDC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]
         )
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = IndividualAddressSerialRead(b"\xaa\xbb\xcc")
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
@@ -3088,6 +4065,15 @@ class TestIndividualAddressSerialResponse:
         assert payload.to_knx() == bytes(
             [0x03, 0xDD, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33, 0x12, 0x03, 0x00, 0x00]
         )
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = IndividualAddressSerialResponse(
+            serial=b"\xaa\xbb\xcc", address=IndividualAddress("1.2.3")
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
 
     def test_str(self) -> None:
         """Test the __str__ method."""
@@ -3165,6 +4151,15 @@ class TestIndividualAddressSerialWrite:
             ]
         )
 
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = IndividualAddressSerialWrite(
+            serial=b"\xaa\xbb\xcc", address=IndividualAddress("1.2.3")
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = IndividualAddressSerialWrite(
@@ -3174,4 +4169,1159 @@ class TestIndividualAddressSerialWrite:
         assert (
             str(payload)
             == '<IndividualAddressSerialWrite serial="aabbcc112233" address="1.2.3" />'
+        )
+
+
+class TestDomainAddressWrite:
+    """Test class for DomainAddressWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+        assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e01234"))
+
+        assert payload == DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e0aabbccddeeff"))
+
+        assert payload == DomainAddressWrite(
+            domain_address=bytes.fromhex("aabbccddeeff")
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e0aabbcc"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+        assert payload.to_knx() == bytes.fromhex("03e01234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e0aabbccddeeff")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        payload = DomainAddressWrite(domain_address=b"\xaa")
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressWrite(domain_address=bytes.fromhex("1234"))
+
+        assert str(payload) == '<DomainAddressWrite domain_address="1234" />'
+
+
+class TestDomainAddressRead:
+    """Test class for DomainAddressRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressRead()
+
+        assert payload.calculated_length() == 1
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes((0x03, 0xE1)))
+
+        assert payload == DomainAddressRead()
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for trailing bytes."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes((0x03, 0xE1, 0x00)))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressRead()
+
+        assert payload.to_knx() == bytes((0x03, 0xE1))
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressRead()
+
+        assert str(payload) == "<DomainAddressRead />"
+
+
+class TestDomainAddressResponse:
+    """Test class for DomainAddressResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+        assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e21234"))
+
+        assert payload == DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03e2aabbccddeeff"))
+
+        assert payload == DomainAddressResponse(
+            domain_address=bytes.fromhex("aabbccddeeff")
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e2aabbcc"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+        assert payload.to_knx() == bytes.fromhex("03e21234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e2aabbccddeeff")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        payload = DomainAddressResponse(domain_address=b"\xaa")
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressResponse(domain_address=bytes.fromhex("1234"))
+
+        assert str(payload) == '<DomainAddressResponse domain_address="1234" />'
+
+
+class TestDomainAddressSelectiveRead:
+    """Test class for DomainAddressSelectiveRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+        assert payload.calculated_length() == 6
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e31234aabbcc"))
+
+        assert payload == DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+    def test_from_knx_empty_asdu(self) -> None:
+        """Test from_knx raises ConversionError for an empty asdu."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes((0x03, 0xE3)))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+        assert payload.to_knx() == bytes.fromhex("03e31234aabbcc")
+
+    def test_to_knx_empty_asdu(self) -> None:
+        """Test to_knx raises ConversionError for an empty asdu."""
+        payload = DomainAddressSelectiveRead(asdu=b"")
+
+        with pytest.raises(ConversionError, match=r".*asdu.*"):
+            payload.to_knx()
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e31234aabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressSelectiveRead(asdu=bytes.fromhex("1234aabbcc"))
+
+        assert str(payload) == ('<DomainAddressSelectiveRead asdu="1234aabbcc" />')
+
+
+class TestNetworkParameterWrite:
+    """Test class for NetworkParameterWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e400000baabbcc"))
+
+        assert payload == NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+    def test_from_knx_no_value(self) -> None:
+        """Test from_knx accepts the minimum 5 octet APDU with no value."""
+        payload = APCI.from_knx(bytes.fromhex("03e4ffffff"))
+
+        assert payload == NetworkParameterWrite(
+            object_type=0xFFFF, property_id=0xFF, value=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e40000"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e400000baabbcc")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e400000baabbcc")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = NetworkParameterWrite(object_type=0x10000, property_id=11)
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = NetworkParameterWrite(object_type=0, property_id=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = NetworkParameterWrite(
+            object_type=0, property_id=11, value=bytes.fromhex("aabbcc")
+        )
+
+        assert str(payload) == (
+            '<NetworkParameterWrite object_type="0" property_id="11" value="aabbcc" />'
+        )
+
+
+class TestLinkRead:
+    """Test class for LinkRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = LinkRead(group_object_number=5, start_index=3)
+
+        assert payload.calculated_length() == 3
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e50503"))
+
+        assert payload == LinkRead(group_object_number=5, start_index=3)
+
+    def test_from_knx_strips_reserved_bits(self) -> None:
+        """Test from_knx discards the reserved upper nibble of byte1."""
+        payload = APCI.from_knx(bytes.fromhex("03e505f3"))
+
+        assert payload == LinkRead(group_object_number=5, start_index=3)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e505"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = LinkRead(group_object_number=5, start_index=3)
+
+        assert payload.to_knx() == bytes.fromhex("03e50503")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e50503")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_group_object_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range group_object_number."""
+        payload = LinkRead(group_object_number=0x100, start_index=3)
+
+        with pytest.raises(ConversionError, match=r".*Group object number.*"):
+            payload.to_knx()
+
+    def test_to_knx_start_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range start_index."""
+        payload = LinkRead(group_object_number=5, start_index=0x10)
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = LinkRead(group_object_number=5, start_index=3)
+
+        assert str(payload) == ('<LinkRead group_object_number="5" start_index="3" />')
+
+
+class TestLinkResponse:
+    """Test class for LinkResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e6052300010002"))
+
+        assert payload == LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+    def test_from_knx_negative_response(self) -> None:
+        """Test from_knx accepts the negative response (no addresses, start_index=0)."""
+        payload = APCI.from_knx(bytes.fromhex("03e60500"))
+
+        assert payload == LinkResponse(
+            group_object_number=5,
+            sending_address=0,
+            start_index=0,
+            group_address_list=[],
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an odd-length address list."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e60523000100"))
+
+    def test_from_knx_too_many_addresses(self) -> None:
+        """Test from_knx raises ConversionError for more than 6 addresses."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e60500") + b"\x00\x01" * 7)
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e6052300010002")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e6052300010002")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_too_many_addresses(self) -> None:
+        """Test to_knx raises ConversionError for more than 6 addresses."""
+        payload = LinkResponse(
+            group_object_number=5,
+            group_address_list=[GroupAddress(i) for i in range(1, 8)],
+        )
+
+        with pytest.raises(ConversionError, match=r".*at most 6.*"):
+            payload.to_knx()
+
+    def test_to_knx_group_object_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range group_object_number."""
+        payload = LinkResponse(group_object_number=0x100)
+
+        with pytest.raises(ConversionError, match=r".*Group object number.*"):
+            payload.to_knx()
+
+    def test_to_knx_sending_address_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range sending_address."""
+        payload = LinkResponse(group_object_number=5, sending_address=0x10)
+
+        with pytest.raises(ConversionError, match=r".*Sending address.*"):
+            payload.to_knx()
+
+    def test_to_knx_start_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range start_index."""
+        payload = LinkResponse(group_object_number=5, start_index=0x10)
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = LinkResponse(
+            group_object_number=5,
+            sending_address=2,
+            start_index=3,
+            group_address_list=[GroupAddress(1), GroupAddress(2)],
+        )
+
+        assert str(payload) == (
+            '<LinkResponse group_object_number="5" sending_address="2" '
+            'start_index="3" group_address_list="0/0/1, 0/0/2" />'
+        )
+
+
+class TestLinkWrite:
+    """Test class for LinkWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = LinkWrite(
+            group_object_number=5, group_address=GroupAddress(1), sending=True
+        )
+
+        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx_add_sending(self) -> None:
+        """Test the from_knx method for adding a sending Group Address."""
+        payload = APCI.from_knx(bytes.fromhex("03e705010001"))
+
+        assert payload == LinkWrite(
+            group_object_number=5,
+            group_address=GroupAddress(1),
+            delete=False,
+            sending=True,
+        )
+
+    def test_from_knx_delete(self) -> None:
+        """Test the from_knx method for deleting a Group Address."""
+        payload = APCI.from_knx(bytes.fromhex("03e705020001"))
+
+        assert payload == LinkWrite(
+            group_object_number=5,
+            group_address=GroupAddress(1),
+            delete=True,
+            sending=False,
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e7050100"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = LinkWrite(
+            group_object_number=5, group_address=GroupAddress(1), sending=True
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e705010001")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e705010001")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_group_object_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range group_object_number."""
+        payload = LinkWrite(group_object_number=0x100, group_address=GroupAddress(1))
+
+        with pytest.raises(ConversionError, match=r".*Group object number.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = LinkWrite(
+            group_object_number=5, group_address=GroupAddress(1), sending=True
+        )
+
+        assert str(payload) == (
+            '<LinkWrite group_object_number="5" delete="False" sending="True" '
+            'group_address="0/0/1" />'
+        )
+
+
+class TestGroupPropValueRead:
+    """Test class for GroupPropValueRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueRead(object_type=17, object_instance=1, property_id=51)
+
+        assert payload.calculated_length() == 5
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e800110133"))
+
+        assert payload == GroupPropValueRead(
+            object_type=17, object_instance=1, property_id=51
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e8001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueRead(object_type=17, object_instance=1, property_id=51)
+
+        assert payload.to_knx() == bytes.fromhex("03e800110133")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e800110133")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_object_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_type."""
+        payload = GroupPropValueRead(
+            object_type=0x10000, object_instance=1, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object type.*"):
+            payload.to_knx()
+
+    def test_to_knx_object_instance_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_instance."""
+        payload = GroupPropValueRead(
+            object_type=17, object_instance=0x100, property_id=51
+        )
+
+        with pytest.raises(ConversionError, match=r".*Object instance.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = GroupPropValueRead(
+            object_type=17, object_instance=1, property_id=0x100
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = GroupPropValueRead(object_type=17, object_instance=1, property_id=51)
+
+        assert str(payload) == (
+            '<GroupPropValueRead object_type="17" object_instance="1" '
+            'property_id="51" />'
+        )
+
+
+class TestGroupPropValueResponse:
+    """Test class for GroupPropValueResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03e900110133aabb"))
+
+        assert payload == GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_no_data(self) -> None:
+        """Test from_knx accepts the minimum 6 octet APDU with no data."""
+        payload = APCI.from_knx(bytes.fromhex("03e900110133"))
+
+        assert payload == GroupPropValueResponse(
+            object_type=17, object_instance=1, property_id=51, data=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03e9001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03e900110133aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03e900110133aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = GroupPropValueResponse(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<GroupPropValueResponse object_type="17" object_instance="1" '
+            'property_id="51" data="aabb" />'
+        )
+
+
+class TestGroupPropValueWrite:
+    """Test class for GroupPropValueWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03ea00110133aabb"))
+
+        assert payload == GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03ea001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03ea00110133aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03ea00110133aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = GroupPropValueWrite(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<GroupPropValueWrite object_type="17" object_instance="1" '
+            'property_id="51" data="aabb" />'
+        )
+
+
+class TestGroupPropValueInfoReport:
+    """Test class for GroupPropValueInfoReport objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03eb00110133aabb"))
+
+        assert payload == GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03eb001101"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03eb00110133aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03eb00110133aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = GroupPropValueInfoReport(
+            object_type=17,
+            object_instance=1,
+            property_id=51,
+            data=bytes.fromhex("aabb"),
+        )
+
+        assert str(payload) == (
+            '<GroupPropValueInfoReport object_type="17" object_instance="1" '
+            'property_id="51" data="aabb" />'
+        )
+
+
+class TestDomainAddressSerialNumberRead:
+    """Test class for DomainAddressSerialNumberRead objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+        assert payload.calculated_length() == 7
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes([0x03, 0xEC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]))
+
+        assert payload == DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+    def test_from_knx_wrong_length(self) -> None:
+        """
+        Test from_knx raises ConversionError for a truncated serial.
+
+        A real truncated frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path with a bare
+        struct.error.
+        """
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03ec0102"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+        assert payload.to_knx() == bytes(
+            [0x03, 0xEC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33]
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes([0x03, 0xEC, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33])
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc")
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressSerialNumberRead(b"\xaa\xbb\xcc\x11\x22\x33")
+
+        assert str(payload) == (
+            '<DomainAddressSerialNumberRead serial="aabbcc112233" />'
+        )
+
+
+class TestDomainAddressSerialNumberResponse:
+    """Test class for DomainAddressSerialNumberResponse objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03edaabbcc1122331234"))
+
+        assert payload == DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03edaabbcc112233445566778899"))
+
+        assert payload == DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("445566778899"),
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03edaabbcc112233112233"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03edaabbcc1122331234")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03edaabbcc1122331234")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_serial_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
+    def test_to_knx_domain_address_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a neither-2-nor-6 octet address."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("112233"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressSerialNumberResponse(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert str(payload) == (
+            '<DomainAddressSerialNumberResponse serial="aabbcc112233" '
+            'domain_address="1234" />'
+        )
+
+
+class TestDomainAddressSerialNumberWrite:
+    """Test class for DomainAddressSerialNumberWrite objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert payload.calculated_length() == 9
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx_pl110(self) -> None:
+        """Test the from_knx method for a 2 octet KNX-PL110 domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03eeaabbcc1122331234"))
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+    def test_from_knx_ip_multicast(self) -> None:
+        """Test the from_knx method for a 4 octet IP multicast domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03eeaabbcc11223311223344"))
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+        )
+
+    def test_from_knx_rf(self) -> None:
+        """Test the from_knx method for a 6 octet KNX-RF domain address."""
+        payload = APCI.from_knx(bytes.fromhex("03eeaabbcc112233445566778899"))
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("445566778899"),
+        )
+
+    def test_from_knx_ip_secure(self) -> None:
+        """Test the from_knx method for the KNX IP Secure variant."""
+        payload = APCI.from_knx(
+            bytes.fromhex("03eeaabbcc11223311223344") + b"\x01" + b"\x00" * 16
+        )
+
+        assert payload == DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+            backbone_key=b"\x00" * 16,
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an unsupported address length."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03eeaabbcc112233112233"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03eeaabbcc1122331234")
+
+    def test_to_knx_ip_secure(self) -> None:
+        """Test the to_knx method for the KNX IP Secure variant."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+            backbone_key=b"\x00" * 16,
+        )
+
+        assert payload.to_knx() == (
+            bytes.fromhex("03eeaabbcc11223311223344") + b"\x01" + b"\x00" * 16
+        )
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03eeaabbcc11223311223344") + b"\x01" + b"\x00" * 16
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_serial_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-6-byte serial."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Serial.*"):
+            payload.to_knx()
+
+    def test_to_knx_domain_address_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for an unsupported address length."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("112233"),
+        )
+
+        with pytest.raises(ConversionError, match=r".*Domain address.*"):
+            payload.to_knx()
+
+    def test_to_knx_secure_fields_require_4_byte_address(self) -> None:
+        """Test to_knx rejects secure fields with a non-4-byte domain address."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+            routing_security_version=1,
+            backbone_key=b"\x00" * 16,
+        )
+
+        with pytest.raises(ConversionError, match=r".*4 octet.*"):
+            payload.to_knx()
+
+    def test_to_knx_secure_fields_must_be_set_together(self) -> None:
+        """Test to_knx rejects a routing_security_version without a backbone_key."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+        )
+
+        with pytest.raises(ConversionError, match=r".*must be set together.*"):
+            payload.to_knx()
+
+    def test_to_knx_routing_security_version_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range version."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=0x100,
+            backbone_key=b"\x00" * 16,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Routing security version.*"):
+            payload.to_knx()
+
+    def test_to_knx_backbone_key_wrong_length(self) -> None:
+        """Test to_knx raises ConversionError for a non-16-byte backbone_key."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("11223344"),
+            routing_security_version=1,
+            backbone_key=b"\x00",
+        )
+
+        with pytest.raises(ConversionError, match=r".*Backbone key.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = DomainAddressSerialNumberWrite(
+            serial=bytes.fromhex("aabbcc112233"),
+            domain_address=bytes.fromhex("1234"),
+        )
+
+        assert str(payload) == (
+            '<DomainAddressSerialNumberWrite serial="aabbcc112233" '
+            'domain_address="1234" routing_security_version="None" '
+            'backbone_key="None" />'
+        )
+
+
+class TestFileStreamInfoReport:
+    """Test class for FileStreamInfoReport objects."""
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+        assert payload.calculated_length() == 4
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(bytes.fromhex("03f053aabb"))
+
+        assert payload == FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+    def test_from_knx_no_file_block(self) -> None:
+        """Test from_knx accepts the minimum 3 octet APDU with no file_block."""
+        payload = APCI.from_knx(bytes.fromhex("03f053"))
+
+        assert payload == FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=b""
+        )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes.fromhex("03f0"))
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method."""
+        payload = FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+        assert payload.to_knx() == bytes.fromhex("03f053aabb")
+
+    def test_round_trip(self) -> None:
+        """Test from_knx().to_knx() reproduces the original frame exactly."""
+        raw = bytes.fromhex("03f053aabb")
+
+        assert APCI.from_knx(raw).to_knx() == raw
+
+    def test_to_knx_file_handle_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range file_handle."""
+        payload = FileStreamInfoReport(file_handle=0x10, file_block_seq_number=3)
+
+        with pytest.raises(ConversionError, match=r".*File handle.*"):
+            payload.to_knx()
+
+    def test_to_knx_file_block_seq_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range seq number."""
+        payload = FileStreamInfoReport(file_handle=5, file_block_seq_number=0x10)
+
+        with pytest.raises(ConversionError, match=r".*sequence number.*"):
+            payload.to_knx()
+
+    def test_str(self) -> None:
+        """Test the __str__ method."""
+        payload = FileStreamInfoReport(
+            file_handle=5, file_block_seq_number=3, file_block=bytes.fromhex("aabb")
+        )
+
+        assert str(payload) == (
+            '<FileStreamInfoReport file_handle="5" file_block_seq_number="3" '
+            'file_block="aabb" />'
         )

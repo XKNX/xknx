@@ -10,7 +10,7 @@ is a service that takes a DPT as a value.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import struct
 from typing import ClassVar, cast
@@ -18,7 +18,7 @@ from typing import ClassVar, cast
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError
 from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
-from xknx.telegram.address import IndividualAddress
+from xknx.telegram.address import GroupAddress, IndividualAddress
 
 
 def encode_cmd_and_payload(
@@ -97,6 +97,8 @@ class APCIUserService(Enum):
     USER_MEMORY_RESPONSE = 0x02C1
     USER_MEMORY_WRITE = 0x02C2
 
+    USER_MEMORY_BIT_WRITE = 0x02C4
+
     USER_MANUFACTURER_INFO_READ = 0x02C5
     USER_MANUFACTURER_INFO_RESPONSE = 0x02C6
 
@@ -108,8 +110,28 @@ class APCIUserService(Enum):
 class APCIExtendedService(Enum):
     """Enum class for extended APCI services."""
 
+    # Coupler specific services
+    FILTER_TABLE_OPEN = 0x03C0
+    FILTER_TABLE_READ = 0x03C1
+    FILTER_TABLE_RESPONSE = 0x03C2
+    FILTER_TABLE_WRITE = 0x03C3
+
+    ROUTER_MEMORY_READ = 0x03C8
+    ROUTER_MEMORY_RESPONSE = 0x03C9
+    ROUTER_MEMORY_WRITE = 0x03CA
+
+    ROUTER_STATUS_READ = 0x03CD
+    ROUTER_STATUS_RESPONSE = 0x03CE
+    ROUTER_STATUS_WRITE = 0x03CF
+
+    # not for future use
+    MEMORY_BIT_WRITE = 0x03D0
+
     AUTHORIZE_REQUEST = 0x03D1
     AUTHORIZE_RESPONSE = 0x03D2
+
+    KEY_WRITE = 0x03D3
+    KEY_RESPONSE = 0x03D4
 
     PROPERTY_VALUE_READ = 0x03D5
     PROPERTY_VALUE_RESPONSE = 0x03D6
@@ -118,9 +140,35 @@ class APCIExtendedService(Enum):
     PROPERTY_DESCRIPTION_READ = 0x03D8
     PROPERTY_DESCRIPTION_RESPONSE = 0x03D9
 
+    NETWORK_PARAMETER_READ = 0x03DA
+    NETWORK_PARAMETER_RESPONSE = 0x03DB
+
     INDIVIDUAL_ADDRESS_SERIAL_READ = 0x03DC
     INDIVIDUAL_ADDRESS_SERIAL_RESPONSE = 0x03DD
     INDIVIDUAL_ADDRESS_SERIAL_WRITE = 0x03DE
+
+    # Open media specific services
+    DOMAIN_ADDRESS_WRITE = 0x03E0
+    DOMAIN_ADDRESS_READ = 0x03E1
+    DOMAIN_ADDRESS_RESPONSE = 0x03E2
+    DOMAIN_ADDRESS_SELECTIVE_READ = 0x03E3
+
+    NETWORK_PARAMETER_WRITE = 0x03E4
+
+    LINK_READ = 0x03E5
+    LINK_RESPONSE = 0x03E6
+    LINK_WRITE = 0x03E7
+
+    GROUP_PROP_VALUE_READ = 0x03E8
+    GROUP_PROP_VALUE_RESPONSE = 0x03E9
+    GROUP_PROP_VALUE_WRITE = 0x03EA
+    GROUP_PROP_VALUE_INFO_REPORT = 0x03EB
+
+    DOMAIN_ADDRESS_SERIAL_NUMBER_READ = 0x03EC
+    DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE = 0x03ED
+    DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE = 0x03EE
+
+    FILE_STREAM_INFO_REPORT = 0x03F0
 
     # DataSecure
     APCI_SEC = 0x03F1
@@ -277,6 +325,8 @@ class APCI(ABC):
                 return UserMemoryResponse.from_knx(raw)
             if apci == APCIUserService.USER_MEMORY_WRITE.value:
                 return UserMemoryWrite.from_knx(raw)
+            if apci == APCIUserService.USER_MEMORY_BIT_WRITE.value:
+                return UserMemoryBitWrite.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_READ.value:
                 return UserManufacturerInfoRead.from_knx(raw)
             if apci == APCIUserService.USER_MANUFACTURER_INFO_RESPONSE.value:
@@ -298,10 +348,36 @@ class APCI(ABC):
                 return RestartMasterResetResponse.from_knx(raw)
             return Restart.from_knx(raw)
         if service == APCIService.ESCAPE.value:
+            if apci == APCIExtendedService.FILTER_TABLE_OPEN.value:
+                return FilterTableOpen.from_knx(raw)
+            if apci == APCIExtendedService.FILTER_TABLE_READ.value:
+                return FilterTableRead.from_knx(raw)
+            if apci == APCIExtendedService.FILTER_TABLE_RESPONSE.value:
+                return FilterTableResponse.from_knx(raw)
+            if apci == APCIExtendedService.FILTER_TABLE_WRITE.value:
+                return FilterTableWrite.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_MEMORY_READ.value:
+                return RouterMemoryRead.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_MEMORY_RESPONSE.value:
+                return RouterMemoryResponse.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_MEMORY_WRITE.value:
+                return RouterMemoryWrite.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_STATUS_READ.value:
+                return RouterStatusRead.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_STATUS_RESPONSE.value:
+                return RouterStatusResponse.from_knx(raw)
+            if apci == APCIExtendedService.ROUTER_STATUS_WRITE.value:
+                return RouterStatusWrite.from_knx(raw)
+            if apci == APCIExtendedService.MEMORY_BIT_WRITE.value:
+                return MemoryBitWrite.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_REQUEST.value:
                 return AuthorizeRequest.from_knx(raw)
             if apci == APCIExtendedService.AUTHORIZE_RESPONSE.value:
                 return AuthorizeResponse.from_knx(raw)
+            if apci == APCIExtendedService.KEY_WRITE.value:
+                return KeyWrite.from_knx(raw)
+            if apci == APCIExtendedService.KEY_RESPONSE.value:
+                return KeyResponse.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_READ.value:
                 return PropertyValueRead.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_VALUE_WRITE.value:
@@ -312,12 +388,48 @@ class APCI(ABC):
                 return PropertyDescriptionRead.from_knx(raw)
             if apci == APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE.value:
                 return PropertyDescriptionResponse.from_knx(raw)
+            if apci == APCIExtendedService.NETWORK_PARAMETER_READ.value:
+                return NetworkParameterRead.from_knx(raw)
+            if apci == APCIExtendedService.NETWORK_PARAMETER_RESPONSE.value:
+                return NetworkParameterResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ.value:
                 return IndividualAddressSerialRead.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_RESPONSE.value:
                 return IndividualAddressSerialResponse.from_knx(raw)
             if apci == APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_WRITE.value:
                 return IndividualAddressSerialWrite.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_WRITE.value:
+                return DomainAddressWrite.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_READ.value:
+                return DomainAddressRead.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_RESPONSE.value:
+                return DomainAddressResponse.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ.value:
+                return DomainAddressSelectiveRead.from_knx(raw)
+            if apci == APCIExtendedService.NETWORK_PARAMETER_WRITE.value:
+                return NetworkParameterWrite.from_knx(raw)
+            if apci == APCIExtendedService.LINK_READ.value:
+                return LinkRead.from_knx(raw)
+            if apci == APCIExtendedService.LINK_RESPONSE.value:
+                return LinkResponse.from_knx(raw)
+            if apci == APCIExtendedService.LINK_WRITE.value:
+                return LinkWrite.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_READ.value:
+                return GroupPropValueRead.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_RESPONSE.value:
+                return GroupPropValueResponse.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_WRITE.value:
+                return GroupPropValueWrite.from_knx(raw)
+            if apci == APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT.value:
+                return GroupPropValueInfoReport.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ.value:
+                return DomainAddressSerialNumberRead.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE.value:
+                return DomainAddressSerialNumberResponse.from_knx(raw)
+            if apci == APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE.value:
+                return DomainAddressSerialNumberWrite.from_knx(raw)
+            if apci == APCIExtendedService.FILE_STREAM_INFO_REPORT.value:
+                return FileStreamInfoReport.from_knx(raw)
             if apci == APCIExtendedService.APCI_SEC.value:
                 return SecureAPDU.from_knx(raw)
 
@@ -2424,6 +2536,75 @@ class UserMemoryResponse(APCI):
 
 
 @dataclass(slots=True)
+class UserMemoryBitWrite(APCI):
+    """
+    UserMemoryBitWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.5.6.4
+    A_UserMemoryBit_Write.
+
+    Payload contains a 1 byte number (octet count of the contiguous
+    block to modify, 1-5), a 2 byte memory_address, and_data and
+    xor_data - both `number` bytes long. Each result bit is computed as
+    (and_data_bit AND block_bit) XOR xor_data_bit, i.e. and_data=0/
+    xor_data=0 clears a bit, and_data=0/xor_data=1 sets it, and_data=1/
+    xor_data=0 leaves it unmodified and and_data=1/xor_data=1 inverts
+    it.
+    """
+
+    CODE: ClassVar = APCIUserService.USER_MEMORY_BIT_WRITE
+
+    address: int
+    and_data: bytes
+    xor_data: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.and_data) + len(self.xor_data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> UserMemoryBitWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_UserMemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        number = raw[2]
+        if len(raw) != 5 + 2 * number:
+            raise ConversionError(
+                f"Invalid length for A_UserMemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        address = (raw[3] << 8) | raw[4]
+        and_data = raw[5 : 5 + number]
+        xor_data = raw[5 + number : 5 + 2 * number]
+
+        return cls(address=address, and_data=and_data, xor_data=xor_data)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.address <= 0xFFFF:
+            raise ConversionError("Address out of range.")
+        number = len(self.and_data)
+        if not 0 <= number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if len(self.xor_data) != number:
+            raise ConversionError("and_data and xor_data must have the same length.")
+
+        payload = (
+            struct.pack("!BH", number, self.address) + self.and_data + self.xor_data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<UserMemoryBitWrite address="{hex(self.address)}" '
+            f'and_data="{self.and_data.hex()}" xor_data="{self.xor_data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
 class UserManufacturerInfoRead(APCI):
     """UserManufacturerInfoRead service."""
 
@@ -2608,6 +2789,624 @@ class FunctionPropertyStateResponse(APCI):
 
 
 @dataclass(slots=True)
+class FilterTableOpen(APCI):
+    """
+    FilterTableOpen service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.1
+    A_FilterTable_Open. Coupler specific service - opens access to the
+    remote Filter Table before A_FilterTable_Read/Write are used. No
+    payload.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_OPEN
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableOpen:
+        """Parse/deserialize from KNX/IP raw data."""
+        # Nothing to parse, but must be implemented explicitly.
+        return cls()
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        return encode_cmd_and_payload(self.CODE)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<FilterTableOpen />"
+
+
+@dataclass(slots=True)
+class FilterTableRead(APCI):
+    """
+    FilterTableRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.2
+    A_FilterTable_Read. Coupler specific service - requires
+    A_FilterTable_Open first.
+
+    Payload contains a 1 byte number (octet count to read, 1-254) and
+    a 2 byte filter_table_address.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_READ
+
+    filter_table_address: int
+    number: int = 1
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Read in CEMI: {raw.hex()}"
+            )
+        number, filter_table_address = struct.unpack("!BH", raw[2:])
+
+        return cls(filter_table_address=filter_table_address, number=number)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 1 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.filter_table_address <= 0xFFFF:
+            raise ConversionError("Filter table address out of range.")
+
+        payload = struct.pack("!BH", self.number, self.filter_table_address)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FilterTableRead "
+            f'filter_table_address="{hex(self.filter_table_address)}" '
+            f'number="{self.number}" />'
+        )
+
+
+@dataclass(slots=True)
+class FilterTableResponse(APCI):
+    """
+    FilterTableResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.2
+    A_FilterTable_Response (defined alongside A_FilterTable_Read).
+    Coupler specific service.
+
+    Payload contains a 1 byte number (octet count), a 2 byte
+    filter_table_address and `number` bytes of data. A device signals
+    an error (e.g. address space unreachable or protected, illegal
+    number of octets requested) by responding with number=0 and no
+    data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_RESPONSE
+
+    filter_table_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Response in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, filter_table_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            filter_table_address=filter_table_address,
+            data=data,
+            number=number,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.filter_table_address <= 0xFFFF:
+            raise ConversionError("Filter table address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.filter_table_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FilterTableResponse "
+            f'filter_table_address="{hex(self.filter_table_address)}" '
+            f'number="{self.number}" data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class FilterTableWrite(APCI):
+    """
+    FilterTableWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.3
+    A_FilterTable_Write. Coupler specific service - requires
+    A_FilterTable_Open first.
+
+    Same payload as FilterTableResponse: a 1 byte number (octet count
+    to write, 1-254), a 2 byte filter_table_address and `number` bytes
+    of data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILTER_TABLE_WRITE
+
+    filter_table_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FilterTableWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Write in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, filter_table_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            filter_table_address=filter_table_address,
+            data=data,
+            number=number,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 1 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.filter_table_address <= 0xFFFF:
+            raise ConversionError("Filter table address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.filter_table_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FilterTableWrite "
+            f'filter_table_address="{hex(self.filter_table_address)}" '
+            f'number="{self.number}" data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class RouterMemoryRead(APCI):
+    """
+    RouterMemoryRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.4
+    A_RouterMemory_Read. Coupler specific service - reads the memory of
+    the second controller of the remote communication controller.
+
+    Payload contains a 1 byte number (octet count to read, 1-254) and
+    a 2 byte memory_address.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_READ
+
+    memory_address: int
+    number: int = 1
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterMemoryRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_RouterMemory_Read in CEMI: {raw.hex()}"
+            )
+        number, memory_address = struct.unpack("!BH", raw[2:])
+
+        return cls(memory_address=memory_address, number=number)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 1 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+
+        payload = struct.pack("!BH", self.number, self.memory_address)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<RouterMemoryRead "
+            f'memory_address="{hex(self.memory_address)}" number="{self.number}" />'
+        )
+
+
+@dataclass(slots=True)
+class RouterMemoryResponse(APCI):
+    """
+    RouterMemoryResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.4
+    A_RouterMemory_Response (defined alongside A_RouterMemory_Read).
+    Coupler specific service.
+
+    Payload contains a 1 byte number (octet count), a 2 byte
+    memory_address and `number` bytes of data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_RESPONSE
+
+    memory_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterMemoryResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_RouterMemory_Response in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, memory_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            memory_address=memory_address,
+            data=data,
+            number=number,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.memory_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<RouterMemoryResponse "
+            f'memory_address="{hex(self.memory_address)}" number="{self.number}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class RouterMemoryWrite(APCI):
+    """
+    RouterMemoryWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.6.5
+    A_RouterMemory_Write. Coupler specific service - writes the memory
+    of the second controller of the remote communication controller.
+
+    Same payload as RouterMemoryResponse: a 1 byte number (octet count
+    to write, 1-254), a 2 byte memory_address and `number` bytes of
+    data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_MEMORY_WRITE
+
+    memory_address: int
+    data: bytes = b""
+    number: int = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        """Post-initialization steps."""
+        if self.number is None:
+            self.number = len(self.data)  # type: ignore[unreachable]
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterMemoryWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_RouterMemory_Write in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        number, memory_address, data = struct.unpack(f"!BH{size}s", raw[2:])
+
+        return cls(
+            memory_address=memory_address,
+            data=data,
+            number=number,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 1 <= self.number <= 254:
+            raise ConversionError("Number out of range.")
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BH{size}s", self.number, self.memory_address, self.data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<RouterMemoryWrite "
+            f'memory_address="{hex(self.memory_address)}" number="{self.number}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class RouterStatusRead(APCI):
+    """
+    RouterStatusRead service.
+
+    APCI 0x3CD, A_RouterStatus_Read. NOT IMPLEMENTED - and not planned:
+    this is a legacy EIB/BCU1-era line coupler management service, not
+    part of the current Application Layer spec (03_03_07 lists the
+    APCI code with no PDU/payload definition - the coupler status byte
+    was a BCU1/BCU2 hardware memory register, documented only in
+    manufacturer-era EIB Bus Coupling Unit memory maps, not the KNX
+    standard). Modern ETS configures couplers exclusively through the
+    Router Object (Interface Object Type 6) properties
+    (PID_MAIN_LCGRPCONFIG/PID_SUB_LCGRPCONFIG, PID_MAIN_LCCONFIG/
+    PID_SUB_LCCONFIG, PID_ROUTETABLE_CONTROL, PID_LINE_STATUS - see
+    AN161 Coupler Model 2.0) via A_PropertyValue_Read/Write - implement
+    against that instead of this APCI. Kept as a stub only so the APCI
+    code table is complete and dispatch doesn't misroute it. from_knx
+    raises ConversionError so a real incoming frame is rejected as
+    UnsupportedCEMIMessage; calculated_length/to_knx raise
+    NotImplementedError since there's no legitimate way to construct an
+    instance to send.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_RouterStatus_Read is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterStatusRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
+        # crashing the receive path - see class docstring.
+        raise ConversionError(f"A_RouterStatus_Read is not supported: {raw.hex()}")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_RouterStatus_Read is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterStatusRead (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterStatusResponse(APCI):
+    """
+    RouterStatusResponse service.
+
+    APCI 0x3CE, A_RouterStatus_Response. NOT IMPLEMENTED - see
+    RouterStatusRead's docstring: this is a legacy EIB/BCU1-era coupler
+    status readout with no current Application Layer PDU spec. Use the
+    Router Object's PID_LINE_STATUS (and related PIDs) via
+    A_PropertyValue_Read instead.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_RESPONSE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_RouterStatus_Response is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterStatusResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
+        # crashing the receive path - see class docstring.
+        raise ConversionError(f"A_RouterStatus_Response is not supported: {raw.hex()}")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_RouterStatus_Response is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterStatusResponse (not implemented) />"
+
+
+@dataclass(slots=True)
+class RouterStatusWrite(APCI):
+    """
+    RouterStatusWrite service.
+
+    APCI 0x3CF, canonically A_Write_Router_Status_Request in the
+    coding table (BCU alias "LcGroupWrite" - Line Coupler Group config
+    write). NOT IMPLEMENTED - see RouterStatusRead's docstring: this
+    set a BCU1-generation coupler's group-telegram routing mode (route
+    all / block all / use filter table), a hardware register with no
+    current Application Layer PDU spec. Use the Router Object's
+    PID_MAIN_LCGRPCONFIG/PID_SUB_LCGRPCONFIG via A_PropertyValue_Write
+    instead.
+    """
+
+    CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_WRITE
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        raise NotImplementedError(
+            "A_RouterStatus_Write is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> RouterStatusWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
+        # crashing the receive path - see class docstring.
+        raise ConversionError(f"A_RouterStatus_Write is not supported: {raw.hex()}")
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        raise NotImplementedError(
+            "A_RouterStatus_Write is a legacy BCU coupler service with no current "
+            "Application Layer spec definition - see class docstring."
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<RouterStatusWrite (not implemented) />"
+
+
+@dataclass(slots=True)
+class MemoryBitWrite(APCI):
+    """
+    MemoryBitWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.5.5
+    A_MemoryBit_Write. Marked "not for future use" by the coupler
+    services table, but fully defined - same layout as
+    A_UserMemoryBit_Write.
+
+    Payload contains a 1 byte number (octet count of the contiguous
+    block to modify, 1-5), a 2 byte memory_address, and_data and
+    xor_data - both `number` bytes long. Each result bit is computed as
+    (and_data_bit AND block_bit) XOR xor_data_bit, i.e. and_data=0/
+    xor_data=0 clears a bit, and_data=0/xor_data=1 sets it, and_data=1/
+    xor_data=0 leaves it unmodified and and_data=1/xor_data=1 inverts
+    it.
+    """
+
+    CODE: ClassVar = APCIExtendedService.MEMORY_BIT_WRITE
+
+    memory_address: int
+    and_data: bytes
+    xor_data: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.and_data) + len(self.xor_data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> MemoryBitWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        number = raw[2]
+        if len(raw) != 5 + 2 * number:
+            raise ConversionError(
+                f"Invalid length for A_MemoryBit_Write in CEMI: {raw.hex()}"
+            )
+        memory_address = (raw[3] << 8) | raw[4]
+        and_data = raw[5 : 5 + number]
+        xor_data = raw[5 + number : 5 + 2 * number]
+
+        return cls(memory_address=memory_address, and_data=and_data, xor_data=xor_data)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.memory_address <= 0xFFFF:
+            raise ConversionError("Memory address out of range.")
+        number = len(self.and_data)
+        if not 0 <= number <= 0xFF:
+            raise ConversionError("Number out of range.")
+        if len(self.xor_data) != number:
+            raise ConversionError("and_data and xor_data must have the same length.")
+
+        payload = (
+            struct.pack("!BH", number, self.memory_address)
+            + self.and_data
+            + self.xor_data
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<MemoryBitWrite memory_address="{hex(self.memory_address)}" '
+            f'and_data="{self.and_data.hex()}" xor_data="{self.xor_data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
 class AuthorizeRequest(APCI):
     """AuthorizeRequest service."""
 
@@ -2663,6 +3462,100 @@ class AuthorizeResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<AuthorizeResponse level="{self.level}"/>'
+
+
+@dataclass(slots=True)
+class KeyWrite(APCI):
+    """
+    KeyWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.5.8 A_Key_Write.
+    Modifies (or, with key=0xFFFFFFFF, deletes) the key associated to
+    an access level.
+
+    Payload contains a 1 byte level and a 4 byte key.
+    """
+
+    CODE: ClassVar = APCIExtendedService.KEY_WRITE
+
+    level: int
+    key: int
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 6
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> KeyWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 7:
+            raise ConversionError(
+                f"Invalid length for A_Key_Write in CEMI: {raw.hex()}"
+            )
+        level, key = struct.unpack("!BI", raw[2:])
+
+        return cls(level=level, key=key)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.level <= 0xFF:
+            raise ConversionError("Level out of range.")
+        if not 0 <= self.key <= 0xFFFFFFFF:
+            raise ConversionError("Key out of range.")
+
+        payload = struct.pack("!BI", self.level, self.key)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<KeyWrite level="{self.level}" key="{self.key:#010x}" />'
+
+
+@dataclass(slots=True)
+class KeyResponse(APCI):
+    """
+    KeyResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.5.8
+    A_Key_Response (defined alongside A_Key_Write). Contains the access
+    level set for the key, or 0xFF if the current access level was
+    higher than the level being written.
+
+    Payload contains a 1 byte level.
+    """
+
+    CODE: ClassVar = APCIExtendedService.KEY_RESPONSE
+
+    level: int
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 2
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> KeyResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 3:
+            raise ConversionError(
+                f"Invalid length for A_Key_Response in CEMI: {raw.hex()}"
+            )
+        (level,) = struct.unpack("!B", raw[2:])
+
+        return cls(level=level)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.level <= 0xFF:
+            raise ConversionError("Level out of range.")
+
+        payload = struct.pack("!B", self.level)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<KeyResponse level="{self.level}" />'
 
 
 @dataclass(slots=True)
@@ -2964,6 +3857,132 @@ class PropertyDescriptionResponse(APCI):
 
 
 @dataclass(slots=True)
+class NetworkParameterRead(APCI):
+    """
+    NetworkParameterRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.2.6
+    A_NetworkParameter_Read. Sent point-to-point or as broadcast to
+    check the configuration of a network parameter.
+
+    Payload contains a 16 bit object_type, an 8 bit property_id and a
+    PID-specific, variable-length test_info. Unlike
+    A_SystemNetworkParameter_Read, property_id here is a full octet
+    with no reserved bits.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_READ
+
+    object_type: int
+    property_id: int
+    test_info: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.test_info)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> NetworkParameterRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_NetworkParameter_Read in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info=raw[5:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
+        payload = struct.pack("!HB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<NetworkParameterRead object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class NetworkParameterResponse(APCI):
+    """
+    NetworkParameterResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.2.6
+    A_NetworkParameter_Response (defined alongside
+    A_NetworkParameter_Read).
+
+    Same header as NetworkParameterRead (16 bit object_type, 8 bit
+    property_id). Beyond that, the PDU has two variable-length fields,
+    test_info and test_result, with no length indicator on the wire
+    separating them - the boundary is only known if the original
+    request's test_info length is known. Since APCI parsing here is
+    stateless, both are kept together as `test_info_and_result` instead
+    of guessing a split.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_RESPONSE
+
+    object_type: int
+    property_id: int
+    test_info_and_result: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.test_info_and_result)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> NetworkParameterResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_NetworkParameter_Response in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info_and_result=raw[5:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
+        payload = struct.pack("!HB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info_and_result
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<NetworkParameterResponse object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" '
+            f'test_info_and_result="{self.test_info_and_result.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
 class IndividualAddressSerialRead(APCI):
     """IndividualAddressSerialRead service."""
 
@@ -3065,6 +4084,938 @@ class IndividualAddressSerialWrite(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<IndividualAddressSerialWrite serial="{self.serial.hex()}" address="{self.address}" />'
+
+
+@dataclass(slots=True)
+class DomainAddressWrite(APCI):
+    """
+    DomainAddressWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.3
+    A_DomainAddress_Write. Open media specific service - the
+    destination is selected manually (eg. a button on the target
+    device), not addressed.
+
+    Payload is a 2 octet (KNX-PL110) or 6 octet (KNX-RF) domain_address.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_WRITE
+
+    domain_address: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1 + len(self.domain_address)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) not in (4, 8):
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Write in CEMI: {raw.hex()}"
+            )
+
+        return cls(domain_address=raw[2:])
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.domain_address) not in (2, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110) or 6 (KNX-RF) octets long."
+            )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.domain_address)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<DomainAddressWrite domain_address="{self.domain_address.hex()}" />'
+
+
+@dataclass(slots=True)
+class DomainAddressRead(APCI):
+    """
+    DomainAddressRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.4
+    A_DomainAddress_Read. Open media specific service - the
+    destination is selected manually (eg. a button on the target
+    device), not addressed. No payload.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Read in CEMI: {raw.hex()}"
+            )
+
+        return cls()
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        return encode_cmd_and_payload(self.CODE)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressRead />"
+
+
+@dataclass(slots=True)
+class DomainAddressResponse(APCI):
+    """
+    DomainAddressResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.4
+    A_DomainAddress_Response (defined alongside A_DomainAddress_Read).
+
+    Same payload as DomainAddressWrite: a 2 octet (KNX-PL110) or 6
+    octet (KNX-RF) domain_address.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_RESPONSE
+
+    domain_address: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1 + len(self.domain_address)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) not in (4, 8):
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Response in CEMI: {raw.hex()}"
+            )
+
+        return cls(domain_address=raw[2:])
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.domain_address) not in (2, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110) or 6 (KNX-RF) octets long."
+            )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.domain_address)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<DomainAddressResponse domain_address="{self.domain_address.hex()}" />'
+
+
+@dataclass(slots=True)
+class DomainAddressSelectiveRead(APCI):
+    """
+    DomainAddressSelectiveRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.5
+    A_DomainAddressSelective_Read. Open media specific service - reads
+    the Domain Address from an identified communication partner, eg. to
+    check for open media devices with a given Domain Address in a
+    neighbouring installation. Only specified for the 2 octet
+    (KNX-PL110) Domain Address format.
+
+    Payload is a variable-length asdu.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SELECTIVE_READ
+
+    asdu: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1 + len(self.asdu)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSelectiveRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) <= 2:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddressSelective_Read in CEMI: {raw.hex()}"
+            )
+
+        return cls(asdu=raw[2:])
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not self.asdu:
+            raise ConversionError("asdu must not be empty.")
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=self.asdu)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<DomainAddressSelectiveRead asdu="{self.asdu.hex()}" />'
+
+
+@dataclass(slots=True)
+class NetworkParameterWrite(APCI):
+    """
+    NetworkParameterWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.2.7
+    A_NetworkParameter_Write. Sent point-to-point or as broadcast to
+    set network configuration information in one or multiple
+    management servers.
+
+    Same header as NetworkParameterRead: a 16 bit object_type, an 8 bit
+    property_id and a PID-specific, variable-length value.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_WRITE
+
+    object_type: int
+    property_id: int
+    value: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 4 + len(self.value)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> NetworkParameterWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_NetworkParameter_Write in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            value=raw[5:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
+        payload = struct.pack("!HB", self.object_type, self.property_id)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.value)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<NetworkParameterWrite object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" value="{self.value.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class LinkRead(APCI):
+    """
+    LinkRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.6.1
+    A_Link_Read. Reads the Group Addresses linked to a Group Object,
+    starting at start_index.
+
+    Payload contains a 1 byte group_object_number and a byte with 4
+    reserved bits followed by a 4 bit start_index.
+    """
+
+    CODE: ClassVar = APCIExtendedService.LINK_READ
+
+    group_object_number: int
+    start_index: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 3
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> LinkRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 4:
+            raise ConversionError(
+                f"Invalid length for A_Link_Read in CEMI: {raw.hex()}"
+            )
+        group_object_number, byte1 = struct.unpack("!BB", raw[2:])
+
+        return cls(group_object_number=group_object_number, start_index=byte1 & 0x0F)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.group_object_number <= 0xFF:
+            raise ConversionError("Group object number out of range.")
+        if not 0 <= self.start_index <= 0xF:
+            raise ConversionError("Start index out of range.")
+
+        payload = struct.pack("!BB", self.group_object_number, self.start_index)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<LinkRead group_object_number="{self.group_object_number}" '
+            f'start_index="{self.start_index}" />'
+        )
+
+
+@dataclass(slots=True)
+class LinkResponse(APCI):
+    """
+    LinkResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.6.1
+    A_Link_Response (defined alongside A_Link_Read).
+
+    Payload contains a 1 byte group_object_number, a byte with a 4 bit
+    sending_address (the sending Group Address's index in the list,
+    1-15, 0 if none) followed by a 4 bit start_index, and 0-6 linked
+    Group Addresses (2 octets each). A negative response (addressed
+    Group Object does not exist, or no Group Addresses assigned from
+    the requested start index) is signalled with an empty
+    group_address_list and start_index=0.
+    """
+
+    CODE: ClassVar = APCIExtendedService.LINK_RESPONSE
+
+    group_object_number: int
+    sending_address: int = 0
+    start_index: int = 0
+    group_address_list: list[GroupAddress] = field(default_factory=list)
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 3 + 2 * len(self.group_address_list)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> LinkResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        remainder = len(raw) - 4
+        if remainder < 0 or remainder % 2 or remainder > 12:
+            raise ConversionError(
+                f"Invalid length for A_Link_Response in CEMI: {raw.hex()}"
+            )
+        group_object_number, byte1 = struct.unpack("!BB", raw[2:4])
+        group_address_list = [
+            GroupAddress.from_knx(raw[i : i + 2]) for i in range(4, len(raw), 2)
+        ]
+
+        return cls(
+            group_object_number=group_object_number,
+            sending_address=byte1 >> 4,
+            start_index=byte1 & 0x0F,
+            group_address_list=group_address_list,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.group_object_number <= 0xFF:
+            raise ConversionError("Group object number out of range.")
+        if not 0 <= self.sending_address <= 0xF:
+            raise ConversionError("Sending address out of range.")
+        if not 0 <= self.start_index <= 0xF:
+            raise ConversionError("Start index out of range.")
+        if len(self.group_address_list) > 6:
+            raise ConversionError(
+                "Group address list must contain at most 6 addresses."
+            )
+
+        byte1 = (self.sending_address << 4) | self.start_index
+        payload = struct.pack("!BB", self.group_object_number, byte1) + b"".join(
+            ga.to_knx() for ga in self.group_address_list
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        addresses = ", ".join(str(ga) for ga in self.group_address_list)
+        return (
+            f'<LinkResponse group_object_number="{self.group_object_number}" '
+            f'sending_address="{self.sending_address}" '
+            f'start_index="{self.start_index}" '
+            f'group_address_list="{addresses}" />'
+        )
+
+
+@dataclass(slots=True)
+class LinkWrite(APCI):
+    """
+    LinkWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.6.2
+    A_Link_Write. Adds or removes a single Group Address to/from a
+    Group Object.
+
+    Payload contains a 1 byte group_object_number, a byte with 6
+    reserved bits followed by the d (delete) and s (sending) flags, and
+    a 2 octet group_address. `sending` is only meaningful when
+    `delete` is False - if delete is True, the Group Address is removed
+    from the Group Object regardless of `sending`.
+    """
+
+    CODE: ClassVar = APCIExtendedService.LINK_WRITE
+
+    group_object_number: int
+    group_address: GroupAddress
+    delete: bool = False
+    sending: bool = False
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> LinkWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 6:
+            raise ConversionError(
+                f"Invalid length for A_Link_Write in CEMI: {raw.hex()}"
+            )
+        group_object_number, flags = struct.unpack("!BB", raw[2:4])
+
+        return cls(
+            group_object_number=group_object_number,
+            group_address=GroupAddress.from_knx(raw[4:6]),
+            delete=bool(flags & 0b10),
+            sending=bool(flags & 0b01),
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.group_object_number <= 0xFF:
+            raise ConversionError("Group object number out of range.")
+
+        flags = (self.delete << 1) | self.sending
+        payload = (
+            struct.pack("!BB", self.group_object_number, flags)
+            + self.group_address.to_knx()
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<LinkWrite group_object_number="{self.group_object_number}" '
+            f'delete="{self.delete}" sending="{self.sending}" '
+            f'group_address="{self.group_address}" />'
+        )
+
+
+def _pack_group_prop_value_header(
+    object_type: int, object_instance: int, property_id: int
+) -> bytes:
+    """
+    Serialize the A_GroupPropValue* ASDU header.
+
+    16 bit object_type, 8 bit object_instance, 8 bit property_id. See
+    KNX Logical Tag Extended (LTE) Application Layer §7.6.4.
+    """
+    if not 0 <= object_type <= 0xFFFF:
+        raise ConversionError("Object type out of range.")
+    if not 0 <= object_instance <= 0xFF:
+        raise ConversionError("Object instance out of range.")
+    if not 0 <= property_id <= 0xFF:
+        raise ConversionError("Property ID out of range.")
+    return struct.pack("!HBB", object_type, object_instance, property_id)
+
+
+def _unpack_group_prop_value_header(raw: bytes) -> tuple[int, int, int]:
+    """
+    Parse the A_GroupPropValue* ASDU header.
+
+    `raw` shall be the complete APDU (raw[2:4] is the 16 bit
+    object_type, raw[4] is the 8 bit object_instance, raw[5] is the 8
+    bit property_id). See KNX Logical Tag Extended (LTE) Application
+    Layer §7.6.4.
+    """
+    object_type = (raw[2] << 8) | raw[3]
+    object_instance = raw[4]
+    property_id = raw[5]
+    return object_type, object_instance, property_id
+
+
+@dataclass(slots=True)
+class GroupPropValueRead(APCI):
+    """
+    GroupPropValueRead service.
+
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.4
+    A_GroupPropValue_Read. Not part of 03_03_07 - defined in the LTE
+    extension for reading Interface Object Server properties via group
+    communication.
+
+    Payload contains a 16 bit object_type, an 8 bit object_instance and
+    an 8 bit property_id.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_READ
+
+    object_type: int
+    object_instance: int
+    property_id: int
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_Read in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<GroupPropValueRead object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" />'
+        )
+
+
+@dataclass(slots=True)
+class GroupPropValueResponse(APCI):
+    """
+    GroupPropValueResponse service.
+
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.4
+    A_GroupPropValue_Response (defined alongside A_GroupPropValue_Read).
+
+    Same header as GroupPropValueRead (16 bit object_type, 8 bit
+    object_instance, 8 bit property_id), followed by variable-length
+    data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_RESPONSE
+
+    object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_Response in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[6:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<GroupPropValueResponse object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class GroupPropValueWrite(APCI):
+    """
+    GroupPropValueWrite service.
+
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.5
+    A_GroupPropValue_Write.
+
+    Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
+    bit object_instance, an 8 bit property_id and variable-length data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_WRITE
+
+    object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_Write in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[6:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<GroupPropValueWrite object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class GroupPropValueInfoReport(APCI):
+    """
+    GroupPropValueInfoReport service.
+
+    See KNX Logical Tag Extended (LTE) Application Layer §7.6.6
+    A_GroupPropValue_InfoReport.
+
+    Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
+    bit object_instance, an 8 bit property_id and variable-length data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.GROUP_PROP_VALUE_INFO_REPORT
+
+    object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> GroupPropValueInfoReport:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_GroupPropValue_InfoReport in CEMI: {raw.hex()}"
+            )
+        object_type, object_instance, property_id = _unpack_group_prop_value_header(raw)
+
+        return cls(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[6:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = _pack_group_prop_value_header(
+            self.object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<GroupPropValueInfoReport object_type="{self.object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberRead(APCI):
+    """
+    DomainAddressSerialNumberRead service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.6
+    A_DomainAddressSerialNumber_Read. Open media specific service -
+    identifies the target by its unique 6 octet KNX Serial Number
+    rather than an address.
+
+    Payload is a 6 octet serial.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ
+
+    serial: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 7
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 8:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddressSerialNumber_Read in CEMI: {raw.hex()}"
+            )
+        (serial,) = struct.unpack("!6s", raw[2:])
+        return cls(serial=serial)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+
+        payload = struct.pack("!6s", self.serial)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<DomainAddressSerialNumberRead serial="{self.serial.hex()}" />'
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberResponse(APCI):
+    """
+    DomainAddressSerialNumberResponse service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.6
+    A_DomainAddressSerialNumber_Response (defined alongside
+    A_DomainAddressSerialNumber_Read).
+
+    Payload is a 6 octet serial followed by a 2 octet (KNX-PL110) or 6
+    octet (KNX-RF) domain_address.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_RESPONSE
+
+    serial: bytes
+    domain_address: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 7 + len(self.domain_address)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        domain_address = raw[8:]
+        if len(raw) < 8 or len(domain_address) not in (2, 6):
+            raise ConversionError(
+                "Invalid length for A_DomainAddressSerialNumber_Response in "
+                f"CEMI: {raw.hex()}"
+            )
+
+        return cls(serial=raw[2:8], domain_address=domain_address)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+        if len(self.domain_address) not in (2, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110) or 6 (KNX-RF) octets long."
+            )
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=self.serial + self.domain_address
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<DomainAddressSerialNumberResponse serial="{self.serial.hex()}" '
+            f'domain_address="{self.domain_address.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberWrite(APCI):
+    """
+    DomainAddressSerialNumberWrite service.
+
+    See KNX Specification 03_03_07 Application Layer §3.3.7
+    A_DomainAddressSerialNumber_Write.
+
+    Payload is a 6 octet serial followed by a domain_address of one of:
+    - 2 octets (KNX-PL110)
+    - 6 octets (KNX-RF)
+    - 4 octets (IP multicast address, KNXnet/IP only)
+    - 4 octets (IP multicast address) + a 1 octet
+      routing_security_version + a 16 octet backbone_key, for KNX IP
+      Secure. `routing_security_version` and `backbone_key` are only
+      valid together with a 4 octet domain_address and are otherwise
+      `None`.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_WRITE
+
+    serial: bytes
+    domain_address: bytes
+    routing_security_version: int | None = None
+    backbone_key: bytes | None = None
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        secure_length = 17 if self.routing_security_version is not None else 0
+        return 7 + len(self.domain_address) + secure_length
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        remainder = raw[8:]
+        if len(raw) < 8 or len(remainder) not in (2, 4, 6, 21):
+            raise ConversionError(
+                "Invalid length for A_DomainAddressSerialNumber_Write in "
+                f"CEMI: {raw.hex()}"
+            )
+        serial = raw[2:8]
+
+        if len(remainder) == 21:
+            return cls(
+                serial=serial,
+                domain_address=remainder[:4],
+                routing_security_version=remainder[4],
+                backbone_key=remainder[5:21],
+            )
+        return cls(serial=serial, domain_address=remainder)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+        if len(self.domain_address) not in (2, 4, 6):
+            raise ConversionError(
+                "Domain address must be 2 (KNX-PL110), 4 (IP multicast) or "
+                "6 (KNX-RF) octets long."
+            )
+
+        payload = self.serial + self.domain_address
+
+        if self.routing_security_version is not None or self.backbone_key is not None:
+            if len(self.domain_address) != 4:
+                raise ConversionError(
+                    "Routing security version and backbone key are only valid "
+                    "with a 4 octet (IP multicast) domain address."
+                )
+            if self.routing_security_version is None or self.backbone_key is None:
+                raise ConversionError(
+                    "Routing security version and backbone key must be set together."
+                )
+            if not 0 <= self.routing_security_version <= 0xFF:
+                raise ConversionError("Routing security version out of range.")
+            if len(self.backbone_key) != 16:
+                raise ConversionError("Backbone key must be 16 bytes.")
+            payload += bytes([self.routing_security_version]) + self.backbone_key
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<DomainAddressSerialNumberWrite serial="{self.serial.hex()}" '
+            f'domain_address="{self.domain_address.hex()}" '
+            f'routing_security_version="{self.routing_security_version}" '
+            f'backbone_key="{self.backbone_key.hex() if self.backbone_key else None}" />'
+        )
+
+
+@dataclass(slots=True)
+class FileStreamInfoReport(APCI):
+    """
+    FileStreamInfoReport service.
+
+    See KNX Specification 03_03_07 Application Layer §3.4.2.3
+    A_FileStream_InfoReport. Unconfirmed - sends one file block to a
+    remote File Server client.
+
+    Payload contains a byte with a 4 bit file_handle followed by a 4
+    bit file_block_seq_number, and a variable-length file_block.
+    """
+
+    CODE: ClassVar = APCIExtendedService.FILE_STREAM_INFO_REPORT
+
+    file_handle: int
+    file_block_seq_number: int
+    file_block: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 2 + len(self.file_block)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FileStreamInfoReport:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 3:
+            raise ConversionError(
+                f"Invalid length for A_FileStream_InfoReport in CEMI: {raw.hex()}"
+            )
+        byte0 = raw[2]
+
+        return cls(
+            file_handle=byte0 >> 4,
+            file_block_seq_number=byte0 & 0x0F,
+            file_block=raw[3:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.file_handle <= 0xF:
+            raise ConversionError("File handle out of range.")
+        if not 0 <= self.file_block_seq_number <= 0xF:
+            raise ConversionError("File block sequence number out of range.")
+
+        byte0 = (self.file_handle << 4) | self.file_block_seq_number
+        payload = bytes([byte0]) + self.file_block
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<FileStreamInfoReport file_handle="{self.file_handle}" '
+            f'file_block_seq_number="{self.file_block_seq_number}" '
+            f'file_block="{self.file_block.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
