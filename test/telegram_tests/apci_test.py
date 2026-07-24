@@ -3204,9 +3204,14 @@ class TestRouterMemoryWrite:
 class TestRouterStatusRead:
     """Test class for RouterStatusRead objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Read.*"):
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Read.*"):
             APCI.from_knx(bytes((0x03, 0xCD)))
 
     def test_to_knx_raises_not_implemented(self) -> None:
@@ -3227,9 +3232,14 @@ class TestRouterStatusRead:
 class TestRouterStatusResponse:
     """Test class for RouterStatusResponse objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Response.*"):
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Response.*"):
             APCI.from_knx(bytes((0x03, 0xCE)))
 
     def test_to_knx_raises_not_implemented(self) -> None:
@@ -3252,9 +3262,14 @@ class TestRouterStatusResponse:
 class TestRouterStatusWrite:
     """Test class for RouterStatusWrite objects."""
 
-    def test_from_knx_dispatches_and_raises_not_implemented(self) -> None:
-        """Test the APCI is routed to the class, which raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match=r".*A_RouterStatus_Write.*"):
+    def test_from_knx_dispatches_and_raises_conversion_error(self) -> None:
+        """
+        Test the APCI is routed to the class, which raises ConversionError.
+
+        A real legacy frame must be rejected as UnsupportedCEMIMessage by
+        CEMILData.from_knx instead of crashing the receive path.
+        """
+        with pytest.raises(ConversionError, match=r".*A_RouterStatus_Write.*"):
             APCI.from_knx(bytes((0x03, 0xCF)))
 
     def test_to_knx_raises_not_implemented(self) -> None:

@@ -3215,7 +3215,11 @@ class RouterStatusRead(APCI):
     PID_SUB_LCCONFIG, PID_ROUTETABLE_CONTROL, PID_LINE_STATUS - see
     AN161 Coupler Model 2.0) via A_PropertyValue_Read/Write - implement
     against that instead of this APCI. Kept as a stub only so the APCI
-    code table is complete and dispatch doesn't misroute it.
+    code table is complete and dispatch doesn't misroute it. from_knx
+    raises ConversionError so a real incoming frame is rejected as
+    UnsupportedCEMIMessage; calculated_length/to_knx raise
+    NotImplementedError since there's no legitimate way to construct an
+    instance to send.
     """
 
     CODE: ClassVar = APCIExtendedService.ROUTER_STATUS_READ
@@ -3230,10 +3234,9 @@ class RouterStatusRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterStatusRead:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_RouterStatus_Read is a legacy BCU coupler service with no current "
-            "Application Layer spec definition - see class docstring."
-        )
+        # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
+        # crashing the receive path - see class docstring.
+        raise ConversionError(f"A_RouterStatus_Read is not supported: {raw.hex()}")
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -3271,10 +3274,9 @@ class RouterStatusResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterStatusResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_RouterStatus_Response is a legacy BCU coupler service with no current "
-            "Application Layer spec definition - see class docstring."
-        )
+        # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
+        # crashing the receive path - see class docstring.
+        raise ConversionError(f"A_RouterStatus_Response is not supported: {raw.hex()}")
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -3315,10 +3317,9 @@ class RouterStatusWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> RouterStatusWrite:
         """Parse/deserialize from KNX/IP raw data."""
-        raise NotImplementedError(
-            "A_RouterStatus_Write is a legacy BCU coupler service with no current "
-            "Application Layer spec definition - see class docstring."
-        )
+        # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
+        # crashing the receive path - see class docstring.
+        raise ConversionError(f"A_RouterStatus_Write is not supported: {raw.hex()}")
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
