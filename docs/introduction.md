@@ -16,6 +16,7 @@ This allows concurrency in a thread safe manner.
 import asyncio
 from xknx import XKNX
 
+
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -24,6 +25,7 @@ async def main():
     # controlling lights, dimmers, shutters
 
     await xknx.stop()
+
 
 asyncio.run(main())
 ```

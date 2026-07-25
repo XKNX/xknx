@@ -28,10 +28,10 @@ NumericValue devices send values to the KNX bus. Received values update the devi
 ```python
 value = NumericValue(
     xknx=xknx,
-    name='Temperature limit',
-    group_address='6/2/1',
+    name="Temperature limit",
+    group_address="6/2/1",
     respond_to_read=True,
-    value_type='temperature'
+    value_type="temperature",
 )
 xknx.devices.async_add(value)
 

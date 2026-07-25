@@ -28,9 +28,9 @@ RawValue devices send uint values to the KNX bus. Received values update the dev
 ```python
 value = RawValue(
     xknx=xknx,
-    name='Raw',
+    name="Raw",
     payload_length=2,
-    group_address='6/2/1',
+    group_address="6/2/1",
     respond_to_read=True,
 )
 xknx.devices.async_add(value)

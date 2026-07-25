@@ -26,11 +26,11 @@ Sensors are monitoring temperature, air humidity, pressure etc. from KNX bus.
 ```python
 sensor = Sensor(
     xknx=xknx,
-    name='DiningRoom.Temperature.Sensor',
+    name="DiningRoom.Temperature.Sensor",
     always_callback=False,
-    group_address_state='6/2/1',
+    group_address_state="6/2/1",
     sync_state=True,
-    value_type='temperature'
+    value_type="temperature",
 )
 xknx.devices.async_add(sensor)
 

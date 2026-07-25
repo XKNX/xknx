@@ -48,7 +48,7 @@ class RemoteValue(ABC, Generic[ValueT]):
         xknx: XKNX,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
-        sync_state: None | bool | int | float | str = None,
+        sync_state: bool | int | float | str | None = None,
         device_name: str | None = None,
         feature_name: str | None = None,
         after_update_cb: RVCallbackType[ValueT] | None = None,

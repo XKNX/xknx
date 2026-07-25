@@ -14,15 +14,11 @@ XKNX provides the possibility to send the local time, date or both combined to t
 ## [](#header-2)Example
 
 ```python
-time_device = TimeDevice(
-    xknx, 'TimeTest',
-    group_address='1/2/3',
-    localtime=True
-)
+time_device = TimeDevice(xknx, "TimeTest", group_address="1/2/3", localtime=True)
 xknx.devices.async_add(time_device)
 
 # `sync()` doesn't send a GroupValueRead when localtime is True but sends the current time to KNX bus
-await xknx.devices['TimeTest'].sync()
+await xknx.devices["TimeTest"].sync()
 ```
 
 * `xknx` is the XKNX object.
@@ -40,11 +36,13 @@ import asyncio
 from xknx import XKNX
 from xknx.devices import DateTimeDevice
 
+
 async def main():
     async with XKNX(daemon_mode=True) as xknx:
-        dt_device = DateTimeDevice(xknx, 'TimeTest', group_address='1/2/3')
+        dt_device = DateTimeDevice(xknx, "TimeTest", group_address="1/2/3")
         xknx.devices.async_add(dt_device)
         print("Sending datetime object to KNX bus every hour")
+
 
 asyncio.run(main())
 ```
@@ -56,7 +54,7 @@ from xknx import XKNX
 from xknx.devices import DateDevice
 
 xknx = XKNX()
-date_device = DateDevice(xknx, 'TimeTest', group_address='1/2/3')
+date_device = DateDevice(xknx, "TimeTest", group_address="1/2/3")
 xknx.devices.async_add(date_device)
 
 await xknx.start()
