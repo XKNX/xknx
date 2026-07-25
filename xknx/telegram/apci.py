@@ -16,7 +16,7 @@ import struct
 from typing import ClassVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, UnsupportedAPCIService
 from xknx.secure.data_secure_asdu import SecureData, SecurityControlField
 from xknx.telegram.address import GroupAddress, IndividualAddress
 
@@ -443,7 +443,7 @@ class APCI(ABC):
                 f"Error parsing APCI {apci:#012b} from raw data: {raw.hex()}"
             ) from err
 
-        raise ConversionError(f"Class not implemented for APCI {apci:#012b}.")
+        raise UnsupportedAPCIService(f"Class not implemented for APCI {apci:#012b}.")
 
 
 @dataclass(slots=True)
@@ -3246,7 +3246,9 @@ class RouterStatusRead(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
         # crashing the receive path - see class docstring.
-        raise ConversionError(f"A_RouterStatus_Read is not supported: {raw.hex()}")
+        raise UnsupportedAPCIService(
+            f"A_RouterStatus_Read is not supported: {raw.hex()}"
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -3286,7 +3288,9 @@ class RouterStatusResponse(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
         # crashing the receive path - see class docstring.
-        raise ConversionError(f"A_RouterStatus_Response is not supported: {raw.hex()}")
+        raise UnsupportedAPCIService(
+            f"A_RouterStatus_Response is not supported: {raw.hex()}"
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
@@ -3329,7 +3333,9 @@ class RouterStatusWrite(APCI):
         """Parse/deserialize from KNX/IP raw data."""
         # Rejected as UnsupportedCEMIMessage by CEMILData.from_knx instead of
         # crashing the receive path - see class docstring.
-        raise ConversionError(f"A_RouterStatus_Write is not supported: {raw.hex()}")
+        raise UnsupportedAPCIService(
+            f"A_RouterStatus_Write is not supported: {raw.hex()}"
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""

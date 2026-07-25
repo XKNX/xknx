@@ -145,6 +145,20 @@ class ConversionError(XKNXException):
         return f'<ConversionError description="{self.description}" {self._format_parameter()}/>'
 
 
+class UnsupportedAPCIService(ConversionError):
+    """
+    Exception for a valid but not defined or not implemented APCI service.
+
+    Subclass of `ConversionError` so existing handlers keep catching it, while
+    allowing the CEMI layer to tell an unsupported service (benign, to be
+    ignored per KNX spec 03_03_07 §2.2) apart from a malformed/truncated APDU.
+    """
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<UnsupportedAPCIService description="{self.description}" {self._format_parameter()}/>'
+
+
 class CouldNotParseAddress(XKNXException):
     """Exception class for wrong address format."""
 

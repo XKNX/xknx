@@ -106,24 +106,24 @@ def test_invalid_tpci_apci(raw: bytes, err_msg: str) -> None:
         (
             # reserved gap between A_FilterTable_Write and A_RouterMemory_Read
             get_data(0x29, 0, 0, 0, 0, 1, 0x03C4, []),
-            r"APDU invalid*",
+            r"APDU not supported*",
         ),
         (
             # A_RouterStatus_Read - legacy BCU coupler service, deliberately
             # unimplemented; must be rejected cleanly, not crash the receive
             # path with an uncaught NotImplementedError.
             get_data(0x29, 0, 0, 0, 0, 1, 0x03CD, []),
-            r"APDU invalid*",
+            r"APDU not supported*",
         ),
         (
             # A_RouterStatus_Response
             get_data(0x29, 0, 0, 0, 0, 1, 0x03CE, []),
-            r"APDU invalid*",
+            r"APDU not supported*",
         ),
         (
             # A_RouterStatus_Write
             get_data(0x29, 0, 0, 0, 0, 1, 0x03CF, []),
-            r"APDU invalid*",
+            r"APDU not supported*",
         ),
     ],
 )
@@ -140,10 +140,11 @@ def test_truncated_secure_apdu() -> None:
     L_Data.con, src 1.1.253, dst 1/1/78, carrying an A_SecureData APDU
     (APCI 0x3F1) with no secure ASDU - observed on a real bus. Parsing this
     used to leak a bare IndexError out of SecureAPDU.from_knx and crash the
-    receive path; it must now be rejected as UnsupportedCEMIMessage.
+    receive path. It must now be rejected as CouldNotParseCEMI - a recognized
+    service with a malformed payload is a parse error, not an unsupported one.
     """
     raw = bytes.fromhex("2e00bcf011fd094e0103f1")
-    with pytest.raises(UnsupportedCEMIMessage, match=r"APDU invalid"):
+    with pytest.raises(CouldNotParseCEMI, match=r"APDU invalid"):
         CEMIFrame.from_knx(raw)
 
 
