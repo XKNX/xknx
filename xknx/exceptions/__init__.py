@@ -18,6 +18,7 @@ from .exception import (
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
     TunnellingAckError,
+    UnsupportedAPCIService,
     UnsupportedCEMIMessage,
     XKNXException,
 )
@@ -40,6 +41,7 @@ __all__ = [
     "ManagementConnectionRefused",
     "ManagementConnectionTimeout",
     "TunnellingAckError",
+    "UnsupportedAPCIService",
     "UnsupportedCEMIMessage",
     "XKNXException",
 ]

@@ -16,7 +16,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
+from xknx.exceptions import (
+    ConversionError,
+    CouldNotParseCEMI,
+    UnsupportedAPCIService,
+    UnsupportedCEMIMessage,
+)
 from xknx.profile.const import ResourceObjectType, ResourcePropertyId
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
@@ -255,10 +260,19 @@ class CEMILData(CEMIData):
 
         try:
             payload = APCI.from_knx(_apdu)
-        except ConversionError as err:
+        except UnsupportedAPCIService as err:
+            # Recognized but not implemented (or reserved) APCI service - benign,
+            # to be ignored per KNX spec 03_03_07 §2.2. Logged at info level.
             raise UnsupportedCEMIMessage(
-                f"APDU not supported from {src_addr} "
-                f"from {src_addr} in CEMI: {raw.hex()}"
+                f"APDU not supported from {src_addr} to {dst_addr} "
+                f"with TPCI {tpci} in CEMI: {raw.hex()}"
+            ) from err
+        except ConversionError as err:
+            # Malformed/truncated APDU of a recognized service - a genuine parse
+            # error worth surfacing at warning level.
+            raise CouldNotParseCEMI(
+                f"APDU invalid from {src_addr} to {dst_addr} "
+                f"with TPCI {tpci} in CEMI: {raw.hex()}"
             ) from err
 
         return cls(

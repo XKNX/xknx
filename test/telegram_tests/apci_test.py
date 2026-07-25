@@ -3,7 +3,7 @@
 import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import ConversionError
+from xknx.exceptions import ConversionError, UnsupportedAPCIService
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import (
     APCI,
@@ -100,19 +100,53 @@ class TestAPCI:
 
     def test_resolve_apci_unsupported(self) -> None:
         """Test resolve_apci for unsupported services."""
-
+        # UnsupportedAPCIService (a ConversionError subclass) marks a valid but
+        # unimplemented service, so the CEMI layer can log it as info rather
+        # than warn like a malformed frame.
         with pytest.raises(
-            ConversionError, match=r".*Class not implemented for APCI.*"
+            UnsupportedAPCIService, match=r".*Class not implemented for APCI.*"
         ):
             # Unsupported user service.
             APCI.from_knx(bytes((0x02, 0xC3)))
 
         with pytest.raises(
-            ConversionError, match=r".*Class not implemented for APCI.*"
+            UnsupportedAPCIService, match=r".*Class not implemented for APCI.*"
         ):
             # Unsupported extended service (reserved gap between
             # A_FilterTable_Write and A_RouterMemory_Read).
             APCI.from_knx(bytes((0x03, 0xC4)))
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            b"",  # no APCI octets at all
+            b"\x03",  # only one of the two APCI octets
+        ],
+    )
+    def test_from_knx_apdu_too_short(self, raw: bytes) -> None:
+        """Test from_knx rejects an APDU too short to hold an APCI."""
+        # Must not raise IndexError/UnboundLocalError from computing the APCI.
+        with pytest.raises(ConversionError, match=r".*too short.*"):
+            APCI.from_knx(raw)
+
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            bytes.fromhex("03f1"),  # A_SecureData (0x3F1) without secure ASDU
+            bytes.fromhex("03ec0102"),  # A_DomainAddressSerialNumber_Read, no serial
+            bytes.fromhex("01c8"),  # A_SystemNetworkParameter_Read, no header
+        ],
+    )
+    def test_from_knx_truncated_payload(self, raw: bytes) -> None:
+        """
+        Test from_knx wraps truncated-payload parse errors as ConversionError.
+
+        Per KNX spec 03_03_07 §2.2 an APDU that cannot be parsed shall be
+        ignored - a malformed frame must never leak IndexError/struct.error/
+        ValueError out of the parser and crash the CEMI receive path.
+        """
+        with pytest.raises(ConversionError):
+            APCI.from_knx(raw)
 
 
 class TestGroupValueRead:
