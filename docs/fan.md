@@ -30,11 +30,11 @@ Fans are simple representations of KNX controlled fans. They support switching o
 ```python
 fan = Fan(
     xknx,
-    'TestFan',
-    group_address_speed='1/2/1',
-    group_address_speed_state='1/2/2',
-    group_address_oscillation='1/2/3',
-    group_address_oscillation_state='1/2/4'
+    "TestFan",
+    group_address_speed="1/2/1",
+    group_address_speed_state="1/2/2",
+    group_address_oscillation="1/2/3",
+    group_address_oscillation_state="1/2/4",
 )
 xknx.devices.async_add(fan)
 

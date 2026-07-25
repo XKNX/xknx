@@ -63,9 +63,9 @@ If only a subset of operation modes shall be used a list of supported modes may 
 ```python
 climate_mode = ClimateMode(
     xknx,
-    'TestClimateMode',
-    group_address_operation_mode='',
-    group_address_operation_mode_state='',
+    "TestClimateMode",
+    group_address_operation_mode="",
+    group_address_operation_mode_state="",
     group_address_operation_mode_protection=None,
     group_address_operation_mode_economy=None,
     group_address_operation_mode_comfort=None,
@@ -80,12 +80,12 @@ climate_mode = ClimateMode(
 
 climate = Climate(
     xknx,
-    'TestClimate',
-    group_address_temperature='',
-    group_address_target_temperature='',
-    group_address_target_temperature_state='',
-    group_address_setpoint_shift='',
-    group_address_setpoint_shift_state='',
+    "TestClimate",
+    group_address_temperature="",
+    group_address_target_temperature="",
+    group_address_target_temperature_state="",
+    group_address_setpoint_shift="",
+    group_address_setpoint_shift_state="",
     group_address_fan_speed=None,
     group_address_fan_speed_state=None,
     group_address_swing=None,
@@ -95,15 +95,15 @@ climate = Climate(
     temperature_step=0.1,
     setpoint_shift_max=6,
     setpoint_shift_min=-6,
-    group_address_on_off='',
-    group_address_on_off_state='',
+    group_address_on_off="",
+    group_address_on_off_state="",
     on_off_invert=False,
     min_temp=18,
     max_temp=26,
     mode=climate_mode,
     device_updated_cb=None,
     fan_speed_mode=FanSpeedMode.STEP,
-    group_address_humidity_state='',
+    group_address_humidity_state="",
 )
 xknx.devices.async_add(climate)
 xknx.devices.async_add(climate_mode)
@@ -124,18 +124,18 @@ climate.shutdown()
 ```python
 climate_setpoint_shift = Climate(
     xknx,
-    'TestClimateSPS',
-    group_address_temperature='1/2/2',
-    group_address_target_temperature_state='1/2/5',
-    group_address_setpoint_shift='1/2/3',
-    group_address_setpoint_shift_state='1/2/4'
+    "TestClimateSPS",
+    group_address_temperature="1/2/2",
+    group_address_target_temperature_state="1/2/5",
+    group_address_setpoint_shift="1/2/3",
+    group_address_setpoint_shift_state="1/2/4",
 )
 
 climate_target_temp = Climate(
     xknx,
-    'TestClimateTT',
-    group_address_temperature='2/2/2',
-    group_address_target_temperature='2/2/3',
-    group_address_target_temperature_state='2/2/4'
+    "TestClimateTT",
+    group_address_temperature="2/2/2",
+    group_address_target_temperature="2/2/3",
+    group_address_target_temperature_state="2/2/4",
 )
 ```

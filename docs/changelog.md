@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.17.0 APCIs and DPTs 2026-07-25
 
 ### Deprecation notes
 
@@ -1570,16 +1570,16 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
+
 async def main():
     xknx = XKNX()
     await xknx.start()
-    outlet = Outlet(xknx,
-                    name='TestOutlet',
-                    group_address='1/1/11')
+    outlet = Outlet(xknx, name="TestOutlet", group_address="1/1/11")
     outlet.set_on()
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

@@ -30,7 +30,7 @@ xknx = XKNX(
     log_directory=None,
     state_updater=False,
     daemon_mode=False,
-    connection_config=ConnectionConfig()
+    connection_config=ConnectionConfig(),
 )
 ```
 
@@ -101,15 +101,14 @@ You can also use an asynchronous context manager instead of calling `xknx.start(
 ```python
 import asyncio
 
+
 async def main():
     async with XKNX() as xknx:
-        switch = Switch(xknx,
-                name='TestSwitch',
-                group_address='1/1/11'
-        )
+        switch = Switch(xknx, name="TestSwitch", group_address="1/1/11")
         xknx.devices.async_add(switch)
 
         await switch.set_on()
+
 
 asyncio.run(main())
 ```
@@ -122,15 +121,11 @@ To remove a device from XKNX call `xknx.devices.async_remove(device)`. Removed d
 Example:
 
 ```python
-switch = Switch(
-    xknx,
-    name='TestSwitch',
-    group_address='1/1/11'
-)
+switch = Switch(xknx, name="TestSwitch", group_address="1/1/11")
 xknx.devices.async_add(switch)
 
-await xknx.devices['TestSwitch'].set_on()
-await xknx.devices['TestSwitch'].set_off()
+await xknx.devices["TestSwitch"].set_on()
+await xknx.devices["TestSwitch"].set_off()
 ```
 
 # [](#header-2)Callbacks
@@ -142,13 +137,16 @@ import asyncio
 from xknx import XKNX
 from xknx.telegram import Telegram
 
+
 def telegram_received_cb(telegram: Telegram):
     print("Telegram received: {0}".format(telegram))
+
 
 async def main():
     xknx = XKNX(telegram_received_cb=telegram_received_cb, daemon_mode=True)
     await xknx.start()
     await xknx.stop()
+
 
 asyncio.run(main())
 ```
@@ -167,12 +165,11 @@ def device_updated_cb(device: Device):
 
 async def main():
     xknx = XKNX(device_updated_cb=device_updated_cb, daemon_mode=True)
-    switch = Switch(xknx,
-                    name='TestSwitch',
-                    group_address='1/1/11')
+    switch = Switch(xknx, name="TestSwitch", group_address="1/1/11")
 
     await xknx.start()
     await xknx.stop()
+
 
 asyncio.run(main())
 ```
@@ -190,9 +187,12 @@ def connection_state_changed_cb(state: XknxConnectionState):
 
 
 async def main():
-    xknx = XKNX(connection_state_changed_cb=connection_state_changed_cb, daemon_mode=True)
+    xknx = XKNX(
+        connection_state_changed_cb=connection_state_changed_cb, daemon_mode=True
+    )
     await xknx.start()
     await xknx.stop()
+
 
 asyncio.run(main())
 ```

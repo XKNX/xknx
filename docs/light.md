@@ -61,19 +61,19 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 ```python
 light = Light(
     xknx,
-    name='TestLight',
-    group_address_switch='1/2/3',
-    group_address_switch_state='1/2/4',
-    group_address_brightness='1/2/5',
-    group_address_brightness_state='1/2/6',
-    group_address_color='1/2/7',
-    group_address_color_state='1/2/8',
-    group_address_rgbw='1/2/13',
-    group_address_rgbw_state='1/2/14',
-    group_address_tunable_white='1/2/9',
-    group_address_tunable_white_state='1/2/10',
-    group_address_color_temperature='1/2/11',
-    group_address_color_temperature_state='1/2/12'
+    name="TestLight",
+    group_address_switch="1/2/3",
+    group_address_switch_state="1/2/4",
+    group_address_brightness="1/2/5",
+    group_address_brightness_state="1/2/6",
+    group_address_color="1/2/7",
+    group_address_color_state="1/2/8",
+    group_address_rgbw="1/2/13",
+    group_address_rgbw_state="1/2/14",
+    group_address_tunable_white="1/2/9",
+    group_address_tunable_white_state="1/2/10",
+    group_address_color_temperature="1/2/11",
+    group_address_color_temperature_state="1/2/12",
 )
 xknx.devices.async_add(light)
 
@@ -87,10 +87,10 @@ await light.set_off()
 await light.set_brightness(23)
 
 # Set color
-await light.set_color((20, 70,200))
+await light.set_color((20, 70, 200))
 
 # Set rgbw color
-await light.set_color((20,70,200), 30)
+await light.set_color((20, 70, 200), 30)
 
 # Set relative color temperature (percent)
 await set_tunable_white(25)
@@ -119,7 +119,7 @@ print(light.current_color_temperature)
 ```python
 light = Light(
     xknx,
-    name='TestRGBWLight',
+    name="TestRGBWLight",
     group_address_switch_red="1/1/1",
     group_address_switch_red_state="1/1/2",
     group_address_brightness_red="1/1/3",
@@ -135,7 +135,7 @@ light = Light(
     group_address_switch_white="1/1/13",
     group_address_switch_white_state="1/1/14",
     group_address_brightness_white="1/1/15",
-    group_address_brightness_white_state="1/1/16"
+    group_address_brightness_white_state="1/1/16",
 )
 xknx.devices.async_add(light)
 
@@ -146,10 +146,10 @@ await light.set_on()
 await light.set_off()
 
 # Set color
-await light.set_color((20, 70,200))
+await light.set_color((20, 70, 200))
 
 # Set rgbw color
-await light.set_color((20,70,200), 30)
+await light.set_color((20, 70, 200), 30)
 
 # Accessing state
 print(light.state)
@@ -162,7 +162,6 @@ print(light.supports_color_temperature)
 
 # Requesting current state via KNX GroupValueRead for all _state addresses
 await light.sync()
-
 ```
 
 ## [](#header-2)Example: HSV-color light
@@ -172,9 +171,9 @@ light = Light(
     xknx,
     "Hue and saturation",
     group_address_switch="1/1/1",
-    group_address_switch_state='1/2/1',
-    group_address_brightness='1/1/2',
-    group_address_brightness_state='1/2/2',
+    group_address_switch_state="1/2/1",
+    group_address_brightness="1/1/2",
+    group_address_brightness_state="1/2/2",
     group_address_hue="1/1/3",
     group_address_hue_state="1/2/3",
     group_address_saturation="1/1/4",
@@ -184,5 +183,5 @@ xknx.devices.async_add(light)
 print(light.supports_brightness)
 print(light.supports_hs_color)
 
-await light.set_hs_color((25,40))
+await light.set_hs_color((25, 40))
 ```
