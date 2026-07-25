@@ -177,6 +177,25 @@ def test_unsupported_cemi(
     assert xknx.connection_manager.cemi_count_incoming_error == 1
 
 
+@patch("xknx.cemi.cemi_handler.CEMIHandler.handle_cemi_frame")
+@patch("xknx.cemi.cemi_handler.CEMIFrame.from_knx", side_effect=RuntimeError("boom"))
+@patch("logging.Logger.exception")
+def test_unexpected_parse_error_does_not_crash(
+    mock_exception: MagicMock,
+    mock_from_knx: MagicMock,
+    mock_handle_cemi_frame: MagicMock,
+) -> None:
+    """Test an unexpected parsing error is contained instead of crashing the loop."""
+    xknx = XKNX()
+
+    # An unforeseen exception from parsing must not propagate out of the
+    # receive path; it is logged (with traceback) and counted, not raised.
+    xknx.cemi_handler.handle_raw_cemi(bytes.fromhex("2900b0d0000100000103f8"))
+    mock_exception.assert_called_once()
+    mock_handle_cemi_frame.assert_not_called()
+    assert xknx.connection_manager.cemi_count_incoming_error == 1
+
+
 @patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
 @patch("logging.Logger.debug")
 def test_incoming_from_own_ia(

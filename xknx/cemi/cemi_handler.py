@@ -106,6 +106,14 @@ class CEMIHandler:
             logger.info("CEMI not supported: %s", unsupported_cemi_err)
             self.xknx.connection_manager.cemi_count_incoming_error += 1
             return
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Last-resort guard: a malformed frame must never crash the receive
+            # loop. `CEMIFrame.from_knx` is expected to raise only CouldNotParseCEMI
+            # / UnsupportedCEMIMessage; anything else is an unforeseen parsing bug,
+            # so log it loudly (with traceback) rather than swallow it silently.
+            logger.exception("Unexpected error parsing CEMI frame: %s", raw_cemi.hex())
+            self.xknx.connection_manager.cemi_count_incoming_error += 1
+            return
         self.handle_cemi_frame(cemi)
 
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
