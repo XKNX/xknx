@@ -7,11 +7,12 @@ import pytest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
+from xknx.exceptions import CouldNotParseAddress
 from xknx.mcp import (
     DptFilter,
     GroupAddressInput,
+    GroupValueReadInput,
     GroupValueWriteInput,
-    ReadGroupValueInput,
     describe_dpt,
     get_connection_status,
     list_dpts,
@@ -61,6 +62,11 @@ async def test_list_dpts_main_filter_and_pagination() -> None:
     page = await list_dpts(DptFilter(main=1, limit=3))
     assert len(page.dpts) == 3
     assert page.limit_reached
+    # Pagination is self-describing: next_offset points past the returned window.
+    assert page.offset == 0
+    assert page.next_offset == 3
+    last = await list_dpts(DptFilter(main=1, limit=1000))
+    assert last.next_offset is None
 
 
 async def test_describe_dpt_by_number_and_name() -> None:
@@ -123,7 +129,7 @@ async def test_send_group_value_write_encodes_and_queues() -> None:
 async def test_send_group_value_write_invalid_address() -> None:
     """An unparsable group address is rejected before anything is queued."""
     xknx = XKNX()
-    with pytest.raises(Exception):  # noqa: B017
+    with pytest.raises(CouldNotParseAddress):
         await send_group_value_write(
             xknx, GroupValueWriteInput(group_address="not-an-address", value=1)
         )
@@ -140,7 +146,7 @@ async def test_read_group_value_decodes_response(read_mock: MagicMock) -> None:
         payload=apci.GroupValueResponse(DPTArray((0x80,))),
     )
     result = await read_group_value(
-        xknx, ReadGroupValueInput(group_address="1/2/3", value_type="percent")
+        xknx, GroupValueReadInput(group_address="1/2/3", value_type="percent")
     )
     assert result.responded
     assert result.value == 50
@@ -153,7 +159,7 @@ async def test_read_group_value_no_response(read_mock: MagicMock) -> None:
     xknx = XKNX()
     read_mock.return_value = None
     result = await read_group_value(
-        xknx, ReadGroupValueInput(group_address="1/2/3")
+        xknx, GroupValueReadInput(group_address="1/2/3")
     )
     assert not result.responded
     assert result.value is None
@@ -169,6 +175,6 @@ async def test_read_group_value_raw_binary() -> None:
             payload=apci.GroupValueResponse(DPTBinary(1)),
         )
         result = await read_group_value(
-            xknx, ReadGroupValueInput(group_address="1/2/3")
+            xknx, GroupValueReadInput(group_address="1/2/3")
         )
     assert result.value == 1

@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, TypeVar
 
 from xknx.core.connection_state import XknxConnectionState
 from xknx.dpt import DPTBase, DPTNumeric
-from xknx.telegram.address import parse_device_group_address
 from xknx.tools import (
     group_value_read,
     group_value_write,
@@ -31,9 +30,9 @@ from .types import (
     DptSummary,
     GroupAddressInput,
     GroupValue,
+    GroupValueReadInput,
+    GroupValueReadResult,
     GroupValueWriteInput,
-    ReadGroupValueInput,
-    ReadGroupValueResult,
     SendResult,
 )
 
@@ -102,6 +101,8 @@ async def list_dpts(filters: DptFilter | None = None) -> DptListResult:
     return DptListResult(
         dpts=window,
         total_count=len(matches),
+        offset=filters.offset,
+        next_offset=filters.offset + len(window) if limit_reached else None,
         limit_reached=limit_reached,
     )
 
@@ -147,13 +148,13 @@ def _jsonify(value: object) -> GroupValue:
 
 
 async def read_group_value(
-    xknx: XKNX, request: ReadGroupValueInput
-) -> ReadGroupValueResult:
+    xknx: XKNX, request: GroupValueReadInput
+) -> GroupValueReadResult:
     """Read a value from a group address, decoding it with the given DPT if set."""
     value = await _read_group_value(
         xknx, request.group_address, value_type=request.value_type
     )
-    return ReadGroupValueResult(
+    return GroupValueReadResult(
         group_address=request.group_address,
         value_type=request.value_type,
         responded=value is not None,
@@ -162,8 +163,12 @@ async def read_group_value(
 
 
 async def send_group_value_read(xknx: XKNX, request: GroupAddressInput) -> SendResult:
-    """Queue a GroupValueRead telegram to trigger a response on the bus."""
-    parse_device_group_address(request.group_address)  # validate before queueing
+    """
+    Queue a GroupValueRead telegram to trigger a response on the bus.
+
+    Raises :exc:`~xknx.exceptions.CouldNotParseAddress` for an invalid address
+    (nothing is queued in that case).
+    """
     group_value_read(xknx, request.group_address)
     return SendResult(group_address=request.group_address, apci="GroupValueRead")
 
@@ -173,8 +178,10 @@ async def send_group_value_write(xknx: XKNX, request: GroupValueWriteInput) -> S
     Queue a GroupValueWrite telegram encoding ``value`` with the given DPT.
 
     This is a **write** operation: consumers gate it behind their read-write mode.
+    Raises :exc:`~xknx.exceptions.CouldNotParseAddress` for an invalid address and
+    :exc:`~xknx.exceptions.ConversionError` if ``value`` does not fit ``value_type``
+    (nothing is queued in either case).
     """
-    parse_device_group_address(request.group_address)  # validate before queueing
     group_value_write(
         xknx, request.group_address, request.value, value_type=request.value_type
     )

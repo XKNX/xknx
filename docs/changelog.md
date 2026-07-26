@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Features
+
+- Add `xknx.mcp`, a host-agnostic subpackage of async MCP tool functions for the KNX bus and data point types (`list_dpts`, `describe_dpt`, `get_connection_status`, `read_group_value`, `send_group_value_read`, `send_group_value_write`). Frozen, JSON-native dataclass I/O with per-field descriptions in `Annotated` metadata; carries no MCP SDK, Home Assistant or web-framework dependency, so a consumer wraps the functions into its own MCP transport.
+
 # 3.17.0 APCIs and DPTs 2026-07-25
 
 ### Deprecation notes

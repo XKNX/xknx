@@ -28,9 +28,9 @@ from .types import (
     DptSummary,
     GroupAddressInput,
     GroupValue,
+    GroupValueReadInput,
+    GroupValueReadResult,
     GroupValueWriteInput,
-    ReadGroupValueInput,
-    ReadGroupValueResult,
     SendResult,
 )
 
@@ -42,9 +42,9 @@ __all__ = [
     "DptSummary",
     "GroupAddressInput",
     "GroupValue",
+    "GroupValueReadInput",
+    "GroupValueReadResult",
     "GroupValueWriteInput",
-    "ReadGroupValueInput",
-    "ReadGroupValueResult",
     "SendResult",
     "describe_dpt",
     "get_connection_status",
