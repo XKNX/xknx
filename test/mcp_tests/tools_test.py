@@ -99,7 +99,7 @@ async def test_send_group_value_write_encodes_and_queues() -> None:
 
 
 async def test_send_group_value_write_invalid_address() -> None:
-    """An unparseable group address is rejected before anything is queued."""
+    """An unparsable group address is rejected before anything is queued."""
     xknx = XKNX()
     with pytest.raises(Exception):  # noqa: B017
         await send_group_value_write(
