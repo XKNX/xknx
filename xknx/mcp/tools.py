@@ -46,7 +46,7 @@ _T = TypeVar("_T")
 def _paginate(items: list[_T], limit: int, offset: int) -> tuple[list[_T], bool]:
     """Slice ``items`` by ``offset``/``limit`` and report whether the limit was hit."""
     window = items[offset : offset + limit] if limit >= 0 else items[offset:]
-    limit_reached = limit >= 0 and len(items) - offset > limit
+    limit_reached = 0 <= limit < len(items) - offset
     return window, limit_reached
 
 
