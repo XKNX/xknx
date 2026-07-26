@@ -129,3 +129,45 @@ class SendResult:
     group_address: str
     apci: str
     queued: bool = True
+
+
+@dataclass(frozen=True, slots=True)
+class EncodeValueInput:
+    """Input for :func:`~xknx.mcp.tools.encode_value`."""
+
+    value: Annotated[GroupValue, "Value to encode (Python native type)."]
+    value_type: Annotated[
+        str,
+        'DPT number ("9.001") or value-type name ("temperature") to encode with.',
+    ]
+
+
+@dataclass(frozen=True, slots=True)
+class EncodeValueResult:
+    """Result of :func:`~xknx.mcp.tools.encode_value`."""
+
+    payload: list[int]
+    value_type: str
+
+
+@dataclass(frozen=True, slots=True)
+class DecodePayloadInput:
+    """Input for :func:`~xknx.mcp.tools.decode_payload`."""
+
+    payload: Annotated[
+        list[int] | int,
+        "Raw payload representation to decode (list of byte integers, or a single integer for 6-bit DPTs like DPT 1/2/3).",
+    ]
+    value_type: Annotated[
+        str,
+        'DPT number ("9.001") or value-type name ("temperature") to decode with.',
+    ]
+
+
+@dataclass(frozen=True, slots=True)
+class DecodePayloadResult:
+    """Result of :func:`~xknx.mcp.tools.decode_payload`."""
+
+    value: GroupValue
+    value_type: str
+

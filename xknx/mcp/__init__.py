@@ -13,7 +13,9 @@ the input/output models.
 """
 
 from .tools import (
+    decode_payload,
     describe_dpt,
+    encode_value,
     get_connection_status,
     list_dpts,
     read_group_value,
@@ -22,10 +24,14 @@ from .tools import (
 )
 from .types import (
     ConnectionStatusResult,
+    DecodePayloadInput,
+    DecodePayloadResult,
     DptDetail,
     DptFilter,
     DptListResult,
     DptSummary,
+    EncodeValueInput,
+    EncodeValueResult,
     GroupAddressInput,
     GroupValue,
     GroupValueReadInput,
@@ -36,17 +42,23 @@ from .types import (
 
 __all__ = [
     "ConnectionStatusResult",
+    "DecodePayloadInput",
+    "DecodePayloadResult",
     "DptDetail",
     "DptFilter",
     "DptListResult",
     "DptSummary",
+    "EncodeValueInput",
+    "EncodeValueResult",
     "GroupAddressInput",
     "GroupValue",
     "GroupValueReadInput",
     "GroupValueReadResult",
     "GroupValueWriteInput",
     "SendResult",
+    "decode_payload",
     "describe_dpt",
+    "encode_value",
     "get_connection_status",
     "list_dpts",
     "read_group_value",

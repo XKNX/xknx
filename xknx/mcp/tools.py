@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar
 
 from xknx.core.connection_state import XknxConnectionState
-from xknx.dpt import DPTBase, DPTNumeric
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric
 from xknx.tools import (
     group_value_read,
     group_value_write,
@@ -24,10 +24,14 @@ from xknx.tools import (
 
 from .types import (
     ConnectionStatusResult,
+    DecodePayloadInput,
+    DecodePayloadResult,
     DptDetail,
     DptFilter,
     DptListResult,
     DptSummary,
+    EncodeValueInput,
+    EncodeValueResult,
     GroupAddressInput,
     GroupValue,
     GroupValueReadInput,
@@ -186,3 +190,39 @@ async def send_group_value_write(xknx: XKNX, request: GroupValueWriteInput) -> S
         xknx, request.group_address, request.value, value_type=request.value_type
     )
     return SendResult(group_address=request.group_address, apci="GroupValueWrite")
+
+
+async def encode_value(request: EncodeValueInput) -> EncodeValueResult:
+    """Encode a value using a specific DPT into its raw payload bytes."""
+    transcoder = DPTBase.get_dpt(request.value_type)
+    encoded = transcoder.to_knx(request.value)
+    if isinstance(encoded, DPTArray):
+        payload = list(encoded.value)
+    else:
+        payload = [encoded.value]
+    return EncodeValueResult(payload=payload, value_type=request.value_type)
+
+
+async def decode_payload(request: DecodePayloadInput) -> DecodePayloadResult:
+    """Decode raw payload bytes or integer using a specific DPT."""
+    transcoder = DPTBase.get_dpt(request.value_type)
+    if transcoder.payload_type is DPTBinary:
+        if isinstance(request.payload, int):
+            raw = DPTBinary(request.payload)
+        elif isinstance(request.payload, list | tuple):
+            if not request.payload:
+                raise ValueError("Empty payload for DPTBinary")
+            raw = DPTBinary(request.payload[0])
+        else:
+            raise TypeError("Unsupported payload type for DPTBinary")
+    else:
+        if isinstance(request.payload, int):
+            raw = DPTArray([request.payload])
+        elif isinstance(request.payload, list | tuple):
+            raw = DPTArray(list(request.payload))
+        else:
+            raise TypeError("Unsupported payload type for DPTArray")
+
+    decoded = transcoder.from_knx(raw)
+    return DecodePayloadResult(value=_jsonify(decoded), value_type=request.value_type)
+
