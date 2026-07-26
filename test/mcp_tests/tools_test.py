@@ -1,5 +1,6 @@
 """Tests for the host-agnostic xknx MCP tool functions."""
 
+from enum import Enum
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,6 +19,7 @@ from xknx.mcp import (
     send_group_value_read,
     send_group_value_write,
 )
+from xknx.mcp.tools import _jsonify
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection, apci
 
 
@@ -28,6 +30,26 @@ async def test_list_dpts_unfiltered() -> None:
     numbers = [d.dpt for d in result.dpts]
     assert numbers == sorted(numbers, key=lambda s: [int(p or 0) for p in s.split(".")])
     assert "9.001" in numbers
+
+
+async def test_list_dpts_text_filter() -> None:
+    """The text filter keeps only DPTs whose number/value type/unit matches."""
+    result = await list_dpts(DptFilter(text="temperature"))
+    assert result.total_count > 0
+    assert "9.001" in {d.dpt for d in result.dpts}
+    assert all("temperature" in (d.value_type or "") for d in result.dpts)
+
+
+def test_jsonify_shapes() -> None:
+    """_jsonify passes JSON natives through, flattens tuples and stringifies the rest."""
+
+    class _Mode(Enum):
+        AUTO = "auto"
+
+    assert _jsonify(21.5) == 21.5
+    assert _jsonify(None) is None
+    assert _jsonify((0x0C, 0x00)) == [0x0C, 0x00]
+    assert _jsonify(_Mode.AUTO) == str(_Mode.AUTO)
 
 
 async def test_list_dpts_main_filter_and_pagination() -> None:

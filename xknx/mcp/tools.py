@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar
 
 from xknx.core.connection_state import XknxConnectionState
-from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric
+from xknx.dpt import DPTBase, DPTNumeric
 from xknx.telegram.address import parse_device_group_address
 from xknx.tools import (
     group_value_read,
@@ -71,11 +71,11 @@ def _summarize_dpt(dpt: type[DPTBase]) -> DptSummary:
 
 def _concrete_dpts() -> list[type[DPTBase]]:
     """Every concrete DPT transcoder (those with a main number), ordered by main then sub."""
-    seen: dict[str, type[DPTBase]] = {}
-    for dpt in DPTBase.dpt_class_tree():
-        if dpt.dpt_main_number is None:
-            continue
-        seen.setdefault(dpt.dpt_number_str(), dpt)
+    seen: dict[str, type[DPTBase]] = {
+        dpt.dpt_number_str(): dpt
+        for dpt in DPTBase.dpt_class_tree()
+        if dpt.dpt_main_number is not None
+    }
     return sorted(
         seen.values(),
         key=lambda dpt: (dpt.dpt_main_number or 0, dpt.dpt_sub_number or -1),
@@ -132,13 +132,15 @@ async def get_connection_status(xknx: XKNX) -> ConnectionStatusResult:
 
 
 def _jsonify(value: object) -> GroupValue:
-    """Coerce a decoded bus value into a JSON-native shape (tuples become lists)."""
+    """
+    Coerce a decoded bus value into a JSON-native shape.
+
+    ``read_group_value`` returns Python natives (a DPT transcoder's ``from_knx``
+    output, or the raw payload value). Tuples become lists; anything not already
+    JSON-native (e.g. an enum or dataclass from a complex DPT) is stringified.
+    """
     if isinstance(value, tuple):
         return [_jsonify(item) for item in value]
-    if isinstance(value, DPTArray):
-        return list(value.value)
-    if isinstance(value, DPTBinary):
-        return value.value
     if value is None or isinstance(value, bool | int | float | str | list | dict):
         return value
     return str(value)
