@@ -11,6 +11,9 @@ nav_order: 2
 ### Features
 
 - Add `xknx.mcp`, a host-agnostic subpackage of async MCP tool functions for the KNX bus and data point types (`list_dpts`, `describe_dpt`, `get_connection_status`, `read_group_value`, `send_group_value_read`, `send_group_value_write`). Frozen, JSON-native dataclass I/O with per-field descriptions in `Annotated` metadata; carries no MCP SDK, Home Assistant or web-framework dependency, so a consumer wraps the functions into its own MCP transport.
+### Protocol
+
+- Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
 
 # 3.17.0 APCIs and DPTs 2026-07-25
 
