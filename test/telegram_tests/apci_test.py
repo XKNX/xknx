@@ -4,6 +4,10 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, UnsupportedAPCIService
+from xknx.secure.data_secure_asdu import (
+    SecurityAlgorithmIdentifier,
+    SecurityALService,
+)
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import (
     APCI,
@@ -83,6 +87,7 @@ from xknx.telegram.apci import (
     RouterStatusRead,
     RouterStatusResponse,
     RouterStatusWrite,
+    SecureAPDU,
     SystemNetworkParameterRead,
     SystemNetworkParameterResponse,
     SystemNetworkParameterWrite,
@@ -164,6 +169,11 @@ class TestGroupValueRead:
         payload = APCI.from_knx(bytes([0x00, 0x00]))
 
         assert payload == GroupValueRead()
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x00, 0x00, 0x00]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -268,6 +278,11 @@ class TestIndividualAddressWrite:
 
         assert payload == IndividualAddressWrite(IndividualAddress("1.2.3"))
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x00, 0xC0, 0x12]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = IndividualAddressWrite(IndividualAddress("1.2.3"))
@@ -296,6 +311,11 @@ class TestIndividualAddressRead:
         payload = APCI.from_knx(bytes([0x01, 0x00]))
 
         assert payload == IndividualAddressRead()
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0x00, 0x00]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -326,6 +346,11 @@ class TestIndividualAddressResponse:
 
         assert payload == IndividualAddressResponse()
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0x40, 0x00]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = IndividualAddressResponse()
@@ -355,6 +380,11 @@ class TestADCRead:
 
         assert payload == ADCRead(channel=2, count=4)
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0x82]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = ADCRead(channel=1, count=3)
@@ -383,6 +413,11 @@ class TestADCResponse:
         payload = APCI.from_knx(bytes([0x01, 0xC2, 0x04, 0x03, 0xFF]))
 
         assert payload == ADCResponse(channel=2, count=4, value=1023)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0xC2, 0x04, 0x03]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -1860,6 +1895,11 @@ class TestMemoryExtendedWrite:
             address=0x123456, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0xFB, 0x03, 0x12, 0x34]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = MemoryExtendedWrite(
@@ -1931,6 +1971,11 @@ class TestMemoryExtendedWriteResponse:
             return_code=1, address=0x123456, confirmation_data=bytes([0xAA, 0xBB])
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0xFC, 0x00, 0x12, 0x34]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = MemoryExtendedWriteResponse(return_code=0, address=0x123456)
@@ -1995,6 +2040,11 @@ class TestMemoryExtendedRead:
 
         assert payload == MemoryExtendedRead(address=0x123456, count=3)
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0xFD, 0x03, 0x12, 0x34]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = MemoryExtendedRead(address=0x123456, count=3)
@@ -2040,6 +2090,11 @@ class TestMemoryExtendedReadResponse:
         assert payload == MemoryExtendedReadResponse(
             return_code=0, address=0x123456, data=bytes([0xAA, 0xBB, 0xCC])
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x01, 0xFE, 0x00, 0x12, 0x34]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2095,6 +2150,11 @@ class TestMemoryRead:
 
         assert payload == MemoryRead(address=0x1234, count=11)
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0x0B, 0x12]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = MemoryRead(address=0x1234, count=11)
@@ -2137,6 +2197,11 @@ class TestMemoryWrite:
         assert payload == MemoryWrite(
             address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0x83, 0x12]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2186,6 +2251,11 @@ class TestMemoryResponse:
         assert payload == MemoryResponse(
             address=0x1234, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0x43, 0x12]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2239,6 +2309,11 @@ class TestDeviceDescriptorRead:
 
         assert payload == DeviceDescriptorRead(13)
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0x0D, 0x00]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = DeviceDescriptorRead(13)
@@ -2275,6 +2350,11 @@ class TestDeviceDescriptorResponse:
 
         assert payload == DeviceDescriptorResponse(descriptor=13, value=123)
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0x4D, 0x00]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = DeviceDescriptorResponse(descriptor=13, value=123)
@@ -2310,6 +2390,11 @@ class TestUserMemoryRead:
         payload = APCI.from_knx(bytes([0x02, 0xC0, 0x1B, 0x23, 0x45]))
 
         assert payload == UserMemoryRead(address=0x12345, count=11)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC0, 0x1B, 0x23]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2355,6 +2440,11 @@ class TestUserMemoryWrite:
         assert payload == UserMemoryWrite(
             address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC2, 0x13, 0x23]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2413,6 +2503,11 @@ class TestUserMemoryResponse:
         assert payload == UserMemoryResponse(
             address=0x12345, count=3, data=bytes([0xAA, 0xBB, 0xCC])
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC1, 0x13, 0x23]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2548,6 +2643,11 @@ class TestRestart:
 
         assert payload == Restart()
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0x80, 0x00]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = Restart()
@@ -2677,6 +2777,11 @@ class TestUserManufacturerInfoRead:
 
         assert payload == UserManufacturerInfoRead()
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC5, 0x00]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = UserManufacturerInfoRead()
@@ -2707,6 +2812,11 @@ class TestUserManufacturerInfoResponse:
         assert payload == UserManufacturerInfoResponse(
             manufacturer_id=123, data=b"\x12\x34"
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC6, 0x7B, 0x12]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2743,6 +2853,11 @@ class TestFunctionPropertyCommand:
         assert payload == FunctionPropertyCommand(
             object_index=1, property_id=4, data=b"\x12\x34"
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC7, 0x01]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2784,6 +2899,11 @@ class TestFunctionPropertyStateRead:
             object_index=1, property_id=4, data=b"\x12\x34"
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC8, 0x01]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = FunctionPropertyStateRead(
@@ -2824,6 +2944,11 @@ class TestFunctionPropertyStateResponse:
             object_index=1, property_id=4, return_code=8, data=b"\x12\x34"
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x02, 0xC9, 0x01, 0x04]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = FunctionPropertyStateResponse(
@@ -2859,6 +2984,11 @@ class TestFilterTableOpen:
         payload = APCI.from_knx(bytes((0x03, 0xC0)))
 
         assert payload == FilterTableOpen()
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for an APDU with trailing garbage."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes((0x03, 0xC0, 0x00)))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -3471,6 +3601,11 @@ class TestAuthorizeRequest:
 
         assert payload == AuthorizeRequest(key=12345678)
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD1, 0x00, 0x00, 0xBC, 0x61]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = AuthorizeRequest(key=12345678)
@@ -3499,6 +3634,11 @@ class TestAuthorizeResponse:
         payload = APCI.from_knx(bytes([0x03, 0xD2, 0x7B]))
 
         assert payload == AuthorizeResponse(level=123)
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD2]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -3634,6 +3774,11 @@ class TestPropertyValueRead:
             object_index=1, property_id=4, count=2, start_index=8
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD5, 0x01, 0x04, 0x20]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = PropertyValueRead(
@@ -3682,6 +3827,11 @@ class TestPropertyValueWrite:
         assert payload == PropertyValueWrite(
             object_index=1, property_id=4, count=2, start_index=8, data=b"\x12\x34"
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD7, 0x01, 0x04, 0x20]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -3734,6 +3884,11 @@ class TestPropertyValueResponse:
             object_index=1, property_id=4, count=2, start_index=8, data=b"\x12\x34"
         )
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD6, 0x01, 0x04, 0x20]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = PropertyValueResponse(
@@ -3784,6 +3939,11 @@ class TestPropertyDescriptionRead:
         assert payload == PropertyDescriptionRead(
             object_index=1, property_id=4, property_index=8
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD8, 0x01, 0x04]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -3836,6 +3996,11 @@ class TestPropertyDescriptionResponse:
             max_count=5,
             access=7,
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xD9, 0x01, 0x04, 0x08, 0x03, 0x00, 0x05]))
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -4044,6 +4209,11 @@ class TestIndividualAddressSerialRead:
 
         assert payload == IndividualAddressSerialRead(b"\xaa\xbb\xcc\x11\x22\x33")
 
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(bytes([0x03, 0xDC, 0xAA, 0xBB, 0xCC, 0x11, 0x22]))
+
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
         payload = IndividualAddressSerialRead(b"\xaa\xbb\xcc\x11\x22\x33")
@@ -4089,6 +4259,15 @@ class TestIndividualAddressSerialResponse:
         assert payload == IndividualAddressSerialResponse(
             serial=b"\xaa\xbb\xcc\x11\x22\x33", address=IndividualAddress("1.2.3")
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(
+                bytes(
+                    [0x03, 0xDD, 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33, 0x12, 0x03, 0x00]
+                )
+            )
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -4159,6 +4338,29 @@ class TestIndividualAddressSerialWrite:
         assert payload == IndividualAddressSerialWrite(
             serial=b"\xaa\xbb\xcc\x11\x22\x33", address=IndividualAddress("1.2.3")
         )
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(
+                bytes(
+                    [
+                        0x03,
+                        0xDE,
+                        0xAA,
+                        0xBB,
+                        0xCC,
+                        0x11,
+                        0x22,
+                        0x33,
+                        0x12,
+                        0x03,
+                        0x00,
+                        0x00,
+                        0x00,
+                    ]
+                )
+            )
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -5348,6 +5550,44 @@ class TestFileStreamInfoReport:
 
         with pytest.raises(ConversionError, match=r".*sequence number.*"):
             payload.to_knx()
+
+
+class TestSecureAPDU:
+    """Test class for SecureAPDU objects."""
+
+    # APCI header (2) + scf (1) + sequence_number (6) + secured_apdu (2) + mac (4)
+    valid_raw = bytes.fromhex("03f100") + bytes(6) + b"\xaa\xbb" + b"\x11\x22\x33\x44"
+
+    def test_calculated_length(self) -> None:
+        """Test the test_calculated_length method."""
+        payload = APCI.from_knx(self.valid_raw)
+
+        assert payload.calculated_length() == 14
+        assert payload.calculated_length() == len(payload.to_knx()) - 1
+
+    def test_from_knx(self) -> None:
+        """Test the from_knx method."""
+        payload = APCI.from_knx(self.valid_raw)
+
+        assert isinstance(payload, SecureAPDU)
+        assert payload.scf.tool_access is False
+        assert payload.scf.algorithm == SecurityAlgorithmIdentifier.CCM_AUTHENTICATION
+        assert payload.scf.system_broadcast is False
+        assert payload.scf.service == SecurityALService.S_A_DATA
+        assert payload.secured_data.sequence_number_bytes == bytes(6)
+        assert payload.secured_data.secured_apdu == b"\xaa\xbb"
+        assert payload.secured_data.message_authentication_code == b"\x11\x22\x33\x44"
+
+    def test_from_knx_wrong_length(self) -> None:
+        """Test from_knx raises ConversionError for a too-short APDU."""
+        with pytest.raises(ConversionError, match=r".*Invalid length.*"):
+            APCI.from_knx(self.valid_raw[:12])
+
+    def test_to_knx(self) -> None:
+        """Test the to_knx method round-trips the raw frame exactly."""
+        payload = APCI.from_knx(self.valid_raw)
+
+        assert payload.to_knx() == self.valid_raw
 
     def test_str(self) -> None:
         """Test the __str__ method."""
