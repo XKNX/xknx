@@ -196,33 +196,21 @@ async def encode_value(request: EncodeValueInput) -> EncodeValueResult:
     """Encode a value using a specific DPT into its raw payload bytes."""
     transcoder = DPTBase.get_dpt(request.value_type)
     encoded = transcoder.to_knx(request.value)
-    if isinstance(encoded, DPTArray):
-        payload = list(encoded.value)
-    else:
-        payload = [encoded.value]
+    payload = list(encoded.value) if isinstance(encoded, DPTArray) else [encoded.value]
     return EncodeValueResult(payload=payload, value_type=request.value_type)
 
 
 async def decode_payload(request: DecodePayloadInput) -> DecodePayloadResult:
-    """Decode raw payload bytes or integer using a specific DPT."""
+    """Decode a raw payload (byte list, or a single int for 6-bit DPTs) with a DPT."""
     transcoder = DPTBase.get_dpt(request.value_type)
+    values = [request.payload] if isinstance(request.payload, int) else list(request.payload)
+    raw: DPTArray | DPTBinary
     if transcoder.payload_type is DPTBinary:
-        if isinstance(request.payload, int):
-            raw = DPTBinary(request.payload)
-        elif isinstance(request.payload, list | tuple):
-            if not request.payload:
-                raise ValueError("Empty payload for DPTBinary")
-            raw = DPTBinary(request.payload[0])
-        else:
-            raise TypeError("Unsupported payload type for DPTBinary")
+        if not values:
+            raise ValueError("Empty payload for DPTBinary")
+        raw = DPTBinary(values[0])
     else:
-        if isinstance(request.payload, int):
-            raw = DPTArray([request.payload])
-        elif isinstance(request.payload, list | tuple):
-            raw = DPTArray(list(request.payload))
-        else:
-            raise TypeError("Unsupported payload type for DPTArray")
-
+        raw = DPTArray(values)
     decoded = transcoder.from_knx(raw)
     return DecodePayloadResult(value=_jsonify(decoded), value_type=request.value_type)
 

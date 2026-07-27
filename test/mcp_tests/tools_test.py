@@ -213,4 +213,8 @@ async def test_decode_payload() -> None:
     switch_int_result = await decode_payload(DecodePayloadInput(payload=1, value_type="1.001"))
     assert switch_int_result.value == "Switch.ON"
 
+    # An empty payload for a 6-bit (DPTBinary) DPT is rejected.
+    with pytest.raises(ValueError, match="Empty payload"):
+        await decode_payload(DecodePayloadInput(payload=[], value_type="1.001"))
+
 
