@@ -463,7 +463,10 @@ class GroupValueRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> GroupValueRead:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_GroupValue_Read in CEMI: {raw.hex()}"
+            )
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -572,6 +575,10 @@ class IndividualAddressWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> IndividualAddressWrite:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 4:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddress_Write in CEMI: {raw.hex()}"
+            )
         (raw_address,) = struct.unpack("!H", raw[2:])
         return cls(address=IndividualAddress(raw_address))
 
@@ -597,7 +604,10 @@ class IndividualAddressRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> IndividualAddressRead:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddress_Read in CEMI: {raw.hex()}"
+            )
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -627,7 +637,10 @@ class IndividualAddressResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> IndividualAddressResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddress_Response in CEMI: {raw.hex()}"
+            )
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -659,6 +672,8 @@ class ADCRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> ADCRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 3:
+            raise ConversionError(f"Invalid length for A_ADC_Read in CEMI: {raw.hex()}")
         channel, count = struct.unpack("!BB", raw[1:])
 
         return cls(
@@ -700,6 +715,10 @@ class ADCResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> ADCResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_ADC_Response in CEMI: {raw.hex()}"
+            )
         channel, count, value = struct.unpack("!BBH", raw[1:])
 
         return cls(
@@ -1844,6 +1863,10 @@ class MemoryExtendedWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWrite:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryExtended_Write in CEMI: {raw.hex()}"
+            )
         count = raw[2]
         address = int.from_bytes(raw[3:6], "big")
         data = raw[6:]
@@ -1894,6 +1917,10 @@ class MemoryExtendedWriteResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedWriteResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryExtended_Write_Response in CEMI: {raw.hex()}"
+            )
         return_code = raw[2]
         address = int.from_bytes(raw[3:6], "big")
         confirmation_data = raw[6:]
@@ -1945,6 +1972,10 @@ class MemoryExtendedRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryExtended_Read in CEMI: {raw.hex()}"
+            )
         count = raw[2]
         address = int.from_bytes(raw[3:6], "big")
 
@@ -1994,6 +2025,10 @@ class MemoryExtendedReadResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryExtendedReadResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_MemoryExtended_Read_Response in CEMI: {raw.hex()}"
+            )
         return_code = raw[2]
         address = int.from_bytes(raw[3:6], "big")
         data = raw[6:]
@@ -2044,6 +2079,10 @@ class MemoryRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 4:
+            raise ConversionError(
+                f"Invalid length for A_Memory_Read in CEMI: {raw.hex()}"
+            )
         count, address = struct.unpack("!BH", raw[1:])
 
         return cls(
@@ -2095,6 +2134,10 @@ class MemoryWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryWrite:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 4:
+            raise ConversionError(
+                f"Invalid length for A_Memory_Write in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 4
 
         count, address, data = struct.unpack(f"!BH{size}s", raw[1:])
@@ -2150,6 +2193,10 @@ class MemoryResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> MemoryResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 4:
+            raise ConversionError(
+                f"Invalid length for A_Memory_Response in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 4
 
         count, address, data = struct.unpack(f"!BH{size}s", raw[1:])
@@ -2198,6 +2245,10 @@ class DeviceDescriptorRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> DeviceDescriptorRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_DeviceDescriptor_Read in CEMI: {raw.hex()}"
+            )
         return cls(descriptor=raw[1] & 0x3F)
 
     def to_knx(self) -> bytearray:
@@ -2232,6 +2283,10 @@ class DeviceDescriptorResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> DeviceDescriptorResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 4:
+            raise ConversionError(
+                f"Invalid length for A_DeviceDescriptor_Response in CEMI: {raw.hex()}"
+            )
         descriptor, value = struct.unpack("!BH", raw[1:])
 
         return cls(descriptor=descriptor & 0x3F, value=value)
@@ -2274,7 +2329,8 @@ class Restart(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> Restart:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(f"Invalid length for A_Restart in CEMI: {raw.hex()}")
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -2407,6 +2463,10 @@ class UserMemoryRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> UserMemoryRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_UserMemory_Read in CEMI: {raw.hex()}"
+            )
         byte0, address = struct.unpack("!BH", raw[2:])
 
         return cls(
@@ -2459,6 +2519,10 @@ class UserMemoryWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> UserMemoryWrite:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_UserMemory_Write in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 5
 
         byte0, address, data = struct.unpack(f"!BH{size}s", raw[2:])
@@ -2515,6 +2579,10 @@ class UserMemoryResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> UserMemoryResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_UserMemory_Response in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 5
 
         byte0, address, data = struct.unpack(f"!BH{size}s", raw[2:])
@@ -2627,7 +2695,10 @@ class UserManufacturerInfoRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> UserManufacturerInfoRead:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_UserManufacturerInfo_Read in CEMI: {raw.hex()}"
+            )
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -2656,6 +2727,10 @@ class UserManufacturerInfoResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> UserManufacturerInfoResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_UserManufacturerInfo_Response in CEMI: {raw.hex()}"
+            )
         manufacturer_id, data = struct.unpack("!B2s", raw[2:])
         return cls(manufacturer_id=manufacturer_id, data=data)
 
@@ -2687,6 +2762,10 @@ class FunctionPropertyCommand(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> FunctionPropertyCommand:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 4:
+            raise ConversionError(
+                f"Invalid length for A_FunctionProperty_Command in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 4
         object_index, property_id, data = struct.unpack(f"!BB{size}s", raw[2:])
         return cls(
@@ -2726,6 +2805,10 @@ class FunctionPropertyStateRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> FunctionPropertyStateRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 4:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyState_Read in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 4
         object_index, property_id, data = struct.unpack(f"!BB{size}s", raw[2:])
         return cls(
@@ -2766,6 +2849,10 @@ class FunctionPropertyStateResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyState_Response in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 5
         (
             object_index,
@@ -2818,7 +2905,10 @@ class FilterTableOpen(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> FilterTableOpen:
         """Parse/deserialize from KNX/IP raw data."""
-        # Nothing to parse, but must be implemented explicitly.
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_FilterTable_Open in CEMI: {raw.hex()}"
+            )
         return cls()
 
     def to_knx(self) -> bytearray:
@@ -3437,6 +3527,10 @@ class AuthorizeRequest(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> AuthorizeRequest:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 7:
+            raise ConversionError(
+                f"Invalid length for A_Authorize_Request in CEMI: {raw.hex()}"
+            )
         _, key = struct.unpack("!BI", raw[2:])
         return cls(key=key)
 
@@ -3466,6 +3560,10 @@ class AuthorizeResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> AuthorizeResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 3:
+            raise ConversionError(
+                f"Invalid length for A_Authorize_Response in CEMI: {raw.hex()}"
+            )
         (level,) = struct.unpack("!B", raw[2:])
         return cls(level=level)
 
@@ -3596,6 +3694,10 @@ class PropertyValueRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyValueRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 6:
+            raise ConversionError(
+                f"Invalid length for A_PropertyValue_Read in CEMI: {raw.hex()}"
+            )
         (
             object_index,
             property_id,
@@ -3676,6 +3778,10 @@ class PropertyValueWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyValueWrite:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_PropertyValue_Write in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 6
         (
             object_index,
@@ -3729,6 +3835,10 @@ class PropertyValueResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyValueResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_PropertyValue_Response in CEMI: {raw.hex()}"
+            )
         size = len(raw) - 6
         (
             object_index,
@@ -3792,6 +3902,10 @@ class PropertyDescriptionRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyDescriptionRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 5:
+            raise ConversionError(
+                f"Invalid length for A_PropertyDescription_Read in CEMI: {raw.hex()}"
+            )
         object_index, property_id, property_index = struct.unpack("!BBB", raw[2:])
         return cls(
             object_index=object_index,
@@ -3832,6 +3946,10 @@ class PropertyDescriptionResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> PropertyDescriptionResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 9:
+            raise ConversionError(
+                f"Invalid length for A_PropertyDescription_Response in CEMI: {raw.hex()}"
+            )
         (
             object_index,
             property_id,
@@ -4013,6 +4131,10 @@ class IndividualAddressSerialRead(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> IndividualAddressSerialRead:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 8:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddressSerialNumber_Read in CEMI: {raw.hex()}"
+            )
         (serial,) = struct.unpack("!6s", raw[2:])
         return cls(serial=serial)
 
@@ -4046,6 +4168,10 @@ class IndividualAddressSerialResponse(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> IndividualAddressSerialResponse:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 12:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddressSerialNumber_Response in CEMI: {raw.hex()}"
+            )
         serial, raw_address, _ = struct.unpack("!6sHH", raw[2:])
         return cls(
             serial=serial,
@@ -4082,6 +4208,10 @@ class IndividualAddressSerialWrite(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> IndividualAddressSerialWrite:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 14:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddressSerialNumber_Write in CEMI: {raw.hex()}"
+            )
         serial, raw_address, _ = struct.unpack("!6sHI", raw[2:])
         return cls(
             serial=serial,
@@ -5050,6 +5180,8 @@ class SecureAPDU(APCI):
     @classmethod
     def from_knx(cls, raw: bytes) -> SecureAPDU:
         """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 13:
+            raise ConversionError(f"Invalid length for A_Sec in CEMI: {raw.hex()}")
         return cls(
             scf=SecurityControlField.from_knx(raw[2]),
             secured_data=SecureData.from_knx(raw[3:]),
