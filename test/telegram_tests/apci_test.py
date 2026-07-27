@@ -1813,6 +1813,54 @@ class TestPropertyExtDescriptionResponse:
 
         assert APCI.from_knx(raw).to_knx() == raw
 
+    def test_to_knx_description_type_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range description_type."""
+        payload = PropertyExtDescriptionResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            description_type=0x10,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property description type.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_index."""
+        payload = PropertyExtDescriptionResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            property_index=0x1000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Property index.*"):
+            payload.to_knx()
+
+    def test_to_knx_dpt_main_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range dpt_main."""
+        payload = PropertyExtDescriptionResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            dpt_main=0x10000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*DPT main number.*"):
+            payload.to_knx()
+
+    def test_to_knx_dpt_sub_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range dpt_sub."""
+        payload = PropertyExtDescriptionResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            dpt_sub=0x10000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*DPT sub number.*"):
+            payload.to_knx()
+
     def test_to_knx_pdt_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range pdt."""
         payload = PropertyExtDescriptionResponse(
@@ -1823,6 +1871,18 @@ class TestPropertyExtDescriptionResponse:
         )
 
         with pytest.raises(ConversionError, match=r".*PDT.*"):
+            payload.to_knx()
+
+    def test_to_knx_max_nr_of_elem_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range max_nr_of_elem."""
+        payload = PropertyExtDescriptionResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            max_nr_of_elem=0x10000,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Max number of elements.*"):
             payload.to_knx()
 
     def test_to_knx_read_level_out_of_range(self) -> None:
@@ -2603,6 +2663,15 @@ class TestUserMemoryBitWrite:
         )
 
         with pytest.raises(ConversionError, match=r".*Address.*"):
+            payload.to_knx()
+
+    def test_to_knx_number_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for and_data longer than 255 bytes."""
+        payload = UserMemoryBitWrite(
+            address=0x1234, and_data=bytes(256), xor_data=bytes(256)
+        )
+
+        with pytest.raises(ConversionError, match=r".*Number.*"):
             payload.to_knx()
 
     def test_to_knx_mismatched_data_length(self) -> None:
