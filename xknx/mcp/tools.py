@@ -24,14 +24,14 @@ from xknx.tools import (
 
 from .types import (
     ConnectionStatusResult,
-    DecodePayloadInput,
-    DecodePayloadResult,
+    DecodeDptPayloadInput,
+    DecodeDptPayloadResult,
     DptDetail,
     DptFilter,
     DptListResult,
     DptSummary,
-    EncodeValueInput,
-    EncodeValueResult,
+    EncodeDptPayloadInput,
+    EncodeDptPayloadResult,
     GroupAddressInput,
     GroupValue,
     GroupValueReadInput,
@@ -192,15 +192,15 @@ async def send_group_value_write(xknx: XKNX, request: GroupValueWriteInput) -> S
     return SendResult(group_address=request.group_address, apci="GroupValueWrite")
 
 
-async def encode_value(request: EncodeValueInput) -> EncodeValueResult:
+async def encode_dpt_payload(request: EncodeDptPayloadInput) -> EncodeDptPayloadResult:
     """Encode a value using a specific DPT into its raw payload bytes."""
     transcoder = DPTBase.get_dpt(request.value_type)
     encoded = transcoder.to_knx(request.value)
     payload = list(encoded.value) if isinstance(encoded, DPTArray) else [encoded.value]
-    return EncodeValueResult(payload=payload, value_type=request.value_type)
+    return EncodeDptPayloadResult(payload=payload, value_type=request.value_type)
 
 
-async def decode_payload(request: DecodePayloadInput) -> DecodePayloadResult:
+async def decode_dpt_payload(request: DecodeDptPayloadInput) -> DecodeDptPayloadResult:
     """Decode a raw payload (byte list, or a single int for 6-bit DPTs) with a DPT."""
     transcoder = DPTBase.get_dpt(request.value_type)
     values = [request.payload] if isinstance(request.payload, int) else list(request.payload)
@@ -212,5 +212,5 @@ async def decode_payload(request: DecodePayloadInput) -> DecodePayloadResult:
     else:
         raw = DPTArray(values)
     decoded = transcoder.from_knx(raw)
-    return DecodePayloadResult(value=_jsonify(decoded), value_type=request.value_type)
+    return DecodeDptPayloadResult(value=_jsonify(decoded), value_type=request.value_type)
 

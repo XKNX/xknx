@@ -132,8 +132,8 @@ class SendResult:
 
 
 @dataclass(frozen=True, slots=True)
-class EncodeValueInput:
-    """Input for :func:`~xknx.mcp.tools.encode_value`."""
+class EncodeDptPayloadInput:
+    """Input for :func:`~xknx.mcp.tools.encode_dpt_payload`."""
 
     value: Annotated[GroupValue, "Value to encode (Python native type)."]
     value_type: Annotated[
@@ -143,16 +143,16 @@ class EncodeValueInput:
 
 
 @dataclass(frozen=True, slots=True)
-class EncodeValueResult:
-    """Result of :func:`~xknx.mcp.tools.encode_value`."""
+class EncodeDptPayloadResult:
+    """Result of :func:`~xknx.mcp.tools.encode_dpt_payload`."""
 
     payload: list[int]
     value_type: str
 
 
 @dataclass(frozen=True, slots=True)
-class DecodePayloadInput:
-    """Input for :func:`~xknx.mcp.tools.decode_payload`."""
+class DecodeDptPayloadInput:
+    """Input for :func:`~xknx.mcp.tools.decode_dpt_payload`."""
 
     payload: Annotated[
         list[int] | int,
@@ -165,8 +165,8 @@ class DecodePayloadInput:
 
 
 @dataclass(frozen=True, slots=True)
-class DecodePayloadResult:
-    """Result of :func:`~xknx.mcp.tools.decode_payload`."""
+class DecodeDptPayloadResult:
+    """Result of :func:`~xknx.mcp.tools.decode_dpt_payload`."""
 
     value: GroupValue
     value_type: str

@@ -9,15 +9,15 @@ from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import CouldNotParseAddress
 from xknx.mcp import (
-    DecodePayloadInput,
+    DecodeDptPayloadInput,
     DptFilter,
-    EncodeValueInput,
+    EncodeDptPayloadInput,
     GroupAddressInput,
     GroupValueReadInput,
     GroupValueWriteInput,
-    decode_payload,
+    decode_dpt_payload,
     describe_dpt,
-    encode_value,
+    encode_dpt_payload,
     get_connection_status,
     list_dpts,
     read_group_value,
@@ -184,37 +184,37 @@ async def test_read_group_value_raw_binary() -> None:
     assert result.value == 1
 
 
-async def test_encode_value() -> None:
-    """encode_value encodes a python value into raw bytes list using DPT."""
+async def test_encode_dpt_payload() -> None:
+    """encode_dpt_payload encodes a python value into raw bytes list using DPT."""
     # Test DPT 9.001 (temperature, DPTArray)
-    temp_result = await encode_value(EncodeValueInput(value=21.0, value_type="9.001"))
+    temp_result = await encode_dpt_payload(EncodeDptPayloadInput(value=21.0, value_type="9.001"))
     assert temp_result.payload == [0x0C, 0x1A]
     assert temp_result.value_type == "9.001"
 
     # Test DPT 1.001 (switch, DPTBinary)
-    switch_result = await encode_value(EncodeValueInput(value=True, value_type="1.001"))
+    switch_result = await encode_dpt_payload(EncodeDptPayloadInput(value=True, value_type="1.001"))
     assert switch_result.payload == [1]
     assert switch_result.value_type == "1.001"
 
 
-async def test_decode_payload() -> None:
-    """decode_payload decodes raw payload bytes list or int into python value using DPT."""
+async def test_decode_dpt_payload() -> None:
+    """decode_dpt_payload decodes raw payload bytes list or int into python value using DPT."""
     # Test DPT 9.001 (DPTArray)
-    temp_result = await decode_payload(DecodePayloadInput(payload=[0x0C, 0x1A], value_type="9.001"))
+    temp_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[0x0C, 0x1A], value_type="9.001"))
     assert temp_result.value == 21.0
     assert temp_result.value_type == "9.001"
 
     # Test DPT 1.001 (DPTBinary)
-    switch_result = await decode_payload(DecodePayloadInput(payload=[1], value_type="1.001"))
+    switch_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[1], value_type="1.001"))
     assert switch_result.value == "Switch.ON"
     assert switch_result.value_type == "1.001"
 
     # Test DPT 1.001 with integer payload directly
-    switch_int_result = await decode_payload(DecodePayloadInput(payload=1, value_type="1.001"))
+    switch_int_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=1, value_type="1.001"))
     assert switch_int_result.value == "Switch.ON"
 
     # An empty payload for a 6-bit (DPTBinary) DPT is rejected.
     with pytest.raises(ValueError, match="Empty payload"):
-        await decode_payload(DecodePayloadInput(payload=[], value_type="1.001"))
+        await decode_dpt_payload(DecodeDptPayloadInput(payload=[], value_type="1.001"))
 
 
