@@ -15,7 +15,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypeVar
 
 from xknx.core.connection_state import XknxConnectionState
-from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTNumeric
+from xknx.dpt import (
+    DPTArray,
+    DPTBase,
+    DPTBinary,
+    DPTComplex,
+    DPTComplexData,
+    DPTEnum,
+    DPTEnumData,
+    DPTNumeric,
+)
 from xknx.tools import (
     group_value_read,
     group_value_write,
@@ -69,20 +78,23 @@ def _summarize_dpt(dpt: type[DPTBase]) -> DptSummary:
         value_min=value_min,
         value_max=value_max,
         resolution=resolution,
+        payload_length=dpt.payload_length,
+        enum_values=(
+            [member.name for member in dpt.get_valid_values()]
+            if issubclass(dpt, DPTEnum)
+            else None
+        ),
+        schema=(
+            [dict(field) for field in dpt.get_dict_schema()]
+            if issubclass(dpt, DPTComplex)
+            else None
+        ),
     )
 
 
-def _concrete_dpts() -> list[type[DPTBase]]:
-    """Every concrete DPT transcoder (those with a main number), ordered by main then sub."""
-    seen: dict[str, type[DPTBase]] = {
-        dpt.dpt_number_str(): dpt
-        for dpt in DPTBase.dpt_class_tree()
-        if dpt.dpt_main_number is not None
-    }
-    return sorted(
-        seen.values(),
-        key=lambda dpt: (dpt.dpt_main_number or 0, dpt.dpt_sub_number or -1),
-    )
+def _dpt_haystack(dpt: type[DPTBase]) -> str:
+    """Return the lower-cased text a ``list_dpts`` text filter matches against."""
+    return f"{dpt.dpt_number_str()}\n{dpt.value_type or ''}\n{dpt.unit or ''}".lower()
 
 
 async def list_dpts(filters: DptFilter | None = None) -> DptListResult:
@@ -90,20 +102,19 @@ async def list_dpts(filters: DptFilter | None = None) -> DptListResult:
     filters = filters or DptFilter()
     needle = filters.text.lower() if filters.text else None
 
-    matches: list[DptSummary] = []
-    for dpt in _concrete_dpts():
-        if filters.main is not None and dpt.dpt_main_number != filters.main:
-            continue
-        summary = _summarize_dpt(dpt)
-        if needle is not None and needle not in (
-            f"{summary.dpt}\n{summary.value_type or ''}\n{summary.unit or ''}".lower()
-        ):
-            continue
-        matches.append(summary)
+    # dpt_class_tree() already yields only concrete transcoders (each with a
+    # main number); filter, then order by DPT number.
+    matches = [
+        dpt
+        for dpt in DPTBase.dpt_class_tree()
+        if (filters.main is None or dpt.dpt_main_number == filters.main)
+        and (needle is None or needle in _dpt_haystack(dpt))
+    ]
+    matches.sort(key=lambda dpt: (dpt.dpt_main_number or 0, dpt.dpt_sub_number or -1))
 
     window, limit_reached = _paginate(matches, filters.limit, filters.offset)
     return DptListResult(
-        dpts=window,
+        dpts=[_summarize_dpt(dpt) for dpt in window],
         total_count=len(matches),
         offset=filters.offset,
         next_offset=filters.offset + len(window) if limit_reached else None,
@@ -141,9 +152,14 @@ def _jsonify(value: object) -> GroupValue:
     Coerce a decoded bus value into a JSON-native shape.
 
     ``read_group_value`` returns Python natives (a DPT transcoder's ``from_knx``
-    output, or the raw payload value). Tuples become lists; anything not already
-    JSON-native (e.g. an enum or dataclass from a complex DPT) is stringified.
+    output, or the raw payload value). Complex DPT values become their
+    ``as_dict()`` form and enum values their member name; tuples become lists;
+    anything else JSON-native passes through, and the rest is stringified.
     """
+    if isinstance(value, DPTComplexData):
+        return value.as_dict()
+    if isinstance(value, DPTEnumData):
+        return value.name
     if isinstance(value, tuple):
         return [_jsonify(item) for item in value]
     if value is None or isinstance(value, bool | int | float | str | list | dict):
@@ -193,7 +209,12 @@ async def send_group_value_write(xknx: XKNX, request: GroupValueWriteInput) -> S
 
 
 async def encode_dpt_payload(request: EncodeDptPayloadInput) -> EncodeDptPayloadResult:
-    """Encode a value using a specific DPT into its raw payload bytes."""
+    """
+    Encode a value using a specific DPT into its raw payload bytes.
+
+    Raises :exc:`ValueError` if ``value_type`` matches no DPT and
+    :exc:`~xknx.exceptions.ConversionError` if ``value`` cannot be encoded with it.
+    """
     transcoder = DPTBase.get_dpt(request.value_type)
     encoded = transcoder.to_knx(request.value)
     payload = list(encoded.value) if isinstance(encoded, DPTArray) else [encoded.value]
@@ -201,7 +222,12 @@ async def encode_dpt_payload(request: EncodeDptPayloadInput) -> EncodeDptPayload
 
 
 async def decode_dpt_payload(request: DecodeDptPayloadInput) -> DecodeDptPayloadResult:
-    """Decode a raw payload (byte list, or a single int for 6-bit DPTs) with a DPT."""
+    """
+    Decode a raw payload (byte list, or a single int for 6-bit DPTs) with a DPT.
+
+    Raises :exc:`ValueError` if ``value_type`` matches no DPT and
+    :exc:`~xknx.exceptions.ConversionError` if the payload is invalid for it.
+    """
     transcoder = DPTBase.get_dpt(request.value_type)
     values = [request.payload] if isinstance(request.payload, int) else list(request.payload)
     raw: DPTArray | DPTBinary

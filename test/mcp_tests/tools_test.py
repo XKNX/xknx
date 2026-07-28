@@ -88,6 +88,23 @@ async def test_describe_dpt_by_number_and_name() -> None:
     assert by_name.dpt.dpt == "9.001"
 
 
+async def test_describe_dpt_semantics() -> None:
+    """Enum, complex and string DPTs expose their extra semantics."""
+    switch = await describe_dpt("1.001")  # enum
+    assert switch.dpt is not None
+    assert switch.dpt.enum_values == ["OFF", "ON"]
+    assert switch.dpt.schema is None
+
+    controlled = await describe_dpt("2.001")  # complex
+    assert controlled.dpt is not None
+    assert controlled.dpt.schema is not None
+    assert {f["name"] for f in controlled.dpt.schema} == {"control", "value"}
+
+    string = await describe_dpt("16.000")  # string: payload_length is the max length
+    assert string.dpt is not None
+    assert string.dpt.payload_length == 14
+
+
 async def test_describe_dpt_unknown() -> None:
     """An unknown identifier returns a not-found result."""
     result = await describe_dpt("999.999")
@@ -206,12 +223,16 @@ async def test_decode_dpt_payload() -> None:
 
     # Test DPT 1.001 (DPTBinary)
     switch_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[1], value_type="1.001"))
-    assert switch_result.value == "Switch.ON"
+    assert switch_result.value == "ON"
     assert switch_result.value_type == "1.001"
 
     # Test DPT 1.001 with integer payload directly
     switch_int_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=1, value_type="1.001"))
-    assert switch_int_result.value == "Switch.ON"
+    assert switch_int_result.value == "ON"
+
+    # A complex DPT decodes to its JSON-native as_dict() form.
+    complex_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[3], value_type="2.001"))
+    assert complex_result.value == {"control": True, "value": "on"}
 
     # An empty payload for a 6-bit (DPTBinary) DPT is rejected.
     with pytest.raises(ValueError, match="Empty payload"):
