@@ -463,13 +463,18 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
 
     task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
 
-    # make sure first request (address check) times out
+    # first request (address check) succeeds
     await time_travel(0)
     xknx.management.process(ack)
     xknx.management.process(device_desc_resp)
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(0)
 
+    # a different device answers the programming-mode broadcast before its
+    # 3s window elapses, so dev_pgm_mode[0] != individual_address
     xknx.management.process(address_reply_message)
+    # fast-forward past the broadcast's 3s timeout via the mocked clock,
+    # instead of waiting on it for real
+    await time_travel(3)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
@@ -479,5 +484,8 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         call(individual_address_read),
     ]
 
-    with pytest.raises(ManagementConnectionError):
+    with pytest.raises(
+        ManagementConnectionError,
+        match=f"A device was found with {individual_address}, cannot continue with programming.",
+    ):
         await task

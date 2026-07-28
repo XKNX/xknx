@@ -10,6 +10,7 @@ from xknx.exceptions import (
     CommunicationError,
     ConfirmationError,
     ManagementConnectionError,
+    ManagementConnectionRefused,
     ManagementConnectionTimeout,
 )
 from xknx.management.management import MANAGAMENT_ACK_TIMEOUT
@@ -136,6 +137,31 @@ async def test_failed_connect_disconnect() -> None:
     xknx.cemi_handler.send_telegram.side_effect = CommunicationError("")
     with pytest.raises(ManagementConnectionError):
         await conn_1.disconnect()
+
+
+async def test_send_on_disconnected_connection() -> None:
+    """Test send_data_no_ack, request and _send_data raise once the connection is closed."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+
+    conn = await xknx.management.connect(ia)
+    await conn.disconnect()
+
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.send_data_no_ack(apci.Restart())
+
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.request(
+            payload=apci.DeviceDescriptorRead(descriptor=0),
+            expected=apci.DeviceDescriptorResponse,
+        )
+
+    # _send_data is only ever reached via request() (which already guards on
+    # entry), but a disconnect can still race in during request()'s rate
+    # limit sleep - so it re-checks on its own.
+    with pytest.raises(ManagementConnectionRefused):
+        await conn._send_data(apci.Restart())
 
 
 async def test_reject_incoming_connection() -> None:
