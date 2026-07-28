@@ -1,4 +1,4 @@
-"""NM_IndividualAddress_Read — KNX 03.05.02 §2.2."""
+"""NM_IndividualAddress_Read — KNX v02.01.02 - Management Procedures 03.05.02 - §2.2."""
 
 from __future__ import annotations
 

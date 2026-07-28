@@ -1,4 +1,4 @@
-"""Tests for nm_individual_address_serial_number_read — KNX 03.05.02 §2.4."""
+"""Tests for nm_individual_address_serial_number_read — KNX v02.01.02 - Management Procedures 03.05.02 - §2.4."""
 
 import asyncio
 from unittest.mock import AsyncMock, call

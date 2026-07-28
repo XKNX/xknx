@@ -1,1 +1,1 @@
-"""Tests for KNX 03.05.02 DM_* procedures."""
+"""Tests for KNX v02.01.02 - Management Procedures 03.05.02 - DM_* procedures."""
