@@ -310,32 +310,20 @@ class P2PConnection:
         self._response_waiter.set_result(telegram)
         self._expected_sequence_number = self._expected_sequence_number + 1 & 0xF
 
-    async def send_data_no_ack(self, payload: APCI) -> None:
-        """Send a TDataConnected telegram without waiting for an ACK (for commands that don't ACK back)."""
-        if not self._connected:
-            raise ManagementConnectionRefused(
-                "Management connection disconnected by the peer."
-            )
-        seq_num = next(self.sequence_number)
-        telegram = Telegram(
-            destination_address=self.address,
-            source_address=self.xknx.current_address,
-            payload=payload,
-            tpci=TDataConnected(sequence_number=seq_num),
-        )
-        await self.xknx.cemi_handler.send_telegram(telegram)
-
-    async def _send_data(self, payload: APCI) -> None:
+    async def send_data(self, payload: APCI, wait_for_ack: bool = True) -> None:
         """
         Send a payload to the KNX device.
 
-        A response has to be processed by `_receive` before sending the next telegram.
+        If `wait_for_ack` is True (default), waits for the device to ACK the
+        telegram - resending once after a timeout - and validates the ACK's
+        sequence number. The response itself still has to be processed by
+        `_receive` before sending the next telegram. Set `wait_for_ack=False`
+        for commands the device doesn't ACK back.
         """
         if not self._connected:
             raise ManagementConnectionRefused(
                 "Management connection disconnected by the peer."
             )
-        self._ack_waiter = asyncio.get_event_loop().create_future()
         seq_num = next(self.sequence_number)
         telegram = Telegram(
             destination_address=self.address,
@@ -343,6 +331,11 @@ class P2PConnection:
             payload=payload,
             tpci=TDataConnected(sequence_number=seq_num),
         )
+        if not wait_for_ack:
+            await self.xknx.cemi_handler.send_telegram(telegram)
+            return
+
+        self._ack_waiter = asyncio.get_event_loop().create_future()
         try:
             await self.xknx.cemi_handler.send_telegram(telegram)
             async with asyncio_timeout(MANAGAMENT_ACK_TIMEOUT):
@@ -413,7 +406,7 @@ class P2PConnection:
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
-        await self._send_data(payload)
+        await self.send_data(payload)
         response = await self._receive(expected)
         self._last_response_time = time.time()
         return response

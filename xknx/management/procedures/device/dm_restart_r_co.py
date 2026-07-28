@@ -22,7 +22,7 @@ async def dm_restart_r_co(conn: P2PConnection) -> None:
     :param conn: an established P2P connection to the device
     """
     logger.debug("Requesting a Basic Restart of %s.", conn.address)
-    await conn.send_data_no_ack(apci.Restart())
+    await conn.send_data(apci.Restart(), wait_for_ack=False)
 
 
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:

@@ -88,7 +88,7 @@ nav_order: 2
 ### New Features
 
 - Add `dm_restart_r_co(conn)` and `nm_individual_address_check_conn(conn)` to `xknx.management.procedures` — variants of `dm_restart`/`nm_individual_address_check` that operate on an already-open `P2PConnection` instead of opening and closing their own, for chaining several procedures over one connection. `dm_restart_r_co` is the actual KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name; the `_conn` suffix on the others is an xknx-only naming convention, not a KNX spec name. All existing top-level procedures (`dm_restart`, `nm_individual_address_check`, `nm_individual_address_write`, `nm_individual_address_read`, `nm_individual_address_serial_number_read`/`_write`) keep their `(xknx, ...)` signature unchanged.
-- Add `P2PConnection.send_data_no_ack()` for sending a telegram without waiting for an ACK (used internally by `dm_restart`/`dm_restart_r_co` and `nm_individual_address_write` instead of open-coding the same `TDataConnected` construction in multiple procedures).
+- Add `P2PConnection.send_data(payload, wait_for_ack=True)` for sending a telegram, optionally without waiting for an ACK (used internally by `dm_restart`/`dm_restart_r_co` and `nm_individual_address_write` instead of open-coding the same `TDataConnected` construction in multiple procedures).
 
 ### Internals
 
