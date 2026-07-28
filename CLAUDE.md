@@ -54,17 +54,3 @@ Note that Management Procedures and Application Layer are two different
 documents cited side by side in `xknx/management/management.py` and carry
 *different* versions (`v02.01.02` vs `v02.01.01`) — don't assume every KNX
 document shares one "current" version just because two happen to be close.
-
-## Local copy of the KNX Standard
-
-The full KNX Standard v3.0.0 (178 PDFs across every volume) lives in
-`../The KNX Standard v3.0.0/` (a sibling of this repo, i.e.
-`xknx/The KNX Standard v3.0.0/` if this repo is checked out as
-`xknx/xknx/` — outside the repo itself, never to be committed). Every PDF
-has a same-named `.txt` sibling generated with `pdftotext -layout` for
-grepping. The document title, number and version used in this file's table
-above can be read straight off each PDF's filename, e.g.
-`03_08_05 Routing v01.05.02 AS.pdf` → title "Routing", number 3.8.5,
-version v01.05.02. If a document isn't in this folder, still don't guess —
-ask the user, since not everything is downloaded (e.g. new documents,
-newer versions if the standard gets updated).
