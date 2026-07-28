@@ -14,6 +14,17 @@ import ``procedures`` via ``from xknx.management import procedures``, import
 individual functions via ``from xknx.management.procedures import <func>``, or
 access them as attributes such as ``procedures.<func>``.
 
+Most procedures come in two forms:
+
+  - ``<spec_name>(management: Management, ...)`` opens (and closes) whatever
+    P2P connections or broadcasts it needs on its own.
+  - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
+    already-open connection, for chaining several procedures over one
+    connection. This suffix is an xknx convention, not a KNX spec name.
+    ``dm_restart_r_co`` is the one exception — ``RCo`` is the actual KNX
+    03.05.02 §3.7.3 procedure name for the connection-based variant of
+    DM_Restart, not the xknx convention.
+
 When adding a new procedure follow the workflow:
 
   1. Create ``procedures/<family>/<spec_name>.py`` with the spec text embedded
@@ -22,25 +33,13 @@ When adding a new procedure follow the workflow:
   3. Replace ``NotImplementedError`` with the implementation and un-skip tests.
 """
 
-
-# Legacy API — backward-compatible re-exports under original names.
-# For the new API, import directly from the procedure modules, e.g.:
-#   from xknx.management.procedures.device.dm_restart_r_co import dm_restart
-from .device.legacy import dm_restart_legacy
-from .network.legacy import (
-    nm_individual_address_check_legacy,
-    nm_individual_address_read_legacy,
-    nm_individual_address_serial_number_read_legacy,
-    nm_individual_address_serial_number_write_legacy,
-    nm_individual_address_write_legacy,
+# ruff: noqa: F401
+from .device import dm_restart, dm_restart_r_co
+from .network import (
+    nm_individual_address_check,
+    nm_individual_address_check_conn,
+    nm_individual_address_read,
+    nm_individual_address_serial_number_read,
+    nm_individual_address_serial_number_write,
+    nm_individual_address_write,
 )
-
-dm_restart = dm_restart_legacy
-nm_individual_address_check = nm_individual_address_check_legacy
-nm_individual_address_read = nm_individual_address_read_legacy
-nm_individual_address_serial_number_read = nm_individual_address_serial_number_read_legacy
-nm_individual_address_serial_number_write = nm_individual_address_serial_number_write_legacy
-nm_individual_address_write = nm_individual_address_write_legacy
-
-# Backwards-compatibility typo alias (the original module exposed both spellings).
-nm_invididual_address_write = nm_individual_address_write

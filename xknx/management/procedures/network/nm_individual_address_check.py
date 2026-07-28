@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 
 from xknx.exceptions import ManagementConnectionRefused, ManagementConnectionTimeout
-from xknx.management.protocols import P2PConnection
+from xknx.management.management import Management, P2PConnection
 from xknx.telegram import apci
+from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 logger = logging.getLogger("xknx.management.procedures")
 
 
-async def nm_individual_address_check(conn: P2PConnection) -> bool:
+async def nm_individual_address_check_conn(conn: P2PConnection) -> bool:
     """
     Check if a device responds on an already-open connection.
 
@@ -36,3 +37,25 @@ async def nm_individual_address_check(conn: P2PConnection) -> bool:
         # if Disconnect is received immediately, IA is occupied
         logger.debug("Device does not support transport layer connections. %s", ex)
         return True
+
+
+async def nm_individual_address_check(
+    management: Management, individual_address: IndividualAddressableType
+) -> bool:
+    """
+    Check if a device responds, opening and closing a connection to it.
+
+    Returns True if the device answers or refuses the connection (per KNX
+    03.05.02 §2.3 step 1, an A_Disconnect-PDU means the address is occupied),
+    False on timeout.
+
+    :param management: connection manager used to open a P2P connection
+    :param individual_address: address to check
+    """
+    address_found = False
+    try:
+        async with management.connection(IndividualAddress(individual_address)) as conn:
+            address_found = await nm_individual_address_check_conn(conn)
+    except ManagementConnectionRefused:
+        address_found = True
+    return address_found

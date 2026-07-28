@@ -76,9 +76,7 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address_new
-        )
+        nm_individual_address_write(xknx.management, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -138,9 +136,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address_new
-        )
+        nm_individual_address_write(xknx.management, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -189,9 +185,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address_new
-        )
+        nm_individual_address_write(xknx.management, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -226,7 +220,7 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     """
     Test nm_individual_address_write when device refuses connection during address check.
 
-    Device sends TDisconnect → nm_individual_address_check returns True internally →
+    Device sends TDisconnect → nm_individual_address_check_conn returns True internally →
     context manager finally raises ManagementConnectionRefused from disconnect() (peer already
     disconnected) → outer except swallows it → address_found remains True.
     """
@@ -257,9 +251,7 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address
-        )
+        nm_individual_address_write(xknx.management, individual_address)
     )
 
     # advance until address check is awaiting ACK
@@ -273,7 +265,7 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     xknx.management.process(disconnect_from_device)
     xknx.management.process(ack_from_device)
 
-    # nm_individual_address_check returns True; context manager finally raises
+    # nm_individual_address_check_conn returns True; context manager finally raises
     # ManagementConnectionRefused (peer already disconnected, no TDisconnect sent by us);
     # except swallows it; IndividualAddressRead broadcast is sent
     await time_travel(0)
@@ -331,9 +323,7 @@ async def test_nm_individual_address_write_address_found(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address
-        )
+        nm_individual_address_write(xknx.management, individual_address)
     )
 
     # first request (address check) succeeds
@@ -395,9 +385,7 @@ async def test_nm_individual_address_write_programming_failed(
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address_new
-        )
+        nm_individual_address_write(xknx.management, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -477,9 +465,7 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx.management, xknx.management, individual_address
-        )
+        nm_individual_address_write(xknx.management, individual_address)
     )
 
     # make sure first request (address check) times out

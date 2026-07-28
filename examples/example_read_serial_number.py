@@ -47,7 +47,7 @@ async def main(argv: list[str]) -> int:
         if not individual_address:
             print("Searching for device in programming mode...")
             found = await procedures.nm_individual_address_read(
-                xknx, raise_if_multiple=True
+                xknx.management, raise_if_multiple=True
             )
             if not found:
                 print("No device in programming mode found.")

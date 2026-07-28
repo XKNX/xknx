@@ -24,7 +24,7 @@ async def main(argv: list[str]) -> int:
 
     async with XKNX() as xknx:
         await procedures.nm_individual_address_serial_number_write(
-            xknx, serial, address
+            xknx.management, serial, address
         )
 
     return 0

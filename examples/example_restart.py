@@ -17,7 +17,7 @@ async def main(argv: list[str]) -> int:
     address = IndividualAddress(argv[1])
 
     async with XKNX() as xknx:
-        await dm_restart(xknx, address)
+        await dm_restart(xknx.management, address)
     return 0
 
 

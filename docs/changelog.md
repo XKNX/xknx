@@ -81,6 +81,28 @@ nav_order: 2
 
 - Add DPTComplex dict schema descriptions.
 
+### Breaking Changes
+
+- Overhaul the `xknx.management.procedures` API around connection lifecycle ownership. Every procedure now has exactly one public name and signature — the previous release's `XKNX`-based legacy wrappers and the `nm_invididual_address_write` typo alias are gone:
+  - Procedures that talk to a single device now take `management: Management` and open/close their own connection: `dm_restart(management, address)`, `nm_individual_address_check(management, address)`, `nm_individual_address_write(management, address)`.
+  - Broadcast-only procedures (`nm_individual_address_read`, `nm_individual_address_serial_number_read`/`_write`) also take `management: Management` instead of a separate `Broadcaster` type, since `Management` already provides both connection and broadcast capability.
+  - To chain several procedures over one already-open connection, use the composable conn-based cores: `dm_restart_r_co(conn)` (the actual KNX 03.05.02 §3.7.3 procedure name) and `nm_individual_address_check_conn(conn)` (an xknx-only naming convention, not a KNX spec name).
+  - Removed the `xknx.management.protocols` module (`P2PConnection`, `ConnectionManager`, `Broadcaster` protocols) — procedures are now annotated with the concrete `xknx.management.Management`/`P2PConnection` classes directly.
+
+  Before:
+  ```python
+  await xknx.management.procedures.dm_restart(xknx, address)
+  await xknx.management.procedures.nm_individual_address_write(
+      xknx.management, xknx.management, address
+  )
+  ```
+
+  After:
+  ```python
+  await xknx.management.procedures.dm_restart(xknx.management, address)
+  await xknx.management.procedures.nm_individual_address_write(xknx.management, address)
+  ```
+
 ### Internals
 
 - Split `xknx/management/procedures.py` into the `xknx/management/procedures/` package. Each procedure lives in its own file under a family subdirectory (`network/`, `device/`, etc.) with the KNX spec prefix in the filename. Public API and behaviour unchanged.

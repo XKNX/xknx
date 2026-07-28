@@ -5,14 +5,14 @@ from __future__ import annotations
 import logging
 
 from xknx.exceptions import ManagementConnectionError, ManagementConnectionRefused
-from xknx.management.procedures.device.dm_restart_r_co import dm_restart
+from xknx.management.management import Management
+from xknx.management.procedures.device.dm_restart_r_co import dm_restart_r_co
 from xknx.management.procedures.network.nm_individual_address_check import (
-    nm_individual_address_check,
+    nm_individual_address_check_conn,
 )
 from xknx.management.procedures.network.nm_individual_address_read import (
     nm_individual_address_read,
 )
-from xknx.management.protocols import Broadcaster, ConnectionManager
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
@@ -20,29 +20,28 @@ logger = logging.getLogger("xknx.management.procedures")
 
 
 async def nm_individual_address_write(
-    manager: ConnectionManager,
-    broadcaster: Broadcaster,
+    management: Management,
     individual_address: IndividualAddressableType,
 ) -> None:
     """
     Write the individual address of a single device in programming mode.
 
-    :param manager: connection manager used to open P2P connections
-    :param broadcaster: broadcaster for sending and receiving broadcast telegrams
+    :param management: connection manager used to open P2P connections and send broadcasts
     :param individual_address: address to be written to KNX device
     """
     logger.debug("Writing individual address %s to device.", individual_address)
 
     # check if the address is already occupied on the network
     individual_address = IndividualAddress(individual_address)
+    address_found = False
     try:
-        async with manager.connection(individual_address) as conn:
-            address_found = await nm_individual_address_check(conn)
+        async with management.connection(individual_address) as conn:
+            address_found = await nm_individual_address_check_conn(conn)
     except ManagementConnectionRefused:
         # KNX 03.05.02 §2.3 step 1: "if A_Disconnect-PDU is received then IA_new shall be
-        # regarded as occupied". nm_individual_address_check already handled this and returned
-        # True; this except swallows ManagementConnectionRefused from disconnect() in finally.
-        pass
+        # regarded as occupied" - this can be raised by disconnect() in the connection
+        # context manager's finally after the peer already disconnected on its own.
+        address_found = True
 
     if address_found:
         logger.debug(
@@ -51,7 +50,7 @@ async def nm_individual_address_write(
 
     # check which devices are in programming mode
     dev_pgm_mode = await nm_individual_address_read(
-        broadcaster, raise_if_multiple=True
+        management, raise_if_multiple=True
     )  # raises exception if more than one device in programming mode
     if not dev_pgm_mode:
         logger.debug("No device in programming mode detected.")
@@ -70,18 +69,18 @@ async def nm_individual_address_write(
         # device in programming mode's address matches address that we want to write, so we can abort the operation safely
         logger.debug("Device already has requested address, no write operation needed.")
     else:
-        await broadcaster.send_broadcast(
+        await management.send_broadcast(
             payload=apci.IndividualAddressWrite(address=individual_address),
         )
         logger.debug("Wrote new address %s to device.", individual_address)
 
-    async with manager.connection(address=individual_address) as connection:
+    async with management.connection(address=individual_address) as connection:
         logger.debug(
             "Checking if device exists at %s and restarting it.", individual_address
         )
-        if not await nm_individual_address_check(connection):
+        if not await nm_individual_address_check_conn(connection):
             raise ManagementConnectionError(
                 "No device answered to connection attempt after write address operation."
             )
         logger.debug("Restarting device, exiting programming mode.")
-        await dm_restart(connection)
+        await dm_restart_r_co(connection)
