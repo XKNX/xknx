@@ -220,9 +220,10 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     """
     Test nm_individual_address_write when device refuses connection during address check.
 
-    Device sends TDisconnect → nm_individual_address_check_conn returns True internally →
-    context manager finally raises ManagementConnectionRefused from disconnect() (peer already
-    disconnected) → outer except swallows it → address_found remains True.
+    Device sends TDisconnect → nm_individual_address_check(xknx, address) already handles
+    this internally (its own connection context manager's finally raises
+    ManagementConnectionRefused from disconnect() after the peer already disconnected, and its
+    own except swallows it) → returns True.
     """
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -263,9 +264,9 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     xknx.management.process(disconnect_from_device)
     xknx.management.process(ack_from_device)
 
-    # nm_individual_address_check_conn returns True; context manager finally raises
+    # nm_individual_address_check's own connection context manager finally raises
     # ManagementConnectionRefused (peer already disconnected, no TDisconnect sent by us);
-    # except swallows it; IndividualAddressRead broadcast is sent
+    # its own except swallows it and returns True; IndividualAddressRead broadcast is sent
     await time_travel(0)
     assert xknx.cemi_handler.send_telegram.call_args_list[2:] == [
         call(individual_address_read),

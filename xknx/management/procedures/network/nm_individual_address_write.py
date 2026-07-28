@@ -5,9 +5,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from xknx.exceptions import ManagementConnectionError, ManagementConnectionRefused
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.procedures.device.dm_restart_r_co import dm_restart_r_co
 from xknx.management.procedures.network.nm_individual_address_check import (
+    nm_individual_address_check,
     nm_individual_address_check_conn,
 )
 from xknx.management.procedures.network.nm_individual_address_read import (
@@ -36,15 +37,7 @@ async def nm_individual_address_write(
 
     # check if the address is already occupied on the network
     individual_address = IndividualAddress(individual_address)
-    address_found = False
-    try:
-        async with xknx.management.connection(individual_address) as conn:
-            address_found = await nm_individual_address_check_conn(conn)
-    except ManagementConnectionRefused:
-        # KNX 03.05.02 §2.3 step 1: "if A_Disconnect-PDU is received then IA_new shall be
-        # regarded as occupied" - this can be raised by disconnect() in the connection
-        # context manager's finally after the peer already disconnected on its own.
-        address_found = True
+    address_found = await nm_individual_address_check(xknx, individual_address)
 
     if address_found:
         logger.debug(

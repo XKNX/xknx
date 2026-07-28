@@ -20,6 +20,7 @@ async def nm_individual_address_serial_number_read(
     timeout: float = 3,
 ) -> IndividualAddress | None:
     """Read individual address from device with specified serial number."""
+    # initialize queue or event handler gathering broadcasts
     async with xknx.management.broadcast() as bc_context:
         await xknx.management.send_broadcast(
             payload=apci.IndividualAddressSerialRead(serial=serial)

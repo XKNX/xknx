@@ -83,23 +83,12 @@ nav_order: 2
 
 ### Breaking Changes
 
-- Clean up the `xknx.management.procedures` internals; the top-level, single-device procedures keep their familiar `(xknx, address, ...)` signature (`dm_restart`, `nm_individual_address_check`, `nm_individual_address_write`, `nm_individual_address_read`, `nm_individual_address_serial_number_read`/`_write`) so most callers see no change at all. What did change:
-  - `nm_individual_address_write` now takes a single `xknx` argument instead of two identical `xknx.management` arguments for its connection-manager and broadcaster roles.
-  - Removed the `xknx.management.protocols` module (`P2PConnection`, `ConnectionManager`, `Broadcaster` protocols) — procedures are now annotated with the concrete `xknx.management.Management`/`P2PConnection` classes directly.
-  - To chain several procedures over one already-open connection (rather than each opening its own), use the composable conn-based cores instead of the top-level procedures: `dm_restart_r_co(conn)` (the actual KNX 03.05.02 §3.7.3 procedure name) and `nm_individual_address_check_conn(conn)` (an xknx-only naming convention, not a KNX spec name; this one is a rename of what used to be the only `nm_individual_address_check` signature).
-  - Removed the previous release's `XKNX`-based legacy wrappers (they only differed from the current procedures by a deprecation warning) and the `nm_invididual_address_write` typo alias — exactly one public name and signature per procedure now.
+- Remove the `nm_invididual_address_write` typo alias for `nm_individual_address_write` in `xknx.management.procedures` — the misspelled name is no longer exported.
 
-  Before:
-  ```python
-  await xknx.management.procedures.nm_individual_address_write(
-      xknx.management, xknx.management, address
-  )
-  ```
+### New Features
 
-  After:
-  ```python
-  await xknx.management.procedures.nm_individual_address_write(xknx, address)
-  ```
+- Add `dm_restart_r_co(conn)` and `nm_individual_address_check_conn(conn)` to `xknx.management.procedures` — variants of `dm_restart`/`nm_individual_address_check` that operate on an already-open `P2PConnection` instead of opening and closing their own, for chaining several procedures over one connection. `dm_restart_r_co` is the actual KNX 03.05.02 §3.7.3 procedure name; the `_conn` suffix on the others is an xknx-only naming convention, not a KNX spec name. All existing top-level procedures (`dm_restart`, `nm_individual_address_check`, `nm_individual_address_write`, `nm_individual_address_read`, `nm_individual_address_serial_number_read`/`_write`) keep their `(xknx, ...)` signature unchanged.
+- Add `P2PConnection.send_data_no_ack()` for sending a telegram without waiting for an ACK (used internally by `dm_restart`/`dm_restart_r_co` and `nm_individual_address_write` instead of open-coding the same `TDataConnected` construction in multiple procedures).
 
 ### Internals
 

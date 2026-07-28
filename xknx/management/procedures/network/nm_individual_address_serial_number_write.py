@@ -19,9 +19,7 @@ logger = logging.getLogger("xknx.management.procedures")
 
 
 async def nm_individual_address_serial_number_write(
-    xknx: XKNX,
-    serial: bytes,
-    individual_address: IndividualAddressableType,
+    xknx: XKNX, serial: bytes, individual_address: IndividualAddressableType
 ) -> None:
     """Write individual address to device with specified serial number."""
     individual_address = IndividualAddress(individual_address)
@@ -37,7 +35,7 @@ async def nm_individual_address_serial_number_write(
         serial,
     )
 
-    address = await nm_individual_address_serial_number_read(xknx, serial=serial)
+    address = await nm_individual_address_serial_number_read(xknx=xknx, serial=serial)
 
     if address is None:
         raise ManagementConnectionError(f"No reply received from {serial!r}.")

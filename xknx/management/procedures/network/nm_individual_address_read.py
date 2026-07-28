@@ -23,12 +23,13 @@ async def nm_individual_address_read(
     """
     Request individual addresses of all devices that are in programming mode.
 
-    :param xknx: the XKNX object
+    :param xknx: XKNX object
     :param timeout: specifies the timeout in seconds, the KNX specification requires a timeout of 3s
     :param raise_if_multiple: if true, ManagementConnectionError is raised when multiple devices are in programming mode
     :returns: list of individual address of devices in programming mode
     """
     addresses = []
+    # initialize queue or event handler gathering broadcasts
     async with xknx.management.broadcast() as bc_context:
         await xknx.management.send_broadcast(apci.IndividualAddressRead())
         async for result in bc_context.receive(timeout=timeout):
