@@ -1,4 +1,4 @@
-"""DM_Restart_RCo — KNX 03.05.02 §3.7.3."""
+"""DM_Restart_RCo — KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3."""
 
 from __future__ import annotations
 

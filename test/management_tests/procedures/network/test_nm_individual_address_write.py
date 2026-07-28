@@ -1,4 +1,4 @@
-"""Tests for nm_individual_address_write — KNX 03.05.02 §2.3 NM_IndividualAddress_Write."""
+"""Tests for nm_individual_address_write — KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 NM_IndividualAddress_Write."""
 
 import asyncio
 from unittest.mock import AsyncMock, call

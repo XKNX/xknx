@@ -4,9 +4,12 @@ Management procedures grouped by KNX spec family.
 Subpackages are created when their first procedure lands. Naming mirrors
 the KNX spec prefix:
 
-  - ``network/`` for NM_* procedures (KNX 03.05.02 Network Management)
-  - ``device/`` for DM_* procedures (KNX 03.05.02 Device Management)
-  - ``ftp/`` for FTP_* procedures (KNX 03.05.02 §8 File Transfer)
+  - ``network/`` for NM_* procedures (KNX v02.01.02 - Management Procedures
+    03.05.02 - Network Management)
+  - ``device/`` for DM_* procedures (KNX v02.01.02 - Management Procedures
+    03.05.02 - Device Management)
+  - ``ftp/`` for FTP_* procedures (KNX v02.01.02 - Management Procedures
+    03.05.02 - §8 File Transfer)
 
 Per-procedure files inside each subpackage host a single public ``async def``
 function. This package re-exports every implemented procedure so callers can
@@ -22,8 +25,8 @@ Most procedures come in two forms:
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.
     ``dm_restart_r_co`` is the one exception — ``RCo`` is the actual KNX
-    03.05.02 §3.7.3 procedure name for the connection-based variant of
-    DM_Restart, not the xknx convention.
+    v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name for
+    the connection-based variant of DM_Restart, not the xknx convention.
 
 When adding a new procedure follow the workflow:
 

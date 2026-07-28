@@ -1,4 +1,4 @@
-"""NM_IndividualAddress_Check — KNX 03.05.02 §2.19."""
+"""NM_IndividualAddress_Check — KNX v02.01.02 - Management Procedures 03.05.02 - §2.19."""
 
 from __future__ import annotations
 
@@ -50,8 +50,8 @@ async def nm_individual_address_check(
     Check if a device responds, opening and closing a connection to it.
 
     Returns True if the device answers or refuses the connection (per KNX
-    03.05.02 §2.3 step 1, an A_Disconnect-PDU means the address is occupied),
-    False on timeout.
+    v02.01.02 - Management Procedures 03.05.02 - §2.3 step 1, an
+    A_Disconnect-PDU means the address is occupied), False on timeout.
 
     :param xknx: the XKNX object
     :param individual_address: address to check

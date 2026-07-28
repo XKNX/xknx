@@ -1,4 +1,4 @@
-"""Tests for dm_restart — KNX 03.05.02 §3.7.3 DM_Restart_RCo."""
+"""Tests for dm_restart — KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3 DM_Restart_RCo."""
 
 from unittest.mock import AsyncMock, call
 
