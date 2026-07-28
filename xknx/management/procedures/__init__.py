@@ -16,8 +16,8 @@ access them as attributes such as ``procedures.<func>``.
 
 Most procedures come in two forms:
 
-  - ``<spec_name>(management: Management, ...)`` opens (and closes) whatever
-    P2P connections or broadcasts it needs on its own.
+  - ``<spec_name>(xknx: XKNX, ...)`` opens (and closes) whatever P2P
+    connections or broadcasts it needs on its own, via ``xknx.management``.
   - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.

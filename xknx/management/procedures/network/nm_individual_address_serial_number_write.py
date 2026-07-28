@@ -3,26 +3,29 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.management import Management
 from xknx.management.procedures.network.nm_individual_address_serial_number_read import (
     nm_individual_address_serial_number_read,
 )
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
+if TYPE_CHECKING:
+    from xknx import XKNX
+
 logger = logging.getLogger("xknx.management.procedures")
 
 
 async def nm_individual_address_serial_number_write(
-    management: Management,
+    xknx: XKNX,
     serial: bytes,
     individual_address: IndividualAddressableType,
 ) -> None:
     """Write individual address to device with specified serial number."""
     individual_address = IndividualAddress(individual_address)
-    await management.send_broadcast(
+    await xknx.management.send_broadcast(
         payload=apci.IndividualAddressSerialWrite(
             address=individual_address,
             serial=serial,
@@ -34,7 +37,7 @@ async def nm_individual_address_serial_number_write(
         serial,
     )
 
-    address = await nm_individual_address_serial_number_read(management, serial=serial)
+    address = await nm_individual_address_serial_number_read(xknx, serial=serial)
 
     if address is None:
         raise ManagementConnectionError(f"No reply received from {serial!r}.")

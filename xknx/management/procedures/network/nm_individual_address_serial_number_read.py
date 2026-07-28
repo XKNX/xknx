@@ -3,22 +3,25 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from xknx.management.management import Management
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress
+
+if TYPE_CHECKING:
+    from xknx import XKNX
 
 logger = logging.getLogger("xknx.management.procedures")
 
 
 async def nm_individual_address_serial_number_read(
-    management: Management,
+    xknx: XKNX,
     serial: bytes,
     timeout: float = 3,
 ) -> IndividualAddress | None:
     """Read individual address from device with specified serial number."""
-    async with management.broadcast() as bc_context:
-        await management.send_broadcast(
+    async with xknx.management.broadcast() as bc_context:
+        await xknx.management.send_broadcast(
             payload=apci.IndividualAddressSerialRead(serial=serial)
         )
         async for result in bc_context.receive(timeout=timeout):

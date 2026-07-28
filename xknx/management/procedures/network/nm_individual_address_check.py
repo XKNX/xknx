@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import ManagementConnectionRefused, ManagementConnectionTimeout
-from xknx.management.management import Management, P2PConnection
+from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
+
+if TYPE_CHECKING:
+    from xknx import XKNX
 
 logger = logging.getLogger("xknx.management.procedures")
 
@@ -40,7 +44,7 @@ async def nm_individual_address_check_conn(conn: P2PConnection) -> bool:
 
 
 async def nm_individual_address_check(
-    management: Management, individual_address: IndividualAddressableType
+    xknx: XKNX, individual_address: IndividualAddressableType
 ) -> bool:
     """
     Check if a device responds, opening and closing a connection to it.
@@ -49,12 +53,14 @@ async def nm_individual_address_check(
     03.05.02 §2.3 step 1, an A_Disconnect-PDU means the address is occupied),
     False on timeout.
 
-    :param management: connection manager used to open a P2P connection
+    :param xknx: the XKNX object
     :param individual_address: address to check
     """
     address_found = False
     try:
-        async with management.connection(IndividualAddress(individual_address)) as conn:
+        async with xknx.management.connection(
+            IndividualAddress(individual_address)
+        ) as conn:
             address_found = await nm_individual_address_check_conn(conn)
     except ManagementConnectionRefused:
         address_found = True

@@ -76,7 +76,7 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address_new)
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -136,7 +136,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address_new)
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -185,7 +185,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address_new)
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -250,9 +250,7 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
 
     # advance until address check is awaiting ACK
     await time_travel(0)
@@ -322,9 +320,7 @@ async def test_nm_individual_address_write_address_found(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
 
     # first request (address check) succeeds
     await time_travel(0)
@@ -385,7 +381,7 @@ async def test_nm_individual_address_write_programming_failed(
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address_new)
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -464,9 +460,7 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         payload=apci.IndividualAddressResponse(),
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_write(xknx.management, individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
 
     # make sure first request (address check) times out
     await time_travel(0)

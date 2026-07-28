@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from xknx.management.management import Management, P2PConnection
+from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
+
+if TYPE_CHECKING:
+    from xknx import XKNX
 
 logger = logging.getLogger("xknx.management.procedures")
 
@@ -21,14 +25,14 @@ async def dm_restart_r_co(conn: P2PConnection) -> None:
     await conn.send_data_no_ack(apci.Restart())
 
 
-async def dm_restart(
-    management: Management, individual_address: IndividualAddressableType
-) -> None:
+async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
     """
     Restart a device, opening and closing a connection to it.
 
-    :param management: connection manager used to open a P2P connection
+    :param xknx: the XKNX object
     :param individual_address: address of the device to restart
     """
-    async with management.connection(IndividualAddress(individual_address)) as conn:
+    async with xknx.management.connection(
+        IndividualAddress(individual_address)
+    ) as conn:
         await dm_restart_r_co(conn)

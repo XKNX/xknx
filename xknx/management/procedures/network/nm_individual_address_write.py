@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from xknx.exceptions import ManagementConnectionError, ManagementConnectionRefused
-from xknx.management.management import Management
 from xknx.management.procedures.device.dm_restart_r_co import dm_restart_r_co
 from xknx.management.procedures.network.nm_individual_address_check import (
     nm_individual_address_check_conn,
@@ -16,17 +16,20 @@ from xknx.management.procedures.network.nm_individual_address_read import (
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
+if TYPE_CHECKING:
+    from xknx import XKNX
+
 logger = logging.getLogger("xknx.management.procedures")
 
 
 async def nm_individual_address_write(
-    management: Management,
+    xknx: XKNX,
     individual_address: IndividualAddressableType,
 ) -> None:
     """
     Write the individual address of a single device in programming mode.
 
-    :param management: connection manager used to open P2P connections and send broadcasts
+    :param xknx: the XKNX object
     :param individual_address: address to be written to KNX device
     """
     logger.debug("Writing individual address %s to device.", individual_address)
@@ -35,7 +38,7 @@ async def nm_individual_address_write(
     individual_address = IndividualAddress(individual_address)
     address_found = False
     try:
-        async with management.connection(individual_address) as conn:
+        async with xknx.management.connection(individual_address) as conn:
             address_found = await nm_individual_address_check_conn(conn)
     except ManagementConnectionRefused:
         # KNX 03.05.02 §2.3 step 1: "if A_Disconnect-PDU is received then IA_new shall be
@@ -50,7 +53,7 @@ async def nm_individual_address_write(
 
     # check which devices are in programming mode
     dev_pgm_mode = await nm_individual_address_read(
-        management, raise_if_multiple=True
+        xknx, raise_if_multiple=True
     )  # raises exception if more than one device in programming mode
     if not dev_pgm_mode:
         logger.debug("No device in programming mode detected.")
@@ -69,12 +72,12 @@ async def nm_individual_address_write(
         # device in programming mode's address matches address that we want to write, so we can abort the operation safely
         logger.debug("Device already has requested address, no write operation needed.")
     else:
-        await management.send_broadcast(
+        await xknx.management.send_broadcast(
             payload=apci.IndividualAddressWrite(address=individual_address),
         )
         logger.debug("Wrote new address %s to device.", individual_address)
 
-    async with management.connection(address=individual_address) as connection:
+    async with xknx.management.connection(address=individual_address) as connection:
         logger.debug(
             "Checking if device exists at %s and restarting it.", individual_address
         )

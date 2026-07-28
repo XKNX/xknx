@@ -129,9 +129,7 @@ async def test_nm_individual_address_check_success() -> None:
         tpci=tpci.TDisconnect(),
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_check(xknx.management, individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_check(xknx, individual_address))
     await asyncio.sleep(0)
     xknx.management.process(ack)
     xknx.management.process(device_desc_resp)
@@ -177,9 +175,7 @@ async def test_nm_individual_address_check_occupied_by_disconnect() -> None:
         tpci=tpci.TAck(0),
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_check(xknx.management, individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_check(xknx, individual_address))
     await asyncio.sleep(0)
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
