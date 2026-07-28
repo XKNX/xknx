@@ -297,7 +297,8 @@ class CEMILData(CEMIData):
             payload = APCI.from_knx(_apdu)
         except UnsupportedAPCIService as err:
             # Recognized but not implemented (or reserved) APCI service - benign,
-            # to be ignored per KNX spec 03_03_07 §2.2. Logged at info level.
+            # to be ignored per KNX v02.01.01 - Application Layer 03.03.07 -
+            # §2.2. Logged at info level.
             # The cause names the offending service - keep it in the message.
             raise UnsupportedCEMIMessage(
                 f"APDU not supported: {err.description} - from {src_addr} to {dst_addr} "

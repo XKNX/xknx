@@ -43,15 +43,20 @@ if they aren't already established elsewhere in the codebase.
 | Document number | Title | Version | Where cited |
 |---|---|---|---|
 | 03.05.02 | Management Procedures | v02.01.02 | `xknx/management/**` |
+| 03.03.07 | Application Layer | v02.01.01 | `xknx/telegram/apci.py`, `xknx/management/management.py`, `xknx/exceptions/exception.py`, `xknx/cemi/cemi_frame.py`, `test/telegram_tests/apci_test.py` |
 | 03.03.04 | Transport Layer | v01.02.02 | `xknx/telegram/tpci.py` |
 | 03.07.02 | Datapoint Types | v02.02.01 | `docs/changelog.md` (historical entry) |
+
+Note that Management Procedures and Application Layer are two different
+documents cited side by side in `xknx/management/management.py` and carry
+*different* versions (`v02.01.02` vs `v02.01.01`) — don't assume every KNX
+document shares one "current" version just because two happen to be close.
 
 ## Documents with citations still missing a confirmed version
 
 These are cited in the codebase today without a version number. Don't add
 one without asking — get it from the user first:
 
-- 03.03.07 — Application Layer (`xknx/telegram/apci.py`, `xknx/management/management.py`, `xknx/exceptions/exception.py`, `xknx/cemi/cemi_frame.py`, `test/telegram_tests/apci_test.py`)
 - KNX Logical Tag Extended (LTE) Application Layer — document number also not yet established (`xknx/telegram/apci.py`)
 - 3.8.5 — Routing (`xknx/io/routing.py`)
 - 3.2.6 — Communication Medium KNX IP (`xknx/io/routing.py`)
