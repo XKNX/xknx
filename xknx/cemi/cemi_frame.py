@@ -129,28 +129,6 @@ class CEMILData(CEMIData):
         # Setting new hops
         self.flags |= val << 4
 
-    def npdu_length(self) -> int:
-        """Get number of NPDU octets; the TPCI octet is not included."""
-        if self.tpci.control:
-            return 0
-        if not isinstance(self.payload, APCI):
-            raise ConversionError(
-                f"Invalid payload set for data TPDU: {type(self.payload)}"
-            )
-        return self.payload.calculated_length()
-
-    @property
-    def frame_type_standard(self) -> bool:
-        """
-        Return True if this is serialized as L_Data_Standard frame.
-
-        The Frame Type is not stored in `flags` for frames created by XKNX; it is a
-        function of the NPDU length. An L_Data_Standard frame can carry at most 15
-        octets after the TPCI octet and an L_Data_Extended frame shall not be used
-        when a standard frame suffices - 3/2/2 §2.2.4 and §2.2.5.1.
-        """
-        return self.npdu_length() <= STANDARD_FRAME_MAX_NPDU_LENGTH
-
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
         if not self.tpci.control and self.payload is not None:
@@ -165,10 +143,10 @@ class CEMILData(CEMIData):
         src_addr: IndividualAddress | None = None,
     ) -> CEMILData:
         """Return CEMILData from a Telegram."""
-        # the Frame Type is not set here; it is derived from the NPDU length
-        # when serializing - see `frame_type_standard`
         flags = (
-            CEMIFlags.DO_NOT_REPEAT
+            # default; the Frame Type is derived from the NPDU length in `to_knx()`
+            CEMIFlags.FRAME_TYPE_STANDARD
+            | CEMIFlags.DO_NOT_REPEAT
             | CEMIFlags.BROADCAST
             | CEMIFlags.NO_ACK_REQUESTED
             | CEMIFlags.CONFIRM_NO_ERROR
@@ -210,6 +188,7 @@ class CEMILData(CEMIData):
         tpdu: bytes | bytearray
         if self.tpci.control:
             tpdu = self.tpci.to_knx().to_bytes(1, "big")
+            npdu_len = 0
         else:
             if not isinstance(self.payload, APCI):
                 raise ConversionError(
@@ -217,19 +196,21 @@ class CEMILData(CEMIData):
                 )
             tpdu = self.payload.to_knx()
             tpdu[0] |= self.tpci.to_knx()
-        npdu_len = self.npdu_length()
+            npdu_len = self.payload.calculated_length()
 
         if npdu_len > MAX_NPDU_LENGTH:
             raise ConversionError(
                 f"APDU too long for a single frame: {npdu_len} octets; "
                 f"maximum is {MAX_NPDU_LENGTH}"
             )
-        # The Frame Type is derived from the NPDU length, not taken from `flags` -
-        # the payload may have been replaced after the frame was created, eg. when
-        # it was wrapped in a SecureAPDU by Data Secure.
+        # The Frame Type is a function of the NPDU length: an L_Data_Standard frame
+        # can carry at most 15 octets after the TPCI octet, and an L_Data_Extended
+        # frame shall not be used when a standard frame suffices - 3/2/2 §2.2.5.1.
+        # Derived here instead of when the frame is created because the payload may
+        # be replaced afterwards - eg. wrapped in a SecureAPDU by Data Secure.
         flags = (
             self.flags | CEMIFlags.FRAME_TYPE_STANDARD
-            if self.frame_type_standard
+            if npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH
             else self.flags & ~CEMIFlags.FRAME_TYPE_STANDARD
         )
 
@@ -343,7 +324,7 @@ class CEMILData(CEMIData):
             "CEMILData("
             f'src_addr="{self.src_addr.__repr__()}" '
             f'dst_addr="{self.dst_addr.__repr__()}" '
-            f'flags="{self.flags:016b}" '
+            f'flags="{self.flags:16b}" '
             f'tpci="{self.tpci}" '
             f'payload="{self.payload}")'
         )

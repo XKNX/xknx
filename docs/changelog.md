@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Bugfixes
 
-- Send frames with an APDU longer than 15 octets as L_Data_Extended frames. The Frame Type is no longer stored in `CEMILData.flags`; it is derived from the NPDU length when serializing, exposed by the new `CEMILData.frame_type_standard` property and the new `CEMILData.npdu_length()` method. This fixes sending telegrams over KNX Data Secure with a payload of 2 octets or more (eg. DPT 9.x or DPT 232.600) - Data Secure adds 12 octets to the plain APDU, which no longer fits in a standard frame. Sending an APDU longer than 254 octets now raises `ConversionError` instead of `OverflowError`.
+- Send frames with an APDU longer than 15 octets as L_Data_Extended frames. The Frame Type flag of Ctrl1 is now derived from the NPDU length when serializing a `CEMILData` instead of always being set to standard frame. This fixes sending telegrams over KNX Data Secure with a payload of 2 octets or more (eg. DPT 9.x or DPT 232.600) - Data Secure adds 12 octets to the plain APDU, which no longer fits in a standard frame. Sending an APDU longer than 254 octets now raises `ConversionError` instead of `OverflowError`.
 
 ### Features
 
