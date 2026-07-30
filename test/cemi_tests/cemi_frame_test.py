@@ -302,9 +302,21 @@ def test_frame_type_from_npdu_length(
     apdu_payload_length: int, expected_npdu_len: int, expected_frame_type: int
 ) -> None:
     """Test Frame Type flag is derived from the NPDU length."""
-    raw = _cemi_l_data_from_payload(
-        GroupValueWrite(DPTArray(bytes(apdu_payload_length)))
+    cemi_data = CEMILData.init_from_telegram(
+        Telegram(
+            destination_address=GroupAddress(1),
+            payload=GroupValueWrite(DPTArray(bytes(apdu_payload_length))),
+        ),
+        src_addr=IndividualAddress(1),
     )
+    # the Frame Type is not stored in `flags`
+    assert not cemi_data.flags & CEMIFlags.FRAME_TYPE_STANDARD
+    assert cemi_data.npdu_length() == expected_npdu_len
+    assert cemi_data.frame_type_standard == (
+        expected_frame_type == CEMIFlags.FRAME_TYPE_STANDARD
+    )
+
+    raw = cemi_data.to_knx()
     assert raw[6] == expected_npdu_len
     assert (raw[0] << 8) & CEMIFlags.FRAME_TYPE_STANDARD == expected_frame_type
 
@@ -321,12 +333,28 @@ def test_frame_type_overrides_flags() -> None:
         tpci=TDataGroup(),
         payload=long_payload,
     )
+    assert not cemi_data.frame_type_standard
     assert not cemi_data.to_knx()[0] & 0x80
     # `flags` is not modified by serialization
     assert cemi_data.flags & CEMIFlags.FRAME_TYPE_STANDARD
 
     cemi_data.flags = CEMIFlags.DESTINATION_GROUP_ADDRESS  # extended frame flag
     cemi_data.payload = short_payload
+    assert cemi_data.frame_type_standard
+    assert cemi_data.to_knx()[0] & 0x80
+
+
+def test_npdu_length_control_tpdu() -> None:
+    """Test a control TPDU has no NPDU and is sent as standard frame."""
+    cemi_data = CEMILData(
+        flags=0,
+        src_addr=IndividualAddress(1),
+        dst_addr=IndividualAddress(2),
+        tpci=TConnect(),
+        payload=None,
+    )
+    assert cemi_data.npdu_length() == 0
+    assert cemi_data.frame_type_standard
     assert cemi_data.to_knx()[0] & 0x80
 
 
