@@ -2,6 +2,13 @@
 
 from enum import Enum, IntEnum
 
+# Maximum value of the NPDU length field. 255 is reserved as escape code.
+# See 3/2/2 Communication Medium TP1 §2.2.5.6 "Length (LG)".
+MAX_NPDU_LENGTH = 254
+# An L_Data_Standard frame encodes the NPDU length in 4 bit only.
+# Longer APDUs require an L_Data_Extended frame. See 3/2/2 §2.2.4 and §2.2.5.1.
+STANDARD_FRAME_MAX_NPDU_LENGTH = 15
+
 
 class CEMIMessageCode(Enum):
     """Enum class for CEMI Message Codes."""
@@ -43,7 +50,8 @@ class CEMIMessageCode(Enum):
 class CEMIFlags:
     """Enum class for CEMI Flags."""
 
-    # Bit 1/7
+    # Bit 1/7 - Frame Type (FT); see 3/6/3 EMI_IMI §4.1.4.3.2
+    # Derived from the NPDU length when serializing - see `CEMILData.to_knx`.
     FRAME_TYPE_EXTENDED = 0x0000
     FRAME_TYPE_STANDARD = 0x8000
 
@@ -80,9 +88,14 @@ class CEMIFlags:
     HOP_COUNT_NO = 0x0070
     HOP_COUNT_1ST = 0x0060
 
-    # Bit 0/3+2+1+0
+    # Bit 0/3+2+1+0 - Extended Frame Format (EFF); see 3/6/3 EMI_IMI §4.1.4.3.2
+    # and 3/2/2 Communication Medium TP1 §2.2.5.3.
+    # 0000b is used for L_Data_Standard frames as well as for long
+    # L_Data_Extended frames; 01xxb denotes LTE-HEE (zone addressed) frames.
+    # All other values are reserved.
     STANDARD_FRAME_FORMAT = 0x0000
-    EXTENDED_FRAME_FORMAT = 0x0001
+    LTE_FRAME_FORMAT = 0x0004
+    EXTENDED_FRAME_FORMAT_MASK = 0x000F
 
 
 class CEMIErrorCode(IntEnum):

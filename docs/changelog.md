@@ -8,12 +8,18 @@ nav_order: 2
 
 # Unreleased changes
 
+### Bugfixes
+
+- Send frames with an APDU longer than 15 octets as L_Data_Extended frames. The Frame Type flag of Ctrl1 is now derived from the NPDU length when serializing a `CEMILData` instead of always being set to standard frame. This fixes sending telegrams over KNX Data Secure with a payload of 2 octets or more (eg. DPT 9.x or DPT 232.600) - Data Secure adds 12 octets to the plain APDU, which no longer fits in a standard frame. Sending an APDU longer than 254 octets now raises `ConversionError` instead of `OverflowError`.
+
 ### Features
 
 - Add `xknx.mcp`, a host-agnostic subpackage of async MCP tool functions for the KNX bus and data point types (`list_dpts`, `describe_dpt`, `encode_dpt_payload`, `decode_dpt_payload`, `get_connection_status`, `read_group_value`, `send_group_value_read`, `send_group_value_write`). Frozen, JSON-native dataclass I/O with per-field descriptions in `Annotated` metadata; carries no MCP SDK, Home Assistant or web-framework dependency, so a consumer wraps the functions into its own MCP transport.
 
 ### Protocol
 
+- Reject incoming CEMI L_Data frames with a non-zero Extended Frame Format field with `UnsupportedCEMIMessage`. LTE-HEE frames use zone addressing, so their address fields can not be parsed as `GroupAddress`. The Frame Type flag is still not validated against the NPDU length when parsing - a receiver shall be tolerant towards the used frame format.
+- `CEMIFlags.EXTENDED_FRAME_FORMAT` was removed; its value `0x0001` was reserved, not an "extended frame format" indicator - `0x0000` is used for standard frames as well as for long extended frames. `CEMIFlags.LTE_FRAME_FORMAT` and `CEMIFlags.EXTENDED_FRAME_FORMAT_MASK` were added instead.
 - Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
 
 # 3.17.0 APCIs and DPTs 2026-07-25

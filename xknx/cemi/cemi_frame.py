@@ -27,7 +27,13 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import TPCI, TDataBroadcast
 
-from .const import CEMIErrorCode, CEMIFlags, CEMIMessageCode
+from .const import (
+    MAX_NPDU_LENGTH,
+    STANDARD_FRAME_MAX_NPDU_LENGTH,
+    CEMIErrorCode,
+    CEMIFlags,
+    CEMIMessageCode,
+)
 
 
 class CEMIInfo:
@@ -138,6 +144,7 @@ class CEMILData(CEMIData):
     ) -> CEMILData:
         """Return CEMILData from a Telegram."""
         flags = (
+            # default; the Frame Type is derived from the NPDU length in `to_knx()`
             CEMIFlags.FRAME_TYPE_STANDARD
             | CEMIFlags.DO_NOT_REPEAT
             | CEMIFlags.BROADCAST
@@ -191,8 +198,24 @@ class CEMILData(CEMIData):
             tpdu[0] |= self.tpci.to_knx()
             npdu_len = self.payload.calculated_length()
 
+        if npdu_len > MAX_NPDU_LENGTH:
+            raise ConversionError(
+                f"APDU too long for a single frame: {npdu_len} octets; "
+                f"maximum is {MAX_NPDU_LENGTH}"
+            )
+        # The Frame Type is a function of the NPDU length: an L_Data_Standard frame
+        # can carry at most 15 octets after the TPCI octet, and an L_Data_Extended
+        # frame shall not be used when a standard frame suffices - 3/2/2 §2.2.5.1.
+        # Derived here instead of when the frame is created because the payload may
+        # be replaced afterwards - eg. wrapped in a SecureAPDU by Data Secure.
+        flags = (
+            self.flags | CEMIFlags.FRAME_TYPE_STANDARD
+            if npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH
+            else self.flags & ~CEMIFlags.FRAME_TYPE_STANDARD
+        )
+
         return (
-            self.flags.to_bytes(2, "big")
+            flags.to_bytes(2, "big")
             + self.src_addr.to_knx()
             + self.dst_addr.to_knx()
             + npdu_len.to_bytes(1, "big")
@@ -211,6 +234,18 @@ class CEMILData(CEMIData):
         flags = int.from_bytes(raw[0:2], "big")
 
         src_addr = IndividualAddress.from_knx(raw[2:4])
+
+        # The Extended Frame Format defines how the address fields are to be
+        # interpreted - 3/2/2 §2.2.5.3. Only 0000b (standard and long frames) is
+        # supported; 01xxb are LTE-HEE zone addressed frames, the rest is reserved.
+        # The Frame Type flag itself is deliberately not validated against the NPDU
+        # length: "any receiver shall be tolerant towards the use of the Frame
+        # Format" - 3/6/3 §4.1.5.2.3.
+        if _eff := flags & CEMIFlags.EXTENDED_FRAME_FORMAT_MASK:
+            raise UnsupportedCEMIMessage(
+                f"Extended Frame Format not supported: {_eff:#06b} "
+                f"from {src_addr} in CEMI: {raw.hex()}"
+            )
 
         _dst_is_group_address = bool(flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
         dst_addr: GroupAddress | IndividualAddress = (
