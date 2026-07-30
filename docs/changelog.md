@@ -15,6 +15,7 @@ nav_order: 2
 ### Protocol
 
 - Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
+- Fix `CEMILData.to_knx()` always encoding outgoing frames as Standard Frame Format, which only fits 15 octets of NPDU. A KNX Data Secure secured payload regularly exceeds that once its SCF/sequence-number/MAC overhead is added, producing a truncated frame on the wire. Frames whose NPDU exceeds 15 octets now switch to Extended Frame Format.
 
 # 3.17.0 APCIs and DPTs 2026-07-25
 

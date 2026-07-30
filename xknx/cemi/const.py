@@ -46,6 +46,9 @@ class CEMIFlags:
     # Bit 1/7
     FRAME_TYPE_EXTENDED = 0x0000
     FRAME_TYPE_STANDARD = 0x8000
+    # Maximum NPDU (TPCI + APDU) length transportable in Standard Frame Format.
+    # Larger NPDUs (eg. KNX Data Secure payloads) require Extended Frame Format.
+    MAX_STANDARD_FRAME_NPDU_LENGTH = 15
 
     # Bit 1/6 - Reserved
 

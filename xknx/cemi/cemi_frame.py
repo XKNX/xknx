@@ -190,6 +190,14 @@ class CEMILData(CEMIData):
             tpdu = self.payload.to_knx()
             tpdu[0] |= self.tpci.to_knx()
             npdu_len = self.payload.calculated_length()
+            if npdu_len > CEMIFlags.MAX_STANDARD_FRAME_NPDU_LENGTH:
+                # Standard Frame Format only fits up to 15 octets of NPDU - eg.
+                # Data Secure regularly exceeds that once its overhead is added.
+                # `to_knx()` is only ever called on outgoing frames (never on
+                # frames parsed from `from_knx()`), so updating `self.flags`
+                # here keeps the object consistent with what is actually put
+                # on the wire, instead of just patching the returned bytes.
+                self.flags &= 0xFFFF ^ CEMIFlags.FRAME_TYPE_STANDARD
 
         return (
             self.flags.to_bytes(2, "big")

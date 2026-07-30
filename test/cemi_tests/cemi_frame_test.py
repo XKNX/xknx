@@ -13,10 +13,11 @@ from xknx.cemi import (
     CEMIMPropWriteResponse,
 )
 from xknx.cemi.const import CEMIErrorCode
+from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
 from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import GroupValueRead
+from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataGroup
 
 
@@ -63,6 +64,55 @@ def test_valid_command() -> None:
     assert frame.data.tpci == TDataGroup()
     assert frame.calculated_length() == 11
     assert frame.to_knx() == raw
+
+
+def test_frame_type_standard_at_boundary() -> None:
+    """NPDU of exactly 15 octets still fits Standard Frame Format."""
+    cemi_data = CEMILData(
+        flags=CEMIFlags.FRAME_TYPE_STANDARD,
+        src_addr=IndividualAddress(1),
+        dst_addr=GroupAddress(1),
+        tpci=TDataGroup(),
+        payload=GroupValueWrite(DPTArray((0,) * 14)),
+    )
+    assert cemi_data.payload.calculated_length() == 15
+    raw = cemi_data.to_knx()
+    assert int.from_bytes(raw[0:2], "big") & CEMIFlags.FRAME_TYPE_STANDARD
+
+
+def test_frame_type_switches_to_extended_for_long_payload() -> None:
+    """NPDU longer than 15 octets (eg. Data Secure) requires Extended Frame Format."""
+    cemi_data = CEMILData(
+        flags=CEMIFlags.FRAME_TYPE_STANDARD,
+        src_addr=IndividualAddress(1),
+        dst_addr=GroupAddress(1),
+        tpci=TDataGroup(),
+        payload=GroupValueWrite(DPTArray((0,) * 15)),
+    )
+    assert cemi_data.payload.calculated_length() == 16
+    raw = cemi_data.to_knx()
+    assert not (int.from_bytes(raw[0:2], "big") & CEMIFlags.FRAME_TYPE_STANDARD)
+    # the object itself reflects the frame type actually put on the wire
+    assert not (cemi_data.flags & CEMIFlags.FRAME_TYPE_STANDARD)
+
+
+def test_frame_type_roundtrip_max_npdu_length() -> None:
+    """NPDU of 255 octets - the maximum a single length byte can encode - roundtrips."""
+    cemi_data = CEMILData(
+        flags=CEMIFlags.FRAME_TYPE_STANDARD | CEMIFlags.DESTINATION_GROUP_ADDRESS,
+        src_addr=IndividualAddress(1),
+        dst_addr=GroupAddress(1),
+        tpci=TDataGroup(),
+        payload=GroupValueWrite(DPTArray((0,) * 254)),
+    )
+    assert cemi_data.payload.calculated_length() == 255
+    raw = cemi_data.to_knx()
+    assert raw[6] == 255
+    assert not (int.from_bytes(raw[0:2], "big") & CEMIFlags.FRAME_TYPE_STANDARD)
+
+    parsed = CEMILData.from_knx(raw)
+    assert parsed == cemi_data
+    assert parsed.to_knx() == raw
 
 
 def test_valid_tpci_control() -> None:

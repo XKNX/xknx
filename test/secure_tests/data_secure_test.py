@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
+from xknx.cemi import CEMIFlags, CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import DataSecureError
 from xknx.secure.data_secure import is_data_secure
@@ -448,7 +448,17 @@ class TestDataSecure:
         assert isinstance(incoming_cemi.data, CEMILData)
         # receive same cemi - fake individual address table entry
         self.data_secure._individual_address_table[incoming_cemi.data.src_addr] = 1
-        assert self.data_secure.received_cemi(incoming_cemi.data) == test_cemi.data
+        decrypted_cemi_data = self.data_secure.received_cemi(incoming_cemi.data)
+        # The secured NPDU (16 octets here) exceeds what Standard Frame Format
+        # can carry, so the wire frame - and thus the decrypted result, which
+        # keeps the flags it was actually received with - uses Extended Frame
+        # Format. `test_cemi.data` never went through serialization, so it
+        # still carries its original (smaller, plaintext-sized) frame type.
+        assert decrypted_cemi_data.flags & CEMIFlags.FRAME_TYPE_STANDARD == 0
+        assert decrypted_cemi_data.src_addr == test_cemi.data.src_addr
+        assert decrypted_cemi_data.dst_addr == test_cemi.data.dst_addr
+        assert decrypted_cemi_data.tpci == test_cemi.data.tpci
+        assert decrypted_cemi_data.payload == test_cemi.data.payload
 
         # Test wrong MAC
         self.data_secure._individual_address_table[incoming_cemi.data.src_addr] = 1
