@@ -34,7 +34,7 @@ from .const import (
     CEMIMessageCode,
 )
 from .flags import (
-    DESTINATION_GROUP_ADDRESS,
+    CEMIAddressType,
     CEMIFlags,
     CEMIFrameFormat,
     CEMIFrameType,
@@ -123,9 +123,13 @@ class CEMILData(CEMIData):
         self.payload = payload
 
     @property
-    def dst_is_group_address(self) -> bool:
-        """Return True if the destination address is a group address."""
-        return isinstance(self.dst_addr, GroupAddress)
+    def address_type(self) -> CEMIAddressType:
+        """Return the Address Type of the destination address."""
+        return (
+            CEMIAddressType.GROUP
+            if isinstance(self.dst_addr, GroupAddress)
+            else CEMIAddressType.INDIVIDUAL
+        )
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
@@ -195,15 +199,15 @@ class CEMILData(CEMIData):
         # frame shall not be used when a standard frame suffices - 3/2/2 §2.2.5.1.
         # Derived here instead of when the frame is created because the payload may
         # be replaced afterwards - eg. wrapped in a SecureAPDU by Data Secure.
+        frame_type = (
+            CEMIFrameType.STANDARD
+            if npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH
+            else CEMIFrameType.EXTENDED
+        )
         return (
-            self.flags.to_knx(
-                frame_type=(
-                    CEMIFrameType.STANDARD
-                    if npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH
-                    else CEMIFrameType.EXTENDED
-                ),
-                dst_is_group_address=self.dst_is_group_address,
-            )
+            (
+                self.flags.to_knx() | frame_type.to_knx() | self.address_type.to_knx()
+            ).to_bytes(2, "big")
             + self.src_addr.to_knx()
             + self.dst_addr.to_knx()
             + npdu_len.to_bytes(1, "big")
@@ -221,8 +225,9 @@ class CEMILData(CEMIData):
         src_addr = IndividualAddress.from_knx(raw[2:4])
 
         # Control field 1 and Control field 2 - first 2 octets
+        _control_field = int.from_bytes(raw[0:2], "big")
         try:
-            flags = CEMIFlags.from_knx(raw[0:2])
+            flags = CEMIFlags.from_knx(_control_field)
         except ConversionError as err:
             raise UnsupportedCEMIMessage(
                 f"{err} from {src_addr} in CEMI: {raw.hex()}"
@@ -240,7 +245,9 @@ class CEMILData(CEMIData):
                 f"from {src_addr} in CEMI: {raw.hex()}"
             )
 
-        _dst_is_group_address = bool(raw[1] & DESTINATION_GROUP_ADDRESS)
+        _dst_is_group_address = (
+            CEMIAddressType.from_knx(_control_field) is CEMIAddressType.GROUP
+        )
         dst_addr: GroupAddress | IndividualAddress = (
             GroupAddress.from_knx(raw[4:6])
             if _dst_is_group_address

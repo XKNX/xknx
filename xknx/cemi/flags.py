@@ -22,20 +22,21 @@ from enum import IntEnum
 
 from xknx.exceptions import ConversionError
 
+# Ctrl1 and Ctrl2 are handled as one 16 bit value: Ctrl1 << 8 | Ctrl2.
+# The Frame Type and Address Type bits are not listed here - `CEMIFrameType` and
+# `CEMIAddressType` place their own bit.
 # Ctrl1
-FRAME_TYPE_STANDARD = 0b10000000
-DO_NOT_REPEAT = 0b00100000
-BROADCAST = 0b00010000
-PRIORITY_MASK = 0b00001100
-PRIORITY_OFFSET = 2
-ACK_REQUESTED = 0b00000010
-CONFIRM_ERROR = 0b00000001
+DO_NOT_REPEAT = 0b00100000_00000000
+BROADCAST = 0b00010000_00000000
+PRIORITY_MASK = 0b00001100_00000000
+PRIORITY_OFFSET = 10
+ACK_REQUESTED = 0b00000010_00000000
+CONFIRM_ERROR = 0b00000001_00000000
 
 # Ctrl2
-DESTINATION_GROUP_ADDRESS = 0b10000000
-HOP_COUNT_MASK = 0b01110000
+HOP_COUNT_MASK = 0b00000000_01110000
 HOP_COUNT_OFFSET = 4
-EXTENDED_FRAME_FORMAT_MASK = 0b00001111
+EXTENDED_FRAME_FORMAT_MASK = 0b00000000_00001111
 
 MAX_HOP_COUNT = 7
 
@@ -59,6 +60,36 @@ class CEMIFrameType(IntEnum):
 
     EXTENDED = 0
     STANDARD = 1
+
+    def to_knx(self) -> int:
+        """Serialize to the Frame Type bit of the control field - Ctrl1 b7."""
+        return self << 15
+
+    @classmethod
+    def from_knx(cls, raw: int) -> CEMIFrameType:
+        """Parse the Frame Type bit from the control field."""
+        return cls(raw >> 15 & 0b1)
+
+
+class CEMIAddressType(IntEnum):
+    """
+    Destination Address Type of a cEMI L_Data frame. See 3/6/3 §4.1.4.3.2.
+
+    Follows from the type of the destination address, so it is not held by
+    `CEMIFlags` - see `CEMILData.address_type`.
+    """
+
+    INDIVIDUAL = 0
+    GROUP = 1
+
+    def to_knx(self) -> int:
+        """Serialize to the Address Type bit of the control field - Ctrl2 b7."""
+        return self << 7
+
+    @classmethod
+    def from_knx(cls, raw: int) -> CEMIAddressType:
+        """Parse the Address Type bit from the control field."""
+        return cls(raw >> 7 & 0b1)
 
 
 class CEMIFrameFormat(IntEnum):
@@ -105,43 +136,37 @@ class CEMIFlags:
     frame_type: CEMIFrameType = CEMIFrameType.STANDARD
     frame_format: CEMIFrameFormat = CEMIFrameFormat.STANDARD
 
-    def to_knx(self, *, frame_type: CEMIFrameType, dst_is_group_address: bool) -> bytes:
+    def to_knx(self) -> int:
         """
-        Serialize to Ctrl1 and Ctrl2.
+        Serialize the control field bits held by this object.
 
-        The Frame Type is passed in by the frame that knows its NPDU length; the
-        Address Type by the frame that knows its destination address. `self.frame_type`
+        The Frame Type and Address Type bits are left clear; the frame ORs them in
+        from `CEMIFrameType.to_knx()` and `CEMIAddressType.to_knx()`. `self.frame_type`
         holds the Frame Type of a received frame and is not used here.
         """
         if not 0 <= self.hop_count <= MAX_HOP_COUNT:
             raise ConversionError(f"Hop count out of range: {self.hop_count}")
 
-        ctrl1 = (
-            (FRAME_TYPE_STANDARD if frame_type is CEMIFrameType.STANDARD else 0)
-            | (0 if self.repeat_on_error else DO_NOT_REPEAT)
+        return (
+            (0 if self.repeat_on_error else DO_NOT_REPEAT)
             | (0 if self.system_broadcast else BROADCAST)
             | (self.priority << PRIORITY_OFFSET)
             | (ACK_REQUESTED if self.acknowledge_request else 0)
             | (CONFIRM_ERROR if self.confirm_error else 0)
-        )
-        ctrl2 = (
-            (DESTINATION_GROUP_ADDRESS if dst_is_group_address else 0)
             | (self.hop_count << HOP_COUNT_OFFSET)
             | CEMIFrameFormat.STANDARD
         )
-        return bytes((ctrl1, ctrl2))
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> CEMIFlags:
+    def from_knx(cls, raw: int) -> CEMIFlags:
         """
-        Parse Ctrl1 and Ctrl2.
+        Parse the control field.
 
         Raise `ConversionError` for a reserved Extended Frame Format. The Frame Type
         is kept but not evaluated: "any receiver shall be tolerant towards the use of
         the Frame Format" - 3/6/3 §4.1.5.2.3.
         """
-        ctrl1, ctrl2 = raw[0], raw[1]
-        _eff = ctrl2 & EXTENDED_FRAME_FORMAT_MASK
+        _eff = raw & EXTENDED_FRAME_FORMAT_MASK
         try:
             frame_format = CEMIFrameFormat(_eff)
         except ValueError:
@@ -150,13 +175,13 @@ class CEMIFlags:
             ) from None
 
         return cls(
-            priority=CEMIPriority((ctrl1 & PRIORITY_MASK) >> PRIORITY_OFFSET),
-            repeat_on_error=not ctrl1 & DO_NOT_REPEAT,
-            system_broadcast=not ctrl1 & BROADCAST,
-            acknowledge_request=bool(ctrl1 & ACK_REQUESTED),
-            confirm_error=bool(ctrl1 & CONFIRM_ERROR),
-            hop_count=(ctrl2 & HOP_COUNT_MASK) >> HOP_COUNT_OFFSET,
-            frame_type=CEMIFrameType(ctrl1 >> 7),
+            priority=CEMIPriority((raw & PRIORITY_MASK) >> PRIORITY_OFFSET),
+            repeat_on_error=not raw & DO_NOT_REPEAT,
+            system_broadcast=not raw & BROADCAST,
+            acknowledge_request=bool(raw & ACK_REQUESTED),
+            confirm_error=bool(raw & CONFIRM_ERROR),
+            hop_count=(raw & HOP_COUNT_MASK) >> HOP_COUNT_OFFSET,
+            frame_type=CEMIFrameType.from_knx(raw),
             frame_format=frame_format,
         )
 

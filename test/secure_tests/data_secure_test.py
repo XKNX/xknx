@@ -7,8 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
-from xknx.cemi.flags import FRAME_TYPE_STANDARD
+from xknx.cemi import CEMIFrame, CEMIFrameType, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import DataSecureError
 from xknx.secure.data_secure import is_data_secure
@@ -483,7 +482,7 @@ class TestDataSecure:
         # 4 octet plain APDU + 12 octets Data Secure overhead doesn't fit in a
         # standard frame - it is serialized as L_Data_Extended frame
         assert outgoing_raw[6] == 16
-        assert not outgoing_raw[0] & FRAME_TYPE_STANDARD
+        assert CEMIFrameType.from_knx(outgoing_raw[0] << 8) is CEMIFrameType.EXTENDED
 
         # create new cemi to avoid mixed bytearray / byte parts
         incoming_cemi = CEMIFrame.from_knx(b"\x11\x00" + outgoing_raw)

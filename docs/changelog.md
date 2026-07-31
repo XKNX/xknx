@@ -19,10 +19,10 @@ nav_order: 2
   - `confirm_error: bool` - only meaningful in an L_Data.con frame
   - `hop_count: int` - replaces the `CEMILData.hops` property, which was removed
   - `frame_type: CEMIFrameType` and `frame_format: CEMIFrameFormat` - informational; they hold what was received and are ignored when serializing
-  The Frame Type of an outgoing frame is derived from its NPDU length and the Address Type from the type of the destination address (also available as `CEMILData.dst_is_group_address`), so neither can disagree with the frame that is put on the wire. The raw bit masks moved to `xknx.cemi.flags` as module level constants.
+  The Frame Type of an outgoing frame is derived from its NPDU length and the Address Type from the type of the destination address (`CEMILData.address_type`), so neither can disagree with the frame that is put on the wire. `CEMIFrameType` and the new `CEMIAddressType` place their own bit via `to_knx()` / `from_knx()`; `CEMILData` composes the control field as `flags.to_knx() | frame_type.to_knx() | address_type.to_knx()`. Ctrl1 and Ctrl2 are handled as one 16 bit int, so `CEMIFlags.to_knx()` returns an `int` and `CEMIFlags.from_knx()` takes one. The remaining bit masks moved to `xknx.cemi.flags` as module level constants.
 - `CEMIFlags` has a compact `__str__` used in `CEMILData.__repr__` - eg. `LOW STANDARD hop_count=6`, listing only the boolean flags that are set. The full dataclass `__repr__` shows every field.
 - `CEMILData(flags=...)` is optional now and defaults to `CEMIFlags()` - low priority, hop count 6, no acknowledge request.
-- `xknx.secure.data_secure_asdu.block_0()`, `SecureData.init_from_plain_apdu()` and `SecureData.get_plain_apdu()` take `dst_is_group_address: bool` instead of `frame_flags: int`. Only the Address Type bit of Ctrl2 ever reached the CCM input; passing it explicitly removes the mask.
+- `xknx.secure.data_secure_asdu.block_0()`, `SecureData.init_from_plain_apdu()` and `SecureData.get_plain_apdu()` take `address_type: CEMIAddressType` instead of `frame_flags: int`. Only the Address Type bit of Ctrl2 ever reached the CCM input, so the B0 flags octet is `address_type.to_knx()` and `B0_AT_FIELD_FLAGS_MASK` is gone.
 
 ### Connection
 

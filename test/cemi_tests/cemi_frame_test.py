@@ -3,8 +3,10 @@
 import pytest
 
 from xknx.cemi import (
+    CEMIAddressType,
     CEMIFlags,
     CEMIFrame,
+    CEMIFrameType,
     CEMILData,
     CEMIMessageCode,
     CEMIMPropReadRequest,
@@ -14,7 +16,6 @@ from xknx.cemi import (
     CEMIPriority,
 )
 from xknx.cemi.const import CEMIErrorCode
-from xknx.cemi.flags import DESTINATION_GROUP_ADDRESS, FRAME_TYPE_STANDARD
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
 from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
@@ -266,7 +267,7 @@ def test_telegram_group_address() -> None:
         data=CEMILData.init_from_telegram(_telegram),
     )
     assert isinstance(frame.data, CEMILData)
-    assert frame.data.dst_is_group_address
+    assert frame.data.address_type is CEMIAddressType.GROUP
     assert frame.data.flags == CEMIFlags(priority=CEMIPriority.LOW)
     # test CEMIFrame.telegram property
     assert frame.data.telegram() == _telegram
@@ -280,7 +281,7 @@ def test_telegram_broadcast() -> None:
         data=CEMILData.init_from_telegram(_telegram),
     )
     assert isinstance(frame.data, CEMILData)
-    assert frame.data.dst_is_group_address
+    assert frame.data.address_type is CEMIAddressType.GROUP
     assert frame.data.flags == CEMIFlags(priority=CEMIPriority.SYSTEM)
     assert frame.data.tpci == TDataBroadcast()
     # test CEMIFrame.telegram property
@@ -295,7 +296,7 @@ def test_telegram_individual_address() -> None:
         data=CEMILData.init_from_telegram(_telegram),
     )
     assert isinstance(frame.data, CEMILData)
-    assert not frame.data.dst_is_group_address
+    assert frame.data.address_type is CEMIAddressType.INDIVIDUAL
     assert frame.data.flags == CEMIFlags(priority=CEMIPriority.SYSTEM)
     assert not frame.data.flags.acknowledge_request
     # test CEMIFrame.telegram property
@@ -337,7 +338,9 @@ def test_frame_type_from_npdu_length(
         GroupValueWrite(DPTArray(bytes(apdu_payload_length)))
     )
     assert raw[6] == expected_npdu_len
-    assert bool(raw[0] & FRAME_TYPE_STANDARD) is expected_standard_frame
+    assert (
+        CEMIFrameType.from_knx(raw[0] << 8) is CEMIFrameType.STANDARD
+    ) is expected_standard_frame
 
 
 def test_frame_type_follows_payload() -> None:
@@ -348,11 +351,11 @@ def test_frame_type_follows_payload() -> None:
         tpci=TDataGroup(),
         payload=GroupValueWrite(DPTArray(bytes(15))),
     )
-    assert not cemi_data.to_knx()[0] & FRAME_TYPE_STANDARD
+    assert CEMIFrameType.from_knx(cemi_data.to_knx()[0] << 8) is CEMIFrameType.EXTENDED
 
     # replacing the payload - as Data Secure does - changes the Frame Type
     cemi_data.payload = GroupValueWrite(DPTArray(bytes(1)))
-    assert cemi_data.to_knx()[0] & FRAME_TYPE_STANDARD
+    assert CEMIFrameType.from_knx(cemi_data.to_knx()[0] << 8) is CEMIFrameType.STANDARD
 
 
 def test_npdu_length_exceeded() -> None:
@@ -377,7 +380,7 @@ def test_extended_frame_format_not_supported(eff: int, err_msg: str) -> None:
     raw = get_data(
         0x29,
         0,
-        (DESTINATION_GROUP_ADDRESS | eff),  # Ctrl2; Ctrl1 = extended frame
+        (CEMIAddressType.GROUP.to_knx() | eff),  # Ctrl2; Ctrl1 = extended frame
         1,
         1,
         1,

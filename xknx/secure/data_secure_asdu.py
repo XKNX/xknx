@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
+from xknx.cemi.flags import CEMIAddressType
 from xknx.exceptions import DataSecureError
 from xknx.telegram.tpci import TPCI
 
@@ -18,14 +19,14 @@ _APCI_SEC_HIGH = 0x03
 _APCI_SEC_LOW = 0xF1
 # Of the cEMI control fields only the Address Type (IA / GA) and the Extended Frame
 # Format are used; both live in Ctrl2. Ctrl1 - and with it the Frame Type - is not
-# covered by the MAC. The Extended Frame Format is always 0 for supported frames.
-_B0_ADDRESS_TYPE_GROUP = 0b10000000
+# covered by the MAC. The Extended Frame Format is always 0 for supported frames,
+# so `CEMIAddressType.to_knx()` is the whole octet.
 
 
 def block_0(
     sequence_number: bytes,
     address_fields_raw: bytes,
-    dst_is_group_address: bool,
+    address_type: CEMIAddressType,
     tpci_int: int,
     payload_length: int,
 ) -> bytes:
@@ -36,7 +37,7 @@ def block_0(
         + bytes(
             (
                 0,
-                _B0_ADDRESS_TYPE_GROUP if dst_is_group_address else 0,
+                address_type.to_knx(),
                 (tpci_int << 2) + _APCI_SEC_HIGH,
                 _APCI_SEC_LOW,
                 0,
@@ -149,7 +150,7 @@ class SecureData:
         scf: SecurityControlField,
         sequence_number: int,
         address_fields_raw: bytes,
-        dst_is_group_address: bool,
+        address_type: CEMIAddressType,
         tpci: TPCI,
     ) -> SecureData:
         """Serialize to KNX raw data."""
@@ -162,7 +163,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    dst_is_group_address=dst_is_group_address,
+                    address_type=address_type,
                     tpci_int=tpci.to_knx(),
                     payload_length=0,
                 ),
@@ -176,7 +177,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    dst_is_group_address=dst_is_group_address,
+                    address_type=address_type,
                     tpci_int=tpci.to_knx(),
                     payload_length=len(apdu),
                 ),
@@ -221,7 +222,7 @@ class SecureData:
         key: bytes,
         scf: SecurityControlField,
         address_fields_raw: bytes,
-        dst_is_group_address: bool,
+        address_type: CEMIAddressType,
         tpci: TPCI,
     ) -> bytes:
         """
@@ -247,7 +248,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=self.sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    dst_is_group_address=dst_is_group_address,
+                    address_type=address_type,
                     tpci_int=tpci.to_knx(),
                     payload_length=len(dec_payload),
                 ),
@@ -263,7 +264,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=self.sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    dst_is_group_address=dst_is_group_address,
+                    address_type=address_type,
                     tpci_int=tpci.to_knx(),
                     payload_length=0,
                 ),
