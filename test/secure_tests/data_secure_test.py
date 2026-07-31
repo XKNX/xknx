@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
+from xknx.cemi import CEMIFlags, CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import DataSecureError
 from xknx.secure.data_secure import is_data_secure
@@ -189,6 +189,43 @@ class TestDataSecure:
 
         assert secured_frame_data.to_knx() == bytes.fromhex(
             "bce0500104000e03f11000254ae1cb67cd184afe5744"
+        )
+
+    def test_data_secure_group_send_extended(self) -> None:
+        """Test outgoing DataSecure group communication requiring an extended frame."""
+        # https://github.com/XKNX/xknx/issues/1868
+        # 5 octet plain APDU + 12 octets Data Secure overhead exceed the 15 octets
+        # a standard frame can carry - it has to be sent as L_Data_Extended frame.
+        self.data_secure._sequence_number_sending = 160170101607
+
+        test_telegram = Telegram(
+            destination_address=GroupAddress("0/4/0"),
+            payload=apci.GroupValueWrite(DPTArray((255, 0, 5))),
+        )
+        test_cemi_data = CEMILData.init_from_telegram(
+            test_telegram, src_addr=self.xknx.current_address
+        )
+        secured_frame_data = self.data_secure.outgoing_cemi(test_cemi_data)
+        assert isinstance(secured_frame_data, CEMILData)
+        assert isinstance(secured_frame_data.payload, apci.SecureAPDU)
+
+        raw = secured_frame_data.to_knx()
+        assert raw[6] == 17  # NPDU length
+        assert raw[0] == 0x3C  # Ctrl1: extended frame; not 0xBC
+        assert raw == bytes.fromhex(
+            "3ce0500104001103f11000254ae1cb67cd98e577b519be47bb"
+        )
+
+        # the Frame Type flag is not part of the CCM MAC, so the frame decrypts
+        # although `secured_frame_data.flags` still holds the standard frame flag
+        incoming_cemi = CEMIFrame.from_knx(b"\x29\x00" + raw)
+        assert isinstance(incoming_cemi.data, CEMILData)
+        self.data_secure._individual_address_table[self.xknx.current_address] = 1
+        plain_cemi_data = self.data_secure.received_cemi(incoming_cemi.data)
+        assert plain_cemi_data.telegram() == Telegram(
+            destination_address=GroupAddress("0/4/0"),
+            source_address=self.xknx.current_address,
+            payload=apci.GroupValueWrite(DPTArray((255, 0, 5))),
         )
 
     def test_data_secure_group_receive(
@@ -441,14 +478,23 @@ class TestDataSecure:
         )
         assert outgoing_signed_cemi_data.payload.secured_data is not None
 
+        outgoing_raw = outgoing_signed_cemi_data.to_knx()
+        # 4 octet plain APDU + 12 octets Data Secure overhead doesn't fit in a
+        # standard frame - it is serialized as L_Data_Extended frame
+        assert outgoing_raw[6] == 16
+        assert not outgoing_raw[0] & CEMIFlags.FRAME_TYPE_STANDARD >> 8
+
         # create new cemi to avoid mixed bytearray / byte parts
-        incoming_cemi = CEMIFrame.from_knx(
-            b"\x11\x00" + outgoing_signed_cemi_data.to_knx()
-        )
+        incoming_cemi = CEMIFrame.from_knx(b"\x11\x00" + outgoing_raw)
         assert isinstance(incoming_cemi.data, CEMILData)
         # receive same cemi - fake individual address table entry
         self.data_secure._individual_address_table[incoming_cemi.data.src_addr] = 1
-        assert self.data_secure.received_cemi(incoming_cemi.data) == test_cemi.data
+        # compare telegrams: `test_cemi.data.flags` still holds the default standard
+        # Frame Type while the serialized frame was sent as extended frame
+        assert (
+            self.data_secure.received_cemi(incoming_cemi.data).telegram()
+            == test_cemi.data.telegram()
+        )
 
         # Test wrong MAC
         self.data_secure._individual_address_table[incoming_cemi.data.src_addr] = 1
