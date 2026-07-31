@@ -735,9 +735,8 @@ class TestStringRepresentations:
         assert (
             str(cemi_frame)
             == '<CEMIFrame code="L_DATA_IND" info="CEMIInfo("")" data="CEMILData(src_addr="IndividualAddress("1.2.3")" '
-            'dst_addr="GroupAddress("1/2/5")" flags="CEMIFlags(priority=LOW hop_count=6 '
-            "repeat_on_error=False system_broadcast=False acknowledge_request=False "
-            'confirm_error=False)" tpci="TDataGroup()" '
+            'dst_addr="GroupAddress("1/2/5")" flags="LOW STANDARD hop_count=6" '
+            'tpci="TDataGroup()" '
             'payload="<GroupValueWrite value="<DPTBinary value="7" />" />")" />'
         )
 

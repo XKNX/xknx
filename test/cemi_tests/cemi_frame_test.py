@@ -14,11 +14,7 @@ from xknx.cemi import (
     CEMIPriority,
 )
 from xknx.cemi.const import CEMIErrorCode
-from xknx.cemi.flags import (
-    DESTINATION_GROUP_ADDRESS,
-    FRAME_TYPE_STANDARD,
-    LTE_FRAME_FORMAT,
-)
+from xknx.cemi.flags import DESTINATION_GROUP_ADDRESS, FRAME_TYPE_STANDARD
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
 from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
@@ -365,21 +361,30 @@ def test_npdu_length_exceeded() -> None:
         _cemi_l_data_from_payload(GroupValueWrite(DPTArray(bytes(254))))
 
 
-def test_extended_frame_format_not_supported() -> None:
+@pytest.mark.parametrize(
+    "eff,err_msg",
+    [
+        # 01xxb - LTE-HEE zone addressed frames
+        (0b0100, r".*Extended Frame Format not supported: LTE_HEE.*"),
+        (0b0111, r".*Extended Frame Format not supported: LTE_HEE.*"),
+        # reserved
+        (0b0001, r".*Reserved Extended Frame Format: 0b0001.*"),
+        (0b1111, r".*Reserved Extended Frame Format: 0b1111.*"),
+    ],
+)
+def test_extended_frame_format_not_supported(eff: int, err_msg: str) -> None:
     """Test parsing of LTE-HEE and reserved Extended Frame Formats."""
     raw = get_data(
         0x29,
         0,
-        (DESTINATION_GROUP_ADDRESS | LTE_FRAME_FORMAT),  # Ctrl2; Ctrl1 = extended
+        (DESTINATION_GROUP_ADDRESS | eff),  # Ctrl2; Ctrl1 = extended frame
         1,
         1,
         1,
         0,
         [],
     )
-    with pytest.raises(
-        UnsupportedCEMIMessage, match=r".*Extended Frame Format not supported.*"
-    ):
+    with pytest.raises(UnsupportedCEMIMessage, match=err_msg):
         CEMIFrame.from_knx(raw)
 
 

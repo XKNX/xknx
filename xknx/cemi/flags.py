@@ -10,8 +10,9 @@ The two control field octets Ctrl1 and Ctrl2 are specified in
 
 Not every field is independent state: the Frame Type (FT) follows from the NPDU
 length and the Address Type (AT) from the destination address, so both are
-derived when serializing - see `CEMILData`. The Extended Frame Format (EFF) is
-always 0 for the frame types XKNX supports.
+derived when serializing - see `CEMILData`. The received Frame Type is still kept
+for inspection; the Address Type can be read from the type of the destination
+address.
 """
 
 from __future__ import annotations
@@ -35,10 +36,6 @@ DESTINATION_GROUP_ADDRESS = 0b10000000
 HOP_COUNT_MASK = 0b01110000
 HOP_COUNT_OFFSET = 4
 EXTENDED_FRAME_FORMAT_MASK = 0b00001111
-# 0000b is used for L_Data_Standard frames as well as for long L_Data_Extended
-# frames; 01xxb denotes LTE-HEE (zone addressed) frames. The rest is reserved.
-STANDARD_FRAME_FORMAT = 0b0000
-LTE_FRAME_FORMAT = 0b0100
 
 MAX_HOP_COUNT = 7
 
@@ -52,13 +49,47 @@ class CEMIPriority(IntEnum):
     LOW = 0b11
 
 
+class CEMIFrameType(IntEnum):
+    """
+    Frame Type of a cEMI L_Data frame. See 3/6/3 §4.1.4.3.2.
+
+    An L_Data_Standard frame carries at most 15 octets after the TPCI octet;
+    longer APDUs require an L_Data_Extended frame - 3/2/2 §2.2.4 and §2.2.5.1.
+    """
+
+    EXTENDED = 0
+    STANDARD = 1
+
+
+class CEMIFrameFormat(IntEnum):
+    """
+    Extended Frame Format (EFF) of a cEMI L_Data frame. See 3/2/2 §2.2.5.3.
+
+    `STANDARD` is used for L_Data_Standard frames as well as for long
+    L_Data_Extended frames. `LTE_HEE` covers 01xxb - the two least significant
+    bits hold the LTE extended address type. All other values are reserved.
+    """
+
+    STANDARD = 0b0000
+    LTE_HEE = 0b0100
+
+    @classmethod
+    def _missing_(cls, value: object) -> CEMIFrameFormat | None:
+        """Resolve the whole 01xxb range to LTE_HEE; reserved values fail."""
+        if isinstance(value, int) and value & 0b1100 == cls.LTE_HEE:
+            return cls.LTE_HEE
+        return None
+
+
 @dataclass(slots=True)
 class CEMIFlags:
     """
     Control fields of a cEMI L_Data frame.
 
-    Holds only the fields that are independent state. Frame Type, Address Type and
-    Extended Frame Format are not stored - they follow from the frame itself.
+    `frame_type` and `frame_format` are informational: they hold what was received
+    and are ignored when serializing. The Frame Type of an outgoing frame follows
+    from its NPDU length and is passed to `to_knx()` by the frame; the Address Type
+    is not held at all - it can be read from the type of the destination address.
 
     `confirm_error` is only meaningful in an L_Data.con frame.
     """
@@ -70,19 +101,23 @@ class CEMIFlags:
     acknowledge_request: bool = False
     confirm_error: bool = False
     hop_count: int = 6
+    # as received; not used when serializing
+    frame_type: CEMIFrameType = CEMIFrameType.STANDARD
+    frame_format: CEMIFrameFormat = CEMIFrameFormat.STANDARD
 
-    def to_knx(self, *, frame_type_standard: bool, dst_is_group_address: bool) -> bytes:
+    def to_knx(self, *, frame_type: CEMIFrameType, dst_is_group_address: bool) -> bytes:
         """
         Serialize to Ctrl1 and Ctrl2.
 
-        Frame Type and Address Type are not held by this object; they are passed in
-        by the frame that knows its NPDU length and destination address.
+        The Frame Type is passed in by the frame that knows its NPDU length; the
+        Address Type by the frame that knows its destination address. `self.frame_type`
+        holds the Frame Type of a received frame and is not used here.
         """
         if not 0 <= self.hop_count <= MAX_HOP_COUNT:
             raise ConversionError(f"Hop count out of range: {self.hop_count}")
 
         ctrl1 = (
-            (FRAME_TYPE_STANDARD if frame_type_standard else 0)
+            (FRAME_TYPE_STANDARD if frame_type is CEMIFrameType.STANDARD else 0)
             | (0 if self.repeat_on_error else DO_NOT_REPEAT)
             | (0 if self.system_broadcast else BROADCAST)
             | (self.priority << PRIORITY_OFFSET)
@@ -92,7 +127,7 @@ class CEMIFlags:
         ctrl2 = (
             (DESTINATION_GROUP_ADDRESS if dst_is_group_address else 0)
             | (self.hop_count << HOP_COUNT_OFFSET)
-            | STANDARD_FRAME_FORMAT
+            | CEMIFrameFormat.STANDARD
         )
         return bytes((ctrl1, ctrl2))
 
@@ -101,10 +136,19 @@ class CEMIFlags:
         """
         Parse Ctrl1 and Ctrl2.
 
-        The Frame Type is deliberately not evaluated: "any receiver shall be
-        tolerant towards the use of the Frame Format" - 3/6/3 §4.1.5.2.3.
+        Raise `ConversionError` for a reserved Extended Frame Format. The Frame Type
+        is kept but not evaluated: "any receiver shall be tolerant towards the use of
+        the Frame Format" - 3/6/3 §4.1.5.2.3.
         """
         ctrl1, ctrl2 = raw[0], raw[1]
+        _eff = ctrl2 & EXTENDED_FRAME_FORMAT_MASK
+        try:
+            frame_format = CEMIFrameFormat(_eff)
+        except ValueError:
+            raise ConversionError(
+                f"Reserved Extended Frame Format: {_eff:#06b}"
+            ) from None
+
         return cls(
             priority=CEMIPriority((ctrl1 & PRIORITY_MASK) >> PRIORITY_OFFSET),
             repeat_on_error=not ctrl1 & DO_NOT_REPEAT,
@@ -112,15 +156,27 @@ class CEMIFlags:
             acknowledge_request=bool(ctrl1 & ACK_REQUESTED),
             confirm_error=bool(ctrl1 & CONFIRM_ERROR),
             hop_count=(ctrl2 & HOP_COUNT_MASK) >> HOP_COUNT_OFFSET,
+            frame_type=CEMIFrameType(ctrl1 >> 7),
+            frame_format=frame_format,
         )
 
-    def __repr__(self) -> str:
-        """Return object as readable string."""
-        return (
-            f"CEMIFlags(priority={self.priority.name} "
-            f"hop_count={self.hop_count} "
-            f"repeat_on_error={self.repeat_on_error} "
-            f"system_broadcast={self.system_broadcast} "
-            f"acknowledge_request={self.acknowledge_request} "
-            f"confirm_error={self.confirm_error})"
+    def __str__(self) -> str:
+        """Return object as compact readable string."""
+        _set_flags = [
+            name
+            for name, value in (
+                ("repeat_on_error", self.repeat_on_error),
+                ("system_broadcast", self.system_broadcast),
+                ("acknowledge_request", self.acknowledge_request),
+                ("confirm_error", self.confirm_error),
+            )
+            if value
+        ]
+        return " ".join(
+            (
+                self.priority.name,
+                self.frame_type.name,
+                f"hop_count={self.hop_count}",
+                *_set_flags,
+            )
         )

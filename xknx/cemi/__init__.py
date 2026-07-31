@@ -12,4 +12,4 @@ from .cemi_frame import (
 )
 from .cemi_handler import CEMIHandler
 from .const import CEMIErrorCode, CEMIMessageCode
-from .flags import CEMIFlags, CEMIPriority
+from .flags import CEMIFlags, CEMIFrameFormat, CEMIFrameType, CEMIPriority

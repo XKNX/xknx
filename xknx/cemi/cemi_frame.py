@@ -35,8 +35,9 @@ from .const import (
 )
 from .flags import (
     DESTINATION_GROUP_ADDRESS,
-    EXTENDED_FRAME_FORMAT_MASK,
     CEMIFlags,
+    CEMIFrameFormat,
+    CEMIFrameType,
     CEMIPriority,
 )
 
@@ -196,7 +197,11 @@ class CEMILData(CEMIData):
         # be replaced afterwards - eg. wrapped in a SecureAPDU by Data Secure.
         return (
             self.flags.to_knx(
-                frame_type_standard=npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH,
+                frame_type=(
+                    CEMIFrameType.STANDARD
+                    if npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH
+                    else CEMIFrameType.EXTENDED
+                ),
                 dst_is_group_address=self.dst_is_group_address,
             )
             + self.src_addr.to_knx()
@@ -213,20 +218,25 @@ class CEMILData(CEMIData):
                 f"CEMI too small. Length: {len(raw)}; CEMI: {raw.hex()}"
             )
 
-        # Control field 1 and Control field 2 - first 2 octets
-        flags = CEMIFlags.from_knx(raw[0:2])
-
         src_addr = IndividualAddress.from_knx(raw[2:4])
 
-        # The Extended Frame Format defines how the address fields are to be
-        # interpreted - 3/2/2 §2.2.5.3. Only 0000b (standard and long frames) is
-        # supported; 01xxb are LTE-HEE zone addressed frames, the rest is reserved.
-        # The Frame Type flag itself is deliberately not validated against the NPDU
-        # length: "any receiver shall be tolerant towards the use of the Frame
-        # Format" - 3/6/3 §4.1.5.2.3.
-        if _eff := raw[1] & EXTENDED_FRAME_FORMAT_MASK:
+        # Control field 1 and Control field 2 - first 2 octets
+        try:
+            flags = CEMIFlags.from_knx(raw[0:2])
+        except ConversionError as err:
             raise UnsupportedCEMIMessage(
-                f"Extended Frame Format not supported: {_eff:#06b} "
+                f"{err} from {src_addr} in CEMI: {raw.hex()}"
+            ) from err
+
+        # The Extended Frame Format defines how the address fields are to be
+        # interpreted - 3/2/2 §2.2.5.3. Only STANDARD (standard and long frames) is
+        # supported; LTE-HEE frames are zone addressed. The Frame Type is kept as
+        # received but deliberately not validated against the NPDU length: "any
+        # receiver shall be tolerant towards the use of the Frame Format"
+        # - 3/6/3 §4.1.5.2.3.
+        if flags.frame_format is not CEMIFrameFormat.STANDARD:
+            raise UnsupportedCEMIMessage(
+                f"Extended Frame Format not supported: {flags.frame_format.name} "
                 f"from {src_addr} in CEMI: {raw.hex()}"
             )
 
@@ -310,7 +320,7 @@ class CEMILData(CEMIData):
             "CEMILData("
             f'src_addr="{self.src_addr.__repr__()}" '
             f'dst_addr="{self.dst_addr.__repr__()}" '
-            f'flags="{self.flags!r}" '
+            f'flags="{self.flags}" '
             f'tpci="{self.tpci}" '
             f'payload="{self.payload}")'
         )
