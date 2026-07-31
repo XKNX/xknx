@@ -79,8 +79,8 @@ def _summarize_dpt(dpt: type[DPTBase]) -> DptSummary:
         value_max=value_max,
         resolution=resolution,
         payload_length=dpt.payload_length,
-        enum_values=(
-            [member.name for member in dpt.get_valid_values()]
+        options=(
+            [member.name.lower() for member in dpt.get_valid_values()]
             if issubclass(dpt, DPTEnum)
             else None
         ),
@@ -153,13 +153,14 @@ def _jsonify(value: object) -> GroupValue:
 
     ``read_group_value`` returns Python natives (a DPT transcoder's ``from_knx``
     output, or the raw payload value). Complex DPT values become their
-    ``as_dict()`` form and enum values their member name; tuples become lists;
+    ``as_dict()`` form and enum values their lower-cased member name (matching HA,
+    the Group Monitor and the ``as_dict()`` enum form); tuples become lists;
     anything else JSON-native passes through, and the rest is stringified.
     """
     if isinstance(value, DPTComplexData):
         return value.as_dict()
     if isinstance(value, DPTEnumData):
-        return value.name
+        return value.name.lower()
     if isinstance(value, tuple):
         return [_jsonify(item) for item in value]
     if value is None or isinstance(value, bool | int | float | str | list | dict):

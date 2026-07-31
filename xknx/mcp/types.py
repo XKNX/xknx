@@ -44,7 +44,7 @@ class DptSummary:
     value_max: float | None
     resolution: float | None
     payload_length: int | None  # DPTArray byte / DPTBinary bit length; e.g. string max length
-    enum_values: list[str] | None  # for enum DPTs: the valid value names
+    options: list[str] | None  # enum DPTs: lower-cased value names, as in a complex DPT's enum-field schema
     schema: list[dict[str, Any]] | None  # for complex DPTs: the field schema of the dict form
 
 
