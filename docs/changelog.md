@@ -12,6 +12,15 @@ nav_order: 2
 
 - Drop support for Python 3.10. XKNX requires Python 3.11 or newer now.
 - Remove `xknx.util`. Its only member was `asyncio_timeout` - a backport of `asyncio.timeout` for Python versions not providing it - so use `asyncio.timeout` directly.
+- `CEMILData.flags` is now a `CEMIFlags` object instead of a 16 bit `int`. `CEMIFlags` was previously a collection of bit constants; it is now a slotted dataclass holding the control field values that are independent state:
+  - `priority: CEMIPriority` - new `SYSTEM` / `NORMAL` / `URGENT` / `LOW` enum
+  - `repeat_on_error: bool`, `system_broadcast: bool` - named for the positive meaning; both are inverted on the wire
+  - `acknowledge_request: bool`
+  - `confirm_error: bool` - only meaningful in an L_Data.con frame
+  - `hop_count: int` - replaces the `CEMILData.hops` property, which was removed
+  Frame Type, Address Type and Extended Frame Format are no longer stored: they follow from the NPDU length, the destination address type and the supported frame formats, and are derived when serializing. `flags` therefore can no longer disagree with the frame that is put on the wire. The raw bit masks moved to `xknx.cemi.flags` as module level constants.
+- `CEMILData(flags=...)` is optional now and defaults to `CEMIFlags()` - low priority, hop count 6, no acknowledge request.
+- `xknx.secure.data_secure_asdu.block_0()`, `SecureData.init_from_plain_apdu()` and `SecureData.get_plain_apdu()` take `dst_is_group_address: bool` instead of `frame_flags: int`. Only the Address Type bit of Ctrl2 ever reached the CCM input; passing it explicitly removes the mask.
 
 ### Connection
 
@@ -73,7 +82,8 @@ nav_order: 2
 ### Protocol
 
 - Reject incoming CEMI L_Data frames with a non-zero Extended Frame Format field with `UnsupportedCEMIMessage`. LTE-HEE frames use zone addressing, so their address fields can not be parsed as `GroupAddress`. The Frame Type flag is still not validated against the NPDU length when parsing - a receiver shall be tolerant towards the used frame format.
-- `CEMIFlags.EXTENDED_FRAME_FORMAT` was removed; its value `0x0001` was reserved, not an "extended frame format" indicator - `0x0000` is used for standard frames as well as for long extended frames. `CEMIFlags.LTE_FRAME_FORMAT` and `CEMIFlags.EXTENDED_FRAME_FORMAT_MASK` were added instead.
+- `CEMIFlags.EXTENDED_FRAME_FORMAT` was removed; its value `0x0001` was reserved, not an "extended frame format" indicator - `0x0000` is used for standard frames as well as for long extended frames. `LTE_FRAME_FORMAT` and `EXTENDED_FRAME_FORMAT_MASK` were added instead.
+- The hop count is validated when serializing; a value outside `0..7` raises `ConversionError` instead of silently corrupting Ctrl2.
 - Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
 
 ### Deprecation notes

@@ -16,14 +16,16 @@ from .security_primitives import (
 # Secure APCI is 0x03F1 - in block_0 it is used split into 2 octets
 _APCI_SEC_HIGH = 0x03
 _APCI_SEC_LOW = 0xF1
-# only Address Type (IA / GA) and Extended Frame format are used
-B0_AT_FIELD_FLAGS_MASK = 0b10001111
+# Of the cEMI control fields only the Address Type (IA / GA) and the Extended Frame
+# Format are used; both live in Ctrl2. Ctrl1 - and with it the Frame Type - is not
+# covered by the MAC. The Extended Frame Format is always 0 for supported frames.
+_B0_ADDRESS_TYPE_GROUP = 0b10000000
 
 
 def block_0(
     sequence_number: bytes,
     address_fields_raw: bytes,
-    frame_flags: int,
+    dst_is_group_address: bool,
     tpci_int: int,
     payload_length: int,
 ) -> bytes:
@@ -34,7 +36,7 @@ def block_0(
         + bytes(
             (
                 0,
-                frame_flags & B0_AT_FIELD_FLAGS_MASK,
+                _B0_ADDRESS_TYPE_GROUP if dst_is_group_address else 0,
                 (tpci_int << 2) + _APCI_SEC_HIGH,
                 _APCI_SEC_LOW,
                 0,
@@ -147,7 +149,7 @@ class SecureData:
         scf: SecurityControlField,
         sequence_number: int,
         address_fields_raw: bytes,
-        frame_flags: int,
+        dst_is_group_address: bool,
         tpci: TPCI,
     ) -> SecureData:
         """Serialize to KNX raw data."""
@@ -160,7 +162,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    dst_is_group_address=dst_is_group_address,
                     tpci_int=tpci.to_knx(),
                     payload_length=0,
                 ),
@@ -174,7 +176,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    dst_is_group_address=dst_is_group_address,
                     tpci_int=tpci.to_knx(),
                     payload_length=len(apdu),
                 ),
@@ -219,7 +221,7 @@ class SecureData:
         key: bytes,
         scf: SecurityControlField,
         address_fields_raw: bytes,
-        frame_flags: int,
+        dst_is_group_address: bool,
         tpci: TPCI,
     ) -> bytes:
         """
@@ -245,7 +247,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=self.sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    dst_is_group_address=dst_is_group_address,
                     tpci_int=tpci.to_knx(),
                     payload_length=len(dec_payload),
                 ),
@@ -261,7 +263,7 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=self.sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    dst_is_group_address=dst_is_group_address,
                     tpci_int=tpci.to_knx(),
                     payload_length=0,
                 ),

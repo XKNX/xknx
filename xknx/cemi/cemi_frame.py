@@ -31,8 +31,13 @@ from .const import (
     MAX_NPDU_LENGTH,
     STANDARD_FRAME_MAX_NPDU_LENGTH,
     CEMIErrorCode,
-    CEMIFlags,
     CEMIMessageCode,
+)
+from .flags import (
+    DESTINATION_GROUP_ADDRESS,
+    EXTENDED_FRAME_FORMAT_MASK,
+    CEMIFlags,
+    CEMIPriority,
 )
 
 
@@ -103,31 +108,23 @@ class CEMILData(CEMIData):
     def __init__(
         self,
         *,
-        flags: int,
+        flags: CEMIFlags | None = None,
         src_addr: IndividualAddress,
         dst_addr: GroupAddress | IndividualAddress,
         tpci: TPCI,
         payload: APCI | None,
     ) -> None:
         """Initialize CEMILData object."""
-        self.flags = flags
+        self.flags = flags if flags is not None else CEMIFlags()
         self.src_addr = src_addr
         self.dst_addr = dst_addr
         self.tpci = tpci
         self.payload = payload
 
     @property
-    def hops(self) -> int:
-        """Return hops."""
-        return (self.flags & 0x0070) >> 4
-
-    @hops.setter
-    def hops(self, val: int) -> None:
-        """Set hops."""
-        # Resetting hops
-        self.flags &= 0xFFFF ^ 0x0070
-        # Setting new hops
-        self.flags |= val << 4
+    def dst_is_group_address(self) -> bool:
+        """Return True if the destination address is a group address."""
+        return isinstance(self.dst_addr, GroupAddress)
 
     def calculated_length(self) -> int:
         """Get length of KNX/IP body."""
@@ -143,30 +140,19 @@ class CEMILData(CEMIData):
         src_addr: IndividualAddress | None = None,
     ) -> CEMILData:
         """Return CEMILData from a Telegram."""
-        flags = (
-            # default; the Frame Type is derived from the NPDU length in `to_knx()`
-            CEMIFlags.FRAME_TYPE_STANDARD
-            | CEMIFlags.DO_NOT_REPEAT
-            | CEMIFlags.BROADCAST
-            | CEMIFlags.NO_ACK_REQUESTED
-            | CEMIFlags.CONFIRM_NO_ERROR
-            | CEMIFlags.HOP_COUNT_1ST
-        )
         if isinstance(telegram.destination_address, GroupAddress):
-            flags |= CEMIFlags.DESTINATION_GROUP_ADDRESS
-            if isinstance(telegram.tpci, TDataBroadcast):
-                flags |= CEMIFlags.PRIORITY_SYSTEM
-            else:
-                flags |= CEMIFlags.PRIORITY_LOW
-        elif isinstance(telegram.destination_address, IndividualAddress):
-            flags |= (
-                CEMIFlags.DESTINATION_INDIVIDUAL_ADDRESS | CEMIFlags.PRIORITY_SYSTEM
+            priority = (
+                CEMIPriority.SYSTEM
+                if isinstance(telegram.tpci, TDataBroadcast)
+                else CEMIPriority.LOW
             )
+        elif isinstance(telegram.destination_address, IndividualAddress):
+            priority = CEMIPriority.SYSTEM
         else:
             raise TypeError()
 
         return CEMILData(
-            flags=flags,
+            flags=CEMIFlags(priority=priority),
             src_addr=src_addr or telegram.source_address,
             dst_addr=telegram.destination_address,
             tpci=telegram.tpci,
@@ -208,14 +194,11 @@ class CEMILData(CEMIData):
         # frame shall not be used when a standard frame suffices - 3/2/2 §2.2.5.1.
         # Derived here instead of when the frame is created because the payload may
         # be replaced afterwards - eg. wrapped in a SecureAPDU by Data Secure.
-        flags = (
-            self.flags | CEMIFlags.FRAME_TYPE_STANDARD
-            if npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH
-            else self.flags & ~CEMIFlags.FRAME_TYPE_STANDARD
-        )
-
         return (
-            flags.to_bytes(2, "big")
+            self.flags.to_knx(
+                frame_type_standard=npdu_len <= STANDARD_FRAME_MAX_NPDU_LENGTH,
+                dst_is_group_address=self.dst_is_group_address,
+            )
             + self.src_addr.to_knx()
             + self.dst_addr.to_knx()
             + npdu_len.to_bytes(1, "big")
@@ -231,7 +214,7 @@ class CEMILData(CEMIData):
             )
 
         # Control field 1 and Control field 2 - first 2 octets
-        flags = int.from_bytes(raw[0:2], "big")
+        flags = CEMIFlags.from_knx(raw[0:2])
 
         src_addr = IndividualAddress.from_knx(raw[2:4])
 
@@ -241,13 +224,13 @@ class CEMILData(CEMIData):
         # The Frame Type flag itself is deliberately not validated against the NPDU
         # length: "any receiver shall be tolerant towards the use of the Frame
         # Format" - 3/6/3 §4.1.5.2.3.
-        if _eff := flags & CEMIFlags.EXTENDED_FRAME_FORMAT_MASK:
+        if _eff := raw[1] & EXTENDED_FRAME_FORMAT_MASK:
             raise UnsupportedCEMIMessage(
                 f"Extended Frame Format not supported: {_eff:#06b} "
                 f"from {src_addr} in CEMI: {raw.hex()}"
             )
 
-        _dst_is_group_address = bool(flags & CEMIFlags.DESTINATION_GROUP_ADDRESS)
+        _dst_is_group_address = bool(raw[1] & DESTINATION_GROUP_ADDRESS)
         dst_addr: GroupAddress | IndividualAddress = (
             GroupAddress.from_knx(raw[4:6])
             if _dst_is_group_address
@@ -327,7 +310,7 @@ class CEMILData(CEMIData):
             "CEMILData("
             f'src_addr="{self.src_addr.__repr__()}" '
             f'dst_addr="{self.dst_addr.__repr__()}" '
-            f'flags="{self.flags:16b}" '
+            f'flags="{self.flags!r}" '
             f'tpci="{self.tpci}" '
             f'payload="{self.payload}")'
         )
