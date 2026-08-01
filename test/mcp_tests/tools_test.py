@@ -46,7 +46,7 @@ async def test_list_dpts_text_filter() -> None:
 
 
 def test_jsonify_shapes() -> None:
-    """_jsonify passes JSON natives through, flattens tuples and stringifies the rest."""
+    """_jsonify passes JSON natives through, flattens tuples and handles DPT objects."""
 
     class _Mode(Enum):
         AUTO = "auto"
@@ -92,16 +92,23 @@ async def test_describe_dpt_semantics() -> None:
     """Enum, complex and string DPTs expose their extra semantics."""
     switch = await describe_dpt("1.001")  # enum
     assert switch.dpt is not None
-    assert switch.dpt.options == ["off", "on"]
-    assert switch.dpt.schema is None
+    assert switch.dpt.payload_type == "binary"
+    assert switch.dpt.payload_length == 1
+    assert switch.options == ["off", "on"]
+    assert switch.fields is None
 
     controlled = await describe_dpt("2.001")  # complex
     assert controlled.dpt is not None
-    assert controlled.dpt.schema is not None
-    assert {f["name"] for f in controlled.dpt.schema} == {"control", "value"}
+    assert controlled.dpt.payload_type == "binary"
+    assert controlled.dpt.payload_length == 2
+    assert controlled.fields is not None
+    assert {f["name"] for f in controlled.fields} == {"control", "value"}
 
-    string = await describe_dpt("16.000")  # string: payload_length is the max length
+    string = await describe_dpt(
+        "16.000"
+    )  # string: payload_length is max length in bytes
     assert string.dpt is not None
+    assert string.dpt.payload_type == "array"
     assert string.dpt.payload_length == 14
 
 
