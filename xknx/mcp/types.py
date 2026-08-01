@@ -43,9 +43,12 @@ class DptSummary:
     value_min: float | None
     value_max: float | None
     resolution: float | None
-    payload_length: int | None  # DPTArray byte / DPTBinary bit length; e.g. string max length
-    options: list[str] | None  # enum DPTs: lower-cased value names, as in a complex DPT's enum-field schema
-    schema: list[dict[str, Any]] | None  # for complex DPTs: the field schema of the dict form
+    # DPTArray byte / DPTBinary bit length; e.g. string max length
+    payload_length: int | None
+    # enum DPTs: lower-cased value names, as in a complex DPT's enum-field schema
+    options: list[str] | None
+    # for complex DPTs: the field schema of the dict form
+    schema: list[dict[str, Any]] | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +58,8 @@ class DptListResult:
     dpts: list[DptSummary]
     total_count: int
     offset: int
-    next_offset: int | None  # pass as ``offset`` for the next page; ``None`` when exhausted
+    # pass as ``offset`` for the next page; ``None`` when exhausted
+    next_offset: int | None
     limit_reached: bool
 
 
@@ -173,4 +177,3 @@ class DecodeDptPayloadResult:
 
     value: GroupValue
     value_type: str
-

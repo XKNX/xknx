@@ -62,7 +62,9 @@ def _paginate(items: list[_T], limit: int, offset: int) -> tuple[list[_T], bool]
     return window, limit_reached
 
 
-def _numeric_bounds(dpt: type[DPTBase]) -> tuple[float | None, float | None, float | None]:
+def _numeric_bounds(
+    dpt: type[DPTBase],
+) -> tuple[float | None, float | None, float | None]:
     """Return ``(value_min, value_max, resolution)`` for numeric DPTs, else ``None``s."""
     if issubclass(dpt, DPTNumeric):
         return (float(dpt.value_min), float(dpt.value_max), float(dpt.resolution))
@@ -194,7 +196,9 @@ async def send_group_value_read(xknx: XKNX, request: GroupAddressInput) -> SendR
     return SendResult(group_address=request.group_address, apci="GroupValueRead")
 
 
-async def send_group_value_write(xknx: XKNX, request: GroupValueWriteInput) -> SendResult:
+async def send_group_value_write(
+    xknx: XKNX, request: GroupValueWriteInput
+) -> SendResult:
     """
     Queue a GroupValueWrite telegram encoding ``value`` with the given DPT.
 
@@ -230,7 +234,9 @@ async def decode_dpt_payload(request: DecodeDptPayloadInput) -> DecodeDptPayload
     :exc:`~xknx.exceptions.ConversionError` if the payload is invalid for it.
     """
     transcoder = DPTBase.get_dpt(request.value_type)
-    values = [request.payload] if isinstance(request.payload, int) else list(request.payload)
+    values = (
+        [request.payload] if isinstance(request.payload, int) else list(request.payload)
+    )
     raw: DPTArray | DPTBinary
     if transcoder.payload_type is DPTBinary:
         if not values:
@@ -239,5 +245,6 @@ async def decode_dpt_payload(request: DecodeDptPayloadInput) -> DecodeDptPayload
     else:
         raw = DPTArray(values)
     decoded = transcoder.from_knx(raw)
-    return DecodeDptPayloadResult(value=_jsonify(decoded), value_type=request.value_type)
-
+    return DecodeDptPayloadResult(
+        value=_jsonify(decoded), value_type=request.value_type
+    )

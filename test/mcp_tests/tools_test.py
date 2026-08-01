@@ -137,7 +137,8 @@ async def test_send_group_value_write_encodes_and_queues() -> None:
     """A GroupValueWrite encodes the value with the given DPT and is queued."""
     xknx = XKNX()
     result = await send_group_value_write(
-        xknx, GroupValueWriteInput(group_address="1/2/3", value=50, value_type="percent")
+        xknx,
+        GroupValueWriteInput(group_address="1/2/3", value=50, value_type="percent"),
     )
     assert result.apci == "GroupValueWrite"
     assert xknx.telegrams.qsize() == 1
@@ -179,9 +180,7 @@ async def test_read_group_value_no_response(read_mock: MagicMock) -> None:
     """When no device answers, the result is flagged as not responded."""
     xknx = XKNX()
     read_mock.return_value = None
-    result = await read_group_value(
-        xknx, GroupValueReadInput(group_address="1/2/3")
-    )
+    result = await read_group_value(xknx, GroupValueReadInput(group_address="1/2/3"))
     assert not result.responded
     assert result.value is None
 
@@ -204,12 +203,16 @@ async def test_read_group_value_raw_binary() -> None:
 async def test_encode_dpt_payload() -> None:
     """encode_dpt_payload encodes a python value into raw bytes list using DPT."""
     # Test DPT 9.001 (temperature, DPTArray)
-    temp_result = await encode_dpt_payload(EncodeDptPayloadInput(value=21.0, value_type="9.001"))
+    temp_result = await encode_dpt_payload(
+        EncodeDptPayloadInput(value=21.0, value_type="9.001")
+    )
     assert temp_result.payload == [0x0C, 0x1A]
     assert temp_result.value_type == "9.001"
 
     # Test DPT 1.001 (switch, DPTBinary)
-    switch_result = await encode_dpt_payload(EncodeDptPayloadInput(value=True, value_type="1.001"))
+    switch_result = await encode_dpt_payload(
+        EncodeDptPayloadInput(value=True, value_type="1.001")
+    )
     assert switch_result.payload == [1]
     assert switch_result.value_type == "1.001"
 
@@ -217,25 +220,31 @@ async def test_encode_dpt_payload() -> None:
 async def test_decode_dpt_payload() -> None:
     """decode_dpt_payload decodes raw payload bytes list or int into python value using DPT."""
     # Test DPT 9.001 (DPTArray)
-    temp_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[0x0C, 0x1A], value_type="9.001"))
+    temp_result = await decode_dpt_payload(
+        DecodeDptPayloadInput(payload=[0x0C, 0x1A], value_type="9.001")
+    )
     assert temp_result.value == 21.0
     assert temp_result.value_type == "9.001"
 
     # Test DPT 1.001 (DPTBinary)
-    switch_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[1], value_type="1.001"))
+    switch_result = await decode_dpt_payload(
+        DecodeDptPayloadInput(payload=[1], value_type="1.001")
+    )
     assert switch_result.value == "on"
     assert switch_result.value_type == "1.001"
 
     # Test DPT 1.001 with integer payload directly
-    switch_int_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=1, value_type="1.001"))
+    switch_int_result = await decode_dpt_payload(
+        DecodeDptPayloadInput(payload=1, value_type="1.001")
+    )
     assert switch_int_result.value == "on"
 
     # A complex DPT decodes to its JSON-native as_dict() form.
-    complex_result = await decode_dpt_payload(DecodeDptPayloadInput(payload=[3], value_type="2.001"))
+    complex_result = await decode_dpt_payload(
+        DecodeDptPayloadInput(payload=[3], value_type="2.001")
+    )
     assert complex_result.value == {"control": True, "value": "on"}
 
     # An empty payload for a 6-bit (DPTBinary) DPT is rejected.
     with pytest.raises(ValueError, match="Empty payload"):
         await decode_dpt_payload(DecodeDptPayloadInput(payload=[], value_type="1.001"))
-
-
