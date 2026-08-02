@@ -45,7 +45,12 @@ class DptSummary:
     resolution: float | None
     # "array" for DPTArray (payload_length in bytes) or "binary" for DPTBinary (payload_length in bits)
     payload_type: str
-    payload_length: int
+    # DPTArray byte / DPTBinary bit length; e.g. string max length
+    payload_length: int | None
+    # enum DPTs: lower-cased value names, as in a complex DPT's enum-field schema
+    options: list[str] | None
+    # for complex DPTs: the field schema of the dict form
+    schema: list[dict[str, Any]] | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,15 +71,11 @@ class DptDetail:
     Result of :func:`~xknx.mcp.tools.describe_dpt`.
 
     ``found`` is ``False`` when the identifier resolves to no transcoder, in
-    which case all other fields are ``None``.
+    which case ``dpt`` is ``None``.
     """
 
     found: bool
     dpt: DptSummary | None
-    # enum DPTs: lower-cased value names
-    options: list[str] | None = None
-    # for complex DPTs: the field list of the dict form
-    fields: list[dict[str, Any]] | None = None
 
 
 @dataclass(frozen=True, slots=True)
