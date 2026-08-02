@@ -82,6 +82,16 @@ def _summarize_dpt(dpt: type[DPTBase]) -> DptSummary:
         resolution=resolution,
         payload_type="binary" if dpt.payload_type is DPTBinary else "array",
         payload_length=dpt.payload_length,
+        options=(
+            [member.name.lower() for member in dpt.get_valid_values()]
+            if issubclass(dpt, DPTEnum)
+            else None
+        ),
+        schema=(
+            [dict(field) for field in dpt.get_dict_schema()]
+            if issubclass(dpt, DPTComplex)
+            else None
+        ),
     )
 
 
@@ -103,7 +113,7 @@ async def list_dpts(filters: DptFilter | None = None) -> DptListResult:
         if (filters.main is None or dpt.dpt_main_number == filters.main)
         and (needle is None or needle in _dpt_haystack(dpt))
     ]
-    matches.sort(key=lambda dpt: (dpt.dpt_main_number, dpt.dpt_sub_number or -1))
+    matches.sort(key=lambda dpt: (dpt.dpt_main_number or 0, dpt.dpt_sub_number or -1))
 
     window, limit_reached = _paginate(matches, filters.limit, filters.offset)
     return DptListResult(
@@ -121,22 +131,7 @@ async def describe_dpt(dpt: str) -> DptDetail:
         transcoder = DPTBase.get_dpt(dpt)
     except ValueError:
         return DptDetail(found=False, dpt=None)
-    options = (
-        [member.name.lower() for member in transcoder.get_valid_values()]
-        if issubclass(transcoder, DPTEnum)
-        else None
-    )
-    fields = (
-        [dict(field) for field in transcoder.get_dict_schema()]
-        if issubclass(transcoder, DPTComplex)
-        else None
-    )
-    return DptDetail(
-        found=True,
-        dpt=_summarize_dpt(transcoder),
-        options=options,
-        fields=fields,
-    )
+    return DptDetail(found=True, dpt=_summarize_dpt(transcoder))
 
 
 async def get_connection_status(xknx: XKNX) -> ConnectionStatusResult:
