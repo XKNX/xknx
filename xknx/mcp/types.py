@@ -154,7 +154,7 @@ class EncodeDptPayloadInput:
 class EncodeDptPayloadResult:
     """Result of :func:`~xknx.mcp.tools.encode_dpt_payload`."""
 
-    payload: list[int]
+    payload: list[int] | int
     value_type: str
 
 

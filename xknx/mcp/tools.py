@@ -229,7 +229,7 @@ async def encode_dpt_payload(request: EncodeDptPayloadInput) -> EncodeDptPayload
     transcoder = DPTBase.get_dpt(request.value_type)
     encoded = transcoder.to_knx(request.value)
     payload = (
-        list(encoded.value) if isinstance(encoded, DPTArray) else [int(encoded.value)]
+        list(encoded.value) if isinstance(encoded, DPTArray) else int(encoded.value)
     )
     return EncodeDptPayloadResult(payload=payload, value_type=request.value_type)
 
