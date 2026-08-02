@@ -221,7 +221,7 @@ async def test_encode_dpt_payload() -> None:
     switch_result = await encode_dpt_payload(
         EncodeDptPayloadInput(value=True, value_type="1.001")
     )
-    assert switch_result.payload == [1]
+    assert switch_result.payload == 1
     assert switch_result.value_type == "1.001"
 
 
