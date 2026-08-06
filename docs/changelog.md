@@ -8,13 +8,15 @@ nav_order: 2
 
 # Unreleased changes
 
+# 3.18.0 Protocol Droid 2026-08-02
+
 ### Bugfixes
 
 - Send frames with an APDU longer than 15 octets as L_Data_Extended frames. The Frame Type flag of Ctrl1 is now derived from the NPDU length when serializing a `CEMILData` instead of always being set to standard frame. This fixes sending telegrams over KNX Data Secure with a payload of 2 octets or more (eg. DPT 9.x or DPT 232.600) - Data Secure adds 12 octets to the plain APDU, which no longer fits in a standard frame. Sending an APDU longer than 254 octets now raises `ConversionError` instead of `OverflowError`.
 
 ### Features
 
-- Add `xknx.mcp`, a host-agnostic subpackage of async MCP tool functions for the KNX bus and data point types (`list_dpts`, `describe_dpt`, `encode_dpt_payload`, `decode_dpt_payload`, `get_connection_status`, `read_group_value`, `send_group_value_read`, `send_group_value_write`). Frozen, JSON-native dataclass I/O with per-field descriptions in `Annotated` metadata; carries no MCP SDK, Home Assistant or web-framework dependency, so a consumer wraps the functions into its own MCP transport.
+- **Experimental.** Add `xknx.mcp`, a host-agnostic subpackage of async MCP tool functions for the KNX bus and data point types (`list_dpts`, `describe_dpt`, `encode_dpt_payload`, `decode_dpt_payload`, `get_connection_status`, `read_group_value`, `send_group_value_read`, `send_group_value_write`). Frozen, JSON-native dataclass I/O with per-field descriptions in `dataclasses.field` metadata; carries no MCP SDK, Home Assistant or web-framework dependency, so a consumer wraps the functions into its own MCP transport. This subpackage is experimental and its API may change in a future release.
 
 ### Protocol
 
