@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Annotated, Any
 
 # JSON-native value carried on the bus (decoded via a DPT transcoder, or raw).
-GroupValue = bool | int | float | str | list[Any] | dict[str, Any] | None
+GroupValue = int | float | bool | str | list[Any] | dict[str, Any] | None
 
 
 @dataclass(frozen=True, slots=True)
