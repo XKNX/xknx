@@ -8,6 +8,7 @@ from xknx.io.transport import UDPTransport
 from xknx.knxip import (
     DeviceConfigurationAck,
     DeviceConfigurationRequest,
+    DisconnectRequest,
     KNXIPFrame,
     KNXIPServiceType,
 )
@@ -160,6 +161,22 @@ class TestDeviceManagement:
         assert mock_transport_send.call_args_list == [
             call(test_ack, addr=("192.168.1.2", 56789))
         ]
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    def test_unsupported_frame(self, mock_transport_send: Mock) -> None:
+        """Test that a frame that is not a DeviceConfigurationRequest is ignored."""
+        with patch("logging.Logger.warning") as mock_warning:
+            self.device_management._request_received(
+                KNXIPFrame.init_from_body(
+                    DisconnectRequest(communication_channel_id=1)
+                ),
+                None,
+                None,
+            )
+            mock_warning.assert_called_once()
+
+        mock_transport_send.assert_not_called()
+        self.cemi_received_mock.assert_not_called()
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     def test_without_cemi_callback(self, mock_transport_send: Mock) -> None:

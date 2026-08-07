@@ -725,6 +725,211 @@ class TestUDPDeviceManagementConnection:
         await time_travel(0)
         await task
 
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_request_answer_timeout(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that a request that is acknowledged but never answered raises."""
+        await self._connect(send_mock, time_travel)
+
+        task = asyncio.create_task(
+            self.connection.read_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+            )
+        )
+        await time_travel(0)
+        self._ack_last_request()
+        await time_travel(DEVICE_CONFIGURATION_REQUEST_TIMEOUT)
+
+        with pytest.raises(CommunicationError):
+            await task
+        # only an unacknowledged request closes the connection
+        assert self.connection.communication_channel == CHANNEL
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_request_cancelled(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that cancelling a request from the outside propagates."""
+        await self._connect(send_mock, time_travel)
+
+        # cancelled while awaiting the acknowledgement
+        task = asyncio.create_task(
+            self.connection.read_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+            )
+        )
+        await time_travel(0)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        # cancelled while awaiting the answer
+        task = asyncio.create_task(
+            self.connection.read_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+            )
+        )
+        await time_travel(0)
+        self._ack_last_request()
+        await time_travel(0)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        assert self.connection.communication_channel == CHANNEL
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_heartbeat_recovery(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that an answered heartbeat repetition keeps the connection open."""
+        await self._connect(send_mock, time_travel)
+
+        await time_travel(HEARTBEAT_RATE)
+        # not answered - a repetition is sent and answered
+        await time_travel(CONNECTIONSTATE_REQUEST_TIMEOUT)
+        self._answer_heartbeat()
+        await time_travel(0)
+
+        state_requests = [
+            call.args[0].body
+            for call in send_mock.call_args_list
+            if isinstance(call.args[0].body, ConnectionStateRequest)
+        ]
+        assert len(state_requests) == 2
+        assert self.connection.communication_channel == CHANNEL
+        # the next regular heartbeat is sent again
+        send_mock.reset_mock()
+        await time_travel(HEARTBEAT_RATE)
+        assert isinstance(send_mock.call_args[0][0].body, ConnectionStateRequest)
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_heartbeat_ends_without_connection(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that the heartbeat ends when the connection is gone."""
+        await self._connect(send_mock, time_travel)
+        heartbeat_task = self.connection._heartbeat_task
+        assert heartbeat_task is not None
+
+        self.connection.communication_channel = None
+        await time_travel(HEARTBEAT_RATE)
+
+        send_mock.assert_not_called()
+        assert heartbeat_task.done()
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_route_back(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test connecting with route back - the control endpoint is unspecified."""
+        connection = UDPDeviceManagementConnection(
+            gateway_ip=REMOTE_ADDR[0],
+            gateway_port=REMOTE_ADDR[1],
+            local_ip=LOCAL_ADDR[0],
+            route_back=True,
+        )
+        with patch("xknx.io.transport.udp_transport.UDPTransport.connect"):
+            task = asyncio.create_task(connection.connect())
+            await time_travel(0)
+            sent = send_mock.call_args[0][0]
+            assert isinstance(sent.body, ConnectRequest)
+            assert sent.body.control_endpoint == HPAI()
+            connection.transport.handle_knxipframe(
+                KNXIPFrame.init_from_body(
+                    ConnectResponse(communication_channel=CHANNEL)
+                ),
+                HPAI(*REMOTE_ADDR),
+            )
+            await task
+
+        assert connection.local_hpai == HPAI()
+        connection._stop()
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_send_request_without_connection(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that sending without an open channel raises."""
+        cemi = CEMIFrame.from_knx(bytes((0xFC, 0x00, 0x0B, 0x01, 0x45, 0x10, 0x01)))
+
+        with pytest.raises(CommunicationError):
+            await self.connection._send_request(cemi)
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_unexpected_frame_body_ignored(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that a frame that is not a DisconnectRequest is ignored."""
+        await self._connect(send_mock, time_travel)
+
+        self.connection._disconnect_request_received(
+            KNXIPFrame.init_from_body(
+                DisconnectResponse(communication_channel_id=CHANNEL)
+            ),
+            HPAI(*REMOTE_ADDR),
+            None,
+        )
+
+        send_mock.assert_not_called()
+        assert self.connection.communication_channel == CHANNEL
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_unexpected_parsing_error(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that an unforeseen parsing bug does not escape the callback."""
+        await self._connect(send_mock, time_travel)
+
+        with (
+            patch("xknx.cemi.CEMIFrame.from_knx", side_effect=RuntimeError("boom")),
+            patch("logging.Logger.exception") as mock_log,
+        ):
+            self._server_sends(prop_read_con(b"\x01"))
+            mock_log.assert_called_once()
+
+        # the frame was acknowledged and the connection is unaffected
+        assert isinstance(send_mock.call_args[0][0].body, DeviceConfigurationAck)
+        assert self.connection.communication_channel == CHANNEL
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_write_property_error(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that a property write reporting an error raises."""
+        await self._connect(send_mock, time_travel)
+
+        task = asyncio.create_task(
+            self.connection.write_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+                data=b"\x00",
+            )
+        )
+        await time_travel(0)
+        self._ack_last_request()
+        self._server_sends(
+            CEMIFrame(
+                code=CEMIMessageCode.M_PROP_WRITE_CON,
+                data=CEMIMPropWriteResponse(
+                    property_info=CEMIMPropInfo(
+                        object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                        property_id=DEVICE_STATE,
+                        number_of_elements=0,
+                    ),
+                    error_code=CEMIErrorCode.CEMI_ERROR_VOID_DP,
+                ),
+            ).to_knx()
+        )
+        await time_travel(0)
+
+        with pytest.raises(CommunicationError):
+            await task
+
 
 class TestTCPDeviceManagementConnection:
     """Test class for KNX/IP device management connections over TCP."""
@@ -907,6 +1112,46 @@ class TestTCPDeviceManagementConnection:
             await task
         assert not self.connection.transport.callbacks
         assert self.connection.communication_channel is None
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_unexpected_frames_ignored(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that unrelated incoming frames are ignored."""
+        await self._connect(send_mock, time_travel)
+
+        # a request for another communication channel
+        self.connection.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                DeviceConfigurationRequest(
+                    communication_channel_id=CHANNEL + 1,
+                    sequence_counter=0,
+                    raw_cemi=prop_read_con(b"\x01"),
+                )
+            ),
+            HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+        )
+        # a frame that is not a DeviceConfigurationRequest
+        self.connection._request_received(
+            KNXIPFrame.init_from_body(
+                DeviceConfigurationAck(communication_channel_id=CHANNEL)
+            ),
+            HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+            None,
+        )
+
+        send_mock.assert_not_called()
+        assert self.connection.communication_channel == CHANNEL
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_send_request_without_connection(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that sending without an open channel raises."""
+        cemi = CEMIFrame.from_knx(bytes((0xFC, 0x00, 0x0B, 0x01, 0x45, 0x10, 0x01)))
+
+        with pytest.raises(CommunicationError):
+            await self.connection._send_request(cemi)
 
 
 class TestSecureDeviceManagementConnection:

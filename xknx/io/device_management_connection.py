@@ -210,11 +210,15 @@ class _DeviceManagementConnection(ABC):
     async def disconnect(self) -> None:
         """Close the device management connection."""
         self._stop()
+        # Cleared before the Disconnect exchange, so a request failed by
+        # `_stop()` already sees the connection closed when it wakes up.
+        channel = self.communication_channel
+        self.communication_channel = None
         try:
-            if self.communication_channel is not None:
+            if channel is not None:
                 disconnect = Disconnect(
                     transport=self.transport,
-                    communication_channel_id=self.communication_channel,
+                    communication_channel_id=channel,
                     local_hpai=self.local_hpai,
                 )
                 await disconnect.start()
@@ -226,7 +230,6 @@ class _DeviceManagementConnection(ABC):
                         else disconnect.response_status_code,
                     )
         finally:
-            self.communication_channel = None
             self.transport.stop()
 
     def _stop(self) -> None:
@@ -364,8 +367,10 @@ class _DeviceManagementConnection(ABC):
                     f"{DEVICE_CONFIGURATION_REQUEST_TIMEOUT} seconds."
                 ) from None
             except asyncio.CancelledError:
-                if pending.cancelled():
-                    # disconnect() failed the request
+                # A cancelled task cancels the future it awaits as well, so
+                # only a closed connection tells that `_stop()` was the one
+                # failing the request; everything else is task cancellation.
+                if pending.cancelled() and self.communication_channel is None:
                     raise CommunicationError(
                         "Device management connection was closed."
                     ) from None
@@ -437,8 +442,8 @@ class _DeviceManagementConnection(ABC):
                 and _same_property(frame.data.property_info, property_info)
             ),
         )
-        if not isinstance(answer.data, CEMIMPropReadResponse):
-            raise CommunicationError(f"Unexpected answer to a property read: {answer}")
+        # `matches` only accepts a CEMIMPropReadResponse for this property
+        assert isinstance(answer.data, CEMIMPropReadResponse)
         try:
             error_code = answer.data.error_code
         except ValueError:
@@ -483,8 +488,8 @@ class _DeviceManagementConnection(ABC):
                 and _same_property(frame.data.property_info, property_info)
             ),
         )
-        if not isinstance(answer.data, CEMIMPropWriteResponse):
-            raise CommunicationError(f"Unexpected answer to a property write: {answer}")
+        # `matches` only accepts a CEMIMPropWriteResponse for this property
+        assert isinstance(answer.data, CEMIMPropWriteResponse)
         if (error_code := answer.data.error_code) is not None:
             raise CommunicationError(f"Writing the property failed: {error_code}")
 
