@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Features
+
+- Add `DeviceManagement` to acknowledge `DeviceConfigurationRequest` frames received over a device management connection. A KNXnet/IP server sends requests of its own over such a connection - a `M_PropRead.con` answering a read, or a `M_PropInfo.ind` announcing a property it changed by itself - and repeats each of them until it is acknowledged, then closes the connection. Sending those acknowledgements had no counterpart to `DeviceConfiguration`, which covers the other direction. Sequence counters are handled as they are for tunnelling; the connection itself stays with the caller.
+
 # 3.18.0 Protocol Droid 2026-08-02
 
 ### Bugfixes
