@@ -33,6 +33,7 @@ from xknx.knxip import (
 )
 from xknx.knxip.knxip_enum import ConnectRequestType
 from xknx.profile.const import ResourceObjectType, ResourcePropertyId
+from xknx.typing import Self
 from xknx.util import asyncio_timeout
 
 from .const import (
@@ -141,7 +142,7 @@ class _DeviceManagementConnection(ABC):
     async def _send_request(self, cemi: CEMIFrame) -> None:
         """Send a request. Raise CommunicationError when that fails."""
 
-    async def __aenter__(self) -> _DeviceManagementConnection:
+    async def __aenter__(self) -> Self:
         """Connect on entering a context."""
         await self.connect()
         return self
