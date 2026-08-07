@@ -41,6 +41,7 @@ from .const import (
     HEARTBEAT_RATE,
 )
 from .device_management import DeviceManagement
+from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, DeviceConfiguration, Disconnect
 from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
@@ -698,3 +699,40 @@ class TCPDeviceManagementConnection(_DeviceManagementConnection):
             )
         )
         self.sequence_number = self.sequence_number + 1 & 0xFF
+
+
+class SecureDeviceManagementConnection(TCPDeviceManagementConnection):
+    """A KNXnet/IP device management connection over an IP Secure session."""
+
+    __slots__ = ("_device_authentication_password", "_user_id", "_user_password")
+
+    transport: SecureSession
+
+    def __init__(
+        self,
+        gateway_ip: str,
+        gateway_port: int,
+        user_id: int,
+        user_password: str,
+        device_authentication_password: str | None = None,
+        indication_callback: Callable[[CEMIFrame], None] | None = None,
+    ) -> None:
+        """Initialize SecureDeviceManagementConnection class."""
+        self._device_authentication_password = device_authentication_password
+        self._user_id = user_id
+        self._user_password = user_password
+        super().__init__(
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            indication_callback=indication_callback,
+        )
+
+    def _init_transport(self) -> None:
+        """Initialize transport."""
+        self.transport = SecureSession(
+            remote_addr=(self.gateway_ip, self.gateway_port),
+            user_id=self._user_id,
+            user_password=self._user_password,
+            device_authentication_password=self._device_authentication_password,
+            connection_lost_cb=self._transport_connection_lost,
+        )

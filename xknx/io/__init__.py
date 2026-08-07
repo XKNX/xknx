@@ -11,6 +11,7 @@ from .connection import ConnectionConfig, ConnectionType, SecureConfig
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .device_management import DeviceManagement
 from .device_management_connection import (
+    SecureDeviceManagementConnection,
     TCPDeviceManagementConnection,
     UDPDeviceManagementConnection,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "KNXIPInterface",
     "Routing",
     "SecureConfig",
+    "SecureDeviceManagementConnection",
     "TCPDeviceManagementConnection",
     "TCPTunnel",
     "UDPDeviceManagementConnection",

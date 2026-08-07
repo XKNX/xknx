@@ -14,13 +14,18 @@ from xknx.cemi import (
     CEMIMPropWriteResponse,
 )
 from xknx.exceptions import CommunicationError
-from xknx.io import TCPDeviceManagementConnection, UDPDeviceManagementConnection
+from xknx.io import (
+    SecureDeviceManagementConnection,
+    TCPDeviceManagementConnection,
+    UDPDeviceManagementConnection,
+)
 from xknx.io.const import (
     CONNECTIONSTATE_REQUEST_TIMEOUT,
     DEVICE_CONFIGURATION_REQUEST_REPETITIONS,
     DEVICE_CONFIGURATION_REQUEST_TIMEOUT,
     HEARTBEAT_RATE,
 )
+from xknx.io.ip_secure import SecureSession
 from xknx.knxip import (
     HPAI,
     ConnectionStateRequest,
@@ -902,3 +907,25 @@ class TestTCPDeviceManagementConnection:
             await task
         assert not self.connection.transport.callbacks
         assert self.connection.communication_channel is None
+
+
+class TestSecureDeviceManagementConnection:
+    """Test class for KNX/IP device management connections over IP Secure."""
+
+    def test_transport(self) -> None:
+        """Test that the transport is a secure session with the given credentials."""
+        connection = SecureDeviceManagementConnection(
+            gateway_ip=REMOTE_ADDR[0],
+            gateway_port=REMOTE_ADDR[1],
+            user_id=2,
+            user_password="password",
+            device_authentication_password="authenticate",
+        )
+        assert isinstance(connection.transport, SecureSession)
+        assert connection.transport.remote_addr == REMOTE_ADDR
+        assert connection.transport.user_id == 2
+        # a lost session ends the device management connection
+        assert (  # pylint: disable=comparison-with-callable
+            connection.transport._connection_lost_cb
+            == connection._transport_connection_lost
+        )
