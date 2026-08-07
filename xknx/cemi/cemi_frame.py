@@ -684,6 +684,11 @@ class CEMIFrame:
             return CEMIFrame(code=code, data=CEMIMPropWriteRequest.from_knx(raw[1:]))
         if code == CEMIMessageCode.M_PROP_WRITE_CON:
             return CEMIFrame(code=code, data=CEMIMPropWriteResponse.from_knx(raw[1:]))
+        if code == CEMIMessageCode.M_PROP_INFO_IND:
+            # Same payload as M_PropRead.con. The spec defines only the positive
+            # form (number of elements > 0, see 3/6/3 EMI_IMI §4.1.7.3.6); a
+            # number of elements == 0 error payload is parsed leniently as well.
+            return CEMIFrame(code=code, data=CEMIMPropReadResponse.from_knx(raw[1:]))
 
         raise UnsupportedCEMIMessage(
             f"Could not handle CEMIMessageCode: {code} / {raw[0]} in CEMI: {raw.hex()}"

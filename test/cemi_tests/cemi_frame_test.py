@@ -481,6 +481,40 @@ def test_valid_error_read_con() -> None:
     assert frame.to_knx() == raw
 
 
+def test_valid_prop_info_ind() -> None:
+    """Test for valid frame parsing."""
+    raw = get_prop(0xF7, 0x000B, 1, 69, 1, 1, [0x01])
+    frame = CEMIFrame.from_knx(raw)
+    assert frame.code == CEMIMessageCode.M_PROP_INFO_IND
+    assert isinstance(frame.data, CEMIMPropReadResponse)
+    assert (
+        frame.data.property_info.object_type
+        == ResourceObjectType.OBJECT_KNXNETIP_PARAMETER
+    )
+    assert frame.data.property_info.object_instance == 1
+    assert (
+        frame.data.property_info.property_id
+        == ResourceKNXNETIPPropertyId.PID_KNXNETIP_DEVICE_STATE
+    )
+    assert frame.data.property_info.number_of_elements == 1
+    assert frame.data.property_info.start_index == 1
+    assert frame.data.error_code is None
+    assert frame.data.data == bytes([0x01])
+    assert frame.calculated_length() == 8
+    assert frame.to_knx() == raw
+
+
+def test_prop_info_ind_with_error_code() -> None:
+    """Test lenient parsing of an off-spec error payload in M_PropInfo.ind."""
+    raw = get_prop(0xF7, 0x000B, 1, 69, 0, 1, [0x07])
+    frame = CEMIFrame.from_knx(raw)
+    assert frame.code == CEMIMessageCode.M_PROP_INFO_IND
+    assert isinstance(frame.data, CEMIMPropReadResponse)
+    assert frame.data.property_info.number_of_elements == 0
+    assert frame.data.error_code == CEMIErrorCode.CEMI_ERROR_VOID_DP
+    assert frame.to_knx() == raw
+
+
 def test_valid_write_req() -> None:
     """Test for valid frame parsing."""
     raw = get_prop(0xF6, 0x000B, 1, 52, 1, 1, [0x12, 0x03])
