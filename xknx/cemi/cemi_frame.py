@@ -682,6 +682,10 @@ class CEMIFrame:
             return CEMIFrame(code=code, data=CEMIMPropWriteRequest.from_knx(raw[1:]))
         if code == CEMIMessageCode.M_PROP_WRITE_CON:
             return CEMIFrame(code=code, data=CEMIMPropWriteResponse.from_knx(raw[1:]))
+        if code == CEMIMessageCode.M_PROP_INFO_IND:
+            # Same payload as M_PropRead.con: the property, then either its
+            # value or, with number of elements zero, an error code.
+            return CEMIFrame(code=code, data=CEMIMPropReadResponse.from_knx(raw[1:]))
 
         raise UnsupportedCEMIMessage(
             f"Could not handle CEMIMessageCode: {code} / {raw[0]} in CEMI: {raw.hex()}"
