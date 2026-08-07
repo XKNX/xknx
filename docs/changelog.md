@@ -8,9 +8,9 @@ nav_order: 2
 
 # Unreleased changes
 
-### Features
+### Protocol
 
-- Parse `M_PropInfo.ind` cEMI frames. A KNXnet/IP server uses them to announce a property changing on its own, for example the KNXnet/IP parameter object's device state when the KNX bus fails, and `CEMIFrame.from_knx()` raised `UnsupportedCEMIMessage` for them. The payload is the same as `M_PropRead.con`, so it is parsed into a `CEMIMPropReadResponse`. Serializing already worked.
+- Parse `M_PropInfo.ind` cEMI frames into a `CEMIMPropReadResponse` - its payload has the same layout as `M_PropRead.con`. A KNXnet/IP server sends these to announce a property changing on its own, e.g. the KNXnet/IP parameter object's device state when the KNX bus fails; they previously raised `UnsupportedCEMIMessage` and were counted as incoming errors. Serializing already worked.
 
 # 3.18.0 Protocol Droid 2026-08-02
 

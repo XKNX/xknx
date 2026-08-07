@@ -482,8 +482,8 @@ def test_valid_prop_info_ind() -> None:
     assert frame.to_knx() == raw
 
 
-def test_valid_error_prop_info_ind() -> None:
-    """Test for valid frame parsing."""
+def test_prop_info_ind_with_error_code() -> None:
+    """Test lenient parsing of an off-spec error payload in M_PropInfo.ind."""
     raw = get_prop(0xF7, 0x000B, 1, 69, 0, 1, [0x07])
     frame = CEMIFrame.from_knx(raw)
     assert frame.code == CEMIMessageCode.M_PROP_INFO_IND
