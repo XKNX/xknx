@@ -62,8 +62,9 @@ class SecurityAlgorithmIdentifier(IntEnum):
 class SecurityALService(IntEnum):
     """Enum representing the used security application layer service."""
 
-    # AN158 v07 Figure 12 and Table 2; 0b001 is not a defined service.
-    # The SCF examples of Figure 15 (S-A_Sync_Req 0x9A) and Figure 16
+    # KNX v02.01.01 - Application Layer 03.03.07 - §5.1.1 Table 5; 0b001 is not
+    # a defined service. The SCF is specified in §5.2.1.2 Figure 106; its
+    # example values in §5.3.2 Figure 109 (S-A_Sync_Req 0x9A) and Figure 110
     # (S-A_Sync_Res 0x9B) confirm the encoding.
     S_A_DATA = 0b000
     S_A_SYNC_REQ = 0b010

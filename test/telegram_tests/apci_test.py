@@ -5582,7 +5582,8 @@ class TestSecureAPDU:
         """Test the from_knx method for an S-A_Sync_Req-PDU."""
         # Real frame from 1.0.252 to 0/0/0. SCF 0x92 -> tool access, CCM with
         # confidentiality, S-A_Sync_Req. Its ASDU holds the 6 octet KNX serial
-        # number and the 6 octet challenge - AN158 v07 Figure 15.
+        # number and the 6 octet challenge - KNX v02.01.01 - Application Layer
+        # 03.03.07 - §5.3.2 Figure 109.
         raw = bytes.fromhex("03f192003f1414e8e5000a46492919b3498640a7655948919e")
         payload = APCI.from_knx(raw)
 

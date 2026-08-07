@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Bugfixes
 
-- Fix the encoding of `SecurityALService.S_A_SYNC_REQ`: the S-A-Service field of the Security Control Field encodes an S-A_Sync_Req-PDU as `0b010`, not `0b001` (AN158 v07 Figure 12 and Table 2; the SCF examples of Figure 15 and 16 use `0x9A` / `0x9B`). Incoming Data Secure sync requests were rejected with `CouldNotParseCEMI` "APDU invalid" instead of being parsed and then ignored as an unsupported S-AL service.
+- Fix the encoding of `SecurityALService.S_A_SYNC_REQ`: the S-A-Service field of the Security Control Field encodes an S-A_Sync_Req-PDU as `0b010`, not `0b001` - KNX v02.01.01 - Application Layer 03.03.07 - §5.1.1 Table 5. Incoming Data Secure sync requests were rejected with `CouldNotParseCEMI` "APDU invalid" instead of being parsed and then ignored as an unsupported S-AL service.
 
 # 3.18.0 Protocol Droid 2026-08-02
 
