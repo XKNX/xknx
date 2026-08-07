@@ -62,8 +62,11 @@ class SecurityAlgorithmIdentifier(IntEnum):
 class SecurityALService(IntEnum):
     """Enum representing the used security application layer service."""
 
+    # AN158 v07 Figure 12 and Table 2; 0b001 is not a defined service.
+    # The SCF examples of Figure 15 (S-A_Sync_Req 0x9A) and Figure 16
+    # (S-A_Sync_Res 0x9B) confirm the encoding.
     S_A_DATA = 0b000
-    S_A_SYNC_REQ = 0b001
+    S_A_SYNC_REQ = 0b010
     S_A_SYNC_RES = 0b011
 
 

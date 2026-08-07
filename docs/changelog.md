@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Bugfixes
+
+- Fix the encoding of `SecurityALService.S_A_SYNC_REQ`: the S-A-Service field of the Security Control Field encodes an S-A_Sync_Req-PDU as `0b010`, not `0b001` (AN158 v07 Figure 12 and Table 2; the SCF examples of Figure 15 and 16 use `0x9A` / `0x9B`). Incoming Data Secure sync requests were rejected with `CouldNotParseCEMI` "APDU invalid" instead of being parsed and then ignored as an unsupported S-AL service.
+
 # 3.18.0 Protocol Droid 2026-08-02
 
 ### Bugfixes
