@@ -45,7 +45,7 @@ if they aren't already established elsewhere in the codebase.
 | Document number | Title | Version | Where cited |
 |---|---|---|---|
 | 03.05.02 | Management Procedures | v02.01.02 | `xknx/management/**` |
-| 03.03.07 | Application Layer | v02.01.01 | `xknx/telegram/apci.py`, `xknx/management/management.py`, `xknx/exceptions/exception.py`, `xknx/cemi/cemi_frame.py`, `test/telegram_tests/apci_test.py` |
+| 03.03.07 | Application Layer | v02.01.01 | `xknx/telegram/apci.py`, `xknx/management/management.py`, `xknx/exceptions/exception.py`, `xknx/cemi/cemi_frame.py`, `xknx/secure/data_secure_asdu.py`, `test/telegram_tests/apci_test.py` |
 | 03.03.04 | Transport Layer | v01.02.02 | `xknx/telegram/tpci.py` |
 | 03.07.02 | Datapoint Types | v02.02.01 | `docs/changelog.md` (historical entry) |
 | 10.1 | Logical Tag Extended | v01.02.02 | `xknx/telegram/apci.py` |
