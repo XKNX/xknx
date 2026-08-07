@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable
 import logging
@@ -26,6 +27,7 @@ from xknx.knxip import (
     DeviceConfigurationRequest,
     DisconnectRequest,
     DisconnectResponse,
+    HostProtocol,
     KNXIPFrame,
     KNXIPServiceType,
 )
@@ -40,7 +42,7 @@ from .const import (
 )
 from .device_management import DeviceManagement
 from .request_response import Connect, ConnectionState, DeviceConfiguration, Disconnect
-from .transport import KNXIPTransport, UDPTransport
+from .transport import KNXIPTransport, TCPTransport, UDPTransport
 
 logger = logging.getLogger("xknx.log")
 
@@ -54,7 +56,7 @@ def _same_property(one: CEMIMPropInfo, other: CEMIMPropInfo) -> bool:
     )
 
 
-class DeviceManagementConnection:
+class _DeviceManagementConnection(ABC):
     """
     A KNXnet/IP device management connection to one server.
 
@@ -75,13 +77,10 @@ class DeviceManagementConnection:
     The connection is supervised: a heartbeat keeps it alive and closes it
     when the server stops answering, and a DisconnectRequest of the server
     is answered and ends it as well.
-
-    UDP only, as device management over TCP is not acknowledged.
     """
 
     __slots__ = (
         "_data_endpoint_addr",
-        "_device_management",
         "_disconnect_callback",
         "_heartbeat_task",
         "_pending",
@@ -91,46 +90,57 @@ class DeviceManagementConnection:
         "gateway_port",
         "indication_callback",
         "local_hpai",
-        "local_ip",
-        "local_port",
-        "route_back",
         "sequence_number",
         "transport",
     )
+
+    transport: KNXIPTransport
 
     def __init__(
         self,
         gateway_ip: str,
         gateway_port: int,
-        local_ip: str,
-        local_port: int = 0,
-        route_back: bool = False,
         indication_callback: Callable[[CEMIFrame], None] | None = None,
     ) -> None:
-        """Initialize DeviceManagementConnection class."""
+        """Initialize _DeviceManagementConnection class."""
         self.gateway_ip = gateway_ip
         self.gateway_port = gateway_port
-        self.local_ip = local_ip
-        self.local_port = local_port
-        self.route_back = route_back
         self.indication_callback = indication_callback
 
-        self.transport = UDPTransport(
-            local_addr=(local_ip, local_port),
-            remote_addr=(gateway_ip, gateway_port),
-            multicast=False,
-        )
         self.local_hpai = HPAI()
         self.communication_channel: int | None = None
         self.sequence_number = 0
         self._data_endpoint_addr: tuple[str, int] | None = None
-        self._device_management: DeviceManagement | None = None
         self._disconnect_callback: KNXIPTransport.Callback | None = None
         self._pending: asyncio.Future[CEMIFrame] | None = None
         self._request_lock = asyncio.Lock()
         self._heartbeat_task: asyncio.Task[None] | None = None
 
-    async def __aenter__(self) -> DeviceManagementConnection:
+        self._init_transport()
+
+    @abstractmethod
+    def _init_transport(self) -> None:
+        """Initialize transport."""
+        # set up self.transport
+
+    @abstractmethod
+    async def _setup_connection(self) -> None:
+        """Set up the connection before sending a ConnectRequest."""
+        # eg. set the local HPAI used for the control and data endpoint
+
+    @abstractmethod
+    def _start_receiving(self) -> None:
+        """Start handling DeviceConfigurationRequests the server sends."""
+
+    @abstractmethod
+    def _stop_receiving(self) -> None:
+        """Stop handling DeviceConfigurationRequests the server sends."""
+
+    @abstractmethod
+    async def _send_request(self, cemi: CEMIFrame) -> None:
+        """Send a request. Raise CommunicationError when that fails."""
+
+    async def __aenter__(self) -> _DeviceManagementConnection:
         """Connect on entering a context."""
         await self.connect()
         return self
@@ -154,11 +164,7 @@ class DeviceManagementConnection:
             )
         try:
             await self.transport.connect()
-            if self.route_back:
-                self.local_hpai = HPAI()
-            else:
-                local_addr, local_port = self.transport.getsockname()
-                self.local_hpai = HPAI(ip_addr=local_addr, port=local_port)
+            await self._setup_connection()
             await self._connect_request()
         except (OSError, CommunicationError) as ex:
             self.transport.stop()
@@ -190,13 +196,7 @@ class DeviceManagementConnection:
             if connect.data_endpoint.route_back
             else connect.data_endpoint.addr_tuple
         )
-        self._device_management = DeviceManagement(
-            transport=self.transport,
-            communication_channel=self.communication_channel,
-            cemi_received_callback=self._cemi_received,
-            data_endpoint=self._data_endpoint_addr,
-        )
-        self._device_management.start()
+        self._start_receiving()
         self._disconnect_callback = self.transport.register_callback(
             self._disconnect_request_received,
             [KNXIPServiceType.DISCONNECT_REQUEST],
@@ -231,19 +231,23 @@ class DeviceManagementConnection:
     def _stop(self) -> None:
         """Stop answering and expecting frames of the current connection."""
         if self._heartbeat_task is not None:
-            # The heartbeat task disconnects itself after repeated failures.
+            # The heartbeat task itself disconnects after repeated failures.
             if self._heartbeat_task is not asyncio.current_task():
                 self._heartbeat_task.cancel()
             self._heartbeat_task = None
-        if self._device_management is not None:
-            self._device_management.stop()
-            self._device_management = None
+        self._stop_receiving()
         if self._disconnect_callback is not None:
             self.transport.unregister_callback(self._disconnect_callback)
             self._disconnect_callback = None
         if self._pending is not None and not self._pending.done():
             # Fail a request waiting for an answer instead of timing it out.
             self._pending.cancel()
+
+    def _connection_lost(self) -> None:
+        """Tear the connection state down without a Disconnect exchange."""
+        self.communication_channel = None
+        self._stop()
+        self.transport.stop()
 
     def _disconnect_request_received(
         self, knxipframe: KNXIPFrame, source: HPAI, _transport: KNXIPTransport
@@ -265,9 +269,7 @@ class DeviceManagementConnection:
                 DisconnectResponse(communication_channel_id=self.communication_channel)
             )
         )
-        self.communication_channel = None
-        self._stop()
-        self.transport.stop()
+        self._connection_lost()
 
     async def _heartbeat(self) -> None:
         """Keep the connection alive, as the server drops a silent one."""
@@ -336,7 +338,7 @@ class DeviceManagementConnection:
         # A device management connection carries one request at a time, and
         # the sequence counter and the pending answer are shared state.
         async with self._request_lock:
-            if self.communication_channel is None or self._device_management is None:
+            if self.communication_channel is None:
                 raise CommunicationError("No active device management connection.")
             pending: asyncio.Future[CEMIFrame] = (
                 asyncio.get_running_loop().create_future()
@@ -370,53 +372,8 @@ class DeviceManagementConnection:
             finally:
                 self._pending = None
 
-    async def _send_request(self, cemi: CEMIFrame) -> None:
-        """Send a request, repeating it while it stays unacknowledged."""
-        if (channel := self.communication_channel) is None:
-            raise CommunicationError("No active device management connection.")
-
-        raw_cemi = cemi.to_knx()
-        # A repetition keeps the sequence counter of the frame it repeats.
-        for attempt in range(DEVICE_CONFIGURATION_REQUEST_REPETITIONS + 1):
-            device_configuration = DeviceConfiguration(
-                transport=self.transport,
-                data_endpoint=self._data_endpoint_addr,
-                device_configuration_request=DeviceConfigurationRequest(
-                    communication_channel_id=channel,
-                    sequence_counter=self.sequence_number,
-                    raw_cemi=raw_cemi,
-                ),
-                timeout_in_seconds=DEVICE_CONFIGURATION_REQUEST_TIMEOUT,
-            )
-            await device_configuration.start()
-            answered = (
-                # The acknowledgement went missing, but the answer arrived -
-                # so the server did accept the request.
-                self._pending is not None
-                and self._pending.done()
-                and not self._pending.cancelled()
-            )
-            if device_configuration.success or answered:
-                self.sequence_number = self.sequence_number + 1 & 0xFF
-                return
-            logger.debug(
-                "DeviceConfigurationRequest was not acknowledged (attempt %s of %s%s).",
-                attempt + 1,
-                DEVICE_CONFIGURATION_REQUEST_REPETITIONS + 1,
-                ""
-                if device_configuration.response_status_code is None
-                else f"; error status {device_configuration.response_status_code.name}",
-            )
-
-        # Repeated to no avail, so the connection is terminated as required.
-        await self.disconnect()
-        raise CommunicationError(
-            "DeviceConfigurationRequest was not acknowledged after "
-            f"{DEVICE_CONFIGURATION_REQUEST_REPETITIONS} repetitions. Disconnected."
-        )
-
     def _cemi_received(self, raw_cemi: bytes) -> None:
-        """Handle a cEMI frame the server sent. Callback of DeviceManagement."""
+        """Handle a cEMI frame the server sent."""
         try:
             cemi = CEMIFrame.from_knx(raw_cemi)
         except (CouldNotParseCEMI, UnsupportedCEMIMessage, ValueError) as err:
@@ -529,3 +486,215 @@ class DeviceManagementConnection:
             raise CommunicationError(f"Unexpected answer to a property write: {answer}")
         if (error_code := answer.data.error_code) is not None:
             raise CommunicationError(f"Writing the property failed: {error_code}")
+
+
+class UDPDeviceManagementConnection(_DeviceManagementConnection):
+    """
+    A KNXnet/IP device management connection over UDP.
+
+    UDP frames are acknowledged: every received DeviceConfigurationRequest
+    is answered with a DeviceConfigurationAck and its sequence counter is
+    tracked, and a sent request that stays unacknowledged for
+    DEVICE_CONFIGURATION_REQUEST_TIMEOUT (10 seconds) is repeated
+    DEVICE_CONFIGURATION_REQUEST_REPETITIONS (3) times and then terminates
+    the connection, as KNXnet/IP Device Management 03.08.03 §2.3.2 requires.
+    """
+
+    __slots__ = (
+        "_device_management",
+        "local_ip",
+        "local_port",
+        "route_back",
+    )
+
+    transport: UDPTransport
+
+    def __init__(
+        self,
+        gateway_ip: str,
+        gateway_port: int,
+        local_ip: str,
+        local_port: int = 0,
+        route_back: bool = False,
+        indication_callback: Callable[[CEMIFrame], None] | None = None,
+    ) -> None:
+        """Initialize UDPDeviceManagementConnection class."""
+        self.local_ip = local_ip
+        self.local_port = local_port
+        self.route_back = route_back
+        self._device_management: DeviceManagement | None = None
+        super().__init__(
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            indication_callback=indication_callback,
+        )
+
+    def _init_transport(self) -> None:
+        """Initialize transport."""
+        self.transport = UDPTransport(
+            local_addr=(self.local_ip, self.local_port),
+            remote_addr=(self.gateway_ip, self.gateway_port),
+            multicast=False,
+        )
+
+    async def _setup_connection(self) -> None:
+        """Set the local HPAI used for the control and data endpoint."""
+        if self.route_back:
+            self.local_hpai = HPAI()
+            return
+        local_addr, local_port = self.transport.getsockname()
+        self.local_hpai = HPAI(ip_addr=local_addr, port=local_port)
+
+    def _start_receiving(self) -> None:
+        """Start acknowledging and handling requests the server sends."""
+        assert self.communication_channel is not None
+        self._device_management = DeviceManagement(
+            transport=self.transport,
+            communication_channel=self.communication_channel,
+            cemi_received_callback=self._cemi_received,
+            data_endpoint=self._data_endpoint_addr,
+        )
+        self._device_management.start()
+
+    def _stop_receiving(self) -> None:
+        """Stop acknowledging and handling requests the server sends."""
+        if self._device_management is not None:
+            self._device_management.stop()
+            self._device_management = None
+
+    async def _send_request(self, cemi: CEMIFrame) -> None:
+        """Send a request, repeating it while it stays unacknowledged."""
+        if (channel := self.communication_channel) is None:
+            raise CommunicationError("No active device management connection.")
+
+        raw_cemi = cemi.to_knx()
+        # A repetition keeps the sequence counter of the frame it repeats.
+        for attempt in range(DEVICE_CONFIGURATION_REQUEST_REPETITIONS + 1):
+            device_configuration = DeviceConfiguration(
+                transport=self.transport,
+                data_endpoint=self._data_endpoint_addr,
+                device_configuration_request=DeviceConfigurationRequest(
+                    communication_channel_id=channel,
+                    sequence_counter=self.sequence_number,
+                    raw_cemi=raw_cemi,
+                ),
+                timeout_in_seconds=DEVICE_CONFIGURATION_REQUEST_TIMEOUT,
+            )
+            await device_configuration.start()
+            answered = (
+                # The acknowledgement went missing, but the answer arrived -
+                # so the server did accept the request.
+                self._pending is not None
+                and self._pending.done()
+                and not self._pending.cancelled()
+            )
+            if device_configuration.success or answered:
+                self.sequence_number = self.sequence_number + 1 & 0xFF
+                return
+            logger.debug(
+                "DeviceConfigurationRequest was not acknowledged (attempt %s of %s%s).",
+                attempt + 1,
+                DEVICE_CONFIGURATION_REQUEST_REPETITIONS + 1,
+                ""
+                if device_configuration.response_status_code is None
+                else f"; error status {device_configuration.response_status_code.name}",
+            )
+
+        # Repeated to no avail, so the connection is terminated as required.
+        await self.disconnect()
+        raise CommunicationError(
+            "DeviceConfigurationRequest was not acknowledged after "
+            f"{DEVICE_CONFIGURATION_REQUEST_REPETITIONS} repetitions. Disconnected."
+        )
+
+
+class TCPDeviceManagementConnection(_DeviceManagementConnection):
+    """
+    A KNXnet/IP device management connection over TCP.
+
+    TCP frames are not acknowledged: no DeviceConfigurationAck is sent and a
+    received one is ignored (03.08.03 §2.3.2), and sequence counters are not
+    evaluated (KNXnet/IP Core 03.08.02 §8.4.3.4.1). The transport reports a
+    lost TCP connection, which ends the device management connection.
+    """
+
+    __slots__ = ("_receive_callback",)
+
+    transport: TCPTransport
+
+    def __init__(
+        self,
+        gateway_ip: str,
+        gateway_port: int,
+        indication_callback: Callable[[CEMIFrame], None] | None = None,
+    ) -> None:
+        """Initialize TCPDeviceManagementConnection class."""
+        self._receive_callback: KNXIPTransport.Callback | None = None
+        super().__init__(
+            gateway_ip=gateway_ip,
+            gateway_port=gateway_port,
+            indication_callback=indication_callback,
+        )
+        # TCP always uses 0.0.0.0:0
+        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
+
+    def _init_transport(self) -> None:
+        """Initialize transport."""
+        self.transport = TCPTransport(
+            remote_addr=(self.gateway_ip, self.gateway_port),
+            connection_lost_cb=self._transport_connection_lost,
+        )
+
+    def _transport_connection_lost(self) -> None:
+        """Handle the TCP connection being lost. Callback of the transport."""
+        logger.info("Device management TCP connection was lost.")
+        self._connection_lost()
+
+    async def _setup_connection(self) -> None:
+        """Set the local HPAI used for the control and data endpoint."""
+        self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
+
+    def _start_receiving(self) -> None:
+        """Start handling requests the server sends. TCP is not acknowledged."""
+        self._receive_callback = self.transport.register_callback(
+            self._request_received,
+            [KNXIPServiceType.DEVICE_CONFIGURATION_REQUEST],
+        )
+
+    def _stop_receiving(self) -> None:
+        """Stop handling requests the server sends."""
+        if self._receive_callback is not None:
+            self.transport.unregister_callback(self._receive_callback)
+            self._receive_callback = None
+
+    def _request_received(
+        self, knxipframe: KNXIPFrame, source: HPAI, _transport: KNXIPTransport
+    ) -> None:
+        """Handle an incoming DeviceConfigurationRequest."""
+        if not isinstance(knxipframe.body, DeviceConfigurationRequest):
+            return
+        if knxipframe.body.communication_channel_id != self.communication_channel:
+            logger.debug(
+                "Received DeviceConfigurationRequest for another communication "
+                "channel than %s. Discarding frame: %s",
+                self.communication_channel,
+                knxipframe.body,
+            )
+            return
+        # No acknowledgement, and the sequence counter is not evaluated.
+        self._cemi_received(knxipframe.body.raw_cemi)
+
+    async def _send_request(self, cemi: CEMIFrame) -> None:
+        """Send a request. TCP is reliable, so it is not acknowledged."""
+        if (channel := self.communication_channel) is None:
+            raise CommunicationError("No active device management connection.")
+        self.transport.send(
+            KNXIPFrame.init_from_body(
+                DeviceConfigurationRequest(
+                    communication_channel_id=channel,
+                    sequence_counter=self.sequence_number,
+                    raw_cemi=cemi.to_knx(),
+                )
+            )
+        )
+        self.sequence_number = self.sequence_number + 1 & 0xFF

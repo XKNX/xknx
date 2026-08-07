@@ -14,7 +14,7 @@ from xknx.cemi import (
     CEMIMPropWriteResponse,
 )
 from xknx.exceptions import CommunicationError
-from xknx.io import DeviceManagementConnection
+from xknx.io import TCPDeviceManagementConnection, UDPDeviceManagementConnection
 from xknx.io.const import (
     CONNECTIONSTATE_REQUEST_TIMEOUT,
     DEVICE_CONFIGURATION_REQUEST_REPETITIONS,
@@ -33,6 +33,7 @@ from xknx.knxip import (
     DisconnectRequest,
     DisconnectResponse,
     ErrorCode,
+    HostProtocol,
     KNXIPFrame,
 )
 from xknx.knxip.knxip_enum import ConnectRequestType
@@ -66,14 +67,14 @@ def prop_read_con(
     ).to_knx()
 
 
-class TestDeviceManagementConnection:
-    """Test class for KNX/IP device management connections."""
+class TestUDPDeviceManagementConnection:
+    """Test class for KNX/IP device management connections over UDP."""
 
     def setup_method(self) -> None:
         """Set up test class."""
         # pylint: disable=attribute-defined-outside-init
         self.indication_mock = Mock()
-        self.connection = DeviceManagementConnection(
+        self.connection = UDPDeviceManagementConnection(
             gateway_ip=REMOTE_ADDR[0],
             gateway_port=REMOTE_ADDR[1],
             local_ip=LOCAL_ADDR[0],
@@ -718,3 +719,186 @@ class TestDeviceManagementConnection:
         self._server_sends(prop_read_con(b"\x01"))
         await time_travel(0)
         await task
+
+
+class TestTCPDeviceManagementConnection:
+    """Test class for KNX/IP device management connections over TCP."""
+
+    def setup_method(self) -> None:
+        """Set up test class."""
+        # pylint: disable=attribute-defined-outside-init
+        self.indication_mock = Mock()
+        self.connection = TCPDeviceManagementConnection(
+            gateway_ip=REMOTE_ADDR[0],
+            gateway_port=REMOTE_ADDR[1],
+            indication_callback=self.indication_mock,
+        )
+
+    async def _connect(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Drive the connect handshake to completion."""
+        with patch("xknx.io.transport.tcp_transport.TCPTransport.connect"):
+            task = asyncio.create_task(self.connection.connect())
+            await time_travel(0)
+            self.connection.transport.handle_knxipframe(
+                KNXIPFrame.init_from_body(
+                    ConnectResponse(
+                        communication_channel=CHANNEL,
+                        data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                    )
+                ),
+                HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+            )
+            await task
+        send_mock.reset_mock()
+
+    def _server_sends(self, raw_cemi: bytes, sequence_counter: int = 0) -> None:
+        """Deliver a server initiated device configuration request."""
+        self.connection.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                DeviceConfigurationRequest(
+                    communication_channel_id=CHANNEL,
+                    sequence_counter=sequence_counter,
+                    raw_cemi=raw_cemi,
+                )
+            ),
+            HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+        )
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_connect_disconnect(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test opening and closing a TCP device management connection."""
+        with patch("xknx.io.transport.tcp_transport.TCPTransport.connect"):
+            task = asyncio.create_task(self.connection.connect())
+            await time_travel(0)
+
+            sent = send_mock.call_args[0][0]
+            assert isinstance(sent.body, ConnectRequest)
+            assert sent.body.cri == ConnectRequestInformation(
+                connection_type=ConnectRequestType.DEVICE_MGMT_CONNECTION
+            )
+            # TCP always uses the route back HPAI
+            assert sent.body.control_endpoint == HPAI(protocol=HostProtocol.IPV4_TCP)
+
+            self.connection.transport.handle_knxipframe(
+                KNXIPFrame.init_from_body(
+                    ConnectResponse(
+                        communication_channel=CHANNEL,
+                        data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                    )
+                ),
+                HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+            )
+            await task
+
+        assert self.connection.communication_channel == CHANNEL
+
+        send_mock.reset_mock()
+        with patch("xknx.io.transport.tcp_transport.TCPTransport.stop"):
+            task = asyncio.create_task(self.connection.disconnect())
+            await time_travel(0)
+            assert isinstance(send_mock.call_args[0][0].body, DisconnectRequest)
+            self.connection.transport.handle_knxipframe(
+                KNXIPFrame.init_from_body(
+                    DisconnectResponse(communication_channel_id=CHANNEL)
+                ),
+                HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+            )
+            await task
+
+        assert not self.connection.transport.callbacks
+        assert self.connection.communication_channel is None
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_read_property_without_acknowledgement(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that TCP requests are answered directly, without acknowledgements."""
+        await self._connect(send_mock, time_travel)
+
+        task = asyncio.create_task(
+            self.connection.read_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+            )
+        )
+        await time_travel(0)
+
+        request = send_mock.call_args[0][0].body
+        assert isinstance(request, DeviceConfigurationRequest)
+        assert CEMIFrame.from_knx(request.raw_cemi).code is (
+            CEMIMessageCode.M_PROP_READ_REQ
+        )
+        send_mock.reset_mock()
+
+        # a received acknowledgement is ignored
+        self.connection.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                DeviceConfigurationAck(
+                    communication_channel_id=CHANNEL, sequence_counter=0
+                )
+            ),
+            HPAI(*REMOTE_ADDR, protocol=HostProtocol.IPV4_TCP),
+        )
+        assert not task.done()
+
+        # the answer is not acknowledged either - its sequence counter is
+        # not evaluated
+        self._server_sends(prop_read_con(b"\x01"), sequence_counter=42)
+        await time_travel(0)
+
+        assert await task == b"\x01"
+        send_mock.assert_not_called()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_indication_not_acknowledged(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that an M_PropInfo.ind reaches the callback and is not acknowledged."""
+        await self._connect(send_mock, time_travel)
+
+        raw_cemi = CEMIFrame(
+            code=CEMIMessageCode.M_PROP_INFO_IND,
+            data=CEMIMPropReadResponse(
+                property_info=CEMIMPropInfo(
+                    object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                    property_id=DEVICE_STATE,
+                ),
+                data=b"\x01",
+            ),
+        ).to_knx()
+        self._server_sends(raw_cemi)
+        await time_travel(0)
+
+        self.indication_mock.assert_called_once()
+        assert self.indication_mock.call_args[0][0].code is (
+            CEMIMessageCode.M_PROP_INFO_IND
+        )
+        send_mock.assert_not_called()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_connection_lost(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that a lost TCP connection ends the device management connection."""
+        await self._connect(send_mock, time_travel)
+
+        task = asyncio.create_task(
+            self.connection.read_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+            )
+        )
+        await time_travel(0)
+
+        # the TCP connection drops
+        self.connection.transport.transport = Mock()
+        self.connection.transport._connection_lost()
+
+        with pytest.raises(CommunicationError):
+            await task
+        assert not self.connection.transport.callbacks
+        assert self.connection.communication_channel is None
