@@ -62,8 +62,9 @@ class SecurityAlgorithmIdentifier(IntEnum):
 class SecurityALService(IntEnum):
     """Enum representing the used security application layer service."""
 
+    # KNX v02.01.01 - Application Layer 03.03.07 - §5.1.1 Table 5
     S_A_DATA = 0b000
-    S_A_SYNC_REQ = 0b001
+    S_A_SYNC_REQ = 0b010
     S_A_SYNC_RES = 0b011
 
 
