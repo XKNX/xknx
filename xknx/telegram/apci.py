@@ -439,8 +439,11 @@ class APCI(ABC):
                 if apci == APCIExtendedService.APCI_SEC.value:
                     return SecureAPDU.from_knx(raw)
         except (IndexError, struct.error, ValueError) as err:
+            # Include the original exception in the message - these are raised deep
+            # inside the service parsers (slicing, `struct.unpack`, enum lookups) and
+            # carry the only hint about what exactly was wrong with the payload.
             raise ConversionError(
-                f"Error parsing APCI {apci:#012b} from raw data: {raw.hex()}"
+                f"Error parsing APCI {apci:#012b} from raw data: {raw.hex()}: {err!r}"
             ) from err
 
         raise UnsupportedAPCIService(f"Class not implemented for APCI {apci:#012b}.")
