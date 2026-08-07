@@ -15,6 +15,8 @@ nav_order: 2
 ### Features
 
 - Add `DeviceManagement` to acknowledge `DeviceConfigurationRequest` frames received over a device management connection. A KNXnet/IP server sends requests of its own over such a connection - a `M_PropRead.con` answering a read, or a `M_PropInfo.ind` announcing a property it changed by itself - and repeats each of them until it is acknowledged, then closes the connection. Sending those acknowledgements had no counterpart to `DeviceConfiguration`, which covers the other direction. Sequence counters are handled as they are for tunnelling; the connection itself stays with the caller.
+- Add `DeviceManagementConnection`, a client for a KNXnet/IP device management connection. It reads and writes the Properties of a server's own Interface Objects - `read_property()`, `write_property()`, or `request()` for any other cEMI frame - and reports the `M_PropInfo.ind` a server sends by itself to an `indication_callback`. It is not an `Interface`: a device management connection carries no telegrams and is unrelated to the KNX bus behind the server, so it leaves `xknx.current_address` and the connection manager alone.
+- `DeviceConfiguration` now waits `DEVICE_CONFIGURATION_REQUEST_TIMEOUT` (10 seconds, as KNXnet/IP Device Management 03.08.03 §2.3.2 requires) for its acknowledgement, instead of the one second inherited from `RequestResponse`, and takes a `timeout_in_seconds` argument to override it. `DeviceManagementConnection` additionally repeats an unacknowledged request `DEVICE_CONFIGURATION_REQUEST_REPETITIONS` (3) times and then terminates the connection.
 
 ### Protocol
 
