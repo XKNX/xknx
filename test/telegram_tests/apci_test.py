@@ -5578,6 +5578,31 @@ class TestSecureAPDU:
         assert payload.secured_data.secured_apdu == b"\xaa\xbb"
         assert payload.secured_data.message_authentication_code == b"\x11\x22\x33\x44"
 
+    def test_from_knx_sync_request(self) -> None:
+        """Test the from_knx method for an S-A_Sync_Req-PDU."""
+        # Real frame from 1.0.252 to 0/0/0. SCF 0x92 -> tool access, CCM with
+        # confidentiality, S-A_Sync_Req. Its ASDU holds the 6 octet KNX serial
+        # number and the 6 octet challenge - KNX v02.01.01 - Application Layer
+        # 03.03.07 - §5.3.2 Figure 109.
+        raw = bytes.fromhex("03f192003f1414e8e5000a46492919b3498640a7655948919e")
+        payload = APCI.from_knx(raw)
+
+        assert isinstance(payload, SecureAPDU)
+        assert payload.scf.tool_access is True
+        assert payload.scf.algorithm == SecurityAlgorithmIdentifier.CCM_ENCRYPTION
+        assert payload.scf.system_broadcast is False
+        assert payload.scf.service == SecurityALService.S_A_SYNC_REQ
+        assert payload.secured_data.sequence_number_bytes == bytes.fromhex(
+            "003f1414e8e5"
+        )
+        assert payload.secured_data.secured_apdu == bytes.fromhex(
+            "000a46492919b3498640a765"
+        )
+        assert payload.secured_data.message_authentication_code == bytes.fromhex(
+            "5948919e"
+        )
+        assert payload.to_knx() == raw
+
     def test_from_knx_wrong_length(self) -> None:
         """Test from_knx raises ConversionError for a too-short APDU."""
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
