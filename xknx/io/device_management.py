@@ -88,6 +88,7 @@ class DeviceManagement:
     ) -> None:
         """Handle incoming requests."""
         if not isinstance(knxipframe.body, DeviceConfigurationRequest):
+            logger.warning("Service not implemented: %s", knxipframe)
             return
         self._device_configuration_request_received(knxipframe.body)
 

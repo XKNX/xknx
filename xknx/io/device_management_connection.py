@@ -15,8 +15,20 @@ from xknx.cemi import (
     CEMIMPropWriteRequest,
     CEMIMPropWriteResponse,
 )
-from xknx.exceptions import CommunicationError, UnsupportedCEMIMessage
-from xknx.knxip import HPAI, ConnectRequestInformation, DeviceConfigurationRequest
+from xknx.exceptions import (
+    CommunicationError,
+    CouldNotParseCEMI,
+    UnsupportedCEMIMessage,
+)
+from xknx.knxip import (
+    HPAI,
+    ConnectRequestInformation,
+    DeviceConfigurationRequest,
+    DisconnectRequest,
+    DisconnectResponse,
+    KNXIPFrame,
+    KNXIPServiceType,
+)
 from xknx.knxip.knxip_enum import ConnectRequestType
 from xknx.profile.const import ResourceObjectType, ResourcePropertyId
 from xknx.util import asyncio_timeout
@@ -28,9 +40,18 @@ from .const import (
 )
 from .device_management import DeviceManagement
 from .request_response import Connect, ConnectionState, DeviceConfiguration, Disconnect
-from .transport import UDPTransport
+from .transport import KNXIPTransport, UDPTransport
 
 logger = logging.getLogger("xknx.log")
+
+
+def _same_property(one: CEMIMPropInfo, other: CEMIMPropInfo) -> bool:
+    """Tell whether two property infos address the same Property."""
+    return (
+        one.object_type is other.object_type
+        and one.object_instance == other.object_instance
+        and one.property_id == other.property_id
+    )
 
 
 class DeviceManagementConnection:
@@ -51,11 +72,17 @@ class DeviceManagementConnection:
     evented device state, and the cEMI Transport Layer indications - go to
     `indication_callback` instead.
 
+    The connection is supervised: a heartbeat keeps it alive and closes it
+    when the server stops answering, and a DisconnectRequest of the server
+    is answered and ends it as well.
+
     UDP only, as device management over TCP is not acknowledged.
     """
 
     __slots__ = (
+        "_data_endpoint_addr",
         "_device_management",
+        "_disconnect_callback",
         "_heartbeat_task",
         "_pending",
         "_request_lock",
@@ -96,7 +123,9 @@ class DeviceManagementConnection:
         self.local_hpai = HPAI()
         self.communication_channel: int | None = None
         self.sequence_number = 0
+        self._data_endpoint_addr: tuple[str, int] | None = None
         self._device_management: DeviceManagement | None = None
+        self._disconnect_callback: KNXIPTransport.Callback | None = None
         self._pending: asyncio.Future[CEMIFrame] | None = None
         self._request_lock = asyncio.Lock()
         self._heartbeat_task: asyncio.Task[None] | None = None
@@ -118,6 +147,11 @@ class DeviceManagementConnection:
 
     async def connect(self) -> None:
         """Open the device management connection. Raise CommunicationError if it fails."""
+        if self.communication_channel is not None:
+            raise CommunicationError(
+                "Device management connection is already open. "
+                f"communication_channel={self.communication_channel}"
+            )
         try:
             await self.transport.connect()
             if self.route_back:
@@ -151,7 +185,7 @@ class DeviceManagementConnection:
 
         self.communication_channel = connect.communication_channel
         self.sequence_number = 0
-        data_endpoint = (
+        self._data_endpoint_addr = (
             None
             if connect.data_endpoint.route_back
             else connect.data_endpoint.addr_tuple
@@ -160,9 +194,13 @@ class DeviceManagementConnection:
             transport=self.transport,
             communication_channel=self.communication_channel,
             cemi_received_callback=self._cemi_received,
-            data_endpoint=data_endpoint,
+            data_endpoint=self._data_endpoint_addr,
         )
         self._device_management.start()
+        self._disconnect_callback = self.transport.register_callback(
+            self._disconnect_request_received,
+            [KNXIPServiceType.DISCONNECT_REQUEST],
+        )
         logger.debug(
             "Device management connection established. communication_channel=%s",
             self.communication_channel,
@@ -170,39 +208,106 @@ class DeviceManagementConnection:
 
     async def disconnect(self) -> None:
         """Close the device management connection."""
+        self._stop()
+        try:
+            if self.communication_channel is not None:
+                disconnect = Disconnect(
+                    transport=self.transport,
+                    communication_channel_id=self.communication_channel,
+                    local_hpai=self.local_hpai,
+                )
+                await disconnect.start()
+                if not disconnect.success:
+                    logger.debug(
+                        "DisconnectRequest was not answered by the server (%s).",
+                        "timeout"
+                        if disconnect.response_status_code is None
+                        else disconnect.response_status_code,
+                    )
+        finally:
+            self.communication_channel = None
+            self.transport.stop()
+
+    def _stop(self) -> None:
+        """Stop answering and expecting frames of the current connection."""
         if self._heartbeat_task is not None:
-            self._heartbeat_task.cancel()
+            # The heartbeat task disconnects itself after repeated failures.
+            if self._heartbeat_task is not asyncio.current_task():
+                self._heartbeat_task.cancel()
             self._heartbeat_task = None
         if self._device_management is not None:
             self._device_management.stop()
             self._device_management = None
-        if self.communication_channel is not None:
-            disconnect = Disconnect(
-                transport=self.transport,
-                communication_channel_id=self.communication_channel,
-                local_hpai=self.local_hpai,
+        if self._disconnect_callback is not None:
+            self.transport.unregister_callback(self._disconnect_callback)
+            self._disconnect_callback = None
+        if self._pending is not None and not self._pending.done():
+            # Fail a request waiting for an answer instead of timing it out.
+            self._pending.cancel()
+
+    def _disconnect_request_received(
+        self, knxipframe: KNXIPFrame, source: HPAI, _transport: KNXIPTransport
+    ) -> None:
+        """Handle a DisconnectRequest sent by the server."""
+        if not isinstance(knxipframe.body, DisconnectRequest):
+            return
+        if knxipframe.body.communication_channel_id != self.communication_channel:
+            logger.debug(
+                "Received DisconnectRequest for another communication channel "
+                "than %s. Discarding frame: %s",
+                self.communication_channel,
+                knxipframe.body,
             )
-            await disconnect.start()
-            self.communication_channel = None
+            return
+        logger.info("Device management connection was closed by the server.")
+        self.transport.send(
+            KNXIPFrame.init_from_body(
+                DisconnectResponse(communication_channel_id=self.communication_channel)
+            )
+        )
+        self.communication_channel = None
+        self._stop()
         self.transport.stop()
 
     async def _heartbeat(self) -> None:
         """Keep the connection alive, as the server drops a silent one."""
         while True:
             await asyncio.sleep(HEARTBEAT_RATE)
-            if self.communication_channel is None:
+            if (channel := self.communication_channel) is None:
                 return
-            conn_state = ConnectionState(
-                transport=self.transport,
-                communication_channel_id=self.communication_channel,
-                local_hpai=self.local_hpai,
+            success, status = await self._connectionstate_request(channel)
+            if not success:
+                # Repeat the ConnectionStateRequest three times, then
+                # terminate the connection - KNXnet/IP Core 03.08.02 §5.4.
+                for _retry in range(3):
+                    success, status = await self._connectionstate_request(channel)
+                    if success:
+                        break
+            if success:
+                continue
+            logger.warning(
+                "Device management connection heartbeat failed %s. Disconnecting.",
+                "- no response from the server"
+                if status is None
+                else f"with status: {status}",
             )
-            await conn_state.start()
-            if not conn_state.success:
-                logger.warning(
-                    "Device management connection heartbeat failed with status: %s",
-                    conn_state.response_status_code,
-                )
+            await self.disconnect()
+            return
+
+    async def _connectionstate_request(
+        self, communication_channel: int
+    ) -> tuple[bool, str | None]:
+        """Send a ConnectionStateRequest and return its outcome."""
+        conn_state = ConnectionState(
+            transport=self.transport,
+            communication_channel_id=communication_channel,
+            local_hpai=self.local_hpai,
+        )
+        await conn_state.start()
+        status_code: str | None = None
+        if error_code := conn_state.response_status_code:
+            status_code = error_code.name
+        return conn_state.success, status_code
 
     ####################
     #
@@ -210,58 +315,97 @@ class DeviceManagementConnection:
     #
     ####################
 
-    async def request(self, cemi: CEMIFrame) -> CEMIFrame:
+    async def request(
+        self,
+        cemi: CEMIFrame,
+        matches: Callable[[CEMIFrame], bool] | None = None,
+    ) -> CEMIFrame:
         """
         Send one cEMI frame and return the one the server answers with.
+
+        `matches` tells whether a received frame is the awaited answer;
+        frames it rejects - e.g. the late answer to an earlier, timed out
+        request - are discarded. Without it, the first frame that is not an
+        indication is returned. Note that xknx only parses the Property
+        service message codes, so e.g. a M_FuncProp request cannot see its
+        answer - and M_Reset.req has none at all.
 
         Raise CommunicationError when the request is not acknowledged or the
         server does not answer it.
         """
-        if self.communication_channel is None or self._device_management is None:
-            raise CommunicationError("No active device management connection.")
-
         # A device management connection carries one request at a time, and
         # the sequence counter and the pending answer are shared state.
         async with self._request_lock:
-            self._pending = asyncio.get_running_loop().create_future()
+            if self.communication_channel is None or self._device_management is None:
+                raise CommunicationError("No active device management connection.")
+            pending: asyncio.Future[CEMIFrame] = (
+                asyncio.get_running_loop().create_future()
+            )
+            self._pending = pending
             try:
                 await self._send_request(cemi)
                 async with asyncio_timeout(DEVICE_CONFIGURATION_REQUEST_TIMEOUT):
-                    return await self._pending
+                    while True:
+                        answer = await pending
+                        if matches is None or matches(answer):
+                            return answer
+                        logger.debug(
+                            "Discarding cEMI frame not answering the request: %s",
+                            answer,
+                        )
+                        pending = asyncio.get_running_loop().create_future()
+                        self._pending = pending
             except asyncio.TimeoutError:
                 raise CommunicationError(
                     f"No answer to {cemi.code} within "
                     f"{DEVICE_CONFIGURATION_REQUEST_TIMEOUT} seconds."
                 ) from None
+            except asyncio.CancelledError:
+                if pending.cancelled():
+                    # disconnect() failed the request
+                    raise CommunicationError(
+                        "Device management connection was closed."
+                    ) from None
+                raise
             finally:
                 self._pending = None
 
     async def _send_request(self, cemi: CEMIFrame) -> None:
         """Send a request, repeating it while it stays unacknowledged."""
-        assert self.communication_channel is not None
-        assert self._device_management is not None
+        if (channel := self.communication_channel) is None:
+            raise CommunicationError("No active device management connection.")
 
         raw_cemi = cemi.to_knx()
         # A repetition keeps the sequence counter of the frame it repeats.
         for attempt in range(DEVICE_CONFIGURATION_REQUEST_REPETITIONS + 1):
             device_configuration = DeviceConfiguration(
                 transport=self.transport,
-                data_endpoint=self._device_management.data_endpoint_addr,
+                data_endpoint=self._data_endpoint_addr,
                 device_configuration_request=DeviceConfigurationRequest(
-                    communication_channel_id=self.communication_channel,
+                    communication_channel_id=channel,
                     sequence_counter=self.sequence_number,
                     raw_cemi=raw_cemi,
                 ),
                 timeout_in_seconds=DEVICE_CONFIGURATION_REQUEST_TIMEOUT,
             )
             await device_configuration.start()
-            if device_configuration.success:
+            answered = (
+                # The acknowledgement went missing, but the answer arrived -
+                # so the server did accept the request.
+                self._pending is not None
+                and self._pending.done()
+                and not self._pending.cancelled()
+            )
+            if device_configuration.success or answered:
                 self.sequence_number = self.sequence_number + 1 & 0xFF
                 return
             logger.debug(
-                "DeviceConfigurationRequest was not acknowledged (attempt %s of %s).",
+                "DeviceConfigurationRequest was not acknowledged (attempt %s of %s%s).",
                 attempt + 1,
                 DEVICE_CONFIGURATION_REQUEST_REPETITIONS + 1,
+                ""
+                if device_configuration.response_status_code is None
+                else f"; error status {device_configuration.response_status_code.name}",
             )
 
         # Repeated to no avail, so the connection is terminated as required.
@@ -275,8 +419,13 @@ class DeviceManagementConnection:
         """Handle a cEMI frame the server sent. Callback of DeviceManagement."""
         try:
             cemi = CEMIFrame.from_knx(raw_cemi)
-        except (UnsupportedCEMIMessage, ValueError) as err:
+        except (CouldNotParseCEMI, UnsupportedCEMIMessage, ValueError) as err:
             logger.warning("Could not parse received cEMI frame: %s", err)
+            return
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Last-resort guard: this runs in the transport's datagram
+            # callback, where an unforeseen parsing bug must not escape.
+            logger.exception("Unexpected error parsing cEMI frame: %s", raw_cemi.hex())
             return
 
         # Of what a server sends, M_PropInfo.ind is the only message that is
@@ -284,7 +433,10 @@ class DeviceManagementConnection:
         # would be the others, but xknx does not know those message codes.
         if cemi.code is CEMIMessageCode.M_PROP_INFO_IND:
             if self.indication_callback is not None:
-                self.indication_callback(cemi)
+                try:
+                    self.indication_callback(cemi)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    logger.exception("Unexpected error in indication_callback")
             return
         if self._pending is not None and not self._pending.done():
             self._pending.set_result(cemi)
@@ -310,23 +462,35 @@ class DeviceManagementConnection:
 
         Raise CommunicationError when the server reports an error instead.
         """
+        property_info = CEMIMPropInfo(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            number_of_elements=number_of_elements,
+            start_index=start_index,
+        )
         answer = await self.request(
             CEMIFrame(
                 code=CEMIMessageCode.M_PROP_READ_REQ,
-                data=CEMIMPropReadRequest(
-                    property_info=CEMIMPropInfo(
-                        object_type=object_type,
-                        object_instance=object_instance,
-                        property_id=property_id,
-                        number_of_elements=number_of_elements,
-                        start_index=start_index,
-                    )
-                ),
-            )
+                data=CEMIMPropReadRequest(property_info=property_info),
+            ),
+            matches=lambda frame: (
+                isinstance(frame.data, CEMIMPropReadResponse)
+                and _same_property(frame.data.property_info, property_info)
+            ),
         )
         if not isinstance(answer.data, CEMIMPropReadResponse):
             raise CommunicationError(f"Unexpected answer to a property read: {answer}")
-        if (error_code := answer.data.error_code) is not None:
+        try:
+            error_code = answer.data.error_code
+        except ValueError:
+            # resolving the error octet to a CEMIErrorCode is lazy and only
+            # covers the codes the specification defines
+            raise CommunicationError(
+                "Reading the property failed with an unknown error code: "
+                f"0x{answer.data.data.hex()}"
+            ) from None
+        if error_code is not None:
             raise CommunicationError(f"Reading the property failed: {error_code}")
         return answer.data.data
 
@@ -344,20 +508,22 @@ class DeviceManagementConnection:
 
         Raise CommunicationError when the server reports an error.
         """
+        property_info = CEMIMPropInfo(
+            object_type=object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            number_of_elements=number_of_elements,
+            start_index=start_index,
+        )
         answer = await self.request(
             CEMIFrame(
                 code=CEMIMessageCode.M_PROP_WRITE_REQ,
-                data=CEMIMPropWriteRequest(
-                    property_info=CEMIMPropInfo(
-                        object_type=object_type,
-                        object_instance=object_instance,
-                        property_id=property_id,
-                        number_of_elements=number_of_elements,
-                        start_index=start_index,
-                    ),
-                    data=data,
-                ),
-            )
+                data=CEMIMPropWriteRequest(property_info=property_info, data=data),
+            ),
+            matches=lambda frame: (
+                isinstance(frame.data, CEMIMPropWriteResponse)
+                and _same_property(frame.data.property_info, property_info)
+            ),
         )
         if not isinstance(answer.data, CEMIMPropWriteResponse):
             raise CommunicationError(f"Unexpected answer to a property write: {answer}")
