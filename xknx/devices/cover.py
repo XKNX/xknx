@@ -305,11 +305,15 @@ class Cover(Device):
             self.travelcalculator.update_position(new_position)
         else:
             self.travelcalculator.set_position(new_position)
-        if position_before_update != self.travelcalculator.current_position():
-            if position_before_update is not None:  # None on first move
-                # restarts when already running
-                self.xknx.task_registry.start_task(self._periodic_update_task)
-            self.after_update()
+        if (
+            position_before_update != self.travelcalculator.current_position()
+            and position_before_update is not None  # None on first move
+        ):
+            # restarts when already running
+            self.xknx.task_registry.start_task(self._periodic_update_task)
+        # a telegram confirming an unchanged position is new information too - it
+        # tells a consumer that the position isn't just an assumption anymore
+        self.after_update()
 
     async def set_angle(self, angle: int) -> None:
         """Move cover to designated angle."""

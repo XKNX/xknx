@@ -837,6 +837,9 @@ class TestCover:
             # call position with same value again to make sure `always_callback` is set for target position
             ("1/2/4", DPTArray(42), "position"),
             ("1/2/5", DPTArray(42), "position state"),
+            # call position state with same value again - confirming the current
+            # position is new information even when the position didn't change
+            ("1/2/5", DPTArray(42), "position state"),
             ("1/2/6", DPTArray(42), "angle"),
             ("1/2/7", DPTArray(51), "angle state"),
         ]:

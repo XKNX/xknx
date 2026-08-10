@@ -12,6 +12,10 @@ nav_order: 2
 
 - Fix the encoding of `SecurityALService.S_A_SYNC_REQ`: the S-A-Service field of the Security Control Field encodes an S-A_Sync_Req-PDU as `0b010`, not `0b001` - KNX v02.01.01 - Application Layer 03.03.07 - §5.1.1 Table 5. Incoming Data Secure sync requests were rejected with `CouldNotParseCEMI` "APDU invalid" instead of being parsed and then ignored as an unsupported S-AL service.
 
+### Devices
+
+- Cover: run device callbacks for every received current position telegram, even when the position doesn't change. Previously a GroupValueResponse or GroupValueWrite confirming the position a consumer already assumed - eg. one restored from a previous run - was swallowed, so the consumer never learned that its position is now confirmed by the bus. The periodic update task is still only started when the position actually changed.
+
 ### Protocol
 
 - Parse `M_PropInfo.ind` cEMI frames into a `CEMIMPropReadResponse` - its payload has the same layout as `M_PropRead.con`. A KNXnet/IP server sends these to announce a property changing on its own, e.g. the KNXnet/IP parameter object's device state when the KNX bus fails; they previously raised `UnsupportedCEMIMessage` and were counted as incoming errors. Serializing already worked.
