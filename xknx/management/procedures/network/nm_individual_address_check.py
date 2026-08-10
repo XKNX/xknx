@@ -56,12 +56,10 @@ async def nm_individual_address_check(
     :param xknx: the XKNX object
     :param individual_address: address to check
     """
-    address_found = False
     try:
         async with xknx.management.connection(
             IndividualAddress(individual_address)
         ) as conn:
-            address_found = await nm_individual_address_check_conn(conn)
+            return await nm_individual_address_check_conn(conn)
     except ManagementConnectionRefused:
-        address_found = True
-    return address_found
+        return True
