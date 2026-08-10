@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.19.0 Covering CEMI errors 2026-08-10
 
 ### Bugfixes
 
