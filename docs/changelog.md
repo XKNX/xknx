@@ -8,15 +8,17 @@ nav_order: 2
 
 # Unreleased changes
 
-### Bugfixes
-
-- Fix the encoding of `SecurityALService.S_A_SYNC_REQ`: the S-A-Service field of the Security Control Field encodes an S-A_Sync_Req-PDU as `0b010`, not `0b001` - KNX v02.01.01 - Application Layer 03.03.07 - §5.1.1 Table 5. Incoming Data Secure sync requests were rejected with `CouldNotParseCEMI` "APDU invalid" instead of being parsed and then ignored as an unsupported S-AL service.
-
 ### Features
 
 - Add `DeviceManagement` to acknowledge `DeviceConfigurationRequest` frames received over a device management connection. A KNXnet/IP server sends requests of its own over such a connection - a `M_PropRead.con` answering a read, or a `M_PropInfo.ind` announcing a property it changed by itself - and repeats each of them until it is acknowledged, then closes the connection. Sending those acknowledgements had no counterpart to `DeviceConfiguration`, which covers the other direction. Sequence counters are handled as they are for tunnelling; the connection itself stays with the caller.
 - Add `UDPDeviceManagementConnection`, `TCPDeviceManagementConnection` and `SecureDeviceManagementConnection`, clients for a KNXnet/IP device management connection - the latter running it over a KNX IP Secure session. They read and write the Properties of a server's own Interface Objects - `read_property()`, `write_property()`, or `request()` for any other cEMI frame - and report the `M_PropInfo.ind` a server sends by itself to an `indication_callback`. They are not an `Interface`: a device management connection carries no telegrams and is unrelated to the KNX bus behind the server, so it leaves `xknx.current_address` and the connection manager alone. The connection is supervised as KNXnet/IP Core 03.08.02 requires: a heartbeat that stays unanswered is repeated three times and then terminates the connection (§5.4), and a `DisconnectRequest` sent by the server is answered and ends it (§5.5). Over TCP no acknowledgements are sent - received ones are ignored and sequence counters are not evaluated (03.08.03 §2.3.2, Core §8.4.3.4.1) - and a lost TCP connection ends the device management connection.
 - `DeviceConfiguration` now waits `DEVICE_CONFIGURATION_REQUEST_TIMEOUT` (10 seconds, as KNXnet/IP Device Management 03.08.03 §2.3.2 requires) for its acknowledgement, instead of the one second inherited from `RequestResponse`, and takes a `timeout_in_seconds` argument to override it. `UDPDeviceManagementConnection` additionally repeats an unacknowledged request `DEVICE_CONFIGURATION_REQUEST_REPETITIONS` (3) times and then terminates the connection.
+
+# 3.19.0 Covering CEMI errors 2026-08-10
+
+### Bugfixes
+
+- Fix the encoding of `SecurityALService.S_A_SYNC_REQ`: the S-A-Service field of the Security Control Field encodes an S-A_Sync_Req-PDU as `0b010`, not `0b001` - KNX v02.01.01 - Application Layer 03.03.07 - §5.1.1 Table 5. Incoming Data Secure sync requests were rejected with `CouldNotParseCEMI` "APDU invalid" instead of being parsed and then ignored as an unsupported S-AL service.
 
 ### Devices
 
