@@ -228,7 +228,7 @@ class P2PConnection:
         """
         Connect to the KNX device.
 
-        Sends T_Connect-PDU (= A_Connect at wire level). KNX v02.01.02 - Application Layer
+        Sends T_Connect-PDU (= A_Connect at wire level). KNX v02.01.01 - Application Layer
         03.03.07 - §3.5.1: "T_Connect.ind and T_Disconnect.ind are mapped transparently to
         A_Connect.ind and A_Disconnect.ind service and passed to the user of Application Layer."
         """

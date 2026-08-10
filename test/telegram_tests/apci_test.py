@@ -146,9 +146,10 @@ class TestAPCI:
         """
         Test from_knx wraps truncated-payload parse errors as ConversionError.
 
-        Per KNX spec 03_03_07 §2.2 an APDU that cannot be parsed shall be
-        ignored - a malformed frame must never leak IndexError/struct.error/
-        ValueError out of the parser and crash the CEMI receive path.
+        Per KNX v02.01.01 - Application Layer 03.03.07 - §2.2 an APDU that
+        cannot be parsed shall be ignored - a malformed frame must never
+        leak IndexError/struct.error/ValueError out of the parser and crash
+        the CEMI receive path.
         """
         with pytest.raises(ConversionError):
             APCI.from_knx(raw)

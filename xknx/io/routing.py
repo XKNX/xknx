@@ -49,7 +49,7 @@ class _RoutingFlowControl:
     """
     Class for handling KNXnet/IP routing flow control.
 
-    See KNX Specifications 3.8.5 Routing §2.3.5 Flow control handling
+    See KNX v01.05.02 - Routing 3.8.5 - §2.3.5 Flow control handling
     """
 
     __slots__ = (
@@ -83,7 +83,7 @@ class _RoutingFlowControl:
     async def throttle(self) -> AsyncIterator[None]:
         """Context manager to wait for ready state and throttle outgoing frames."""
         # limit RoutingIndication transmission rate according to
-        # KNX Specifications 3.2.6 Communication Medium KNX IP §2.1
+        # KNX v01.01.02 - Communication Medium KNX IP 3.2.6 - §2.1
         # simplified version - pause 20 ms after transmit a RoutingIndication
         elapsed = self._loop.time() - self._last_sent_routing_indication_time
         if elapsed < ROUTING_INDICATION_WAIT_TIME:

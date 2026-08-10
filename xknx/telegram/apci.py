@@ -751,7 +751,7 @@ def _pack_function_property_ext_header(
 
     16 bit interface_object_type, then a 12 bit object_instance
     followed by a 12 bit property_id, packed into 3 bytes. See KNX
-    Specification 03_03_07 Application Layer §3.4.8.2.
+    v02.01.01 - Application Layer 03.03.07 - §3.4.8.2.
     """
     if not 0 <= interface_object_type <= 0xFFFF:
         raise ConversionError("Interface object type out of range.")
@@ -774,8 +774,8 @@ def _unpack_function_property_ext_header(raw: bytes) -> tuple[int, int, int]:
 
     `raw` shall be the complete APDU (raw[2:4] is the 16 bit
     interface_object_type, raw[4:7] packs the 12 bit object_instance and
-    12 bit property_id with no reserved bits). See KNX Specification
-    03_03_07 Application Layer §3.4.8.
+    12 bit property_id with no reserved bits). See KNX v02.01.01 -
+    Application Layer 03.03.07 - §3.4.8.
     """
     interface_object_type = (raw[2] << 8) | raw[3]
     object_instance = (raw[4] << 4) | (raw[5] >> 4)
@@ -788,7 +788,7 @@ class FunctionPropertyExtCommand(APCI):
     """
     FunctionPropertyExtCommand service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.8.1
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.1
     A_FunctionPropertyExtCommand.
 
     Payload contains a 16 bit Interface Object Type, a 12 bit Object
@@ -849,7 +849,7 @@ class FunctionPropertyExtStateRead(APCI):
     """
     FunctionPropertyExtStateRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.8.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.2
     A_FunctionPropertyExtState_Read.
 
     Payload contains a 16 bit Interface Object Type, a 12 bit Object
@@ -910,7 +910,7 @@ class FunctionPropertyExtStateResponse(APCI):
     """
     FunctionPropertyExtStateResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.8.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.2
     A_FunctionPropertyExtState_Response.
 
     Same header as FunctionPropertyExtStateRead (16 bit
@@ -984,8 +984,8 @@ def _pack_system_network_parameter_header(object_type: int, property_id: int) ->
     Serialize the A_SystemNetworkParameter_Read/Response ASDU header.
 
     16 bit object_type, then a 12 bit property_id followed by 4 reserved
-    bits (always emitted as 0). See KNX Specification 03_03_07
-    Application Layer §3.3.8.
+    bits (always emitted as 0). See KNX v02.01.01 - Application Layer
+    03.03.07 - §3.3.8.
     """
     if not 0 <= object_type <= 0xFFFF:
         raise ConversionError("Object type out of range.")
@@ -1000,8 +1000,8 @@ def _unpack_system_network_parameter_header(raw: bytes) -> tuple[int, int]:
 
     `raw` shall be the complete APDU (raw[2:4] is the 16 bit object_type,
     raw[4] and the upper nibble of raw[5] form the 12 bit property_id, the
-    lower nibble of raw[5] is reserved and discarded). See KNX
-    Specification 03_03_07 Application Layer §3.3.8.
+    lower nibble of raw[5] is reserved and discarded). See KNX v02.01.01 -
+    Application Layer 03.03.07 - §3.3.8.
     """
     object_type = (raw[2] << 8) | raw[3]
     property_id = (raw[4] << 4) | (raw[5] >> 4)
@@ -1013,7 +1013,7 @@ class SystemNetworkParameterRead(APCI):
     """
     SystemNetworkParameterRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.8
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.8
     A_SystemNetworkParameter_Read.
 
     APCI 0x1C8 falls within the same 4 bit service nibble (0b0111) that is
@@ -1071,7 +1071,7 @@ class SystemNetworkParameterResponse(APCI):
     """
     SystemNetworkParameterResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.8
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.8
     A_SystemNetworkParameter_Response.
 
     Same header as SystemNetworkParameterRead (16 bit object_type, 12 bit
@@ -1132,7 +1132,7 @@ class SystemNetworkParameterWrite(APCI):
     """
     SystemNetworkParameterWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.9
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.9
     A_SystemNetworkParameter_Write.
 
     Same header as SystemNetworkParameterRead/Response (16 bit object_type,
@@ -1186,7 +1186,7 @@ class PropertyExtValueRead(APCI):
     """
     PropertyExtValueRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.5.1
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.5.1
     A_PropertyExtValue_Read.
 
     Payload contains a 16 bit Interface Object Type, a 12 bit Object
@@ -1256,7 +1256,7 @@ class PropertyExtValueResponse(APCI):
     """
     PropertyExtValueResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.5.1
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.5.1
     A_PropertyExtValue_Response (defined alongside A_PropertyExtValue_Read).
 
     Payload contains a 16 bit Interface Object Type, a 12 bit Object
@@ -1331,7 +1331,7 @@ class PropertyExtValueWriteCon(APCI):
     """
     PropertyExtValueWriteCon service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.5.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.5.2
     A_PropertyExtValue_WriteCon-service.
 
     Same payload as PropertyExtValueResponse: a 16 bit Interface Object
@@ -1406,7 +1406,7 @@ class PropertyExtValueWriteConRes(APCI):
     """
     PropertyExtValueWriteConRes service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.5.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.5.2
     A_PropertyExtValue_WriteConRes (defined alongside
     A_PropertyExtValue_WriteCon-service).
 
@@ -1491,7 +1491,7 @@ class PropertyExtValueWriteUnCon(APCI):
     """
     PropertyExtValueWriteUnCon service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.5.3
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.5.3
     A_PropertyExtValue_WriteUnCon-service.
 
     Same payload as PropertyExtValueWriteCon (and PropertyExtValueResponse):
@@ -1567,7 +1567,7 @@ class PropertyExtValueInfoReport(APCI):
     """
     PropertyExtValueInfoReport service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.5.4
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.5.4
     A_PropertyExtValue_InfoReport-service.
 
     Same payload as PropertyExtValueResponse/WriteCon/WriteUnCon: a 16
@@ -1643,7 +1643,7 @@ class PropertyExtDescriptionRead(APCI):
     """
     PropertyExtDescriptionRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.3.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.2
     A_PropertyExtDescription_Read-service.
 
     Same header as A_PropertyExtValue_* (16 bit Interface Object Type,
@@ -1718,7 +1718,7 @@ class PropertyExtDescriptionResponse(APCI):
     """
     PropertyExtDescriptionResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.3.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.2
     A_PropertyExtDescription_Response (defined alongside
     A_PropertyExtDescription_Read-service).
 
@@ -2315,7 +2315,7 @@ class Restart(APCI):
     """
     Restart service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.2.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.2.2
     A_Restart. The 10 bit APCI for the A_Restart family is 4 bits
     (1110) selecting the service, 1 bit for request (0) vs response
     (1), 4 reserved bits (0), and 1 bit for restart type: 0 for Basic
@@ -2350,7 +2350,7 @@ class RestartMasterReset(APCI):
     """
     RestartMasterReset service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.2.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.2.2
     A_Restart_Master_Reset - the request variant (restart type bit set,
     see Restart's docstring for the full APCI bit layout).
 
@@ -2400,7 +2400,7 @@ class RestartMasterResetResponse(APCI):
     """
     RestartMasterResetResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.2.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.2.2
     A_Restart_Response - a Basic Restart (RestartMasterReset with
     restart_type unset) is never confirmed at the application layer, so
     this is only ever sent in reply to a Master Reset request.
@@ -2621,7 +2621,7 @@ class UserMemoryBitWrite(APCI):
     """
     UserMemoryBitWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.5.6.4
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.5.6.4
     A_UserMemoryBit_Write.
 
     Payload contains a 1 byte number (octet count of the contiguous
@@ -2893,7 +2893,7 @@ class FilterTableOpen(APCI):
     """
     FilterTableOpen service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.1
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.1
     A_FilterTable_Open. Coupler specific service - opens access to the
     remote Filter Table before A_FilterTable_Read/Write are used. No
     payload.
@@ -2928,7 +2928,7 @@ class FilterTableRead(APCI):
     """
     FilterTableRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.2
     A_FilterTable_Read. Coupler specific service - requires
     A_FilterTable_Open first.
 
@@ -2981,7 +2981,7 @@ class FilterTableResponse(APCI):
     """
     FilterTableResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.2
     A_FilterTable_Response (defined alongside A_FilterTable_Read).
     Coupler specific service.
 
@@ -3051,7 +3051,7 @@ class FilterTableWrite(APCI):
     """
     FilterTableWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.3
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.3
     A_FilterTable_Write. Coupler specific service - requires
     A_FilterTable_Open first.
 
@@ -3119,7 +3119,7 @@ class RouterMemoryRead(APCI):
     """
     RouterMemoryRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.4
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.4
     A_RouterMemory_Read. Coupler specific service - reads the memory of
     the second controller of the remote communication controller.
 
@@ -3171,7 +3171,7 @@ class RouterMemoryResponse(APCI):
     """
     RouterMemoryResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.4
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.4
     A_RouterMemory_Response (defined alongside A_RouterMemory_Read).
     Coupler specific service.
 
@@ -3238,7 +3238,7 @@ class RouterMemoryWrite(APCI):
     """
     RouterMemoryWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.6.5
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.6.5
     A_RouterMemory_Write. Coupler specific service - writes the memory
     of the second controller of the remote communication controller.
 
@@ -3308,8 +3308,9 @@ class RouterStatusRead(APCI):
 
     APCI 0x3CD, A_RouterStatus_Read. NOT IMPLEMENTED - and not planned:
     this is a legacy EIB/BCU1-era line coupler management service, not
-    part of the current Application Layer spec (03_03_07 lists the
-    APCI code with no PDU/payload definition - the coupler status byte
+    part of the current Application Layer spec (KNX v02.01.01 -
+    Application Layer 03.03.07 lists the APCI code with no PDU/payload
+    definition - the coupler status byte
     was a BCU1/BCU2 hardware memory register, documented only in
     manufacturer-era EIB Bus Coupling Unit memory maps, not the KNX
     standard). Modern ETS configures couplers exclusively through the
@@ -3447,7 +3448,7 @@ class MemoryBitWrite(APCI):
     """
     MemoryBitWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.5.5
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.5.5
     A_MemoryBit_Write. Marked "not for future use" by the coupler
     services table, but fully defined - same layout as
     A_UserMemoryBit_Write.
@@ -3586,7 +3587,7 @@ class KeyWrite(APCI):
     """
     KeyWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.5.8 A_Key_Write.
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.5.8 A_Key_Write.
     Modifies (or, with key=0xFFFFFFFF, deletes) the key associated to
     an access level.
 
@@ -3634,7 +3635,7 @@ class KeyResponse(APCI):
     """
     KeyResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.5.8
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.5.8
     A_Key_Response (defined alongside A_Key_Write). Contains the access
     level set for the key, or 0xFF if the current access level was
     higher than the level being written.
@@ -3998,7 +3999,7 @@ class NetworkParameterRead(APCI):
     """
     NetworkParameterRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.2.6
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.2.6
     A_NetworkParameter_Read. Sent point-to-point or as broadcast to
     check the configuration of a network parameter.
 
@@ -4059,7 +4060,7 @@ class NetworkParameterResponse(APCI):
     """
     NetworkParameterResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.2.6
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.2.6
     A_NetworkParameter_Response (defined alongside
     A_NetworkParameter_Read).
 
@@ -4240,7 +4241,7 @@ class DomainAddressWrite(APCI):
     """
     DomainAddressWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.3
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.3
     A_DomainAddress_Write. Open media specific service - the
     destination is selected manually (eg. a button on the target
     device), not addressed.
@@ -4285,7 +4286,7 @@ class DomainAddressRead(APCI):
     """
     DomainAddressRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.4
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.4
     A_DomainAddress_Read. Open media specific service - the
     destination is selected manually (eg. a button on the target
     device), not addressed. No payload.
@@ -4321,7 +4322,7 @@ class DomainAddressResponse(APCI):
     """
     DomainAddressResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.4
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.4
     A_DomainAddress_Response (defined alongside A_DomainAddress_Read).
 
     Same payload as DomainAddressWrite: a 2 octet (KNX-PL110) or 6
@@ -4365,7 +4366,7 @@ class DomainAddressSelectiveRead(APCI):
     """
     DomainAddressSelectiveRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.5
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.5
     A_DomainAddressSelective_Read. Open media specific service - reads
     the Domain Address from an identified communication partner, eg. to
     check for open media devices with a given Domain Address in a
@@ -4410,7 +4411,7 @@ class NetworkParameterWrite(APCI):
     """
     NetworkParameterWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.2.7
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.2.7
     A_NetworkParameter_Write. Sent point-to-point or as broadcast to
     set network configuration information in one or multiple
     management servers.
@@ -4468,7 +4469,7 @@ class LinkRead(APCI):
     """
     LinkRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.6.1
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.6.1
     A_Link_Read. Reads the Group Addresses linked to a Group Object,
     starting at start_index.
 
@@ -4520,7 +4521,7 @@ class LinkResponse(APCI):
     """
     LinkResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.6.1
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.6.1
     A_Link_Response (defined alongside A_Link_Read).
 
     Payload contains a 1 byte group_object_number, a byte with a 4 bit
@@ -4599,7 +4600,7 @@ class LinkWrite(APCI):
     """
     LinkWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.6.2
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.6.2
     A_Link_Write. Adds or removes a single Group Address to/from a
     Group Object.
 
@@ -4666,7 +4667,7 @@ def _pack_group_prop_value_header(
     Serialize the A_GroupPropValue* ASDU header.
 
     16 bit object_type, 8 bit object_instance, 8 bit property_id. See
-    KNX Logical Tag Extended (LTE) Application Layer §7.6.4.
+    KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.4.
     """
     if not 0 <= object_type <= 0xFFFF:
         raise ConversionError("Object type out of range.")
@@ -4683,8 +4684,8 @@ def _unpack_group_prop_value_header(raw: bytes) -> tuple[int, int, int]:
 
     `raw` shall be the complete APDU (raw[2:4] is the 16 bit
     object_type, raw[4] is the 8 bit object_instance, raw[5] is the 8
-    bit property_id). See KNX Logical Tag Extended (LTE) Application
-    Layer §7.6.4.
+    bit property_id). See KNX v01.02.02 - Logical Tag Extended 10.1 -
+    §7.6.4.
     """
     object_type = (raw[2] << 8) | raw[3]
     object_instance = raw[4]
@@ -4697,10 +4698,10 @@ class GroupPropValueRead(APCI):
     """
     GroupPropValueRead service.
 
-    See KNX Logical Tag Extended (LTE) Application Layer §7.6.4
-    A_GroupPropValue_Read. Not part of 03_03_07 - defined in the LTE
-    extension for reading Interface Object Server properties via group
-    communication.
+    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.4
+    A_GroupPropValue_Read. Not part of KNX v02.01.01 - Application Layer
+    03.03.07 - defined in the LTE extension for reading Interface Object
+    Server properties via group communication.
 
     Payload contains a 16 bit object_type, an 8 bit object_instance and
     an 8 bit property_id.
@@ -4753,7 +4754,7 @@ class GroupPropValueResponse(APCI):
     """
     GroupPropValueResponse service.
 
-    See KNX Logical Tag Extended (LTE) Application Layer §7.6.4
+    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.4
     A_GroupPropValue_Response (defined alongside A_GroupPropValue_Read).
 
     Same header as GroupPropValueRead (16 bit object_type, 8 bit
@@ -4810,7 +4811,7 @@ class GroupPropValueWrite(APCI):
     """
     GroupPropValueWrite service.
 
-    See KNX Logical Tag Extended (LTE) Application Layer §7.6.5
+    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.5
     A_GroupPropValue_Write.
 
     Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
@@ -4866,7 +4867,7 @@ class GroupPropValueInfoReport(APCI):
     """
     GroupPropValueInfoReport service.
 
-    See KNX Logical Tag Extended (LTE) Application Layer §7.6.6
+    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.6
     A_GroupPropValue_InfoReport.
 
     Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
@@ -4922,7 +4923,7 @@ class DomainAddressSerialNumberRead(APCI):
     """
     DomainAddressSerialNumberRead service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.6
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.6
     A_DomainAddressSerialNumber_Read. Open media specific service -
     identifies the target by its unique 6 octet KNX Serial Number
     rather than an address.
@@ -4967,7 +4968,7 @@ class DomainAddressSerialNumberResponse(APCI):
     """
     DomainAddressSerialNumberResponse service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.6
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.6
     A_DomainAddressSerialNumber_Response (defined alongside
     A_DomainAddressSerialNumber_Read).
 
@@ -5022,7 +5023,7 @@ class DomainAddressSerialNumberWrite(APCI):
     """
     DomainAddressSerialNumberWrite service.
 
-    See KNX Specification 03_03_07 Application Layer §3.3.7
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.7
     A_DomainAddressSerialNumber_Write.
 
     Payload is a 6 octet serial followed by a domain_address of one of:
@@ -5113,7 +5114,7 @@ class FileStreamInfoReport(APCI):
     """
     FileStreamInfoReport service.
 
-    See KNX Specification 03_03_07 Application Layer §3.4.2.3
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.2.3
     A_FileStream_InfoReport. Unconfirmed - sends one file block to a
     remote File Server client.
 
