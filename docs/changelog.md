@@ -16,6 +16,10 @@ nav_order: 2
 
 - Parse `M_PropInfo.ind` cEMI frames into a `CEMIMPropReadResponse` - its payload has the same layout as `M_PropRead.con`. A KNXnet/IP server sends these to announce a property changing on its own, e.g. the KNXnet/IP parameter object's device state when the KNX bus fails; they previously raised `UnsupportedCEMIMessage` and were counted as incoming errors. Serializing already worked.
 
+### Internals
+
+- Keep the underlying error message when a CEMI or APDU parse error is re-raised as a more generic exception so it no longer hides what was actually wrong with the frame.
+
 # 3.18.0 Protocol Droid 2026-08-02
 
 ### Bugfixes

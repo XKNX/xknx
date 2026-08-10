@@ -149,6 +149,28 @@ def test_truncated_secure_apdu() -> None:
         CEMIFrame.from_knx(raw)
 
 
+def test_invalid_secure_apdu_keeps_cause_in_message() -> None:
+    """
+    Test the CEMI parse error repeats the underlying APDU error message.
+
+    L_Data.ind carrying an A_SecureData APDU (APCI 0x3F1) whose SCF names the
+    reserved S-A-Service 0b100. `CouldNotParseCEMI` is logged as a plain string,
+    so the message must carry the cause; without it the log only says "APDU
+    invalid" and the actual defect of the frame is lost.
+    """
+    raw = bytes.fromhex(
+        "290030e010fc00001803f194003f1414e8e5000a46492919b3498640a7655948919e"
+    )
+    with pytest.raises(CouldNotParseCEMI) as err_info:
+        CEMIFrame.from_knx(raw)
+
+    message = str(err_info.value)
+    assert "APDU invalid" in message
+    assert "Error parsing APCI 0b1111110001" in message  # APCI layer
+    assert "4 is not a valid SecurityALService" in message  # root cause
+    assert "from 1.0.252 to 0/0/0" in message  # CEMI layer context
+
+
 def test_invalid_apdu_len() -> None:
     """Test for invalid apdu len."""
     with pytest.raises(CouldNotParseCEMI, match=r".*APDU LEN should be .*"):
