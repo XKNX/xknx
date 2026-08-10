@@ -36,6 +36,15 @@ nav_order: 2
 - `CEMIFlags.EXTENDED_FRAME_FORMAT` was removed; its value `0x0001` was reserved, not an "extended frame format" indicator - `0x0000` is used for standard frames as well as for long extended frames. `CEMIFlags.LTE_FRAME_FORMAT` and `CEMIFlags.EXTENDED_FRAME_FORMAT_MASK` were added instead.
 - Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
 
+### Deprecation notes
+
+- `nm_invididual_address_write`, the typo'd alias for `nm_individual_address_write` in `xknx.management.procedures`, is deprecated and will be removed in v4. Use `nm_individual_address_write` instead.
+
+### New Features
+
+- Add `dm_restart_r_co(conn)` and `nm_individual_address_check_conn(conn)` to `xknx.management.procedures` — variants of `dm_restart`/`nm_individual_address_check` that operate on an already-open `P2PConnection` instead of opening and closing their own, for chaining several procedures over one connection. `dm_restart_r_co` is the actual KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name; the `_conn` suffix on the others is an xknx-only naming convention, not a KNX spec name. All existing top-level procedures (`dm_restart`, `nm_individual_address_check`, `nm_individual_address_write`, `nm_individual_address_read`, `nm_individual_address_serial_number_read`/`_write`) keep their `(xknx, ...)` signature unchanged.
+- Add `P2PConnection.send_data(payload, wait_for_ack=True)` for sending a telegram, optionally without waiting for an ACK (used internally by `dm_restart`/`dm_restart_r_co` and `nm_individual_address_write` instead of open-coding the same `TDataConnected` construction in multiple procedures).
+
 # 3.17.0 APCIs and DPTs 2026-07-25
 
 ### Deprecation notes

@@ -1,18 +1,20 @@
-"""NM_IndividualAddress_Write — KNX 03.05.02 §2.3."""
+"""NM_IndividualAddress_Write — KNX v02.01.02 - Management Procedures 03.05.02 - §2.3."""
 
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
 
-from xknx.exceptions import ManagementConnectionError, ManagementConnectionTimeout
+from xknx.exceptions import ManagementConnectionError
+from xknx.management.procedures.device.dm_restart_r_co import dm_restart_r_co
 from xknx.management.procedures.network.nm_individual_address_check import (
     nm_individual_address_check,
+    nm_individual_address_check_conn,
 )
 from xknx.management.procedures.network.nm_individual_address_read import (
     nm_individual_address_read,
 )
-from xknx.telegram import Telegram, apci, tpci
+from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 if TYPE_CHECKING:
@@ -22,12 +24,13 @@ logger = logging.getLogger("xknx.management.procedures")
 
 
 async def nm_individual_address_write(
-    xknx: XKNX, individual_address: IndividualAddressableType
+    xknx: XKNX,
+    individual_address: IndividualAddressableType,
 ) -> None:
     """
     Write the individual address of a single device in programming mode.
 
-    :param xknx: XKNX object
+    :param xknx: the XKNX object
     :param individual_address: address to be written to KNX device
     """
     logger.debug("Writing individual address %s to device.", individual_address)
@@ -67,31 +70,13 @@ async def nm_individual_address_write(
         )
         logger.debug("Wrote new address %s to device.", individual_address)
 
-    async with xknx.management.connection(
-        address=IndividualAddress(individual_address)
-    ) as connection:
+    async with xknx.management.connection(address=individual_address) as connection:
         logger.debug(
             "Checking if device exists at %s and restarting it.", individual_address
         )
-
-        try:
-            await connection.request(
-                payload=apci.DeviceDescriptorRead(descriptor=0),
-                expected=apci.DeviceDescriptorResponse,
-            )
-        except ManagementConnectionTimeout as ex:
-            # if nothing is received (-> timeout) IA is free
+        if not await nm_individual_address_check_conn(connection):
             raise ManagementConnectionError(
-                f"No device answered to connection attempt after write address operation. {ex}"
-            ) from None
-
-        logger.debug("Restating device, exiting programming mode.")
-        # A_Restart will not be ACKed by the device, so it is manually sent to avoid timeout and retry
-        seq_num = next(connection.sequence_number)
-        telegram = Telegram(
-            destination_address=connection.address,
-            source_address=xknx.current_address,
-            payload=apci.Restart(),
-            tpci=tpci.TDataConnected(sequence_number=seq_num),
-        )
-        await xknx.cemi_handler.send_telegram(telegram)
+                "No device answered to connection attempt after write address operation."
+            )
+        logger.debug("Restarting device, exiting programming mode.")
+        await dm_restart_r_co(connection)

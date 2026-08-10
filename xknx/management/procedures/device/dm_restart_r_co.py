@@ -1,11 +1,12 @@
-"""DM_Restart_RCo — KNX 03.05.02 §3.7.3."""
+"""DM_Restart_RCo — KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3."""
 
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
 
-from xknx.telegram import Telegram, apci, tpci
+from xknx.management.management import P2PConnection
+from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 if TYPE_CHECKING:
@@ -14,23 +15,24 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.management.procedures")
 
 
+async def dm_restart_r_co(conn: P2PConnection) -> None:
+    """
+    Restart the device on an already-open connection.
+
+    :param conn: an established P2P connection to the device
+    """
+    logger.debug("Requesting a Basic Restart of %s.", conn.address)
+    await conn.send_data(apci.Restart(), wait_for_ack=False)
+
+
 async def dm_restart(xknx: XKNX, individual_address: IndividualAddressableType) -> None:
     """
-    Restart the device.
+    Restart a device, opening and closing a connection to it.
 
-    :param xknx: XKNX object
-    :param individual_address: address of device to reset
+    :param xknx: the XKNX object
+    :param individual_address: address of the device to restart
     """
     async with xknx.management.connection(
-        address=IndividualAddress(individual_address)
-    ) as connection:
-        logger.debug("Requesting a Basic Restart of %s.", individual_address)
-        # A_Restart will not be ACKed by the device, so it is manually sent to avoid timeout and retry
-        seq_num = next(connection.sequence_number)
-        telegram = Telegram(
-            destination_address=connection.address,
-            source_address=xknx.current_address,
-            payload=apci.Restart(),
-            tpci=tpci.TDataConnected(sequence_number=seq_num),
-        )
-        await xknx.cemi_handler.send_telegram(telegram)
+        IndividualAddress(individual_address)
+    ) as conn:
+        await dm_restart_r_co(conn)
