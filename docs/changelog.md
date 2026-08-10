@@ -36,9 +36,9 @@ nav_order: 2
 - `CEMIFlags.EXTENDED_FRAME_FORMAT` was removed; its value `0x0001` was reserved, not an "extended frame format" indicator - `0x0000` is used for standard frames as well as for long extended frames. `CEMIFlags.LTE_FRAME_FORMAT` and `CEMIFlags.EXTENDED_FRAME_FORMAT_MASK` were added instead.
 - Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
 
-### Breaking Changes
+### Deprecation notes
 
-- Remove the `nm_invididual_address_write` typo alias for `nm_individual_address_write` in `xknx.management.procedures` — the misspelled name is no longer exported.
+- `nm_invididual_address_write`, the typo'd alias for `nm_individual_address_write` in `xknx.management.procedures`, is deprecated and will be removed in v4. Use `nm_individual_address_write` instead.
 
 ### New Features
 
