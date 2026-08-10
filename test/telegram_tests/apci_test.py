@@ -146,12 +146,26 @@ class TestAPCI:
         """
         Test from_knx wraps truncated-payload parse errors as ConversionError.
 
-        Per KNX spec 03_03_07 §2.2 an APDU that cannot be parsed shall be
-        ignored - a malformed frame must never leak IndexError/struct.error/
-        ValueError out of the parser and crash the CEMI receive path.
+        Per KNX v02.01.01 - Application Layer 03.03.07 - §2.2 an APDU that
+        cannot be parsed shall be ignored - a malformed frame must never
+        leak IndexError/struct.error/ValueError out of the parser and crash
+        the CEMI receive path.
         """
         with pytest.raises(ConversionError):
             APCI.from_knx(raw)
+
+    def test_from_knx_keeps_cause_in_message(self) -> None:
+        """Test the wrapping ConversionError repeats the original error message."""
+        # A_SecureData (0x3F1) with SCF 0x94 -> reserved S-A-Service 0b100. The
+        # enum lookup failure is the only hint about what is wrong with the frame,
+        # so it must survive the wrapping - `raise ... from err` alone only shows
+        # up in a traceback, not in the message loggers print.
+        raw = bytes.fromhex("03f194003f1414e8e5000a46492919b3498640a7655948919e")
+        with pytest.raises(
+            ConversionError, match=r".*4 is not a valid SecurityALService.*"
+        ) as err_info:
+            APCI.from_knx(raw)
+        assert isinstance(err_info.value.__cause__, ValueError)
 
 
 class TestGroupValueRead:

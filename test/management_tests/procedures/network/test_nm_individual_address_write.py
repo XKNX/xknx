@@ -1,4 +1,4 @@
-"""Tests for nm_individual_address_write — KNX 03.05.02 §2.3 NM_IndividualAddress_Write."""
+"""Tests for nm_individual_address_write — KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 NM_IndividualAddress_Write."""
 
 import asyncio
 from unittest.mock import AsyncMock, call
@@ -76,9 +76,7 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
-        )
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -138,9 +136,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
-        )
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -189,9 +185,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
     )
 
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
-        )
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -218,6 +212,73 @@ async def test_nm_individual_address_write_no_device_programming_mode(
     ):
         await task
     assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
+
+
+async def test_nm_individual_address_write_address_occupied_by_disconnect(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """
+    Test nm_individual_address_write when device refuses connection during address check.
+
+    Device sends TDisconnect → nm_individual_address_check(xknx, address) already handles
+    this internally (its own connection context manager's finally raises
+    ManagementConnectionRefused from disconnect() after the peer already disconnected, and its
+    own except swallows it) → returns True.
+    """
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("1.1.4")
+
+    connect = Telegram(destination_address=individual_address, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    disconnect_from_device = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDisconnect(),
+    )
+    ack_from_device = Telegram(
+        source_address=individual_address,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(0),
+    )
+    individual_address_read = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+
+    task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
+
+    # advance until address check is awaiting ACK
+    await time_travel(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+    ]
+
+    # device sends disconnect (address occupied) then ACK for the DeviceDescriptorRead
+    xknx.management.process(disconnect_from_device)
+    xknx.management.process(ack_from_device)
+
+    # nm_individual_address_check's own connection context manager finally raises
+    # ManagementConnectionRefused (peer already disconnected, no TDisconnect sent by us);
+    # its own except swallows it and returns True; IndividualAddressRead broadcast is sent
+    await time_travel(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[2:] == [
+        call(individual_address_read),
+    ]
+
+    # no device in programming mode → timeout → error
+    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    with pytest.raises(
+        ManagementConnectionError, match="No device in programming mode"
+    ):
+        await task
+    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 3
 
 
 async def test_nm_individual_address_write_address_found(
@@ -260,9 +321,7 @@ async def test_nm_individual_address_write_address_found(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_write(xknx=xknx, individual_address=individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
 
     # first request (address check) succeeds
     await time_travel(0)
@@ -323,9 +382,7 @@ async def test_nm_individual_address_write_programming_failed(
         payload=apci.IndividualAddressWrite(address=individual_address_new),
     )
     task = asyncio.create_task(
-        nm_individual_address_write(
-            xknx=xknx, individual_address=individual_address_new
-        )
+        nm_individual_address_write(xknx, individual_address_new)
     )
 
     # make sure first request (address check) times out
@@ -404,17 +461,20 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         payload=apci.IndividualAddressResponse(),
     )
 
-    task = asyncio.create_task(
-        nm_individual_address_write(xknx=xknx, individual_address=individual_address)
-    )
+    task = asyncio.create_task(nm_individual_address_write(xknx, individual_address))
 
-    # make sure first request (address check) times out
+    # first request (address check) succeeds
     await time_travel(0)
     xknx.management.process(ack)
     xknx.management.process(device_desc_resp)
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(0)
 
+    # a different device answers the programming-mode broadcast before its
+    # 3s window elapses, so dev_pgm_mode[0] != individual_address
     xknx.management.process(address_reply_message)
+    # fast-forward past the broadcast's 3s timeout via the mocked clock,
+    # instead of waiting on it for real
+    await time_travel(3)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
@@ -424,5 +484,8 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         call(individual_address_read),
     ]
 
-    with pytest.raises(ManagementConnectionError):
+    with pytest.raises(
+        ManagementConnectionError,
+        match=f"A device was found with {individual_address}, cannot continue with programming.",
+    ):
         await task

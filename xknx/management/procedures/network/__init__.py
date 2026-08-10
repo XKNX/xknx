@@ -1,7 +1,10 @@
-"""KNX 03.05.02 Network Management (NM_*) procedures."""
+"""KNX v02.01.02 - Management Procedures 03.05.02 - Network Management (NM_*) procedures."""
 
 # ruff: noqa: F401
-from .nm_individual_address_check import nm_individual_address_check
+from .nm_individual_address_check import (
+    nm_individual_address_check,
+    nm_individual_address_check_conn,
+)
 from .nm_individual_address_read import nm_individual_address_read
 from .nm_individual_address_serial_number_read import (
     nm_individual_address_serial_number_read,

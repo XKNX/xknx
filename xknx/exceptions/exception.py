@@ -151,7 +151,8 @@ class UnsupportedAPCIService(ConversionError):
 
     Subclass of `ConversionError` so existing handlers keep catching it, while
     allowing the CEMI layer to tell an unsupported service (benign, to be
-    ignored per KNX spec 03_03_07 §2.2) apart from a malformed/truncated APDU.
+    ignored per KNX v02.01.01 - Application Layer 03.03.07 - §2.2) apart
+    from a malformed/truncated APDU.
     """
 
     def __str__(self) -> str:

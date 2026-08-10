@@ -18,10 +18,18 @@ nav_order: 2
 - Add `UDPDeviceManagementConnection`, `TCPDeviceManagementConnection` and `SecureDeviceManagementConnection`, clients for a KNXnet/IP device management connection - the latter running it over a KNX IP Secure session. They read and write the Properties of a server's own Interface Objects - `read_property()`, `write_property()`, or `request()` for any other cEMI frame - and report the `M_PropInfo.ind` a server sends by itself to an `indication_callback`. They are not an `Interface`: a device management connection carries no telegrams and is unrelated to the KNX bus behind the server, so it leaves `xknx.current_address` and the connection manager alone. The connection is supervised as KNXnet/IP Core 03.08.02 requires: a heartbeat that stays unanswered is repeated three times and then terminates the connection (§5.4), and a `DisconnectRequest` sent by the server is answered and ends it (§5.5). Over TCP no acknowledgements are sent - received ones are ignored and sequence counters are not evaluated (03.08.03 §2.3.2, Core §8.4.3.4.1) - and a lost TCP connection ends the device management connection.
 - `DeviceConfiguration` now waits `DEVICE_CONFIGURATION_REQUEST_TIMEOUT` (10 seconds, as KNXnet/IP Device Management 03.08.03 §2.3.2 requires) for its acknowledgement, instead of the one second inherited from `RequestResponse`, and takes a `timeout_in_seconds` argument to override it. `UDPDeviceManagementConnection` additionally repeats an unacknowledged request `DEVICE_CONFIGURATION_REQUEST_REPETITIONS` (3) times and then terminates the connection.
 
+### Devices
+
+- Cover: run device callbacks for every received current position telegram, even when the position doesn't change. Previously a GroupValueResponse or GroupValueWrite confirming the position a consumer already assumed - eg. one restored from a previous run - was swallowed, so the consumer never learned that its position is now confirmed by the bus. The periodic update task is still only started when the position actually changed.
+
 ### Protocol
 
 - Be tolerant about property error codes the specification does not define: `CEMIMPropReadResponse.error_code` and `CEMIMPropWriteResponse` keep an octet outside `CEMIErrorCode` as a plain `int` instead of raising `ValueError` - from lazy resolution (and `__repr__`) on read, and from `from_knx` on write, where it made the whole frame unparsable. A `CEMIMPropWriteResponse` with the falsy `CEMI_ERROR_UNSPECIFIED` (`0x00`) error code no longer drops its error octet when serializing.
 - Parse `M_PropInfo.ind` cEMI frames into a `CEMIMPropReadResponse` - its payload has the same layout as `M_PropRead.con`. A KNXnet/IP server sends these to announce a property changing on its own, e.g. the KNXnet/IP parameter object's device state when the KNX bus fails; they previously raised `UnsupportedCEMIMessage` and were counted as incoming errors. Serializing already worked.
+
+### Internals
+
+- Keep the underlying error message when a CEMI or APDU parse error is re-raised as a more generic exception so it no longer hides what was actually wrong with the frame.
 
 # 3.18.0 Protocol Droid 2026-08-02
 
@@ -38,6 +46,15 @@ nav_order: 2
 - Reject incoming CEMI L_Data frames with a non-zero Extended Frame Format field with `UnsupportedCEMIMessage`. LTE-HEE frames use zone addressing, so their address fields can not be parsed as `GroupAddress`. The Frame Type flag is still not validated against the NPDU length when parsing - a receiver shall be tolerant towards the used frame format.
 - `CEMIFlags.EXTENDED_FRAME_FORMAT` was removed; its value `0x0001` was reserved, not an "extended frame format" indicator - `0x0000` is used for standard frames as well as for long extended frames. `CEMIFlags.LTE_FRAME_FORMAT` and `CEMIFlags.EXTENDED_FRAME_FORMAT_MASK` were added instead.
 - Add explicit length checks to every remaining APCI `from_knx` (and the top-level `APCI.from_knx` dispatcher) as defense-in-depth on top of the broad `except (IndexError, struct.error, ValueError)` added in 3.17.0: each service now raises `ConversionError` with a specific "Invalid length for A_X in CEMI" message for a truncated, malformed or overlong frame instead of relying solely on the generic dispatcher-level catch.
+
+### Deprecation notes
+
+- `nm_invididual_address_write`, the typo'd alias for `nm_individual_address_write` in `xknx.management.procedures`, is deprecated and will be removed in v4. Use `nm_individual_address_write` instead.
+
+### New Features
+
+- Add `dm_restart_r_co(conn)` and `nm_individual_address_check_conn(conn)` to `xknx.management.procedures` — variants of `dm_restart`/`nm_individual_address_check` that operate on an already-open `P2PConnection` instead of opening and closing their own, for chaining several procedures over one connection. `dm_restart_r_co` is the actual KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name; the `_conn` suffix on the others is an xknx-only naming convention, not a KNX spec name. All existing top-level procedures (`dm_restart`, `nm_individual_address_check`, `nm_individual_address_write`, `nm_individual_address_read`, `nm_individual_address_serial_number_read`/`_write`) keep their `(xknx, ...)` signature unchanged.
+- Add `P2PConnection.send_data(payload, wait_for_ack=True)` for sending a telegram, optionally without waiting for an ACK (used internally by `dm_restart`/`dm_restart_r_co` and `nm_individual_address_write` instead of open-coding the same `TDataConnected` construction in multiple procedures).
 
 # 3.17.0 APCIs and DPTs 2026-07-25
 
