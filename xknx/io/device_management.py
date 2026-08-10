@@ -129,7 +129,10 @@ class DeviceManagement:
             return
         # Anything else is dropped without an acknowledgement, as the KNX
         # specification requires; the server repeats the frame and closes the
-        # connection when that is not acknowledged either.
+        # connection when that is not acknowledged either. Unlike the tunnel,
+        # which schedules a disconnect for servers that fail to do that, this
+        # class only observes: the connection belongs to the caller, and its
+        # heartbeat will notice a server that dropped the channel silently.
         logger.warning(
             "Received DeviceConfigurationRequest with sequence number not equal to "
             "expected: %s. Discarding frame: %s",

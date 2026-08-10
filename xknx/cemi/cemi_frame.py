@@ -445,10 +445,14 @@ class CEMIMPropReadResponse(CEMIData):
         self.data = data
 
     @property
-    def error_code(self) -> CEMIErrorCode | None:
+    def error_code(self) -> CEMIErrorCode | int | None:
         """Return an optional CEMI error code."""
         if self.property_info.number_of_elements == 0:
-            return CEMIErrorCode(self.data[0])
+            try:
+                return CEMIErrorCode(self.data[0])
+            except ValueError:
+                # be tolerant about error codes the specification does not define
+                return self.data[0]
 
         return None
 
@@ -538,7 +542,7 @@ class CEMIMPropWriteResponse(CEMIData):
         self,
         *,
         property_info: CEMIMPropInfo,
-        error_code: CEMIErrorCode | None = None,
+        error_code: CEMIErrorCode | int | None = None,
     ) -> None:
         """Initialize CEMIMPropWriteResponse object."""
         self.property_info = property_info
@@ -546,19 +550,18 @@ class CEMIMPropWriteResponse(CEMIData):
 
     def calculated_length(self) -> int:
         """Get length of CEMI data."""
-        return CEMIMPropInfo.LENGTH + (1 if self._error_code else 0)
+        return CEMIMPropInfo.LENGTH + (1 if self._error_code is not None else 0)
 
     def to_knx(self) -> bytes:
         """Serialize to CEMI raw data."""
-        if self._error_code:
-            return self.property_info.to_knx() + self._error_code.value.to_bytes(
-                1, "big"
-            )
+        if self._error_code is not None:
+            # CEMIErrorCode is an IntEnum, so this also serializes a plain octet
+            return self.property_info.to_knx() + self._error_code.to_bytes(1, "big")
 
         return self.property_info.to_knx()
 
     @property
-    def error_code(self) -> CEMIErrorCode | None:
+    def error_code(self) -> CEMIErrorCode | int | None:
         """Return an optional CEMI error code."""
         return self._error_code
 
@@ -578,10 +581,14 @@ class CEMIMPropWriteResponse(CEMIData):
                 raise CouldNotParseCEMI(
                     f"Invalid CEMI error response length: {len(raw)}; CEMI: {raw.hex()}"
                 )
-            return cls(
-                property_info=property_info,
-                error_code=CEMIErrorCode(raw[CEMIMPropInfo.LENGTH]),
-            )
+            try:
+                error_code: CEMIErrorCode | int = CEMIErrorCode(
+                    raw[CEMIMPropInfo.LENGTH]
+                )
+            except ValueError:
+                # be tolerant about error codes the specification does not define
+                error_code = raw[CEMIMPropInfo.LENGTH]
+            return cls(property_info=property_info, error_code=error_code)
 
         if len(raw) != CEMIMPropInfo.LENGTH:
             raise CouldNotParseCEMI(

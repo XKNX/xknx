@@ -20,6 +20,7 @@ nav_order: 2
 
 ### Protocol
 
+- Be tolerant about property error codes the specification does not define: `CEMIMPropReadResponse.error_code` and `CEMIMPropWriteResponse` keep an octet outside `CEMIErrorCode` as a plain `int` instead of raising `ValueError` - from lazy resolution (and `__repr__`) on read, and from `from_knx` on write, where it made the whole frame unparsable. A `CEMIMPropWriteResponse` with the falsy `CEMI_ERROR_UNSPECIFIED` (`0x00`) error code no longer drops its error octet when serializing.
 - Parse `M_PropInfo.ind` cEMI frames into a `CEMIMPropReadResponse` - its payload has the same layout as `M_PropRead.con`. A KNXnet/IP server sends these to announce a property changing on its own, e.g. the KNXnet/IP parameter object's device state when the KNX bus fails; they previously raised `UnsupportedCEMIMessage` and were counted as incoming errors. Serializing already worked.
 
 # 3.18.0 Protocol Droid 2026-08-02

@@ -559,6 +559,28 @@ def test_valid_error_write_con() -> None:
     assert frame.to_knx() == raw
 
 
+@pytest.mark.parametrize("message_code", [0xFB, 0xF5])
+def test_undefined_error_code(message_code: int) -> None:
+    """Test lenient parsing of an error code the specification does not define."""
+    raw = get_prop(message_code, 0x000B, 1, 52, 0, 1, [0x99])
+    frame = CEMIFrame.from_knx(raw)
+    assert isinstance(frame.data, (CEMIMPropReadResponse, CEMIMPropWriteResponse))
+    assert frame.data.error_code == 0x99
+    assert repr(frame.data)
+    assert frame.calculated_length() == 8
+    assert frame.to_knx() == raw
+
+
+def test_unspecified_error_code_roundtrip() -> None:
+    """Test that the falsy CEMI_ERROR_UNSPECIFIED (0x00) octet is kept."""
+    raw = get_prop(0xF5, 0x000B, 1, 52, 0, 1, [0x00])
+    frame = CEMIFrame.from_knx(raw)
+    assert isinstance(frame.data, CEMIMPropWriteResponse)
+    assert frame.data.error_code == CEMIErrorCode.CEMI_ERROR_UNSPECIFIED
+    assert frame.calculated_length() == 8
+    assert frame.to_knx() == raw
+
+
 @pytest.mark.parametrize(
     "raw,err_msg",
     [

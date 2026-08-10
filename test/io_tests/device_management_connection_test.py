@@ -247,6 +247,37 @@ class TestUDPDeviceManagementConnection:
         assert self.connection.communication_channel is None
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_connect_late_failure_resets_channel(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that a failure after the ConnectResponse leaves no channel behind."""
+        with (
+            patch("xknx.io.transport.udp_transport.UDPTransport.connect"),
+            patch(
+                "xknx.io.transport.udp_transport.UDPTransport.getsockname",
+                return_value=LOCAL_ADDR,
+            ),
+            patch(
+                "xknx.io.device_management_connection.DeviceManagement.start",
+                side_effect=CommunicationError("boom"),
+            ),
+        ):
+            task = asyncio.create_task(self.connection.connect())
+            await time_travel(0)
+            self.connection.transport.handle_knxipframe(
+                KNXIPFrame.init_from_body(
+                    ConnectResponse(communication_channel=CHANNEL)
+                ),
+                HPAI(*REMOTE_ADDR),
+            )
+            with pytest.raises(CommunicationError):
+                await task
+
+        # a new attempt is not refused as "already open"
+        assert self.connection.communication_channel is None
+        assert not self.connection.transport.callbacks
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     async def test_context_manager(
         self, send_mock: Mock, time_travel: EventLoopClockAdvancer
     ) -> None:
@@ -356,11 +387,47 @@ class TestUDPDeviceManagementConnection:
         )
         await time_travel(0)
         self._ack_last_request()
-        # 0x99 is not a CEMIErrorCode - resolving it raises ValueError
+        # 0x99 is not a CEMIErrorCode - it is kept as a plain octet
         self._server_sends(prop_read_con(b"\x99", number_of_elements=0))
         await time_travel(0)
 
         with pytest.raises(CommunicationError):
+            await task
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_write_property_unknown_error_code(
+        self, send_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test that an undefined error code fails a write promptly, not by timeout."""
+        await self._connect(send_mock, time_travel)
+
+        task = asyncio.create_task(
+            self.connection.write_property(
+                object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                property_id=DEVICE_STATE,
+                data=b"\x00",
+            )
+        )
+        await time_travel(0)
+        self._ack_last_request()
+        # M_PropWrite.con with number_of_elements=0 and error octet 0xF7,
+        # which is not a CEMIErrorCode
+        self._server_sends(
+            CEMIFrame(
+                code=CEMIMessageCode.M_PROP_WRITE_CON,
+                data=CEMIMPropWriteResponse(
+                    property_info=CEMIMPropInfo(
+                        object_type=ResourceObjectType.OBJECT_KNXNETIP_PARAMETER,
+                        property_id=DEVICE_STATE,
+                        number_of_elements=0,
+                    ),
+                    error_code=0xF7,
+                ),
+            ).to_knx()
+        )
+        await time_travel(0)
+
+        with pytest.raises(CommunicationError, match="0xf7"):
             await task
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")

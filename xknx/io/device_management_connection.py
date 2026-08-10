@@ -8,6 +8,7 @@ from collections.abc import Callable
 import logging
 
 from xknx.cemi import (
+    CEMIErrorCode,
     CEMIFrame,
     CEMIMessageCode,
     CEMIMPropInfo,
@@ -56,6 +57,13 @@ def _same_property(one: CEMIMPropInfo, other: CEMIMPropInfo) -> bool:
         and one.object_instance == other.object_instance
         and one.property_id == other.property_id
     )
+
+
+def _format_error_code(error_code: CEMIErrorCode | int) -> str:
+    """Return a readable form of an error code, defined by the spec or not."""
+    if isinstance(error_code, CEMIErrorCode):
+        return error_code.name
+    return f"0x{error_code:02x}"
 
 
 class _DeviceManagementConnection(ABC):
@@ -169,7 +177,9 @@ class _DeviceManagementConnection(ABC):
             await self._setup_connection()
             await self._connect_request()
         except (OSError, CommunicationError) as ex:
-            self.transport.stop()
+            # `_connect_request` may have failed after setting up connection
+            # state, so a failed attempt does not leave a channel behind.
+            self._connection_lost()
             raise CommunicationError(
                 f"Device management connection could not be established: {ex}"
             ) from ex
@@ -332,10 +342,12 @@ class _DeviceManagementConnection(ABC):
 
         `matches` tells whether a received frame is the awaited answer;
         frames it rejects - e.g. the late answer to an earlier, timed out
-        request - are discarded. Without it, the first frame that is not an
-        indication is returned. Note that xknx only parses the Property
-        service message codes, so e.g. a M_FuncProp request cannot see its
-        answer - and M_Reset.req has none at all.
+        request for another property - are discarded. A retry of the very
+        same request is indistinguishable from its predecessor, so a stale
+        answer can still satisfy that. Without `matches`, the first frame
+        that is not an indication is returned. Note that xknx only parses
+        the Property service message codes, so e.g. a M_FuncProp request
+        cannot see its answer - and M_Reset.req has none at all.
 
         Raise CommunicationError when the request is not acknowledged or the
         server does not answer it.
@@ -351,6 +363,8 @@ class _DeviceManagementConnection(ABC):
             self._pending = pending
             try:
                 await self._send_request(cemi)
+                # The spec defines this timeout for the acknowledgement only;
+                # reusing it as the answer deadline is merely a sensible choice.
                 async with asyncio_timeout(DEVICE_CONFIGURATION_REQUEST_TIMEOUT):
                     while True:
                         answer = await pending
@@ -445,17 +459,10 @@ class _DeviceManagementConnection(ABC):
         )
         # `matches` only accepts a CEMIMPropReadResponse for this property
         assert isinstance(answer.data, CEMIMPropReadResponse)
-        try:
-            error_code = answer.data.error_code
-        except ValueError:
-            # resolving the error octet to a CEMIErrorCode is lazy and only
-            # covers the codes the specification defines
+        if (error_code := answer.data.error_code) is not None:
             raise CommunicationError(
-                "Reading the property failed with an unknown error code: "
-                f"0x{answer.data.data.hex()}"
-            ) from None
-        if error_code is not None:
-            raise CommunicationError(f"Reading the property failed: {error_code}")
+                f"Reading the property failed: {_format_error_code(error_code)}"
+            )
         return answer.data.data
 
     async def write_property(
@@ -492,7 +499,9 @@ class _DeviceManagementConnection(ABC):
         # `matches` only accepts a CEMIMPropWriteResponse for this property
         assert isinstance(answer.data, CEMIMPropWriteResponse)
         if (error_code := answer.data.error_code) is not None:
-            raise CommunicationError(f"Writing the property failed: {error_code}")
+            raise CommunicationError(
+                f"Writing the property failed: {_format_error_code(error_code)}"
+            )
 
 
 class UDPDeviceManagementConnection(_DeviceManagementConnection):
