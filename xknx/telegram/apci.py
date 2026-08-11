@@ -4667,7 +4667,7 @@ def _pack_group_prop_value_header(
     Serialize the A_GroupPropValue* ASDU header.
 
     16 bit object_type, 8 bit object_instance, 8 bit property_id. See
-    KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.4.
+    KNX v01.02.02 - Logical Tag Extended 10.01 - §7.6.4.
     """
     if not 0 <= object_type <= 0xFFFF:
         raise ConversionError("Object type out of range.")
@@ -4684,7 +4684,7 @@ def _unpack_group_prop_value_header(raw: bytes) -> tuple[int, int, int]:
 
     `raw` shall be the complete APDU (raw[2:4] is the 16 bit
     object_type, raw[4] is the 8 bit object_instance, raw[5] is the 8
-    bit property_id). See KNX v01.02.02 - Logical Tag Extended 10.1 -
+    bit property_id). See KNX v01.02.02 - Logical Tag Extended 10.01 -
     §7.6.4.
     """
     object_type = (raw[2] << 8) | raw[3]
@@ -4698,7 +4698,7 @@ class GroupPropValueRead(APCI):
     """
     GroupPropValueRead service.
 
-    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.4
+    See KNX v01.02.02 - Logical Tag Extended 10.01 - §7.6.4
     A_GroupPropValue_Read. Not part of KNX v02.01.01 - Application Layer
     03.03.07 - defined in the LTE extension for reading Interface Object
     Server properties via group communication.
@@ -4754,7 +4754,7 @@ class GroupPropValueResponse(APCI):
     """
     GroupPropValueResponse service.
 
-    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.4
+    See KNX v01.02.02 - Logical Tag Extended 10.01 - §7.6.4
     A_GroupPropValue_Response (defined alongside A_GroupPropValue_Read).
 
     Same header as GroupPropValueRead (16 bit object_type, 8 bit
@@ -4811,7 +4811,7 @@ class GroupPropValueWrite(APCI):
     """
     GroupPropValueWrite service.
 
-    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.5
+    See KNX v01.02.02 - Logical Tag Extended 10.01 - §7.6.5
     A_GroupPropValue_Write.
 
     Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
@@ -4867,7 +4867,7 @@ class GroupPropValueInfoReport(APCI):
     """
     GroupPropValueInfoReport service.
 
-    See KNX v01.02.02 - Logical Tag Extended 10.1 - §7.6.6
+    See KNX v01.02.02 - Logical Tag Extended 10.01 - §7.6.6
     A_GroupPropValue_InfoReport.
 
     Same payload as GroupPropValueResponse: a 16 bit object_type, an 8
