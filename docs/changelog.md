@@ -6,6 +6,14 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Features
+
+- Add `DeviceManagement` to acknowledge `DeviceConfigurationRequest` frames received over a device management connection. A KNXnet/IP server sends requests of its own over such a connection - a `M_PropRead.con` answering a read, or a `M_PropInfo.ind` announcing a property it changed by itself - and repeats each of them until it is acknowledged, then closes the connection. Sending those acknowledgements had no counterpart to `DeviceConfiguration`, which covers the other direction. Sequence counters are handled as they are for tunnelling; the connection itself stays with the caller.
+- Add `UDPDeviceManagementConnection`, `TCPDeviceManagementConnection` and `SecureDeviceManagementConnection`, clients for a KNXnet/IP device management connection - the latter running it over a KNX IP Secure session. They read and write the Properties of a server's own Interface Objects - `read_property()`, `write_property()`, or `request()` for any other cEMI frame - and report the `M_PropInfo.ind` a server sends by itself to an `indication_callback`. They are not an `Interface`: a device management connection carries no telegrams and is unrelated to the KNX bus behind the server, so it leaves `xknx.current_address` and the connection manager alone. The connection is supervised as KNX v01.06.02 - Core 03.08.02 requires: a heartbeat that stays unanswered is repeated three times and then terminates the connection (§5.4), and a `DisconnectRequest` sent by the server is answered and ends it (§5.5). Over TCP no acknowledgements are sent - received ones are ignored and sequence counters are not evaluated (KNX v01.07.03 - Device Management 03.08.03 - §2.3.2, KNX v01.06.02 - Core 03.08.02 - §8.4.3.4.1) - and a lost TCP connection ends the device management connection.
+- `DeviceConfiguration` now waits `DEVICE_CONFIGURATION_REQUEST_TIMEOUT` (10 seconds, as KNX v01.07.03 - Device Management 03.08.03 - §2.3.2 requires) for its acknowledgement, instead of the one second inherited from `RequestResponse`, and takes a `timeout_in_seconds` argument to override it. `UDPDeviceManagementConnection` additionally repeats an unacknowledged request `DEVICE_CONFIGURATION_REQUEST_REPETITIONS` (3) times and then terminates the connection.
+
 # 3.19.0 Covering CEMI errors 2026-08-10
 
 ### Bugfixes
@@ -18,6 +26,7 @@ nav_order: 2
 
 ### Protocol
 
+- Be tolerant about property error codes the specification does not define: `CEMIMPropReadResponse.error_code` and `CEMIMPropWriteResponse` keep an octet outside `CEMIErrorCode` as a plain `int` instead of raising `ValueError` - from lazy resolution (and `__repr__`) on read, and from `from_knx` on write, where it made the whole frame unparsable. A `CEMIMPropWriteResponse` with the falsy `CEMI_ERROR_UNSPECIFIED` (`0x00`) error code no longer drops its error octet when serializing.
 - Parse `M_PropInfo.ind` cEMI frames into a `CEMIMPropReadResponse` - its payload has the same layout as `M_PropRead.con`. A KNXnet/IP server sends these to announce a property changing on its own, e.g. the KNXnet/IP parameter object's device state when the KNX bus fails; they previously raised `UnsupportedCEMIMessage` and were counted as incoming errors. Serializing already worked.
 
 ### Internals

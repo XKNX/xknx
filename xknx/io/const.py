@@ -12,6 +12,11 @@ CONNECTION_ALIVE_TIME: Final = 120
 CONNECTIONSTATE_REQUEST_TIMEOUT: Final = 10
 HEARTBEAT_RATE: Final = CONNECTION_ALIVE_TIME - (CONNECTIONSTATE_REQUEST_TIMEOUT * 5)
 
+# A DeviceConfigurationRequest that stays unacknowledged for this long is
+# repeated this many times, after which the connection is terminated.
+DEVICE_CONFIGURATION_REQUEST_TIMEOUT: Final = 10
+DEVICE_CONFIGURATION_REQUEST_REPETITIONS: Final = 3
+
 # Maximum time an authenticated secure session may remain unused (without
 # any communication over this session) until the session will be dropped.
 SESSION_TIMEOUT: Final = 60

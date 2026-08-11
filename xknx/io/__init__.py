@@ -9,6 +9,12 @@ Package containing all objects managing Tunneling and Routing Connections..
 
 from .connection import ConnectionConfig, ConnectionType, SecureConfig
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+from .device_management import DeviceManagement
+from .device_management_connection import (
+    SecureDeviceManagementConnection,
+    TCPDeviceManagementConnection,
+    UDPDeviceManagementConnection,
+)
 from .gateway_scanner import GatewayDescriptor, GatewayScanFilter, GatewayScanner
 from .knxip_interface import KNXIPInterface, knx_interface_factory
 from .routing import Routing
@@ -21,13 +27,17 @@ __all__ = [
     "ConnectionConfig",
     "ConnectionType",
     "DescriptionQuery",
+    "DeviceManagement",
     "GatewayDescriptor",
     "GatewayScanFilter",
     "GatewayScanner",
     "KNXIPInterface",
     "Routing",
     "SecureConfig",
+    "SecureDeviceManagementConnection",
+    "TCPDeviceManagementConnection",
     "TCPTunnel",
+    "UDPDeviceManagementConnection",
     "UDPTunnel",
     "knx_interface_factory",
 ]

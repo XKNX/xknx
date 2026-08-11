@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from xknx.io.const import DEVICE_CONFIGURATION_REQUEST_TIMEOUT
 from xknx.knxip import DeviceConfigurationAck, DeviceConfigurationRequest, KNXIPFrame
 
 from .request_response import RequestResponse
@@ -22,11 +23,14 @@ class DeviceConfiguration(RequestResponse):
         transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
         device_configuration_request: DeviceConfigurationRequest,
+        timeout_in_seconds: float = DEVICE_CONFIGURATION_REQUEST_TIMEOUT,
     ) -> None:
         """Initialize DeviceConfiguration class."""
         self.data_endpoint_addr = data_endpoint
         self.device_configuration_request = device_configuration_request
-        super().__init__(transport, DeviceConfigurationAck)
+        super().__init__(
+            transport, DeviceConfigurationAck, timeout_in_seconds=timeout_in_seconds
+        )
 
     async def send_request(self) -> None:
         """Build knxipframe (within derived class) and send via UDP."""

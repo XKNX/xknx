@@ -48,9 +48,12 @@ if they aren't already established elsewhere in the codebase.
 | 03.03.07 | Application Layer | v02.01.01 | `xknx/telegram/apci.py`, `xknx/management/management.py`, `xknx/exceptions/exception.py`, `xknx/cemi/cemi_frame.py`, `xknx/secure/data_secure_asdu.py`, `test/telegram_tests/apci_test.py` |
 | 03.03.04 | Transport Layer | v01.02.02 | `xknx/telegram/tpci.py` |
 | 03.07.02 | Datapoint Types | v02.02.01 | `docs/changelog.md` (historical entry) |
-| 10.1 | Logical Tag Extended | v01.02.02 | `xknx/telegram/apci.py` |
-| 3.8.5 | Routing | v01.05.02 | `xknx/io/routing.py` |
-| 3.2.6 | Communication Medium KNX IP | v01.01.02 | `xknx/io/routing.py` |
+| 10.01 | Logical Tag Extended | v01.02.02 | `xknx/telegram/apci.py` |
+| 03.08.05 | Routing | v01.05.02 | `xknx/io/routing.py` |
+| 03.02.06 | Communication Medium KNX IP | v01.01.02 | `xknx/io/routing.py` |
+| 03.08.02 | Core | v01.06.02 | `xknx/io/device_management_connection.py` |
+| 03.08.03 | Device Management | v01.07.03 | `xknx/io/device_management.py`, `xknx/io/device_management_connection.py`, `docs/changelog.md` |
+| 03.08.04 | Tunnelling | v01.07.01 | `xknx/io/device_management.py` |
 
 Note that Management Procedures and Application Layer are two different
 documents cited side by side in `xknx/management/management.py` and carry
@@ -65,13 +68,13 @@ area; a document's number starts with its Volume:
 | Volume | Covers | Example document numbers cited in xknx |
 |---|---|---|
 | 3 — System Specifications | The core protocol stack: physical/data link/network/transport/application layers, management, routing, communication media | 03.02.06, 03.03.04, 03.03.07, 03.05.02, 03.08.05 |
-| 10 — Application Specific Standards | Standardized application-level extensions built on top of Volume 3 | 10.1 (Logical Tag Extended) |
+| 10 — Application Specific Standards | Standardized application-level extensions built on top of Volume 3 | 10.01 (Logical Tag Extended) |
 
 Almost everything xknx cites is Volume 3, since that's the wire protocol
 itself. Volume 10 documents are extensions layered on top (e.g. LTE adds
 `A_GroupPropValue_*` services on top of the Application Layer) and are
 versioned independently of Volume 3 — this is why Logical Tag Extended
-(10.1) doesn't share a version with Application Layer (03.03.07) even
+(10.01) doesn't share a version with Application Layer (03.03.07) even
 though the two are closely related.
 
 Document numbers within a volume follow `<volume>.<chapter>[.<subchapter>]`
@@ -81,6 +84,11 @@ same volume, even adjacent subchapters, can still be at different versions
 (e.g. Transport Layer 03.03.04 at v01.02.02 vs. Application Layer 03.03.07
 at v02.01.01), so the numbering scheme is only useful for finding *which*
 document to ask about, never for guessing its version.
+
+Every segment is zero-padded to two digits — `03.08.02`, not `3.8.2`;
+`10.01`, not `10.1` — matching the KNX Association's own document
+filenames (e.g. `03_08_02 Core`, `10_01 Logical Tag Extended`). Write new
+citations this way even where an existing one in the codebase doesn't.
 
 ## Management procedures naming convention
 

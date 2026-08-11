@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from xknx.cemi import CEMIFrame, CEMIMPropInfo, CEMIMPropReadRequest
 from xknx.cemi.const import CEMIMessageCode
+from xknx.io.const import DEVICE_CONFIGURATION_REQUEST_TIMEOUT
 from xknx.io.request_response import DeviceConfiguration
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -80,3 +81,21 @@ class TestDeviceConfiguration:
         res_knxipframe = KNXIPFrame.init_from_body(DeviceConfigurationAck())
         device_configuration.response_rec_callback(res_knxipframe, HPAI(), None)
         assert device_configuration.success
+
+    async def test_default_timeout(self) -> None:
+        """Test waiting the DEVICE_CONFIGURATION_REQUEST_TIMEOUT for the acknowledgement."""
+        udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
+        device_configuration = DeviceConfiguration(
+            udp_transport,
+            ("192.168.1.2", 4567),
+            DeviceConfigurationRequest(
+                communication_channel_id=23,
+                sequence_counter=42,
+                raw_cemi=bytes((0xFC, 0x00, 0x0B, 0x01, 0x45, 0x10, 0x01)),
+            ),
+        )
+        assert (
+            device_configuration.timeout_in_seconds
+            == DEVICE_CONFIGURATION_REQUEST_TIMEOUT
+            == 10
+        )
