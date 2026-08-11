@@ -25,11 +25,11 @@ KNX v01.02.02 - Transport Layer 03.03.04 - §2 TPDU
 The KNX Standard is published as a set of separate documents (one per
 volume/part/chapter), and **different documents carry different version
 numbers** — they are not all released together under one overall version.
-`xknx/telegram/tpci.py` cites Transport Layer (03.03.04) at `v01.02.02`,
-while the Management Procedures document (03.05.02) is at `v02.01.02`. A
-citation with the document number but no version is ambiguous: the cited
-paragraph's content, numbering, or even its existence can differ between
-versions of the same document.
+Transport Layer (03.03.04) is at `v01.02.02`, while the Management
+Procedures document (03.05.02) is at `v02.01.02`. A citation with the
+document number but no version is ambiguous: the cited paragraph's
+content, numbering, or even its existence can differ between versions of
+the same document.
 
 ### Rule: never guess the version (or the document number/title)
 
@@ -42,23 +42,23 @@ if they aren't already established elsewhere in the codebase.
 
 ### Known documents and confirmed versions
 
-| Document number | Title | Version | Where cited |
-|---|---|---|---|
-| 03.05.02 | Management Procedures | v02.01.02 | `xknx/management/**` |
-| 03.03.07 | Application Layer | v02.01.01 | `xknx/telegram/apci.py`, `xknx/management/management.py`, `xknx/exceptions/exception.py`, `xknx/cemi/cemi_frame.py`, `xknx/secure/data_secure_asdu.py`, `test/telegram_tests/apci_test.py` |
-| 03.03.04 | Transport Layer | v01.02.02 | `xknx/telegram/tpci.py` |
-| 03.07.02 | Datapoint Types | v02.02.01 | `docs/changelog.md` (historical entry) |
-| 10.01 | Logical Tag Extended | v01.02.02 | `xknx/telegram/apci.py` |
-| 03.08.05 | Routing | v01.05.02 | `xknx/io/routing.py` |
-| 03.02.06 | Communication Medium KNX IP | v01.01.02 | `xknx/io/routing.py` |
-| 03.08.02 | Core | v01.06.02 | `xknx/io/device_management_connection.py` |
-| 03.08.03 | Device Management | v01.07.03 | `xknx/io/device_management.py`, `xknx/io/device_management_connection.py`, `docs/changelog.md` |
-| 03.08.04 | Tunnelling | v01.07.01 | `xknx/io/device_management.py` |
+| Spec version | Title | Document number |
+|---|---|---|
+| v02.01.02 | Management Procedures | 03.05.02 |
+| v02.01.01 | Application Layer | 03.03.07 |
+| v01.02.02 | Transport Layer | 03.03.04 |
+| v02.02.01 | Datapoint Types | 03.07.02 |
+| v01.02.02 | Logical Tag Extended | 10.01 |
+| v01.05.02 | Routing | 03.08.05 |
+| v01.01.02 | Communication Medium KNX IP | 03.02.06 |
+| v01.06.02 | Core | 03.08.02 |
+| v01.07.03 | Device Management | 03.08.03 |
+| v01.07.01 | Tunnelling | 03.08.04 |
 
 Note that Management Procedures and Application Layer are two different
-documents cited side by side in `xknx/management/management.py` and carry
-*different* versions (`v02.01.02` vs `v02.01.01`) — don't assume every KNX
-document shares one "current" version just because two happen to be close.
+documents, cited side by side in places, that carry *different* versions
+(`v02.01.02` vs `v02.01.01`) — don't assume every KNX document shares one
+"current" version just because two happen to be close.
 
 ### How the KNX Standard is organized
 
