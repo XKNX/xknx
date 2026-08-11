@@ -1,4 +1,4 @@
-"""Tests for dm_connect — KNX 03.05.02 §3.2.1 DMP_Connect_RCo."""
+"""Tests for dm_connect — KNX v02.01.02 - Management Procedures 03.05.02 - §3.2.1 DMP_Connect_RCo."""
 
 import asyncio
 from unittest.mock import AsyncMock, call

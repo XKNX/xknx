@@ -1,4 +1,4 @@
-"""Tests for dmp_authorize_r_co - KNX 03.05.02 section 3.5 DM_Authorize."""
+"""Tests for dmp_authorize_r_co - KNX v02.01.02 - Management Procedures 03.05.02 - §3.5 DM_Authorize."""
 
 import asyncio
 from unittest.mock import AsyncMock, call
@@ -243,7 +243,9 @@ async def test_dmp_authorize2_r_co_equal_levels(xknx_setup: XKNX) -> None:
     await responder
 
     assert level == 5
-    assert xknx.cemi_handler.send_telegram.call_count == 4  # connect + 2x authorize, no re-auth
+    assert (
+        xknx.cemi_handler.send_telegram.call_count == 4
+    )  # connect + 2x authorize, no re-auth
 
     await conn.disconnect()
 

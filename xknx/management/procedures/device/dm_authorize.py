@@ -1,6 +1,4 @@
-"""
-DM_Authorize — KNX 03.05.02 §3.5 (PDF p. 74).
-"""
+"""DM_Authorize — KNX v02.01.02 - Management Procedures 03.05.02 - §3.5."""
 
 from __future__ import annotations
 
@@ -12,12 +10,15 @@ FREE_ACCESS_KEY = 0xFFFFFFFF
 __all__ = ["FREE_ACCESS_KEY", "dmp_authorize2_r_co", "dmp_authorize_r_co"]
 
 
-async def dmp_authorize_r_co(connection: P2PConnection, key: int = FREE_ACCESS_KEY) -> int:
+async def dmp_authorize_r_co(
+    connection: P2PConnection, key: int = FREE_ACCESS_KEY
+) -> int:
     """
     Authorize with a KNX device to obtain access rights.
 
-    DMP_Authorize_RCo — KNX 03.05.02 §3.5.1. Requires an established
-    connection (DM_Connect must be executed first).
+    DMP_Authorize_RCo — KNX v02.01.02 - Management Procedures 03.05.02 -
+    §3.5.1. Requires an established connection (DM_Connect must be
+    executed first).
 
     :param connection: Active P2P connection to the device
     :param key: 4-byte authorization key (0xFFFFFFFF for free access)
@@ -27,6 +28,8 @@ async def dmp_authorize_r_co(connection: P2PConnection, key: int = FREE_ACCESS_K
         payload=apci.AuthorizeRequest(key=key),
         expected=apci.AuthorizeResponse,
     )
+    # `expected` guarantees this via `P2PConnection._receive`
+    assert isinstance(response.payload, apci.AuthorizeResponse)
     return response.payload.level
 
 
@@ -34,8 +37,9 @@ async def dmp_authorize2_r_co(connection: P2PConnection, client_key: int) -> int
     """
     Authorize with a KNX device, comparing free access vs client key.
 
-    DMP_Authorize2_RCo — KNX 03.05.02 §3.5.2. Tries free access first,
-    then client key, and uses whichever gives better (lower) access level.
+    DMP_Authorize2_RCo — KNX v02.01.02 - Management Procedures 03.05.02 -
+    §3.5.2. Tries free access first, then client key, and uses whichever
+    gives better (lower) access level.
 
     :param connection: Active P2P connection to the device
     :param client_key: 4-byte client authorization key
