@@ -295,7 +295,7 @@ class _DeviceManagementConnection(ABC):
             success, status = await self._connectionstate_request(channel)
             if not success:
                 # Repeat the ConnectionStateRequest three times, then
-                # terminate the connection - KNXnet/IP Core 03.08.02 §5.4.
+                # terminate the connection - KNX v01.06.02 - Core 03.08.02 - §5.4.
                 for _retry in range(3):
                     success, status = await self._connectionstate_request(channel)
                     if success:
@@ -513,7 +513,8 @@ class UDPDeviceManagementConnection(_DeviceManagementConnection):
     tracked, and a sent request that stays unacknowledged for
     DEVICE_CONFIGURATION_REQUEST_TIMEOUT (10 seconds) is repeated
     DEVICE_CONFIGURATION_REQUEST_REPETITIONS (3) times and then terminates
-    the connection, as KNXnet/IP Device Management 03.08.03 §2.3.2 requires.
+    the connection, as KNX v01.07.03 - Device Management 03.08.03 - §2.3.2
+    requires.
     """
 
     __slots__ = (
@@ -629,9 +630,10 @@ class TCPDeviceManagementConnection(_DeviceManagementConnection):
     A KNXnet/IP device management connection over TCP.
 
     TCP frames are not acknowledged: no DeviceConfigurationAck is sent and a
-    received one is ignored (03.08.03 §2.3.2), and sequence counters are not
-    evaluated (KNXnet/IP Core 03.08.02 §8.4.3.4.1). The transport reports a
-    lost TCP connection, which ends the device management connection.
+    received one is ignored (KNX v01.07.03 - Device Management 03.08.03 -
+    §2.3.2), and sequence counters are not evaluated (KNX v01.06.02 - Core
+    03.08.02 - §8.4.3.4.1). The transport reports a lost TCP connection,
+    which ends the device management connection.
     """
 
     __slots__ = ("_receive_callback",)

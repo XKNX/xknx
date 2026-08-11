@@ -104,11 +104,13 @@ class DeviceManagement:
                 request,
             )
             return
-        # Device Management only spells out the server side of this - "shall
-        # send no DEVICE_CONFIGURATION_ACK and shall discard the frame if it
-        # receives a frame with an unexpected sequence number" - so the client
-        # side follows the rules Tunnelling states for both ends. Taking the
-        # server sentence literally would break the repetition it exists for:
+        # Device Management (KNX v01.07.03 - Device Management 03.08.03 -
+        # §2.3.2) only spells out the server side of this - "shall send no
+        # DEVICE_CONFIGURATION_ACK and shall discard the frame if it receives
+        # a frame with an unexpected sequence number" - so the client side
+        # follows the rules KNX v01.07.01 - Tunnelling 03.08.04 - §2.6.1
+        # states for both ends. Taking the server sentence literally would
+        # break the repetition it exists for:
         # after a frame is processed the expected counter has moved on, so the
         # repetition a server sends when its acknowledgement went missing is
         # itself "unexpected", and leaving it unacknowledged would have the
