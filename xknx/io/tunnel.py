@@ -29,7 +29,11 @@ from xknx.knxip import (
 )
 from xknx.telegram import IndividualAddress
 
-from .const import HEARTBEAT_RATE
+from .data_connection import (
+    ConnectionHeartbeat,
+    IncomingSequenceCounter,
+    SequenceVerdict,
+)
 from .gateway_scanner import GatewayDescriptor
 from .interface import CEMIBytesCallbackType, Interface
 from .ip_secure import SecureSession
@@ -48,7 +52,7 @@ class _Tunnel(Interface):
 
     __slots__ = (
         "_data_endpoint_addr",
-        "_heartbeat_task",
+        "_heartbeat",
         "_reconnect_task",
         "_requested_address",
         "_send_lock",
@@ -82,7 +86,10 @@ class _Tunnel(Interface):
         self.sequence_number = 0
         self.cemi_received_callback = cemi_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
-        self._heartbeat_task: asyncio.Task[None] | None = None
+        self._heartbeat = ConnectionHeartbeat(
+            send_connectionstate=self._connectionstate_request,
+            on_failure=self._heartbeat_failed,
+        )
         self._reconnect_task: asyncio.Task[None] | None = None
         self._requested_address: IndividualAddress | None = None
         self._src_address = IndividualAddress(0)
@@ -406,41 +413,15 @@ class _Tunnel(Interface):
 
     def start_heartbeat(self) -> None:
         """Start heartbeat for monitoring state of tunnel, as suggested by 03.08.02 KNX Core 5.4."""
-        self._heartbeat_task = asyncio.create_task(self.do_heartbeat())
+        self._heartbeat.start()
 
     def stop_heartbeat(self) -> None:
         """Stop heartbeat task if running."""
-        if self._heartbeat_task is not None:
-            self._heartbeat_task.cancel()
-            self._heartbeat_task = None
+        self._heartbeat.stop()
 
-    async def do_heartbeat(self) -> None:
-        """Heartbeat: Worker task, endless loop for sending heartbeat requests."""
-        while True:
-            try:
-                await asyncio.sleep(HEARTBEAT_RATE)
-                success, _ = await self._connectionstate_request()
-                if not success:
-                    await self._do_heartbeat_failed()
-            except CommunicationError as err:
-                logger.warning(err)
-                self._tunnel_lost()
-
-    async def _do_heartbeat_failed(self) -> None:
-        """Heartbeat: handling error."""
-        # first heartbeat failed - try 3 more times before disconnecting.
-        for _heartbeats_failed in range(3):
-            success, status = await self._connectionstate_request()
-            if success:
-                return
-        # 3 retries failed
-        if status is None:
-            raise CommunicationError(
-                "Heartbeat failed. No answer from tunnelling server."
-            )
-        raise CommunicationError(
-            f"Heartbeat failed. Tunnelling server repeatedly responded with status: {status}"
-        )
+    async def _heartbeat_failed(self) -> None:
+        """Reconnect or shut down after a repeatedly failed heartbeat. Heartbeat callback."""
+        self._tunnel_lost()
 
 
 class UDPTunnel(_Tunnel):
@@ -448,7 +429,7 @@ class UDPTunnel(_Tunnel):
 
     __slots__ = (
         "_invalid_sequence_number_reconnect_task",
-        "expected_sequence_number",
+        "_sequence",
         "gateway_ip",
         "gateway_port",
         "local_ip",
@@ -483,8 +464,18 @@ class UDPTunnel(_Tunnel):
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
         )
-        self.expected_sequence_number = 0
+        self._sequence = IncomingSequenceCounter()
         self._invalid_sequence_number_reconnect_task: asyncio.Task[None] | None = None
+
+    @property
+    def expected_sequence_number(self) -> int:
+        """Return the sequence counter expected on the next TunnellingRequest."""
+        return self._sequence.expected
+
+    @expected_sequence_number.setter
+    def expected_sequence_number(self, value: int) -> None:
+        """Set the sequence counter expected on the next TunnellingRequest."""
+        self._sequence.expected = value
 
     def _init_transport(self) -> None:
         """Initialize transport transport."""
@@ -496,7 +487,7 @@ class UDPTunnel(_Tunnel):
 
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
-        self.expected_sequence_number = 0
+        self._sequence.reset()
 
         if self.route_back:
             self.local_hpai = HPAI()
@@ -645,8 +636,8 @@ class UDPTunnel(_Tunnel):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnelling request."""
-        if tunneling_request.sequence_counter == self.expected_sequence_number:
-            self.expected_sequence_number = self.expected_sequence_number + 1 & 0xFF
+        verdict = self._sequence.evaluate(tunneling_request.sequence_counter)
+        if verdict is SequenceVerdict.EXPECTED:
             # valid frame received - cancel scheduled reconnect for invalid sequence number
             self._cancel_invalid_sequence_number_reconnect_schedule()
 
@@ -656,10 +647,7 @@ class UDPTunnel(_Tunnel):
             )
             super()._tunnelling_request_received(tunneling_request)
             return
-        if (
-            tunneling_request.sequence_counter
-            == self.expected_sequence_number - 1 & 0xFF
-        ):
+        if verdict is SequenceVerdict.REPEATED:
             self._send_tunnelling_ack(
                 tunneling_request.communication_channel_id,
                 tunneling_request.sequence_counter,
