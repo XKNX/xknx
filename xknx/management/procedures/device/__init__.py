@@ -2,5 +2,5 @@
 
 # ruff: noqa: F401
 from .dm_authorize import FREE_ACCESS_KEY, dmp_authorize2_r_co, dmp_authorize_r_co
-from .dm_connect import dm_connect
+from .dm_connect_r_co import dmp_connect_r_co
 from .dm_restart_r_co import dm_restart, dm_restart_r_co

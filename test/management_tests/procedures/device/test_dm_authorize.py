@@ -12,6 +12,9 @@ from xknx.management.procedures.device.dm_authorize import (
     dmp_authorize_r_co,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+from xknx.util import asyncio_timeout
+
+RESPONDER_TIMEOUT = 1
 
 
 @pytest.fixture
@@ -20,6 +23,38 @@ def xknx_setup() -> XKNX:
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     return xknx
+
+
+def _authorize_request(ia: IndividualAddress, sequence: int, key: int) -> Telegram:
+    """Build the outgoing AuthorizeRequest telegram for a given sequence number."""
+    return Telegram(
+        destination_address=ia,
+        tpci=tpci.TDataConnected(sequence),
+        payload=apci.AuthorizeRequest(key=key),
+    )
+
+
+def _ack(ia: IndividualAddress, xknx: XKNX, sequence: int) -> Telegram:
+    """Build an incoming TAck for a given sequence number."""
+    return Telegram(
+        source_address=ia,
+        destination_address=xknx.current_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(sequence),
+    )
+
+
+def _authorize_response(
+    ia: IndividualAddress, xknx: XKNX, sequence: int, level: int
+) -> Telegram:
+    """Build an incoming AuthorizeResponse telegram for a given sequence number."""
+    return Telegram(
+        source_address=ia,
+        destination_address=xknx.current_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataConnected(sequence),
+        payload=apci.AuthorizeResponse(level=level),
+    )
 
 
 async def test_dmp_authorize_r_co_with_key(xknx_setup: XKNX) -> None:
@@ -34,28 +69,12 @@ async def test_dmp_authorize_r_co_with_key(xknx_setup: XKNX) -> None:
     task = asyncio.create_task(dmp_authorize_r_co(conn, test_key))
     await asyncio.sleep(0)
 
-    expected_request = Telegram(
-        destination_address=ia,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.AuthorizeRequest(key=test_key),
-    )
-    assert xknx.cemi_handler.send_telegram.call_args_list == [call(expected_request)]
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_authorize_request(ia, 0, test_key))
+    ]
 
-    ack = Telegram(
-        source_address=ia,
-        destination_address=xknx.current_address,
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
-    response = Telegram(
-        source_address=ia,
-        destination_address=xknx.current_address,
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.AuthorizeResponse(level=3),
-    )
-    xknx.management.process(ack)
-    xknx.management.process(response)
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(_authorize_response(ia, xknx, 0, level=3))
 
     level = await task
     assert level == 3
@@ -74,28 +93,12 @@ async def test_dmp_authorize_r_co_free_access(xknx_setup: XKNX) -> None:
     task = asyncio.create_task(dmp_authorize_r_co(conn, FREE_ACCESS_KEY))
     await asyncio.sleep(0)
 
-    expected_request = Telegram(
-        destination_address=ia,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.AuthorizeRequest(key=FREE_ACCESS_KEY),
-    )
-    assert xknx.cemi_handler.send_telegram.call_args_list == [call(expected_request)]
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_authorize_request(ia, 0, FREE_ACCESS_KEY))
+    ]
 
-    ack = Telegram(
-        source_address=ia,
-        destination_address=xknx.current_address,
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
-    response = Telegram(
-        source_address=ia,
-        destination_address=xknx.current_address,
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.AuthorizeResponse(level=15),
-    )
-    xknx.management.process(ack)
-    xknx.management.process(response)
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(_authorize_response(ia, xknx, 0, level=15))
 
     level = await task
     assert level == 15
@@ -115,24 +118,17 @@ async def test_dmp_authorize2_r_co_free_access_is_highest(xknx_setup: XKNX) -> N
     task = asyncio.create_task(dmp_authorize2_r_co(conn, client_key))
     await asyncio.sleep(0)
 
-    ack = Telegram(
-        source_address=ia,
-        destination_address=xknx.current_address,
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
-    response = Telegram(
-        source_address=ia,
-        destination_address=xknx.current_address,
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TDataConnected(0),
-        payload=apci.AuthorizeResponse(level=0),
-    )
-    xknx.management.process(ack)
-    xknx.management.process(response)
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(_authorize_response(ia, xknx, 0, level=0))
 
     level = await task
     assert level == 0
+
+    # only the free-access attempt - level 0 short-circuits the client key
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_authorize_request(ia, 0, FREE_ACCESS_KEY)),
+        call(Telegram(destination_address=ia, tpci=tpci.TAck(0))),
+    ]
 
     await conn.disconnect()
 
@@ -147,47 +143,31 @@ async def test_dmp_authorize2_r_co_client_key_is_better(xknx_setup: XKNX) -> Non
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond_to_requests() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack0 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        free_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
-            payload=apci.AuthorizeResponse(level=15),
-        )
-        xknx.management.process(ack0)
-        xknx.management.process(free_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 0))
+        xknx.management.process(_authorize_response(ia, xknx, 0, level=15))
 
-        while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack1 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(1),
-        )
-        client_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(1),
-            payload=apci.AuthorizeResponse(level=3),
-        )
-        xknx.management.process(ack1)
-        xknx.management.process(client_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 1))
+        xknx.management.process(_authorize_response(ia, xknx, 1, level=3))
 
     responder = asyncio.create_task(respond_to_requests())
     level = await dmp_authorize2_r_co(conn, client_key)
     await responder
 
     assert level == 3
+
+    # free access (level 15) then client key (level 3) - client key wins, no re-auth
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _authorize_request(ia, 0, FREE_ACCESS_KEY),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _authorize_request(ia, 1, client_key),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+    ]
 
     await conn.disconnect()
 
@@ -202,50 +182,32 @@ async def test_dmp_authorize2_r_co_equal_levels(xknx_setup: XKNX) -> None:
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond_to_requests() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack0 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        free_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
-            payload=apci.AuthorizeResponse(level=5),
-        )
-        xknx.management.process(ack0)
-        xknx.management.process(free_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 0))
+        xknx.management.process(_authorize_response(ia, xknx, 0, level=5))
 
-        while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack1 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(1),
-        )
-        client_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(1),
-            payload=apci.AuthorizeResponse(level=5),
-        )
-        xknx.management.process(ack1)
-        xknx.management.process(client_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 1))
+        xknx.management.process(_authorize_response(ia, xknx, 1, level=5))
 
     responder = asyncio.create_task(respond_to_requests())
     level = await dmp_authorize2_r_co(conn, client_key)
     await responder
 
     assert level == 5
-    assert (
-        xknx.cemi_handler.send_telegram.call_count == 4
-    )  # connect + 2x authorize, no re-auth
+    # 2 AuthorizeRequests (free, client) + 2 background ACKs for their
+    # responses (see Management.process) - no third, re-authorizing request
+    assert xknx.cemi_handler.send_telegram.call_count == 4
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _authorize_request(ia, 0, FREE_ACCESS_KEY),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _authorize_request(ia, 1, client_key),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+    ]
 
     await conn.disconnect()
 
@@ -260,64 +222,38 @@ async def test_dmp_authorize2_r_co_free_access_is_better(xknx_setup: XKNX) -> No
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond_to_requests() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack0 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        free_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
-            payload=apci.AuthorizeResponse(level=3),
-        )
-        xknx.management.process(ack0)
-        xknx.management.process(free_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 0))
+        xknx.management.process(_authorize_response(ia, xknx, 0, level=3))
 
-        while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack1 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(1),
-        )
-        client_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(1),
-            payload=apci.AuthorizeResponse(level=10),
-        )
-        xknx.management.process(ack1)
-        xknx.management.process(client_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 1))
+        xknx.management.process(_authorize_response(ia, xknx, 1, level=10))
 
-        while xknx.cemi_handler.send_telegram.call_count < 5:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack2 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(2),
-        )
-        reauth_response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(2),
-            payload=apci.AuthorizeResponse(level=3),
-        )
-        xknx.management.process(ack2)
-        xknx.management.process(reauth_response)
+        async with asyncio_timeout(RESPONDER_TIMEOUT):
+            while xknx.cemi_handler.send_telegram.call_count < 5:  # noqa: ASYNC110
+                await asyncio.sleep(0)
+        xknx.management.process(_ack(ia, xknx, 2))
+        xknx.management.process(_authorize_response(ia, xknx, 2, level=3))
 
     responder = asyncio.create_task(respond_to_requests())
     level = await dmp_authorize2_r_co(conn, client_key)
     await responder
 
     assert level == 3
+
+    # free access (level 3) then client key (level 10, worse) - re-authorize with free access
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _authorize_request(ia, 0, FREE_ACCESS_KEY),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _authorize_request(ia, 1, client_key),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+        _authorize_request(ia, 2, FREE_ACCESS_KEY),
+        Telegram(destination_address=ia, tpci=tpci.TAck(2)),
+    ]
 
     await conn.disconnect()

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-__all__ = ["dm_connect"]
+__all__ = ["dmp_connect_r_co"]
 
 
-async def dm_connect(conn: P2PConnection) -> int:
+async def dmp_connect_r_co(conn: P2PConnection) -> int:
     """
     Confirm an open P2P connection by reading the device descriptor (DD0).
 
@@ -25,4 +26,8 @@ async def dm_connect(conn: P2PConnection) -> int:
     )
     # `expected` guarantees this via `P2PConnection._receive`
     assert isinstance(response.payload, apci.DeviceDescriptorResponse)
+    if response.payload.descriptor != 0:
+        raise ManagementConnectionError(
+            f"Expected Device Descriptor Type 0, got type {response.payload.descriptor}"
+        )
     return response.payload.value
