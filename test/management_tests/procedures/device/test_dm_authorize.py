@@ -3,8 +3,6 @@
 import asyncio
 from unittest.mock import AsyncMock, call
 
-import pytest
-
 from xknx import XKNX
 from xknx.management.procedures.device.dm_authorize import (
     FREE_ACCESS_KEY,
@@ -17,8 +15,7 @@ from xknx.util import asyncio_timeout
 RESPONDER_TIMEOUT = 1
 
 
-@pytest.fixture
-def xknx_setup() -> XKNX:
+def _xknx_setup() -> XKNX:
     """Set up XKNX with mocked cemi_handler."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -57,9 +54,9 @@ def _authorize_response(
     )
 
 
-async def test_dmp_authorize_r_co_with_key(xknx_setup: XKNX) -> None:
+async def test_dmp_authorize_r_co_with_key() -> None:
     """Test dmp_authorize_r_co sends AuthorizeRequest and returns level."""
-    xknx = xknx_setup
+    xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
     test_key = 0x12345678
 
@@ -82,9 +79,9 @@ async def test_dmp_authorize_r_co_with_key(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_authorize_r_co_free_access(xknx_setup: XKNX) -> None:
+async def test_dmp_authorize_r_co_free_access() -> None:
     """Test dmp_authorize_r_co with free access key."""
-    xknx = xknx_setup
+    xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
 
     conn = await xknx.management.connect(ia)
@@ -106,9 +103,9 @@ async def test_dmp_authorize_r_co_free_access(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_authorize2_r_co_free_access_is_highest(xknx_setup: XKNX) -> None:
+async def test_dmp_authorize2_r_co_free_access_is_highest() -> None:
     """Test dmp_authorize2_r_co when free access gives level 0 (highest)."""
-    xknx = xknx_setup
+    xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
     client_key = 0xABCDEF00
 
@@ -133,9 +130,9 @@ async def test_dmp_authorize2_r_co_free_access_is_highest(xknx_setup: XKNX) -> N
     await conn.disconnect()
 
 
-async def test_dmp_authorize2_r_co_client_key_is_better(xknx_setup: XKNX) -> None:
+async def test_dmp_authorize2_r_co_client_key_is_better() -> None:
     """Test dmp_authorize2_r_co when client key gives better access than free."""
-    xknx = xknx_setup
+    xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
     client_key = 0xABCDEF00
 
@@ -172,9 +169,9 @@ async def test_dmp_authorize2_r_co_client_key_is_better(xknx_setup: XKNX) -> Non
     await conn.disconnect()
 
 
-async def test_dmp_authorize2_r_co_equal_levels(xknx_setup: XKNX) -> None:
+async def test_dmp_authorize2_r_co_equal_levels() -> None:
     """Test dmp_authorize2_r_co when client key gives equal access to free — no re-auth."""
-    xknx = xknx_setup
+    xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
     client_key = 0xABCDEF00
 
@@ -212,9 +209,9 @@ async def test_dmp_authorize2_r_co_equal_levels(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_authorize2_r_co_free_access_is_better(xknx_setup: XKNX) -> None:
+async def test_dmp_authorize2_r_co_free_access_is_better() -> None:
     """Test dmp_authorize2_r_co when free access is better than client key."""
-    xknx = xknx_setup
+    xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
     client_key = 0xABCDEF00
 
