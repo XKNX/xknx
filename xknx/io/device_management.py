@@ -13,6 +13,7 @@ from xknx.knxip import (
     KNXIPServiceType,
 )
 
+from .data_connection import IncomingSequenceCounter, SequenceVerdict
 from .transport import KNXIPTransport, UDPTransport
 
 logger = logging.getLogger("xknx.log")
@@ -42,10 +43,10 @@ class DeviceManagement:
 
     __slots__ = (
         "_callback",
+        "_sequence",
         "cemi_received_callback",
         "communication_channel",
         "data_endpoint_addr",
-        "expected_sequence_number",
         "transport",
     )
 
@@ -61,8 +62,18 @@ class DeviceManagement:
         self.communication_channel = communication_channel
         self.cemi_received_callback = cemi_received_callback
         self.data_endpoint_addr = data_endpoint
-        self.expected_sequence_number = 0
+        self._sequence = IncomingSequenceCounter()
         self._callback: UDPTransport.Callback | None = None
+
+    @property
+    def expected_sequence_number(self) -> int:
+        """Return the sequence counter expected on the next request."""
+        return self._sequence.expected
+
+    @expected_sequence_number.setter
+    def expected_sequence_number(self, value: int) -> None:
+        """Set the sequence counter expected on the next request."""
+        self._sequence.expected = value
 
     def start(self) -> None:
         """Start answering incoming requests."""
@@ -70,7 +81,7 @@ class DeviceManagement:
             return
         # A sequence counter starts at 0 for every established connection, so
         # an instance reused for a new one does not carry the old count over.
-        self.expected_sequence_number = 0
+        self._sequence.reset()
         self._callback = self.transport.register_callback(
             self._request_received,
             [KNXIPServiceType.DEVICE_CONFIGURATION_REQUEST],
@@ -104,24 +115,13 @@ class DeviceManagement:
                 request,
             )
             return
-        # Device Management (KNX v01.07.03 - Device Management 03.08.03 -
-        # §2.3.2) only spells out the server side of this - "shall send no
-        # DEVICE_CONFIGURATION_ACK and shall discard the frame if it receives
-        # a frame with an unexpected sequence number" - so the client side
-        # follows the rules KNX v01.07.01 - Tunnelling 03.08.04 - §2.6.1
-        # states for both ends. Taking the server sentence literally would
-        # break the repetition it exists for:
-        # after a frame is processed the expected counter has moved on, so the
-        # repetition a server sends when its acknowledgement went missing is
-        # itself "unexpected", and leaving it unacknowledged would have the
-        # server repeat until it drops the connection.
-        if request.sequence_counter == self.expected_sequence_number:
-            self.expected_sequence_number = self.expected_sequence_number + 1 & 0xFF
+        verdict = self._sequence.evaluate(request.sequence_counter)
+        if verdict is SequenceVerdict.EXPECTED:
             self._send_device_configuration_ack(request.sequence_counter)
             if self.cemi_received_callback is not None:
                 self.cemi_received_callback(request.raw_cemi)
             return
-        if request.sequence_counter == self.expected_sequence_number - 1 & 0xFF:
+        if verdict is SequenceVerdict.REPEATED:
             self._send_device_configuration_ack(request.sequence_counter)
             logger.debug(
                 "Received DeviceConfigurationRequest with sequence number one less "
@@ -129,12 +129,12 @@ class DeviceManagement:
                 request,
             )
             return
-        # Anything else is dropped without an acknowledgement, as the KNX
-        # specification requires; the server repeats the frame and closes the
-        # connection when that is not acknowledged either. Unlike the tunnel,
-        # which schedules a disconnect for servers that fail to do that, this
-        # class only observes: the connection belongs to the caller, and its
-        # heartbeat will notice a server that dropped the channel silently.
+        # Dropped without an acknowledgement; the server repeats the frame and
+        # closes the connection when that is not acknowledged either. Unlike
+        # the tunnel, which schedules a disconnect for servers that fail to do
+        # that, this class only observes: the connection belongs to the caller,
+        # and its heartbeat will notice a server that dropped the channel
+        # silently.
         logger.warning(
             "Received DeviceConfigurationRequest with sequence number not equal to "
             "expected: %s. Discarding frame: %s",
