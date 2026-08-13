@@ -40,8 +40,8 @@ from xknx.util import asyncio_timeout
 from .const import (
     DEVICE_CONFIGURATION_REQUEST_REPETITIONS,
     DEVICE_CONFIGURATION_REQUEST_TIMEOUT,
-    HEARTBEAT_RATE,
 )
+from .data_connection import ConnectionHeartbeat
 from .device_management import DeviceManagement
 from .ip_secure import SecureSession
 from .request_response import Connect, ConnectionState, DeviceConfiguration, Disconnect
@@ -92,7 +92,7 @@ class _DeviceManagementConnection(ABC):
     __slots__ = (
         "_data_endpoint_addr",
         "_disconnect_callback",
-        "_heartbeat_task",
+        "_heartbeat",
         "_pending",
         "_request_lock",
         "communication_channel",
@@ -124,7 +124,11 @@ class _DeviceManagementConnection(ABC):
         self._disconnect_callback: KNXIPTransport.Callback | None = None
         self._pending: asyncio.Future[CEMIFrame] | None = None
         self._request_lock = asyncio.Lock()
-        self._heartbeat_task: asyncio.Task[None] | None = None
+        self._heartbeat = ConnectionHeartbeat(
+            name="Device management connection",
+            send_connectionstate=self._connectionstate_request,
+            on_failure=self.disconnect,
+        )
 
         self._init_transport()
 
@@ -184,7 +188,7 @@ class _DeviceManagementConnection(ABC):
                 f"Device management connection could not be established: {ex}"
             ) from ex
 
-        self._heartbeat_task = asyncio.create_task(self._heartbeat())
+        self._heartbeat.start()
 
     async def _connect_request(self) -> None:
         """Send a ConnectRequest and set up the connection from its response."""
@@ -245,11 +249,7 @@ class _DeviceManagementConnection(ABC):
 
     def _stop(self) -> None:
         """Stop answering and expecting frames of the current connection."""
-        if self._heartbeat_task is not None:
-            # The heartbeat task itself disconnects after repeated failures.
-            if self._heartbeat_task is not asyncio.current_task():
-                self._heartbeat_task.cancel()
-            self._heartbeat_task = None
+        self._heartbeat.stop()
         self._stop_receiving()
         if self._disconnect_callback is not None:
             self.transport.unregister_callback(self._disconnect_callback)
@@ -286,38 +286,14 @@ class _DeviceManagementConnection(ABC):
         )
         self._connection_lost()
 
-    async def _heartbeat(self) -> None:
-        """Keep the connection alive, as the server drops a silent one."""
-        while True:
-            await asyncio.sleep(HEARTBEAT_RATE)
-            if (channel := self.communication_channel) is None:
-                return
-            success, status = await self._connectionstate_request(channel)
-            if not success:
-                # Repeat the ConnectionStateRequest three times, then
-                # terminate the connection - KNX v01.06.02 - Core 03.08.02 - §5.4.
-                for _retry in range(3):
-                    success, status = await self._connectionstate_request(channel)
-                    if success:
-                        break
-            if success:
-                continue
-            logger.warning(
-                "Device management connection heartbeat failed %s. Disconnecting.",
-                "- no response from the server"
-                if status is None
-                else f"with status: {status}",
-            )
-            await self.disconnect()
-            return
-
-    async def _connectionstate_request(
-        self, communication_channel: int
-    ) -> tuple[bool, str | None]:
-        """Send a ConnectionStateRequest and return its outcome."""
+    async def _connectionstate_request(self) -> tuple[bool, str | None] | None:
+        """Send a ConnectionStateRequest and return its outcome. Heartbeat callback."""
+        if self.communication_channel is None:
+            # The connection is already gone - end the heartbeat quietly.
+            return None
         conn_state = ConnectionState(
             transport=self.transport,
-            communication_channel_id=communication_channel,
+            communication_channel_id=self.communication_channel,
             local_hpai=self.local_hpai,
         )
         await conn_state.start()

@@ -63,11 +63,11 @@ class TestDeviceManagement:
 
     def test_start_resets_sequence_number(self) -> None:
         """Test that starting a connection resets the expected sequence number."""
-        self.device_management.expected_sequence_number = 42
+        self.device_management._sequence.expected = 42
 
         self.device_management.start()
 
-        assert self.device_management.expected_sequence_number == 0
+        assert self.device_management._sequence.expected == 0
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     def test_device_configuration_request_received(
@@ -82,7 +82,7 @@ class TestDeviceManagement:
         self.device_management._request_received(test_frame, None, None)
 
         assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
-        assert self.device_management.expected_sequence_number == 1
+        assert self.device_management._sequence.expected == 1
         self.cemi_received_mock.assert_called_once_with(test_frame.body.raw_cemi)
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
@@ -90,7 +90,7 @@ class TestDeviceManagement:
         self, mock_transport_send: Mock
     ) -> None:
         """Test receiving repeated DeviceConfigurationRequest frames."""
-        self.device_management.expected_sequence_number = 10
+        self.device_management._sequence.expected = 10
 
         test_frame = self._request(sequence_counter=10)
         test_ack = KNXIPFrame.init_from_body(
@@ -103,30 +103,30 @@ class TestDeviceManagement:
         self.device_management._request_received(test_frame, None, None)
         assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
         mock_transport_send.reset_mock()
-        assert self.device_management.expected_sequence_number == 11
+        assert self.device_management._sequence.expected == 11
         assert self.cemi_received_mock.call_count == 1
         # same sequence number as before - ACK, not processed
         self.device_management._request_received(test_frame, None, None)
         assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
         mock_transport_send.reset_mock()
-        assert self.device_management.expected_sequence_number == 11
+        assert self.device_management._sequence.expected == 11
         assert self.cemi_received_mock.call_count == 1
         # wrong sequence number - no ACK, not processed
         self.device_management._request_received(test_frame_9, None, None)
         assert mock_transport_send.call_args_list == []
-        assert self.device_management.expected_sequence_number == 11
+        assert self.device_management._sequence.expected == 11
         assert self.cemi_received_mock.call_count == 1
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     def test_sequence_number_wraps(self, mock_transport_send: Mock) -> None:
         """Test that the expected sequence number wraps after 255."""
-        self.device_management.expected_sequence_number = 255
+        self.device_management._sequence.expected = 255
 
         self.device_management._request_received(
             self._request(sequence_counter=255), None, None
         )
 
-        assert self.device_management.expected_sequence_number == 0
+        assert self.device_management._sequence.expected == 0
         # the frame before the expected one is still acknowledged after the wrap
         mock_transport_send.reset_mock()
         self.device_management._request_received(
@@ -143,7 +143,7 @@ class TestDeviceManagement:
         )
 
         assert mock_transport_send.call_args_list == []
-        assert self.device_management.expected_sequence_number == 0
+        assert self.device_management._sequence.expected == 0
         self.cemi_received_mock.assert_not_called()
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
@@ -190,4 +190,4 @@ class TestDeviceManagement:
         )
 
         assert mock_transport_send.call_count == 1
-        assert device_management.expected_sequence_number == 1
+        assert device_management._sequence.expected == 1

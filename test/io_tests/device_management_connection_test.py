@@ -683,7 +683,7 @@ class TestUDPDeviceManagementConnection:
             stop_mock.assert_called_once()
 
         assert not self.connection.transport.callbacks
-        assert self.connection._heartbeat_task is None
+        assert self.connection._heartbeat._task is None
         assert self.connection.communication_channel is None
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
@@ -880,7 +880,7 @@ class TestUDPDeviceManagementConnection:
     ) -> None:
         """Test that the heartbeat ends when the connection is gone."""
         await self._connect(send_mock, time_travel)
-        heartbeat_task = self.connection._heartbeat_task
+        heartbeat_task = self.connection._heartbeat._task
         assert heartbeat_task is not None
 
         self.connection.communication_channel = None
