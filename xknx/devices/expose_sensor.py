@@ -168,6 +168,20 @@ class ExposeSensor(Device):
             self.xknx.task_registry.start_task(self._cooldown_task)
         self.sensor_value.send_raw(payload)
 
+    def initialize_value(self, value: Any) -> None:
+        """
+        Set new value without sending it to the KNX bus.
+
+        The value is treated as if it had been sent: it answers GroupValueRead
+        telegrams, is used by periodic sending and is compared against by
+        `skip_unchanged` in `set()`. `None` clears it again.
+        Raises ConversionError on invalid value.
+        """
+        self.sensor_value.value = value
+        # equal to `last_payload` means nothing is pending, so a running
+        # cooldown task will cancel itself instead of sending this value
+        self._payload_after_cooldown = self.sensor_value.last_payload
+
     async def _cooldown_send(self) -> None:
         """Send value after cooldown if it differs from last processed value."""
         if self.sensor_value.last_payload == self._payload_after_cooldown:
