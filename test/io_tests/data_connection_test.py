@@ -62,7 +62,7 @@ class TestConnectionHeartbeat:
         """Test that a ConnectionStateRequest is sent every HEARTBEAT_RATE seconds."""
         send = AsyncMock(return_value=(True, None))
         on_failure = AsyncMock()
-        heartbeat = ConnectionHeartbeat(send, on_failure)
+        heartbeat = ConnectionHeartbeat("Test", send, on_failure)
 
         heartbeat.start()
         await time_travel(HEARTBEAT_RATE)
@@ -80,7 +80,7 @@ class TestConnectionHeartbeat:
         """Test that an answered repetition keeps the heartbeat going."""
         send = AsyncMock(side_effect=[(False, None), (True, None), (True, None)])
         on_failure = AsyncMock()
-        heartbeat = ConnectionHeartbeat(send, on_failure)
+        heartbeat = ConnectionHeartbeat("Test", send, on_failure)
 
         heartbeat.start()
         await time_travel(HEARTBEAT_RATE)
@@ -97,14 +97,14 @@ class TestConnectionHeartbeat:
         """Test that a request failing repeatedly calls on_failure once and ends."""
         send = AsyncMock(return_value=(False, "E_CONNECTION_ID"))
         on_failure = AsyncMock()
-        heartbeat = ConnectionHeartbeat(send, on_failure)
+        heartbeat = ConnectionHeartbeat("Test", send, on_failure)
 
         heartbeat.start()
         task = heartbeat._task
         assert task is not None
         await time_travel(HEARTBEAT_RATE)
 
-        # the initial request plus 3 repetitions - Core 03.08.02 §5.4
+        # the initial request plus 3 repetitions - KNX v01.06.02 - Core 03.08.02 - §5.4
         assert send.await_count == 4
         on_failure.assert_awaited_once()
         assert task.done()
@@ -115,7 +115,7 @@ class TestConnectionHeartbeat:
         """Test that a raising callable calls on_failure once and ends."""
         send = AsyncMock(side_effect=CommunicationError("boom"))
         on_failure = AsyncMock()
-        heartbeat = ConnectionHeartbeat(send, on_failure)
+        heartbeat = ConnectionHeartbeat("Test", send, on_failure)
 
         heartbeat.start()
         task = heartbeat._task
@@ -130,12 +130,11 @@ class TestConnectionHeartbeat:
     ) -> None:
         """Test that on_failure may stop the heartbeat from within its own task."""
         send = AsyncMock(return_value=(False, None))
-        heartbeat = ConnectionHeartbeat(send, AsyncMock())
 
         async def stop_heartbeat() -> None:
             heartbeat.stop()
 
-        heartbeat._on_failure = stop_heartbeat
+        heartbeat = ConnectionHeartbeat("Test", send, stop_heartbeat)
         heartbeat.start()
         task = heartbeat._task
         assert task is not None
@@ -145,10 +144,26 @@ class TestConnectionHeartbeat:
         assert task.done()
         assert not task.cancelled()
 
+    async def test_connection_gone(self, time_travel: EventLoopClockAdvancer) -> None:
+        """Test that the heartbeat ends quietly when the connection is gone."""
+        send = AsyncMock(return_value=None)
+        on_failure = AsyncMock()
+        heartbeat = ConnectionHeartbeat("Test", send, on_failure)
+
+        heartbeat.start()
+        task = heartbeat._task
+        assert task is not None
+        await time_travel(HEARTBEAT_RATE)
+
+        send.assert_awaited_once()
+        on_failure.assert_not_awaited()
+        assert task.done()
+        assert not task.cancelled()
+
     async def test_restart(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test that starting again stops a previously running heartbeat."""
         send = AsyncMock(return_value=(True, None))
-        heartbeat = ConnectionHeartbeat(send, AsyncMock())
+        heartbeat = ConnectionHeartbeat("Test", send, AsyncMock())
 
         heartbeat.start()
         first_task = heartbeat._task

@@ -87,6 +87,7 @@ class _Tunnel(Interface):
         self.cemi_received_callback = cemi_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
         self._heartbeat = ConnectionHeartbeat(
+            name="Tunnel",
             send_connectionstate=self._connectionstate_request,
             on_failure=self._heartbeat_failed,
         )

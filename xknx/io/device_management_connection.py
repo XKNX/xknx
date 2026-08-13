@@ -125,6 +125,7 @@ class _DeviceManagementConnection(ABC):
         self._pending: asyncio.Future[CEMIFrame] | None = None
         self._request_lock = asyncio.Lock()
         self._heartbeat = ConnectionHeartbeat(
+            name="Device management connection",
             send_connectionstate=self._connectionstate_request,
             on_failure=self.disconnect,
         )
@@ -285,10 +286,11 @@ class _DeviceManagementConnection(ABC):
         )
         self._connection_lost()
 
-    async def _connectionstate_request(self) -> tuple[bool, str | None]:
+    async def _connectionstate_request(self) -> tuple[bool, str | None] | None:
         """Send a ConnectionStateRequest and return its outcome. Heartbeat callback."""
         if self.communication_channel is None:
-            raise CommunicationError("No active device management connection.")
+            # The connection is already gone - end the heartbeat quietly.
+            return None
         conn_state = ConnectionState(
             transport=self.transport,
             communication_channel_id=self.communication_channel,

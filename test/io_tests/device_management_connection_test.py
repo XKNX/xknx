@@ -886,11 +886,7 @@ class TestUDPDeviceManagementConnection:
         self.connection.communication_channel = None
         await time_travel(HEARTBEAT_RATE)
 
-        # no ConnectionStateRequest for a dead channel
-        assert not any(
-            isinstance(call.args[0].body, ConnectionStateRequest)
-            for call in send_mock.call_args_list
-        )
+        send_mock.assert_not_called()
         assert heartbeat_task.done()
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
