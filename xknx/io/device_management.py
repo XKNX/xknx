@@ -65,16 +65,6 @@ class DeviceManagement:
         self._sequence = IncomingSequenceCounter()
         self._callback: UDPTransport.Callback | None = None
 
-    @property
-    def expected_sequence_number(self) -> int:
-        """Return the sequence counter expected on the next request."""
-        return self._sequence.expected
-
-    @expected_sequence_number.setter
-    def expected_sequence_number(self, value: int) -> None:
-        """Set the sequence counter expected on the next request."""
-        self._sequence.expected = value
-
     def start(self) -> None:
         """Start answering incoming requests."""
         if self._callback is not None:
@@ -138,7 +128,7 @@ class DeviceManagement:
         logger.warning(
             "Received DeviceConfigurationRequest with sequence number not equal to "
             "expected: %s. Discarding frame: %s",
-            self.expected_sequence_number,
+            self._sequence.expected,
             request,
         )
 

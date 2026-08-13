@@ -468,16 +468,6 @@ class UDPTunnel(_Tunnel):
         self._sequence = IncomingSequenceCounter()
         self._invalid_sequence_number_reconnect_task: asyncio.Task[None] | None = None
 
-    @property
-    def expected_sequence_number(self) -> int:
-        """Return the sequence counter expected on the next TunnellingRequest."""
-        return self._sequence.expected
-
-    @expected_sequence_number.setter
-    def expected_sequence_number(self, value: int) -> None:
-        """Set the sequence counter expected on the next TunnellingRequest."""
-        self._sequence.expected = value
-
     def _init_transport(self) -> None:
         """Initialize transport transport."""
         self.transport = UDPTransport(
@@ -610,7 +600,7 @@ class UDPTunnel(_Tunnel):
             logger.warning(
                 "TunnellingRequest with expected sequence number %s was not received within %s seconds "
                 "after an unexpected sequence number was received. Closing tunnel connection.",
-                self.expected_sequence_number,
+                self._sequence.expected,
                 seconds,
             )
             # Clear the stored task reference before calling _tunnel_lost() so
@@ -662,7 +652,7 @@ class UDPTunnel(_Tunnel):
         logger.warning(
             "Received TunnellingRequest with sequence number not equal to expected: %s. "
             "Discarding frame: %s",
-            self.expected_sequence_number,
+            self._sequence.expected,
             tunneling_request,
         )
         # Tunnelling server should repeat that frame and disconnect after that was also not ACKed.

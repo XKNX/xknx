@@ -82,7 +82,7 @@ class TestUDPTunnel:
     ) -> None:
         """Test Tunnel for calling send_ack on frames."""
         raw_cemi = raw[10:]
-        self.tunnel.expected_sequence_number = 0x21
+        self.tunnel._sequence.expected = 0x21
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
@@ -108,7 +108,7 @@ class TestUDPTunnel:
         test_cemi = CEMIFrame.from_knx(raw_ind[10:])
         test_telegram = test_cemi.data.telegram()
         test_telegram.direction = TelegramDirection.INCOMING
-        self.tunnel.expected_sequence_number = 0x81
+        self.tunnel._sequence.expected = 0x81
 
         response_telegram = Telegram(
             destination_address=IndividualAddress(test_telegram.source_address),
@@ -140,7 +140,7 @@ class TestUDPTunnel:
         """Test Tunnel for receiving repeated TunnellingRequest frames."""
         self.tunnel.transport.transport = Mock()
         self.tunnel.communication_channel = 1
-        self.tunnel.expected_sequence_number = 10
+        self.tunnel._sequence.expected = 10
 
         test_telegram = Telegram(
             destination_address=GroupAddress(1),
@@ -166,14 +166,14 @@ class TestUDPTunnel:
         await time_travel(0)
         assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
         mock_transport_send.reset_mock()
-        assert self.tunnel.expected_sequence_number == 11
+        assert self.tunnel._sequence.expected == 11
         assert self.cemi_received_mock.call_count == 1
         # same sequence number as before - ACK, not processed
         self.tunnel._request_received(test_frame, None, None)
         await time_travel(0)
         assert mock_transport_send.call_args_list == [call(test_ack, addr=None)]
         mock_transport_send.reset_mock()
-        assert self.tunnel.expected_sequence_number == 11
+        assert self.tunnel._sequence.expected == 11
         assert self.cemi_received_mock.call_count == 1
         # wrong sequence number - no ACK, not processed
         # reconnect if `auto_reconnect` was True, disconnect if False
@@ -184,7 +184,7 @@ class TestUDPTunnel:
         await time_travel(2)
         mock_transport_stop.assert_called_once()
 
-        assert self.tunnel.expected_sequence_number == 11
+        assert self.tunnel._sequence.expected == 11
         assert self.cemi_received_mock.call_count == 1
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
@@ -199,7 +199,7 @@ class TestUDPTunnel:
         self.tunnel.transport.transport = Mock()
         self.tunnel.communication_channel = 1
         self.tunnel.sequence_number = 23
-        self.tunnel.expected_sequence_number = 15
+        self.tunnel._sequence.expected = 15
 
         test_telegram = Telegram(
             destination_address=GroupAddress(1),
