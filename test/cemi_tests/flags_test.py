@@ -130,6 +130,15 @@ def test_composition(
     assert raw == control_field(*expected)
 
 
+def test_to_knx_serializes_frame_format() -> None:
+    """Test the Extended Frame Format is serialized as held, not as a constant."""
+    # Data Secure protects the Extended Frame Format - `block_0()` reads the same
+    # field, so the value on the wire and the one fed to the MAC can not diverge.
+    flags = CEMIFlags(frame_format=CEMIFrameFormat.LTE_HEE)
+    assert flags.to_knx() & 0b1111 == CEMIFrameFormat.LTE_HEE
+    assert CEMIFlags().to_knx() & 0b1111 == CEMIFrameFormat.STANDARD
+
+
 def test_to_knx_ignores_received_frame_type() -> None:
     """Test the Frame Type of a received frame is not used when serializing."""
     flags = CEMIFlags.from_knx(control_field(0x3C, 0xE0))

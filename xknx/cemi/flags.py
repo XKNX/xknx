@@ -117,10 +117,12 @@ class CEMIFlags:
     """
     Control fields of a cEMI L_Data frame.
 
-    `frame_type` and `frame_format` are informational: they hold what was received
-    and are ignored when serializing. The Frame Type of an outgoing frame follows
-    from its NPDU length and is passed to `to_knx()` by the frame; the Address Type
-    is not held at all - it can be read from the type of the destination address.
+    `frame_type` is informational: it holds what was received and is ignored when
+    serializing, as the Frame Type of an outgoing frame follows from its NPDU length
+    and is passed to `to_knx()` by the frame. The Address Type is not held at all -
+    it can be read from the type of the destination address. The Extended Frame
+    Format does not follow from anything else, so `frame_format` is serialized as
+    held; it is `STANDARD` for every frame xknx currently supports.
 
     `confirm_error` is only meaningful in an L_Data.con frame.
     """
@@ -142,7 +144,9 @@ class CEMIFlags:
 
         The Frame Type and Address Type bits are left clear; the frame ORs them in
         from `CEMIFrameType.to_knx()` and `CEMIAddressType.to_knx()`. `self.frame_type`
-        holds the Frame Type of a received frame and is not used here.
+        holds the Frame Type of a received frame and is not used here. The Extended
+        Frame Format is serialized - Data Secure protects it, so the value on the
+        wire and the one fed to the MAC have to come from the same place.
         """
         if not 0 <= self.hop_count <= MAX_HOP_COUNT:
             raise ConversionError(f"Hop count out of range: {self.hop_count}")
@@ -154,7 +158,7 @@ class CEMIFlags:
             | (ACK_REQUESTED if self.acknowledge_request else 0)
             | (CONFIRM_ERROR if self.confirm_error else 0)
             | (self.hop_count << HOP_COUNT_OFFSET)
-            | CEMIFrameFormat.STANDARD
+            | self.frame_format
         )
 
     @classmethod
