@@ -114,6 +114,55 @@ class TestExposeSensor:
             payload=GroupValueWrite(DPTArray((0x0C, 0x1A))),
         )
 
+    async def test_initialize_value(self) -> None:
+        """Test initialize_value doesn't send, but is answered and compared against."""
+        xknx = XKNX()
+        expose_sensor = ExposeSensor(
+            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
+        )
+        expose_sensor.initialize_value(75)
+        assert xknx.telegrams.qsize() == 0
+        assert expose_sensor.resolve_state() == 75
+
+        # answers a GroupValueRead with the initialized value
+        expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueRead(),
+            )
+        )
+        assert xknx.telegrams.get_nowait() == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTArray((0xBF,))),
+        )
+
+        # skip_unchanged compares against the initialized value
+        await expose_sensor.set(75, skip_unchanged=True)
+        assert xknx.telegrams.qsize() == 0
+        await expose_sensor.set(50, skip_unchanged=True)
+        assert xknx.telegrams.get_nowait() == Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTArray((0x80,))),
+        )
+
+    async def test_initialize_value_none(self) -> None:
+        """Test initialize_value with None clears the value again."""
+        xknx = XKNX()
+        expose_sensor = ExposeSensor(
+            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
+        )
+        expose_sensor.initialize_value(75)
+        expose_sensor.initialize_value(None)
+        assert expose_sensor.resolve_state() is None
+
+        expose_sensor.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueRead(),
+            )
+        )
+        assert xknx.telegrams.qsize() == 0
+
     #
     # TEST PROCESS (GROUP READ)
     #
@@ -590,5 +639,40 @@ class TestExposeSensor:
         )
         await time_travel(10)
         xknx.cemi_handler.send_telegram.assert_not_called()
+
+        await xknx.stop()
+
+    async def test_periodic_send_local_value(
+        self,
+        xknx_no_interface: XKNX,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a value set locally is sent periodically."""
+        xknx = xknx_no_interface
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        xknx.cemi_handler = AsyncMock()
+        expose_sensor = ExposeSensor(
+            xknx,
+            "TestSensor",
+            group_address="1/2/3",
+            value_type="switch",
+            periodic_send=10,
+        )
+        xknx.devices.async_add(expose_sensor)
+        await xknx.start()
+
+        # initializing the value sends nothing by itself
+        expose_sensor.initialize_value(True)
+        await time_travel(0)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+
+        # but it is picked up by the periodic send
+        await time_travel(10)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+        )
 
         await xknx.stop()
