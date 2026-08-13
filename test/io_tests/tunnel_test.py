@@ -616,6 +616,51 @@ class TestTCPTunnel:
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
     @patch("xknx.io.tunnel.TCPTunnel._tunnel_lost")
+    async def test_tunnel_heartbeat_ends_without_connection(
+        self,
+        mock_tunnel_lost: MagicMock,
+        mock_transport_stop: MagicMock,
+        mock_transport_send: MagicMock,
+        mock_transport_getsockname: MagicMock,
+        mock_transport_connect: MagicMock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test that the heartbeat ends quietly when the tunnel is gone."""
+        local_addr = ("192.168.1.1", 12345)
+        remote_hpai = HPAI(
+            ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP
+        )
+        mock_transport_getsockname.return_value = local_addr
+
+        # Connect
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        connect_response_frame = KNXIPFrame.init_from_body(
+            ConnectResponse(
+                communication_channel=23,
+                data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                crd=ConnectResponseData(individual_address=IndividualAddress(7)),
+            )
+        )
+        self.tunnel.transport.handle_knxipframe(connect_response_frame, remote_hpai)
+        await connection_task
+        mock_transport_send.reset_mock()
+        heartbeat_task = self.tunnel._heartbeat._task
+        assert heartbeat_task is not None
+
+        self.tunnel.communication_channel = None
+        await time_travel(HEARTBEAT_RATE)
+
+        # no ConnectionStateRequest for a dead channel, no _tunnel_lost
+        mock_transport_send.assert_not_called()
+        mock_tunnel_lost.assert_not_called()
+        assert heartbeat_task.done()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.getsockname")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
+    @patch("xknx.io.tunnel.TCPTunnel._tunnel_lost")
     async def test_tunnel_heartbeat_error(
         self,
         mock_tunnel_lost: MagicMock,

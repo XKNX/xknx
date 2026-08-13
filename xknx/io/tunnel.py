@@ -270,10 +270,11 @@ class _Tunnel(Interface):
             f"ConnectRequest failed. Status code: {connect.response_status_code}"
         )
 
-    async def _connectionstate_request(self) -> tuple[bool, str | None]:
+    async def _connectionstate_request(self) -> tuple[bool, str | None] | None:
         """Return state of tunnel. True if tunnel is in good shape."""
         if self.communication_channel is None:
-            raise CommunicationError("No active communication channel.")
+            # The tunnel is already gone - end the heartbeat quietly.
+            return None
         conn_state = ConnectionState(
             transport=self.transport,
             communication_channel_id=self.communication_channel,
