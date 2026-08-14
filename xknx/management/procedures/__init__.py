@@ -37,7 +37,14 @@ When adding a new procedure follow the workflow:
 """
 
 # ruff: noqa: F401
-from .device import dm_restart, dm_restart_r_co
+from .device import (
+    FREE_ACCESS_KEY,
+    dm_restart,
+    dm_restart_r_co,
+    dmp_authorize2_r_co,
+    dmp_authorize_r_co,
+    dmp_connect_r_co,
+)
 from .network import (
     nm_individual_address_check,
     nm_individual_address_check_conn,
