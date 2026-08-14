@@ -1,4 +1,4 @@
-"""Tests for dmp_interface_object_write_r — KNX 03.05.02 §3.25.2."""
+"""Tests for dmp_interface_object_write_r — KNX v02.01.02 - Management Procedures 03.05.02 - §3.25.2."""
 
 import asyncio
 from unittest.mock import AsyncMock

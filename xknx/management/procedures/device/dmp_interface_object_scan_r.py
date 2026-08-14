@@ -1,4 +1,4 @@
-"""DMP_InterfaceObjectScan_R — KNX 03.05.02 §3.28.2 (PDF p. 126)."""
+"""DMP_InterfaceObjectScan_R — KNX v02.01.02 - Management Procedures 03.05.02 - §3.28.2."""
 
 from __future__ import annotations
 
@@ -8,7 +8,8 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-# KNX 03.04.01: PID_OBJECT_TYPE is always property ID 1 on every interface object
+# KNX v02.01.01 - Application Interface Layer 03.04.01 - §4.3.2.3: the
+# Property with property_id = 1 is always PID_OBJECT_TYPE
 _PID_OBJECT_TYPE = 0x01
 
 
@@ -27,8 +28,9 @@ async def dmp_interface_object_scan_r(
     """
     Enumerate all interface objects and their properties on a device.
 
-    DMP_InterfaceObjectScan_R — KNX 03.05.02 §3.28.2. Requires an established
-    connection (DM_Connect must be executed first).
+    DMP_InterfaceObjectScan_R — KNX v02.01.02 - Management Procedures 03.05.02 -
+    §3.28.2. Requires an established connection (DM_Connect must be executed
+    first).
 
     :param connection: Active P2P connection to the device
     :return: List of discovered interface objects with their property descriptions

@@ -1,4 +1,4 @@
-"""DMP_InterfaceObjectVerify_R — KNX 03.05.02 §3.26.2 (PDF p. 120)."""
+"""DMP_InterfaceObjectVerify_R — KNX v02.01.02 - Management Procedures 03.05.02 - §3.26.2."""
 
 from __future__ import annotations
 
@@ -6,7 +6,8 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-# nr_of_elem field is 4 bits (KNX 03.03.07 v02.01.01 §3.4.4 Figure 46), max value 2^4 - 1
+# nr_of_elem field is 4 bits (KNX v02.01.01 - Application Layer 03.03.07 -
+# §3.4.4 Figure 46), max value 2^4 - 1
 MAX_ELEMENTS_PER_REQUEST = (1 << 4) - 1
 
 
@@ -21,9 +22,10 @@ async def dmp_interface_object_verify_r(
     """
     Verify that a device's property value matches expected data, block by block.
 
-    DMP_InterfaceObjectVerify_R — KNX 03.05.02 §3.26.2. Requires an established
-    connection (DM_Connect must be executed first). Per-block comparison satisfies
-    the spec's "different or no data received ⇒ error" note inside the loop.
+    DMP_InterfaceObjectVerify_R — KNX v02.01.02 - Management Procedures 03.05.02 -
+    §3.26.2. Requires an established connection (DM_Connect must be executed
+    first). Per-block comparison satisfies the spec's "different or no data
+    received ⇒ error" note inside the loop.
 
     :param connection: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)

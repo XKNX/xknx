@@ -1,4 +1,4 @@
-"""DMP_InterfaceObjectWrite_R — KNX 03.05.02 §3.25.2 (PDF p. 116)."""
+"""DMP_InterfaceObjectWrite_R — KNX v02.01.02 - Management Procedures 03.05.02 - §3.25.2."""
 
 from __future__ import annotations
 
@@ -6,7 +6,8 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-# nr_of_elem field is 4 bits (KNX 03.03.07 v02.01.01 §3.4.4 Figure 48), max value 2^4 - 1
+# nr_of_elem field is 4 bits (KNX v02.01.01 - Application Layer 03.03.07 -
+# §3.4.4 Figure 48), max value 2^4 - 1
 MAX_ELEMENTS_PER_REQUEST = (1 << 4) - 1
 
 
@@ -22,8 +23,9 @@ async def dmp_interface_object_write_r(
     """
     Write property value(s) to an interface object.
 
-    DMP_InterfaceObjectWrite_R — KNX 03.05.02 §3.25.2. Requires an established
-    connection (DM_Connect must be executed first).
+    DMP_InterfaceObjectWrite_R — KNX v02.01.02 - Management Procedures 03.05.02 -
+    §3.25.2. Requires an established connection (DM_Connect must be executed
+    first).
 
     :param connection: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)
@@ -73,10 +75,11 @@ async def dmp_interface_object_write_r(
         # `expected` guarantees this via `P2PConnection._receive`
         assert isinstance(response.payload, apci.PropertyValueResponse)
 
-        # KNX 03.03.07 v02.01.01 §3.4.4.2: "If the remote application process has a problem,
-        # e.g., Interface Object or Property doesn't exist or the requester does not
-        # have the required access rights, then the nr_of_elem of the
-        # A_PropertyValue_Response-PDU shall be zero and shall contain no data."
+        # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.2: "If the remote
+        # application process has a problem, e.g., Interface Object or Property
+        # doesn't exist or the requester does not have the required access
+        # rights, then the nr_of_elem of the A_PropertyValue_Response-PDU
+        # shall be zero and shall contain no data."
         response_count = response.payload.count
         if response_count == 0:
             raise ManagementConnectionError(
