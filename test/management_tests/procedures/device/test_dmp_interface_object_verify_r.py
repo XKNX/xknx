@@ -263,3 +263,75 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(
         )
     await responder
     await conn.disconnect()
+
+
+async def test_dmp_interface_object_verify_r_count_zero(xknx_setup: XKNX) -> None:
+    """Test verify with count=0 returns immediately without sending a request."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    await dmp_interface_object_verify_r(
+        conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=0
+    )
+
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_verify_r_invalid_data_length(
+    xknx_setup: XKNX,
+) -> None:
+    """Test verify raises ValueError when expected_data length is not divisible by count."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+
+    with pytest.raises(ValueError, match=r"expected_data length .* must be divisible"):
+        await dmp_interface_object_verify_r(
+            conn,
+            object_index=0,
+            property_id=78,
+            expected_data=b"\x01\x02\x03",
+            count=2,
+        )
+
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_verify_r_error_partial_response(
+    xknx_setup: XKNX,
+) -> None:
+    """Test verify raises ManagementConnectionError on a partial response (not in spec, defensive)."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=2,  # requested 5, got 2
+                start_index=1,
+                data=b"\x01\x02",
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(ManagementConnectionError, match=r"requested 5 elements, got 2"):
+        await dmp_interface_object_verify_r(
+            conn,
+            object_index=0,
+            property_id=52,
+            expected_data=b"\x01" * 5,
+            count=5,
+        )
+    await responder
+    await conn.disconnect()
