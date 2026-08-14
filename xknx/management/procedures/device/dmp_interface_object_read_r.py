@@ -55,6 +55,8 @@ async def dmp_interface_object_read_r(
             ),
             expected=apci.PropertyValueResponse,
         )
+        # `expected` guarantees this via `P2PConnection._receive`
+        assert isinstance(response.payload, apci.PropertyValueResponse)
         # KNX 03.03.07 v02.01.01 §3.4.4.1: "If the remote application process has a problem,
         # e.g., object or Property does not exist or the data does not fit in a PDU
         # or the requester has not the required access rights, then the nr_of_elem

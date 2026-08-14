@@ -91,7 +91,7 @@ async def test_dmp_interface_object_write_r_with_verify(xknx_setup: XKNX) -> Non
                 property_id=78,
                 count=1,
                 start_index=1,
-                data=b"\xAA\xBB",
+                data=b"\xaa\xbb",
             ),
         )
         xknx.management.process(ack)
@@ -102,14 +102,14 @@ async def test_dmp_interface_object_write_r_with_verify(xknx_setup: XKNX) -> Non
         conn,
         object_index=0,
         property_id=78,
-        data=b"\xAA\xBB",
+        data=b"\xaa\xbb",
         count=1,
         start_index=1,
         verify=True,
     )
     await responder
 
-    assert result == b"\xAA\xBB"
+    assert result == b"\xaa\xbb"
     await conn.disconnect()
 
 
@@ -140,7 +140,7 @@ async def test_dmp_interface_object_write_r_verify_failure(xknx_setup: XKNX) -> 
                 property_id=78,
                 count=1,
                 start_index=1,
-                data=b"\xFF\xFF",
+                data=b"\xff\xff",
             ),
         )
         xknx.management.process(ack)
@@ -152,7 +152,7 @@ async def test_dmp_interface_object_write_r_verify_failure(xknx_setup: XKNX) -> 
             conn,
             object_index=0,
             property_id=78,
-            data=b"\xAA\xBB",
+            data=b"\xaa\xbb",
             count=1,
             start_index=1,
             verify=True,
@@ -352,7 +352,12 @@ async def test_dmp_interface_object_write_r_error_nr_of_elem_zero(
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match=r"nr_of_elem=0"):
         await dmp_interface_object_write_r(
-            conn, object_index=0, property_id=78, data=b"\xAA\xBB", count=1, start_index=1
+            conn,
+            object_index=0,
+            property_id=78,
+            data=b"\xaa\xbb",
+            count=1,
+            start_index=1,
         )
     await responder
 

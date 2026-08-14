@@ -70,6 +70,8 @@ async def dmp_interface_object_write_r(
             ),
             expected=apci.PropertyValueResponse,
         )
+        # `expected` guarantees this via `P2PConnection._receive`
+        assert isinstance(response.payload, apci.PropertyValueResponse)
 
         # KNX 03.03.07 v02.01.01 §3.4.4.2: "If the remote application process has a problem,
         # e.g., Interface Object or Property doesn't exist or the requester does not
