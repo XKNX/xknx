@@ -47,6 +47,8 @@ async def dmp_interface_object_scan_r(
             ),
             expected=apci.PropertyDescriptionResponse,
         )
+        # `expected` guarantees this via `P2PConnection._receive`
+        assert isinstance(exist_resp.payload, apci.PropertyDescriptionResponse)
         if exist_resp.payload.property_id == 0:
             break  # no more objects
 
@@ -60,6 +62,8 @@ async def dmp_interface_object_scan_r(
             ),
             expected=apci.PropertyValueResponse,
         )
+        # `expected` guarantees this via `P2PConnection._receive`
+        assert isinstance(type_resp.payload, apci.PropertyValueResponse)
         if type_resp.payload.count == 0:
             raise ManagementConnectionError(
                 f"Object type read failed for object_index={object_index}: nr_of_elem=0"
@@ -78,6 +82,8 @@ async def dmp_interface_object_scan_r(
                 ),
                 expected=apci.PropertyDescriptionResponse,
             )
+            # `expected` guarantees this via `P2PConnection._receive`
+            assert isinstance(prop_resp.payload, apci.PropertyDescriptionResponse)
             if prop_resp.payload.property_id == 0:
                 break
             properties.append(prop_resp.payload)

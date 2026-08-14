@@ -64,12 +64,18 @@ async def test_dmp_interface_object_verify_r_match(xknx_setup: XKNX) -> None:
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
         _process_response(
-            xknx, ia, seq=0,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=78, count=1, start_index=1, data=b"\xAB\xCD"),
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0, property_id=78, count=1, start_index=1, data=b"\xab\xcd"
+            ),
         )
 
     responder = asyncio.create_task(respond())
-    await dmp_interface_object_verify_r(conn, object_index=0, property_id=78, expected_data=b"\xAB\xCD", count=1)
+    await dmp_interface_object_verify_r(
+        conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=1
+    )
     await responder
     await conn.disconnect()
 
@@ -84,13 +90,19 @@ async def test_dmp_interface_object_verify_r_mismatch(xknx_setup: XKNX) -> None:
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
         _process_response(
-            xknx, ia, seq=0,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=78, count=1, start_index=1, data=b"\x00\x00"),
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0, property_id=78, count=1, start_index=1, data=b"\x00\x00"
+            ),
         )
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match="Property verify failed"):
-        await dmp_interface_object_verify_r(conn, object_index=0, property_id=78, expected_data=b"\xAB\xCD", count=1)
+        await dmp_interface_object_verify_r(
+            conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=1
+        )
     await responder
     await conn.disconnect()
 
@@ -105,13 +117,19 @@ async def test_dmp_interface_object_verify_r_read_error(xknx_setup: XKNX) -> Non
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
         _process_response(
-            xknx, ia, seq=0,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=78, count=0, start_index=1, data=b""),
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0, property_id=78, count=0, start_index=1, data=b""
+            ),
         )
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match="nr_of_elem=0"):
-        await dmp_interface_object_verify_r(conn, object_index=0, property_id=78, expected_data=b"\xAB\xCD", count=1)
+        await dmp_interface_object_verify_r(
+            conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=1
+        )
     await responder
     await conn.disconnect()
 
@@ -128,22 +146,42 @@ async def test_dmp_interface_object_verify_r_chunked_match(xknx_setup: XKNX) -> 
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
         _process_response(
-            xknx, ia, seq=0,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=52, count=15, start_index=1, data=b"\x01" * 15),
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=15,
+                start_index=1,
+                data=b"\x01" * 15,
+            ),
         )
         await _wait_for_request(xknx, 2)
         _process_response(
-            xknx, ia, seq=1,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=52, count=5, start_index=16, data=b"\x02" * 5),
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=5,
+                start_index=16,
+                data=b"\x02" * 5,
+            ),
         )
 
     responder = asyncio.create_task(respond())
-    await dmp_interface_object_verify_r(conn, object_index=0, property_id=52, expected_data=expected, count=20)
+    await dmp_interface_object_verify_r(
+        conn, object_index=0, property_id=52, expected_data=expected, count=20
+    )
     await responder
     await conn.disconnect()
 
 
-async def test_dmp_interface_object_verify_r_chunked_mismatch_first_block(xknx_setup: XKNX) -> None:
+async def test_dmp_interface_object_verify_r_chunked_mismatch_first_block(
+    xknx_setup: XKNX,
+) -> None:
     """Test chunked verify fails immediately on first-block mismatch without sending a second request."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
@@ -155,13 +193,23 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_first_block(xknx_s
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
         _process_response(
-            xknx, ia, seq=0,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=52, count=15, start_index=1, data=b"\xFF" * 15),
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=15,
+                start_index=1,
+                data=b"\xff" * 15,
+            ),
         )
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match="Property verify failed"):
-        await dmp_interface_object_verify_r(conn, object_index=0, property_id=52, expected_data=expected, count=20)
+        await dmp_interface_object_verify_r(
+            conn, object_index=0, property_id=52, expected_data=expected, count=20
+        )
     await responder
 
     # only one request sent — early termination on first-block mismatch
@@ -169,7 +217,9 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_first_block(xknx_s
     await conn.disconnect()
 
 
-async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(xknx_setup: XKNX) -> None:
+async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(
+    xknx_setup: XKNX,
+) -> None:
     """Test chunked verify passes first block then fails on second-block mismatch."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
@@ -181,17 +231,35 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(xknx_
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
         _process_response(
-            xknx, ia, seq=0,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=52, count=15, start_index=1, data=b"\x01" * 15),
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=15,
+                start_index=1,
+                data=b"\x01" * 15,
+            ),
         )
         await _wait_for_request(xknx, 2)
         _process_response(
-            xknx, ia, seq=1,
-            payload=apci.PropertyValueResponse(object_index=0, property_id=52, count=5, start_index=16, data=b"\xFF" * 5),
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=5,
+                start_index=16,
+                data=b"\xff" * 5,
+            ),
         )
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match="Property verify failed"):
-        await dmp_interface_object_verify_r(conn, object_index=0, property_id=52, expected_data=expected, count=20)
+        await dmp_interface_object_verify_r(
+            conn, object_index=0, property_id=52, expected_data=expected, count=20
+        )
     await responder
     await conn.disconnect()
