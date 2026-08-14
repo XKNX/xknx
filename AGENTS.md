@@ -54,6 +54,7 @@ if they aren't already established elsewhere in the codebase.
 | v01.06.02 | Core | 03.08.02 |
 | v01.07.03 | Device Management | 03.08.03 |
 | v01.07.01 | Tunnelling | 03.08.04 |
+| v02.01.01 | Application Interface Layer | 03.04.01 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions

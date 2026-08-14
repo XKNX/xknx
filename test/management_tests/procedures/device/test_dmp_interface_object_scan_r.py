@@ -1,4 +1,4 @@
-"""Tests for dmp_interface_object_scan_r — KNX 03.05.02 §3.28.2 DMP_InterfaceObjectScan_R."""
+"""Tests for dmp_interface_object_scan_r — KNX v02.01.02 - Management Procedures 03.05.02 - §3.28.2 DMP_InterfaceObjectScan_R."""
 
 import asyncio
 from unittest.mock import AsyncMock
