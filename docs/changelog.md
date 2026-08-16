@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 3.20.0 DeviceManagement and Expose init 2026-08-16
 
 ### Devices
 
