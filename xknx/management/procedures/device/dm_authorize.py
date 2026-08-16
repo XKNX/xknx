@@ -29,8 +29,6 @@ async def dmp_authorize_r_co(conn: P2PConnection, key: int) -> int:
         payload=apci.AuthorizeRequest(key=key),
         expected=apci.AuthorizeResponse,
     )
-    # `expected` guarantees this via `P2PConnection._receive`
-    assert response.payload is not None
     return response.payload.level
 
 

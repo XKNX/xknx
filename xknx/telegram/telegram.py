@@ -14,7 +14,7 @@ from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 from .tpci import TPCI, TDataBroadcast, TDataGroup, TDataIndividual
 
-APCIT_co = TypeVar("APCIT_co", bound=APCI, default=APCI, covariant=True)
+APCIT_co = TypeVar("APCIT_co", bound=APCI | None, default=APCI | None, covariant=True)
 
 
 class TelegramDirection(Enum):
@@ -52,7 +52,8 @@ class Telegram(Generic[APCIT_co]):
             InternalGroupAddress.
         direction: Communication direction (INCOMING or OUTGOING).
         payload: APCi payload containing the actual data (e.g., GroupValueWrite,
-            GroupValueResponse). None for control information only telegrams.
+            GroupValueResponse). None for control information only telegrams -
+            parametrize as `Telegram[SomeAPCI]` where a payload is guaranteed.
         source_address: IndividualAddress of the sender. When default of 0.0.0 is
             used, it will be set automatically when sent.
         tpci: Transport Layer Control Information (TDataBroadcast, TDataGroup, or
@@ -68,7 +69,7 @@ class Telegram(Generic[APCIT_co]):
 
     destination_address: GroupAddress | IndividualAddress | InternalGroupAddress
     direction: TelegramDirection = TelegramDirection.OUTGOING
-    payload: APCIT_co | None = None
+    payload: APCIT_co = None  # type: ignore[assignment]  # None only if APCIT_co allows it
     source_address: IndividualAddress = field(
         default_factory=lambda: IndividualAddress(0)
     )
