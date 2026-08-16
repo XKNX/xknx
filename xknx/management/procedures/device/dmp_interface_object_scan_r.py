@@ -6,11 +6,8 @@ from dataclasses import dataclass, field
 
 from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
+from xknx.profile.const import ResourceGenericPropertyId
 from xknx.telegram import apci
-
-# KNX v02.01.01 - Application Interface Layer 03.04.01 - §4.3.2.3: the
-# Property with property_id = 1 is always PID_OBJECT_TYPE
-_PID_OBJECT_TYPE = 0x01
 
 
 @dataclass
@@ -54,11 +51,13 @@ async def dmp_interface_object_scan_r(
         if exist_resp.payload.property_id == 0:
             break  # no more objects
 
-        # Read the object type (PID_OBJECT_TYPE = 0x01, always 1 element, 2 bytes)
+        # Read the object type - KNX v02.01.01 - Application Interface Layer
+        # 03.04.01 - §4.3.2.3: PID_OBJECT_TYPE is always property_id 1, index 0,
+        # and mandatory for every Interface Object (always 1 element, 2 bytes).
         type_resp = await connection.request(
             payload=apci.PropertyValueRead(
                 object_index=object_index,
-                property_id=_PID_OBJECT_TYPE,
+                property_id=ResourceGenericPropertyId.PID_OBJECT_TYPE,
                 count=1,
                 start_index=1,
             ),

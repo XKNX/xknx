@@ -6,9 +6,7 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-# nr_of_elem field is 4 bits (KNX v02.01.01 - Application Layer 03.03.07 -
-# §3.4.4 Figure 46), max value 2^4 - 1
-MAX_ELEMENTS_PER_REQUEST = (1 << 4) - 1
+from .const import MAX_ELEMENTS_PER_REQUEST
 
 
 async def dmp_interface_object_read_r(
