@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Generic
+
+from typing_extensions import TypeVar
 
 from xknx.dpt import DPTBase, DPTComplexData, DPTEnumData
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
-from .apci import APCI
+from .apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 from .tpci import TPCI, TDataBroadcast, TDataGroup, TDataIndividual
+
+APCIT_co = TypeVar("APCIT_co", bound=APCI, default=APCI, covariant=True)
 
 
 class TelegramDirection(Enum):
@@ -35,7 +40,7 @@ class TelegramDecodedData:
 
 
 @dataclass(slots=True)
-class Telegram:
+class Telegram(Generic[APCIT_co]):
     """
     Data transfer object for KNX telegrams.
 
@@ -63,7 +68,7 @@ class Telegram:
 
     destination_address: GroupAddress | IndividualAddress | InternalGroupAddress
     direction: TelegramDirection = TelegramDirection.OUTGOING
-    payload: APCI | None = None
+    payload: APCIT_co | None = None
     source_address: IndividualAddress = field(
         default_factory=lambda: IndividualAddress(0)
     )
@@ -103,3 +108,10 @@ class Telegram:
             f'destination_address="{self.destination_address}" '
             f"{data}{decoded_data} />"
         )
+
+
+# Telegram carrying a value payload - the union `Device.process_group_write()` and
+# `RemoteValue.process()` accept, since a GroupValueResponse is treated like a
+# GroupValueWrite by default (see `Device.process_group_response()`).
+GroupValueTelegram = Telegram[GroupValueWrite] | Telegram[GroupValueResponse]
+GroupReadTelegram = Telegram[GroupValueRead]

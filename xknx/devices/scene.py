@@ -11,7 +11,7 @@ from xknx.remote_value import GroupAddressesType, RemoteValueSceneNumber
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupValueTelegram
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -49,7 +49,7 @@ class Scene(Device):
         """Activate scene."""
         self.scene_value.set(self.scene_number)
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.scene_value.process(telegram, always_callback=True)
 

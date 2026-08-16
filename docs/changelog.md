@@ -16,6 +16,7 @@ nav_order: 2
 
 - `RequestResponse` is now generic over the response body it awaits, eg. `class Connect(RequestResponse[ConnectResponse])`. `start()` gives way to `request()`, which returns that response instead of leaving it on the instance, and raises the new `RequestResponseError` when none arrived or the server answered with an error status.
 - `DescriptionQuery` and `SearchExtendedQuery` derive from `RequestResponse` now. Their `start()` and `gateway_descriptor` attribute are replaced by `request_gateway_descriptor()`.
+- `Telegram` is now generic over its `payload` type (`Telegram[GroupValueWrite]`, etc.), defaulting to `Telegram` behaving exactly as before when left unparametrized. `P2PConnection.request()` returns the narrowed `Telegram[T]` for the `type[T]` passed as `expected`, so procedures no longer need `assert isinstance(response.payload, T)` to get a typed `.payload` - the check already happened in `_receive()`. Likewise `Device.process()` now hands `process_group_write()`/`process_group_response()`/`process_group_read()` a `Telegram` narrowed to the APCI type it already verified via `isinstance`, propagated through `RemoteValue.process()` and every device's `process_group_*` override. No behavior change - `RemoteValue.process()` keeps its own `isinstance` check since, unlike the management case, nothing enforces the payload type before it's called directly.
 
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 

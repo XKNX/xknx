@@ -24,7 +24,6 @@ async def read_serial_number(
         print(f"Reading serial number from {individual_address} failed.")
         return None
 
-    assert isinstance(response.payload, apci.PropertyValueResponse)
     return response.payload.data
 
 

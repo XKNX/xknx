@@ -21,7 +21,8 @@ from xknx.telegram.apci import GroupValueWrite
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupValueTelegram, Telegram
+    from xknx.telegram.apci import GroupValueResponse
     from xknx.xknx import XKNX
 
 
@@ -91,7 +92,7 @@ class BinarySensor(Device):
             self.xknx.task_registry.remove_task(self._reset_task)
 
     @property
-    def last_telegram(self) -> Telegram | None:
+    def last_telegram(self) -> GroupValueTelegram | None:
         """Return the last telegram received from the RemoteValue."""
         return self.remote_value.telegram
 
@@ -155,12 +156,12 @@ class BinarySensor(Device):
             self._count_set_off = 1
         return 1
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GroupValueWrite telegram."""
         if self.remote_value.process(telegram, always_callback=True):
             self._process_reset_after()
 
-    def process_group_response(self, telegram: Telegram) -> None:
+    def process_group_response(self, telegram: Telegram[GroupValueResponse]) -> None:
         """Process incoming GroupValueResponse telegrams."""
         if self.remote_value.process(telegram, always_callback=self.always_callback):
             self._process_reset_after()

@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from xknx.exceptions import (
     CommunicationError,
@@ -34,6 +34,8 @@ logger = logging.getLogger("xknx.management")
 
 MANAGAMENT_ACK_TIMEOUT = 3
 MANAGAMENT_CONNECTION_TIMEOUT = 6
+
+APCIT = TypeVar("APCIT", bound=APCI)
 
 
 class Management:
@@ -392,7 +394,15 @@ class P2PConnection:
             )
         return telegram
 
-    async def request(self, payload: APCI, expected: type[APCI] | None) -> Telegram:
+    @overload
+    async def request(
+        self, payload: APCI, expected: type[APCIT]
+    ) -> Telegram[APCIT]: ...
+    @overload
+    async def request(self, payload: APCI, expected: None) -> Telegram: ...
+    async def request(
+        self, payload: APCI, expected: type[APCI] | None
+    ) -> Telegram[Any]:
         """Send a payload to the KNX device and wait for the response."""
         if not self._connected:
             raise ManagementConnectionRefused(

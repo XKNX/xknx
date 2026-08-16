@@ -25,7 +25,7 @@ async def dmp_connect_r_co(conn: P2PConnection) -> int:
         expected=apci.DeviceDescriptorResponse,
     )
     # `expected` guarantees this via `P2PConnection._receive`
-    assert isinstance(response.payload, apci.DeviceDescriptorResponse)
+    assert response.payload is not None
     if response.payload.descriptor != 0:
         raise ManagementConnectionError(
             f"Expected Device Descriptor Type 0, got type {response.payload.descriptor}"

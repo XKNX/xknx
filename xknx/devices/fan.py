@@ -26,7 +26,7 @@ from xknx.remote_value import (
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupValueTelegram
     from xknx.xknx import XKNX
 
 DEFAULT_TURN_ON_SPEED = 50
@@ -159,7 +159,7 @@ class Fan(Device):
         """Set the fan oscillation mode on or off."""
         self.oscillation.set(oscillation)
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.switch.process(telegram)
         self.speed.process(telegram)

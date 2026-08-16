@@ -32,7 +32,7 @@ from xknx.remote_value import (
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupValueTelegram
     from xknx.xknx import XKNX
 
 
@@ -251,7 +251,7 @@ class Weather(Device):
         yield self._air_pressure
         yield self._humidity
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             remote_value.process(telegram)

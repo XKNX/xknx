@@ -30,7 +30,7 @@ from xknx.typing import DPTParsable
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupReadTelegram, GroupValueTelegram
     from xknx.xknx import XKNX
 
 
@@ -130,7 +130,7 @@ class ExposeSensor(Device):
             self.xknx.task_registry.remove_task(self._periodic_send_task)
             self._periodic_send_task = None
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.sensor_value.process(telegram)
         # reset periodic send timer
@@ -140,7 +140,7 @@ class ExposeSensor(Device):
         ):
             self._periodic_send_task.restart()
 
-    def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: GroupReadTelegram) -> None:
         """Process incoming GROUP READ telegram."""
         if not self.respond_to_read:
             return
