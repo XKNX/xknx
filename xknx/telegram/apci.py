@@ -13,7 +13,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 import struct
-from typing import ClassVar, cast
+from typing import ClassVar, Generic, TypeVar, cast
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, UnsupportedAPCIService
@@ -447,6 +447,21 @@ class APCI(ABC):
             ) from err
 
         raise UnsupportedAPCIService(f"Class not implemented for APCI {apci:#012b}.")
+
+
+ResponseT = TypeVar("ResponseT", bound=APCI)
+
+
+class ExpectedResponse(Generic[ResponseT]):
+    """
+    Mixin for APCI request services with a KNX-spec-defined response.
+
+    Set `RESPONSE_TYPE` on the subclass to the response APCI class once it is
+    defined - lets `P2PConnection.request()` infer and verify the expected
+    response from the payload's type alone, without an `expected=` argument.
+    """
+
+    RESPONSE_TYPE: ClassVar[type[APCI]]
 
 
 @dataclass(slots=True)
@@ -2230,7 +2245,7 @@ class MemoryResponse(APCI):
 
 
 @dataclass(slots=True)
-class DeviceDescriptorRead(APCI):
+class DeviceDescriptorRead(APCI, ExpectedResponse["DeviceDescriptorResponse"]):
     """
     DeviceDescriptorRead service.
 
@@ -2308,6 +2323,9 @@ class DeviceDescriptorResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DeviceDescriptorResponse descriptor="{self.descriptor}" value="{self.value}" />'
+
+
+DeviceDescriptorRead.RESPONSE_TYPE = DeviceDescriptorResponse
 
 
 @dataclass(slots=True)
@@ -3517,7 +3535,7 @@ class MemoryBitWrite(APCI):
 
 
 @dataclass(slots=True)
-class AuthorizeRequest(APCI):
+class AuthorizeRequest(APCI, ExpectedResponse["AuthorizeResponse"]):
     """AuthorizeRequest service."""
 
     CODE: ClassVar = APCIExtendedService.AUTHORIZE_REQUEST
@@ -3580,6 +3598,9 @@ class AuthorizeResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<AuthorizeResponse level="{self.level}"/>'
+
+
+AuthorizeRequest.RESPONSE_TYPE = AuthorizeResponse
 
 
 @dataclass(slots=True)
@@ -3677,7 +3698,7 @@ class KeyResponse(APCI):
 
 
 @dataclass(slots=True)
-class PropertyValueRead(APCI):
+class PropertyValueRead(APCI, ExpectedResponse["PropertyValueResponse"]):
     """
     PropertyValueRead service.
 
@@ -3887,6 +3908,9 @@ class PropertyValueResponse(APCI):
             f'data="{self.data.hex()}" '
             "/>"
         )
+
+
+PropertyValueRead.RESPONSE_TYPE = PropertyValueResponse
 
 
 @dataclass(slots=True)

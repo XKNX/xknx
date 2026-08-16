@@ -89,10 +89,7 @@ async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
         payload=apci.DeviceDescriptorRead(descriptor=0),
     )
     task = asyncio.create_task(
-        conn.request(
-            payload=apci.DeviceDescriptorRead(descriptor=0),
-            expected=apci.DeviceDescriptorResponse,
-        )
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
     )
     await asyncio.sleep(0)
     assert xknx.cemi_handler.send_telegram.call_args_list == [
@@ -155,10 +152,7 @@ async def test_send_on_disconnected_connection() -> None:
         await conn.send_data(apci.Restart())
 
     with pytest.raises(ManagementConnectionRefused):
-        await conn.request(
-            payload=apci.DeviceDescriptorRead(descriptor=0),
-            expected=apci.DeviceDescriptorResponse,
-        )
+        await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
 
 
 async def test_reject_incoming_connection() -> None:
@@ -289,10 +283,7 @@ async def test_p2p_rate_limit(
 
     # create task and request data
     task = asyncio.create_task(
-        conn.request(
-            payload=apci.DeviceDescriptorRead(descriptor=0),
-            expected=apci.DeviceDescriptorResponse,
-        )
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
     )
 
     await asyncio.sleep(0)
@@ -304,10 +295,7 @@ async def test_p2p_rate_limit(
 
     # create second task
     task = asyncio.create_task(
-        conn.request(
-            payload=apci.DeviceDescriptorRead(descriptor=0),
-            expected=apci.DeviceDescriptorResponse,
-        )
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
     )
     await asyncio.sleep(0)
 

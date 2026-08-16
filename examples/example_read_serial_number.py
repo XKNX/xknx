@@ -17,8 +17,7 @@ async def read_serial_number(
         response = await connection.request(
             payload=apci.PropertyValueRead(
                 property_id=ResourceGenericPropertyId.PID_SERIAL_NUMBER
-            ),
-            expected=apci.PropertyValueResponse,
+            )
         )
     return response.payload.data
 

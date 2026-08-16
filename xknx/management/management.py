@@ -17,7 +17,7 @@ from xknx.exceptions import (
     ManagementConnectionTimeout,
 )
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import APCI
+from xknx.telegram.apci import APCI, ExpectedResponse
 from xknx.telegram.tpci import (
     TAck,
     TConnect,
@@ -395,15 +395,16 @@ class P2PConnection:
         return telegram
 
     @overload
-    async def request(
-        self, payload: APCI, expected: type[APCIT]
-    ) -> Telegram[APCIT]: ...
+    async def request(self, payload: ExpectedResponse[APCIT]) -> Telegram[APCIT]: ...
     @overload
-    async def request(self, payload: APCI, expected: None) -> Telegram: ...
-    async def request(
-        self, payload: APCI, expected: type[APCI] | None
-    ) -> Telegram[Any]:
-        """Send a payload to the KNX device and wait for the response."""
+    async def request(self, payload: APCI) -> Telegram: ...
+    async def request(self, payload: Any) -> Telegram[Any]:
+        """
+        Send a payload to the KNX device and wait for the response.
+
+        The response is verified against `type(payload).RESPONSE_TYPE` if the
+        payload defines one - see `ExpectedResponse`.
+        """
         if not self._connected:
             raise ManagementConnectionRefused(
                 "Management connection disconnected by the peer."
@@ -416,6 +417,7 @@ class P2PConnection:
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
+        expected = getattr(payload, "RESPONSE_TYPE", None)
         await self.send_data(payload)
         response = await self._receive(expected)
         self._last_response_time = time.time()
