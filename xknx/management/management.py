@@ -417,7 +417,9 @@ class P2PConnection:
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
-        expected = getattr(payload, "RESPONSE_TYPE", None)
+        expected = (
+            payload.RESPONSE_TYPE if isinstance(payload, ExpectedResponse) else None
+        )
         await self.send_data(payload)
         response = await self._receive(expected)
         self._last_response_time = time.time()
