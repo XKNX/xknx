@@ -2290,6 +2290,43 @@ class MemoryResponse(APCI):
 
 
 @dataclass(slots=True)
+class DeviceDescriptorRead(APCIRequest["DeviceDescriptorResponse"]):
+    """
+    DeviceDescriptorRead service.
+
+    Payload contains the descriptor.
+    """
+
+    CODE: ClassVar = APCIService.DEVICE_DESCRIPTOR_READ
+
+    descriptor: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DeviceDescriptorRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_DeviceDescriptor_Read in CEMI: {raw.hex()}"
+            )
+        return cls(descriptor=raw[1] & 0x3F)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.descriptor <= 0x3F:
+            raise ConversionError("Descriptor out of range.")
+
+        return encode_cmd_and_payload(self.CODE, encoded_payload=self.descriptor)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<DeviceDescriptorRead descriptor="{self.descriptor}" />'
+
+
+@dataclass(slots=True)
 class DeviceDescriptorResponse(APCI):
     """
     DeviceDescriptorResponse service.
@@ -2331,43 +2368,6 @@ class DeviceDescriptorResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DeviceDescriptorResponse descriptor="{self.descriptor}" value="{self.value}" />'
-
-
-@dataclass(slots=True)
-class DeviceDescriptorRead(APCIRequest[DeviceDescriptorResponse]):
-    """
-    DeviceDescriptorRead service.
-
-    Payload contains the descriptor.
-    """
-
-    CODE: ClassVar = APCIService.DEVICE_DESCRIPTOR_READ
-
-    descriptor: int = 0
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 1
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> DeviceDescriptorRead:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) != 2:
-            raise ConversionError(
-                f"Invalid length for A_DeviceDescriptor_Read in CEMI: {raw.hex()}"
-            )
-        return cls(descriptor=raw[1] & 0x3F)
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        if not 0 <= self.descriptor <= 0x3F:
-            raise ConversionError("Descriptor out of range.")
-
-        return encode_cmd_and_payload(self.CODE, encoded_payload=self.descriptor)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return f'<DeviceDescriptorRead descriptor="{self.descriptor}" />'
 
 
 @dataclass(slots=True)
@@ -3577,6 +3577,39 @@ class MemoryBitWrite(APCI):
 
 
 @dataclass(slots=True)
+class AuthorizeRequest(APCIRequest["AuthorizeResponse"]):
+    """AuthorizeRequest service."""
+
+    CODE: ClassVar = APCIExtendedService.AUTHORIZE_REQUEST
+
+    key: int = 0
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 6
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> AuthorizeRequest:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 7:
+            raise ConversionError(
+                f"Invalid length for A_Authorize_Request in CEMI: {raw.hex()}"
+            )
+        _, key = struct.unpack("!BI", raw[2:])
+        return cls(key=key)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = struct.pack("!BI", 0, self.key)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<AuthorizeRequest key="{self.key}" />'
+
+
+@dataclass(slots=True)
 class AuthorizeResponse(APCI):
     """AuthorizeResponse service."""
 
@@ -3607,39 +3640,6 @@ class AuthorizeResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<AuthorizeResponse level="{self.level}"/>'
-
-
-@dataclass(slots=True)
-class AuthorizeRequest(APCIRequest[AuthorizeResponse]):
-    """AuthorizeRequest service."""
-
-    CODE: ClassVar = APCIExtendedService.AUTHORIZE_REQUEST
-
-    key: int = 0
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 6
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> AuthorizeRequest:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) != 7:
-            raise ConversionError(
-                f"Invalid length for A_Authorize_Request in CEMI: {raw.hex()}"
-            )
-        _, key = struct.unpack("!BI", raw[2:])
-        return cls(key=key)
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        payload = struct.pack("!BI", 0, self.key)
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return f'<AuthorizeRequest key="{self.key}" />'
 
 
 @dataclass(slots=True)
@@ -3737,81 +3737,7 @@ class KeyResponse(APCI):
 
 
 @dataclass(slots=True)
-class PropertyValueResponse(APCI):
-    """
-    PropertyValueResponse service.
-
-    Payload indicates object, property, count, start and data itself. Size of
-    the payload depends on the data.
-    """
-
-    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_RESPONSE
-
-    object_index: int = 0
-    property_id: int = 0
-    count: int = 1
-    start_index: int = 0
-    data: bytes = b""
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 5 + len(self.data)
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> PropertyValueResponse:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 6:
-            raise ConversionError(
-                f"Invalid length for A_PropertyValue_Response in CEMI: {raw.hex()}"
-            )
-        size = len(raw) - 6
-        (
-            object_index,
-            property_id,
-            count,
-            start_index,
-            data,
-        ) = struct.unpack(f"!BBBB{size}s", raw[2:])
-        return cls(
-            object_index=object_index,
-            property_id=property_id,
-            count=count >> 4,
-            start_index=(count & 0xF) * 256 + start_index,
-            data=data,
-        )
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        if not 0 <= self.count <= 0xF:
-            raise ConversionError("Count out of range.")
-
-        size = len(self.data)
-        payload = struct.pack(
-            f"!BBBB{size}s",
-            self.object_index,
-            self.property_id,
-            (self.count << 4) + (self.start_index >> 8),
-            self.start_index & 0xFF,
-            self.data,
-        )
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return (
-            "<PropertyValueResponse "
-            f'object_index="{self.object_index}" '
-            f'property_id="{self.property_id}" '
-            f'count="{self.count}" '
-            f'start_index="{self.start_index}" '
-            f'data="{self.data.hex()}" '
-            "/>"
-        )
-
-
-@dataclass(slots=True)
-class PropertyValueRead(APCIRequest[PropertyValueResponse]):
+class PropertyValueRead(APCIRequest["PropertyValueResponse"]):
     """
     PropertyValueRead service.
 
@@ -3940,6 +3866,80 @@ class PropertyValueWrite(APCI):
         """Return object as readable string."""
         return (
             "<PropertyValueWrite "
+            f'object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'count="{self.count}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" '
+            "/>"
+        )
+
+
+@dataclass(slots=True)
+class PropertyValueResponse(APCI):
+    """
+    PropertyValueResponse service.
+
+    Payload indicates object, property, count, start and data itself. Size of
+    the payload depends on the data.
+    """
+
+    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_RESPONSE
+
+    object_index: int = 0
+    property_id: int = 0
+    count: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyValueResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_PropertyValue_Response in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 6
+        (
+            object_index,
+            property_id,
+            count,
+            start_index,
+            data,
+        ) = struct.unpack(f"!BBBB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            count=count >> 4,
+            start_index=(count & 0xF) * 256 + start_index,
+            data=data,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.count <= 0xF:
+            raise ConversionError("Count out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BBBB{size}s",
+            self.object_index,
+            self.property_id,
+            (self.count << 4) + (self.start_index >> 8),
+            self.start_index & 0xFF,
+            self.data,
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyValueResponse "
             f'object_index="{self.object_index}" '
             f'property_id="{self.property_id}" '
             f'count="{self.count}" '
