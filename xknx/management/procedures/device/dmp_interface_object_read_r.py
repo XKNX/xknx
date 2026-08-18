@@ -31,12 +31,15 @@ async def dmp_interface_object_read_r(
     :return: The property data read from device
     :raises ManagementConnectionError: If device returns error (nr_of_elem = 0)
     """
-    # The spec's sequence (A_PropertyDescription_Read) is intentionally skipped:
-    # callers supply object_index/property_id/count/start_index explicitly, so the
-    # property is always known at this level. Discovery belongs to the Configuration
-    # Procedure above (per spec: "shall not interpret ... at the level of this
-    # Management Procedure"). Use dmp_interface_object_scan_r to discover properties
-    # (type, max_count, access) before calling this function.
+    # DMP_InterfaceObjectRead_R's own parameter list (KNX v02.01.02 -
+    # Management Procedures 03.05.02 - §3.27.1: object_type, object_index,
+    # PID, start_index, noElements) only ever supplies a PID, so the spec's
+    # optional A_PropertyDescription_Read step - "if Property... is unknown
+    # to the Management Client" - never applies here: the property is always
+    # known by definition. Use dmp_interface_object_scan_r (KNX v02.01.02 -
+    # Management Procedures 03.05.02 - §3.28.2) to discover a device's
+    # properties (type, max_count, access) first if you don't already know
+    # which PID to read.
     if count <= 0:
         return b""
 
