@@ -13,8 +13,10 @@ if TYPE_CHECKING:
     from xknx.io.transport import UDPTransport
 
 
-class DeviceConfiguration(RequestResponse):
+class DeviceConfiguration(RequestResponse[DeviceConfigurationAck]):
     """Class to send DeviceConfigurationRequest and wait for DeviceConfigurationAck (UDP only)."""
+
+    __slots__ = ("data_endpoint_addr", "device_configuration_request")
 
     transport: UDPTransport
 
@@ -28,9 +30,7 @@ class DeviceConfiguration(RequestResponse):
         """Initialize DeviceConfiguration class."""
         self.data_endpoint_addr = data_endpoint
         self.device_configuration_request = device_configuration_request
-        super().__init__(
-            transport, DeviceConfigurationAck, timeout_in_seconds=timeout_in_seconds
-        )
+        super().__init__(transport, timeout_in_seconds=timeout_in_seconds)
 
     async def send_request(self) -> None:
         """Build knxipframe (within derived class) and send via UDP."""

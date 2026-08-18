@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any, ClassVar, Generic, TypeVar, get_args
 
 from xknx.exceptions import CommunicationError
 from xknx.io.transport import KNXIPTransport
@@ -16,19 +17,37 @@ from xknx.util import asyncio_timeout
 
 logger = logging.getLogger("xknx.log")
 
+ResponseBodyT = TypeVar("ResponseBodyT", bound=KNXIPBody)
 
-class RequestResponse:
+
+class RequestResponse(Generic[ResponseBodyT]):
     """Class for sending a specific type of KNX/IP Packet to a KNX/IP device and wait for the corresponding answer."""
+
+    __slots__ = (
+        "response_received_event",
+        "response_status_code",
+        "success",
+        "timeout_in_seconds",
+        "transport",
+    )
+
+    AWAITED_RESPONSE_CLASS: ClassVar[type[ResponseBodyT]]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Derive `AWAITED_RESPONSE_CLASS` from the `RequestResponse` type argument."""
+        super().__init_subclass__(**kwargs)
+        for orig_base in cls.__dict__.get("__orig_bases__", ()):
+            if args := get_args(orig_base):
+                cls.AWAITED_RESPONSE_CLASS = args[0]
+                return
 
     def __init__(
         self,
         transport: KNXIPTransport,
-        awaited_response_class: type[KNXIPBody],
         timeout_in_seconds: float = 1.0,
     ) -> None:
         """Initialize RequstResponse class."""
         self.transport = transport
-        self.awaited_response_class: type[KNXIPBody] = awaited_response_class
         self.response_received_event = asyncio.Event()
         self.success = False
         self.timeout_in_seconds = timeout_in_seconds
@@ -42,7 +61,7 @@ class RequestResponse:
     async def start(self) -> None:
         """Start. Send request and wait for an answer."""
         callb = self.transport.register_callback(
-            self.response_rec_callback, [self.awaited_response_class.SERVICE_TYPE]
+            self.response_rec_callback, [self.AWAITED_RESPONSE_CLASS.SERVICE_TYPE]
         )
         try:
             await self.send_request()
@@ -70,23 +89,24 @@ class RequestResponse:
         self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
         """Verify and handle knxipframe. Callback from internal transport."""
-        if not isinstance(knxipframe.body, self.awaited_response_class):
+        body = knxipframe.body
+        if not isinstance(body, self.AWAITED_RESPONSE_CLASS):
             logger.warning("Could not understand knxipframe")
             return
         self.response_received_event.set()
 
-        if isinstance(knxipframe.body, KNXIPBodyResponse):
-            self.response_status_code = knxipframe.body.status_code
-            if knxipframe.body.status_code != ErrorCode.E_NO_ERROR:
+        if isinstance(body, KNXIPBodyResponse):
+            self.response_status_code = body.status_code
+            if body.status_code != ErrorCode.E_NO_ERROR:
                 logger.debug(
                     "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
                     self.__class__.__name__,
-                    self.awaited_response_class.__name__,
-                    knxipframe.body.status_code,
+                    self.AWAITED_RESPONSE_CLASS.__name__,
+                    body.status_code,
                 )
                 return
         self.success = True
-        self.on_success_hook(knxipframe)
+        self.on_success_hook(body)
 
-    def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
+    def on_success_hook(self, response: ResponseBodyT) -> None:
         """Do something after having received a valid answer. May be overwritten in derived class."""

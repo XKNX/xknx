@@ -26,7 +26,7 @@ class TestConnectionState:
         )
         connectionstate.timeout_in_seconds = 0
 
-        assert connectionstate.awaited_response_class == ConnectionStateResponse
+        assert connectionstate.AWAITED_RESPONSE_CLASS is ConnectionStateResponse
         assert connectionstate.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:
@@ -78,7 +78,7 @@ class TestConnectionState:
         )
         connectionstate.timeout_in_seconds = 0
 
-        assert connectionstate.awaited_response_class == ConnectionStateResponse
+        assert connectionstate.AWAITED_RESPONSE_CLASS is ConnectionStateResponse
         assert connectionstate.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:

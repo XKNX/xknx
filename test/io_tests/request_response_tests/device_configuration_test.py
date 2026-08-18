@@ -47,7 +47,7 @@ class TestDeviceConfiguration:
         )
         device_configuration.timeout_in_seconds = 0
 
-        assert device_configuration.awaited_response_class == DeviceConfigurationAck
+        assert device_configuration.AWAITED_RESPONSE_CLASS is DeviceConfigurationAck
 
         exp_knxipframe = KNXIPFrame.init_from_body(device_configuration_request)
         with (

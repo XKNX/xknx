@@ -19,7 +19,7 @@ class TestSession:
         )
         session.timeout_in_seconds = 0
 
-        assert session.awaited_response_class == SessionResponse
+        assert session.AWAITED_RESPONSE_CLASS is SessionResponse
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(

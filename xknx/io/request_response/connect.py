@@ -19,12 +19,14 @@ if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
 
 
-class Connect(RequestResponse):
+class Connect(RequestResponse[ConnectResponse]):
     """
     Class to send a ConnectRequest and wait for ConnectResponse.
 
     Setting a `individual_address` is only supported for Tunnelling v2 connections.
     """
+
+    __slots__ = ("communication_channel", "crd", "cri", "data_endpoint", "local_hpai")
 
     def __init__(
         self,
@@ -33,7 +35,7 @@ class Connect(RequestResponse):
         cri: ConnectRequestInformation | None = None,
     ) -> None:
         """Initialize Connect class."""
-        super().__init__(transport, ConnectResponse)
+        super().__init__(transport)
         self.communication_channel = 0
         self.data_endpoint = HPAI()
         self.local_hpai = local_hpai
@@ -50,9 +52,8 @@ class Connect(RequestResponse):
         )
         return KNXIPFrame.init_from_body(connect_request)
 
-    def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
+    def on_success_hook(self, response: ConnectResponse) -> None:
         """Set communication channel and identifier after having received a valid answer."""
-        assert isinstance(knxipframe.body, ConnectResponse)
-        self.communication_channel = knxipframe.body.communication_channel
-        self.data_endpoint = knxipframe.body.data_endpoint
-        self.crd = knxipframe.body.crd
+        self.communication_channel = response.communication_channel
+        self.data_endpoint = response.data_endpoint
+        self.crd = response.crd

@@ -26,7 +26,7 @@ class TestConnect:
         connect = Connect(udp_transport, local_hpai=local_hpai)
         connect.timeout_in_seconds = 0
 
-        assert connect.awaited_response_class == ConnectResponse
+        assert connect.AWAITED_RESPONSE_CLASS is ConnectResponse
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(
@@ -82,7 +82,7 @@ class TestConnect:
         connect = Connect(udp_transport, local_hpai=local_hpai)
         connect.timeout_in_seconds = 0
 
-        assert connect.awaited_response_class == ConnectResponse
+        assert connect.AWAITED_RESPONSE_CLASS is ConnectResponse
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(ConnectRequest())

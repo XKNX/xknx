@@ -42,7 +42,7 @@ class TestTunnelling:
         tunnelling = Tunnelling(udp_transport, data_endpoint, tunnelling_request)
         tunnelling.timeout_in_seconds = 0
 
-        assert tunnelling.awaited_response_class == TunnellingAck
+        assert tunnelling.AWAITED_RESPONSE_CLASS is TunnellingAck
 
         exp_knxipframe = KNXIPFrame.init_from_body(tunnelling_request)
         with (

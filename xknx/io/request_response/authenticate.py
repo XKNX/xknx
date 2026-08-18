@@ -12,8 +12,10 @@ if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
 
 
-class Authenticate(RequestResponse):
+class Authenticate(RequestResponse[SessionStatus]):
     """Class to send a SessionAuthenticate and wait for SessionStatus."""
+
+    __slots__ = ("message_authentication_code", "response", "user_id")
 
     def __init__(
         self,
@@ -22,7 +24,7 @@ class Authenticate(RequestResponse):
         message_authentication_code: bytes,
     ) -> None:
         """Initialize Session class."""
-        super().__init__(transport, SessionStatus, timeout_in_seconds=10)
+        super().__init__(transport, timeout_in_seconds=10)
         self.user_id = user_id
         self.message_authentication_code = message_authentication_code
         self.response: SessionStatus | None = None
@@ -36,7 +38,6 @@ class Authenticate(RequestResponse):
             )
         )
 
-    def on_success_hook(self, knxipframe: KNXIPFrame) -> None:
+    def on_success_hook(self, response: SessionStatus) -> None:
         """Set communication channel and identifier after having received a valid answer."""
-        assert isinstance(knxipframe.body, SessionStatus)
-        self.response = knxipframe.body
+        self.response = response

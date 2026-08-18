@@ -28,7 +28,7 @@ class TestAuthenticate:
         )
         authenticate.timeout_in_seconds = 0
 
-        assert authenticate.awaited_response_class == SessionStatus
+        assert authenticate.AWAITED_RESPONSE_CLASS is SessionStatus
 
         # Expected KNX/IP-Frame:
         exp_knxipframe = KNXIPFrame.init_from_body(

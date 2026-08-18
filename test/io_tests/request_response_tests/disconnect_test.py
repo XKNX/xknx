@@ -26,7 +26,7 @@ class TestDisconnect:
         )
         disconnect.timeout_in_seconds = 0
 
-        assert disconnect.awaited_response_class == DisconnectResponse
+        assert disconnect.AWAITED_RESPONSE_CLASS is DisconnectResponse
         assert disconnect.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:
@@ -78,7 +78,7 @@ class TestDisconnect:
         )
         disconnect.timeout_in_seconds = 0
 
-        assert disconnect.awaited_response_class == DisconnectResponse
+        assert disconnect.AWAITED_RESPONSE_CLASS is DisconnectResponse
         assert disconnect.communication_channel_id == communication_channel_id
 
         # Expected KNX/IP-Frame:
