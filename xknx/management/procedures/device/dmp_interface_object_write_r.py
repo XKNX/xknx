@@ -34,7 +34,10 @@ async def dmp_interface_object_write_r(
     :param property_id: Property identifier (1-255)
     :param data: Data to write
     :param count: Number of elements to write
-    :param start_index: Start element index (1-based, 1-4095)
+    :param start_index: Start element index (0-4095). Unlike read_r/verify_r,
+        0 is valid here: KNX v02.01.01 - Application Interface Layer
+        03.04.01 - §4.3.2.3 - "The array can be reset to no elements by
+        writing zero on element '0'."
     :param verify: If True, verify response data matches written data
     :param max_apdu_length: Caps each chunk so its A_PropertyValue_Write-PDU
         fits within this many octets - the device's PID_MAX_APDU_LENGTH (KNX
@@ -43,7 +46,8 @@ async def dmp_interface_object_write_r(
         read; pass the real value for a device known to support more.
     :return: The response data from device (concatenated for chunked writes)
     :raises ValueError: If count is not positive, data length is not
-        divisible by count, or max_apdu_length is not positive
+        divisible by count, start_index + count - 1 exceeds 4095, or
+        max_apdu_length is not positive
     :raises PropertyVerificationError: If verify is enabled and the response differs
     :raises ManagementConnectionError: If device returns error (nr_of_elem =
         0), or a response with an element count that doesn't match the request
@@ -67,6 +71,14 @@ async def dmp_interface_object_write_r(
     if len(data) % count != 0:
         raise ValueError(
             f"Data length {len(data)} must be divisible by element count {count}"
+        )
+    # start_index (12 bits) and count (4 bits) are independently bounds-checked
+    # by apci.PropertyValueWrite.to_knx(), but only per-chunk - a count large
+    # enough to push a later chunk's start_index past 0xFFF would otherwise
+    # only fail mid-transfer, after earlier chunks were already written.
+    if start_index + count - 1 > 0xFFF:
+        raise ValueError(
+            f"start_index + count - 1 must be <= {0xFFF}, got {start_index + count - 1}"
         )
 
     element_size = len(data) // count

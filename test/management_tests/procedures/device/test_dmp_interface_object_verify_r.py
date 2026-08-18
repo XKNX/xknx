@@ -151,6 +151,29 @@ async def test_dmp_interface_object_verify_r_read_error(xknx_setup: XKNX) -> Non
     await conn.disconnect()
 
 
+async def test_dmp_interface_object_verify_r_start_index_overflow(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_verify_r raises ValueError when start_index + count - 1 > 4095."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+
+    with pytest.raises(
+        ValueError, match=r"start_index \+ count - 1 must be <= 4095, got 4096"
+    ):
+        await dmp_interface_object_verify_r(
+            conn,
+            object_index=0,
+            property_id=78,
+            expected_data=b"\xab\xcd\xab\xcd",
+            count=2,
+            start_index=4095,
+        )
+
+    await conn.disconnect()
+
+
 async def test_dmp_interface_object_verify_r_max_apdu_length_not_positive(
     xknx_setup: XKNX,
 ) -> None:
