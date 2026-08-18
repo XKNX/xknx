@@ -252,7 +252,12 @@ async def test_dmp_interface_object_write_r_max_apdu_length_not_positive(
     conn = await xknx.management.connect(ia)
     with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
         await dmp_interface_object_write_r(
-            conn, object_index=0, property_id=78, data=b"\xaa\xbb", count=1, max_apdu_length=0
+            conn,
+            object_index=0,
+            property_id=78,
+            data=b"\xaa\xbb",
+            count=1,
+            max_apdu_length=0,
         )
 
     await conn.disconnect()
@@ -337,7 +342,8 @@ async def test_dmp_interface_object_write_r_chunked(xknx_setup: XKNX) -> None:
 async def test_dmp_interface_object_write_r_default_max_apdu_length_budget(
     xknx_setup: XKNX,
 ) -> None:
-    """Test the default max_apdu_length=15 budget yields exactly 10 elements/chunk for 1-byte elements.
+    """
+    Test the default max_apdu_length=15 budget yields exactly 10 elements/chunk for 1-byte elements.
 
     Pins PROPERTY_VALUE_HEADER_OCTETS=5: budget = 15 - 5 = 10, matching
     apci.PropertyValueWrite(data=b"").calculated_length() == 5 and Calimero's
@@ -367,7 +373,11 @@ async def test_dmp_interface_object_write_r_default_max_apdu_length_budget(
             ia,
             seq=1,
             payload=apci.PropertyValueResponse(
-                object_index=0, property_id=52, count=1, start_index=11, data=data[10:11]
+                object_index=0,
+                property_id=52,
+                count=1,
+                start_index=11,
+                data=data[10:11],
             ),
         )
 
@@ -380,11 +390,23 @@ async def test_dmp_interface_object_write_r_default_max_apdu_length_budget(
     assert result == data
     assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
         _write_request(
-            ia, 0, object_index=0, property_id=52, data=data[0:10], count=10, start_index=1
+            ia,
+            0,
+            object_index=0,
+            property_id=52,
+            data=data[0:10],
+            count=10,
+            start_index=1,
         ),
         Telegram(destination_address=ia, tpci=tpci.TAck(0)),
         _write_request(
-            ia, 1, object_index=0, property_id=52, data=data[10:11], count=1, start_index=11
+            ia,
+            1,
+            object_index=0,
+            property_id=52,
+            data=data[10:11],
+            count=1,
+            start_index=11,
         ),
         Telegram(destination_address=ia, tpci=tpci.TAck(1)),
     ]
@@ -460,15 +482,33 @@ async def test_dmp_interface_object_write_r_max_apdu_length(xknx_setup: XKNX) ->
     assert result == data
     assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
         _write_request(
-            ia, 0, object_index=0, property_id=60, data=data[0:8], count=2, start_index=1
+            ia,
+            0,
+            object_index=0,
+            property_id=60,
+            data=data[0:8],
+            count=2,
+            start_index=1,
         ),
         Telegram(destination_address=ia, tpci=tpci.TAck(0)),
         _write_request(
-            ia, 1, object_index=0, property_id=60, data=data[8:16], count=2, start_index=3
+            ia,
+            1,
+            object_index=0,
+            property_id=60,
+            data=data[8:16],
+            count=2,
+            start_index=3,
         ),
         Telegram(destination_address=ia, tpci=tpci.TAck(1)),
         _write_request(
-            ia, 2, object_index=0, property_id=60, data=data[16:20], count=1, start_index=5
+            ia,
+            2,
+            object_index=0,
+            property_id=60,
+            data=data[16:20],
+            count=1,
+            start_index=5,
         ),
         Telegram(destination_address=ia, tpci=tpci.TAck(2)),
     ]

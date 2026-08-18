@@ -19,7 +19,6 @@ async def dmp_interface_object_read_r(
     count: int = 1,
     start_index: int = 1,
     max_apdu_length: int = STANDARD_FRAME_MAX_NPDU_LENGTH,
-    element_size: int = 1,
 ) -> bytes:
     """
     Read property value(s) from an interface object.
@@ -28,32 +27,31 @@ async def dmp_interface_object_read_r(
     §3.27.2. Requires an established connection (DM_Connect must be executed
     first).
 
+    The wire PDU carries no Property element size (PDT), so for count > 1 the
+    first request always reads exactly 1 element to safely learn it - a
+    single element is the smallest possible request, so it's the only size
+    that's safe to ask for without already knowing the answer. Every request
+    after that is sized against max_apdu_length using the now-known element
+    size, so a wide-element property is chunked correctly from the start
+    instead of failing outright on an oversized first guess.
+
     :param conn: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)
     :param property_id: Property identifier (1-255)
     :param count: Number of elements to read
     :param start_index: Start element index (1-based, 1-4095)
-    :param max_apdu_length: Caps each chunk so its A_PropertyValue_Response-PDU
-        fits within this many octets - the device's PID_MAX_APDU_LENGTH (KNX
-        v01.10.01 - Resources 03.05.01 - §4.3.7). Defaults to the spec's
-        fallback of 15 octets for a device whose actual value hasn't been
-        read; pass the real value for a device known to support more.
-    :param element_size: Octet size of a single Property element (from its
-        PDT, e.g. via a preceding A_PropertyDescription_Read). Used together
-        with max_apdu_length to size chunks; the default of 1 is only correct
-        for byte-sized properties - an incorrect value can undersize *or*
-        oversize chunks, so pass the real size for anything wider.
-        TODO: derive this automatically instead of requiring the caller to
-        pass it - issue an A_PropertyDescription_Read for the PDT (KNX
-        v02.01.01 - Application Layer 03.03.07 - §3.4.3) and look it up in a
-        PDT -> byte-size table, as Calimero's
-        ManagementClientImpl.readProperty/PropertyTypes.bitSize does. Needs a
-        PDT size table, which xknx doesn't have yet.
+    :param max_apdu_length: Caps each chunk (after the first) so its
+        A_PropertyValue_Response-PDU fits within this many octets - the
+        device's PID_MAX_APDU_LENGTH (KNX v01.10.01 - Resources 03.05.01 -
+        §4.3.7). Defaults to the spec's fallback of 15 octets for a device
+        whose actual value hasn't been read; pass the real value for a device
+        known to support more.
     :return: The property data read from device
     :raises ValueError: If count is not positive, start_index is < 1, or
         max_apdu_length is not positive
-    :raises ManagementConnectionError: If device returns error (nr_of_elem = 0)
-        or a response with an element count that doesn't match the request
+    :raises ManagementConnectionError: If device returns error (nr_of_elem =
+        0), a response with an element count that doesn't match the request,
+        or the probe response has empty data
     """
     if max_apdu_length <= 0:
         raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
@@ -75,14 +73,14 @@ async def dmp_interface_object_read_r(
     if start_index < 1:
         raise ValueError(f"start_index must be >= 1, got {start_index}")
 
-    max_elements_per_chunk = min(
-        MAX_ELEMENTS_PER_REQUEST,
-        max(1, (max_apdu_length - PROPERTY_VALUE_HEADER_OCTETS) // element_size),
-    )
-
     data = bytearray()
     remaining = count
     current_index = start_index
+    # First request: read exactly 1 element - the only size that's safe to
+    # ask for without already knowing element_size. Widened once that
+    # response reveals it.
+    max_elements_per_chunk = 1
+    element_size: int | None = None
 
     while remaining > 0:
         chunk_count = min(remaining, max_elements_per_chunk)
@@ -118,6 +116,24 @@ async def dmp_interface_object_read_r(
                 f"index {current_index} requested {chunk_count} elements, "
                 f"got {response_count}"
             )
+
+        if element_size is None:
+            # This is always the 1-element probe request (response_count == 1,
+            # guaranteed by the check above), so its data length *is* the
+            # element size directly - no division needed.
+            element_size = len(response.payload.data)
+            if element_size == 0:
+                raise ManagementConnectionError(
+                    f"Property read failed: object {object_index} PID {property_id} "
+                    f"index {current_index} returned empty data for 1 element"
+                )
+            max_elements_per_chunk = min(
+                MAX_ELEMENTS_PER_REQUEST,
+                max(
+                    1, (max_apdu_length - PROPERTY_VALUE_HEADER_OCTETS) // element_size
+                ),
+            )
+
         data.extend(response.payload.data)
         current_index += response_count
         remaining -= response_count
