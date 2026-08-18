@@ -14,7 +14,7 @@ nav_order: 2
 
 ### Internals
 
-- `RequestResponse` is now generic over the response body it awaits, eg. `class Connect(RequestResponse[ConnectResponse])`. The awaited class is no longer passed to `__init__()` - it is derived from that type argument as `AWAITED_RESPONSE_CLASS`, so the two can not disagree. `on_success_hook()` receives the response directly instead of the whole `KNXIPFrame`, so `Connect`, `Session` and `Authenticate` no longer need `assert isinstance(knxipframe.body, ...)` to reach it. `RequestResponse` and its subclasses are slotted now.
+- `RequestResponse` is now generic over the response body it awaits, eg. `class Connect(RequestResponse[ConnectResponse])`. The awaited class is no longer passed to `__init__()` - it is derived from that type argument as `AWAITED_RESPONSE_CLASS`, so the two can not disagree. A received response is kept as `response`, typed to that class - it replaces both `success` (which is now `response is not None`) and `on_success_hook()`. `Connect` no longer mirrors `communication_channel`, `data_endpoint` and `crd` onto itself; read them from `connect.response`. `RequestResponse` and its subclasses are slotted now.
 
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 

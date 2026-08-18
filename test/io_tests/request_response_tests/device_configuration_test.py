@@ -80,7 +80,7 @@ class TestDeviceConfiguration:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DeviceConfigurationAck())
         device_configuration.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert device_configuration.success
+        assert device_configuration.response is not None
 
     async def test_default_timeout(self) -> None:
         """Test waiting the DEVICE_CONFIGURATION_REQUEST_TIMEOUT for the acknowledgement."""

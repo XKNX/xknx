@@ -249,20 +249,20 @@ class _Tunnel(Interface):
             cri=ConnectRequestInformation(individual_address=self._requested_address),
         )
         await connect.start()
-        if connect.success:
-            self.communication_channel = connect.communication_channel
+        if (response := connect.response) is not None:
+            self.communication_channel = response.communication_channel
             # assign data_endpoint received from server
             self._data_endpoint_addr = (
                 None
-                if connect.data_endpoint.route_back
-                else connect.data_endpoint.addr_tuple
+                if response.data_endpoint.route_back
+                else response.data_endpoint.addr_tuple
             )
             # Use the individual address provided by the tunnelling server
-            self._src_address = connect.crd.individual_address or IndividualAddress(0)
+            self._src_address = response.crd.individual_address or IndividualAddress(0)
             self.xknx.current_address = self._src_address
             logger.debug(
                 "Tunnel established. communication_channel=%s, address=%s",
-                connect.communication_channel,
+                response.communication_channel,
                 self._src_address,
             )
             return True
@@ -285,7 +285,7 @@ class _Tunnel(Interface):
         status_code: str | None = None
         if error_code := conn_state.response_status_code:
             status_code = error_code.name
-        return conn_state.success, status_code
+        return conn_state.response is not None, status_code
 
     async def _disconnect_request(self) -> None:
         """Disconnect from tunnel device. Delete communication_channel."""
@@ -296,7 +296,7 @@ class _Tunnel(Interface):
                 local_hpai=self.local_hpai,
             )
             await disconnect.start()
-            if disconnect.success:
+            if disconnect.response is not None:
                 logger.debug(
                     "Tunnel disconnect succeeded (communication_channel: %s)",
                     self.communication_channel,
@@ -567,7 +567,7 @@ class UDPTunnel(_Tunnel):
         )
         await tunnelling.start()
 
-        if not tunnelling.success:
+        if tunnelling.response is None:
             if error_code := tunnelling.response_status_code:
                 reason = (
                     f"Received TUNNELLING_ACK with error code: {error_code.name} "

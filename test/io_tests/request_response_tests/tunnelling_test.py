@@ -75,4 +75,4 @@ class TestTunnelling:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(TunnellingAck())
         tunnelling.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert tunnelling.success
+        assert tunnelling.response is not None

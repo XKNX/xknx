@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Session(RequestResponse[SessionResponse]):
     """Class to send a SessionRequest and wait for SessionResponse."""
 
-    __slots__ = ("ecdh_client_public_key", "response")
+    __slots__ = ("ecdh_client_public_key",)
 
     def __init__(
         self,
@@ -26,16 +26,9 @@ class Session(RequestResponse[SessionResponse]):
         # TODO: increase timeout to timeoutAuthentication: 10sec ?
         super().__init__(transport)
         self.ecdh_client_public_key = ecdh_client_public_key
-        # TODO: maybe replace self.success with self.response None check
-        # and remove on_success_hook in favour of using self.response directly
-        self.response: SessionResponse | None = None
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(
             SessionRequest(ecdh_client_public_key=self.ecdh_client_public_key)
         )
-
-    def on_success_hook(self, response: SessionResponse) -> None:
-        """Set communication channel and identifier after having received a valid answer."""
-        self.response = response

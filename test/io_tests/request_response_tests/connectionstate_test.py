@@ -66,7 +66,7 @@ class TestConnectionState:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(ConnectionStateResponse())
         connectionstate.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert connectionstate.success
+        assert connectionstate.response is not None
 
     async def test_connectionstate_route_back_true(self) -> None:
         """Test connectionstateing from KNX bus."""
@@ -117,4 +117,4 @@ class TestConnectionState:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(ConnectionStateResponse())
         connectionstate.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert connectionstate.success
+        assert connectionstate.response is not None

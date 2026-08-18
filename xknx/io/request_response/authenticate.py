@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Authenticate(RequestResponse[SessionStatus]):
     """Class to send a SessionAuthenticate and wait for SessionStatus."""
 
-    __slots__ = ("message_authentication_code", "response", "user_id")
+    __slots__ = ("message_authentication_code", "user_id")
 
     def __init__(
         self,
@@ -27,7 +27,6 @@ class Authenticate(RequestResponse[SessionStatus]):
         super().__init__(transport, timeout_in_seconds=10)
         self.user_id = user_id
         self.message_authentication_code = message_authentication_code
-        self.response: SessionStatus | None = None
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
@@ -37,7 +36,3 @@ class Authenticate(RequestResponse[SessionStatus]):
                 message_authentication_code=self.message_authentication_code,
             )
         )
-
-    def on_success_hook(self, response: SessionStatus) -> None:
-        """Set communication channel and identifier after having received a valid answer."""
-        self.response = response

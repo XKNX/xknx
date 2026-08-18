@@ -71,9 +71,9 @@ class TestConnect:
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert connect.success
-        assert connect.communication_channel == 23
-        assert connect.crd.individual_address.raw == 7
+        assert connect.response is not None
+        assert connect.response.communication_channel == 23
+        assert connect.response.crd.individual_address.raw == 7
 
     async def test_connect_route_back_true(self) -> None:
         """Test connecting from KNX bus."""
@@ -121,6 +121,6 @@ class TestConnect:
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert connect.success
-        assert connect.communication_channel == 23
-        assert connect.crd.individual_address.raw == 7
+        assert connect.response is not None
+        assert connect.response.communication_channel == 23
+        assert connect.response.crd.individual_address.raw == 7

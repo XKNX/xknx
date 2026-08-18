@@ -66,7 +66,7 @@ class TestDisconnect:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DisconnectResponse())
         disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert disconnect.success
+        assert disconnect.response is not None
 
     async def test_disconnect_route_back_true(self) -> None:
         """Test disconnecting from KNX bus."""
@@ -117,4 +117,4 @@ class TestDisconnect:
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DisconnectResponse())
         disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert disconnect.success
+        assert disconnect.response is not None

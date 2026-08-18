@@ -24,9 +24,9 @@ class RequestResponse(Generic[ResponseBodyT]):
     """Class for sending a specific type of KNX/IP Packet to a KNX/IP device and wait for the corresponding answer."""
 
     __slots__ = (
+        "response",
         "response_received_event",
         "response_status_code",
-        "success",
         "timeout_in_seconds",
         "transport",
     )
@@ -49,9 +49,9 @@ class RequestResponse(Generic[ResponseBodyT]):
         """Initialize RequstResponse class."""
         self.transport = transport
         self.response_received_event = asyncio.Event()
-        self.success = False
         self.timeout_in_seconds = timeout_in_seconds
 
+        self.response: ResponseBodyT | None = None
         self.response_status_code: ErrorCode | None = None
 
     def create_knxipframe(self) -> KNXIPFrame:
@@ -105,8 +105,4 @@ class RequestResponse(Generic[ResponseBodyT]):
                     body.status_code,
                 )
                 return
-        self.success = True
-        self.on_success_hook(body)
-
-    def on_success_hook(self, response: ResponseBodyT) -> None:
-        """Do something after having received a valid answer. May be overwritten in derived class."""
+        self.response = body

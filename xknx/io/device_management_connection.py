@@ -200,17 +200,17 @@ class _DeviceManagementConnection(ABC):
             ),
         )
         await connect.start()
-        if not connect.success:
+        if connect.response is None:
             raise CommunicationError(
                 f"ConnectRequest failed. Status code: {connect.response_status_code}"
             )
 
-        self.communication_channel = connect.communication_channel
+        self.communication_channel = connect.response.communication_channel
         self.sequence_number = 0
         self._data_endpoint_addr = (
             None
-            if connect.data_endpoint.route_back
-            else connect.data_endpoint.addr_tuple
+            if connect.response.data_endpoint.route_back
+            else connect.response.data_endpoint.addr_tuple
         )
         self._start_receiving()
         self._disconnect_callback = self.transport.register_callback(
@@ -237,7 +237,7 @@ class _DeviceManagementConnection(ABC):
                     local_hpai=self.local_hpai,
                 )
                 await disconnect.start()
-                if not disconnect.success:
+                if disconnect.response is None:
                     logger.debug(
                         "DisconnectRequest was not answered by the server (%s).",
                         "timeout"
@@ -300,7 +300,7 @@ class _DeviceManagementConnection(ABC):
         status_code: str | None = None
         if error_code := conn_state.response_status_code:
             status_code = error_code.name
-        return conn_state.success, status_code
+        return conn_state.response is not None, status_code
 
     ####################
     #
@@ -581,7 +581,7 @@ class UDPDeviceManagementConnection(_DeviceManagementConnection):
                 and self._pending.done()
                 and not self._pending.cancelled()
             )
-            if device_configuration.success or answered:
+            if device_configuration.response is not None or answered:
                 self.sequence_number = self.sequence_number + 1 & 0xFF
                 return
             logger.debug(

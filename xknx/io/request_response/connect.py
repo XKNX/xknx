@@ -9,7 +9,6 @@ from xknx.knxip import (
     ConnectRequest,
     ConnectRequestInformation,
     ConnectResponse,
-    ConnectResponseData,
     KNXIPFrame,
 )
 
@@ -26,7 +25,7 @@ class Connect(RequestResponse[ConnectResponse]):
     Setting a `individual_address` is only supported for Tunnelling v2 connections.
     """
 
-    __slots__ = ("communication_channel", "crd", "cri", "data_endpoint", "local_hpai")
+    __slots__ = ("cri", "local_hpai")
 
     def __init__(
         self,
@@ -36,11 +35,8 @@ class Connect(RequestResponse[ConnectResponse]):
     ) -> None:
         """Initialize Connect class."""
         super().__init__(transport)
-        self.communication_channel = 0
-        self.data_endpoint = HPAI()
         self.local_hpai = local_hpai
         self.cri = cri or ConnectRequestInformation()
-        self.crd = ConnectResponseData()
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
@@ -51,9 +47,3 @@ class Connect(RequestResponse[ConnectResponse]):
             cri=self.cri,
         )
         return KNXIPFrame.init_from_body(connect_request)
-
-    def on_success_hook(self, response: ConnectResponse) -> None:
-        """Set communication channel and identifier after having received a valid answer."""
-        self.communication_channel = response.communication_channel
-        self.data_endpoint = response.data_endpoint
-        self.crd = response.crd

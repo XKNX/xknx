@@ -46,7 +46,7 @@ class TestAuthenticate:
         with patch("logging.Logger.warning") as mock_warning:
             authenticate.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
-            assert authenticate.success is False
+            assert authenticate.response is None
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(SessionStatus())
@@ -54,7 +54,7 @@ class TestAuthenticate:
             SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         )
         authenticate.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert authenticate.success is True
+        assert authenticate.response is not None
         assert (
             authenticate.response.status
             == SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
