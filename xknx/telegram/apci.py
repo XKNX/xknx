@@ -452,6 +452,7 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
+@dataclass(slots=True)
 class APCIRequest(APCI, Generic[APCIResponseT]):
     """
     Base class for APCI request services with a KNX-spec-defined response.
