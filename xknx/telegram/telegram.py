@@ -6,9 +6,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Generic
 
-from typing_extensions import TypeVar
-
 from xknx.dpt import DPTBase, DPTComplexData, DPTEnumData
+from xknx.typing import TypeVar
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
 from .apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite

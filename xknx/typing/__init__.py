@@ -2,12 +2,18 @@
 
 from collections.abc import Callable
 import sys
-from typing import TYPE_CHECKING, TypedDict, TypeVar
+from typing import TYPE_CHECKING, TypedDict
 
 if sys.version_info >= (3, 11):
     from typing import NotRequired as NotRequired, Self as Self
 else:
     from typing_extensions import NotRequired as NotRequired, Self as Self
+
+if sys.version_info >= (3, 13):
+    # TypeVar(..., default=...) - PEP 696 - is only in stdlib typing since 3.13
+    from typing import TypeVar as TypeVar
+else:
+    from typing_extensions import TypeVar as TypeVar
 
 if TYPE_CHECKING:
     from xknx.core.connection_manager import XknxConnectionState
