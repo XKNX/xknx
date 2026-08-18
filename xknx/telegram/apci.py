@@ -495,10 +495,11 @@ class APCIRequest(APCI, Generic[APCIResponseT]):
     """
     Base class for APCI request services with a KNX-spec-defined response.
 
-    Subclass this instead of `APCI`, parametrized with the response APCI class -
-    lets `P2PConnection.request()` infer and verify the expected response from the
-    payload's type alone, without an `expected=` argument. `RESPONSE_TYPE` is
-    derived from that type argument, so the two can not disagree.
+    Subclass this instead of `APCI`, parametrized with the response APCI class.
+    `P2PConnection.request()` then infers the expected response from the payload's
+    type alone, verifies the received telegram against it and returns it narrowed
+    to `Telegram[<the response class>]`. `RESPONSE_TYPE` is derived from the type
+    argument, so the two can not disagree.
     Deriving from `APCI` keeps `APCIRequest[...]` usable wherever an `APCI`
     is expected; listing both as bases would be an MRO error.
     """
