@@ -49,7 +49,11 @@ class TestAuthenticate:
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
             authenticate.response_rec_callback(wrong_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with("Could not understand knxipframe")
+            mock_warning.assert_called_with(
+                "Could not understand knxipframe for %s: %s",
+                type(authenticate).__name__,
+                wrong_knxipframe,
+            )
             assert authenticate._response is None
 
         # Correct Response KNX/IP-Frame:

@@ -37,7 +37,9 @@ class RequestResponse(Generic[ResponseBodyT]):
         """Derive `AWAITED_RESPONSE_CLASS` from the `RequestResponse` type argument."""
         super().__init_subclass__(**kwargs)
         for orig_base in cls.__dict__.get("__orig_bases__", ()):
-            if args := get_args(orig_base):
+            # a generic intermediate class parametrizes with its own TypeVar -
+            # only a concrete subclass names the response class itself
+            if (args := get_args(orig_base)) and isinstance(args[0], type):
                 cls.AWAITED_RESPONSE_CLASS = args[0]
                 return
 
@@ -104,7 +106,11 @@ class RequestResponse(Generic[ResponseBodyT]):
         """Verify and handle knxipframe. Callback from internal transport."""
         body = knxipframe.body
         if not isinstance(body, self.AWAITED_RESPONSE_CLASS):
-            logger.warning("Could not understand knxipframe")
+            logger.warning(
+                "Could not understand knxipframe for %s: %s",
+                self.__class__.__name__,
+                knxipframe,
+            )
             return
         self.response_received_event.set()
 

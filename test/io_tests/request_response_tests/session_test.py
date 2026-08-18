@@ -37,7 +37,11 @@ class TestSession:
         wrong_knxipframe = KNXIPFrame.init_from_body(SessionStatus())
         with patch("logging.Logger.warning") as mock_warning:
             session.response_rec_callback(wrong_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with("Could not understand knxipframe")
+            mock_warning.assert_called_with(
+                "Could not understand knxipframe for %s: %s",
+                type(session).__name__,
+                wrong_knxipframe,
+            )
             assert session._response is None
 
         # Correct Response KNX/IP-Frame:

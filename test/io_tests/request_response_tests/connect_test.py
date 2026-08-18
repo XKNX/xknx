@@ -52,7 +52,11 @@ class TestConnect:
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
             connect.response_rec_callback(wrong_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with("Could not understand knxipframe")
+            mock_warning.assert_called_with(
+                "Could not understand knxipframe for %s: %s",
+                type(connect).__name__,
+                wrong_knxipframe,
+            )
 
         # Response KNX/IP-Frame with error:
         err_knxipframe = KNXIPFrame.init_from_body(
@@ -98,7 +102,11 @@ class TestConnect:
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
             connect.response_rec_callback(wrong_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with("Could not understand knxipframe")
+            mock_warning.assert_called_with(
+                "Could not understand knxipframe for %s: %s",
+                type(connect).__name__,
+                wrong_knxipframe,
+            )
 
         # Response KNX/IP-Frame with error:
         err_knxipframe = KNXIPFrame.init_from_body(

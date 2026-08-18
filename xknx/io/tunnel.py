@@ -314,8 +314,11 @@ class _Tunnel(Interface):
             transport=self.transport,
             local_hpai=self.local_hpai,
         )
-        await description.start()
-        return description.gateway_descriptor
+        try:
+            return await description.request_gateway_descriptor()
+        except RequestResponseError as err:
+            logger.debug("Could not request description: %s", err)
+            return None
 
     @asynccontextmanager
     async def _send_ready(self) -> AsyncGenerator[None, None]:

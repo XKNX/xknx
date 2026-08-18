@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-import asyncio
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypeVar
 
-from xknx.exceptions import CommunicationError, XKNXException
+from xknx.exceptions import CommunicationError, RequestResponseError, XKNXException
 from xknx.io import util
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.knxip import (
@@ -20,9 +18,9 @@ from xknx.knxip import (
     SearchRequestExtended,
     SearchResponseExtended,
 )
-from xknx.util import asyncio_timeout
 
 from .const import DEFAULT_MCAST_PORT
+from .request_response import RequestResponse
 from .transport import UDPTransport
 
 if TYPE_CHECKING:
@@ -31,6 +29,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.log")
 
 DESCRIPTION_TIMEOUT: Final = 2
+
+_DescriptionResponseT = TypeVar(
+    "_DescriptionResponseT", bound=DescriptionResponse | SearchResponseExtended
+)
 
 
 async def request_description(
@@ -79,32 +81,35 @@ async def request_description(
             transport=transport,
             local_hpai=local_hpai,
         )
-        await description_query.start()
-        gateway = description_query.gateway_descriptor
-        if gateway is None:
+        try:
+            gateway = await description_query.request_gateway_descriptor()
+        except RequestResponseError as err:
             raise CommunicationError(
                 f"Could not fetch gateway info from {gateway_ip}:{gateway_port}"
-            )
+            ) from err
         if gateway.core_version >= 2:
             search_extended_query = SearchExtendedQuery(
                 transport=transport,
                 local_hpai=local_hpai,
             )
-            await search_extended_query.start()
-            gateway = search_extended_query.gateway_descriptor
-            if gateway is None:
+            try:
+                gateway = await search_extended_query.request_gateway_descriptor()
+            except RequestResponseError as err:
                 raise CommunicationError(
                     f"Could not fetch extended gateway info from {gateway_ip}:{gateway_port}"
-                )
+                ) from err
         return gateway
     finally:
         transport.stop()
 
 
-class _SelfDescriptionQuery(ABC):
+# concrete subclasses implement create_knxipframe()
+class _SelfDescriptionQuery(  # pylint: disable=abstract-method
+    RequestResponse[_DescriptionResponseT]
+):
     """Base class for handling descriptions request-response cycles."""
 
-    expected_response_class: type[DescriptionResponse] | type[SearchResponseExtended]
+    __slots__ = ("local_hpai",)
 
     def __init__(
         self,
@@ -112,62 +117,25 @@ class _SelfDescriptionQuery(ABC):
         local_hpai: HPAI,
     ) -> None:
         """Initialize Description class."""
-        self.transport = transport
+        super().__init__(transport, timeout_in_seconds=DESCRIPTION_TIMEOUT)
         self.local_hpai = local_hpai
 
-        self.gateway_descriptor: GatewayDescriptor | None = None
-        self.response_received_event = asyncio.Event()
-
-    @abstractmethod
-    def create_knxipframe(self) -> KNXIPFrame:
-        """Create KNX/IP Frame object to be sent to device."""
-
-    async def start(self) -> None:
-        """Start. Send request and wait for an answer."""
-        callb = self.transport.register_callback(
-            self.response_rec_callback, [self.expected_response_class.SERVICE_TYPE]
-        )
-        frame = self.create_knxipframe()
-        try:
-            self.transport.send(frame)
-            async with asyncio_timeout(DESCRIPTION_TIMEOUT):
-                await self.response_received_event.wait()
-        except asyncio.TimeoutError:
-            logger.debug(
-                "Error: KNX bus did not respond in time (%s secs) to request of type '%s'",
-                DESCRIPTION_TIMEOUT,
-                self.__class__.__name__,
-            )
-        except CommunicationError as err:
-            logger.warning("Sending %s failed: %s", frame.body.__class__.__name__, err)
-        finally:
-            # cleanup to not leave callbacks (for asyncio.CancelledError)
-            self.transport.unregister_callback(callb)
-
-    def response_rec_callback(
-        self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
-    ) -> None:
-        """Verify and handle knxipframe. Callback from internal transport."""
-        if not isinstance(knxipframe.body, self.expected_response_class):
-            logger.warning(
-                "Wrong knxipframe for %s: %s", self.__class__.__name__, knxipframe
-            )
-            return
-        self.response_received_event.set()
-        # Set gateway descriptor attribute
+    async def request_gateway_descriptor(self) -> GatewayDescriptor:
+        """Send the request and describe the gateway from the response to it."""
+        response = await self.request()
         gateway = GatewayDescriptor(
             ip_addr=self.transport.remote_addr[0],
             port=self.transport.remote_addr[1],
             local_ip=self.transport.getsockname()[0],
         )
-        gateway.parse_dibs(knxipframe.body.dibs)
-        self.gateway_descriptor = gateway
+        gateway.parse_dibs(response.dibs)
+        return gateway
 
 
-class DescriptionQuery(_SelfDescriptionQuery):
+class DescriptionQuery(_SelfDescriptionQuery[DescriptionResponse]):
     """Class to send a DescriptionRequest and wait for DescriptionResponse."""
 
-    expected_response_class = DescriptionResponse
+    __slots__ = ()
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
@@ -175,14 +143,14 @@ class DescriptionQuery(_SelfDescriptionQuery):
         return KNXIPFrame.init_from_body(description_request)
 
 
-class SearchExtendedQuery(_SelfDescriptionQuery):
+class SearchExtendedQuery(_SelfDescriptionQuery[SearchResponseExtended]):
     """
     Class to send a SearchRequestExtended and wait for SearchResponseExtended to a single device.
 
     Does only work with UDP transports.
     """
 
-    expected_response_class = SearchResponseExtended
+    __slots__ = ()
 
     def create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""

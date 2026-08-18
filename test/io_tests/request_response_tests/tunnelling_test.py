@@ -61,7 +61,11 @@ class TestTunnelling:
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
             tunnelling.response_rec_callback(wrong_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with("Could not understand knxipframe")
+            mock_warning.assert_called_with(
+                "Could not understand knxipframe for %s: %s",
+                type(tunnelling).__name__,
+                wrong_knxipframe,
+            )
 
         # Response KNX/IP-Frame with error:
         err_knxipframe = KNXIPFrame.init_from_body(

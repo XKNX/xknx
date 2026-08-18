@@ -16,6 +16,7 @@ nav_order: 2
 
 - `RequestResponse` is now generic over the response body it awaits, eg. `class Connect(RequestResponse[ConnectResponse])`. The awaited class is no longer passed to `__init__()` - it is derived from that type argument as `AWAITED_RESPONSE_CLASS`, so the two can not disagree. `RequestResponse` and its subclasses are slotted now.
 - `RequestResponse.start()` is replaced by `request()`, which returns the response - typed to the awaited class - instead of leaving it on the instance. The `response`, `response_status_code` and `success` attributes and the `on_success_hook()` override point are gone with it. A request that is not answered in time, can not be sent, or is answered with an error status now raises the new `RequestResponseError` (a `CommunicationError`) rather than returning quietly; its `error_code` carries the `ErrorCode` of an error status and is `None` when no response arrived. `Connect` no longer mirrors `communication_channel`, `data_endpoint` and `crd` onto itself - they are read from the returned `ConnectResponse`.
+- `DescriptionQuery` and `SearchExtendedQuery` are `RequestResponse` subclasses now, replacing their own copy of the request-response cycle. `start()` and the `gateway_descriptor` attribute give way to `request_gateway_descriptor()`, which returns the `GatewayDescriptor` or raises.
 
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 
