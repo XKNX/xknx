@@ -3719,6 +3719,8 @@ class PropertyValueRead(APCI):
         """Serialize to KNX/IP raw data."""
         if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
+        if not 0 <= self.start_index <= 0xFFF:
+            raise ConversionError("Start index out of range.")
 
         payload = struct.pack(
             "!BBBB",
@@ -3766,6 +3768,8 @@ class PropertyValueWrite(APCI):
         """Serialize to KNX/IP raw data."""
         if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
+        if not 0 <= self.start_index <= 0xFFF:
+            raise ConversionError("Start index out of range.")
 
         size = len(self.data)
         payload = struct.pack(
@@ -3863,6 +3867,8 @@ class PropertyValueResponse(APCI):
         """Serialize to KNX/IP raw data."""
         if not 0 <= self.count <= 0xF:
             raise ConversionError("Count out of range.")
+        if not 0 <= self.start_index <= 0xFFF:
+            raise ConversionError("Start index out of range.")
 
         size = len(self.data)
         payload = struct.pack(
