@@ -306,6 +306,27 @@ async def test_dmp_interface_object_verify_r_count_zero(xknx_setup: XKNX) -> Non
     await conn.disconnect()
 
 
+async def test_dmp_interface_object_verify_r_start_index_zero(xknx_setup: XKNX) -> None:
+    """Test verify with start_index=0 raises ValueError without sending a request."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    with pytest.raises(ValueError, match=r"start_index must be >= 1, got 0"):
+        await dmp_interface_object_verify_r(
+            conn,
+            object_index=0,
+            property_id=78,
+            expected_data=b"\xab\xcd\xab\xcd",
+            count=2,
+            start_index=0,
+        )
+
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
+
+
 async def test_dmp_interface_object_verify_r_invalid_data_length(
     xknx_setup: XKNX,
 ) -> None:

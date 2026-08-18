@@ -33,14 +33,20 @@ async def dmp_interface_object_verify_r(
     :param expected_data: Data the property is expected to contain
     :param count: Number of elements to verify
     :param start_index: Start element index (1-based, 1-4095)
-    :raises ValueError: If count is not positive, or expected_data length is
-        not divisible by count
+    :raises ValueError: If count is not positive, expected_data length is
+        not divisible by count, or start_index is < 1
     :raises PropertyVerificationError: If a block's data doesn't match expected
     :raises ManagementConnectionError: If a block read fails (nr_of_elem = 0,
         or a response with an element count that doesn't match the request)
     """
     if count <= 0:
         raise ValueError(f"count must be positive, got {count}")
+    # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.1: start_index=0
+    # with nr_of_elem>1 is a distinct "read the current element count"
+    # request that answers with nr_of_elem=1 and the count in `data`, not
+    # the requested elements - not something this chunked comparison supports.
+    if start_index < 1:
+        raise ValueError(f"start_index must be >= 1, got {start_index}")
 
     if len(expected_data) % count != 0:
         raise ValueError(
