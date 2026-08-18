@@ -6,17 +6,19 @@ from unittest.mock import Mock, patch
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import pytest
 
-from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
+from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IPSecureError
 from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.ip_secure import SecureSession
 from xknx.knxip import (
     HPAI,
+    DisconnectRequest,
     KNXIPFrame,
     SecureWrapper,
     SessionAuthenticate,
     SessionRequest,
     SessionResponse,
     SessionStatus,
+    TunnellingRequest,
 )
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 
@@ -178,13 +180,14 @@ class TestSecureSession:
         assert self.session.initialized is True
         assert not self.session._keepalive_task.done()
 
-        # handle incoming SessionStatus (unencrypted for sake of simplicity)
+        # handle incoming SessionStatus - SessionStatus is only valid encrypted
         session_status_close_frame = KNXIPFrame.init_from_body(
             SessionStatus(status=SecureSessionStatusCode.STATUS_CLOSE)
         )
         with patch.object(self.session, "transport") as mock_transport:
             self.session.handle_knxipframe(
-                session_status_close_frame, HPAI(*self.mock_addr)
+                self.session.encrypt_frame(session_status_close_frame),
+                HPAI(*self.mock_addr),
             )
             mock_transport.close.assert_called_once()
 
@@ -442,3 +445,55 @@ class TestSecureSession:
         with pytest.raises(CommunicationError):
             await time_travel(10)
             await connect_task
+
+    def test_receive_plain_frames(self) -> None:
+        """Test that only a SessionResponse is handled unencrypted."""
+        frame_received_mock = Mock()
+        self.session.register_callback(frame_received_mock)
+        session_response_frame = KNXIPFrame.init_from_body(
+            SessionResponse(
+                secure_session_id=1,
+                ecdh_server_public_key=self.mock_server_public_key,
+                message_authentication_code=bytes(16),
+            )
+        )
+        tunnelling_request_frame = KNXIPFrame.init_from_body(
+            TunnellingRequest(raw_cemi=bytes.fromhex("2900b06010fa10ff0080"))
+        )
+        disconnect_request_frame = KNXIPFrame.init_from_body(DisconnectRequest())
+
+        def receive(knxipframe: KNXIPFrame) -> bool:
+            """Return True if the plain frame was passed on to the callbacks."""
+            frame_received_mock.reset_mock()
+            self.session.handle_knxipframe(knxipframe, HPAI(*self.mock_addr))
+            return frame_received_mock.called
+
+        # the SessionResponse of the handshake is the only plain frame received
+        assert not self.session.initialized
+        assert receive(session_response_frame)
+        assert not receive(tunnelling_request_frame)
+        assert not receive(disconnect_request_frame)
+        # nothing is accepted in plain once the session is established
+        self.session.initialized = True
+        assert not receive(session_response_frame)
+        assert not receive(tunnelling_request_frame)
+        assert not receive(disconnect_request_frame)
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    def test_send_plain_frames(self, mock_super_send: Mock) -> None:
+        """Test that only a SessionRequest is sent unencrypted."""
+        session_request_frame = KNXIPFrame.init_from_body(
+            SessionRequest(ecdh_client_public_key=self.mock_public_key)
+        )
+        assert not self.session.initialized
+        self.session.send(session_request_frame)
+        mock_super_send.assert_called_once_with(session_request_frame, None)
+
+        mock_super_send.reset_mock()
+        with pytest.raises(IPSecureError):
+            self.session.send(
+                KNXIPFrame.init_from_body(
+                    SessionStatus(status=SecureSessionStatusCode.STATUS_KEEPALIVE)
+                )
+            )
+        mock_super_send.assert_not_called()

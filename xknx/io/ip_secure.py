@@ -24,8 +24,8 @@ from xknx.knxip import (
     HPAI,
     KNXIPFrame,
     KNXIPServiceType,
-    RoutingIndication,
     SecureWrapper,
+    SessionRequest,
     SessionResponse,
     SessionStatus,
     TimerNotify,
@@ -55,6 +55,32 @@ COUNTER_0_HANDSHAKE = (  # used in SessionResponse and SessionAuthenticate
     b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x00"
 )
 MESSAGE_TAG_TUNNELLING = bytes.fromhex("00 00")  # use 0x00 0x00 for tunneling
+
+# Discovery and self description are never secured
+# KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.6.2 and §2.2.1.4.2
+# The routing multicast endpoint is by default the discovery endpoint, and the multicast
+# listener socket binds INADDR_ANY:3671 on macOS and Windows, so unicast requests addressed
+# to us arrive there too. These are the only plain frames a SecureGroup forwards.
+PLAIN_MULTICAST_SERVICES: Final = (
+    KNXIPServiceType.SEARCH_REQUEST,
+    KNXIPServiceType.SEARCH_REQUEST_EXTENDED,
+    KNXIPServiceType.SEARCH_RESPONSE,
+    KNXIPServiceType.SEARCH_RESPONSE_EXTENDED,
+    KNXIPServiceType.DESCRIPTION_REQUEST,
+    KNXIPServiceType.DESCRIPTION_RESPONSE,
+)
+# Services that shall not travel inside a SecureWrapper either.
+FORBIDDEN_WRAPPED_SERVICES: Final = (
+    # secure wrappers and sessions may not be nested
+    # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.1.2.2.2 and §2.2.3.5.1
+    KNXIPServiceType.SECURE_WRAPPER,
+    # Remote Configuration and Diagnosis is not supported in Security Mode
+    # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.1.4.7
+    KNXIPServiceType.REMOTE_DIAG_REQUEST,
+    KNXIPServiceType.REMOTE_DIAG_RESPONSE,
+    KNXIPServiceType.REMOTE_CONFIG_REQUEST,
+    KNXIPServiceType.REMOTE_RESET_REQUEST,
+)
 
 
 class _IPSecureTransportLayer(ABC):
@@ -112,6 +138,10 @@ class _IPSecureTransportLayer(ABC):
             )
 
         knxipframe, _ = KNXIPFrame.from_knx(dec_frame)
+        if knxipframe.header.service_type_ident in FORBIDDEN_WRAPPED_SERVICES:
+            raise KNXSecureValidationError(
+                f"Service type not allowed in SecureWrapper: {knxipframe}"
+            )
         return knxipframe
 
     def encrypt_frame(self, plain_frame: KNXIPFrame) -> KNXIPFrame:
@@ -325,7 +355,6 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        # TODO: disallow unencrypted frames with exceptions for discovery etc. eg. DescriptionResponse
         if isinstance(knxipframe.body, SecureWrapper):
             if not self.initialized:
                 raise CouldNotParseKNXIP(
@@ -354,6 +383,14 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
                 return
             self._sequence_number_received = new_sequence_number
             knx_logger.debug("Decrypted frame: %s", knxipframe)
+        elif self.initialized or not isinstance(knxipframe.body, SessionResponse):
+            # SessionResponse is the only frame received in plain - and only until
+            # the session is initialized. Everything else shall be ignored.
+            # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.4.1
+            ip_secure_logger.warning(
+                "Discarding received unencrypted frame: %s", knxipframe
+            )
+            return
         super().handle_knxipframe(knxipframe, source)
 
     async def _session_keepalive(self) -> None:
@@ -373,8 +410,10 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
             # keepalive timer is started with first and reset with every other
             # SecureWrapper frame (including wrapped keepalive frames themselves)
             self.start_keepalive_task()
-        # TODO: disallow sending unencrypted frames over non-initialized session with
-        # exceptions for discovery and SessionRequest
+        elif not isinstance(knxipframe.body, SessionRequest):
+            raise IPSecureError(
+                f"Only SessionRequest may be sent unencrypted over a secure session: {knxipframe}"
+            )
         super().send(knxipframe, addr)
 
     def get_sequence_information(self) -> bytes:
@@ -454,12 +493,6 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
 
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
-        if isinstance(knxipframe.body, RoutingIndication):
-            ip_secure_logger.info(
-                "Discarding received unencrypted RoutingIndication: %s",
-                knxipframe,
-            )
-            return
         if isinstance(knxipframe.body, TimerNotify):
             self.secure_timer.handle_timer_notify(knxipframe.body)
             return
@@ -490,15 +523,19 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                 )
                 return
             knx_logger.debug("Decrypted frame: %s", knxipframe)
-        # handle decrypted frames and plain frames (e.g. SearchRequest for discovery)
+        elif knxipframe.header.service_type_ident not in PLAIN_MULTICAST_SERVICES:
+            ip_secure_logger.info(
+                "Discarding received unencrypted frame: %s",
+                knxipframe,
+            )
+            return
+        # handle decrypted frames and plain discovery frames (e.g. SearchRequest)
         super().handle_knxipframe(knxipframe, source)
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
         knx_logger.debug("Encrypting frame: %s", knxipframe)
         knxipframe = self.encrypt_frame(plain_frame=knxipframe)
-        # TODO: disallow sending unencrypted frames over non-initialized session with
-        # exceptions for discovery and SessionRequest
         super().send(knxipframe, addr)
 
     def get_sequence_information(self) -> bytes:
@@ -514,7 +551,7 @@ class SecureSequenceTimer:
     """
     Class for holding and synchronizing the timer for secure sequence information.
 
-    According to AN159 v06 KNXnet-IP Secure AS §2.2.2.3 Timer synchronizing
+    According to KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.2.3 Timer synchronizing
     """
 
     __slots__ = (
