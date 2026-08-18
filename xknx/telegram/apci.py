@@ -449,16 +449,18 @@ class APCI(ABC):
         raise UnsupportedAPCIService(f"Class not implemented for APCI {apci:#012b}.")
 
 
-ResponseT = TypeVar("ResponseT", bound=APCI)
+APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
-class ExpectedResponse(Generic[ResponseT]):
+class APCIRequest(APCI, Generic[APCIResponseT]):
     """
-    Mixin for APCI request services with a KNX-spec-defined response.
+    Base class for APCI request services with a KNX-spec-defined response.
 
-    Set `RESPONSE_TYPE` on the subclass to the response APCI class once it is
-    defined - lets `P2PConnection.request()` infer and verify the expected
-    response from the payload's type alone, without an `expected=` argument.
+    Subclass this instead of `APCI` and set `RESPONSE_TYPE` to the response APCI
+    class - lets `P2PConnection.request()` infer and verify the expected response
+    from the payload's type alone, without an `expected=` argument.
+    Deriving from `APCI` keeps `APCIRequest[...]` usable wherever an `APCI`
+    is expected; listing both as bases would be an MRO error.
     """
 
     RESPONSE_TYPE: ClassVar[type[APCI]]
@@ -2289,7 +2291,7 @@ class DeviceDescriptorResponse(APCI):
 
 
 @dataclass(slots=True)
-class DeviceDescriptorRead(APCI, ExpectedResponse[DeviceDescriptorResponse]):
+class DeviceDescriptorRead(APCIRequest[DeviceDescriptorResponse]):
     """
     DeviceDescriptorRead service.
 
@@ -3566,7 +3568,7 @@ class AuthorizeResponse(APCI):
 
 
 @dataclass(slots=True)
-class AuthorizeRequest(APCI, ExpectedResponse[AuthorizeResponse]):
+class AuthorizeRequest(APCIRequest[AuthorizeResponse]):
     """AuthorizeRequest service."""
 
     CODE: ClassVar = APCIExtendedService.AUTHORIZE_REQUEST
@@ -3768,7 +3770,7 @@ class PropertyValueResponse(APCI):
 
 
 @dataclass(slots=True)
-class PropertyValueRead(APCI, ExpectedResponse[PropertyValueResponse]):
+class PropertyValueRead(APCIRequest[PropertyValueResponse]):
     """
     PropertyValueRead service.
 

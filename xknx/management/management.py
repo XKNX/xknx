@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import logging
 import time
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, overload
 
 from xknx.exceptions import (
     CommunicationError,
@@ -17,7 +17,7 @@ from xknx.exceptions import (
     ManagementConnectionTimeout,
 )
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import APCI, ExpectedResponse
+from xknx.telegram.apci import APCI, APCIRequest, APCIResponseT
 from xknx.telegram.tpci import (
     TAck,
     TConnect,
@@ -34,8 +34,6 @@ logger = logging.getLogger("xknx.management")
 
 MANAGAMENT_ACK_TIMEOUT = 3
 MANAGAMENT_CONNECTION_TIMEOUT = 6
-
-APCIT = TypeVar("APCIT", bound=APCI)
 
 
 class Management:
@@ -395,15 +393,17 @@ class P2PConnection:
         return telegram
 
     @overload
-    async def request(self, payload: ExpectedResponse[APCIT]) -> Telegram[APCIT]: ...
+    async def request(
+        self, payload: APCIRequest[APCIResponseT]
+    ) -> Telegram[APCIResponseT]: ...
     @overload
     async def request(self, payload: APCI) -> Telegram: ...
-    async def request(self, payload: Any) -> Telegram[Any]:
+    async def request(self, payload: APCI) -> Telegram:
         """
         Send a payload to the KNX device and wait for the response.
 
         The response is verified against `type(payload).RESPONSE_TYPE` if the
-        payload defines one - see `ExpectedResponse`.
+        payload defines one - see `APCIRequest`.
         """
         if not self._connected:
             raise ManagementConnectionRefused(
@@ -417,9 +417,7 @@ class P2PConnection:
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
-        expected = (
-            payload.RESPONSE_TYPE if isinstance(payload, ExpectedResponse) else None
-        )
+        expected = payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
         await self.send_data(payload)
         response = await self._receive(expected)
         self._last_response_time = time.time()
