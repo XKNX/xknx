@@ -2,6 +2,9 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
+from xknx.exceptions import RequestResponseError
 from xknx.io.request_response import Session
 from xknx.knxip import HPAI, KNXIPFrame, SessionRequest, SessionResponse, SessionStatus
 
@@ -26,7 +29,8 @@ class TestSession:
             SessionRequest(ecdh_client_public_key=ecdh_public_key)
         )
 
-        await session.start()
+        with pytest.raises(RequestResponseError):
+            await session.request()
         transport_mock.send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -34,10 +38,10 @@ class TestSession:
         with patch("logging.Logger.warning") as mock_warning:
             session.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
-            assert session.response is None
+            assert session._response is None
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(SessionResponse(secure_session_id=5))
         session.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert session.response is not None
-        assert session.response.secure_session_id == 5
+        assert session._response is not None
+        assert session._response.secure_session_id == 5

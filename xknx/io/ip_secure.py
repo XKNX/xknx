@@ -15,7 +15,6 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 
 from xknx.exceptions import (
-    CommunicationError,
     CouldNotParseKNXIP,
     IPSecureError,
     KNXSecureValidationError,
@@ -257,13 +256,9 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
             transport=self,
             ecdh_client_public_key=self.public_key,
         )
-        await request_session.start()
-        if request_session.response is None:
-            raise CommunicationError(
-                "Secure session could not be established. No response received."
-            )
+        session_response = await request_session.request()
         # SessionAuthenticate and everything else after now shall be wrapped in SecureWrapper
-        authenticate_mac = self.handshake(request_session.response)
+        authenticate_mac = self.handshake(session_response)
         self.initialized = True
 
         request_authentication = Authenticate(
@@ -271,17 +266,15 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
             user_id=self.user_id,
             message_authentication_code=authenticate_mac,
         )
-        await request_authentication.start()
-        if request_authentication.response is None:
-            raise CommunicationError(
-                "Secure session could not be established. No response received."
-            )
-        if (  # TODO: look for status in request/response and use `success` instead of response ?
-            request_authentication.response.status
+        # TODO: SessionStatus carries its own status field - let RequestResponse
+        # verify it like the ErrorCode of a KNXIPBodyResponse ?
+        authentication_response = await request_authentication.request()
+        if (
+            authentication_response.status
             != SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         ):
             raise IPSecureError(
-                f"Secure session authentication failed: {request_authentication.response.status}"
+                f"Secure session authentication failed: {authentication_response.status}"
             )
         self._session_status_handler = self.register_callback(
             self._handle_session_status, [KNXIPServiceType.SESSION_STATUS]

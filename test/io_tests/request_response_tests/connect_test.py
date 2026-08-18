@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+import pytest
+
+from xknx.exceptions import RequestResponseError
 from xknx.io.request_response import Connect
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -41,7 +44,8 @@ class TestConnect:
             patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
         ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            await connect.start()
+            with pytest.raises(RequestResponseError):
+                await connect.request()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -54,14 +58,9 @@ class TestConnect:
         err_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        with patch("logging.Logger.debug") as mock_warning:
-            connect.response_rec_callback(err_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with(
-                "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
-                type(connect).__name__,
-                type(err_knxipframe.body).__name__,
-                ErrorCode.E_CONNECTION_ID,
-            )
+        connect.response_rec_callback(err_knxipframe, HPAI(), None)
+        assert connect._response is None
+        assert connect._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(
@@ -71,9 +70,9 @@ class TestConnect:
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert connect.response is not None
-        assert connect.response.communication_channel == 23
-        assert connect.response.crd.individual_address.raw == 7
+        assert connect._response is not None
+        assert connect._response.communication_channel == 23
+        assert connect._response.crd.individual_address.raw == 7
 
     async def test_connect_route_back_true(self) -> None:
         """Test connecting from KNX bus."""
@@ -91,7 +90,8 @@ class TestConnect:
             patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
         ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            await connect.start()
+            with pytest.raises(RequestResponseError):
+                await connect.request()
             mock_udp_send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -104,14 +104,9 @@ class TestConnect:
         err_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        with patch("logging.Logger.debug") as mock_warning:
-            connect.response_rec_callback(err_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with(
-                "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
-                type(connect).__name__,
-                type(err_knxipframe.body).__name__,
-                ErrorCode.E_CONNECTION_ID,
-            )
+        connect.response_rec_callback(err_knxipframe, HPAI(), None)
+        assert connect._response is None
+        assert connect._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(
@@ -121,6 +116,6 @@ class TestConnect:
             )
         )
         connect.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert connect.response is not None
-        assert connect.response.communication_channel == 23
-        assert connect.response.crd.individual_address.raw == 7
+        assert connect._response is not None
+        assert connect._response.communication_channel == 23
+        assert connect._response.crd.individual_address.raw == 7

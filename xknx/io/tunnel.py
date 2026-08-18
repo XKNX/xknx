@@ -15,7 +15,11 @@ from typing import TYPE_CHECKING
 
 from xknx.cemi import CEMIFrame
 from xknx.core import XknxConnectionState, XknxConnectionType
-from xknx.exceptions import CommunicationError, TunnellingAckError
+from xknx.exceptions import (
+    CommunicationError,
+    RequestResponseError,
+    TunnellingAckError,
+)
 from xknx.knxip import (
     HPAI,
     ConnectRequestInformation,
@@ -241,33 +245,28 @@ class _Tunnel(Interface):
     #
     ####################
 
-    async def _connect_request(self) -> bool:
+    async def _connect_request(self) -> None:
         """Connect to tunnelling server. Set communication_channel and src_address."""
         connect = Connect(
             transport=self.transport,
             local_hpai=self.local_hpai,
             cri=ConnectRequestInformation(individual_address=self._requested_address),
         )
-        await connect.start()
-        if (response := connect.response) is not None:
-            self.communication_channel = response.communication_channel
-            # assign data_endpoint received from server
-            self._data_endpoint_addr = (
-                None
-                if response.data_endpoint.route_back
-                else response.data_endpoint.addr_tuple
-            )
-            # Use the individual address provided by the tunnelling server
-            self._src_address = response.crd.individual_address or IndividualAddress(0)
-            self.xknx.current_address = self._src_address
-            logger.debug(
-                "Tunnel established. communication_channel=%s, address=%s",
-                response.communication_channel,
-                self._src_address,
-            )
-            return True
-        raise CommunicationError(
-            f"ConnectRequest failed. Status code: {connect.response_status_code}"
+        response = await connect.request()
+        self.communication_channel = response.communication_channel
+        # assign data_endpoint received from server
+        self._data_endpoint_addr = (
+            None
+            if response.data_endpoint.route_back
+            else response.data_endpoint.addr_tuple
+        )
+        # Use the individual address provided by the tunnelling server
+        self._src_address = response.crd.individual_address or IndividualAddress(0)
+        self.xknx.current_address = self._src_address
+        logger.debug(
+            "Tunnel established. communication_channel=%s, address=%s",
+            response.communication_channel,
+            self._src_address,
         )
 
     async def _connectionstate_request(self) -> tuple[bool, str | None] | None:
@@ -280,12 +279,11 @@ class _Tunnel(Interface):
             communication_channel_id=self.communication_channel,
             local_hpai=self.local_hpai,
         )
-        await conn_state.start()
-
-        status_code: str | None = None
-        if error_code := conn_state.response_status_code:
-            status_code = error_code.name
-        return conn_state.response is not None, status_code
+        try:
+            await conn_state.request()
+        except RequestResponseError as err:
+            return False, err.error_code.name if err.error_code is not None else None
+        return True, None
 
     async def _disconnect_request(self) -> None:
         """Disconnect from tunnel device. Delete communication_channel."""
@@ -295,22 +293,18 @@ class _Tunnel(Interface):
                 communication_channel_id=self.communication_channel,
                 local_hpai=self.local_hpai,
             )
-            await disconnect.start()
-            if disconnect.response is not None:
+            try:
+                await disconnect.request()
+            except RequestResponseError as err:
+                logger.warning(
+                    "Tunnel disconnect failed (communication_channel: %s): %s",
+                    self.communication_channel,
+                    err,
+                )
+            else:
                 logger.debug(
                     "Tunnel disconnect succeeded (communication_channel: %s)",
                     self.communication_channel,
-                )
-            else:
-                error_msg = (
-                    f"with error code: {disconnect.response_status_code}"
-                    if disconnect.response_status_code is not None
-                    else "- no response from device (timeout)"
-                )
-                logger.warning(
-                    "Tunnel disconnect failed (communication_channel: %s) %s",
-                    self.communication_channel,
-                    error_msg,
                 )
         self.communication_channel = None
 
@@ -565,20 +559,12 @@ class UDPTunnel(_Tunnel):
             data_endpoint=self._data_endpoint_addr,
             tunnelling_request=frame,
         )
-        await tunnelling.start()
-
-        if tunnelling.response is None:
-            if error_code := tunnelling.response_status_code:
-                reason = (
-                    f"Received TUNNELLING_ACK with error code: {error_code.name} "
-                    f"for frame {frame}"
-                )
-            else:
-                reason = (
-                    "Did not receive a TUNNELLING_ACK within 1 second for "
-                    f"frame with sequence_counter={frame.sequence_counter}"
-                )
-            raise TunnellingAckError(reason)
+        try:
+            await tunnelling.request()
+        except RequestResponseError as err:
+            raise TunnellingAckError(
+                f"{err} for frame with sequence_counter={frame.sequence_counter}"
+            ) from err
 
     ####################
     #

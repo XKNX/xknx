@@ -2,8 +2,11 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from xknx.cemi import CEMIFrame, CEMIMPropInfo, CEMIMPropReadRequest
 from xknx.cemi.const import CEMIMessageCode
+from xknx.exceptions import RequestResponseError
 from xknx.io.const import DEVICE_CONFIGURATION_REQUEST_TIMEOUT
 from xknx.io.request_response import DeviceConfiguration
 from xknx.io.transport import UDPTransport
@@ -55,7 +58,8 @@ class TestDeviceConfiguration:
             patch("xknx.io.transport.UDPTransport.getsockname") as mock_udp_getsockname,
         ):
             mock_udp_getsockname.return_value = ("192.168.1.3", 4321)
-            await device_configuration.start()
+            with pytest.raises(RequestResponseError):
+                await device_configuration.request()
             mock_udp_send.assert_called_with(exp_knxipframe, addr=data_endpoint)
 
         # Response KNX/IP-Frame with wrong type
@@ -68,19 +72,14 @@ class TestDeviceConfiguration:
         err_knxipframe = KNXIPFrame.init_from_body(
             DeviceConfigurationAck(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        with patch("logging.Logger.debug") as mock_warning:
-            device_configuration.response_rec_callback(err_knxipframe, HPAI(), None)
-            mock_warning.assert_called_with(
-                "Error: KNX bus responded to request of type '%s' with error in '%s': %s",
-                type(device_configuration).__name__,
-                type(err_knxipframe.body).__name__,
-                ErrorCode.E_CONNECTION_ID,
-            )
+        device_configuration.response_rec_callback(err_knxipframe, HPAI(), None)
+        assert device_configuration._response is None
+        assert device_configuration._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DeviceConfigurationAck())
         device_configuration.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert device_configuration.response is not None
+        assert device_configuration._response is not None
 
     async def test_default_timeout(self) -> None:
         """Test waiting the DEVICE_CONFIGURATION_REQUEST_TIMEOUT for the acknowledgement."""

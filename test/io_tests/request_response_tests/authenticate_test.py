@@ -2,6 +2,9 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
+from xknx.exceptions import RequestResponseError
 from xknx.io.request_response import Authenticate
 from xknx.knxip import (
     HPAI,
@@ -38,7 +41,8 @@ class TestAuthenticate:
             )
         )
 
-        await authenticate.start()
+        with pytest.raises(RequestResponseError):
+            await authenticate.request()
         transport_mock.send.assert_called_with(exp_knxipframe)
 
         # Response KNX/IP-Frame with wrong type
@@ -46,7 +50,7 @@ class TestAuthenticate:
         with patch("logging.Logger.warning") as mock_warning:
             authenticate.response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with("Could not understand knxipframe")
-            assert authenticate.response is None
+            assert authenticate._response is None
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(SessionStatus())
@@ -54,8 +58,8 @@ class TestAuthenticate:
             SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         )
         authenticate.response_rec_callback(res_knxipframe, HPAI(), None)
-        assert authenticate.response is not None
+        assert authenticate._response is not None
         assert (
-            authenticate.response.status
+            authenticate._response.status
             == SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         )
