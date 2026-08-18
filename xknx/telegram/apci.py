@@ -716,7 +716,7 @@ class IndividualAddressResponse(APCI):
 
 
 @dataclass(slots=True)
-class ADCRead(APCI):
+class ADCRead(APCIRequest["ADCResponse"]):
     """
     ADCRead service.
 
@@ -905,7 +905,7 @@ class FunctionPropertyExtCommand(APCI):
 
 
 @dataclass(slots=True)
-class FunctionPropertyExtStateRead(APCI):
+class FunctionPropertyExtStateRead(APCIRequest["FunctionPropertyExtStateResponse"]):
     """
     FunctionPropertyExtStateRead service.
 
@@ -1242,7 +1242,7 @@ class SystemNetworkParameterWrite(APCI):
 
 
 @dataclass(slots=True)
-class PropertyExtValueRead(APCI):
+class PropertyExtValueRead(APCIRequest["PropertyExtValueResponse"]):
     """
     PropertyExtValueRead service.
 
@@ -1387,7 +1387,7 @@ class PropertyExtValueResponse(APCI):
 
 
 @dataclass(slots=True)
-class PropertyExtValueWriteCon(APCI):
+class PropertyExtValueWriteCon(APCIRequest["PropertyExtValueWriteConRes"]):
     """
     PropertyExtValueWriteCon service.
 
@@ -1699,7 +1699,7 @@ class PropertyExtValueInfoReport(APCI):
 
 
 @dataclass(slots=True)
-class PropertyExtDescriptionRead(APCI):
+class PropertyExtDescriptionRead(APCIRequest["PropertyExtDescriptionResponse"]):
     """
     PropertyExtDescriptionRead service.
 
@@ -1901,7 +1901,7 @@ class PropertyExtDescriptionResponse(APCI):
 
 
 @dataclass(slots=True)
-class MemoryExtendedWrite(APCI):
+class MemoryExtendedWrite(APCIRequest["MemoryExtendedWriteResponse"]):
     """
     MemoryExtendedWrite service.
 
@@ -2016,7 +2016,7 @@ class MemoryExtendedWriteResponse(APCI):
 
 
 @dataclass(slots=True)
-class MemoryExtendedRead(APCI):
+class MemoryExtendedRead(APCIRequest["MemoryExtendedReadResponse"]):
     """
     MemoryExtendedRead service.
 
@@ -2123,7 +2123,7 @@ class MemoryExtendedReadResponse(APCI):
 
 
 @dataclass(slots=True)
-class MemoryRead(APCI):
+class MemoryRead(APCIRequest["MemoryResponse"]):
     """
     MemoryRead service.
 
@@ -2406,7 +2406,7 @@ class Restart(APCI):
 
 
 @dataclass(slots=True)
-class RestartMasterReset(APCI):
+class RestartMasterReset(APCIRequest["RestartMasterResetResponse"]):
     """
     RestartMasterReset service.
 
@@ -2507,7 +2507,7 @@ class RestartMasterResetResponse(APCI):
 
 
 @dataclass(slots=True)
-class UserMemoryRead(APCI):
+class UserMemoryRead(APCIRequest["UserMemoryResponse"]):
     """
     UserMemoryRead service.
 
@@ -2746,7 +2746,7 @@ class UserMemoryBitWrite(APCI):
 
 
 @dataclass(slots=True)
-class UserManufacturerInfoRead(APCI):
+class UserManufacturerInfoRead(APCIRequest["UserManufacturerInfoResponse"]):
     """UserManufacturerInfoRead service."""
 
     CODE: ClassVar = APCIUserService.USER_MANUFACTURER_INFO_READ
@@ -2852,7 +2852,7 @@ class FunctionPropertyCommand(APCI):
 
 
 @dataclass(slots=True)
-class FunctionPropertyStateRead(APCI):
+class FunctionPropertyStateRead(APCIRequest["FunctionPropertyStateResponse"]):
     """FunctionPropertyStateRead service."""
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_READ
@@ -2984,7 +2984,7 @@ class FilterTableOpen(APCI):
 
 
 @dataclass(slots=True)
-class FilterTableRead(APCI):
+class FilterTableRead(APCIRequest["FilterTableResponse"]):
     """
     FilterTableRead service.
 
@@ -3175,7 +3175,7 @@ class FilterTableWrite(APCI):
 
 
 @dataclass(slots=True)
-class RouterMemoryRead(APCI):
+class RouterMemoryRead(APCIRequest["RouterMemoryResponse"]):
     """
     RouterMemoryRead service.
 
@@ -3362,7 +3362,7 @@ class RouterMemoryWrite(APCI):
 
 
 @dataclass(slots=True)
-class RouterStatusRead(APCI):
+class RouterStatusRead(APCIRequest["RouterStatusResponse"]):
     """
     RouterStatusRead service.
 
@@ -3643,7 +3643,7 @@ class AuthorizeRequest(APCIRequest[AuthorizeResponse]):
 
 
 @dataclass(slots=True)
-class KeyWrite(APCI):
+class KeyWrite(APCIRequest["KeyResponse"]):
     """
     KeyWrite service.
 
@@ -3950,7 +3950,7 @@ class PropertyValueWrite(APCI):
 
 
 @dataclass(slots=True)
-class PropertyDescriptionRead(APCI):
+class PropertyDescriptionRead(APCIRequest["PropertyDescriptionResponse"]):
     """PropertyDescriptionRead service."""
 
     CODE: ClassVar = APCIExtendedService.PROPERTY_DESCRIPTION_READ
@@ -4525,7 +4525,7 @@ class NetworkParameterWrite(APCI):
 
 
 @dataclass(slots=True)
-class LinkRead(APCI):
+class LinkRead(APCIRequest["LinkResponse"]):
     """
     LinkRead service.
 
