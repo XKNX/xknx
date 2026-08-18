@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
 from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import MAX_ELEMENTS_PER_REQUEST
+from .const import MAX_ELEMENTS_PER_REQUEST, PROPERTY_VALUE_HEADER_OCTETS
 
 __all__ = ["dmp_interface_object_read_r"]
 
@@ -17,6 +18,8 @@ async def dmp_interface_object_read_r(
     property_id: int,
     count: int = 1,
     start_index: int = 1,
+    max_apdu_length: int = STANDARD_FRAME_MAX_NPDU_LENGTH,
+    element_size: int = 1,
 ) -> bytes:
     """
     Read property value(s) from an interface object.
@@ -30,11 +33,30 @@ async def dmp_interface_object_read_r(
     :param property_id: Property identifier (1-255)
     :param count: Number of elements to read
     :param start_index: Start element index (1-based, 1-4095)
+    :param max_apdu_length: Caps each chunk so its A_PropertyValue_Response-PDU
+        fits within this many octets - the device's PID_MAX_APDU_LENGTH (KNX
+        v01.10.01 - Resources 03.05.01 - §4.3.7). Defaults to the spec's
+        fallback of 15 octets for a device whose actual value hasn't been
+        read; pass the real value for a device known to support more.
+    :param element_size: Octet size of a single Property element (from its
+        PDT, e.g. via a preceding A_PropertyDescription_Read). Used together
+        with max_apdu_length to size chunks; the default of 1 is only correct
+        for byte-sized properties - an incorrect value can undersize *or*
+        oversize chunks, so pass the real size for anything wider.
+        TODO: derive this automatically instead of requiring the caller to
+        pass it - issue an A_PropertyDescription_Read for the PDT (KNX
+        v02.01.01 - Application Layer 03.03.07 - §3.4.3) and look it up in a
+        PDT -> byte-size table, as Calimero's
+        ManagementClientImpl.readProperty/PropertyTypes.bitSize does. Needs a
+        PDT size table, which xknx doesn't have yet.
     :return: The property data read from device
-    :raises ValueError: If count is not positive, or start_index is < 1
+    :raises ValueError: If count is not positive, start_index is < 1, or
+        max_apdu_length is not positive
     :raises ManagementConnectionError: If device returns error (nr_of_elem = 0)
         or a response with an element count that doesn't match the request
     """
+    if max_apdu_length <= 0:
+        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
     # DMP_InterfaceObjectRead_R's own parameter list (KNX v02.01.02 -
     # Management Procedures 03.05.02 - §3.27.1: object_type, object_index,
     # PID, start_index, noElements) only ever supplies a PID, so the spec's
@@ -53,12 +75,17 @@ async def dmp_interface_object_read_r(
     if start_index < 1:
         raise ValueError(f"start_index must be >= 1, got {start_index}")
 
+    max_elements_per_chunk = min(
+        MAX_ELEMENTS_PER_REQUEST,
+        max(1, (max_apdu_length - PROPERTY_VALUE_HEADER_OCTETS) // element_size),
+    )
+
     data = bytearray()
     remaining = count
     current_index = start_index
 
     while remaining > 0:
-        chunk_count = min(remaining, MAX_ELEMENTS_PER_REQUEST)
+        chunk_count = min(remaining, max_elements_per_chunk)
         response = await conn.request(
             payload=apci.PropertyValueRead(
                 object_index=object_index,

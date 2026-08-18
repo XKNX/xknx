@@ -151,6 +151,27 @@ async def test_dmp_interface_object_verify_r_read_error(xknx_setup: XKNX) -> Non
     await conn.disconnect()
 
 
+async def test_dmp_interface_object_verify_r_max_apdu_length_not_positive(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_verify_r raises ValueError for max_apdu_length <= 0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+
+    with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
+        await dmp_interface_object_verify_r(
+            conn,
+            object_index=0,
+            property_id=78,
+            expected_data=b"\xab\xcd",
+            count=1,
+            max_apdu_length=0,
+        )
+
+    await conn.disconnect()
+
+
 async def test_dmp_interface_object_verify_r_chunked_match(xknx_setup: XKNX) -> None:
     """Test verify with count > 15 reads and compares in two blocks."""
     xknx = xknx_setup
@@ -190,7 +211,12 @@ async def test_dmp_interface_object_verify_r_chunked_match(xknx_setup: XKNX) -> 
 
     responder = asyncio.create_task(respond())
     await dmp_interface_object_verify_r(
-        conn, object_index=0, property_id=52, expected_data=expected, count=20
+        conn,
+        object_index=0,
+        property_id=52,
+        expected_data=expected,
+        count=20,
+        max_apdu_length=21,  # (21 - 6) // 1 == 15, matching the wire cap exactly
     )
     await responder
 
@@ -233,7 +259,12 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_first_block(
     responder = asyncio.create_task(respond())
     with pytest.raises(PropertyVerificationError, match="Property verify mismatch"):
         await dmp_interface_object_verify_r(
-            conn, object_index=0, property_id=52, expected_data=expected, count=20
+            conn,
+            object_index=0,
+            property_id=52,
+            expected_data=expected,
+            count=20,
+            max_apdu_length=21,  # (21 - 6) // 1 == 15, matching the wire cap exactly
         )
     await responder
 
@@ -284,9 +315,90 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(
     responder = asyncio.create_task(respond())
     with pytest.raises(PropertyVerificationError, match="Property verify mismatch"):
         await dmp_interface_object_verify_r(
-            conn, object_index=0, property_id=52, expected_data=expected, count=20
+            conn,
+            object_index=0,
+            property_id=52,
+            expected_data=expected,
+            count=20,
+            max_apdu_length=21,  # (21 - 6) // 1 == 15, matching the wire cap exactly
         )
     await responder
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_verify_r_max_apdu_length(xknx_setup: XKNX) -> None:
+    """Test max_apdu_length further limits chunk size below the 15-element cap."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    # element_size=4 (20 bytes / 5 elements); with max_apdu_length=14 only
+    # (14 - 6) // 4 = 2 elements fit per request, well below the 15-element
+    # wire cap, so this must split into three requests instead of one.
+    expected = bytes(range(20))
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=60,
+                count=2,
+                start_index=1,
+                data=expected[0:8],
+            ),
+        )
+        await _wait_for_request(xknx, 2)
+        _process_response(
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=60,
+                count=2,
+                start_index=3,
+                data=expected[8:16],
+            ),
+        )
+        await _wait_for_request(xknx, 3)
+        _process_response(
+            xknx,
+            ia,
+            seq=2,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=60,
+                count=1,
+                start_index=5,
+                data=expected[16:20],
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    await dmp_interface_object_verify_r(
+        conn,
+        object_index=0,
+        property_id=60,
+        expected_data=expected,
+        count=5,
+        start_index=1,
+        max_apdu_length=14,
+    )
+    await responder
+
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _verify_request(ia, 0, object_index=0, property_id=60, count=2, start_index=1),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _verify_request(ia, 1, object_index=0, property_id=60, count=2, start_index=3),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+        _verify_request(ia, 2, object_index=0, property_id=60, count=1, start_index=5),
+        Telegram(destination_address=ia, tpci=tpci.TAck(2)),
+    ]
     await conn.disconnect()
 
 

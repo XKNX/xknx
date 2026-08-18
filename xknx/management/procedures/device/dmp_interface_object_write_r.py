@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
 from xknx.exceptions import ManagementConnectionError, PropertyVerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import MAX_ELEMENTS_PER_REQUEST
+from .const import MAX_ELEMENTS_PER_REQUEST, PROPERTY_VALUE_HEADER_OCTETS
 
 __all__ = ["dmp_interface_object_write_r"]
 
@@ -19,6 +20,7 @@ async def dmp_interface_object_write_r(
     count: int = 1,
     start_index: int = 1,
     verify: bool = False,
+    max_apdu_length: int = STANDARD_FRAME_MAX_NPDU_LENGTH,
 ) -> bytes:
     """
     Write property value(s) to an interface object.
@@ -34,13 +36,20 @@ async def dmp_interface_object_write_r(
     :param count: Number of elements to write
     :param start_index: Start element index (1-based, 1-4095)
     :param verify: If True, verify response data matches written data
+    :param max_apdu_length: Caps each chunk so its A_PropertyValue_Write-PDU
+        fits within this many octets - the device's PID_MAX_APDU_LENGTH (KNX
+        v01.10.01 - Resources 03.05.01 - §4.3.7). Defaults to the spec's
+        fallback of 15 octets for a device whose actual value hasn't been
+        read; pass the real value for a device known to support more.
     :return: The response data from device (concatenated for chunked writes)
-    :raises ValueError: If count is not positive, or data length is not
-        divisible by count
+    :raises ValueError: If count is not positive, data length is not
+        divisible by count, or max_apdu_length is not positive
     :raises PropertyVerificationError: If verify is enabled and the response differs
     :raises ManagementConnectionError: If device returns error (nr_of_elem =
         0), or a response with an element count that doesn't match the request
     """
+    if max_apdu_length <= 0:
+        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
     # DMP_InterfaceObjectWrite_R's own parameter list (KNX v02.01.02 -
     # Management Procedures 03.05.02 - §3.25.1: object_type, object_index,
     # PID, start_index, noElements) only ever supplies a PID, so the spec's
@@ -61,13 +70,18 @@ async def dmp_interface_object_write_r(
         )
 
     element_size = len(data) // count
+    max_elements_per_chunk = min(
+        MAX_ELEMENTS_PER_REQUEST,
+        max(1, (max_apdu_length - PROPERTY_VALUE_HEADER_OCTETS) // element_size),
+    )
+
     result = bytearray()
     remaining = count
     current_index = start_index
     data_offset = 0
 
     while remaining > 0:
-        chunk_count = min(remaining, MAX_ELEMENTS_PER_REQUEST)
+        chunk_count = min(remaining, max_elements_per_chunk)
         chunk_data = data[data_offset : data_offset + chunk_count * element_size]
 
         response = await conn.request(
