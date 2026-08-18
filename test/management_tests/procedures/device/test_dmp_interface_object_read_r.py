@@ -166,6 +166,22 @@ async def test_dmp_interface_object_read_r_start_index_zero(xknx_setup: XKNX) ->
     await conn.disconnect()
 
 
+async def test_dmp_interface_object_read_r_max_apdu_length_not_positive(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_read_r raises ValueError for max_apdu_length <= 0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
+        await dmp_interface_object_read_r(
+            conn, object_index=0, property_id=78, count=1, max_apdu_length=0
+        )
+
+    await conn.disconnect()
+
+
 async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
     """Test dmp_interface_object_read_r with count > 15 uses multiple requests."""
     xknx = xknx_setup
@@ -204,7 +220,12 @@ async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
 
     responder = asyncio.create_task(respond())
     data = await dmp_interface_object_read_r(
-        conn, object_index=0, property_id=52, count=20, start_index=1
+        conn,
+        object_index=0,
+        property_id=52,
+        count=20,
+        start_index=1,
+        max_apdu_length=21,  # (21 - 6) // 1 == 15, matching the wire cap exactly
     )
     await responder
 
@@ -215,6 +236,84 @@ async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
         Telegram(destination_address=ia, tpci=tpci.TAck(0)),
         _read_request(ia, 1, object_index=0, property_id=52, count=5, start_index=16),
         Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+    ]
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> None:
+    """Test max_apdu_length + element_size further limits chunk size below the 15-element cap."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    # element_size=4; with max_apdu_length=14 only (14 - 6) // 4 = 2 elements
+    # fit per request, well below the 15-element wire cap, so this must split
+    # into three requests instead of one.
+    expected = bytes(range(20))
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=60,
+                count=2,
+                start_index=1,
+                data=expected[0:8],
+            ),
+        )
+        await _wait_for_request(xknx, 2)
+        _process_response(
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=60,
+                count=2,
+                start_index=3,
+                data=expected[8:16],
+            ),
+        )
+        await _wait_for_request(xknx, 3)
+        _process_response(
+            xknx,
+            ia,
+            seq=2,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=60,
+                count=1,
+                start_index=5,
+                data=expected[16:20],
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    data = await dmp_interface_object_read_r(
+        conn,
+        object_index=0,
+        property_id=60,
+        count=5,
+        start_index=1,
+        max_apdu_length=14,
+        element_size=4,
+    )
+    await responder
+
+    assert data == expected
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _read_request(ia, 0, object_index=0, property_id=60, count=2, start_index=1),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _read_request(ia, 1, object_index=0, property_id=60, count=2, start_index=3),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+        _read_request(ia, 2, object_index=0, property_id=60, count=1, start_index=5),
+        Telegram(destination_address=ia, tpci=tpci.TAck(2)),
     ]
     await conn.disconnect()
 
