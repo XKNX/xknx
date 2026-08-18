@@ -42,8 +42,8 @@ async def dmp_interface_object_verify_r(
         actual value hasn't been read; pass the real value for a device
         known to support more.
     :raises ValueError: If count is not positive, expected_data length is
-        not divisible by count, start_index is < 1, or max_apdu_length is
-        not positive
+        not divisible by count, start_index is < 1, start_index + count - 1
+        exceeds 4095, or max_apdu_length is not positive
     :raises PropertyVerificationError: If a block's data doesn't match expected
     :raises ManagementConnectionError: If a block read fails (nr_of_elem = 0,
         or a response with an element count that doesn't match the request)
@@ -58,6 +58,14 @@ async def dmp_interface_object_verify_r(
     # the requested elements - not something this chunked comparison supports.
     if start_index < 1:
         raise ValueError(f"start_index must be >= 1, got {start_index}")
+    # start_index (12 bits) and count (4 bits) are independently bounds-checked
+    # by apci.PropertyValueRead.to_knx(), but only per-chunk - a count large
+    # enough to push a later chunk's start_index past 0xFFF would otherwise
+    # only fail mid-transfer, after earlier chunks already went out.
+    if start_index + count - 1 > 0xFFF:
+        raise ValueError(
+            f"start_index + count - 1 must be <= {0xFFF}, got {start_index + count - 1}"
+        )
 
     if len(expected_data) % count != 0:
         raise ValueError(

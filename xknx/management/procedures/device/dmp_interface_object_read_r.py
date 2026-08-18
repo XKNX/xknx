@@ -47,8 +47,9 @@ async def dmp_interface_object_read_r(
         whose actual value hasn't been read; pass the real value for a device
         known to support more.
     :return: The property data read from device
-    :raises ValueError: If count is not positive, start_index is < 1, or
-        max_apdu_length is not positive
+    :raises ValueError: If count is not positive, start_index is < 1,
+        start_index + count - 1 exceeds 4095, or max_apdu_length is not
+        positive
     :raises ManagementConnectionError: If device returns error (nr_of_elem =
         0), a response with an element count that doesn't match the request,
         or the probe response has empty data
@@ -72,6 +73,14 @@ async def dmp_interface_object_read_r(
     # the requested elements - not something this chunked byte-read supports.
     if start_index < 1:
         raise ValueError(f"start_index must be >= 1, got {start_index}")
+    # start_index (12 bits) and count (4 bits) are independently bounds-checked
+    # by apci.PropertyValueRead.to_knx(), but only per-chunk - a count large
+    # enough to push a later chunk's start_index past 0xFFF would otherwise
+    # only fail mid-transfer, after earlier chunks already went out.
+    if start_index + count - 1 > 0xFFF:
+        raise ValueError(
+            f"start_index + count - 1 must be <= {0xFFF}, got {start_index + count - 1}"
+        )
 
     data = bytearray()
     remaining = count
