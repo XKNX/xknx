@@ -171,17 +171,76 @@ async def test_dmp_interface_object_read_r_count_zero(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_interface_object_read_r_start_index_zero(xknx_setup: XKNX) -> None:
-    """Test dmp_interface_object_read_r raises ValueError for start_index=0."""
+async def test_dmp_interface_object_read_r_start_index_zero_requires_count_one(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_read_r raises ValueError for start_index=0 with count != 1."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
     conn = await xknx.management.connect(ia)
-    with pytest.raises(ValueError, match=r"start_index must be >= 1, got 0"):
+    with pytest.raises(
+        ValueError,
+        match=r"start_index=0 \(element count query\) requires count=1, got 2",
+    ):
         await dmp_interface_object_read_r(
             conn, object_index=0, property_id=78, count=2, start_index=0
         )
 
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_read_r_start_index_negative(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_read_r raises ValueError for start_index < 0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"start_index must be >= 0, got -1"):
+        await dmp_interface_object_read_r(
+            conn, object_index=0, property_id=78, count=1, start_index=-1
+        )
+
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_read_r_start_index_zero_element_count(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_read_r with start_index=0, count=1 reads the element count (not array data)."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=78,
+                count=1,
+                start_index=0,
+                data=b"\x00\x2a",  # 42
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    data = await dmp_interface_object_read_r(
+        conn, object_index=0, property_id=78, count=1, start_index=0
+    )
+    await responder
+
+    assert data == b"\x00\x2a"
+    assert xknx.cemi_handler.send_telegram.call_args_list[0] == call(
+        _read_request(ia, 0, object_index=0, property_id=78, count=1, start_index=0)
+    )
     await conn.disconnect()
 
 

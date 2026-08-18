@@ -39,7 +39,14 @@ async def dmp_interface_object_read_r(
     :param object_index: Index of the interface object (0-255)
     :param property_id: Property identifier (1-255)
     :param count: Number of elements to read
-    :param start_index: Start element index (1-based, 1-4095)
+    :param start_index: Start element index (0-4095). 0 is a special case
+        (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.1): the device
+        answers with the Property's current element count instead of real
+        array data, in a single fixed-shape exchange - only valid together
+        with count=1. In that case, the returned bytes are the count itself,
+        encoded as unsigned16 or unsigned32 depending on the Property's
+        max_nr_of_elem exponent (KNX v02.01.01 - Application Interface Layer
+        03.04.01 - §4.3.2.3) - decode with int.from_bytes(data, "big").
     :param max_apdu_length: Caps each chunk (after the first) so its
         A_PropertyValue_Response-PDU fits within this many octets - the
         device's PID_MAX_APDU_LENGTH (KNX v01.10.01 - Resources 03.05.01 -
@@ -47,9 +54,9 @@ async def dmp_interface_object_read_r(
         whose actual value hasn't been read; pass the real value for a device
         known to support more.
     :return: The property data read from device
-    :raises ValueError: If count is not positive, start_index is < 1,
-        start_index + count - 1 exceeds 4095, or max_apdu_length is not
-        positive
+    :raises ValueError: If count is not positive, start_index is negative,
+        start_index is 0 with count != 1, start_index + count - 1 exceeds
+        4095, or max_apdu_length is not positive
     :raises ManagementConnectionError: If device returns error (nr_of_elem =
         0), a response with an element count that doesn't match the request,
         or the probe response has empty data
@@ -67,12 +74,19 @@ async def dmp_interface_object_read_r(
     # which PID to read.
     if count <= 0:
         raise ValueError(f"count must be positive, got {count}")
-    # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.1: start_index=0
-    # with nr_of_elem>1 is a distinct "read the current element count"
-    # request that answers with nr_of_elem=1 and the count in `data`, not
-    # the requested elements - not something this chunked byte-read supports.
-    if start_index < 1:
-        raise ValueError(f"start_index must be >= 1, got {start_index}")
+    if start_index < 0:
+        raise ValueError(f"start_index must be >= 0, got {start_index}")
+    # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.1: start_index=0 is
+    # a distinct "read the current element count" request answered with
+    # nr_of_elem=1 and the count in `data`, not real array data. Restricting
+    # to count=1 keeps this safe to run through the same chunking loop below
+    # unmodified: it becomes the only (and last) iteration, so there's no
+    # second request that would otherwise misinterpret the count bytes as
+    # real array data and continue reading from the wrong index.
+    if start_index == 0 and count != 1:
+        raise ValueError(
+            f"start_index=0 (element count query) requires count=1, got {count}"
+        )
     # start_index (12 bits) and count (4 bits) are independently bounds-checked
     # by apci.PropertyValueRead.to_knx(), but only per-chunk - a count large
     # enough to push a later chunk's start_index past 0xFFF would otherwise
