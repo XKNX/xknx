@@ -31,7 +31,7 @@ async def dmp_interface_object_read_r(
     :param count: Number of elements to read
     :param start_index: Start element index (1-based, 1-4095)
     :return: The property data read from device
-    :raises ValueError: If count is not positive
+    :raises ValueError: If count is not positive, or start_index is < 1
     :raises ManagementConnectionError: If device returns error (nr_of_elem = 0)
         or a response with an element count that doesn't match the request
     """
@@ -46,6 +46,12 @@ async def dmp_interface_object_read_r(
     # which PID to read.
     if count <= 0:
         raise ValueError(f"count must be positive, got {count}")
+    # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.1: start_index=0
+    # with nr_of_elem>1 is a distinct "read the current element count"
+    # request that answers with nr_of_elem=1 and the count in `data`, not
+    # the requested elements - not something this chunked byte-read supports.
+    if start_index < 1:
+        raise ValueError(f"start_index must be >= 1, got {start_index}")
 
     data = bytearray()
     remaining = count

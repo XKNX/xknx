@@ -152,6 +152,20 @@ async def test_dmp_interface_object_read_r_count_zero(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
+async def test_dmp_interface_object_read_r_start_index_zero(xknx_setup: XKNX) -> None:
+    """Test dmp_interface_object_read_r raises ValueError for start_index=0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"start_index must be >= 1, got 0"):
+        await dmp_interface_object_read_r(
+            conn, object_index=0, property_id=78, count=2, start_index=0
+        )
+
+    await conn.disconnect()
+
+
 async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
     """Test dmp_interface_object_read_r with count > 15 uses multiple requests."""
     xknx = xknx_setup
