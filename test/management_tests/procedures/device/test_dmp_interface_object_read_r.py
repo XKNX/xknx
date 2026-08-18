@@ -108,7 +108,7 @@ async def test_dmp_interface_object_read_r_basic(xknx_setup: XKNX) -> None:
 
 
 async def test_dmp_interface_object_read_r_multiple_elements(xknx_setup: XKNX) -> None:
-    """Test dmp_interface_object_read_r with count > 1."""
+    """Test dmp_interface_object_read_r with count > 1: 1-element probe, then the rest."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -124,9 +124,22 @@ async def test_dmp_interface_object_read_r_multiple_elements(xknx_setup: XKNX) -
             payload=apci.PropertyValueResponse(
                 object_index=1,
                 property_id=52,
-                count=3,
+                count=1,
                 start_index=1,
-                data=b"\x01\x02\x03\x04\x05\x06",
+                data=b"\x01\x02",
+            ),
+        )
+        await _wait_for_request(xknx, 2)
+        _process_response(
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=1,
+                property_id=52,
+                count=2,
+                start_index=2,
+                data=b"\x03\x04\x05\x06",
             ),
         )
 
@@ -137,6 +150,12 @@ async def test_dmp_interface_object_read_r_multiple_elements(xknx_setup: XKNX) -
     await responder
 
     assert data == b"\x01\x02\x03\x04\x05\x06"
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _read_request(ia, 0, object_index=1, property_id=52, count=1, start_index=1),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _read_request(ia, 1, object_index=1, property_id=52, count=2, start_index=2),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+    ]
     await conn.disconnect()
 
 
@@ -183,7 +202,7 @@ async def test_dmp_interface_object_read_r_max_apdu_length_not_positive(
 
 
 async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
-    """Test dmp_interface_object_read_r with count > 15 uses multiple requests."""
+    """Test dmp_interface_object_read_r with count > 15: probe, then 15-element wire-capped chunks."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -199,9 +218,9 @@ async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=52,
-                count=15,
+                count=1,
                 start_index=1,
-                data=b"\x01" * 15,
+                data=b"\x01",
             ),
         )
         await _wait_for_request(xknx, 2)
@@ -212,9 +231,22 @@ async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=52,
-                count=5,
-                start_index=16,
-                data=b"\x02" * 5,
+                count=15,
+                start_index=2,
+                data=b"\x01" * 15,
+            ),
+        )
+        await _wait_for_request(xknx, 3)
+        _process_response(
+            xknx,
+            ia,
+            seq=2,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=4,
+                start_index=17,
+                data=b"\x02" * 4,
             ),
         )
 
@@ -225,33 +257,38 @@ async def test_dmp_interface_object_read_r_chunked(xknx_setup: XKNX) -> None:
         property_id=52,
         count=20,
         start_index=1,
-        max_apdu_length=21,  # (21 - 6) // 1 == 15, matching the wire cap exactly
+        max_apdu_length=21,  # (21 - 5) // 1 == 16, min'd with the 15-element wire cap
     )
     await responder
 
-    assert data == b"\x01" * 15 + b"\x02" * 5
-    # the second chunk must continue at start_index=16, not restart or overlap
+    assert data == b"\x01" * 16 + b"\x02" * 4
+    # each chunk must continue where the previous left off, not restart or overlap
     assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
-        _read_request(ia, 0, object_index=0, property_id=52, count=15, start_index=1),
+        _read_request(ia, 0, object_index=0, property_id=52, count=1, start_index=1),
         Telegram(destination_address=ia, tpci=tpci.TAck(0)),
-        _read_request(ia, 1, object_index=0, property_id=52, count=5, start_index=16),
+        _read_request(ia, 1, object_index=0, property_id=52, count=15, start_index=2),
         Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+        _read_request(ia, 2, object_index=0, property_id=52, count=4, start_index=17),
+        Telegram(destination_address=ia, tpci=tpci.TAck(2)),
     ]
     await conn.disconnect()
 
 
 async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> None:
-    """Test max_apdu_length + element_size further limits chunk size below the 15-element cap."""
+    """
+    Test element_size discovered from the probe tightens later chunks' size.
+
+    element_size=4 is only known after the 1-element probe response; with
+    max_apdu_length=14, (14 - 5) // 4 == 2 elements/chunk for everything
+    after that.
+    """
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
     conn = await xknx.management.connect(ia)
     xknx.cemi_handler.send_telegram.reset_mock()
 
-    # element_size=4; with max_apdu_length=14 only (14 - 6) // 4 = 2 elements
-    # fit per request, well below the 15-element wire cap, so this must split
-    # into three requests instead of one.
-    expected = bytes(range(20))
+    expected = bytes(range(20))  # 5 elements * 4 bytes
 
     async def respond() -> None:
         await _wait_for_request(xknx, 1)
@@ -262,9 +299,9 @@ async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> 
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=60,
-                count=2,
+                count=1,
                 start_index=1,
-                data=expected[0:8],
+                data=expected[0:4],
             ),
         )
         await _wait_for_request(xknx, 2)
@@ -276,8 +313,8 @@ async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> 
                 object_index=0,
                 property_id=60,
                 count=2,
-                start_index=3,
-                data=expected[8:16],
+                start_index=2,
+                data=expected[4:12],
             ),
         )
         await _wait_for_request(xknx, 3)
@@ -288,9 +325,9 @@ async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> 
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=60,
-                count=1,
-                start_index=5,
-                data=expected[16:20],
+                count=2,
+                start_index=4,
+                data=expected[12:20],
             ),
         )
 
@@ -302,17 +339,16 @@ async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> 
         count=5,
         start_index=1,
         max_apdu_length=14,
-        element_size=4,
     )
     await responder
 
     assert data == expected
     assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
-        _read_request(ia, 0, object_index=0, property_id=60, count=2, start_index=1),
+        _read_request(ia, 0, object_index=0, property_id=60, count=1, start_index=1),
         Telegram(destination_address=ia, tpci=tpci.TAck(0)),
-        _read_request(ia, 1, object_index=0, property_id=60, count=2, start_index=3),
+        _read_request(ia, 1, object_index=0, property_id=60, count=2, start_index=2),
         Telegram(destination_address=ia, tpci=tpci.TAck(1)),
-        _read_request(ia, 2, object_index=0, property_id=60, count=1, start_index=5),
+        _read_request(ia, 2, object_index=0, property_id=60, count=2, start_index=4),
         Telegram(destination_address=ia, tpci=tpci.TAck(2)),
     ]
     await conn.disconnect()
@@ -321,7 +357,12 @@ async def test_dmp_interface_object_read_r_max_apdu_length(xknx_setup: XKNX) -> 
 async def test_dmp_interface_object_read_r_error_partial_response(
     xknx_setup: XKNX,
 ) -> None:
-    """Test dmp_interface_object_read_r raises error on partial response (not in spec, defensive)."""
+    """
+    Test dmp_interface_object_read_r raises error when a response's count doesn't match the request.
+
+    The 1-element probe itself is the mismatched response here (not in spec,
+    defensive).
+    """
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -337,14 +378,91 @@ async def test_dmp_interface_object_read_r_error_partial_response(
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=52,
-                count=2,  # requested 5, got 2
+                count=2,  # probe requested 1, got 2
                 start_index=1,
                 data=b"\x01\x02",
             ),
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match=r"requested 5 elements, got 2"):
+    with pytest.raises(ManagementConnectionError, match=r"requested 1 elements, got 2"):
+        await dmp_interface_object_read_r(
+            conn, object_index=0, property_id=52, count=5, start_index=1
+        )
+    await responder
+
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_read_r_error_partial_response_after_probe(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_read_r raises error when a post-probe chunk's count mismatches."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0, property_id=52, count=1, start_index=1, data=b"\x01"
+            ),
+        )
+        await _wait_for_request(xknx, 2)
+        _process_response(
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=52,
+                count=2,  # requested 4, got 2
+                start_index=2,
+                data=b"\x02\x03",
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(ManagementConnectionError, match=r"requested 4 elements, got 2"):
+        await dmp_interface_object_read_r(
+            conn, object_index=0, property_id=52, count=5, start_index=1
+        )
+    await responder
+
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_read_r_error_empty_probe_data(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_interface_object_read_r raises error when the probe response has empty data."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=0, property_id=52, count=1, start_index=1, data=b""
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(
+        ManagementConnectionError, match=r"returned empty data for 1 element"
+    ):
         await dmp_interface_object_read_r(
             conn, object_index=0, property_id=52, count=5, start_index=1
         )
