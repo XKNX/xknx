@@ -36,12 +36,15 @@ async def dmp_interface_object_write_r(
     :raises ManagementConnectionError: If verify is enabled and response differs
     :raises ValueError: If data length is not divisible by count
     """
-    # The spec's sequence (A_PropertyDescription_Read) is intentionally skipped:
-    # callers supply object_index/property_id/count/start_index explicitly, so the
-    # property is always known at this level. Discovery belongs to the Configuration
-    # Procedure above (per spec: "shall not interpret ... at the level of this
-    # Management Procedure"). Use dmp_interface_object_scan_r to discover properties
-    # (type, max_count, access) before calling this function.
+    # DMP_InterfaceObjectWrite_R's own parameter list (KNX v02.01.02 -
+    # Management Procedures 03.05.02 - §3.25.1: object_type, object_index,
+    # PID, start_index, noElements) only ever supplies a PID, so the spec's
+    # optional A_PropertyDescription_Read step - "if Property... is unknown
+    # to the Management Client" - never applies here: the property is always
+    # known by definition. Use dmp_interface_object_scan_r (KNX v02.01.02 -
+    # Management Procedures 03.05.02 - §3.28.2) to discover a device's
+    # properties (type, max_count, access) first if you don't already know
+    # which PID to write.
     if count <= 0 or not data:
         return b""
 
