@@ -13,7 +13,17 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 import struct
-from typing import ClassVar, Generic, TypeVar, cast
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    ForwardRef,
+    Generic,
+    TypeVar,
+    cast,
+    get_args,
+)
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, UnsupportedAPCIService
@@ -452,19 +462,51 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
+class _ResponseType:
+    """
+    Resolve `RESPONSE_TYPE` from the `APCIRequest` type argument on first access.
+
+    Resolving lazily lets the type argument be a forward reference, so a request
+    service can keep its place in front of its response - the KNX service code
+    order this module is written in. The resolved class is cached on the subclass,
+    where it shadows this descriptor for every later lookup.
+    """
+
+    def __get__(self, obj: object, owner: type[APCIRequest[Any]]) -> type[APCI]:
+        """Return the response APCI class of the owning request service."""
+        for base in owner.__dict__.get("__orig_bases__", ()):
+            args = get_args(base)
+            if not args:
+                continue
+            response_type: type[APCI] = (
+                getattr(sys.modules[owner.__module__], args[0].__forward_arg__)
+                if isinstance(args[0], ForwardRef)
+                else args[0]
+            )
+            owner.RESPONSE_TYPE = response_type
+            return response_type
+        raise AttributeError(
+            f"{owner.__name__} does not parametrize APCIRequest with a response type"
+        )
+
+
 @dataclass(slots=True)
 class APCIRequest(APCI, Generic[APCIResponseT]):
     """
     Base class for APCI request services with a KNX-spec-defined response.
 
-    Subclass this instead of `APCI` and set `RESPONSE_TYPE` to the response APCI
-    class - lets `P2PConnection.request()` infer and verify the expected response
-    from the payload's type alone, without an `expected=` argument.
+    Subclass this instead of `APCI`, parametrized with the response APCI class -
+    lets `P2PConnection.request()` infer and verify the expected response from the
+    payload's type alone, without an `expected=` argument. `RESPONSE_TYPE` is
+    derived from that type argument, so the two can not disagree.
     Deriving from `APCI` keeps `APCIRequest[...]` usable wherever an `APCI`
     is expected; listing both as bases would be an MRO error.
     """
 
-    RESPONSE_TYPE: ClassVar[type[APCI]]
+    if TYPE_CHECKING:
+        RESPONSE_TYPE: ClassVar[type[APCIResponseT]]
+    else:
+        RESPONSE_TYPE = _ResponseType()
 
 
 @dataclass(slots=True)
@@ -2300,7 +2342,6 @@ class DeviceDescriptorRead(APCIRequest[DeviceDescriptorResponse]):
     """
 
     CODE: ClassVar = APCIService.DEVICE_DESCRIPTOR_READ
-    RESPONSE_TYPE: ClassVar = DeviceDescriptorResponse
 
     descriptor: int = 0
 
@@ -3573,7 +3614,6 @@ class AuthorizeRequest(APCIRequest[AuthorizeResponse]):
     """AuthorizeRequest service."""
 
     CODE: ClassVar = APCIExtendedService.AUTHORIZE_REQUEST
-    RESPONSE_TYPE: ClassVar = AuthorizeResponse
 
     key: int = 0
 
@@ -3779,7 +3819,6 @@ class PropertyValueRead(APCIRequest[PropertyValueResponse]):
     """
 
     CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_READ
-    RESPONSE_TYPE: ClassVar = PropertyValueResponse
 
     object_index: int = 0
     property_id: int = 0
