@@ -8,9 +8,11 @@ from xknx.telegram import apci
 
 from .const import MAX_ELEMENTS_PER_REQUEST
 
+__all__ = ["dmp_interface_object_read_r"]
+
 
 async def dmp_interface_object_read_r(
-    connection: P2PConnection,
+    conn: P2PConnection,
     object_index: int,
     property_id: int,
     count: int = 1,
@@ -23,13 +25,15 @@ async def dmp_interface_object_read_r(
     §3.27.2. Requires an established connection (DM_Connect must be executed
     first).
 
-    :param connection: Active P2P connection to the device
+    :param conn: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)
     :param property_id: Property identifier (1-255)
     :param count: Number of elements to read
     :param start_index: Start element index (1-based, 1-4095)
     :return: The property data read from device
+    :raises ValueError: If count is not positive
     :raises ManagementConnectionError: If device returns error (nr_of_elem = 0)
+        or a response with an element count that doesn't match the request
     """
     # DMP_InterfaceObjectRead_R's own parameter list (KNX v02.01.02 -
     # Management Procedures 03.05.02 - §3.27.1: object_type, object_index,
@@ -41,7 +45,7 @@ async def dmp_interface_object_read_r(
     # properties (type, max_count, access) first if you don't already know
     # which PID to read.
     if count <= 0:
-        return b""
+        raise ValueError(f"count must be positive, got {count}")
 
     data = bytearray()
     remaining = count
@@ -49,7 +53,7 @@ async def dmp_interface_object_read_r(
 
     while remaining > 0:
         chunk_count = min(remaining, MAX_ELEMENTS_PER_REQUEST)
-        response = await connection.request(
+        response = await conn.request(
             payload=apci.PropertyValueRead(
                 object_index=object_index,
                 property_id=property_id,

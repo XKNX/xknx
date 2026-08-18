@@ -1,16 +1,19 @@
 """Tests for dmp_interface_object_write_r — KNX v02.01.02 - Management Procedures 03.05.02 - §3.25.2."""
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, PropertyVerificationError
 from xknx.management.procedures.device.dmp_interface_object_write_r import (
     dmp_interface_object_write_r,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+from xknx.util import asyncio_timeout
+
+RESPONDER_TIMEOUT = 1
 
 
 @pytest.fixture(name="xknx_setup")
@@ -19,6 +22,58 @@ def fixture_xknx_setup() -> XKNX:
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     return xknx
+
+
+def _write_request(
+    ia: IndividualAddress,
+    seq: int,
+    object_index: int,
+    property_id: int,
+    data: bytes,
+    **kwargs: int,
+) -> Telegram:
+    """Build the outgoing PropertyValueWrite telegram for a given sequence number."""
+    return Telegram(
+        destination_address=ia,
+        tpci=tpci.TDataConnected(seq),
+        payload=apci.PropertyValueWrite(
+            object_index=object_index, property_id=property_id, data=data, **kwargs
+        ),
+    )
+
+
+def _process_response(
+    xknx: XKNX,
+    ia: IndividualAddress,
+    seq: int,
+    payload: apci.APCI,
+) -> None:
+    """Inject ACK + TDataConnected response into the management layer."""
+    xknx.management.process(
+        Telegram(
+            source_address=ia,
+            destination_address=xknx.current_address,
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TAck(seq),
+        )
+    )
+    xknx.management.process(
+        Telegram(
+            source_address=ia,
+            destination_address=xknx.current_address,
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TDataConnected(seq),
+            payload=payload,
+        )
+    )
+
+
+async def _wait_for_request(xknx: XKNX, req_num: int) -> None:
+    """Wait until the req_num-th request telegram has been sent (1-indexed)."""
+    threshold = req_num * 2 - 1
+    async with asyncio_timeout(RESPONDER_TIMEOUT):
+        while xknx.cemi_handler.send_telegram.call_count < threshold:  # noqa: ASYNC110
+            await asyncio.sleep(0)
 
 
 async def test_dmp_interface_object_write_r_basic(xknx_setup: XKNX) -> None:
@@ -30,19 +85,11 @@ async def test_dmp_interface_object_write_r_basic(xknx_setup: XKNX) -> None:
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=78,
@@ -51,8 +98,6 @@ async def test_dmp_interface_object_write_r_basic(xknx_setup: XKNX) -> None:
                 data=b"\x00\x91",
             ),
         )
-        xknx.management.process(ack)
-        xknx.management.process(response)
 
     responder = asyncio.create_task(respond())
     result = await dmp_interface_object_write_r(
@@ -61,6 +106,17 @@ async def test_dmp_interface_object_write_r_basic(xknx_setup: XKNX) -> None:
     await responder
 
     assert result == b"\x00\x91"
+    assert xknx.cemi_handler.send_telegram.call_args_list[0] == call(
+        _write_request(
+            ia,
+            0,
+            object_index=0,
+            property_id=78,
+            data=b"\x00\x91",
+            count=1,
+            start_index=1,
+        )
+    )
     await conn.disconnect()
 
 
@@ -73,19 +129,11 @@ async def test_dmp_interface_object_write_r_with_verify(xknx_setup: XKNX) -> Non
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=78,
@@ -94,8 +142,6 @@ async def test_dmp_interface_object_write_r_with_verify(xknx_setup: XKNX) -> Non
                 data=b"\xaa\xbb",
             ),
         )
-        xknx.management.process(ack)
-        xknx.management.process(response)
 
     responder = asyncio.create_task(respond())
     result = await dmp_interface_object_write_r(
@@ -114,7 +160,7 @@ async def test_dmp_interface_object_write_r_with_verify(xknx_setup: XKNX) -> Non
 
 
 async def test_dmp_interface_object_write_r_verify_failure(xknx_setup: XKNX) -> None:
-    """Test dmp_interface_object_write_r raises error when verify fails."""
+    """Test dmp_interface_object_write_r raises PropertyVerificationError when verify fails."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -122,19 +168,11 @@ async def test_dmp_interface_object_write_r_verify_failure(xknx_setup: XKNX) -> 
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=78,
@@ -143,11 +181,9 @@ async def test_dmp_interface_object_write_r_verify_failure(xknx_setup: XKNX) -> 
                 data=b"\xff\xff",
             ),
         )
-        xknx.management.process(ack)
-        xknx.management.process(response)
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match="Property verify failed"):
+    with pytest.raises(PropertyVerificationError, match="Property verify mismatch"):
         await dmp_interface_object_write_r(
             conn,
             object_index=0,
@@ -169,10 +205,24 @@ async def test_dmp_interface_object_write_r_empty(xknx_setup: XKNX) -> None:
 
     conn = await xknx.management.connect(ia)
     result = await dmp_interface_object_write_r(
-        conn, object_index=0, property_id=78, data=b"", count=0
+        conn, object_index=0, property_id=78, data=b"", count=1
     )
 
     assert result == b""
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_write_r_count_zero(xknx_setup: XKNX) -> None:
+    """Test dmp_interface_object_write_r raises ValueError for count=0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"count must be positive, got 0"):
+        await dmp_interface_object_write_r(
+            conn, object_index=0, property_id=78, data=b"\xaa\xbb", count=0
+        )
+
     await conn.disconnect()
 
 
@@ -201,19 +251,11 @@ async def test_dmp_interface_object_write_r_chunked(xknx_setup: XKNX) -> None:
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack0 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        response0 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=52,
@@ -222,22 +264,11 @@ async def test_dmp_interface_object_write_r_chunked(xknx_setup: XKNX) -> None:
                 data=b"\x01" * 15,
             ),
         )
-        xknx.management.process(ack0)
-        xknx.management.process(response0)
-
-        while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack1 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(1),
-        )
-        response1 = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(1),
+        await _wait_for_request(xknx, 2)
+        _process_response(
+            xknx,
+            ia,
+            seq=1,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=52,
@@ -246,8 +277,6 @@ async def test_dmp_interface_object_write_r_chunked(xknx_setup: XKNX) -> None:
                 data=b"\x02" * 5,
             ),
         )
-        xknx.management.process(ack1)
-        xknx.management.process(response1)
 
     responder = asyncio.create_task(respond())
     result = await dmp_interface_object_write_r(
@@ -261,6 +290,30 @@ async def test_dmp_interface_object_write_r_chunked(xknx_setup: XKNX) -> None:
     await responder
 
     assert result == b"\x01" * 15 + b"\x02" * 5
+    # the second chunk must continue at start_index=16 with its own slice of
+    # data, not restart, overlap, or resend the first chunk's bytes
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _write_request(
+            ia,
+            0,
+            object_index=0,
+            property_id=52,
+            data=b"\x01" * 15,
+            count=15,
+            start_index=1,
+        ),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _write_request(
+            ia,
+            1,
+            object_index=0,
+            property_id=52,
+            data=b"\x02" * 5,
+            count=5,
+            start_index=16,
+        ),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+    ]
     await conn.disconnect()
 
 
@@ -275,19 +328,11 @@ async def test_dmp_interface_object_write_r_error_partial_response(
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=52,
@@ -296,8 +341,6 @@ async def test_dmp_interface_object_write_r_error_partial_response(
                 data=b"\x01\x02",
             ),
         )
-        xknx.management.process(ack)
-        xknx.management.process(response)
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match=r"requested 5 elements, got 2"):
@@ -325,19 +368,11 @@ async def test_dmp_interface_object_write_r_error_nr_of_elem_zero(
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond() -> None:
-        while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
-            await asyncio.sleep(0)
-        ack = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TAck(0),
-        )
-        response = Telegram(
-            source_address=ia,
-            destination_address=xknx.current_address,
-            direction=TelegramDirection.INCOMING,
-            tpci=tpci.TDataConnected(0),
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
             payload=apci.PropertyValueResponse(
                 object_index=0,
                 property_id=78,
@@ -346,8 +381,6 @@ async def test_dmp_interface_object_write_r_error_nr_of_elem_zero(
                 data=b"",
             ),
         )
-        xknx.management.process(ack)
-        xknx.management.process(response)
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match=r"nr_of_elem=0"):

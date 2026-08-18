@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, PropertyVerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
 from .const import MAX_ELEMENTS_PER_REQUEST
 
+__all__ = ["dmp_interface_object_write_r"]
+
 
 async def dmp_interface_object_write_r(
-    connection: P2PConnection,
+    conn: P2PConnection,
     object_index: int,
     property_id: int,
     data: bytes,
@@ -25,7 +27,7 @@ async def dmp_interface_object_write_r(
     §3.25.2. Requires an established connection (DM_Connect must be executed
     first).
 
-    :param connection: Active P2P connection to the device
+    :param conn: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)
     :param property_id: Property identifier (1-255)
     :param data: Data to write
@@ -33,8 +35,11 @@ async def dmp_interface_object_write_r(
     :param start_index: Start element index (1-based, 1-4095)
     :param verify: If True, verify response data matches written data
     :return: The response data from device (concatenated for chunked writes)
-    :raises ManagementConnectionError: If verify is enabled and response differs
-    :raises ValueError: If data length is not divisible by count
+    :raises ValueError: If count is not positive, or data length is not
+        divisible by count
+    :raises PropertyVerificationError: If verify is enabled and the response differs
+    :raises ManagementConnectionError: If device returns error (nr_of_elem =
+        0), or a response with an element count that doesn't match the request
     """
     # DMP_InterfaceObjectWrite_R's own parameter list (KNX v02.01.02 -
     # Management Procedures 03.05.02 - §3.25.1: object_type, object_index,
@@ -45,7 +50,9 @@ async def dmp_interface_object_write_r(
     # Management Procedures 03.05.02 - §3.28.2) to discover a device's
     # properties (type, max_count, access) first if you don't already know
     # which PID to write.
-    if count <= 0 or not data:
+    if count <= 0:
+        raise ValueError(f"count must be positive, got {count}")
+    if not data:
         return b""
 
     if len(data) % count != 0:
@@ -63,7 +70,7 @@ async def dmp_interface_object_write_r(
         chunk_count = min(remaining, MAX_ELEMENTS_PER_REQUEST)
         chunk_data = data[data_offset : data_offset + chunk_count * element_size]
 
-        response = await connection.request(
+        response = await conn.request(
             payload=apci.PropertyValueWrite(
                 object_index=object_index,
                 property_id=property_id,
@@ -99,8 +106,8 @@ async def dmp_interface_object_write_r(
             )
 
         if verify and response.payload.data != chunk_data:
-            raise ManagementConnectionError(
-                f"Property verify failed at object {object_index} PID {property_id} "
+            raise PropertyVerificationError(
+                f"Property verify mismatch at object {object_index} PID {property_id} "
                 f"index {current_index}: expected {chunk_data.hex()}, "
                 f"got {response.payload.data.hex()}"
             )
