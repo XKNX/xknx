@@ -9,6 +9,12 @@ from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
 from xknx.telegram import apci
 
+__all__ = ["ScannedInterfaceObject", "dmp_interface_object_scan_r"]
+
+# object_index and property_index are single-octet fields (KNX v02.01.01 -
+# Application Layer 03.03.07 - §3.4.3.1 A_PropertyDescription_Read-PDU)
+MAX_INDEX = 0xFF
+
 
 @dataclass
 class ScannedInterfaceObject:
@@ -20,7 +26,7 @@ class ScannedInterfaceObject:
 
 
 async def dmp_interface_object_scan_r(
-    connection: P2PConnection,
+    conn: P2PConnection,
 ) -> list[ScannedInterfaceObject]:
     """
     Enumerate all interface objects and their properties on a device.
@@ -29,7 +35,7 @@ async def dmp_interface_object_scan_r(
     §3.28.2. Requires an established connection (DM_Connect must be executed
     first).
 
-    :param connection: Active P2P connection to the device
+    :param conn: Active P2P connection to the device
     :return: List of discovered interface objects with their property descriptions
     :raises ManagementConnectionError: On disconnect or missing object type data
     """
@@ -37,8 +43,12 @@ async def dmp_interface_object_scan_r(
     object_index = 0
 
     while True:
+        if object_index > MAX_INDEX:
+            raise ManagementConnectionError(
+                f"No end of interface object list (PID=0) within {MAX_INDEX + 1} objects"
+            )
         # Check if an interface object exists at this index (PID=0 → use property_index)
-        exist_resp = await connection.request(
+        exist_resp = await conn.request(
             payload=apci.PropertyDescriptionRead(
                 object_index=object_index,
                 property_id=0,
@@ -52,9 +62,12 @@ async def dmp_interface_object_scan_r(
             break  # no more objects
 
         # Read the object type - KNX v02.01.01 - Application Interface Layer
-        # 03.04.01 - §4.3.2.3: PID_OBJECT_TYPE is always property_id 1, index 0,
-        # and mandatory for every Interface Object (always 1 element, 2 bytes).
-        type_resp = await connection.request(
+        # 03.04.01 - §4.3.2.3: PID_OBJECT_TYPE is always property_id 1,
+        # mandatory for every Interface Object. Per KNX v02.01.02 -
+        # Management Procedures 03.05.02 - §3.28.2, only its first element
+        # (start_index=1) is read here - PID_OBJECT_TYPE can itself be an
+        # array for array Interface Objects, but the type only needs element 1.
+        type_resp = await conn.request(
             payload=apci.PropertyValueRead(
                 object_index=object_index,
                 property_id=ResourceGenericPropertyId.PID_OBJECT_TYPE,
@@ -69,13 +82,23 @@ async def dmp_interface_object_scan_r(
             raise ManagementConnectionError(
                 f"Object type read failed for object_index={object_index}: nr_of_elem=0"
             )
+        if len(type_resp.payload.data) != 2:
+            raise ManagementConnectionError(
+                f"Object type read for object_index={object_index} returned "
+                f"{len(type_resp.payload.data)} bytes, expected 2"
+            )
         object_type = int.from_bytes(type_resp.payload.data, "big")
 
         # Enumerate all properties of this object
         properties: list[apci.PropertyDescriptionResponse] = []
         property_index = 0
         while True:
-            prop_resp = await connection.request(
+            if property_index > MAX_INDEX:
+                raise ManagementConnectionError(
+                    f"No end of property list (PID=0) for object_index="
+                    f"{object_index} within {MAX_INDEX + 1} properties"
+                )
+            prop_resp = await conn.request(
                 payload=apci.PropertyDescriptionRead(
                     object_index=object_index,
                     property_id=0,

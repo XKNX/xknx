@@ -1,7 +1,7 @@
 """Tests for dmp_interface_object_scan_r — KNX v02.01.02 - Management Procedures 03.05.02 - §3.28.2 DMP_InterfaceObjectScan_R."""
 
 import asyncio
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -12,6 +12,9 @@ from xknx.management.procedures.device.dmp_interface_object_scan_r import (
     dmp_interface_object_scan_r,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+from xknx.util import asyncio_timeout
+
+RESPONDER_TIMEOUT = 1
 
 
 @pytest.fixture(name="xknx_setup")
@@ -91,8 +94,9 @@ def _prop_val(
 async def _wait_for_request(xknx: XKNX, req_num: int) -> None:
     """Wait until the req_num-th request telegram has been sent (1-indexed)."""
     threshold = req_num * 2 - 1
-    while xknx.cemi_handler.send_telegram.call_count < threshold:  # noqa: ASYNC110
-        await asyncio.sleep(0)
+    async with asyncio_timeout(RESPONDER_TIMEOUT):
+        while xknx.cemi_handler.send_telegram.call_count < threshold:  # noqa: ASYNC110
+            await asyncio.sleep(0)
 
 
 async def test_dmp_interface_object_scan_r_no_objects(xknx_setup: XKNX) -> None:
@@ -295,6 +299,88 @@ async def test_dmp_interface_object_scan_r_object_type_read_error(
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match="nr_of_elem=0"):
+        await dmp_interface_object_scan_r(conn)
+    await responder
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_scan_r_object_type_wrong_length(
+    xknx_setup: XKNX,
+) -> None:
+    """Test scan raises ManagementConnectionError when object type data isn't 2 bytes."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _prop_desc(xknx, ia, seq=0, object_index=0, property_id=1, property_index=0)
+        await _wait_for_request(xknx, 2)
+        _prop_val(xknx, ia, seq=1, object_index=0, property_id=1, data=b"\x01")
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(ManagementConnectionError, match=r"1 bytes, expected 2"):
+        await dmp_interface_object_scan_r(conn)
+    await responder
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_scan_r_object_index_exhausted(
+    xknx_setup: XKNX,
+) -> None:
+    """Test scan raises ManagementConnectionError instead of a raw struct.error past MAX_INDEX."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _prop_desc(xknx, ia, seq=0, object_index=0, property_id=1, property_index=0)
+        await _wait_for_request(xknx, 2)
+        _prop_val(xknx, ia, seq=1, object_index=0, property_id=1, data=b"\x00\x01")
+        await _wait_for_request(xknx, 3)
+        _prop_desc(xknx, ia, seq=2, object_index=0, property_id=0, property_index=1)
+
+    responder = asyncio.create_task(respond())
+    with (
+        patch(
+            "xknx.management.procedures.device.dmp_interface_object_scan_r.MAX_INDEX",
+            0,
+        ),
+        pytest.raises(ManagementConnectionError, match=r"within 1 objects"),
+    ):
+        await dmp_interface_object_scan_r(conn)
+    await responder
+    await conn.disconnect()
+
+
+async def test_dmp_interface_object_scan_r_property_index_exhausted(
+    xknx_setup: XKNX,
+) -> None:
+    """Test scan raises ManagementConnectionError instead of a raw struct.error past MAX_INDEX."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _prop_desc(xknx, ia, seq=0, object_index=0, property_id=1, property_index=0)
+        await _wait_for_request(xknx, 2)
+        _prop_val(xknx, ia, seq=1, object_index=0, property_id=1, data=b"\x00\x01")
+        await _wait_for_request(xknx, 3)
+        _prop_desc(xknx, ia, seq=2, object_index=0, property_id=78, property_index=0)
+
+    responder = asyncio.create_task(respond())
+    with (
+        patch(
+            "xknx.management.procedures.device.dmp_interface_object_scan_r.MAX_INDEX",
+            0,
+        ),
+        pytest.raises(ManagementConnectionError, match=r"within 1 properties"),
+    ):
         await dmp_interface_object_scan_r(conn)
     await responder
     await conn.disconnect()

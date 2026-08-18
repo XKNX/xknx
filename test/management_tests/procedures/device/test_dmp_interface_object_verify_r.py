@@ -6,11 +6,14 @@ from unittest.mock import AsyncMock
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, PropertyVerificationError
 from xknx.management.procedures.device.dmp_interface_object_verify_r import (
     dmp_interface_object_verify_r,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+from xknx.util import asyncio_timeout
+
+RESPONDER_TIMEOUT = 1
 
 
 @pytest.fixture(name="xknx_setup")
@@ -19,6 +22,19 @@ def fixture_xknx_setup() -> XKNX:
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     return xknx
+
+
+def _verify_request(
+    ia: IndividualAddress, seq: int, object_index: int, property_id: int, **kwargs: int
+) -> Telegram:
+    """Build the outgoing PropertyValueRead telegram for a given sequence number."""
+    return Telegram(
+        destination_address=ia,
+        tpci=tpci.TDataConnected(seq),
+        payload=apci.PropertyValueRead(
+            object_index=object_index, property_id=property_id, **kwargs
+        ),
+    )
 
 
 def _process_response(
@@ -50,8 +66,9 @@ def _process_response(
 async def _wait_for_request(xknx: XKNX, req_num: int) -> None:
     """Wait until the req_num-th request telegram has been sent (1-indexed)."""
     threshold = req_num * 2 - 1
-    while xknx.cemi_handler.send_telegram.call_count < threshold:  # noqa: ASYNC110
-        await asyncio.sleep(0)
+    async with asyncio_timeout(RESPONDER_TIMEOUT):
+        while xknx.cemi_handler.send_telegram.call_count < threshold:  # noqa: ASYNC110
+            await asyncio.sleep(0)
 
 
 async def test_dmp_interface_object_verify_r_match(xknx_setup: XKNX) -> None:
@@ -81,7 +98,7 @@ async def test_dmp_interface_object_verify_r_match(xknx_setup: XKNX) -> None:
 
 
 async def test_dmp_interface_object_verify_r_mismatch(xknx_setup: XKNX) -> None:
-    """Test verify raises ManagementConnectionError when data does not match."""
+    """Test verify raises PropertyVerificationError when data does not match."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
     conn = await xknx.management.connect(ia)
@@ -99,7 +116,7 @@ async def test_dmp_interface_object_verify_r_mismatch(xknx_setup: XKNX) -> None:
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match="Property verify failed"):
+    with pytest.raises(PropertyVerificationError, match="Property verify mismatch"):
         await dmp_interface_object_verify_r(
             conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=1
         )
@@ -176,6 +193,14 @@ async def test_dmp_interface_object_verify_r_chunked_match(xknx_setup: XKNX) -> 
         conn, object_index=0, property_id=52, expected_data=expected, count=20
     )
     await responder
+
+    # the second chunk must continue at start_index=16, not restart or overlap
+    assert [c.args[0] for c in xknx.cemi_handler.send_telegram.call_args_list] == [
+        _verify_request(ia, 0, object_index=0, property_id=52, count=15, start_index=1),
+        Telegram(destination_address=ia, tpci=tpci.TAck(0)),
+        _verify_request(ia, 1, object_index=0, property_id=52, count=5, start_index=16),
+        Telegram(destination_address=ia, tpci=tpci.TAck(1)),
+    ]
     await conn.disconnect()
 
 
@@ -206,7 +231,7 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_first_block(
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match="Property verify failed"):
+    with pytest.raises(PropertyVerificationError, match="Property verify mismatch"):
         await dmp_interface_object_verify_r(
             conn, object_index=0, property_id=52, expected_data=expected, count=20
         )
@@ -257,7 +282,7 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match="Property verify failed"):
+    with pytest.raises(PropertyVerificationError, match="Property verify mismatch"):
         await dmp_interface_object_verify_r(
             conn, object_index=0, property_id=52, expected_data=expected, count=20
         )
@@ -266,15 +291,16 @@ async def test_dmp_interface_object_verify_r_chunked_mismatch_second_block(
 
 
 async def test_dmp_interface_object_verify_r_count_zero(xknx_setup: XKNX) -> None:
-    """Test verify with count=0 returns immediately without sending a request."""
+    """Test verify with count=0 raises ValueError without sending a request."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
     conn = await xknx.management.connect(ia)
     xknx.cemi_handler.send_telegram.reset_mock()
 
-    await dmp_interface_object_verify_r(
-        conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=0
-    )
+    with pytest.raises(ValueError, match=r"count must be positive, got 0"):
+        await dmp_interface_object_verify_r(
+            conn, object_index=0, property_id=78, expected_data=b"\xab\xcd", count=0
+        )
 
     xknx.cemi_handler.send_telegram.assert_not_called()
     await conn.disconnect()
