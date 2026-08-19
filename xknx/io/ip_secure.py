@@ -522,15 +522,18 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                     secure_wrapper,
                 )
                 return
+            # handle decrypted frames
             knx_logger.debug("Decrypted frame: %s", knxipframe)
-        elif knxipframe.header.service_type_ident not in PLAIN_MULTICAST_SERVICES:
-            ip_secure_logger.info(
-                "Discarding received unencrypted frame: %s",
-                knxipframe,
-            )
+            super().handle_knxipframe(knxipframe, source)
             return
-        # handle decrypted frames and plain discovery frames (e.g. SearchRequest)
-        super().handle_knxipframe(knxipframe, source)
+        if knxipframe.header.service_type_ident in PLAIN_MULTICAST_SERVICES:
+            # handle plain discovery frames (e.g. SearchRequest)
+            super().handle_knxipframe(knxipframe, source)
+            return
+        ip_secure_logger.info(
+            "Discarding received unencrypted frame: %s",
+            knxipframe,
+        )
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket. `addr` is ignored on TCP."""
