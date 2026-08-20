@@ -18,6 +18,7 @@ nav_order: 2
 - `DescriptionQuery` and `SearchExtendedQuery` derive from `RequestResponse` now. Their `start()` and `gateway_descriptor` attribute are replaced by `request_gateway_descriptor()`.
 - Dependencies are declared in `pyproject.toml` only - the library's own in `[project.dependencies]`, the development tooling in the `dev` group of `[dependency-groups]` - and pinned, including transitive ones, in `uv.lock`. The `requirements/` directory and `tox.ini` are removed; contributors need [uv](https://docs.astral.sh/uv/) now: `uv sync` to set up, `uv run pytest` to test.
 - Git hooks are run by [prek](https://github.com/j178/prek) instead of pre-commit, from the same `.pre-commit-config.yaml`. Install them with `uv run prek install`, run them with `uv run prek run --all-files`. ruff, ruff format, mypy and pylint are local hooks executed via `uv run --frozen`, so their versions come from `uv.lock` alone - ruff is no longer pinned a second time in the hook config. `script/run-in-env.sh` is removed with them. The `check-json` hook is dropped - the repository tracks no JSON files.
+- Releases are built with `uv build` and uploaded by `pypa/gh-action-pypi-publish` using [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/) instead of `twine` with a stored username and password. Distributions now carry PEP 740 attestations.
 
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 
