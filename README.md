@@ -3,7 +3,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/xknx?logo=python)
 [![codecov](https://codecov.io/gh/XKNX/xknx/branch/main/graph/badge.svg?token=irWbIygS84)](https://codecov.io/gh/XKNX/xknx)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
-[![Pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=f8b424)](https://github.com/pre-commit/pre-commit)
+[![prek](https://img.shields.io/badge/prek-enabled-brightgreen)](https://github.com/j178/prek)
 [![HA integration usage](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcurrent_data.json&query=%24.integrations.knx&logo=home-assistant&label=integration%20usage&color=41BDF5&cacheSeconds=21600)](https://www.home-assistant.io/integrations/knx/)
 [![Discord](https://img.shields.io/discord/338619021215924227?color=7289da&label=Discord&logo=discord&logoColor=7289da)](https://discord.gg/bkZe9m4zvw)
 
@@ -21,15 +21,19 @@ You will need at least Python 3.10 in order to use XKNX.
 
 Setting up your local environment:
 
-1. Install requirements: `pip install -r requirements/testing.txt`
-2. Install pre-commit hook: `pre-commit install`
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
+2. Create the environment: `uv sync`
+3. Install the git hooks: `uv run prek install`
+
+Dependencies are declared in `pyproject.toml` and pinned in `uv.lock`.
 
 ## Testing
 
-To run all tests, linters, formatters and type checker call `tox`
+To run all linters, formatters and the type checker call `uv run prek run --all-files`
 
-Running only unit tests is possible with `pytest`
-Running specific unit tests can be invoked by: `pytest -vv test/management_tests/procedures_test.py -k test_nm_individual_address_serial_number_write_fail`
+Unit tests are run with `uv run pytest`
+Running specific unit tests can be invoked by: `uv run pytest -vv test/management_tests/procedures_test.py -k test_nm_individual_address_serial_number_write_fail`
+Testing against another supported Python version: `uv run --python 3.10 pytest`
 
 ## Home-Assistant
 

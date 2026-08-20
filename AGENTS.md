@@ -108,6 +108,25 @@ in sync with the code. Summary:
   `dm_restart_r_co` is the one exception, since `RCo` is the real KNX name
   for that connection-based variant of DM_Restart.
 
+## Running tests and checks
+
+The project is managed with [uv](https://docs.astral.sh/uv/); dependencies are
+declared in `pyproject.toml` (`[project].dependencies` for the library,
+`[dependency-groups] dev` for tooling) and pinned in `uv.lock`. There is no
+`requirements.txt` and no tox.
+
+```
+uv sync                        # create/update the environment
+uv run pytest                  # unit tests
+uv run prek run --all-files    # ruff, ruff format, mypy, pylint, codespell
+uv run --python 3.10 pytest    # test against another supported version
+```
+
+Hooks are configured in `.pre-commit-config.yaml` and run by
+[prek](https://github.com/j178/prek). Never add a tool version to that file —
+linters run from the locked project environment via `uv run --frozen`, so
+`uv.lock` is the only place their versions live.
+
 ## Changelog
 
 Every user-facing change belongs in `docs/changelog.md`, under the

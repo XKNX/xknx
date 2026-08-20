@@ -12,6 +12,7 @@ xknx.egg-info/
 .coverage
 coverage.xml
 venv
+.venv/
 .idea/
 .vscode/
 .sass-cache/

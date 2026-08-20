@@ -16,6 +16,8 @@ nav_order: 2
 
 - `RequestResponse` is now generic over the response body it awaits, eg. `class Connect(RequestResponse[ConnectResponse])`. `start()` gives way to `request()`, which returns that response instead of leaving it on the instance, and raises the new `RequestResponseError` when none arrived or the server answered with an error status.
 - `DescriptionQuery` and `SearchExtendedQuery` derive from `RequestResponse` now. Their `start()` and `gateway_descriptor` attribute are replaced by `request_gateway_descriptor()`.
+- Dependencies are declared in `pyproject.toml` only - the library's own in `[project.dependencies]`, the development tooling in the `dev` group of `[dependency-groups]` - and pinned, including transitive ones, in `uv.lock`. The `requirements/` directory and `tox.ini` are removed; contributors need [uv](https://docs.astral.sh/uv/) now: `uv sync` to set up, `uv run pytest` to test.
+- Git hooks are run by [prek](https://github.com/j178/prek) instead of pre-commit, from the same `.pre-commit-config.yaml`. Install them with `uv run prek install`, run them with `uv run prek run --all-files`. ruff, ruff format, mypy and pylint are local hooks executed via `uv run --frozen`, so their versions come from `uv.lock` alone - ruff is no longer pinned a second time in the hook config. `script/run-in-env.sh` is removed with them. The `check-json` hook is dropped - the repository tracks no JSON files.
 
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 
