@@ -60,7 +60,7 @@ class TestTunnelling:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            tunnelling.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            tunnelling._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(tunnelling).__name__,
@@ -71,11 +71,11 @@ class TestTunnelling:
         err_knxipframe = KNXIPFrame.init_from_body(
             TunnellingAck(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        tunnelling.response_rec_callback(err_knxipframe, HPAI(), None)
+        tunnelling._response_rec_callback(err_knxipframe, HPAI(), None)
         assert tunnelling._response is None
         assert tunnelling._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(TunnellingAck())
-        tunnelling.response_rec_callback(res_knxipframe, HPAI(), None)
+        tunnelling._response_rec_callback(res_knxipframe, HPAI(), None)
         assert tunnelling._response is not None

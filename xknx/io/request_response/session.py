@@ -27,7 +27,7 @@ class Session(RequestResponse[SessionResponse]):
         super().__init__(transport)
         self.ecdh_client_public_key = ecdh_client_public_key
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(
             SessionRequest(ecdh_client_public_key=self.ecdh_client_public_key)

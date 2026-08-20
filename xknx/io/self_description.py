@@ -103,7 +103,7 @@ async def request_description(
         transport.stop()
 
 
-# concrete subclasses implement create_knxipframe()
+# concrete subclasses implement _create_knxipframe()
 class _SelfDescriptionQuery(  # pylint: disable=abstract-method
     RequestResponse[_DescriptionResponseT]
 ):
@@ -124,9 +124,9 @@ class _SelfDescriptionQuery(  # pylint: disable=abstract-method
         """Send the request and describe the gateway from the response to it."""
         response = await self.request()
         gateway = GatewayDescriptor(
-            ip_addr=self.transport.remote_addr[0],
-            port=self.transport.remote_addr[1],
-            local_ip=self.transport.getsockname()[0],
+            ip_addr=self._transport.remote_addr[0],
+            port=self._transport.remote_addr[1],
+            local_ip=self._transport.getsockname()[0],
         )
         gateway.parse_dibs(response.dibs)
         return gateway
@@ -137,7 +137,7 @@ class DescriptionQuery(_SelfDescriptionQuery[DescriptionResponse]):
 
     __slots__ = ()
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         description_request = DescriptionRequest(control_endpoint=self.local_hpai)
         return KNXIPFrame.init_from_body(description_request)
@@ -152,7 +152,7 @@ class SearchExtendedQuery(_SelfDescriptionQuery[SearchResponseExtended]):
 
     __slots__ = ()
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         search_extended_request = SearchRequestExtended(
             discovery_endpoint=self.local_hpai,

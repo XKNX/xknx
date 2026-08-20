@@ -15,7 +15,7 @@ class _RequestResponse(RequestResponse[KNXIPBody]):  # pylint: disable=abstract-
     """
     RequestResponse is only usable parametrized - it derives the awaited class from that.
 
-    `create_knxipframe()` is deliberately not overridden - one test asserts it raises.
+    `_create_knxipframe()` is deliberately not overridden - one test asserts it raises.
     """
 
     __slots__ = ()
@@ -25,7 +25,7 @@ class TestConnectResponse:
     """Test class for xknx/io/Disconnect objects."""
 
     async def test_create_knxipframe_err(self) -> None:
-        """Test if create_knxipframe of base class raises an exception."""
+        """Test if _create_knxipframe of base class raises an exception."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         request_response = _RequestResponse(udp_transport)
         request_response.timeout_in_seconds = 0
@@ -34,7 +34,7 @@ class TestConnectResponse:
             await request_response.request()
 
     @patch(
-        "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
+        "xknx.io.request_response.RequestResponse._send_request", new_callable=AsyncMock
     )
     async def test_request_response_timeout(
         self, _send_request_mock: MagicMock
@@ -42,7 +42,7 @@ class TestConnectResponse:
         """Test RequestResponse: timeout. No callback shall be left."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = _RequestResponse(udp_transport)
-        requ_resp.response_received_event.wait = MagicMock(
+        requ_resp._response_received_event.wait = MagicMock(
             side_effect=asyncio.TimeoutError()
         )
         with pytest.raises(RequestResponseError) as exc_info:
@@ -57,7 +57,7 @@ class TestConnectResponse:
         assert not udp_transport.callbacks
 
     @patch(
-        "xknx.io.request_response.RequestResponse.send_request", new_callable=AsyncMock
+        "xknx.io.request_response.RequestResponse._send_request", new_callable=AsyncMock
     )
     async def test_request_response_cancelled(
         self, _send_request_mock: AsyncMock
@@ -65,7 +65,7 @@ class TestConnectResponse:
         """Test RequestResponse: task cancelled. No callback shall be left."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = _RequestResponse(udp_transport)
-        requ_resp.response_received_event.wait = MagicMock(
+        requ_resp._response_received_event.wait = MagicMock(
             side_effect=asyncio.CancelledError()
         )
         with pytest.raises(asyncio.CancelledError):

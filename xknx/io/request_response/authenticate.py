@@ -28,7 +28,7 @@ class Authenticate(RequestResponse[SessionStatus]):
         self.user_id = user_id
         self.message_authentication_code = message_authentication_code
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(
             SessionAuthenticate(

@@ -51,7 +51,7 @@ class TestDisconnect:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(DisconnectRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            disconnect.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            disconnect._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(disconnect).__name__,
@@ -62,13 +62,13 @@ class TestDisconnect:
         err_knxipframe = KNXIPFrame.init_from_body(
             DisconnectResponse(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        disconnect.response_rec_callback(err_knxipframe, HPAI(), None)
+        disconnect._response_rec_callback(err_knxipframe, HPAI(), None)
         assert disconnect._response is None
         assert disconnect._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DisconnectResponse())
-        disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
+        disconnect._response_rec_callback(res_knxipframe, HPAI(), None)
         assert disconnect._response is not None
 
     async def test_disconnect_route_back_true(self) -> None:
@@ -102,7 +102,7 @@ class TestDisconnect:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(DisconnectRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            disconnect.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            disconnect._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(disconnect).__name__,
@@ -113,11 +113,11 @@ class TestDisconnect:
         err_knxipframe = KNXIPFrame.init_from_body(
             DisconnectResponse(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        disconnect.response_rec_callback(err_knxipframe, HPAI(), None)
+        disconnect._response_rec_callback(err_knxipframe, HPAI(), None)
         assert disconnect._response is None
         assert disconnect._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DisconnectResponse())
-        disconnect.response_rec_callback(res_knxipframe, HPAI(), None)
+        disconnect._response_rec_callback(res_knxipframe, HPAI(), None)
         assert disconnect._response is not None

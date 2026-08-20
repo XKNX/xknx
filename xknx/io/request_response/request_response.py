@@ -26,9 +26,9 @@ class RequestResponse(Generic[ResponseBodyT]):
     __slots__ = (
         "_error_code",
         "_response",
-        "response_received_event",
+        "_response_received_event",
+        "_transport",
         "timeout_in_seconds",
-        "transport",
     )
 
     AWAITED_RESPONSE_CLASS: ClassVar[type[ResponseBodyT]]
@@ -49,16 +49,16 @@ class RequestResponse(Generic[ResponseBodyT]):
         timeout_in_seconds: float = 1.0,
     ) -> None:
         """Initialize RequstResponse class."""
-        self.transport = transport
-        self.response_received_event = asyncio.Event()
+        self._transport = transport
+        self._response_received_event = asyncio.Event()
         self.timeout_in_seconds = timeout_in_seconds
 
         self._response: ResponseBodyT | None = None
         self._error_code: ErrorCode | None = None
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
-        raise NotImplementedError("create_knxipframe has to be implemented")
+        raise NotImplementedError("_create_knxipframe has to be implemented")
 
     async def request(self) -> ResponseBodyT:
         """
@@ -68,13 +68,13 @@ class RequestResponse(Generic[ResponseBodyT]):
         could not be sent, or the server answered with an error status - only the
         last of which carries an `error_code`.
         """
-        callb = self.transport.register_callback(
-            self.response_rec_callback, [self.AWAITED_RESPONSE_CLASS.SERVICE_TYPE]
+        callb = self._transport.register_callback(
+            self._response_rec_callback, [self.AWAITED_RESPONSE_CLASS.SERVICE_TYPE]
         )
         try:
-            await self.send_request()
+            await self._send_request()
             async with asyncio_timeout(self.timeout_in_seconds):
-                await self.response_received_event.wait()
+                await self._response_received_event.wait()
         except asyncio.TimeoutError:
             raise RequestResponseError(
                 f"KNX bus did not respond in time ({self.timeout_in_seconds} secs) "
@@ -86,7 +86,7 @@ class RequestResponse(Generic[ResponseBodyT]):
             ) from err
         finally:
             # cleanup to not leave callbacks (for asyncio.CancelledError)
-            self.transport.unregister_callback(callb)
+            self._transport.unregister_callback(callb)
 
         if self._response is None:
             raise RequestResponseError(
@@ -96,11 +96,11 @@ class RequestResponse(Generic[ResponseBodyT]):
             )
         return self._response
 
-    async def send_request(self) -> None:
+    async def _send_request(self) -> None:
         """Build knxipframe (within derived class) and send via transport."""
-        self.transport.send(self.create_knxipframe())
+        self._transport.send(self._create_knxipframe())
 
-    def response_rec_callback(
+    def _response_rec_callback(
         self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
         """Verify and handle knxipframe. Callback from internal transport."""
@@ -112,7 +112,7 @@ class RequestResponse(Generic[ResponseBodyT]):
                 knxipframe,
             )
             return
-        self.response_received_event.set()
+        self._response_received_event.set()
 
         if (
             isinstance(body, KNXIPBodyResponse)

@@ -65,7 +65,7 @@ class TestDeviceConfiguration:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            device_configuration.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            device_configuration._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(device_configuration).__name__,
@@ -76,13 +76,13 @@ class TestDeviceConfiguration:
         err_knxipframe = KNXIPFrame.init_from_body(
             DeviceConfigurationAck(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        device_configuration.response_rec_callback(err_knxipframe, HPAI(), None)
+        device_configuration._response_rec_callback(err_knxipframe, HPAI(), None)
         assert device_configuration._response is None
         assert device_configuration._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
         res_knxipframe = KNXIPFrame.init_from_body(DeviceConfigurationAck())
-        device_configuration.response_rec_callback(res_knxipframe, HPAI(), None)
+        device_configuration._response_rec_callback(res_knxipframe, HPAI(), None)
         assert device_configuration._response is not None
 
     async def test_default_timeout(self) -> None:

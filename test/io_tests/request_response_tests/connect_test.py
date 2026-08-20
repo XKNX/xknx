@@ -51,7 +51,7 @@ class TestConnect:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            connect.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            connect._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(connect).__name__,
@@ -62,7 +62,7 @@ class TestConnect:
         err_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        connect.response_rec_callback(err_knxipframe, HPAI(), None)
+        connect._response_rec_callback(err_knxipframe, HPAI(), None)
         assert connect._response is None
         assert connect._error_code is ErrorCode.E_CONNECTION_ID
 
@@ -73,7 +73,7 @@ class TestConnect:
                 crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
-        connect.response_rec_callback(res_knxipframe, HPAI(), None)
+        connect._response_rec_callback(res_knxipframe, HPAI(), None)
         assert connect._response is not None
         assert connect._response.communication_channel == 23
         assert connect._response.crd.individual_address.raw == 7
@@ -101,7 +101,7 @@ class TestConnect:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            connect.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            connect._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(connect).__name__,
@@ -112,7 +112,7 @@ class TestConnect:
         err_knxipframe = KNXIPFrame.init_from_body(
             ConnectResponse(status_code=ErrorCode.E_CONNECTION_ID)
         )
-        connect.response_rec_callback(err_knxipframe, HPAI(), None)
+        connect._response_rec_callback(err_knxipframe, HPAI(), None)
         assert connect._response is None
         assert connect._error_code is ErrorCode.E_CONNECTION_ID
 
@@ -123,7 +123,7 @@ class TestConnect:
                 crd=ConnectResponseData(individual_address=IndividualAddress(7)),
             )
         )
-        connect.response_rec_callback(res_knxipframe, HPAI(), None)
+        connect._response_rec_callback(res_knxipframe, HPAI(), None)
         assert connect._response is not None
         assert connect._response.communication_channel == 23
         assert connect._response.crd.individual_address.raw == 7

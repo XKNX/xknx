@@ -48,7 +48,7 @@ class TestAuthenticate:
         # Response KNX/IP-Frame with wrong type
         wrong_knxipframe = KNXIPFrame.init_from_body(ConnectionStateRequest())
         with patch("logging.Logger.warning") as mock_warning:
-            authenticate.response_rec_callback(wrong_knxipframe, HPAI(), None)
+            authenticate._response_rec_callback(wrong_knxipframe, HPAI(), None)
             mock_warning.assert_called_with(
                 "Could not understand knxipframe for %s: %s",
                 type(authenticate).__name__,
@@ -61,7 +61,7 @@ class TestAuthenticate:
         res_knxipframe.body.status = (
             SecureSessionStatusCode.STATUS_AUTHENTICATION_SUCCESS
         )
-        authenticate.response_rec_callback(res_knxipframe, HPAI(), None)
+        authenticate._response_rec_callback(res_knxipframe, HPAI(), None)
         assert authenticate._response is not None
         assert (
             authenticate._response.status

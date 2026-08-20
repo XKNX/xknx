@@ -38,7 +38,7 @@ class Connect(RequestResponse[ConnectResponse]):
         self.local_hpai = local_hpai
         self.cri = cri or ConnectRequestInformation()
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         # use the same HPAI for control_endpoint and data_endpoint
         connect_request = ConnectRequest(
