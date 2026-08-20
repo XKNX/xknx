@@ -459,17 +459,15 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
-class APCIRequest(APCI, Generic[APCIResponseT]):
+class _APCIWithResponse(APCI, Generic[APCIResponseT]):
     """
-    Base class for APCI request services with a KNX-spec-defined response.
+    Base class for APCI services with a KNX-spec-defined response.
 
-    Subclass this instead of `APCI`, parametrized with the response APCI class.
-    `P2PConnection.request()` then infers the expected response from the payload's
-    type alone, verifies the received telegram against it and returns it narrowed
-    to `Telegram[<the response class>]`. `RESPONSE_TYPE` is derived from the type
-    argument, so the two can not disagree.
-    Deriving from `APCI` keeps `APCIRequest[...]` usable wherever an `APCI`
-    is expected; listing both as bases would be an MRO error.
+    Subclass one of `APCIRequest` or `APCIBroadcastRequest` instead of this,
+    parametrized with the response APCI class. `RESPONSE_TYPE` is derived from
+    that type argument, so the two can not disagree.
+    Deriving from `APCI` keeps these usable wherever an `APCI` is expected;
+    listing both as bases would be an MRO error.
     """
 
     # not @dataclass(slots=True) like the services below: that recreates the
@@ -480,7 +478,7 @@ class APCIRequest(APCI, Generic[APCIResponseT]):
     RESPONSE_TYPE: ClassVar[type[APCIResponseT]]
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Derive `RESPONSE_TYPE` from the `APCIRequest` type argument."""
+        """Derive `RESPONSE_TYPE` from the type argument."""
         super().__init_subclass__(**kwargs)
         for orig_base in cls.__dict__.get("__orig_bases__", ()):
             # a generic intermediate class parametrizes with its own TypeVar -
@@ -488,6 +486,31 @@ class APCIRequest(APCI, Generic[APCIResponseT]):
             if (args := get_args(orig_base)) and isinstance(args[0], type):
                 cls.RESPONSE_TYPE = args[0]
                 return
+
+
+class APCIRequest(_APCIWithResponse[APCIResponseT]):
+    """
+    Base class for point-to-point request services.
+
+    `P2PConnection.request()` infers the expected response from the payload's
+    type alone, verifies the received telegram against it and returns it
+    narrowed to `Telegram[<the response class>]`.
+    """
+
+    __slots__ = ()
+
+
+class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT]):
+    """
+    Base class for broadcast request services.
+
+    These are answered by any number of devices over the broadcast channel
+    rather than by one peer, so they are sent with `Management.send_broadcast()`
+    and their responses are collected with `BroadcastContext.receive()`, which
+    filters the channel by the response type declared here.
+    """
+
+    __slots__ = ()
 
 
 @dataclass(slots=True)
@@ -636,34 +659,6 @@ class IndividualAddressWrite(APCI):
 
 
 @dataclass(slots=True)
-class IndividualAddressRead(APCI):
-    """IndividualAddressRead service."""
-
-    CODE: ClassVar = APCIService.INDIVIDUAL_ADDRESS_READ
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 1
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> IndividualAddressRead:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) != 2:
-            raise ConversionError(
-                f"Invalid length for A_IndividualAddress_Read in CEMI: {raw.hex()}"
-            )
-        return cls()
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.CODE)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return "<IndividualAddressRead />"
-
-
-@dataclass(slots=True)
 class IndividualAddressResponse(APCI):
     """
     IndividualAddressResponse service.
@@ -694,6 +689,34 @@ class IndividualAddressResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return "<IndividualAddressResponse />"
+
+
+@dataclass(slots=True)
+class IndividualAddressRead(APCIBroadcastRequest[IndividualAddressResponse]):
+    """IndividualAddressRead service."""
+
+    CODE: ClassVar = APCIService.INDIVIDUAL_ADDRESS_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddress_Read in CEMI: {raw.hex()}"
+            )
+        return cls()
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        return encode_cmd_and_payload(self.CODE)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<IndividualAddressRead />"
 
 
 @dataclass(slots=True)
@@ -1050,64 +1073,6 @@ def _unpack_system_network_parameter_header(raw: bytes) -> tuple[int, int]:
 
 
 @dataclass(slots=True)
-class SystemNetworkParameterRead(APCI):
-    """
-    SystemNetworkParameterRead service.
-
-    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.8
-    A_SystemNetworkParameter_Read.
-
-    APCI 0x1C8 falls within the same 4 bit service nibble (0b0111) that is
-    otherwise used for A_ADC_Response, but is a distinct, dedicated service.
-    Payload contains a 16 bit interface object type, a 12 bit Property ID
-    and a PID-specific, variable-length test_info used eg. by ETS to
-    discover devices and system parameters via broadcast.
-    """
-
-    CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_READ
-
-    object_type: int
-    property_id: int
-    test_info: bytes = b""
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 5 + len(self.test_info)
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> SystemNetworkParameterRead:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 6:
-            raise ConversionError(
-                f"Invalid length for A_SystemNetworkParameter_Read in CEMI: {raw.hex()}"
-            )
-        object_type, property_id = _unpack_system_network_parameter_header(raw)
-
-        return cls(
-            object_type=object_type,
-            property_id=property_id,
-            test_info=raw[6:],
-        )
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        payload = _pack_system_network_parameter_header(
-            self.object_type, self.property_id
-        )
-
-        return encode_cmd_and_payload(
-            self.CODE, appended_payload=payload + self.test_info
-        )
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return (
-            f'<SystemNetworkParameterRead object_type="{self.object_type}" '
-            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
-        )
-
-
-@dataclass(slots=True)
 class SystemNetworkParameterResponse(APCI):
     """
     SystemNetworkParameterResponse service.
@@ -1165,6 +1130,64 @@ class SystemNetworkParameterResponse(APCI):
             f'<SystemNetworkParameterResponse object_type="{self.object_type}" '
             f'property_id="{self.property_id}" '
             f'test_info_and_result="{self.test_info_and_result.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class SystemNetworkParameterRead(APCIBroadcastRequest[SystemNetworkParameterResponse]):
+    """
+    SystemNetworkParameterRead service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.8
+    A_SystemNetworkParameter_Read.
+
+    APCI 0x1C8 falls within the same 4 bit service nibble (0b0111) that is
+    otherwise used for A_ADC_Response, but is a distinct, dedicated service.
+    Payload contains a 16 bit interface object type, a 12 bit Property ID
+    and a PID-specific, variable-length test_info used eg. by ETS to
+    discover devices and system parameters via broadcast.
+    """
+
+    CODE: ClassVar = APCIService.SYSTEM_NETWORK_PARAMETER_READ
+
+    object_type: int
+    property_id: int
+    test_info: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.test_info)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> SystemNetworkParameterRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_SystemNetworkParameter_Read in CEMI: {raw.hex()}"
+            )
+        object_type, property_id = _unpack_system_network_parameter_header(raw)
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info=raw[6:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        payload = _pack_system_network_parameter_header(
+            self.object_type, self.property_id
+        )
+
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            f'<SystemNetworkParameterRead object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
         )
 
 
@@ -4036,67 +4059,6 @@ class PropertyDescriptionRead(APCIRequest[PropertyDescriptionResponse]):
 
 
 @dataclass(slots=True)
-class NetworkParameterRead(APCI):
-    """
-    NetworkParameterRead service.
-
-    See KNX v02.01.01 - Application Layer 03.03.07 - §3.2.6
-    A_NetworkParameter_Read. Sent point-to-point or as broadcast to
-    check the configuration of a network parameter.
-
-    Payload contains a 16 bit object_type, an 8 bit property_id and a
-    PID-specific, variable-length test_info. Unlike
-    A_SystemNetworkParameter_Read, property_id here is a full octet
-    with no reserved bits.
-    """
-
-    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_READ
-
-    object_type: int
-    property_id: int
-    test_info: bytes = b""
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 4 + len(self.test_info)
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> NetworkParameterRead:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
-            raise ConversionError(
-                f"Invalid length for A_NetworkParameter_Read in CEMI: {raw.hex()}"
-            )
-        object_type, property_id = struct.unpack("!HB", raw[2:5])
-
-        return cls(
-            object_type=object_type,
-            property_id=property_id,
-            test_info=raw[5:],
-        )
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        if not 0 <= self.object_type <= 0xFFFF:
-            raise ConversionError("Object type out of range.")
-        if not 0 <= self.property_id <= 0xFF:
-            raise ConversionError("Property ID out of range.")
-
-        payload = struct.pack("!HB", self.object_type, self.property_id)
-
-        return encode_cmd_and_payload(
-            self.CODE, appended_payload=payload + self.test_info
-        )
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return (
-            f'<NetworkParameterRead object_type="{self.object_type}" '
-            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
-        )
-
-
-@dataclass(slots=True)
 class NetworkParameterResponse(APCI):
     """
     NetworkParameterResponse service.
@@ -4162,39 +4124,64 @@ class NetworkParameterResponse(APCI):
 
 
 @dataclass(slots=True)
-class IndividualAddressSerialRead(APCI):
-    """IndividualAddressSerialRead service."""
+class NetworkParameterRead(APCIBroadcastRequest[NetworkParameterResponse]):
+    """
+    NetworkParameterRead service.
 
-    CODE: ClassVar = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.2.6
+    A_NetworkParameter_Read. Sent point-to-point or as broadcast to
+    check the configuration of a network parameter.
 
-    serial: bytes
+    Payload contains a 16 bit object_type, an 8 bit property_id and a
+    PID-specific, variable-length test_info. Unlike
+    A_SystemNetworkParameter_Read, property_id here is a full octet
+    with no reserved bits.
+    """
+
+    CODE: ClassVar = APCIExtendedService.NETWORK_PARAMETER_READ
+
+    object_type: int
+    property_id: int
+    test_info: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 7
+        return 4 + len(self.test_info)
 
     @classmethod
-    def from_knx(cls, raw: bytes) -> IndividualAddressSerialRead:
+    def from_knx(cls, raw: bytes) -> NetworkParameterRead:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) != 8:
+        if len(raw) < 5:
             raise ConversionError(
-                f"Invalid length for A_IndividualAddressSerialNumber_Read in CEMI: {raw.hex()}"
+                f"Invalid length for A_NetworkParameter_Read in CEMI: {raw.hex()}"
             )
-        (serial,) = struct.unpack("!6s", raw[2:])
-        return cls(serial=serial)
+        object_type, property_id = struct.unpack("!HB", raw[2:5])
+
+        return cls(
+            object_type=object_type,
+            property_id=property_id,
+            test_info=raw[5:],
+        )
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
-        if len(self.serial) != 6:
-            raise ConversionError("Serial must be 6 bytes.")
+        if not 0 <= self.object_type <= 0xFFFF:
+            raise ConversionError("Object type out of range.")
+        if not 0 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
 
-        payload = struct.pack("!6s", self.serial)
+        payload = struct.pack("!HB", self.object_type, self.property_id)
 
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+        return encode_cmd_and_payload(
+            self.CODE, appended_payload=payload + self.test_info
+        )
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<IndividualAddressSerialRead serial="{self.serial.hex()}" />'
+        return (
+            f'<NetworkParameterRead object_type="{self.object_type}" '
+            f'property_id="{self.property_id}" test_info="{self.test_info.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -4235,6 +4222,44 @@ class IndividualAddressSerialResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<IndividualAddressSerialResponse serial="{self.serial.hex()}" address="{self.address}" />'
+
+
+@dataclass(slots=True)
+class IndividualAddressSerialRead(
+    APCIBroadcastRequest[IndividualAddressSerialResponse]
+):
+    """IndividualAddressSerialRead service."""
+
+    CODE: ClassVar = APCIExtendedService.INDIVIDUAL_ADDRESS_SERIAL_READ
+
+    serial: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 7
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> IndividualAddressSerialRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 8:
+            raise ConversionError(
+                f"Invalid length for A_IndividualAddressSerialNumber_Read in CEMI: {raw.hex()}"
+            )
+        (serial,) = struct.unpack("!6s", raw[2:])
+        return cls(serial=serial)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+
+        payload = struct.pack("!6s", self.serial)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<IndividualAddressSerialRead serial="{self.serial.hex()}" />'
 
 
 @dataclass(slots=True)
@@ -4323,42 +4348,6 @@ class DomainAddressWrite(APCI):
 
 
 @dataclass(slots=True)
-class DomainAddressRead(APCI):
-    """
-    DomainAddressRead service.
-
-    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.4
-    A_DomainAddress_Read. Open media specific service - the
-    destination is selected manually (eg. a button on the target
-    device), not addressed. No payload.
-    """
-
-    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_READ
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 1
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> DomainAddressRead:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) != 2:
-            raise ConversionError(
-                f"Invalid length for A_DomainAddress_Read in CEMI: {raw.hex()}"
-            )
-
-        return cls()
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        return encode_cmd_and_payload(self.CODE)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return "<DomainAddressRead />"
-
-
-@dataclass(slots=True)
 class DomainAddressResponse(APCI):
     """
     DomainAddressResponse service.
@@ -4400,6 +4389,42 @@ class DomainAddressResponse(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<DomainAddressResponse domain_address="{self.domain_address.hex()}" />'
+
+
+@dataclass(slots=True)
+class DomainAddressRead(APCIBroadcastRequest[DomainAddressResponse]):
+    """
+    DomainAddressRead service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.4
+    A_DomainAddress_Read. Open media specific service - the
+    destination is selected manually (eg. a button on the target
+    device), not addressed. No payload.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_READ
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 1
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 2:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddress_Read in CEMI: {raw.hex()}"
+            )
+
+        return cls()
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        return encode_cmd_and_payload(self.CODE)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return "<DomainAddressRead />"
 
 
 @dataclass(slots=True)
@@ -4960,51 +4985,6 @@ class GroupPropValueInfoReport(APCI):
 
 
 @dataclass(slots=True)
-class DomainAddressSerialNumberRead(APCI):
-    """
-    DomainAddressSerialNumberRead service.
-
-    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.6
-    A_DomainAddressSerialNumber_Read. Open media specific service -
-    identifies the target by its unique 6 octet KNX Serial Number
-    rather than an address.
-
-    Payload is a 6 octet serial.
-    """
-
-    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ
-
-    serial: bytes
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 7
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberRead:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) != 8:
-            raise ConversionError(
-                f"Invalid length for A_DomainAddressSerialNumber_Read in CEMI: {raw.hex()}"
-            )
-        (serial,) = struct.unpack("!6s", raw[2:])
-        return cls(serial=serial)
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        if len(self.serial) != 6:
-            raise ConversionError("Serial must be 6 bytes.")
-
-        payload = struct.pack("!6s", self.serial)
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return f'<DomainAddressSerialNumberRead serial="{self.serial.hex()}" />'
-
-
-@dataclass(slots=True)
 class DomainAddressSerialNumberResponse(APCI):
     """
     DomainAddressSerialNumberResponse service.
@@ -5057,6 +5037,53 @@ class DomainAddressSerialNumberResponse(APCI):
             f'<DomainAddressSerialNumberResponse serial="{self.serial.hex()}" '
             f'domain_address="{self.domain_address.hex()}" />'
         )
+
+
+@dataclass(slots=True)
+class DomainAddressSerialNumberRead(
+    APCIBroadcastRequest[DomainAddressSerialNumberResponse]
+):
+    """
+    DomainAddressSerialNumberRead service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.3.6
+    A_DomainAddressSerialNumber_Read. Open media specific service -
+    identifies the target by its unique 6 octet KNX Serial Number
+    rather than an address.
+
+    Payload is a 6 octet serial.
+    """
+
+    CODE: ClassVar = APCIExtendedService.DOMAIN_ADDRESS_SERIAL_NUMBER_READ
+
+    serial: bytes
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 7
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> DomainAddressSerialNumberRead:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) != 8:
+            raise ConversionError(
+                f"Invalid length for A_DomainAddressSerialNumber_Read in CEMI: {raw.hex()}"
+            )
+        (serial,) = struct.unpack("!6s", raw[2:])
+        return cls(serial=serial)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if len(self.serial) != 6:
+            raise ConversionError("Serial must be 6 bytes.")
+
+        payload = struct.pack("!6s", self.serial)
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<DomainAddressSerialNumberRead serial="{self.serial.hex()}" />'
 
 
 @dataclass(slots=True)

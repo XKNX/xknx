@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
 import logging
 import time
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, Any, overload
 
 from xknx.exceptions import (
     CommunicationError,
@@ -17,7 +17,12 @@ from xknx.exceptions import (
     ManagementConnectionTimeout,
 )
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import APCI, APCIRequest, APCIResponseT
+from xknx.telegram.apci import (
+    APCI,
+    APCIBroadcastRequest,
+    APCIRequest,
+    APCIResponseT,
+)
 from xknx.telegram.tpci import (
     TAck,
     TConnect,
@@ -125,7 +130,7 @@ class Management:
     @asynccontextmanager
     async def connection(
         self, address: IndividualAddress, rate_limit: int = 20
-    ) -> AsyncIterator[P2PConnection]:
+    ) -> AsyncGenerator[P2PConnection, None]:
         """Provide a point-to-point connection to a KNX device."""
         conn = await self.connect(address, rate_limit)
         try:
@@ -143,8 +148,28 @@ class Management:
             )
         )
 
+    async def request_broadcast(
+        self,
+        payload: APCIBroadcastRequest[APCIResponseT],
+        timeout: float | None = 3,
+    ) -> AsyncGenerator[Telegram[APCIResponseT], None]:
+        """
+        Broadcast a request service and yield the responses to it.
+
+        Holds a `broadcast()` context open for the iteration, so responses sent
+        before the generator is first awaited are not missed. Use `broadcast()`
+        with `send_broadcast()` and `receive()` directly to keep one context
+        across several requests.
+        """
+        async with self.broadcast() as context:
+            await self.send_broadcast(payload)
+            async for telegram in context.receive(
+                payload.RESPONSE_TYPE, timeout=timeout
+            ):
+                yield telegram
+
     @asynccontextmanager
-    async def broadcast(self) -> AsyncIterator[BroadcastContext]:
+    async def broadcast(self) -> AsyncGenerator[BroadcastContext, None]:
         """Provide a broadcast context."""
         context = BroadcastContext()
         self._broadcast_contexts.add(context)
@@ -163,16 +188,43 @@ class BroadcastContext:
         """Initialize BroadcastContext class."""
         self.queue: asyncio.Queue[Telegram] = asyncio.Queue()
 
+    @overload
+    def receive(
+        self,
+        expected: type[APCIResponseT],
+        timeout: float | None = 3,
+    ) -> AsyncGenerator[Telegram[APCIResponseT], None]: ...
+    @overload
+    def receive(
+        self,
+        expected: None = None,
+        timeout: float | None = 3,
+    ) -> AsyncGenerator[Telegram, None]: ...
     async def receive(
         self,
+        expected: Any = None,
         timeout: float | None = 3,
     ) -> AsyncGenerator[Telegram, None]:
-        """Receive telegrams from the broadcast context."""
+        """
+        Receive telegrams from the broadcast context.
+
+        The broadcast channel carries telegrams of every service and from every
+        device. Passing the APCI class to listen for yields only those, already
+        narrowed to it; without it the caller has to sort them out itself.
+        """
         try:
             async with asyncio.timeout(timeout):
                 while True:
                     try:
-                        yield await self.queue.get()
+                        telegram = await self.queue.get()
+                    except GeneratorExit:
+                        return
+                    if expected is not None and not isinstance(
+                        telegram.payload, expected
+                    ):
+                        continue
+                    try:
+                        yield telegram
                     except GeneratorExit:
                         return
         except TimeoutError:

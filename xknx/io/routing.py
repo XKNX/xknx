@@ -7,7 +7,7 @@ Routing uses UDP Multicast to send and receive KNXnet/IP messages.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import logging
 import random
@@ -80,7 +80,7 @@ class _RoutingFlowControl:
             self._timer_task.cancel()
 
     @asynccontextmanager
-    async def throttle(self) -> AsyncIterator[None]:
+    async def throttle(self) -> AsyncGenerator[None, None]:
         """Context manager to wait for ready state and throttle outgoing frames."""
         # limit RoutingIndication transmission rate according to
         # KNX v01.01.02 - Communication Medium KNX IP 03.02.06 - §2.1
