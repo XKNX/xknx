@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Connection
+
+- KNX IP Secure transports discard unencrypted frames instead of passing them to their callbacks. A secure session accepts a plain frame only for the handshake - `SessionRequest` outgoing, `SessionResponse` incoming - and raises `IPSecureError` when anything else is sent before the session is initialized. Secure routing keeps forwarding plain discovery and self description frames (`SearchRequest`, `SearchResponse`, `DescriptionRequest` and `DescriptionResponse`, extended variants included) since these services are never secured and share the multicast endpoint, but now drops every other plain frame - previously only `RoutingIndication` was dropped, so a plain `RoutingBusy` from any sender could still throttle outgoing telegrams. Frames that may not be encapsulated at all - a nested `SecureWrapper` and the Remote Configuration and Diagnosis service family - are discarded when received inside a `SecureWrapper`.
+
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 
 ### Devices

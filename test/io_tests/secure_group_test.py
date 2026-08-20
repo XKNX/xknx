@@ -6,10 +6,21 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
-from xknx.exceptions import IPSecureError
+from xknx.exceptions import IPSecureError, KNXSecureValidationError
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup, SecureSequenceTimer
-from xknx.knxip import HPAI, KNXIPFrame, RoutingIndication, SecureWrapper, TimerNotify
+from xknx.knxip import (
+    HPAI,
+    DescriptionRequest,
+    DescriptionResponse,
+    KNXIPFrame,
+    RoutingBusy,
+    RoutingIndication,
+    RoutingLostMessage,
+    SecureWrapper,
+    SessionRequest,
+    TimerNotify,
+)
 from xknx.telegram import GroupAddress, Telegram, apci
 
 from ..conftest import EventLoopClockAdvancer
@@ -525,7 +536,7 @@ class TestSecureGroup:
         mock_super_send: Mock,
         mock_super_connect: Mock,
     ) -> None:
-        """Test class for KNXnet/IP secure routing."""
+        """Test that only unsecured discovery services are handled unencrypted."""
         frame_received_mock = Mock()
         secure_group = SecureGroup(
             local_addr=self.mock_addr,
@@ -534,18 +545,72 @@ class TestSecureGroup:
             latency_ms=1000,
         )
         secure_group.register_callback(frame_received_mock)
+
+        def receive(raw: bytes) -> bool:
+            """Return True if the plain frame was passed on to the callbacks."""
+            frame_received_mock.reset_mock()
+            secure_group.data_received_callback(raw, ("192.168.1.2", 3671))
+            return frame_received_mock.called
+
+        # the routing service family shall only be received in a SecureWrapper
         plain_routing_indication = bytes.fromhex("0610 0530 0010 2900b06010fa10ff0080")
-        secure_group.data_received_callback(
-            plain_routing_indication, ("192.168.1.2", 3671)
+        assert not receive(plain_routing_indication)
+        assert not receive(KNXIPFrame.init_from_body(RoutingBusy()).to_knx())
+        assert not receive(KNXIPFrame.init_from_body(RoutingLostMessage()).to_knx())
+        # session services belong to unicast connections
+        assert not receive(
+            KNXIPFrame.init_from_body(
+                SessionRequest(ecdh_client_public_key=bytes(32))
+            ).to_knx()
         )
-        frame_received_mock.assert_not_called()
+        # discovery and self description are never secured; the multicast listener
+        # socket receives unicast frames addressed to us on macOS and Windows
         plain_search_response = bytes.fromhex(
             "0610020c006608010a0100280e57360102001000000000082d40834de000170c"
             "000ab3274a3247697261204b4e582f49502d526f757465720000000000000000"
             "000000000e02020203020402050207010901140700dc10f1fffe10f2ffff10f3"
             "ffff10f4ffff"
         )
-        secure_group.data_received_callback(
-            plain_search_response, ("192.168.1.2", 3671)
+        assert receive(plain_search_response)
+        assert receive(
+            KNXIPFrame.init_from_body(
+                DescriptionRequest(control_endpoint=HPAI())
+            ).to_knx()
         )
-        frame_received_mock.assert_called_once()
+        assert receive(KNXIPFrame.init_from_body(DescriptionResponse()).to_knx())
+
+    async def test_nested_secure_wrapper(
+        self,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+    ) -> None:
+        """Test that a SecureWrapper inside a SecureWrapper is discarded."""
+        frame_received_mock = Mock()
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_group.register_callback(frame_received_mock)
+        secure_group.secure_timer.timer_authenticated = True
+
+        raw_test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("1/2/3"),
+                    payload=apci.GroupValueRead(),
+                )
+            ),
+        ).to_knx()
+        inner = secure_group.encrypt_frame(
+            KNXIPFrame.init_from_body(RoutingIndication(raw_cemi=raw_test_cemi))
+        )
+        nested = secure_group.encrypt_frame(inner)
+
+        with pytest.raises(KNXSecureValidationError):
+            secure_group.decrypt_frame(nested)
+        # discarded by handle_knxipframe instead of raising
+        secure_group.data_received_callback(nested.to_knx(), ("192.168.1.2", 3671))
+        frame_received_mock.assert_not_called()
