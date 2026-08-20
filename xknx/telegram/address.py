@@ -20,10 +20,9 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from functools import total_ordering
 from re import compile as re_compile
-from typing import ClassVar, Union
+from typing import ClassVar, Self, Union
 
 from xknx.exceptions import CouldNotParseAddress
-from xknx.typing import Self
 
 GroupAddressableType = Union["GroupAddress", str, int]
 IndividualAddressableType = Union["IndividualAddress", str, int]

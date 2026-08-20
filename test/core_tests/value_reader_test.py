@@ -48,7 +48,7 @@ class TestValueReader:
         xknx = XKNX()
         value_reader = ValueReader(xknx, GroupAddress("0/0/1"))
         value_reader.response_received_event.wait = MagicMock(
-            side_effect=asyncio.TimeoutError()
+            side_effect=TimeoutError()
         )
 
         timed_out_read = await value_reader.read()

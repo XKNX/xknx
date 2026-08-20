@@ -13,7 +13,6 @@ from typing import Any, ClassVar, Generic, TypeVar, get_args
 from xknx.exceptions import CommunicationError, RequestResponseError
 from xknx.io.transport import KNXIPTransport
 from xknx.knxip import HPAI, ErrorCode, KNXIPBody, KNXIPBodyResponse, KNXIPFrame
-from xknx.util import asyncio_timeout
 
 logger = logging.getLogger("xknx.log")
 
@@ -73,9 +72,9 @@ class RequestResponse(Generic[ResponseBodyT]):
         )
         try:
             await self._send_request()
-            async with asyncio_timeout(self.timeout_in_seconds):
+            async with asyncio.timeout(self.timeout_in_seconds):
                 await self._response_received_event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise RequestResponseError(
                 f"KNX bus did not respond in time ({self.timeout_in_seconds} secs) "
                 f"to request of type '{self.__class__.__name__}'"

@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import MISSING, fields as dataclass_fields
-from typing import Any
-
-from xknx.typing import Self
+from typing import Any, Self
 
 from ..dpt import DPTComplexData
 from ..dpt_1 import Step

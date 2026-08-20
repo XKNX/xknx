@@ -42,9 +42,7 @@ class TestConnectResponse:
         """Test RequestResponse: timeout. No callback shall be left."""
         udp_transport = UDPTransport(("192.168.1.1", 0), ("192.168.1.2", 1234))
         requ_resp = _RequestResponse(udp_transport)
-        requ_resp._response_received_event.wait = MagicMock(
-            side_effect=asyncio.TimeoutError()
-        )
+        requ_resp._response_received_event.wait = MagicMock(side_effect=TimeoutError())
         with pytest.raises(RequestResponseError) as exc_info:
             await requ_resp.request()
         assert str(exc_info.value) == (

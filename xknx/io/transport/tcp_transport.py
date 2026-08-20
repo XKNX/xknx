@@ -38,7 +38,7 @@ class TCPTransport(KNXIPTransport):
             self.data_received_callback = data_received_callback
             self.connection_lost_callback = connection_lost_callback
 
-            # Workaround for issue of TCP Transport in ProactorEventLoop in py3.10 and py3.11
+            # Workaround for issue of TCP Transport in ProactorEventLoop in py3.11
             # on Windows returning bytearray instead of bytes which lead to errors in
             # cryptography (eg. X25519PublicKey.from_public_bytes() in IP Secure handshake)
             # https://github.com/python/cpython/issues/99941
