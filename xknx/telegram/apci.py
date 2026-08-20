@@ -459,7 +459,6 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
-@dataclass(slots=True)
 class APCIRequest(APCI, Generic[APCIResponseT]):
     """
     Base class for APCI request services with a KNX-spec-defined response.
@@ -472,6 +471,11 @@ class APCIRequest(APCI, Generic[APCIResponseT]):
     Deriving from `APCI` keeps `APCIRequest[...]` usable wherever an `APCI`
     is expected; listing both as bases would be an MRO error.
     """
+
+    # not @dataclass(slots=True) like the services below: that recreates the
+    # class, leaving the __class__ cell of __init_subclass__ pointing at the
+    # original, so its zero argument super() raises on Python < 3.12
+    __slots__ = ()
 
     RESPONSE_TYPE: ClassVar[type[APCIResponseT]]
 
