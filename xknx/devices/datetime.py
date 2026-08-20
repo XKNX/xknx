@@ -25,7 +25,7 @@ from xknx.typing import Self
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupReadTelegram, GroupValueTelegram
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
@@ -120,11 +120,11 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
         """Set time and send to KNX bus."""
         # self.remote_value.set(value)
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.remote_value.process(telegram)
 
-    def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: GroupReadTelegram) -> None:
         """Process incoming GROUP READ telegram."""
         if self.localtime:
             self.broadcast_localtime(True)

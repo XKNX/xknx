@@ -20,12 +20,7 @@ async def dmp_connect_r_co(conn: P2PConnection) -> int:
     :param conn: an established P2P connection to the device
     :return: Device Descriptor Type 0 value (mask version, 2 bytes)
     """
-    response = await conn.request(
-        payload=apci.DeviceDescriptorRead(descriptor=0),
-        expected=apci.DeviceDescriptorResponse,
-    )
-    # `expected` guarantees this via `P2PConnection._receive`
-    assert isinstance(response.payload, apci.DeviceDescriptorResponse)
+    response = await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
     if response.payload.descriptor != 0:
         raise ManagementConnectionError(
             f"Expected Device Descriptor Type 0, got type {response.payload.descriptor}"

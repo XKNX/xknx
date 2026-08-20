@@ -12,7 +12,7 @@ from xknx.typing import DPTParsable
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupReadTelegram, GroupValueTelegram
     from xknx.xknx import XKNX
 
 
@@ -59,11 +59,11 @@ class Notification(Device):
         cropped_message = message[: self.remote_value.dpt_class.payload_length]
         self.remote_value.set(cropped_message)
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.remote_value.process(telegram)
 
-    def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: GroupReadTelegram) -> None:
         """Process incoming GroupValueResponse telegrams."""
         if (
             self.respond_to_read

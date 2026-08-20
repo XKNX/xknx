@@ -26,14 +26,11 @@ async def nm_individual_address_check_conn(conn: P2PConnection) -> bool:
     :param conn: an established P2P connection to the device
     """
     try:
-        response = await conn.request(
-            payload=apci.DeviceDescriptorRead(descriptor=0),
-            expected=apci.DeviceDescriptorResponse,
-        )
-        if isinstance(response.payload, apci.DeviceDescriptorResponse):
-            logger.debug("Device found at %s", conn.address)
-            return True
-        return False
+        await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+        # DeviceDescriptorRead.RESPONSE_TYPE guarantees a matching response
+        # was received, otherwise P2PConnection.request() would have raised
+        logger.debug("Device found at %s", conn.address)
+        return True
     except ManagementConnectionTimeout as ex:
         logger.debug("No device answered to connection attempt. %s", ex)
         return False

@@ -23,7 +23,8 @@ from xknx.typing import DPTParsable
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupValueTelegram, Telegram
+    from xknx.telegram.apci import GroupValueResponse
     from xknx.xknx import XKNX
 
 
@@ -57,15 +58,15 @@ class Sensor(Device):
         yield self.sensor_value
 
     @property
-    def last_telegram(self) -> Telegram | None:
+    def last_telegram(self) -> GroupValueTelegram | None:
         """Return the last telegram received from the RemoteValue."""
         return self.sensor_value.telegram
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         self.sensor_value.process(telegram, always_callback=self.always_callback)
 
-    def process_group_response(self, telegram: Telegram) -> None:
+    def process_group_response(self, telegram: Telegram[GroupValueResponse]) -> None:
         """Process incoming GroupValueResponse telegrams."""
         self.sensor_value.process(telegram, always_callback=self.always_callback)
 
