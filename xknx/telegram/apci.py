@@ -13,10 +13,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 import struct
-import sys
 from typing import (
+    Any,
     ClassVar,
-    ForwardRef,
     Generic,
     TypeVar,
     cast,
@@ -460,37 +459,6 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
-class _ResponseType(Generic[APCIResponseT]):
-    """
-    Resolve `RESPONSE_TYPE` from the `APCIRequest` type argument on access.
-
-    Resolving lazily lets the type argument be a forward reference, so a request
-    service can keep its place in front of its response - the KNX service code
-    order this module is written in. It is read once per outgoing request, so
-    resolving it on every access is cheaper than caching it would be worth.
-    """
-
-    def __get__(
-        self,
-        obj: APCIRequest[APCIResponseT] | None,
-        owner: type[APCIRequest[APCIResponseT]],
-    ) -> type[APCIResponseT]:
-        """Return the response APCI class of the owning request service."""
-        for base in owner.__dict__.get("__orig_bases__", ()):
-            args = get_args(base)
-            if not args:
-                continue
-            response_type: type[APCIResponseT] = (
-                getattr(sys.modules[owner.__module__], args[0].__forward_arg__)
-                if isinstance(args[0], ForwardRef)
-                else args[0]
-            )
-            return response_type
-        raise AttributeError(
-            f"{owner.__name__} does not parametrize APCIRequest with a response type"
-        )
-
-
 @dataclass(slots=True)
 class APCIRequest(APCI, Generic[APCIResponseT]):
     """
@@ -505,7 +473,17 @@ class APCIRequest(APCI, Generic[APCIResponseT]):
     is expected; listing both as bases would be an MRO error.
     """
 
-    RESPONSE_TYPE: ClassVar[_ResponseType[APCIResponseT]] = _ResponseType()
+    RESPONSE_TYPE: ClassVar[type[APCIResponseT]]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Derive `RESPONSE_TYPE` from the `APCIRequest` type argument."""
+        super().__init_subclass__(**kwargs)
+        for orig_base in cls.__dict__.get("__orig_bases__", ()):
+            # a generic intermediate class parametrizes with its own TypeVar -
+            # only a concrete subclass names the response class itself
+            if (args := get_args(orig_base)) and isinstance(args[0], type):
+                cls.RESPONSE_TYPE = args[0]
+                return
 
 
 @dataclass(slots=True)
