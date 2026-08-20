@@ -64,15 +64,14 @@ class TestSelfDescription:
         description_query = DescriptionQuery(
             transport=transport_mocked, local_hpai=HPAI(*local_addr)
         )
-        task = asyncio.create_task(description_query.start())
+        task = asyncio.create_task(description_query.request_gateway_descriptor())
         await time_travel(0)
         mock_transport_send.assert_called_once_with(description_request)
         transport_mocked.data_received_callback(
             raw=self.description_response_raw, source=remote_addr
         )
-        await task
-        assert description_query.gateway_descriptor is not None
-        assert description_query.gateway_descriptor.name == "KNX IP Router 752 secure"
+        gateway_descriptor = await task
+        assert gateway_descriptor.name == "KNX IP Router 752 secure"
 
     async def test_request_description_v1(
         self,

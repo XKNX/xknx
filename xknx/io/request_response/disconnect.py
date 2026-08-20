@@ -12,8 +12,10 @@ if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
 
 
-class Disconnect(RequestResponse):
+class Disconnect(RequestResponse[DisconnectResponse]):
     """Class to send a DisconnectRequest and wait for a DisconnectResponse."""
+
+    __slots__ = ("communication_channel_id", "local_hpai")
 
     def __init__(
         self,
@@ -22,11 +24,11 @@ class Disconnect(RequestResponse):
         local_hpai: HPAI,
     ) -> None:
         """Initialize Disconnect class."""
-        super().__init__(transport, DisconnectResponse)
+        super().__init__(transport)
         self.communication_channel_id = communication_channel_id
         self.local_hpai = local_hpai
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         disconnect_request = DisconnectRequest(
             communication_channel_id=self.communication_channel_id,

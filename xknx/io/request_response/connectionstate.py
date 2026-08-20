@@ -13,8 +13,10 @@ if TYPE_CHECKING:
     from xknx.io.transport import KNXIPTransport
 
 
-class ConnectionState(RequestResponse):
+class ConnectionState(RequestResponse[ConnectionStateResponse]):
     """Class to send ConnectonStateRequest and wait for ConnectionStateResponse."""
+
+    __slots__ = ("communication_channel_id", "local_hpai")
 
     def __init__(
         self,
@@ -23,15 +25,11 @@ class ConnectionState(RequestResponse):
         local_hpai: HPAI,
     ) -> None:
         """Initialize ConnectionState class."""
-        super().__init__(
-            transport,
-            ConnectionStateResponse,
-            timeout_in_seconds=CONNECTIONSTATE_REQUEST_TIMEOUT,
-        )
+        super().__init__(transport, timeout_in_seconds=CONNECTIONSTATE_REQUEST_TIMEOUT)
         self.communication_channel_id = communication_channel_id
         self.local_hpai = local_hpai
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         connectionstate_request = ConnectionStateRequest(
             communication_channel_id=self.communication_channel_id,

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from xknx.knxip import ErrorCode
 
 
 class XKNXException(Exception):
@@ -42,6 +45,21 @@ class TunnellingAckError(CommunicationError):
 
 class IPSecureError(CommunicationError):
     """Error in IP Secure communication."""
+
+
+class RequestResponseError(CommunicationError):
+    """A KNXnet/IP request was not answered, or answered with an error status."""
+
+    def __init__(
+        self,
+        message: str,
+        error_code: ErrorCode | None = None,
+        should_log: bool = True,
+    ) -> None:
+        """Instantiate exception. `error_code` is None when no response arrived."""
+        super().__init__(message, should_log)
+
+        self.error_code = error_code
 
 
 class CouldNotParseTelegram(XKNXException):

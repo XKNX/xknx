@@ -12,10 +12,12 @@ if TYPE_CHECKING:
     from xknx.io.transport import UDPTransport
 
 
-class Tunnelling(RequestResponse):
+class Tunnelling(RequestResponse[TunnellingAck]):
     """Class to send TunnelingRequest and wait for TunnelingACK (UDP only)."""
 
-    transport: UDPTransport
+    __slots__ = ("data_endpoint_addr", "tunnelling_request")
+
+    _transport: UDPTransport
 
     def __init__(
         self,
@@ -26,12 +28,12 @@ class Tunnelling(RequestResponse):
         """Initialize Tunnelling class."""
         self.data_endpoint_addr = data_endpoint
         self.tunnelling_request = tunnelling_request
-        super().__init__(transport, TunnellingAck)
+        super().__init__(transport)
 
-    async def send_request(self) -> None:
+    async def _send_request(self) -> None:
         """Build knxipframe (within derived class) and send via UDP."""
-        self.transport.send(self.create_knxipframe(), addr=self.data_endpoint_addr)
+        self._transport.send(self._create_knxipframe(), addr=self.data_endpoint_addr)
 
-    def create_knxipframe(self) -> KNXIPFrame:
+    def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(self.tunnelling_request)
