@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+import pytest
+
 from xknx import XKNX
 from xknx.devices import Scene
 from xknx.dpt import DPTArray
@@ -38,6 +40,21 @@ class TestScene:
         )
 
     #
+    # TEST LEARN SCENE
+    #
+    async def test_learn(self) -> None:
+        """Test storing a scene."""
+        xknx = XKNX()
+        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        await scene.learn()
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/1"),
+            payload=GroupValueWrite(DPTArray(0x96)),
+        )
+
+    #
     # TEST has_group_address
     #
     def test_has_group_address(self) -> None:
@@ -47,7 +64,7 @@ class TestScene:
         assert scene.has_group_address(GroupAddress("1/2/1"))
         assert not scene.has_group_address(GroupAddress("2/2/2"))
 
-    async def test_process_callback(self) -> None:
+    async def test_process_callback(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
@@ -76,3 +93,39 @@ class TestScene:
             )
         )
         after_update_callback.assert_not_called()
+
+        assert not scene.learn_requested
+
+        after_update_callback.reset_mock()
+        scene.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x80,))),  # same scene number, learn
+            )
+        )
+        # a request to store the scene calls the callback too - `learn_requested`
+        # tells it apart from an activation
+        after_update_callback.assert_called_with(scene)
+        assert scene.learn_requested
+        assert not caplog.records
+
+        after_update_callback.reset_mock()
+        scene.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x81,))),  # different scene number
+            )
+        )
+        # another scene neither calls the callback nor changes `learn_requested`
+        after_update_callback.assert_not_called()
+        assert scene.learn_requested
+
+        after_update_callback.reset_mock()
+        scene.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray((0x00,))),  # same number, activate
+            )
+        )
+        after_update_callback.assert_called_with(scene)
+        assert not scene.learn_requested

@@ -26,10 +26,15 @@ nav_order: 2
 - Remove device lookup by name or index from `xknx.devices`. `xknx.devices["NameOfDevice"]` and `xknx.devices[0]` are gone - device names are never checked for uniqueness, so the lookup could return any one of several devices sharing a name. Keep a reference to the device object instead, or iterate `xknx.devices` to find it. `device in xknx.devices` takes the `Device` object now instead of its name.
 - `Devices.async_add()` and `Devices.async_remove()` raise `ValueError` when the device object is already registered, or not registered at all. Adding a device twice had it receive every telegram twice and fire its callbacks twice; removing an unregistered one cancelled its tasks and unregistered its state updater before failing.
 - Remove `Device.__eq__()` - same reasoning as `RemoteValue.__eq__()` above: it compared `__dict__` attributes and was a leftover of the YAML config handling removed in 1.0. Devices compare by identity now, which also makes `Device` hashable again, so devices can be used in sets and as dict keys. The same applies to `Light.red`, `.green`, `.blue` and `.white`.
+- `Scene.scene_value` is a `RemoteValueSceneControl` (DPT 18.001) instead of a `RemoteValueSceneNumber` (DPT 17.001), so its value carries the learn bit next to the scene number. Telegrams on the wire are unchanged: DPT 18.001 encodes an activation to the same octet DPT 17.001 does, and decodes one back the same way. The device callback is called for received learn telegrams of the devices `scene_number` now, not only for activations - the new `Scene.learn_requested` tells both apart.
 
 ### Connection
 
 - KNX IP Secure transports discard unencrypted frames instead of passing them to their callbacks. A secure session accepts a plain frame only for the handshake - `SessionRequest` outgoing, `SessionResponse` incoming - and raises `IPSecureError` when anything else is sent before the session is initialized. Secure routing keeps forwarding plain discovery and self description frames (`SearchRequest`, `SearchResponse`, `DescriptionRequest` and `DescriptionResponse`, extended variants included) since these services are never secured and share the multicast endpoint, but now drops every other plain frame - previously only `RoutingIndication` was dropped, so a plain `RoutingBusy` from any sender could still throttle outgoing telegrams. Frames that may not be encapsulated at all - a nested `SecureWrapper` and the Remote Configuration and Diagnosis service family - are discarded when received inside a `SecureWrapper`.
+
+### Devices
+
+- Scene: add `learn()` to send a telegram with the learn bit set, telling actuators to store their current state as this scene. Received learn telegrams are decoded instead of logging a "Can not process" warning, so a Scene can serve as scene actuator: restore its state from the device callback when `learn_requested` is `False`, store it when it is `True`.
 
 ### Internals
 
