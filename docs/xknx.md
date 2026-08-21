@@ -118,6 +118,7 @@ asyncio.run(main())
 To attach a device to XKNX call `xknx.devices.async_add(device)`. Keep your own reference to the device object to interact with it. When an update via KNX GroupValueWrite or GroupValueResponse was received devices will be updated accordingly.
 To remove a device from XKNX call `xknx.devices.async_remove(device)`. This cancels background tasks of that device and disconnects it from receiving new telegrams. Removed devices can be re-added at a later point.
 Adding a device object that is already registered, or removing one that isn't, raises a `ValueError`.
+Devices are indexed by their group addresses when they are added, so a devices group addresses must not be changed while it is registered.
 
 Example:
 
