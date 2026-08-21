@@ -30,9 +30,6 @@ Switches are simple representations of binary actors. They mainly support switch
 switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
 xknx.devices.async_add(switch)
 
-# Accessing switch via xknx.devices
-await xknx.devices["TestOutlet"].set_on()
-
 # Switching switch on
 await switch.set_on()
 # Switching switch off

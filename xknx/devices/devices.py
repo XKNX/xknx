@@ -61,25 +61,31 @@ class Devices:
             if device.has_group_address(group_address):
                 yield device
 
-    def __getitem__(self, key: str | int) -> Device:
-        """Return device by name or by index."""
-        for device in self.__devices:
-            if device.name == key:
-                return device
-        if isinstance(key, int):
-            return self.__devices[key]
-        raise KeyError
-
     def __len__(self) -> int:
         """Return number of devices within vector."""
         return len(self.__devices)
 
-    def __contains__(self, key: str) -> bool:
-        """Return if devices with name 'key' is within devices."""
-        return any(device.name == key for device in self.__devices)
+    def __contains__(self, device: Device) -> bool:
+        """Return if device is registered. Devices are identified by object identity."""
+        return self._index_of(device) is not None
+
+    def _index_of(self, device: Device) -> int | None:
+        """Return the index of a registered device object or None if it is not registered."""
+        # `list.index()` and `list.remove()` compare by equality - `Device.__eq__()`
+        # compares attributes, so two distinct devices of equal state would match
+        return next(
+            (
+                index
+                for index, registered in enumerate(self.__devices)
+                if registered is device
+            ),
+            None,
+        )
 
     def async_add(self, device: Device) -> None:
         """Add device to active XKNX devices."""
+        if device in self:
+            raise ValueError(f"Device is already registered: {device}")
         device.register_device_updated_cb(self.device_updated)
         self.__devices.append(device)
         device.register_state_updater()
@@ -89,10 +95,13 @@ class Devices:
 
     def async_remove(self, device: Device) -> None:
         """Remove device from XKNX devices."""
+        index = self._index_of(device)
+        if index is None:
+            raise ValueError(f"Device is not registered: {device}")
         device.async_remove_tasks()
         device.unregister_state_updater()
         device.unregister_device_updated_cb(self.device_updated)
-        self.__devices.remove(device)
+        del self.__devices[index]
 
     def device_updated(self, device: Device) -> None:
         """Call all registered device updated callbacks of device."""

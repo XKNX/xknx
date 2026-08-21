@@ -7,15 +7,22 @@ from xknx.devices import Switch
 
 
 async def main() -> None:
-    """Add test Switch to devices storage and access it by name."""
+    """Add test Switch to devices storage and use it."""
     xknx = XKNX()
     await xknx.start()
     switch = Switch(xknx, name="TestOutlet", group_address="1/1/11")
     xknx.devices.async_add(switch)
 
-    await xknx.devices["TestOutlet"].set_on()
+    # devices registered in the storage receive telegrams from the bus
+    assert switch in xknx.devices
+    for device in xknx.devices:
+        print(device)
+
+    await switch.set_on()
     await asyncio.sleep(2)
-    await xknx.devices["TestOutlet"].set_off()
+    await switch.set_off()
+
+    xknx.devices.async_remove(switch)
     await xknx.stop()
 
 

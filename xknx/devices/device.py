@@ -137,4 +137,6 @@ class Device(ABC):
 
     def __eq__(self, other: object) -> bool:
         """Compare for quality."""
+        if not isinstance(other, Device):
+            return NotImplemented
         return self.__dict__ == other.__dict__

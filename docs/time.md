@@ -18,7 +18,7 @@ time_device = TimeDevice(xknx, "TimeTest", group_address="1/2/3", localtime=True
 xknx.devices.async_add(time_device)
 
 # `sync()` doesn't send a GroupValueRead when localtime is True but sends the current time to KNX bus
-await xknx.devices["TimeTest"].sync()
+await time_device.sync()
 ```
 
 * `xknx` is the XKNX object.
