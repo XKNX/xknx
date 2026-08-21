@@ -17,16 +17,19 @@ from .remote_value import RemoteValue
 class RemoteValueTime(RemoteValue[KNXTime]):
     """Abstraction for remote value of KNX 3 octet time."""
 
+    __slots__ = ()
     dpt_class = DPTTime
 
 
 class RemoteValueDate(RemoteValue[KNXDate]):
     """Abstraction for remote value of KNX 3 octet date."""
 
+    __slots__ = ()
     dpt_class = DPTDate
 
 
 class RemoteValueDateTime(RemoteValue[KNXDateTime]):
     """Abstraction for remote value of KNX 8 octet datetime."""
 
+    __slots__ = ()
     dpt_class = DPTDateTime

@@ -14,4 +14,5 @@ from .remote_value import RemoteValue
 class RemoteValueColorRGB(RemoteValue[RGBColor]):
     """Abstraction for remote value of KNX DPT 232.600 (DPT_Color_RGB)."""
 
+    __slots__ = ()
     dpt_class = DPTColorRGB

@@ -24,6 +24,8 @@ ValueT = TypeVar("ValueT")
 class _RemoteValueGeneric(RemoteValue[ValueT]):
     """Abstraction for generic DPT types."""
 
+    __slots__ = ("dpt_class",)
+
     dpt_base_class: type[DPTBase]
     _default_dpt_class: type[DPTBase] | None = None
     dpt_class: type[DPTBase]
@@ -77,6 +79,7 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
 class RemoteValueSensor(_RemoteValueGeneric[int | float | str]):
     """Abstraction for sensor DPT types."""
 
+    __slots__ = ()
     dpt_base_class = DPTBase
     dpt_class: type[DPTBase]
 
@@ -84,6 +87,7 @@ class RemoteValueSensor(_RemoteValueGeneric[int | float | str]):
 class RemoteValueNumeric(_RemoteValueGeneric[int | float]):
     """Abstraction for numeric DPT types."""
 
+    __slots__ = ()
     dpt_base_class = DPTNumeric
     dpt_class: type[DPTNumeric]
 
@@ -91,6 +95,7 @@ class RemoteValueNumeric(_RemoteValueGeneric[int | float]):
 class RemoteValueString(_RemoteValueGeneric[str]):
     """Abstraction for string DPT types."""
 
+    __slots__ = ()
     dpt_base_class = DPTString
     dpt_class: type[DPTString]
     _default_dpt_class = DPTString

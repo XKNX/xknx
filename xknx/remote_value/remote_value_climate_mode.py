@@ -42,6 +42,8 @@ HVACModeT = TypeVar(
 class RemoteValueClimateModeBase(RemoteValue[HVACModeT]):
     """Base class for binary climate mode remote values."""
 
+    __slots__ = ()
+
     @abstractmethod
     def supported_operation_modes(self) -> list[HVACOperationMode]:
         """Return a list of all supported operation modes."""
@@ -62,6 +64,7 @@ class RemoteValueClimateModeBase(RemoteValue[HVACModeT]):
 class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
     """Abstraction for remote value of KNX climate operation modes."""
 
+    __slots__ = ()
     dpt_class = DPTHVACMode
 
     def __init__(
@@ -107,6 +110,7 @@ class RemoteValueOperationMode(RemoteValueClimateModeBase[HVACOperationMode]):
 class RemoteValueControllerMode(RemoteValueClimateModeBase[HVACControllerMode]):
     """Abstraction for remote value of KNX climate controller modes."""
 
+    __slots__ = ()
     dpt_class = DPTHVACContrMode
 
     def __init__(
@@ -152,6 +156,7 @@ class RemoteValueControllerMode(RemoteValueClimateModeBase[HVACControllerMode]):
 class RemoteValueHVACStatus(RemoteValueClimateModeBase[HVACStatus]):
     """Abstraction for remote value of KNX climate HVAC status (Eberle status)."""
 
+    __slots__ = ()
     dpt_class = DPTHVACStatus
 
     def __init__(
@@ -232,6 +237,8 @@ class RemoteValueBinaryOperationMode(
 ):
     """Abstraction for remote value of split up KNX climate modes."""
 
+    __slots__ = ("operation_mode",)
+
     def __init__(
         self,
         xknx: XKNX,
@@ -311,6 +318,8 @@ class RemoteValueBinaryOperationMode(
 
 class RemoteValueBinaryHeatCool(RemoteValueClimateModeBase[HVACControllerMode]):
     """Abstraction for remote value of heat/cool controller mode."""
+
+    __slots__ = ("controller_mode",)
 
     def __init__(
         self,

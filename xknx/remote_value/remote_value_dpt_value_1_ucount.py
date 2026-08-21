@@ -14,4 +14,5 @@ from .remote_value import RemoteValue
 class RemoteValueDptValue1Ucount(RemoteValue[int]):
     """Abstraction for remote value of KNX DPT 5.010."""
 
+    __slots__ = ()
     dpt_class = DPTValue1Ucount

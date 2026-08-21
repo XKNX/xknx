@@ -14,4 +14,5 @@ from .remote_value import RemoteValue
 class RemoteValueTemp(RemoteValue[float]):
     """Abstraction for remote value of KNX 9.001 (DPT_Value_Temp)."""
 
+    __slots__ = ()
     dpt_class = DPTTemperature

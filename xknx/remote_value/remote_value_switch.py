@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 class RemoteValueSwitch(RemoteValue[bool]):
     """Abstraction for remote value of KNX DPT 1.001 / DPT_Switch."""
 
+    __slots__ = ("invert",)
+
     def __init__(
         self,
         xknx: XKNX,

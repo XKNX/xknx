@@ -90,8 +90,9 @@ class TestStringRepresentations:
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" <1/2/3, 1/2/4, [], None /> />'
         )
 
-        remote_value.to_knx = lambda value: value  # to bypass NotImplementedError
-        remote_value.value = 34
+        # patch the class to bypass NotImplementedError - RemoteValue is slotted
+        with patch.object(RemoteValue, "to_knx", lambda self, value: value):
+            remote_value.value = 34
         assert (
             str(remote_value)
             == '<RemoteValue device_name="MyDevice" feature_name="Unknown" '

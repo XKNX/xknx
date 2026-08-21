@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 class RemoteValueByLength(RemoteValue[float]):
     """RemoteValue with DPT detection based on payload length of first received value."""
 
+    __slots__ = ("_dpt_classes", "_internal_dpt_class")
+
     def __init__(
         self,
         xknx: XKNX,

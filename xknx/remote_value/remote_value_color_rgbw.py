@@ -19,6 +19,8 @@ if TYPE_CHECKING:
 class RemoteValueColorRGBW(RemoteValue[RGBWColor]):
     """Abstraction for remote value of KNX DPT 251.600 (DPT_Color_RGBW)."""
 
+    __slots__ = ("_valid_value",)
+
     def __init__(
         self,
         xknx: XKNX,

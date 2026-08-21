@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 class RemoteValueScaling(RemoteValue[int]):
     """Abstraction for remote value of KNX DPT 5.001 (DPT_Scaling)."""
 
+    __slots__ = ("range_from", "range_to")
+
     def __init__(
         self,
         xknx: XKNX,

@@ -41,6 +41,20 @@ RVCallbackType = Callable[[ValueT], None]
 class RemoteValue(ABC, Generic[ValueT]):
     """Class for managing remote knx value."""
 
+    __slots__ = (
+        "_payload",
+        "_sync_state",
+        "_value",
+        "after_update_cb",
+        "device_name",
+        "feature_name",
+        "group_address",
+        "group_address_state",
+        "passive_group_addresses",
+        "telegram",
+        "xknx",
+    )
+
     dpt_class: type[DPTBase] | None = None
 
     def __init__(
@@ -306,19 +320,3 @@ class RemoteValue(ABC, Generic[ValueT]):
             f'feature_name="{self.feature_name}" '
             f"{self.group_addr_str()} />"
         )
-
-    def __eq__(self, other: object) -> bool:
-        """Equal operator."""
-        for key, value in self.__dict__.items():
-            if key == "after_update_cb":
-                continue
-            if key not in other.__dict__:
-                return False
-            if other.__dict__[key] != value:
-                return False
-        for key in other.__dict__:
-            if key == "after_update_cb":
-                continue
-            if key not in self.__dict__:
-                return False
-        return True
