@@ -2,10 +2,13 @@
 
 from unittest.mock import AsyncMock, Mock, call
 
+import pytest
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -14,6 +17,16 @@ from ..conftest import EventLoopClockAdvancer
 
 class TestExposeSensor:
     """Test class for Sensor objects."""
+
+    def test_value_type_required(self) -> None:
+        """Test that value_type is a required argument."""
+        xknx = XKNX()
+        with pytest.raises(TypeError):
+            ExposeSensor(xknx, "TestSensor")  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
+        with pytest.raises(ConversionError):
+            ExposeSensor(xknx, "TestSensor", value_type=None)  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            ExposeSensor(xknx, "TestSensor", value_type="no_dpt")
 
     #
     # STR FUNCTIONS

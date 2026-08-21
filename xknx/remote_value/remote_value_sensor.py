@@ -25,28 +25,22 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
     """Abstraction for generic DPT types."""
 
     dpt_base_class: type[DPTBase]
-    _default_dpt_class: type[DPTBase] | None = None
     dpt_class: type[DPTBase]
 
     def __init__(
         self,
         xknx: XKNX,
+        value_type: DPTParsable | type[DPTBase],
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
-        value_type: DPTParsable | type[DPTBase] | None = None,
         device_name: str | None = None,
         feature_name: str = "Value",
         after_update_cb: RVCallbackType[ValueT] | None = None,
     ) -> None:
         """Initialize RemoteValueSensor class."""
         try:
-            if value_type is None:
-                if self._default_dpt_class is None:
-                    raise ValueError
-                self.dpt_class = self._default_dpt_class
-            else:
-                self.dpt_class = self.dpt_base_class.get_dpt(value_type)
+            self.dpt_class = self.dpt_base_class.get_dpt(value_type)
         except ValueError:
             raise ConversionError(
                 f"invalid value type for base class {self.dpt_base_class.dpt_name()}",
@@ -93,4 +87,3 @@ class RemoteValueString(_RemoteValueGeneric[str]):
 
     dpt_base_class = DPTString
     dpt_class: type[DPTString]
-    _default_dpt_class = DPTString

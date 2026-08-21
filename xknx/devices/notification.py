@@ -27,7 +27,7 @@ class Notification(Device):
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
-        value_type: DPTParsable | type[DPTString] | None = None,
+        value_type: DPTParsable | type[DPTString] = "string",
         device_updated_cb: DeviceCallbackType[Notification] | None = None,
     ) -> None:
         """Initialize notification class."""
@@ -36,10 +36,10 @@ class Notification(Device):
         self.respond_to_read = respond_to_read
         self.remote_value = RemoteValueString(
             xknx,
+            value_type=value_type,
             group_address=group_address,
             group_address_state=group_address_state,
             sync_state=sync_state,
-            value_type=value_type,
             device_name=name,
             feature_name="Text",
             after_update_cb=self.after_update,
