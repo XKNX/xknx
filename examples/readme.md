@@ -27,7 +27,7 @@
 |[Switch light](./example_light_switch.py)|Example for switching a light on and off|
 |[Sensor](./example_sensor.py)|Example for Sensor device|
 |[Switch](./example_switch.py)|Example for Switch device|
-|[Scene](./example_scene.py)|Example for calling a scene|
+|[Scene](./example_scene.py)|Example for calling a scene and reacting to scenes called or learned on the bus|
 |[Weather](./example_weather.py)|Example for reading a Weather devices data|
 
 ## Low-level
