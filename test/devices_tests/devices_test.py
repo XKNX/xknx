@@ -120,19 +120,22 @@ class TestDevices:
         assert list(xknx.devices) == [light]
         assert light.device_updated_cbs == [xknx.devices.device_updated]
 
-    def test_remove_equal_devices(self) -> None:
-        """Test removing one of two registered devices of equal state."""
+    def test_devices_compare_by_identity(self) -> None:
+        """Test that devices of identical configuration are distinct objects."""
         xknx = XKNX()
         sensor1 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
         sensor2 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
+        assert sensor1 != sensor2
+        assert len({sensor1, sensor2}) == 2  # hashable by identity
+
+        # both can be registered and removed independently
         xknx.devices.async_add(sensor1)
         xknx.devices.async_add(sensor2)
-        assert sensor1 == sensor2  # equal state, but distinct objects
+        assert sensor2 in xknx.devices
 
         xknx.devices.async_remove(sensor2)
-        remaining = list(xknx.devices)
-        assert len(remaining) == 1
-        assert remaining[0] is sensor1
+        assert list(xknx.devices) == [sensor1]
+        assert sensor2 not in xknx.devices
 
     @patch.multiple(Device, __abstractmethods__=set())
     def test_add_remove(self) -> None:

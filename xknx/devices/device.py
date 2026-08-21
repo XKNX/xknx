@@ -134,9 +134,3 @@ class Device(ABC):
             group_address in remote_value.group_addresses()
             for remote_value in self._iter_remote_values()
         )
-
-    def __eq__(self, other: object) -> bool:
-        """Compare for quality."""
-        if not isinstance(other, Device):
-            return NotImplemented
-        return self.__dict__ == other.__dict__

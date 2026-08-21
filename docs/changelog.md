@@ -24,7 +24,8 @@ nav_order: 2
   rv_1.my_own_attribute = 1  # before: works; now: AttributeError
   ```
 - Remove device lookup by name or index from `xknx.devices`. `xknx.devices["NameOfDevice"]` and `xknx.devices[0]` are gone - device names are never checked for uniqueness, so the lookup could return any one of several devices sharing a name. Keep a reference to the device object instead, or iterate `xknx.devices` to find it. `device in xknx.devices` takes the `Device` object now instead of its name.
-- `Devices.async_add()` and `Devices.async_remove()` raise `ValueError` when the device object is already registered, or not registered at all. Adding a device twice had it receive every telegram twice and fire its callbacks twice; removing an unregistered one cancelled its tasks and unregistered its state updater before failing. Registered devices are identified by object identity now - `Device.__eq__()` compares attributes, so two distinct devices of equal state no longer shadow each other in `device in xknx.devices` or `async_remove()`.
+- `Devices.async_add()` and `Devices.async_remove()` raise `ValueError` when the device object is already registered, or not registered at all. Adding a device twice had it receive every telegram twice and fire its callbacks twice; removing an unregistered one cancelled its tasks and unregistered its state updater before failing.
+- Remove `Device.__eq__()` - same reasoning as `RemoteValue.__eq__()` above: it compared `__dict__` attributes and was a leftover of the YAML config handling removed in 1.0. Devices compare by identity now, which also makes `Device` hashable again, so devices can be used in sets and as dict keys. The same applies to `Light.red`, `.green`, `.blue` and `.white`.
 
 ### Connection
 
@@ -38,10 +39,6 @@ nav_order: 2
 - `DescriptionQuery` and `SearchExtendedQuery` derive from `RequestResponse` now. Their `start()` and `gateway_descriptor` attribute are replaced by `request_gateway_descriptor()`.
 - `Telegram` is now generic over its `payload` type (`Telegram[GroupValueWrite]`, etc.), defaulting to `Telegram` behaving exactly as before when left unparametrized - `payload` is `None` only for that default/unparametrized case (control telegrams like ACK/Disconnect); parametrized as `Telegram[SomeAPCI]`, `payload` is `SomeAPCI`, never `None`. `Device.process()` now hands `process_group_write()`/`process_group_response()`/`process_group_read()` a `Telegram` narrowed to the APCI type it already verified via `isinstance`, propagated through `RemoteValue.process()` and every device's `process_group_*` override. No behavior change - `RemoteValue.process()` keeps its own `isinstance` check since, unlike the management case below, nothing enforces the payload type before it's called directly.
 - Add `APCIRequest` to `xknx.telegram.apci` - an `APCI` subclass carrying the KNX-spec-defined response type of a request service as its type argument, eg. `class MemoryRead(APCIRequest[MemoryResponse])`. `RESPONSE_TYPE` is derived from that argument. All 21 point-to-point request services with a spec-defined response were converted; group and broadcast services (`GroupValueRead`, `IndividualAddressRead`, `DomainAddressRead`, ...) stay plain `APCI` since they are never sent via `P2PConnection.request()`. `request()` no longer takes an `expected=` argument - it infers and verifies the expected response from the payload's type and returns the correspondingly typed `Telegram[ResponseType]`, so procedures no longer need `assert isinstance(response.payload, ResponseType)` (or even a `None` check) to get a typed `.payload`.
-
-### Bugfixes
-
-- `Device.__eq__()` returns `NotImplemented` for non-`Device` operands instead of raising `AttributeError`, so comparing a device to any other object evaluates to `False` now.
 
 # 3.20.0 DeviceManagement and Expose init 2026-08-16
 

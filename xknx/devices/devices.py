@@ -66,21 +66,8 @@ class Devices:
         return len(self.__devices)
 
     def __contains__(self, device: Device) -> bool:
-        """Return if device is registered. Devices are identified by object identity."""
-        return self._index_of(device) is not None
-
-    def _index_of(self, device: Device) -> int | None:
-        """Return the index of a registered device object or None if it is not registered."""
-        # `list.index()` and `list.remove()` compare by equality - `Device.__eq__()`
-        # compares attributes, so two distinct devices of equal state would match
-        return next(
-            (
-                index
-                for index, registered in enumerate(self.__devices)
-                if registered is device
-            ),
-            None,
-        )
+        """Return if device is registered."""
+        return device in self.__devices
 
     def async_add(self, device: Device) -> None:
         """Add device to active XKNX devices."""
@@ -95,13 +82,12 @@ class Devices:
 
     def async_remove(self, device: Device) -> None:
         """Remove device from XKNX devices."""
-        index = self._index_of(device)
-        if index is None:
+        if device not in self:
             raise ValueError(f"Device is not registered: {device}")
         device.async_remove_tasks()
         device.unregister_state_updater()
         device.unregister_device_updated_cb(self.device_updated)
-        del self.__devices[index]
+        self.__devices.remove(device)
 
     def device_updated(self, device: Device) -> None:
         """Call all registered device updated callbacks of device."""
