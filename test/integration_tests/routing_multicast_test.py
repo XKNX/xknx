@@ -11,7 +11,6 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 from xknx.telegram.apci import GroupValueWrite
 from xknx.telegram.telegram import TelegramDirection
 from xknx.telegram.tpci import TDataGroup
-from xknx.util import asyncio_timeout
 
 # RFC 4727 multicast group for testing purposes
 # to not mess with live installations when running tests
@@ -54,7 +53,7 @@ async def test_routing_indication_multicast() -> None:
         ),
     ):
         await xknx1.telegrams.put(msg)
-        async with asyncio_timeout(1):
+        async with asyncio.timeout(1):
             await data_received.wait()
 
         msg.direction = TelegramDirection.INCOMING

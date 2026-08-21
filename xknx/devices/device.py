@@ -9,13 +9,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupReadTelegram, GroupValueTelegram, Telegram
 from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
-from xknx.typing import DeviceCallbackType, Self
+from xknx.typing import DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX

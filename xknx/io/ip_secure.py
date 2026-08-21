@@ -39,7 +39,6 @@ from xknx.secure.security_primitives import (
     generate_ecdh_key_pair,
 )
 from xknx.secure.util import bytes_xor, sha256_hash
-from xknx.util import asyncio_timeout
 
 from .const import SESSION_KEEPALIVE_RATE, XKNX_SERIAL_NUMBER
 from .request_response import Authenticate, Session
@@ -758,13 +757,13 @@ class SecureSequenceTimer:
         self._expected_notify_handler = message_tag, waiter_fut
         self.send_timer_notify(message_tag=message_tag)
         try:
-            async with asyncio_timeout(  # 3.3 seconds at latency_ms=1000, SYNC_LATENCY_FRACTION=10%
+            async with asyncio.timeout(  # 3.3 seconds at latency_ms=1000, SYNC_LATENCY_FRACTION=10%
                 self.max_delay_time_follower_update_notify
                 + 2 * self.latency_tolerance_ms / 1000
             ):
                 timer_value = await waiter_fut
             self.update(new_value=timer_value)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # use highest received timer value of TimerNotify or SecureWrapper frames
             ip_secure_logger.warning(
                 "Timer synchronization not answered. Becoming time keeper."

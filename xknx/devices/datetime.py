@@ -7,7 +7,7 @@ from collections.abc import Iterator
 import datetime
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar
 
 from xknx.core import Task
 from xknx.dpt.dpt_10 import KNXDay, KNXTime
@@ -20,7 +20,6 @@ from xknx.remote_value import (
     RemoteValueDateTime,
     RemoteValueTime,
 )
-from xknx.typing import Self
 
 from .device import Device, DeviceCallbackType
 

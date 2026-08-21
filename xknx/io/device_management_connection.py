@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable
 import logging
+from typing import Self
 
 from xknx.cemi import (
     CEMIErrorCode,
@@ -36,8 +37,6 @@ from xknx.knxip import (
 )
 from xknx.knxip.knxip_enum import ConnectRequestType
 from xknx.profile.const import ResourceObjectType, ResourcePropertyId
-from xknx.typing import Self
-from xknx.util import asyncio_timeout
 
 from .const import (
     DEVICE_CONFIGURATION_REQUEST_REPETITIONS,
@@ -334,7 +333,7 @@ class _DeviceManagementConnection(ABC):
                 await self._send_request(cemi)
                 # The spec defines this timeout for the acknowledgement only;
                 # reusing it as the answer deadline is merely a sensible choice.
-                async with asyncio_timeout(DEVICE_CONFIGURATION_REQUEST_TIMEOUT):
+                async with asyncio.timeout(DEVICE_CONFIGURATION_REQUEST_TIMEOUT):
                     while True:
                         answer = await pending
                         if matches is None or matches(answer):
@@ -345,7 +344,7 @@ class _DeviceManagementConnection(ABC):
                         )
                         pending = asyncio.get_running_loop().create_future()
                         self._pending = pending
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise CommunicationError(
                     f"No answer to {cemi.code} within "
                     f"{DEVICE_CONFIGURATION_REQUEST_TIMEOUT} seconds."

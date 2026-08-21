@@ -22,7 +22,7 @@ from xknx.knxip import (
 )
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 
-from ..conftest import EventLoopClockAdvancer, skip_3_10
+from ..conftest import EventLoopClockAdvancer
 
 
 class TestSecureSession:
@@ -74,7 +74,6 @@ class TestSecureSession:
         self.patch_serial_number.stop()
         self.patch_message_tag.stop()
 
-    @skip_3_10
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     @patch(

@@ -26,7 +26,6 @@ from xknx.telegram.tpci import (
     TDisconnect,
     TNak,
 )
-from xknx.util import asyncio_timeout
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -166,17 +165,17 @@ class BroadcastContext:
 
     async def receive(
         self,
-        timeout: float | None = 3,
+        timeout: float | None = 3,  # noqa: ASYNC109 - part of the public API
     ) -> AsyncGenerator[Telegram, None]:
         """Receive telegrams from the broadcast context."""
         try:
-            async with asyncio_timeout(timeout):
+            async with asyncio.timeout(timeout):
                 while True:
                     try:
                         yield await self.queue.get()
                     except GeneratorExit:
                         return
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return
 
 
@@ -338,9 +337,9 @@ class P2PConnection:
         self._ack_waiter = asyncio.get_event_loop().create_future()
         try:
             await self.xknx.cemi_handler.send_telegram(telegram)
-            async with asyncio_timeout(MANAGAMENT_ACK_TIMEOUT):
+            async with asyncio.timeout(MANAGAMENT_ACK_TIMEOUT):
                 ack = await self._ack_waiter
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.info(
                 "%s: timeout while waiting for ACK. Resending Telegram.", self.address
             )
@@ -349,9 +348,9 @@ class P2PConnection:
             self._ack_waiter = asyncio.get_event_loop().create_future()
             await self.xknx.cemi_handler.send_telegram(telegram)
             try:
-                async with asyncio_timeout(MANAGAMENT_ACK_TIMEOUT):
+                async with asyncio.timeout(MANAGAMENT_ACK_TIMEOUT):
                     ack = await self._ack_waiter
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise ManagementConnectionTimeout(
                     "No ACK received for repeated telegram."
                 ) from None
@@ -376,9 +375,9 @@ class P2PConnection:
     async def _receive(self, expected_payload: type[APCI] | None) -> Telegram:
         """Wait for a telegram from the KNX device."""
         try:
-            async with asyncio_timeout(MANAGAMENT_CONNECTION_TIMEOUT):
+            async with asyncio.timeout(MANAGAMENT_CONNECTION_TIMEOUT):
                 telegram = await self._response_waiter
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise ManagementConnectionTimeout(
                 f"Timeout while waiting for {expected_payload}"
             ) from None

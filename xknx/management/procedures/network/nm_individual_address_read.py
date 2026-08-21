@@ -17,7 +17,7 @@ logger = logging.getLogger("xknx.management.procedures")
 
 async def nm_individual_address_read(
     xknx: XKNX,
-    timeout: float | None = 3,
+    timeout: float | None = 3,  # noqa: ASYNC109 - part of the public API
     raise_if_multiple: bool = False,
 ) -> list[IndividualAddress]:
     """

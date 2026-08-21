@@ -23,7 +23,6 @@ from xknx.exceptions import (
 from xknx.secure.data_secure import DataSecure, is_data_secure
 from xknx.secure.keyring import Keyring
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
-from xknx.util import asyncio_timeout
 
 from .cemi_frame import CEMIFrame, CEMILData
 from .const import CEMIMessageCode
@@ -85,9 +84,9 @@ class CEMIHandler:
             raise ex
 
         try:
-            async with asyncio_timeout(REQUEST_TO_CONFIRMATION_TIMEOUT):
+            async with asyncio.timeout(REQUEST_TO_CONFIRMATION_TIMEOUT):
                 await self._l_data_confirmation_event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.xknx.connection_manager.cemi_count_outgoing_error += 1
             raise ConfirmationError(
                 f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
