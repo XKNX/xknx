@@ -12,18 +12,6 @@ nav_order: 2
 
 - Drop support for Python 3.10. XKNX requires Python 3.11 or newer now.
 - Remove `xknx.util`. Its only member was `asyncio_timeout` - a backport of `asyncio.timeout` for Python versions not providing it - so use `asyncio.timeout` directly.
-- `CEMILData.flags` is now a `CEMIFlags` object instead of a 16 bit `int`. `CEMIFlags` was previously a collection of bit constants; it is now a slotted dataclass holding the control field values that are independent state:
-  - `priority: CEMIPriority` - new `SYSTEM` / `NORMAL` / `URGENT` / `LOW` enum
-  - `repeat_on_error: bool`, `system_broadcast: bool` - named for the positive meaning; both are inverted on the wire
-  - `acknowledge_request: bool`
-  - `confirm_error: bool` - only meaningful in an L_Data.con frame
-  - `hop_count: int` - replaces the `CEMILData.hops` property, which was removed
-  - `frame_type: CEMIFrameType` - informational; holds what was received and is ignored when serializing
-  - `frame_format: CEMIFrameFormat` - the Extended Frame Format, serialized as held; `STANDARD` for every frame xknx supports
-  The Frame Type of an outgoing frame is derived from its NPDU length and the Address Type from the type of the destination address (`CEMILData.address_type`), so neither can disagree with the frame that is put on the wire. `CEMIFrameType` and the new `CEMIAddressType` place their own bit via `to_knx()` / `from_knx()`; `CEMILData` composes the control field as `flags.to_knx() | frame_type.to_knx() | address_type.to_knx()`. Ctrl1 and Ctrl2 are handled as one 16 bit int, so `CEMIFlags.to_knx()` returns an `int` and `CEMIFlags.from_knx()` takes one. The remaining bit masks moved to `xknx.cemi.flags` as module level constants.
-- `CEMIFlags` has a compact `__str__` used in `CEMILData.__repr__` - eg. `LOW STANDARD hop_count=6`, listing only the boolean flags that are set. The full dataclass `__repr__` shows every field.
-- `CEMILData(flags=...)` is optional now and defaults to `CEMIFlags()` - low priority, hop count 6, no acknowledge request.
-- `xknx.secure.data_secure_asdu.block_0()`, `SecureData.init_from_plain_apdu()` and `SecureData.get_plain_apdu()` take `address_type: CEMIAddressType` and `frame_format: CEMIFrameFormat` instead of `frame_flags: int`. Only those two fields of Ctrl2 ever reached the CCM input, so the B0 flags octet is `address_type.to_knx() | frame_format` and `B0_AT_FIELD_FLAGS_MASK` is gone.
 
 ### Connection
 
@@ -31,6 +19,8 @@ nav_order: 2
 
 ### Internals
 
+- `CEMILData.flags` is a `CEMIFlags` dataclass now instead of a 16 bit `int`, with a field per control field value: `priority` (new `CEMIPriority` enum), `repeat_on_error`, `system_broadcast` (both named for the positive meaning; inverted on the wire), `acknowledge_request`, `confirm_error`, `hop_count` - which replaces the removed `CEMILData.hops` property - and the received `frame_type` / `frame_format`. Frame Type and Address Type are derived when serializing, from the NPDU length and from the type of the destination address (`CEMILData.address_type`), so `flags` can no longer disagree with the frame that is put on the wire. `CEMILData(flags=...)` is optional now. The bit constants moved from `CEMIFlags` to `xknx.cemi.flags`.
+- `xknx.secure.data_secure_asdu.block_0()`, `SecureData.init_from_plain_apdu()` and `SecureData.get_plain_apdu()` take `address_type: CEMIAddressType` and `frame_format: CEMIFrameFormat` instead of `frame_flags: int`. Only those two fields of Ctrl2 ever reached the CCM input; the value on the wire and the one fed to the MAC now come from the same place.
 - `RequestResponse` is now generic over the response body it awaits, eg. `class Connect(RequestResponse[ConnectResponse])`. `start()` gives way to `request()`, which returns that response instead of leaving it on the instance, and raises the new `RequestResponseError` when none arrived or the server answered with an error status.
 - `DescriptionQuery` and `SearchExtendedQuery` derive from `RequestResponse` now. Their `start()` and `gateway_descriptor` attribute are replaced by `request_gateway_descriptor()`.
 - `Telegram` is now generic over its `payload` type (`Telegram[GroupValueWrite]`, etc.), defaulting to `Telegram` behaving exactly as before when left unparametrized - `payload` is `None` only for that default/unparametrized case (control telegrams like ACK/Disconnect); parametrized as `Telegram[SomeAPCI]`, `payload` is `SomeAPCI`, never `None`. `Device.process()` now hands `process_group_write()`/`process_group_response()`/`process_group_read()` a `Telegram` narrowed to the APCI type it already verified via `isinstance`, propagated through `RemoteValue.process()` and every device's `process_group_*` override. No behavior change - `RemoteValue.process()` keeps its own `isinstance` check since, unlike the management case below, nothing enforces the payload type before it's called directly.
