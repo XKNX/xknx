@@ -144,7 +144,7 @@ lint.ignore = [
   "D212",
   "E501",     # line too long
   "SIM102",   # collapsible-if
-  "SIM105",   #suppressible-exception
+  "SIM105",   # suppressible-exception
 ]
 extend-exclude = ["script"]
 
