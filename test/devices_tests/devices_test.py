@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.devices import BinarySensor, Device, Light, Switch
+from xknx.devices import BinarySensor, Device, Light
 from xknx.telegram import GroupAddress
 
 
@@ -15,34 +15,6 @@ class TestDevices:
     #
     # XKNX Config
     #
-    def test_get_item(self) -> None:
-        """Test get item by name or by index."""
-        xknx = XKNX()
-        light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
-        xknx.devices.async_add(light1)
-        switch1 = Switch(xknx, "TestOutlet_1", group_address="1/2/3")
-        xknx.devices.async_add(switch1)
-        light2 = Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
-        xknx.devices.async_add(light2)
-        switch2 = Switch(xknx, "TestOutlet_2", group_address="1/2/4")
-        xknx.devices.async_add(switch2)
-
-        assert xknx.devices["Living-Room.Light_1"] == light1
-        assert xknx.devices["TestOutlet_1"] == switch1
-        assert xknx.devices["Living-Room.Light_2"] == light2
-        assert xknx.devices["TestOutlet_2"] == switch2
-        with pytest.raises(KeyError):
-            # pylint: disable=pointless-statement
-            xknx.devices["TestOutlet_2sdds"]
-
-        assert xknx.devices[0] == light1
-        assert xknx.devices[1] == switch1
-        assert xknx.devices[2] == light2
-        assert xknx.devices[3] == switch2
-        with pytest.raises(IndexError):
-            # pylint: disable=pointless-statement
-            xknx.devices[4]
-
     def test_device_by_group_address(self) -> None:
         """Test get devices by group address."""
         xknx = XKNX()
@@ -106,16 +78,64 @@ class TestDevices:
     def test_contains(self) -> None:
         """Test __contains__() function."""
         xknx = XKNX()
+        light1 = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
+        light2 = Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
+        light3 = Light(xknx, "Living-Room.Light_3", group_address_switch="1/6/9")
+        xknx.devices.async_add(light1)
+        xknx.devices.async_add(light2)
+
+        assert light1 in xknx.devices
+        assert light2 in xknx.devices
+        assert light3 not in xknx.devices
+        # devices are not looked up by name
+        assert "Living-Room.Light_1" not in xknx.devices  # type: ignore[operator]
+
+    def test_add_twice(self) -> None:
+        """Test adding the same device twice."""
+        xknx = XKNX()
+        light = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
+        xknx.devices.async_add(light)
+
+        with pytest.raises(ValueError, match="already registered"):
+            xknx.devices.async_add(light)
+        assert len(xknx.devices) == 1
+        assert light.device_updated_cbs == [xknx.devices.device_updated]
+
+        # an equal, but distinct device is not considered registered
         xknx.devices.async_add(
             Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
         )
-        xknx.devices.async_add(
-            Light(xknx, "Living-Room.Light_2", group_address_switch="1/6/8")
-        )
+        assert len(xknx.devices) == 2
 
-        assert "Living-Room.Light_1" in xknx.devices
-        assert "Living-Room.Light_2" in xknx.devices
-        assert "Living-Room.Light_3" not in xknx.devices
+    def test_remove_not_registered(self) -> None:
+        """Test removing a device that is not registered."""
+        xknx = XKNX()
+        light = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
+        other = Light(xknx, "Living-Room.Light_1", group_address_switch="1/6/7")
+        xknx.devices.async_add(light)
+
+        with pytest.raises(ValueError, match="not registered"):
+            xknx.devices.async_remove(other)
+        # the equal, but not registered device didn't affect the registered one
+        assert list(xknx.devices) == [light]
+        assert light.device_updated_cbs == [xknx.devices.device_updated]
+
+    def test_devices_compare_by_identity(self) -> None:
+        """Test that devices of identical configuration are distinct objects."""
+        xknx = XKNX()
+        sensor1 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
+        sensor2 = BinarySensor(xknx, "Diningroom", group_address_state="3/0/1")
+        assert sensor1 != sensor2
+        assert len({sensor1, sensor2}) == 2  # hashable by identity
+
+        # both can be registered and removed independently
+        xknx.devices.async_add(sensor1)
+        xknx.devices.async_add(sensor2)
+        assert sensor2 in xknx.devices
+
+        xknx.devices.async_remove(sensor2)
+        assert list(xknx.devices) == [sensor1]
+        assert sensor2 not in xknx.devices
 
     @patch.multiple(Device, __abstractmethods__=set())
     def test_add_remove(self) -> None:
@@ -128,7 +148,7 @@ class TestDevices:
         assert len(xknx.devices) == 2
         xknx.devices.async_remove(device1)
         assert len(xknx.devices) == 1
-        assert "TestDevice1" not in xknx.devices
+        assert device1 not in xknx.devices
         xknx.devices.async_remove(device2)
         assert len(xknx.devices) == 0
 
@@ -142,7 +162,7 @@ class TestDevices:
             xknx.devices.process(xknx.telegrams.get_nowait())
         assert light1.state
 
-        device2 = xknx.devices["Living-Room.Light_1"]
+        device2 = next(iter(xknx.devices))
         await device2.set_off()
         xknx.devices.process(xknx.telegrams.get_nowait())
         assert not light1.state

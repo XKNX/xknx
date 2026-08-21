@@ -115,8 +115,9 @@ asyncio.run(main())
 
 # [](#header-2)Devices
 
-To attach a device to XKNX call `xknx.devices.async_add(device)`. Added devices may be accessed by their name: `xknx.devices['NameOfDevice']`. When an update via KNX GroupValueWrite or GroupValueResponse was received devices will be updated accordingly.
-To remove a device from XKNX call `xknx.devices.async_remove(device)`. Removed devices can be re-added at a later point. This cancels background tasks of that device and disconnects it from receiving new telegrams.
+To attach a device to XKNX call `xknx.devices.async_add(device)`. Keep your own reference to the device object to interact with it. When an update via KNX GroupValueWrite or GroupValueResponse was received devices will be updated accordingly.
+To remove a device from XKNX call `xknx.devices.async_remove(device)`. This cancels background tasks of that device and disconnects it from receiving new telegrams. Removed devices can be re-added at a later point.
+Adding a device object that is already registered, or removing one that isn't, raises a `ValueError`.
 
 Example:
 
@@ -124,8 +125,8 @@ Example:
 switch = Switch(xknx, name="TestSwitch", group_address="1/1/11")
 xknx.devices.async_add(switch)
 
-await xknx.devices["TestSwitch"].set_on()
-await xknx.devices["TestSwitch"].set_off()
+await switch.set_on()
+await switch.set_off()
 ```
 
 # [](#header-2)Callbacks

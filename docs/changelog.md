@@ -23,6 +23,9 @@ nav_order: 2
   hash(rv_1)  # before: TypeError: unhashable type; now: works
   rv_1.my_own_attribute = 1  # before: works; now: AttributeError
   ```
+- Remove device lookup by name or index from `xknx.devices`. `xknx.devices["NameOfDevice"]` and `xknx.devices[0]` are gone - device names are never checked for uniqueness, so the lookup could return any one of several devices sharing a name. Keep a reference to the device object instead, or iterate `xknx.devices` to find it. `device in xknx.devices` takes the `Device` object now instead of its name.
+- `Devices.async_add()` and `Devices.async_remove()` raise `ValueError` when the device object is already registered, or not registered at all. Adding a device twice had it receive every telegram twice and fire its callbacks twice; removing an unregistered one cancelled its tasks and unregistered its state updater before failing.
+- Remove `Device.__eq__()` - same reasoning as `RemoteValue.__eq__()` above: it compared `__dict__` attributes and was a leftover of the YAML config handling removed in 1.0. Devices compare by identity now, which also makes `Device` hashable again, so devices can be used in sets and as dict keys. The same applies to `Light.red`, `.green`, `.blue` and `.white`.
 
 ### Connection
 

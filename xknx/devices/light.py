@@ -108,10 +108,6 @@ class _SwitchAndBrightness:
         if self.brightness.writable:
             self.brightness.set(0)
 
-    def __eq__(self, other: object) -> bool:
-        """Compare for equality."""
-        return self.__dict__ == other.__dict__
-
 
 class Light(Device):
     """Class for managing a light."""
