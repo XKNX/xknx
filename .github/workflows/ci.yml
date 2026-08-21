@@ -58,7 +58,7 @@ jobs:
           enable-cache: true
           python-version: "3.14"
       - name: Cache prek hook environments
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/prek
           key: prek-${{ hashFiles('.pre-commit-config.yaml') }}
