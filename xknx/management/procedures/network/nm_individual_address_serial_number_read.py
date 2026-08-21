@@ -17,7 +17,7 @@ logger = logging.getLogger("xknx.management.procedures")
 async def nm_individual_address_serial_number_read(
     xknx: XKNX,
     serial: bytes,
-    timeout: float = 3,  # noqa: ASYNC109 - part of the public API
+    timeout: float = 3,
 ) -> IndividualAddress | None:
     """Read individual address from device with specified serial number."""
     # initialize queue or event handler gathering broadcasts
