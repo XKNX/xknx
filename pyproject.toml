@@ -33,6 +33,22 @@ homepage = "https://xknx.io/"
 repository = "https://github.com/XKNX/xknx.git"
 
 
+[dependency-groups]
+dev = [
+  "coverage",
+  "freezegun>=1.5",
+  "mypy>=2.3",
+  "prek>=0.4",
+  "pylint>=4.0",
+  "pytest>=9.1",
+  "pytest-asyncio>=1.4",
+  "pytest-cov>=7.1",
+  "pytest-icdiff>=0.9",
+  "ruff>=0.16",
+  "tzdata>=2026.3",
+]
+
+
 [tool.setuptools.dynamic]
 version = { attr = "xknx.__version__.__version__" }
 
@@ -92,7 +108,7 @@ disable = [
   "unused-argument",                # generic callbacks and setup methods create a lot of warnings
   "wrong-import-order",             # handled by ruff
 ]
-# disabled for tests via command line options in tox.ini:
+# disabled for tests via command line options in the pylint-test hook:
 #   - protected-access
 #   - abstract-class-instantiated
 enable = ["use-symbolic-message-instead"]

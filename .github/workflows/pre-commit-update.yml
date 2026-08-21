@@ -11,25 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.x"
-          cache: "pip"
-          cache-dependency-path: |
-            requirements/production.txt
-            requirements/testing.txt
-            .pre-commit-config.yaml
+          enable-cache: true
+          python-version: "3.14"
       - name: Install dependencies
-        # needed for the mypy hook
-        run: |
-          pip install -r requirements/testing.txt
-      - name: Pre-commit auto-update
+        run: uv sync --locked
+      - name: Hook auto-update
         env:
           # new branch is created in create-pull-request step
           SKIP: no-commit-to-branch
-        run: |
-          pre-commit autoupdate
+        run: uv run --no-sync prek update
       - uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

@@ -7,23 +7,11 @@ repos:
         additional_dependencies:
           - tomli
         exclude_types: [csv, json]
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.16.3'
-    hooks:
-      - id: ruff
-        # in CI it is directly run by tox to allow dependency upgrade checks
-        stages: [pre-commit]
-        args: [ --fix, --exit-non-zero-on-fix ]
-      - id: ruff-format
-        files: ^((xknx|test|examples|docs)/.+)?[^/]+\.py$
-        # in CI it is directly run by tox to allow dependency upgrade checks
-        stages: [pre-commit]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: check-executables-have-shebangs
         stages: [manual]
-      - id: check-json
       - id: no-commit-to-branch
         args:
           - --branch=main
@@ -31,7 +19,7 @@ repos:
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.8.1
     hooks:
-      # Run `pre-commit run --hook-stage manual python-typing-update --all-files` manually
+      # Run `prek run --hook-stage manual python-typing-update --all-files` manually
       # from time to time to update python typing syntax.
       # Will require manual work, before submitting changes!
       - id: python-typing-update
@@ -43,35 +31,45 @@ repos:
         files: ^(xknx)/.+\.py$
   - repo: local
     hooks:
-      # Run mypy through our wrapper script in order to get the possible
-      # pyenv and/or virtualenv activated; it may not have been e.g. if
-      # committing from a GUI tool that was not launched from an activated
-      # shell.
+      # Every tool below runs from the locked project environment via `uv run`, so
+      # its version is pinned in uv.lock only - no second pin to keep in sync here.
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --frozen ruff check --force-exclude --fix --exit-non-zero-on-fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --frozen ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        files: ^((xknx|test|examples|docs)/.+)?[^/]+\.py$
+        require_serial: true
+
       - id: mypy
         name: mypy
-        entry: script/run-in-env.sh mypy
-        language: script
+        entry: uv run --frozen mypy
+        language: system
         types: [python]
         require_serial: true
         files: ^xknx/.+\.py$
 
-  - repo: local
-    hooks:
-    - id: pylint-xknx
-      name: pylint-xknx
-      entry: pylint xknx examples
-      language: python
-      types: [python]
-      pass_filenames: true
-      require_serial: true
-      files: ^(xknx/|examples/)
+      - id: pylint-xknx
+        name: pylint-xknx
+        entry: uv run --frozen pylint xknx examples
+        language: system
+        types: [python]
+        pass_filenames: true
+        require_serial: true
+        files: ^(xknx/|examples/)
 
-    - id: pylint-test
-      name: pylint-test
-      entry: pylint --disable=protected-access,abstract-class-instantiated
-      language: python
-      types: [python]
-      pass_filenames: true
-      require_serial: true
-      files: ^test/
-
+      - id: pylint-test
+        name: pylint-test
+        entry: uv run --frozen pylint --disable=protected-access,abstract-class-instantiated
+        language: system
+        types: [python]
+        pass_filenames: true
+        require_serial: true
+        files: ^test/
