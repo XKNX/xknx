@@ -505,9 +505,9 @@ class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT]):
     Base class for broadcast request services.
 
     These are answered by any number of devices over the broadcast channel
-    rather than by one peer, so they are sent with `Management.send_broadcast()`
-    and their responses are collected with `BroadcastContext.receive()`, which
-    filters the channel by the response type declared here.
+    rather than by one peer, so they are sent with `Broadcast.request()`, which
+    filters the channel by the response type declared here and yields every
+    answer until it times out.
     """
 
     __slots__ = ()

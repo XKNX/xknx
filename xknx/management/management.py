@@ -43,13 +43,13 @@ MANAGAMENT_CONNECTION_TIMEOUT = 6
 class Management:
     """Class for management procedures as described in KNX-Standard 3.5.2."""
 
-    __slots__ = ("_broadcast_contexts", "_connections", "xknx")
+    __slots__ = ("_connections", "broadcast", "xknx")
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize Management class."""
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
-        self._broadcast_contexts: set[BroadcastContext] = set()
+        self.broadcast = Broadcast(xknx)
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
@@ -82,8 +82,7 @@ class Management:
             )
             return
         if isinstance(telegram.tpci, TDataBroadcast):
-            for context in self._broadcast_contexts:
-                context.queue.put_nowait(telegram)
+            self.broadcast.process(telegram)
             return
         logger.debug("Unhandled management telegram: %r", telegram)
         return
@@ -138,7 +137,29 @@ class Management:
         finally:
             await self.disconnect(address)
 
-    async def send_broadcast(self, payload: APCI) -> None:
+
+class Broadcast:
+    """
+    Class for broadcast communication.
+
+    Broadcast telegrams are sent to every device on the bus and answered by any
+    number of them, so this owns the sending, the open receive contexts and the
+    dispatching of incoming telegrams to them.
+    """
+
+    __slots__ = ("_contexts", "xknx")
+
+    def __init__(self, xknx: XKNX) -> None:
+        """Initialize Broadcast class."""
+        self.xknx = xknx
+        self._contexts: set[BroadcastContext] = set()
+
+    def process(self, telegram: Telegram) -> None:
+        """Hand an incoming broadcast telegram to every open context."""
+        for context in self._contexts:
+            context.queue.put_nowait(telegram)
+
+    async def send(self, payload: APCI) -> None:
         """Send a broadcast message."""
         await self.xknx.cemi_handler.send_telegram(
             Telegram(
@@ -148,7 +169,7 @@ class Management:
             )
         )
 
-    async def request_broadcast(
+    async def request(
         self,
         payload: APCIBroadcastRequest[APCIResponseT],
         timeout: float | None = 3,
@@ -156,27 +177,26 @@ class Management:
         """
         Broadcast a request service and yield the responses to it.
 
-        Holds a `broadcast()` context open for the iteration, so responses sent
-        before the generator is first awaited are not missed. Use `broadcast()`
-        with `send_broadcast()` and `receive()` directly to keep one context
-        across several requests.
+        Holds a `context()` open for the iteration, so responses sent before the
+        generator is first awaited are not missed. Use `context()` with `send()`
+        and `receive()` directly to keep one context across several requests.
         """
-        async with self.broadcast() as context:
-            await self.send_broadcast(payload)
+        async with self.context() as context:
+            await self.send(payload)
             async for telegram in context.receive(
                 payload.RESPONSE_TYPE, timeout=timeout
             ):
                 yield telegram
 
     @asynccontextmanager
-    async def broadcast(self) -> AsyncGenerator[BroadcastContext, None]:
+    async def context(self) -> AsyncGenerator[BroadcastContext, None]:
         """Provide a broadcast context."""
         context = BroadcastContext()
-        self._broadcast_contexts.add(context)
+        self._contexts.add(context)
         try:
             yield context
         finally:
-            self._broadcast_contexts.remove(context)
+            self._contexts.remove(context)
 
 
 class BroadcastContext:

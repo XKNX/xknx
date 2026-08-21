@@ -248,7 +248,7 @@ async def test_broadcast_message() -> None:
         payload=apci.IndividualAddressRead(),
     )
     with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
-        await xknx.management.send_broadcast(apci.IndividualAddressRead())
+        await xknx.management.broadcast.send(apci.IndividualAddressRead())
         assert send_telegram.call_args_list == [call(test_telegram)]
 
 
@@ -288,7 +288,7 @@ async def test_broadcast_receive_filters_by_expected_apci(
     expected, traffic = _mixed_broadcast_traffic()
 
     async def collect() -> list[Telegram]:
-        async with xknx.management.broadcast() as bc_context:
+        async with xknx.management.broadcast.context() as bc_context:
             return [
                 telegram
                 async for telegram in bc_context.receive(
@@ -305,7 +305,7 @@ async def test_broadcast_receive_filters_by_expected_apci(
 
 
 async def test_request_broadcast(time_travel: EventLoopClockAdvancer) -> None:
-    """Test that request_broadcast() manages the broadcast context itself."""
+    """Test that Broadcast.request() manages the broadcast context itself."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     _timeout = 2
@@ -314,19 +314,19 @@ async def test_request_broadcast(time_travel: EventLoopClockAdvancer) -> None:
     async def collect() -> list[Telegram]:
         return [
             telegram
-            async for telegram in xknx.management.request_broadcast(
+            async for telegram in xknx.management.broadcast.request(
                 apci.IndividualAddressRead(), timeout=_timeout
             )
         ]
 
     task = asyncio.create_task(collect())
     await asyncio.sleep(0)
-    assert len(xknx.management._broadcast_contexts) == 1
+    assert len(xknx.management.broadcast._contexts) == 1
     for telegram in traffic:
         xknx.management.process(telegram)
     await time_travel(_timeout)
     assert await task == [expected]
-    assert not xknx.management._broadcast_contexts
+    assert not xknx.management.broadcast._contexts
 
 
 async def test_request_broadcast_releases_context_on_early_exit() -> None:
@@ -336,7 +336,7 @@ async def test_request_broadcast_releases_context_on_early_exit() -> None:
     expected, _ = _mixed_broadcast_traffic()
 
     async def first_response() -> IndividualAddress | None:
-        async for telegram in xknx.management.request_broadcast(
+        async for telegram in xknx.management.broadcast.request(
             apci.IndividualAddressRead(), timeout=None
         ):
             return telegram.source_address
@@ -344,11 +344,51 @@ async def test_request_broadcast_releases_context_on_early_exit() -> None:
 
     task = asyncio.create_task(first_response())
     await asyncio.sleep(0)
-    assert len(xknx.management._broadcast_contexts) == 1
+    assert len(xknx.management.broadcast._contexts) == 1
     xknx.management.process(expected)
     assert await task == expected.source_address
     await asyncio.sleep(0)
-    assert not xknx.management._broadcast_contexts
+    assert not xknx.management.broadcast._contexts
+
+
+async def test_broadcast_receive_unfiltered(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that receive() without an APCI class yields the whole channel."""
+    xknx = XKNX()
+    _timeout = 2
+    _, traffic = _mixed_broadcast_traffic()
+
+    async def collect() -> list[Telegram]:
+        async with xknx.management.broadcast.context() as bc_context:
+            return [telegram async for telegram in bc_context.receive(timeout=_timeout)]
+
+    task = asyncio.create_task(collect())
+    await asyncio.sleep(0)
+    for telegram in traffic:
+        xknx.management.process(telegram)
+    await time_travel(_timeout)
+    assert await task == list(traffic)
+
+
+async def test_request_broadcast_releases_context_when_cancelled() -> None:
+    """Test that cancelling the consumer closes the broadcast context."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+
+    async def consume() -> None:
+        async for _ in xknx.management.broadcast.request(
+            apci.IndividualAddressRead(), timeout=None
+        ):
+            pass
+
+    task = asyncio.create_task(consume())
+    await asyncio.sleep(0)
+    assert len(xknx.management.broadcast._contexts) == 1
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    await asyncio.sleep(0)
+    assert not xknx.management.broadcast._contexts
 
 
 @pytest.mark.parametrize("rate_limit", [0, 1])
