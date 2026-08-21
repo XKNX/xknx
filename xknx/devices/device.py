@@ -9,13 +9,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from xknx.remote_value import RemoteValue
-from xknx.telegram import Telegram
+from xknx.telegram import GroupReadTelegram, GroupValueTelegram, Telegram
 from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
-from xknx.typing import DeviceCallbackType, Self
+from xknx.typing import DeviceCallbackType
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -103,23 +103,23 @@ class Device(ABC):
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegram."""
         if isinstance(telegram.payload, GroupValueWrite):
-            self.process_group_write(telegram)
+            self.process_group_write(cast("Telegram[GroupValueWrite]", telegram))
         elif isinstance(telegram.payload, GroupValueResponse):
-            self.process_group_response(telegram)
+            self.process_group_response(cast("Telegram[GroupValueResponse]", telegram))
         elif isinstance(telegram.payload, GroupValueRead):
-            self.process_group_read(telegram)
+            self.process_group_read(cast("GroupReadTelegram", telegram))
 
-    def process_group_read(self, telegram: Telegram) -> None:
+    def process_group_read(self, telegram: GroupReadTelegram) -> None:
         """Process incoming GroupValueRead telegrams."""
         # The default is, that devices don't answer to group reads
         return
 
-    def process_group_response(self, telegram: Telegram) -> None:
+    def process_group_response(self, telegram: Telegram[GroupValueResponse]) -> None:
         """Process incoming GroupValueResponse telegrams."""
         # Per default mapped to group write.
         self.process_group_write(telegram)
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming GroupValueWrite telegrams."""
         # The default is, that devices don't process group writes
         return

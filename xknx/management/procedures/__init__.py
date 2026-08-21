@@ -53,7 +53,3 @@ from .network import (
     nm_individual_address_serial_number_write,
     nm_individual_address_write,
 )
-
-# Backwards-compatibility typo alias (the original module exposed both spellings).
-# TODO: remove in v4
-nm_invididual_address_write = nm_individual_address_write

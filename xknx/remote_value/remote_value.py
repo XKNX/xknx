@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Generic, TypeVar, Union
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import GroupAddress, GroupValueTelegram, Telegram
 from xknx.telegram.address import (
     DeviceGroupAddress,
     InternalGroupAddress,
@@ -83,7 +83,7 @@ class RemoteValue(ABC, Generic[ValueT]):
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
         self._value: ValueT | None = None
         self._payload: DPTArray | DPTBinary | None = None
-        self.telegram: Telegram | None = None
+        self.telegram: GroupValueTelegram | None = None
         self.after_update_cb: RVCallbackType[ValueT] | None = after_update_cb
         self._sync_state = sync_state
 
@@ -176,7 +176,9 @@ class RemoteValue(ABC, Generic[ValueT]):
             )
         return self.dpt_class.to_knx(value)
 
-    def process(self, telegram: Telegram, always_callback: bool = False) -> bool:
+    def process(
+        self, telegram: GroupValueTelegram, always_callback: bool = False
+    ) -> bool:
         """Process incoming or outgoing telegram."""
         if (
             not isinstance(

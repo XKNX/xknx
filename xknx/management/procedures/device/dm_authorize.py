@@ -25,12 +25,7 @@ async def dmp_authorize_r_co(conn: P2PConnection, key: int) -> int:
     :param key: 4-byte authorization key
     :return: Access level granted by the device (0 = highest, 15 = lowest)
     """
-    response = await conn.request(
-        payload=apci.AuthorizeRequest(key=key),
-        expected=apci.AuthorizeResponse,
-    )
-    # `expected` guarantees this via `P2PConnection._receive`
-    assert isinstance(response.payload, apci.AuthorizeResponse)
+    response = await conn.request(payload=apci.AuthorizeRequest(key=key))
     return response.payload.level
 
 

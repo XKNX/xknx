@@ -17,7 +17,7 @@ We need your help for testing and improving XKNX. For questions, feature request
 
 ## Development
 
-You will need at least Python 3.10 in order to use XKNX.
+You will need at least Python 3.11 in order to use XKNX.
 
 Setting up your local environment:
 
@@ -33,7 +33,7 @@ To run all linters, formatters and the type checker call `uv run prek run --all-
 
 Unit tests are run with `uv run pytest`
 Running specific unit tests can be invoked by: `uv run pytest -vv test/management_tests/procedures_test.py -k test_nm_individual_address_serial_number_write_fail`
-Testing against another supported Python version: `uv run --python 3.10 pytest`
+Testing against another supported Python version: `uv run --python 3.11 pytest`
 
 ## Home-Assistant
 

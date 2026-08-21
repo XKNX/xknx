@@ -4,12 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Generic
 
 from xknx.dpt import DPTBase, DPTComplexData, DPTEnumData
+from xknx.typing import TypeVar
 
 from .address import GroupAddress, IndividualAddress, InternalGroupAddress
-from .apci import APCI
+from .apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 from .tpci import TPCI, TDataBroadcast, TDataGroup, TDataIndividual
+
+APCIT_co = TypeVar("APCIT_co", bound=APCI | None, default=APCI | None, covariant=True)
 
 
 class TelegramDirection(Enum):
@@ -35,7 +39,7 @@ class TelegramDecodedData:
 
 
 @dataclass(slots=True)
-class Telegram:
+class Telegram(Generic[APCIT_co]):
     """
     Data transfer object for KNX telegrams.
 
@@ -47,7 +51,8 @@ class Telegram:
             InternalGroupAddress.
         direction: Communication direction (INCOMING or OUTGOING).
         payload: APCi payload containing the actual data (e.g., GroupValueWrite,
-            GroupValueResponse). None for control information only telegrams.
+            GroupValueResponse). None for control information only telegrams -
+            parametrize as `Telegram[SomeAPCI]` where a payload is guaranteed.
         source_address: IndividualAddress of the sender. When default of 0.0.0 is
             used, it will be set automatically when sent.
         tpci: Transport Layer Control Information (TDataBroadcast, TDataGroup, or
@@ -63,7 +68,7 @@ class Telegram:
 
     destination_address: GroupAddress | IndividualAddress | InternalGroupAddress
     direction: TelegramDirection = TelegramDirection.OUTGOING
-    payload: APCI | None = None
+    payload: APCIT_co = None  # type: ignore[assignment]  # None only if APCIT_co allows it
     source_address: IndividualAddress = field(
         default_factory=lambda: IndividualAddress(0)
     )
@@ -103,3 +108,10 @@ class Telegram:
             f'destination_address="{self.destination_address}" '
             f"{data}{decoded_data} />"
         )
+
+
+# Telegram carrying a value payload - the union `Device.process_group_write()` and
+# `RemoteValue.process()` accept, since a GroupValueResponse is treated like a
+# GroupValueWrite by default (see `Device.process_group_response()`).
+GroupValueTelegram = Telegram[GroupValueWrite] | Telegram[GroupValueResponse]
+GroupReadTelegram = Telegram[GroupValueRead]

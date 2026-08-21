@@ -36,7 +36,6 @@ from xknx.knxip.dib import (
     TunnelingSlotStatus,
 )
 from xknx.telegram import IndividualAddress
-from xknx.util import asyncio_timeout
 
 from .transport import UDPTransport
 
@@ -277,9 +276,9 @@ class GatewayScanner:
         )
         try:
             await self._send_search_requests(udp_transport=udp_transport)
-            async with asyncio_timeout(self.timeout_in_seconds):
+            async with asyncio.timeout(self.timeout_in_seconds):
                 await self._response_received_event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
         except asyncio.CancelledError:
             pass

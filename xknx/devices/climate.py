@@ -28,7 +28,7 @@ from .climate_mode import ClimateMode
 from .device import Device, DeviceCallbackType
 
 if TYPE_CHECKING:
-    from xknx.telegram import Telegram
+    from xknx.telegram import GroupValueTelegram
     from xknx.telegram.address import DeviceGroupAddress
     from xknx.xknx import XKNX
 
@@ -363,7 +363,7 @@ class Climate(Device):
         """Return current horizontal swing state."""
         return self.horizontal_swing.value
 
-    def process_group_write(self, telegram: Telegram) -> None:
+    def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
             remote_value.process(telegram)

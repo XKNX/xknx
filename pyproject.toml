@@ -17,8 +17,7 @@ classifiers = [
   "Topic :: System :: Hardware :: Hardware Drivers",
 ]
 dependencies = [
-  "async_timeout>=4.0.0; python_version<'3.11'",
-  "typing_extensions; python_version<'3.11'",
+  "typing_extensions; python_version<'3.13'",
   "cryptography>=35.0.0",
   "ifaddr>=0.1.7",
 ]
@@ -27,7 +26,7 @@ dynamic = ["version"]
 keywords = ["KNX", "EIB", "Home Assistant", "home automation"]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 
 [project.urls]
 homepage = "https://xknx.io/"
@@ -64,7 +63,7 @@ quiet-level = 2
 
 [tool.mypy]
 pretty = true
-python_version = "3.10"
+python_version = "3.11"
 show_error_codes = true
 strict = true
 # additional flags to strict mode
@@ -154,13 +153,14 @@ lint.select = [
   "W",     # pydocstyle warning
 ]
 lint.ignore = [
-  "ANN401", # any-type - mypy should handle this where necessary
+  "ANN401",   # any-type - mypy should handle this where necessary
+  "ASYNC109", # async-function-with-timeout - timeout is part of the public API
   "D202",
   "D203",
   "D212",
-  "E501",   # line too long
-  "SIM102", # collapsible-if
-  "SIM105", #suppressible-exception
+  "E501",     # line too long
+  "SIM102",   # collapsible-if
+  "SIM105",   # suppressible-exception
 ]
 extend-exclude = ["script"]
 

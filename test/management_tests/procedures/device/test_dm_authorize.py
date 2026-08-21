@@ -10,7 +10,6 @@ from xknx.management.procedures.device.dm_authorize import (
     dmp_authorize_r_co,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
-from xknx.util import asyncio_timeout
 
 RESPONDER_TIMEOUT = 1
 
@@ -140,13 +139,13 @@ async def test_dmp_authorize2_r_co_client_key_is_better() -> None:
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond_to_requests() -> None:
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 0))
         xknx.management.process(_authorize_response(ia, xknx, 0, level=15))
 
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 1))
@@ -179,13 +178,13 @@ async def test_dmp_authorize2_r_co_equal_levels() -> None:
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond_to_requests() -> None:
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 0))
         xknx.management.process(_authorize_response(ia, xknx, 0, level=5))
 
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 1))
@@ -219,19 +218,19 @@ async def test_dmp_authorize2_r_co_free_access_is_better() -> None:
     xknx.cemi_handler.send_telegram.reset_mock()
 
     async def respond_to_requests() -> None:
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 1:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 0))
         xknx.management.process(_authorize_response(ia, xknx, 0, level=3))
 
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 3:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 1))
         xknx.management.process(_authorize_response(ia, xknx, 1, level=10))
 
-        async with asyncio_timeout(RESPONDER_TIMEOUT):
+        async with asyncio.timeout(RESPONDER_TIMEOUT):
             while xknx.cemi_handler.send_telegram.call_count < 5:  # noqa: ASYNC110
                 await asyncio.sleep(0)
         xknx.management.process(_ack(ia, xknx, 2))

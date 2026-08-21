@@ -119,7 +119,7 @@ declared in `pyproject.toml` (`[project].dependencies` for the library,
 uv sync                        # create/update the environment
 uv run pytest                  # unit tests
 uv run prek run --all-files    # ruff, ruff format, mypy, pylint, codespell
-uv run --python 3.10 pytest    # test against another supported version
+uv run --python 3.11 pytest    # test against another supported version
 ```
 
 Hooks are configured in `.pre-commit-config.yaml` and run by

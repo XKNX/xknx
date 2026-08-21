@@ -7,7 +7,7 @@ from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import logging
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from xknx.exceptions import (
     CommunicationError,
@@ -17,7 +17,7 @@ from xknx.exceptions import (
     ManagementConnectionTimeout,
 )
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import APCI
+from xknx.telegram.apci import APCI, APCIRequest, APCIResponseT
 from xknx.telegram.tpci import (
     TAck,
     TConnect,
@@ -26,7 +26,6 @@ from xknx.telegram.tpci import (
     TDisconnect,
     TNak,
 )
-from xknx.util import asyncio_timeout
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -170,13 +169,13 @@ class BroadcastContext:
     ) -> AsyncGenerator[Telegram, None]:
         """Receive telegrams from the broadcast context."""
         try:
-            async with asyncio_timeout(timeout):
+            async with asyncio.timeout(timeout):
                 while True:
                     try:
                         yield await self.queue.get()
                     except GeneratorExit:
                         return
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return
 
 
@@ -338,9 +337,9 @@ class P2PConnection:
         self._ack_waiter = asyncio.get_event_loop().create_future()
         try:
             await self.xknx.cemi_handler.send_telegram(telegram)
-            async with asyncio_timeout(MANAGAMENT_ACK_TIMEOUT):
+            async with asyncio.timeout(MANAGAMENT_ACK_TIMEOUT):
                 ack = await self._ack_waiter
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.info(
                 "%s: timeout while waiting for ACK. Resending Telegram.", self.address
             )
@@ -349,9 +348,9 @@ class P2PConnection:
             self._ack_waiter = asyncio.get_event_loop().create_future()
             await self.xknx.cemi_handler.send_telegram(telegram)
             try:
-                async with asyncio_timeout(MANAGAMENT_ACK_TIMEOUT):
+                async with asyncio.timeout(MANAGAMENT_ACK_TIMEOUT):
                     ack = await self._ack_waiter
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise ManagementConnectionTimeout(
                     "No ACK received for repeated telegram."
                 ) from None
@@ -376,9 +375,9 @@ class P2PConnection:
     async def _receive(self, expected_payload: type[APCI] | None) -> Telegram:
         """Wait for a telegram from the KNX device."""
         try:
-            async with asyncio_timeout(MANAGAMENT_CONNECTION_TIMEOUT):
+            async with asyncio.timeout(MANAGAMENT_CONNECTION_TIMEOUT):
                 telegram = await self._response_waiter
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise ManagementConnectionTimeout(
                 f"Timeout while waiting for {expected_payload}"
             ) from None
@@ -392,8 +391,19 @@ class P2PConnection:
             )
         return telegram
 
-    async def request(self, payload: APCI, expected: type[APCI] | None) -> Telegram:
-        """Send a payload to the KNX device and wait for the response."""
+    @overload
+    async def request(
+        self, payload: APCIRequest[APCIResponseT]
+    ) -> Telegram[APCIResponseT]: ...
+    @overload
+    async def request(self, payload: APCI) -> Telegram: ...
+    async def request(self, payload: APCI) -> Telegram:
+        """
+        Send a payload to the KNX device and wait for the response.
+
+        The response is verified against `type(payload).RESPONSE_TYPE` if the
+        payload defines one - see `APCIRequest`.
+        """
         if not self._connected:
             raise ManagementConnectionRefused(
                 "Management connection disconnected by the peer."
@@ -406,6 +416,7 @@ class P2PConnection:
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
+        expected = payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
         await self.send_data(payload)
         response = await self._receive(expected)
         self._last_response_time = time.time()
