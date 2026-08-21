@@ -65,7 +65,7 @@ async def nm_individual_address_write(
         # device in programming mode's address matches address that we want to write, so we can abort the operation safely
         logger.debug("Device already has requested address, no write operation needed.")
     else:
-        await xknx.management.send_broadcast(
+        await xknx.management.broadcast.send(
             payload=apci.IndividualAddressWrite(address=individual_address),
         )
         logger.debug("Wrote new address %s to device.", individual_address)

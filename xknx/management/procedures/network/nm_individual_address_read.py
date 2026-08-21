@@ -29,7 +29,7 @@ async def nm_individual_address_read(
     :returns: list of individual address of devices in programming mode
     """
     addresses = []
-    async for result in xknx.management.request_broadcast(
+    async for result in xknx.management.broadcast.request(
         apci.IndividualAddressRead(), timeout=timeout
     ):
         addresses.append(result.source_address)
