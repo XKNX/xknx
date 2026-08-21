@@ -211,7 +211,8 @@ class DataSecure:
                 key=key,
                 scf=s_apdu.scf,
                 address_fields_raw=_address_fields_raw,
-                frame_flags=cemi_data.flags,
+                address_type=cemi_data.address_type,
+                frame_format=cemi_data.flags.frame_format,
                 tpci=cemi_data.tpci,
             )
         decrypted_payload = APCI.from_knx(plain_apdu_raw)
@@ -259,7 +260,8 @@ class DataSecure:
             sequence_number=self.get_sequence_number(),
             address_fields_raw=cemi_data.src_addr.to_knx()
             + cemi_data.dst_addr.to_knx(),
-            frame_flags=cemi_data.flags,
+            address_type=cemi_data.address_type,
+            frame_format=cemi_data.flags.frame_format,
             tpci=cemi_data.tpci,
         )
         secure_cemi_data = copy(cemi_data)

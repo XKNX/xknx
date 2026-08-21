@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
+from xknx.cemi.flags import CEMIAddressType, CEMIFrameFormat
 from xknx.exceptions import DataSecureError
 from xknx.telegram.tpci import TPCI
 
@@ -16,25 +17,29 @@ from .security_primitives import (
 # Secure APCI is 0x03F1 - in block_0 it is used split into 2 octets
 _APCI_SEC_HIGH = 0x03
 _APCI_SEC_LOW = 0xF1
-# only Address Type (IA / GA) and Extended Frame format are used
-B0_AT_FIELD_FLAGS_MASK = 0b10001111
 
 
 def block_0(
     sequence_number: bytes,
     address_fields_raw: bytes,
-    frame_flags: int,
+    address_type: CEMIAddressType,
+    frame_format: CEMIFrameFormat,
     tpci_int: int,
     payload_length: int,
 ) -> bytes:
     """Return Block 0 for KNX Data Secure."""
+    # Of the two control field octets only Ctrl2 is protected, and only as
+    # `A000EEEEb` - A the Address Type, EEEEb the Extended Frame Format if
+    # L_Data_Extended frames are used and 0000b otherwise. Priority, repeat flag,
+    # hop count and the Frame Type stay unprotected and may change on the way -
+    # KNX v02.01.01 - Application Layer 03.03.07 - §5.1.3.2 Figure 100 and NOTE 16.
     return (
         sequence_number
         + address_fields_raw
         + bytes(
             (
                 0,
-                frame_flags & B0_AT_FIELD_FLAGS_MASK,
+                address_type.to_knx() | frame_format,
                 (tpci_int << 2) + _APCI_SEC_HIGH,
                 _APCI_SEC_LOW,
                 0,
@@ -147,7 +152,8 @@ class SecureData:
         scf: SecurityControlField,
         sequence_number: int,
         address_fields_raw: bytes,
-        frame_flags: int,
+        address_type: CEMIAddressType,
+        frame_format: CEMIFrameFormat,
         tpci: TPCI,
     ) -> SecureData:
         """Serialize to KNX raw data."""
@@ -160,7 +166,8 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    address_type=address_type,
+                    frame_format=frame_format,
                     tpci_int=tpci.to_knx(),
                     payload_length=0,
                 ),
@@ -174,7 +181,8 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    address_type=address_type,
+                    frame_format=frame_format,
                     tpci_int=tpci.to_knx(),
                     payload_length=len(apdu),
                 ),
@@ -219,7 +227,8 @@ class SecureData:
         key: bytes,
         scf: SecurityControlField,
         address_fields_raw: bytes,
-        frame_flags: int,
+        address_type: CEMIAddressType,
+        frame_format: CEMIFrameFormat,
         tpci: TPCI,
     ) -> bytes:
         """
@@ -245,7 +254,8 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=self.sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    address_type=address_type,
+                    frame_format=frame_format,
                     tpci_int=tpci.to_knx(),
                     payload_length=len(dec_payload),
                 ),
@@ -261,7 +271,8 @@ class SecureData:
                 block_0=block_0(
                     sequence_number=self.sequence_number_bytes,
                     address_fields_raw=address_fields_raw,
-                    frame_flags=frame_flags,
+                    address_type=address_type,
+                    frame_format=frame_format,
                     tpci_int=tpci.to_knx(),
                     payload_length=0,
                 ),

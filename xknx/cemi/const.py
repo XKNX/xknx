@@ -47,57 +47,6 @@ class CEMIMessageCode(Enum):
     M_RESET_IND = 0xF0  # Reset confirmation
 
 
-class CEMIFlags:
-    """Enum class for CEMI Flags."""
-
-    # Bit 1/7 - Frame Type (FT); see 3/6/3 EMI_IMI §4.1.4.3.2
-    # Derived from the NPDU length when serializing - see `CEMILData.to_knx`.
-    FRAME_TYPE_EXTENDED = 0x0000
-    FRAME_TYPE_STANDARD = 0x8000
-
-    # Bit 1/6 - Reserved
-
-    # Bit 1/5
-    # Repeat in case of an error
-    REPEAT = 0x0000
-    DO_NOT_REPEAT = 0x2000
-
-    # Bit 1/4
-    SYSTEM_BROADCAST = 0x0000
-    BROADCAST = 0x1000
-
-    # Bit 1/3+2
-    PRIORITY_SYSTEM = 0x0000
-    PRIORITY_NORMAL = 0x0400
-    PRIORITY_URGENT = 0x0800
-    PRIORITY_LOW = 0x0C00
-
-    # Bit 1/1
-    NO_ACK_REQUESTED = 0x0000
-    ACK_REQUESTED = 0x0200
-
-    # Bit 1/0
-    CONFIRM_NO_ERROR = 0x0000
-    CONFIRM_ERROR = 0x0100
-
-    # Bit 0/7
-    DESTINATION_INDIVIDUAL_ADDRESS = 0x0000
-    DESTINATION_GROUP_ADDRESS = 0x0080
-
-    # Bit 0/6+5+4
-    HOP_COUNT_NO = 0x0070
-    HOP_COUNT_1ST = 0x0060
-
-    # Bit 0/3+2+1+0 - Extended Frame Format (EFF); see 3/6/3 EMI_IMI §4.1.4.3.2
-    # and 3/2/2 Communication Medium TP1 §2.2.5.3.
-    # 0000b is used for L_Data_Standard frames as well as for long
-    # L_Data_Extended frames; 01xxb denotes LTE-HEE (zone addressed) frames.
-    # All other values are reserved.
-    STANDARD_FRAME_FORMAT = 0x0000
-    LTE_FRAME_FORMAT = 0x0004
-    EXTENDED_FRAME_FORMAT_MASK = 0x000F
-
-
 class CEMIErrorCode(IntEnum):
     """Enum class for CEMI Error Codes."""
 

@@ -44,7 +44,7 @@ class TestKNXIPRountingIndication:
             ),
         )
         assert isinstance(cemi.data, CEMILData)
-        cemi.data.hops = 5
+        cemi.data.flags.hop_count = 5
         routing_indication = RoutingIndication(raw_cemi=cemi.to_knx())
         knxipframe = KNXIPFrame.init_from_body(routing_indication)
 
