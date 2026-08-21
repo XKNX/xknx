@@ -137,13 +137,14 @@ lint.select = [
   "W",     # pydocstyle warning
 ]
 lint.ignore = [
-  "ANN401", # any-type - mypy should handle this where necessary
+  "ANN401",   # any-type - mypy should handle this where necessary
+  "ASYNC109", # async-function-with-timeout - timeout is part of the public API
   "D202",
   "D203",
   "D212",
-  "E501",   # line too long
-  "SIM102", # collapsible-if
-  "SIM105", #suppressible-exception
+  "E501",     # line too long
+  "SIM102",   # collapsible-if
+  "SIM105",   # suppressible-exception
 ]
 extend-exclude = ["script"]
 
