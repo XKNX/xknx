@@ -34,11 +34,11 @@ class Sensor(Device):
     def __init__(
         self,
         xknx: XKNX,
+        value_type: DPTParsable | type[DPTBase],
         name: str | None = None,
         group_address_state: GroupAddressesType = None,
         sync_state: bool | int | float | str = True,
         always_callback: bool = False,
-        value_type: DPTParsable | type[DPTBase] | None = None,
         device_updated_cb: DeviceCallbackType[Sensor] | None = None,
     ) -> None:
         """Initialize Sensor class."""
@@ -50,9 +50,9 @@ class Sensor(Device):
             self._name = f"{type(self).__name__} {type_name}"
         self.sensor_value = RemoteValueSensor(
             xknx,
+            value_type=value_type,
             group_address_state=group_address_state,
             sync_state=sync_state,
-            value_type=value_type,
             device_name=self.name,
             after_update_cb=self.after_update,
         )

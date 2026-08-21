@@ -22,9 +22,9 @@ async def main() -> None:
 
     sensor2 = Sensor(
         xknx,
+        "temperature",
         "DiningRoom.Temperature.Sensor",
         group_address_state="6/2/1",
-        value_type="temperature",
     )
     xknx.devices.async_add(sensor2)
 

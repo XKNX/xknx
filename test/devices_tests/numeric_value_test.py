@@ -7,6 +7,7 @@ import pytest
 from xknx import XKNX
 from xknx.devices import NumericValue
 from xknx.dpt import DPTArray
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -17,9 +18,20 @@ class TestNumericValue:
     def test_default_name(self) -> None:
         """Test name defaulting to the class name and value type."""
         xknx = XKNX()
-        numeric_value = NumericValue(xknx, group_address="1/2/3", value_type="percent")
+        numeric_value = NumericValue(xknx, "percent", group_address="1/2/3")
         assert numeric_value.name == "NumericValue percent"
         assert numeric_value.sensor_value.device_name == "NumericValue percent"
+
+    def test_value_type_required(self) -> None:
+        """Test that value_type is a required argument."""
+        xknx = XKNX()
+        with pytest.raises(TypeError):
+            NumericValue(xknx)  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
+        with pytest.raises(ConversionError):
+            NumericValue(xknx, None)  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            # non-numeric DPTs are not valid for NumericValue
+            NumericValue(xknx, "string")
 
     @pytest.mark.parametrize(
         "value_type,raw_payload,expected_state",
@@ -95,12 +107,7 @@ class TestNumericValue:
     ) -> None:
         """Test sensor value types."""
         xknx = XKNX()
-        sensor = NumericValue(
-            xknx,
-            "TestSensor",
-            group_address="1/2/3",
-            value_type=value_type,
-        )
+        sensor = NumericValue(xknx, value_type, "TestSensor", group_address="1/2/3")
         sensor.process(
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
@@ -118,25 +125,25 @@ class TestNumericValue:
         xknx = XKNX()
         responding = NumericValue(
             xknx,
+            "volume_liquid_litre",
             "TestSensor1",
             group_address="1/1/1",
             respond_to_read=True,
-            value_type="volume_liquid_litre",
         )
         non_responding = NumericValue(
             xknx,
+            "volume_liquid_litre",
             "TestSensor2",
             group_address="1/1/1",
             respond_to_read=False,
-            value_type="volume_liquid_litre",
         )
         responding_multiple = NumericValue(
             xknx,
+            "volume_liquid_litre",
             "TestSensor3",
             group_address=["1/1/1", "3/3/3"],
             group_address_state="2/2/2",
             respond_to_read=True,
-            value_type="volume_liquid_litre",
         )
         #  set initial payload of NumericValue
         responding.sensor_value.value = 256
@@ -184,9 +191,7 @@ class TestNumericValue:
     async def test_set_percent(self) -> None:
         """Test set with percent numeric value."""
         xknx = XKNX()
-        num_value = NumericValue(
-            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
-        )
+        num_value = NumericValue(xknx, "percent", "TestSensor", group_address="1/2/3")
         await num_value.set(75)
         assert xknx.telegrams.qsize() == 1
 
@@ -200,7 +205,7 @@ class TestNumericValue:
         """Test set with temperature numeric value."""
         xknx = XKNX()
         num_value = NumericValue(
-            xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
         await num_value.set(21.0)
         assert xknx.telegrams.qsize() == 1
@@ -219,7 +224,7 @@ class TestNumericValue:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         sensor = NumericValue(
-            xknx, "TestSensor", value_type="temperature", group_address_state="1/2/3"
+            xknx, "temperature", "TestSensor", group_address_state="1/2/3"
         )
         await sensor.sync()
         assert xknx.telegrams.qsize() == 1
@@ -234,9 +239,7 @@ class TestNumericValue:
     async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
-        sensor = NumericValue(
-            xknx, "TestSensor", value_type="temperature", group_address="1/2/3"
-        )
+        sensor = NumericValue(xknx, "temperature", "TestSensor", group_address="1/2/3")
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -251,9 +254,7 @@ class TestNumericValue:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
-        sensor = NumericValue(
-            xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
-        )
+        sensor = NumericValue(xknx, "temperature", "TestSensor", group_address="1/2/3")
         after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 
@@ -275,9 +276,9 @@ class TestNumericValue:
         xknx = XKNX()
         sensor = NumericValue(
             xknx,
+            "temperature",
             "TestSensor",
             group_address="1/2/3",
-            value_type="temperature",
             always_callback=True,
         )
         after_update_callback = Mock()
@@ -301,7 +302,7 @@ class TestNumericValue:
         xknx = XKNX()
         after_update_callback = Mock()
         num_value = NumericValue(
-            xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
         xknx.devices.async_add(num_value)
         num_value.register_device_updated_cb(after_update_callback)
@@ -314,9 +315,7 @@ class TestNumericValue:
         """Test NumericValue string representation."""
 
         xknx = XKNX()
-        value = NumericValue(
-            xknx, "Num", group_address="1/2/3", value_type="temperature"
-        )
+        value = NumericValue(xknx, "temperature", "Num", group_address="1/2/3")
         value.sensor_value.value = 4.9
         assert (
             str(value)
