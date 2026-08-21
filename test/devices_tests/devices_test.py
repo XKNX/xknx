@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.devices import BinarySensor, Device, Light
+from xknx.devices import BinarySensor, Device, Light, Switch
 from xknx.telegram import GroupAddress
+from xknx.telegram.address import InternalGroupAddress
 
 
 class TestDevices:
@@ -53,6 +54,57 @@ class TestDevices:
         xknx.devices.async_add(light2)
 
         assert tuple(iter(xknx.devices)) == (light1, sensor1, sensor2, light2)
+
+    def test_device_by_group_address_deduplicates(self) -> None:
+        """Test a device carrying one group address on several remote values."""
+        xknx = XKNX()
+        # switch and state address are the same - the device must be yielded once
+        light = Light(
+            xknx,
+            "Livingroom",
+            group_address_switch="1/6/7",
+            group_address_switch_state="1/6/7",
+            group_address_brightness="1/6/8",
+        )
+        xknx.devices.async_add(light)
+
+        assert tuple(xknx.devices.devices_by_group_address(GroupAddress("1/6/7"))) == (
+            light,
+        )
+        assert tuple(xknx.devices.devices_by_group_address(GroupAddress("1/6/8"))) == (
+            light,
+        )
+
+    def test_device_by_group_address_internal(self) -> None:
+        """Test lookup of an InternalGroupAddress."""
+        xknx = XKNX()
+        switch = Switch(xknx, "Internal", group_address="i-test")
+        xknx.devices.async_add(switch)
+
+        assert tuple(
+            xknx.devices.devices_by_group_address(InternalGroupAddress("i-test"))
+        ) == (switch,)
+
+    def test_device_by_group_address_after_remove(self) -> None:
+        """Test that removed devices are not returned anymore, and re-added ones are."""
+        xknx = XKNX()
+        light1 = Light(xknx, "Livingroom", group_address_switch="1/6/7")
+        light2 = Light(xknx, "Diningroom", group_address_switch="1/6/7")
+        xknx.devices.async_add(light1)
+        xknx.devices.async_add(light2)
+        ga = GroupAddress("1/6/7")
+        assert tuple(xknx.devices.devices_by_group_address(ga)) == (light1, light2)
+
+        xknx.devices.async_remove(light1)
+        assert tuple(xknx.devices.devices_by_group_address(ga)) == (light2,)
+
+        xknx.devices.async_remove(light2)
+        assert not tuple(xknx.devices.devices_by_group_address(ga))
+
+        # re-adding registers the group addresses again - at the end of the order
+        xknx.devices.async_add(light2)
+        xknx.devices.async_add(light1)
+        assert tuple(xknx.devices.devices_by_group_address(ga)) == (light2, light1)
 
     def test_len(self) -> None:
         """Test len() function."""
