@@ -211,10 +211,10 @@ class Light(Device):
 
         self.hue = RemoteValueNumeric(
             xknx,
+            "angle",
             group_address_hue,
             group_address_hue_state,
             sync_state=sync_state,
-            value_type="angle",
             device_name=self.name,
             feature_name="Hue",
             after_update_cb=self.after_update,
@@ -222,10 +222,10 @@ class Light(Device):
 
         self.saturation = RemoteValueNumeric(
             xknx,
+            "percent",
             group_address_saturation,
             group_address_saturation_state,
             sync_state=sync_state,
-            value_type="percent",
             device_name=self.name,
             feature_name="Saturation",
             after_update_cb=self.after_update,
@@ -256,10 +256,10 @@ class Light(Device):
 
         self.color_temperature = RemoteValueNumeric(
             xknx,
+            color_temperature_type.value,
             group_address_color_temperature,
             group_address_color_temperature_state,
             sync_state=sync_state,
-            value_type=color_temperature_type.value,
             device_name=self.name,
             feature_name="Color temperature",
             after_update_cb=self.after_update,

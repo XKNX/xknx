@@ -34,10 +34,6 @@ class TestRemoteValueString:
                 0x00,
             )
         )
-        remote_value_default = RemoteValueString(xknx)
-        assert remote_value_default.dpt_class == DPTString
-        assert remote_value_default.to_knx("KNX is OK") == dpt_array_string
-
         remote_value_ascii = RemoteValueString(xknx, value_type="string")
         assert remote_value_ascii.dpt_class == DPTString
         assert remote_value_ascii.to_knx("KNX is OK") == dpt_array_string
@@ -49,7 +45,7 @@ class TestRemoteValueString:
     def test_from_knx(self) -> None:
         """Test from_knx function with normal operation."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx)
+        remote_value = RemoteValueString(xknx, value_type="string")
         assert (
             remote_value.from_knx(
                 DPTArray(
@@ -77,14 +73,16 @@ class TestRemoteValueString:
     def test_to_knx_error(self) -> None:
         """Test to_knx function with wrong parametern."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx)
+        remote_value = RemoteValueString(xknx, value_type="string")
         with pytest.raises(ConversionError):
             remote_value.to_knx("123456789012345")
 
     async def test_set(self) -> None:
         """Test setting value."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
+        remote_value = RemoteValueString(
+            xknx, value_type="string", group_address=GroupAddress("1/2/3")
+        )
         remote_value.set("asdf")
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -107,7 +105,9 @@ class TestRemoteValueString:
     def test_process(self) -> None:
         """Test process telegram."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
+        remote_value = RemoteValueString(
+            xknx, value_type="string", group_address=GroupAddress("1/2/3")
+        )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(
@@ -137,7 +137,9 @@ class TestRemoteValueString:
     def test_to_process_error(self) -> None:
         """Test process erroneous telegram."""
         xknx = XKNX()
-        remote_value = RemoteValueString(xknx, group_address=GroupAddress("1/2/3"))
+        remote_value = RemoteValueString(
+            xknx, value_type="string", group_address=GroupAddress("1/2/3")
+        )
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),

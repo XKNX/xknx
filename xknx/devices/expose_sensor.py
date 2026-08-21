@@ -41,9 +41,9 @@ class ExposeSensor(Device):
         self,
         xknx: XKNX,
         name: str,
+        value_type: DPTParsable | type[DPTBase],
         group_address: GroupAddressesType = None,
         respond_to_read: bool = True,
-        value_type: DPTParsable | type[DPTBase] | None = None,
         cooldown: float = 0,
         periodic_send: float = 0,
         device_updated_cb: DeviceCallbackType[ExposeSensor] | None = None,
@@ -54,10 +54,11 @@ class ExposeSensor(Device):
         Args:
         xknx: XKNX instance to use for communication.
         name: Name of the device.
+        value_type: DPT type or identifier used to encode the sensor value.
+            ``"binary"`` sends and receives a plain boolean (DPT 1).
         group_address: KNX group address to send the value to.
         respond_to_read: If True, respond to GroupValueRead telegrams with the
             current value.
-        value_type: DPT type or identifier used to encode the sensor value.
         cooldown: Minimum time in seconds between sending values to the KNX
             bus. If multiple updates occur during this period, only the last
             value is sent when the cooldown ends. ``0`` (default) disables cooldown.
@@ -81,11 +82,11 @@ class ExposeSensor(Device):
         else:
             self.sensor_value = RemoteValueSensor(
                 xknx,
+                value_type=value_type,
                 group_address=group_address,
                 sync_state=False,
                 device_name=self.name,
                 after_update_cb=self.after_update,
-                value_type=value_type,
             )
         # the next payload to be sent after cooldown or the last sent payload
         self._payload_after_cooldown: DPTArray | DPTBinary | None = None

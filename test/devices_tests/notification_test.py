@@ -2,15 +2,32 @@
 
 from unittest.mock import Mock, patch
 
+import pytest
+
 from xknx import XKNX
 from xknx.devices import Notification
-from xknx.dpt import DPTArray, DPTBinary, DPTCharacter, DPTString
+from xknx.dpt import DPTArray, DPTBinary, DPTCharacter, DPTLatin1, DPTString
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestNotification:
     """Test class for Notification object."""
+
+    def test_value_type_default(self) -> None:
+        """Test default value_type and an explicit one."""
+        xknx = XKNX()
+        assert Notification(xknx, "Warning").remote_value.dpt_class is DPTString
+        assert (
+            Notification(xknx, "Warning", value_type="latin_1").remote_value.dpt_class
+            is DPTLatin1
+        )
+        with pytest.raises(ConversionError):
+            Notification(xknx, "Warning", value_type=None)  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            # only string DPTs are valid for Notification
+            Notification(xknx, "Warning", value_type="temperature")
 
     #
     # SYNC

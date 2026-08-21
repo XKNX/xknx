@@ -7,12 +7,24 @@ import pytest
 from xknx import XKNX
 from xknx.devices import NumericValue
 from xknx.dpt import DPTArray
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestNumericValue:
     """Test class for NumericValue objects."""
+
+    def test_value_type_required(self) -> None:
+        """Test that value_type is a required argument."""
+        xknx = XKNX()
+        with pytest.raises(TypeError):
+            NumericValue(xknx, "TestSensor")  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
+        with pytest.raises(ConversionError):
+            NumericValue(xknx, "TestSensor", value_type=None)  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            # non-numeric DPTs are not valid for NumericValue
+            NumericValue(xknx, "TestSensor", value_type="string")
 
     @pytest.mark.parametrize(
         "value_type,raw_payload,expected_state",

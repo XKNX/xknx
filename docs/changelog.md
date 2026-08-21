@@ -12,6 +12,8 @@ nav_order: 2
 
 - Drop support for Python 3.10. XKNX requires Python 3.11 or newer now.
 - Remove `xknx.util`. Its only member was `asyncio_timeout` - a backport of `asyncio.timeout` for Python versions not providing it - so use `asyncio.timeout` directly.
+- `value_type` is a required argument of `Sensor`, `NumericValue` and `ExposeSensor` and moved to third position - directly after `name` - like `payload_length` of `RawValue`. It never had a usable default: passing `None` raised `ConversionError`. `Notification` keeps its optional `value_type`, now defaulting to `"string"` instead of `None`.
+- `value_type` is a required argument of `RemoteValueSensor`, `RemoteValueNumeric` and `RemoteValueString` and moved to second position - directly after `xknx`. `RemoteValueString` no longer defaults to `DPTString`; pass `value_type="string"` explicitly.
 
 ### Connection
 

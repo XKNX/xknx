@@ -7,12 +7,23 @@ import pytest
 from xknx import XKNX
 from xknx.devices import Sensor
 from xknx.dpt import DPTArray
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 
 class TestSensor:
     """Test class for Sensor objects."""
+
+    def test_value_type_required(self) -> None:
+        """Test that value_type is a required argument."""
+        xknx = XKNX()
+        with pytest.raises(TypeError):
+            Sensor(xknx, "TestSensor")  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
+        with pytest.raises(ConversionError):
+            Sensor(xknx, "TestSensor", value_type=None)  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            Sensor(xknx, "TestSensor", value_type="no_dpt")
 
     @pytest.mark.parametrize(
         ("value_type", "raw_payload", "expected_state"),
