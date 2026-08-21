@@ -12,6 +12,13 @@ from xknx.telegram import GroupAddress, Telegram, TelegramDecodedData
 from xknx.telegram.apci import GroupValueWrite
 
 
+class _RemoteValue2ByteFloat(RemoteValue[float]):
+    """Concrete RemoteValue to test the base class implementation."""
+
+    __slots__ = ()
+    dpt_class = DPT2ByteFloat
+
+
 @patch.multiple(RemoteValue, __abstractmethods__=set())
 class TestRemoteValue:
     """Test class for RemoteValue objects."""
@@ -19,8 +26,7 @@ class TestRemoteValue:
     async def test_get_set_value(self) -> None:
         """Test value getter and setter."""
         xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        remote_value.to_knx = DPT2ByteFloat.to_knx
+        remote_value = _RemoteValue2ByteFloat(xknx)
         remote_value.after_update_cb = Mock()
 
         assert remote_value.value is None
@@ -31,9 +37,9 @@ class TestRemoteValue:
             remote_value.value = "a"
         # new value is used in response Telegram
         test_payload = remote_value.to_knx(2.2)
-        remote_value.send_raw = Mock()
-        remote_value.respond()
-        remote_value.send_raw.assert_called_with(test_payload, response=True)
+        with patch.object(_RemoteValue2ByteFloat, "send_raw") as send_raw_mock:
+            remote_value.respond()
+            send_raw_mock.assert_called_with(test_payload, response=True)
         # callback is not called when setting value programmatically
         remote_value.after_update_cb.assert_not_called()
         # no Telegram was sent to the queue
@@ -42,8 +48,7 @@ class TestRemoteValue:
     def test_set_value(self) -> None:
         """Test set_value awaitable."""
         xknx = XKNX()
-        remote_value = RemoteValue(xknx)
-        remote_value.to_knx = DPT2ByteFloat.to_knx
+        remote_value = _RemoteValue2ByteFloat(xknx)
         remote_value.after_update_cb = Mock()
 
         remote_value.update_value(3.3)
@@ -229,8 +234,7 @@ class TestRemoteValue:
     def test_process_passive_address(self) -> None:
         """Test if passive group addresses are processed."""
         xknx = XKNX()
-        remote_value = RemoteValue(xknx, group_address=["1/2/3", "1/1/1"])
-        remote_value.dpt_class = DPT2ByteFloat
+        remote_value = _RemoteValue2ByteFloat(xknx, group_address=["1/2/3", "1/1/1"])
 
         assert remote_value.writable
         assert not remote_value.readable
@@ -261,15 +265,14 @@ class TestRemoteValue:
             remote_value.process(telegram)
 
         # doesn't raise with `dpt_class` set
-        remote_value.dpt_class = DPT2ByteFloat
-        remote_value.value = 3.3
-        remote_value.process(telegram)
+        remote_value_dpt = _RemoteValue2ByteFloat(xknx, group_address="1/1/1")
+        remote_value_dpt.value = 3.3
+        remote_value_dpt.process(telegram)
 
     def test_pre_decoded_telegram(self) -> None:
         """Test if pre-decoded Telegram is processed."""
         xknx = XKNX()
-        remote_value = RemoteValue(xknx, group_address="1/1/1")
-        remote_value.dpt_class = DPT2ByteFloat
+        remote_value = _RemoteValue2ByteFloat(xknx, group_address="1/1/1")
 
         test_payload = "invalid for testing"
         telegram = Telegram(
@@ -280,27 +283,21 @@ class TestRemoteValue:
         assert remote_value.process(telegram)
         assert remote_value.value == 3.3
 
-    def test_eq(self) -> None:
-        """Test __eq__ operator."""
+    def test_compare_by_identity(self) -> None:
+        """Test that remote values of identical configuration are distinct objects."""
         xknx = XKNX()
         remote_value1 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
         remote_value2 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
-        remote_value3 = RemoteValue(xknx, group_address=GroupAddress("1/1/2"))
-        remote_value4 = RemoteValue(xknx, group_address=GroupAddress("1/1/1"))
-        remote_value4.fnord = "fnord"
 
-        def _callback() -> None:
-            pass
+        assert remote_value1 != remote_value2
+        assert remote_value1 != "not a RemoteValue"
+        assert len({remote_value1, remote_value2}) == 2  # hashable by identity
 
-        remote_value5 = RemoteValue(
-            xknx, group_address=GroupAddress("1/1/1"), after_update_cb=_callback()
-        )
+    def test_no_instance_dict(self) -> None:
+        """Test that remote values are slotted."""
+        remote_value = RemoteValue(XKNX(), group_address=GroupAddress("1/1/1"))
 
-        assert remote_value1 == remote_value2
-        assert remote_value2 == remote_value1
-        assert remote_value1 != remote_value3
-        assert remote_value3 != remote_value1
-        assert remote_value1 != remote_value4
-        assert remote_value4 != remote_value1
-        assert remote_value1 == remote_value5
-        assert remote_value5 == remote_value1
+        assert not hasattr(remote_value, "__dict__")
+        with pytest.raises(AttributeError):
+            # pylint: disable=assigning-non-slot
+            remote_value.fnord = "fnord"

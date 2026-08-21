@@ -12,6 +12,17 @@ nav_order: 2
 
 - Drop support for Python 3.10. XKNX requires Python 3.11 or newer now.
 - Remove `xknx.util`. Its only member was `asyncio_timeout` - a backport of `asyncio.timeout` for Python versions not providing it - so use `asyncio.timeout` directly.
+- Remove `RemoteValue.__eq__()`. It compared `__dict__` attributes - a leftover of the YAML config handling removed in 1.0 - and raised `AttributeError` when compared to an object without a `__dict__`. Remote values compare by identity now, which also makes them hashable again, so they can be used in sets and as dict keys.
+- All classes in `xknx.remote_value` define `__slots__` now. Setting an attribute that isn't declared by the class raises `AttributeError` instead of silently creating it.
+
+  ```python
+  rv_1 = RemoteValueSwitch(xknx, group_address="1/2/3")
+  rv_2 = RemoteValueSwitch(xknx, group_address="1/2/3")
+
+  rv_1 == rv_2  # before: True (equal attributes); now: False (distinct objects)
+  hash(rv_1)  # before: TypeError: unhashable type; now: works
+  rv_1.my_own_attribute = 1  # before: works; now: AttributeError
+  ```
 
 ### Connection
 

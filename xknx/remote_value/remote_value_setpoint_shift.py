@@ -28,6 +28,8 @@ class SetpointShiftMode(Enum):
 class RemoteValueSetpointShift(RemoteValue[float]):
     """Abstraction for remote value of KNX DPT 6.010."""
 
+    __slots__ = ("_internal_dpt_class", "setpoint_shift_step")
+
     def __init__(
         self,
         xknx: XKNX,

@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 class RemoteValueRaw(RemoteValue[int]):
     """Abstraction for raw values."""
 
+    __slots__ = ("payload_length",)
+
     def __init__(
         self,
         xknx: XKNX,

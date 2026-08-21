@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 class RemoteValueStep(RemoteValue["RemoteValueStep.Direction"]):
     """Abstraction for remote value of KNX DPT 1.007 / DPT_Step."""
 
+    __slots__ = ("invert",)
+
     class Direction(Enum):
         """Enum for indicating the direction."""
 
