@@ -38,6 +38,8 @@ logger = logging.getLogger("xknx.management")
 
 MANAGEMENT_ACK_TIMEOUT = 3
 MANAGEMENT_CONNECTION_TIMEOUT = 6
+# telegrams per second a point-to-point connection sends at most
+MANAGEMENT_RATE_LIMIT = 20
 
 
 class Management:
@@ -88,7 +90,7 @@ class Management:
         return
 
     async def connect(
-        self, address: IndividualAddress, rate_limit: int = 20
+        self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
     ) -> P2PConnection:
         """Open a point-to-point connection to a KNX device."""
         if address in self._connections:
@@ -128,7 +130,7 @@ class Management:
 
     @asynccontextmanager
     async def connection(
-        self, address: IndividualAddress, rate_limit: int = 20
+        self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
     ) -> AsyncGenerator[P2PConnection, None]:
         """Provide a point-to-point connection to a KNX device."""
         conn = await self.connect(address, rate_limit)
@@ -278,7 +280,10 @@ class P2PConnection:
     )
 
     def __init__(
-        self, xknx: XKNX, address: IndividualAddress, rate_limit: int = 20
+        self,
+        xknx: XKNX,
+        address: IndividualAddress,
+        rate_limit: int = MANAGEMENT_RATE_LIMIT,
     ) -> None:
         """Initialize P2PConnection class."""
         self.xknx = xknx
