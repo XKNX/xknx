@@ -55,14 +55,6 @@ class Management:
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
-        if isinstance(telegram.tpci, TDataConnected):
-            ack = Telegram(
-                destination_address=telegram.source_address,
-                tpci=TAck(sequence_number=telegram.tpci.sequence_number),
-            )
-            self.xknx.task_registry.background(
-                self.xknx.cemi_handler.send_telegram(ack)
-            )
         if conn := self._connections.get(telegram.source_address):
             conn.process(telegram)
             return
@@ -87,7 +79,6 @@ class Management:
             self.broadcast.process(telegram)
             return
         logger.debug("Unhandled management telegram: %r", telegram)
-        return
 
     async def connect(
         self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
@@ -363,6 +354,17 @@ class P2PConnection:
             self._response_waiter.cancel()
             self.disconnect_hook()  # remove connection from management class
 
+    def _send_control(self, tpci: TAck | TNak) -> None:
+        """Acknowledge a received telegram - sent in the background."""
+        telegram = Telegram(
+            destination_address=self.address,
+            source_address=self.xknx.current_address,
+            tpci=tpci,
+        )
+        self.xknx.task_registry.background(
+            self.xknx.cemi_handler.send_telegram(telegram)
+        )
+
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
         if isinstance(telegram.tpci, TDisconnect):
@@ -379,6 +381,31 @@ class P2PConnection:
                 return
             self._ack_waiter.set_result(telegram.tpci)
             return
+        # KNX v01.02.03 - Transport Layer 03.03.04 - §5.3: acknowledging is a
+        # transport layer duty, so it does not depend on anything waiting for
+        # the payload - hence before the `_response_waiter` check below.
+        sequence_number = telegram.tpci.sequence_number
+        if sequence_number == self._expected_sequence_number:
+            self._send_control(TAck(sequence_number=sequence_number))  # A2
+            self._expected_sequence_number = sequence_number + 1 & 0xF
+        elif sequence_number == self._expected_sequence_number - 1 & 0xF:
+            # a repetition of the telegram we processed last - acknowledge it
+            # again, the previous acknowledgement apparently did not arrive
+            self._send_control(TAck(sequence_number=sequence_number))  # A3
+            logger.debug(
+                "Received repeated sequence number %s from %s",
+                sequence_number,
+                self.address,
+            )
+            return
+        else:
+            self._send_control(TNak(sequence_number=sequence_number))  # A4
+            logger.warning(
+                "Received unexpected sequence number: %s (expected: %s)",
+                sequence_number,
+                self._expected_sequence_number,
+            )
+            return
         if self._response_waiter.done():
             logger.warning(
                 "Received unexpected point-to-point telegram for %s: %s",
@@ -386,15 +413,7 @@ class P2PConnection:
                 telegram,
             )
             return
-        if telegram.tpci.sequence_number != self._expected_sequence_number:
-            logger.warning(
-                "Received unexpected sequence number: %s (expected: %s)",
-                telegram.tpci.sequence_number,
-                self._expected_sequence_number,
-            )
-            return
         self._response_waiter.set_result(telegram)
-        self._expected_sequence_number = self._expected_sequence_number + 1 & 0xF
 
     async def send_data(self, payload: APCI, wait_for_ack: bool = True) -> None:
         """
