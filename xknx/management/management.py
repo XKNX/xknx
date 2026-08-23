@@ -231,18 +231,24 @@ class BroadcastContext:
         The broadcast channel carries telegrams of every service and from every
         device. Passing the APCI class to listen for yields only those, already
         narrowed to it; without it the caller has to sort them out itself.
+
+        `timeout` is the window for the whole iteration, not for a single
+        telegram. It is armed around the wait only, never across a `yield`, so
+        that a caller may leave the loop as soon as it has what it needs - a
+        timeout spanning the `yield` stays armed on an abandoned generator and
+        cancels whoever entered it once it elapses.
         """
-        try:
-            async with asyncio.timeout(timeout):
-                while True:
+        deadline = (
+            None if timeout is None else asyncio.get_running_loop().time() + timeout
+        )
+        while True:
+            try:
+                async with asyncio.timeout_at(deadline):
                     telegram = await self.queue.get()
-                    if expected is None or isinstance(telegram.payload, expected):
-                        try:
-                            yield telegram
-                        except GeneratorExit:
-                            return
-        except TimeoutError:
-            return
+            except TimeoutError:
+                return
+            if expected is None or isinstance(telegram.payload, expected):
+                yield telegram
 
 
 class P2PConnection:

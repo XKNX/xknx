@@ -1,6 +1,7 @@
 """Test management handling."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -389,6 +390,35 @@ async def test_request_broadcast_releases_context_when_cancelled() -> None:
     await asyncio.gather(task, return_exceptions=True)
     await asyncio.sleep(0)
     assert not xknx.management.broadcast._contexts
+
+
+async def test_broadcast_timeout_does_not_outlive_the_loop(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that leaving the loop early does not cancel the caller later on."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    _timeout = 2
+    expected, _ = _mixed_broadcast_traffic()
+    retained: list[AsyncGenerator[Telegram, None]] = []
+
+    async def take_one_then_keep_working() -> str:
+        generator = xknx.management.broadcast.request(
+            apci.IndividualAddressRead(), timeout=_timeout
+        )
+        # retained, so leaving the loop does not finalize it right away - an
+        # armed timeout would outlive the iteration and cancel this task
+        retained.append(generator)
+        async for _ in generator:
+            break
+        await asyncio.sleep(_timeout * 2)
+        return "still running"
+
+    task = asyncio.create_task(take_one_then_keep_working())
+    await asyncio.sleep(0)
+    xknx.management.process(expected)
+    await time_travel(_timeout * 2)
+    assert await task == "still running"
 
 
 @pytest.mark.parametrize("rate_limit", [0, 1])
