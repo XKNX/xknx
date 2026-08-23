@@ -7,7 +7,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.management import MANAGAMENT_CONNECTION_TIMEOUT
+from xknx.management.management import MANAGEMENT_CONNECTION_TIMEOUT
 from xknx.management.procedures.network.nm_individual_address_write import (
     nm_individual_address_write,
 )
@@ -80,14 +80,14 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
     )
 
     # make sure first request (address check) times out
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
 
     # confirm device is up and running
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
     xknx.management.process(ack)
     xknx.management.process(device_desc_resp)
 
@@ -273,7 +273,7 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     ]
 
     # no device in programming mode → timeout → error
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
     with pytest.raises(
         ManagementConnectionError, match="No device in programming mode"
     ):
@@ -386,16 +386,16 @@ async def test_nm_individual_address_write_programming_failed(
     )
 
     # make sure first request (address check) times out
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
 
     # device experienced error, so set connection request timeout
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGAMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),

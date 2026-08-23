@@ -14,7 +14,7 @@ from xknx.exceptions import (
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
 )
-from xknx.management.management import MANAGAMENT_ACK_TIMEOUT
+from xknx.management.management import MANAGEMENT_ACK_TIMEOUT
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,
@@ -96,13 +96,13 @@ async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(device_desc_read),
     ]
-    await time_travel(MANAGAMENT_ACK_TIMEOUT)
+    await time_travel(MANAGEMENT_ACK_TIMEOUT)
     # telegram repeated
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(device_desc_read),
         call(device_desc_read),
     ]
-    await time_travel(MANAGAMENT_ACK_TIMEOUT)
+    await time_travel(MANAGEMENT_ACK_TIMEOUT)
     with pytest.raises(ManagementConnectionTimeout):
         # still no ACK -> timeout
         await task
