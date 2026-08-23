@@ -23,7 +23,7 @@ async def nm_individual_address_serial_number_write(
 ) -> None:
     """Write individual address to device with specified serial number."""
     individual_address = IndividualAddress(individual_address)
-    await xknx.management.send_broadcast(
+    await xknx.management.broadcast.send(
         payload=apci.IndividualAddressSerialWrite(
             address=individual_address,
             serial=serial,

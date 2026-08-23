@@ -29,14 +29,12 @@ async def nm_individual_address_read(
     :returns: list of individual address of devices in programming mode
     """
     addresses = []
-    # initialize queue or event handler gathering broadcasts
-    async with xknx.management.broadcast() as bc_context:
-        await xknx.management.send_broadcast(apci.IndividualAddressRead())
-        async for result in bc_context.receive(timeout=timeout):
-            if isinstance(result.payload, apci.IndividualAddressResponse):
-                addresses.append(result.source_address)
-                if raise_if_multiple and (len(addresses) > 1):
-                    raise ManagementConnectionError(
-                        "More than one KNX device is in programming mode."
-                    )
+    async for result in xknx.management.broadcast.request(
+        apci.IndividualAddressRead(), timeout=timeout
+    ):
+        addresses.append(result.source_address)
+        if raise_if_multiple and (len(addresses) > 1):
+            raise ManagementConnectionError(
+                "More than one KNX device is in programming mode."
+            )
     return addresses

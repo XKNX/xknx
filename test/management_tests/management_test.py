@@ -1,6 +1,7 @@
 """Test management handling."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -248,8 +249,176 @@ async def test_broadcast_message() -> None:
         payload=apci.IndividualAddressRead(),
     )
     with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
-        await xknx.management.send_broadcast(apci.IndividualAddressRead())
+        await xknx.management.broadcast.send(apci.IndividualAddressRead())
         assert send_telegram.call_args_list == [call(test_telegram)]
+
+
+def _broadcast_telegram(payload: apci.APCI, source: str) -> Telegram:
+    """Build an incoming broadcast telegram."""
+    return Telegram(
+        source_address=IndividualAddress(source),
+        destination_address=GroupAddress("0/0/0"),
+        tpci=tpci.TDataBroadcast(),
+        payload=payload,
+    )
+
+
+def _mixed_broadcast_traffic() -> tuple[Telegram, tuple[Telegram, ...]]:
+    """Return one IndividualAddressResponse and unrelated traffic around it."""
+    expected = _broadcast_telegram(apci.IndividualAddressResponse(), "1.1.4")
+    return expected, (
+        # another service, from another device answering a different broadcast
+        _broadcast_telegram(
+            apci.IndividualAddressSerialResponse(
+                serial=b"\x00" * 6, address=IndividualAddress("1.1.5")
+            ),
+            "1.1.5",
+        ),
+        # a request from a third party, not a response at all
+        _broadcast_telegram(apci.IndividualAddressRead(), "1.1.6"),
+        expected,
+    )
+
+
+async def test_broadcast_receive_filters_by_expected_apci(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that receive() yields only telegrams carrying the expected APCI."""
+    xknx = XKNX()
+    _timeout = 2
+    expected, traffic = _mixed_broadcast_traffic()
+
+    async def collect() -> list[Telegram]:
+        async with xknx.management.broadcast.context() as bc_context:
+            return [
+                telegram
+                async for telegram in bc_context.receive(
+                    apci.IndividualAddressResponse, timeout=_timeout
+                )
+            ]
+
+    task = asyncio.create_task(collect())
+    await asyncio.sleep(0)
+    for telegram in traffic:
+        xknx.management.process(telegram)
+    await time_travel(_timeout)
+    assert await task == [expected]
+
+
+async def test_request_broadcast(time_travel: EventLoopClockAdvancer) -> None:
+    """Test that Broadcast.request() manages the broadcast context itself."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    _timeout = 2
+    expected, traffic = _mixed_broadcast_traffic()
+
+    async def collect() -> list[Telegram]:
+        return [
+            telegram
+            async for telegram in xknx.management.broadcast.request(
+                apci.IndividualAddressRead(), timeout=_timeout
+            )
+        ]
+
+    task = asyncio.create_task(collect())
+    await asyncio.sleep(0)
+    assert len(xknx.management.broadcast._contexts) == 1
+    for telegram in traffic:
+        xknx.management.process(telegram)
+    await time_travel(_timeout)
+    assert await task == [expected]
+    assert not xknx.management.broadcast._contexts
+
+
+async def test_request_broadcast_releases_context_on_early_exit() -> None:
+    """Test that leaving the iteration early still closes the broadcast context."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    expected, _ = _mixed_broadcast_traffic()
+
+    async def first_response() -> IndividualAddress | None:
+        async for telegram in xknx.management.broadcast.request(
+            apci.IndividualAddressRead(), timeout=None
+        ):
+            return telegram.source_address
+        return None
+
+    task = asyncio.create_task(first_response())
+    await asyncio.sleep(0)
+    assert len(xknx.management.broadcast._contexts) == 1
+    xknx.management.process(expected)
+    assert await task == expected.source_address
+    await asyncio.sleep(0)
+    assert not xknx.management.broadcast._contexts
+
+
+async def test_broadcast_receive_unfiltered(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that receive() without an APCI class yields the whole channel."""
+    xknx = XKNX()
+    _timeout = 2
+    _, traffic = _mixed_broadcast_traffic()
+
+    async def collect() -> list[Telegram]:
+        async with xknx.management.broadcast.context() as bc_context:
+            return [telegram async for telegram in bc_context.receive(timeout=_timeout)]
+
+    task = asyncio.create_task(collect())
+    await asyncio.sleep(0)
+    for telegram in traffic:
+        xknx.management.process(telegram)
+    await time_travel(_timeout)
+    assert await task == list(traffic)
+
+
+async def test_request_broadcast_releases_context_when_cancelled() -> None:
+    """Test that cancelling the consumer closes the broadcast context."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+
+    async def consume() -> None:
+        async for _ in xknx.management.broadcast.request(
+            apci.IndividualAddressRead(), timeout=None
+        ):
+            pass
+
+    task = asyncio.create_task(consume())
+    await asyncio.sleep(0)
+    assert len(xknx.management.broadcast._contexts) == 1
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    await asyncio.sleep(0)
+    assert not xknx.management.broadcast._contexts
+
+
+async def test_broadcast_timeout_does_not_outlive_the_loop(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that leaving the loop early does not cancel the caller later on."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    _timeout = 2
+    expected, _ = _mixed_broadcast_traffic()
+    retained: list[AsyncGenerator[Telegram, None]] = []
+
+    async def take_one_then_keep_working() -> str:
+        generator = xknx.management.broadcast.request(
+            apci.IndividualAddressRead(), timeout=_timeout
+        )
+        # retained, so leaving the loop does not finalize it right away - an
+        # armed timeout would outlive the iteration and cancel this task
+        retained.append(generator)
+        async for _ in generator:
+            break
+        await asyncio.sleep(_timeout * 2)
+        return "still running"
+
+    task = asyncio.create_task(take_one_then_keep_working())
+    await asyncio.sleep(0)
+    xknx.management.process(expected)
+    await time_travel(_timeout * 2)
+    assert await task == "still running"
 
 
 @pytest.mark.parametrize("rate_limit", [0, 1])
