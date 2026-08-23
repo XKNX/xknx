@@ -177,9 +177,14 @@ class Broadcast:
         """
         Broadcast a request service and yield the responses to it.
 
-        Holds a `context()` open for the iteration, so responses sent before the
-        generator is first awaited are not missed. Use `context()` with `send()`
-        and `receive()` directly to keep one context across several requests.
+        The request goes out when iteration starts, not when this is called. The
+        receive context is opened before it is sent, so a device answering
+        immediately can not be missed.
+
+        Any number of devices may answer, so this yields until `timeout` elapses
+        rather than returning one telegram like `P2PConnection.request()` does.
+        Leaving the loop early is fine. Use `context()` with `send()` and
+        `receive()` directly to keep one context across several requests.
         """
         async with self.context() as context:
             await self.send(payload)
@@ -200,7 +205,12 @@ class Broadcast:
 
 
 class BroadcastContext:
-    """Class providing broadcast contexts."""
+    """
+    A subscription to the broadcast channel.
+
+    While the context is open every telegram sent to the broadcast address is
+    queued here, whatever service it carries and whichever device sent it.
+    """
 
     __slots__ = ("queue",)
 
@@ -233,10 +243,10 @@ class BroadcastContext:
         narrowed to it; without it the caller has to sort them out itself.
 
         `timeout` is the window for the whole iteration, not for a single
-        telegram. It is armed around the wait only, never across a `yield`, so
-        that a caller may leave the loop as soon as it has what it needs - a
-        timeout spanning the `yield` stays armed on an abandoned generator and
-        cancels whoever entered it once it elapses.
+        telegram. It is armed around the wait for the next telegram only, never
+        across a `yield`, so that a caller can leave the loop as soon as it has
+        what it needs - a timeout spanning the `yield` would stay armed on the
+        abandoned generator and cancel whoever entered it once it elapsed.
         """
         deadline = (
             None if timeout is None else asyncio.get_running_loop().time() + timeout
