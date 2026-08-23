@@ -32,6 +32,7 @@ nav_order: 2
 ### Bugfixes
 
 - Management: don't acknowledge a connected telegram from a device xknx has no open point-to-point connection with. The acknowledgement was sent before the connection was looked up, so a device that was not talking to us received a `T_Ack` and was then reported as "No active point-to-point connection for received telegram". KNX v01.02.03 - Transport Layer 03.03.04 - §5.4: no style of the connection oriented state machine acknowledges anything while CLOSED - including the styles that accept incoming connections.
+- Management: only telegrams of a point-to-point connection are handled by an open connection to their sender. The sender address alone decided that before, so an unnumbered telegram from a device we happened to hold a connection with - a broadcast response for example - was acknowledged, never reached the broadcast context it was meant for, and could be mistaken for the response of a pending point-to-point request.
 - Management: a repeated sequence number is acknowledged again instead of being acknowledged and dropped, and a sequence number that is neither the expected nor the previous one is answered with a negative acknowledgement instead of a positive one - Transport Layer 03.03.04 - §5.3 A3 and A4.
 
 ### Connection

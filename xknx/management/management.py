@@ -55,9 +55,13 @@ class Management:
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
-        if conn := self._connections.get(telegram.source_address):
-            conn.process(telegram)
-            return
+        # only telegrams of a point-to-point connection are the connections
+        # business - a device we are connected to may just as well send us an
+        # unnumbered telegram, eg. answer a broadcast we sent
+        if isinstance(telegram.tpci, TDataConnected | TAck | TNak | TDisconnect):
+            if conn := self._connections.get(telegram.source_address):
+                conn.process(telegram)
+                return
         if telegram.tpci.numbered:
             logger.warning(
                 "No active point-to-point connection for received telegram: %s",
@@ -380,6 +384,13 @@ class P2PConnection:
                 logger.warning("Received unexpected ACK/NAK: %s", telegram)
                 return
             self._ack_waiter.set_result(telegram.tpci)
+            return
+        if not isinstance(telegram.tpci, TDataConnected):
+            logger.warning(
+                "Received telegram of unexpected transport layer service for %s: %s",
+                self.address,
+                telegram,
+            )
             return
         # KNX v01.02.03 - Transport Layer 03.03.04 - §5.3: acknowledging is a
         # transport layer duty, so it does not depend on anything waiting for

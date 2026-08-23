@@ -250,6 +250,32 @@ async def test_incoming_sequence_numbers() -> None:
     assert not connection._response_waiter.done()
 
 
+async def test_incoming_unnumbered_telegram_from_connected_device() -> None:
+    """Test unnumbered telegrams are not handled by an open connection to their sender."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("4.0.10")
+    # the device answering the broadcast is one we hold a connection with
+    connection = await xknx.management.connect(individual_address)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    address_response = Telegram(
+        source_address=individual_address,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataBroadcast(),
+        payload=apci.IndividualAddressResponse(),
+    )
+    async with xknx.management.broadcast.context() as bc_context:
+        xknx.management.process(address_response)
+        await asyncio.sleep(0)
+        assert bc_context.queue.get_nowait() == address_response
+    # not acknowledged - it is not part of the point-to-point connection - and
+    # not mistaken for its response either
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    assert not connection._response_waiter.done()
+
+
 async def test_incoming_wrong_address() -> None:
     """Test incoming telegrams addressed to different devices."""
     xknx = XKNX()
