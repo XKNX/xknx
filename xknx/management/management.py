@@ -62,7 +62,6 @@ class Management:
             if conn := self._connections.get(telegram.source_address):
                 conn.process(telegram)
                 return
-        if telegram.tpci.numbered:
             logger.warning(
                 "No active point-to-point connection for received telegram: %s",
                 telegram,
