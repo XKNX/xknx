@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Breaking changes
 
+- Rename `xknx.management.management.MANAGAMENT_ACK_TIMEOUT` and `MANAGAMENT_CONNECTION_TIMEOUT` to `MANAGEMENT_ACK_TIMEOUT` and `MANAGEMENT_CONNECTION_TIMEOUT` - they were misspelled.
 - Drop support for Python 3.10. XKNX requires Python 3.11 or newer now.
 - Remove `xknx.util`. Its only member was `asyncio_timeout` - a backport of `asyncio.timeout` for Python versions not providing it - so use `asyncio.timeout` directly.
 - Remove `RemoteValue.__eq__()`. It compared `__dict__` attributes - a leftover of the YAML config handling removed in 1.0 - and raised `AttributeError` when compared to an object without a `__dict__`. Remote values compare by identity now, which also makes them hashable again, so they can be used in sets and as dict keys.

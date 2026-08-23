@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 logger = logging.getLogger("xknx.management")
 
-MANAGAMENT_ACK_TIMEOUT = 3
-MANAGAMENT_CONNECTION_TIMEOUT = 6
+MANAGEMENT_ACK_TIMEOUT = 3
+MANAGEMENT_CONNECTION_TIMEOUT = 6
 
 
 class Management:
@@ -419,7 +419,7 @@ class P2PConnection:
         self._ack_waiter = asyncio.get_event_loop().create_future()
         try:
             await self.xknx.cemi_handler.send_telegram(telegram)
-            async with asyncio.timeout(MANAGAMENT_ACK_TIMEOUT):
+            async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
                 ack = await self._ack_waiter
         except TimeoutError:
             logger.info(
@@ -430,7 +430,7 @@ class P2PConnection:
             self._ack_waiter = asyncio.get_event_loop().create_future()
             await self.xknx.cemi_handler.send_telegram(telegram)
             try:
-                async with asyncio.timeout(MANAGAMENT_ACK_TIMEOUT):
+                async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
                     ack = await self._ack_waiter
             except TimeoutError:
                 raise ManagementConnectionTimeout(
@@ -457,7 +457,7 @@ class P2PConnection:
     async def _receive(self, expected_payload: type[APCI] | None) -> Telegram:
         """Wait for a telegram from the KNX device."""
         try:
-            async with asyncio.timeout(MANAGAMENT_CONNECTION_TIMEOUT):
+            async with asyncio.timeout(MANAGEMENT_CONNECTION_TIMEOUT):
                 telegram = await self._response_waiter
         except TimeoutError:
             raise ManagementConnectionTimeout(
