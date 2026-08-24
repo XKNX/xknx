@@ -180,8 +180,8 @@ async def test_reject_incoming_connection() -> None:
         assert send_telegram.call_args_list == [call(disconnect)]
 
 
-async def test_incoming_unexpected_numbered_telegram() -> None:
-    """Test incoming unexpected numbered telegram is acked."""
+async def test_incoming_numbered_telegram_without_connection_is_ignored() -> None:
+    """Test connected telegrams from devices we have no connection with are ignored."""
     xknx = XKNX()
     individual_address = IndividualAddress("4.0.10")
 
@@ -192,16 +192,88 @@ async def test_incoming_unexpected_numbered_telegram() -> None:
         tpci=tpci.TDataConnected(0),
         payload=apci.DeviceDescriptorRead(descriptor=0),
     )
-    ack = Telegram(
-        source_address=xknx.current_address,
-        destination_address=individual_address,
-        direction=TelegramDirection.OUTGOING,
-        tpci=tpci.TAck(0),
-    )
     with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
         xknx.cemi_handler.telegram_received(device_desc_read)
         await asyncio.sleep(0)
-        assert send_telegram.call_args_list == [call(ack)]
+        # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4: acknowledging is A2/A3,
+        # neither of which the CLOSED state has - the telegram is not ours to ack
+        send_telegram.assert_not_called()
+
+
+async def test_incoming_sequence_numbers() -> None:
+    """Test acknowledgement of in-sequence, repeated and out-of-window telegrams."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("4.0.10")
+    connection = await xknx.management.connect(individual_address)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    def incoming(sequence_number: int) -> Telegram:
+        return Telegram(
+            source_address=individual_address,
+            destination_address=xknx.current_address,
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TDataConnected(sequence_number),
+            payload=apci.DeviceDescriptorResponse(),
+        )
+
+    def outgoing(control: tpci.TPCI) -> Telegram:
+        return Telegram(
+            source_address=xknx.current_address,
+            destination_address=individual_address,
+            tpci=control,
+        )
+
+    # in sequence - acknowledged and handed to whoever waits for it
+    xknx.management.process(incoming(0))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(outgoing(tpci.TAck(0)))
+    ]
+    assert connection._response_waiter.done()
+
+    # a repetition of it - acknowledged again, but not processed a second time
+    connection._response_waiter = asyncio.get_event_loop().create_future()
+    xknx.management.process(incoming(0))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        outgoing(tpci.TAck(0))
+    )
+    assert not connection._response_waiter.done()
+
+    # neither the expected nor the previous one - not acknowledged
+    xknx.management.process(incoming(7))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        outgoing(tpci.TNak(7))
+    )
+    assert not connection._response_waiter.done()
+
+
+async def test_incoming_unnumbered_telegram_from_connected_device() -> None:
+    """Test unnumbered telegrams are not handled by an open connection to their sender."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address = IndividualAddress("4.0.10")
+    # the device answering the broadcast is one we hold a connection with
+    connection = await xknx.management.connect(individual_address)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    address_response = Telegram(
+        source_address=individual_address,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataBroadcast(),
+        payload=apci.IndividualAddressResponse(),
+    )
+    async with xknx.management.broadcast.context() as bc_context:
+        xknx.management.process(address_response)
+        await asyncio.sleep(0)
+        assert bc_context.queue.get_nowait() == address_response
+    # not acknowledged - it is not part of the point-to-point connection - and
+    # not mistaken for its response either
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    assert not connection._response_waiter.done()
 
 
 async def test_incoming_wrong_address() -> None:
