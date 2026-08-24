@@ -14,6 +14,13 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 class TestNumericValue:
     """Test class for NumericValue objects."""
 
+    def test_default_name(self) -> None:
+        """Test name defaulting to the class name and value type."""
+        xknx = XKNX()
+        numeric_value = NumericValue(xknx, group_address="1/2/3", value_type="percent")
+        assert numeric_value.name == "NumericValue percent"
+        assert numeric_value.sensor_value.device_name == "NumericValue percent"
+
     @pytest.mark.parametrize(
         "value_type,raw_payload,expected_state",
         [

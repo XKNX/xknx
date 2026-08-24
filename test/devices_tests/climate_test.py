@@ -36,6 +36,23 @@ DPT_20102_MODES = [
 class TestClimate:
     """Test class for Climate objects."""
 
+    def test_name_is_passed_down_to_mode(self) -> None:
+        """Test setting the name renames the mode device and its RemoteValues."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx, "TestClimateMode", group_address_operation_mode="1/2/5"
+        )
+        climate = Climate(
+            xknx, "TestClimate", group_address_temperature="1/2/3", mode=climate_mode
+        )
+        # the mode device keeps its own name until the climate device is renamed
+        assert climate_mode.name == "TestClimateMode"
+
+        climate.name = "climate.test"
+        assert climate_mode.name == "climate.test"
+        assert climate_mode.remote_value_operation_mode.device_name == "climate.test"
+        assert climate.temperature.device_name == "climate.test"
+
     #
     # SUPPORTS TEMPERATURE / SETPOINT
     #

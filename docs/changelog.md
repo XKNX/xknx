@@ -27,6 +27,7 @@ nav_order: 2
 - Remove device lookup by name or index from `xknx.devices`. `xknx.devices["NameOfDevice"]` and `xknx.devices[0]` are gone - device names are never checked for uniqueness, so the lookup could return any one of several devices sharing a name. Keep a reference to the device object instead, or iterate `xknx.devices` to find it. `device in xknx.devices` takes the `Device` object now instead of its name.
 - `Devices.async_add()` and `Devices.async_remove()` raise `ValueError` when the device object is already registered, or not registered at all. Adding a device twice had it receive every telegram twice and fire its callbacks twice; removing an unregistered one cancelled its tasks and unregistered its state updater before failing.
 - Remove `Device.__eq__()` - same reasoning as `RemoteValue.__eq__()` above: it compared `__dict__` attributes and was a leftover of the YAML config handling removed in 1.0. Devices compare by identity now, which also makes `Device` hashable again, so devices can be used in sets and as dict keys. The same applies to `Light.red`, `.green`, `.blue` and `.white`.
+- `RawValue` takes `payload_length` as its first argument after `xknx`, before `name` - `name` is optional now and Python doesn't allow a required argument after an optional one. `RawValue(xknx, "Name", 2, ...)` becomes `RawValue(xknx, 2, "Name", ...)`.
 - `Scene.scene_value` is a `RemoteValueSceneControl` (DPT 18.001) instead of a `RemoteValueSceneNumber` (DPT 17.001), so its value carries the learn bit next to the scene number. Telegrams on the wire are unchanged: DPT 18.001 encodes an activation to the same octet DPT 17.001 does, and decodes one back the same way. The device callback is called for received learn telegrams of the devices `scene_number` now, not only for activations - the new `Scene.learn_requested` tells both apart.
 
 ### Bugfixes
@@ -41,6 +42,13 @@ nav_order: 2
 
 ### Devices
 
+- The `name` of a device is optional now and can be changed after instantiation. When no name is given it defaults to the class name of the device; `Sensor`, `NumericValue` and `ExposeSensor` append their value type, eg. `"Sensor temperature"`. Assigning `Device.name` passes the new name down to the devices `RemoteValue` instances, so log messages and exceptions use it too - previously the name was only copied to the remote values on instantiation and assigning a new one left them stale. Renaming a `Climate` renames its `mode` device as well.
+
+  ```python
+  light = Light(xknx, group_address_switch="1/2/3")
+  light.name  # "Light"
+  light.name = "light.kitchen_ceiling"  # eg. in Home Assistants `async_added_to_hass()`
+  ```
 - Scene: add `learn()` to send a telegram with the learn bit set, telling actuators to store their current state as this scene. Received learn telegrams are decoded instead of logging a "Can not process" warning, so a Scene can serve as scene actuator: restore its state from the device callback when `learn_requested` is `False`, store it when it is `True`.
 
 ### Internals

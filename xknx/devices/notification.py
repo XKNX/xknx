@@ -22,7 +22,7 @@ class Notification(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
@@ -40,7 +40,7 @@ class Notification(Device):
             group_address_state=group_address_state,
             sync_state=sync_state,
             value_type=value_type,
-            device_name=name,
+            device_name=self.name,
             feature_name="Text",
             after_update_cb=self.after_update,
         )

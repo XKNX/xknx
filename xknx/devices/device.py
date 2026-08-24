@@ -29,15 +29,40 @@ class Device(ABC):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         device_updated_cb: DeviceCallbackType[Self] | None = None,
     ) -> None:
         """Initialize Device class."""
         self.xknx = xknx
-        self.name = name
+        # assigned directly - the `name` setter needs the RemoteValues of the
+        # subclass, which are only created after this constructor has returned
+        self._name = name
         self.device_updated_cbs: list[DeviceCallbackType[Self]] = []
         if device_updated_cb is not None:
             self.register_device_updated_cb(device_updated_cb)
+
+    @property
+    def name(self) -> str:
+        """Return name of device."""
+        if self._name is None:
+            return self._default_name()
+        return self._name
+
+    @name.setter
+    def name(self, name: str | None) -> None:
+        """Set name of device and pass it down to its RemoteValues."""
+        self._name = name
+        self._update_device_name()
+
+    def _default_name(self) -> str:
+        """Return the name used when no name was given."""
+        return type(self).__name__
+
+    def _update_device_name(self) -> None:
+        """Pass the current device name down to all RemoteValues of this device."""
+        name = self.name
+        for remote_value in self._iter_remote_values():
+            remote_value.device_name = name
 
     def register_state_updater(self) -> None:
         """Register device addresses for StateUpdater."""

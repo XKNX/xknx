@@ -32,7 +32,7 @@ class BinarySensor(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address_state: GroupAddressesType = None,
         invert: bool = False,
         sync_state: bool | int | float | str = True,

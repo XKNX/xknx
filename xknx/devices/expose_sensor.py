@@ -40,7 +40,7 @@ class ExposeSensor(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         respond_to_read: bool = True,
         value_type: DPTParsable | type[DPTBase] | None = None,
@@ -53,7 +53,7 @@ class ExposeSensor(Device):
 
         Args:
         xknx: XKNX instance to use for communication.
-        name: Name of the device.
+        name: Name of the device. Defaults to the class name and the value type.
         group_address: KNX group address to send the value to.
         respond_to_read: If True, respond to GroupValueRead telegrams with the
             current value.
@@ -75,7 +75,7 @@ class ExposeSensor(Device):
                 xknx,
                 group_address=group_address,
                 sync_state=False,
-                device_name=self.name,
+                device_name=name,
                 after_update_cb=self.after_update,
             )
         else:
@@ -83,10 +83,11 @@ class ExposeSensor(Device):
                 xknx,
                 group_address=group_address,
                 sync_state=False,
-                device_name=self.name,
+                device_name=name,
                 after_update_cb=self.after_update,
                 value_type=value_type,
             )
+        self._update_device_name()
         # the next payload to be sent after cooldown or the last sent payload
         self._payload_after_cooldown: DPTArray | DPTBinary | None = None
         self._cooldown_task = (
@@ -111,6 +112,14 @@ class ExposeSensor(Device):
             if periodic_send and periodic_send > 0
             else None
         )
+
+    def _default_name(self) -> str:
+        """Return the name used when no name was given."""
+        if isinstance(self.sensor_value, RemoteValueSwitch):
+            return f"{type(self).__name__} binary"
+        if value_type := self.sensor_value.dpt_class.value_type:
+            return f"{type(self).__name__} {value_type}"
+        return super()._default_name()
 
     def _iter_remote_values(self) -> Iterator[RemoteValue[Any]]:
         """Iterate the devices RemoteValue classes."""

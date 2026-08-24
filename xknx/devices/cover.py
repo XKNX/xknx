@@ -45,7 +45,7 @@ class Cover(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address_long: GroupAddressesType = None,
         group_address_short: GroupAddressesType = None,
         group_address_stop: GroupAddressesType = None,
