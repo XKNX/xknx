@@ -6,7 +6,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.devices import Sensor
-from xknx.dpt import DPTArray
+from xknx.dpt import DPTArray, DPTTemperature
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -20,6 +20,10 @@ class TestSensor:
         sensor = Sensor(xknx, group_address_state="1/2/3", value_type="temperature")
         assert sensor.name == "Sensor temperature"
         assert sensor.sensor_value.device_name == "Sensor temperature"
+
+        # a DPT class is named by its class name, not its repr
+        sensor = Sensor(xknx, group_address_state="1/2/3", value_type=DPTTemperature)
+        assert sensor.name == "Sensor DPTTemperature"
 
     @pytest.mark.parametrize(
         ("value_type", "raw_payload", "expected_state"),

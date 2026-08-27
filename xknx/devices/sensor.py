@@ -44,7 +44,10 @@ class Sensor(Device):
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
         if name is None:
-            self._name = f"{type(self).__name__} {value_type}"
+            type_name = (
+                value_type.__name__ if isinstance(value_type, type) else value_type
+            )
+            self._name = f"{type(self).__name__} {type_name}"
         self.sensor_value = RemoteValueSensor(
             xknx,
             group_address_state=group_address_state,
