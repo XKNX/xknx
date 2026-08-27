@@ -119,6 +119,7 @@ class Light(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_switch: GroupAddressesType = None,
         group_address_switch_state: GroupAddressesType = None,
@@ -161,7 +162,7 @@ class Light(Device):
         device_updated_cb: DeviceCallbackType[Light] | None = None,
     ) -> None:
         """Initialize Light class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.switch = RemoteValueSwitch(
             xknx,

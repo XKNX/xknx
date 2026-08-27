@@ -28,6 +28,7 @@ class RawValue(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         payload_length: int,
         name: str | None = None,
         group_address: GroupAddressesType = None,
@@ -38,7 +39,7 @@ class RawValue(Device):
         device_updated_cb: DeviceCallbackType[RawValue] | None = None,
     ) -> None:
         """Initialize RawValue class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
         self.always_callback = always_callback
         self.respond_to_read = respond_to_read
         self.remote_value = RemoteValueRaw(

@@ -126,7 +126,7 @@ class TestStringRepresentations:
             str(binary_sensor)
             == '<BinarySensor name="BinarySensor" remote_value=<None, 1/2/3, [], None /> state=None />'
         )
-        sensor = Sensor(xknx, "temperature", group_address_state="1/2/3")
+        sensor = Sensor(xknx, value_type="temperature", group_address_state="1/2/3")
         assert (
             str(sensor)
             == '<Sensor name="Sensor temperature" sensor=<None, 1/2/3, [], None /> value=None unit="°C"/>'
@@ -310,7 +310,9 @@ class TestStringRepresentations:
     async def test_sensor(self) -> None:
         """Test string representation of sensor object."""
         xknx = XKNX()
-        sensor = Sensor(xknx, "percent", name="MeinSensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx, value_type="percent", name="MeinSensor", group_address_state="1/2/3"
+        )
         assert (
             str(sensor)
             == '<Sensor name="MeinSensor" sensor=<None, 1/2/3, [], None /> value=None unit="%"/>'
@@ -330,7 +332,9 @@ class TestStringRepresentations:
     async def test_expose_sensor(self) -> None:
         """Test string representation of expose sensor object."""
         xknx = XKNX()
-        sensor = ExposeSensor(xknx, "percent", name="MeinSensor", group_address="1/2/3")
+        sensor = ExposeSensor(
+            xknx, value_type="percent", name="MeinSensor", group_address="1/2/3"
+        )
         assert (
             str(sensor)
             == '<ExposeSensor name="MeinSensor" sensor=<1/2/3, None, [], None /> value=None unit="%"/>'
@@ -358,7 +362,7 @@ class TestStringRepresentations:
         xknx = XKNX()
         weather = Weather(
             xknx,
-            "Home",
+            name="Home",
             group_address_temperature="7/0/1",
             group_address_brightness_south="7/0/5",
             group_address_brightness_east="7/0/4",

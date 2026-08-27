@@ -63,7 +63,7 @@ If only a subset of operation modes shall be used a list of supported modes may 
 ```python
 climate_mode = ClimateMode(
     xknx,
-    "TestClimateMode",
+    name="TestClimateMode",
     group_address_operation_mode="",
     group_address_operation_mode_state="",
     group_address_operation_mode_protection=None,
@@ -80,7 +80,7 @@ climate_mode = ClimateMode(
 
 climate = Climate(
     xknx,
-    "TestClimate",
+    name="TestClimate",
     group_address_temperature="",
     group_address_target_temperature="",
     group_address_target_temperature_state="",
@@ -124,7 +124,7 @@ climate.shutdown()
 ```python
 climate_setpoint_shift = Climate(
     xknx,
-    "TestClimateSPS",
+    name="TestClimateSPS",
     group_address_temperature="1/2/2",
     group_address_target_temperature_state="1/2/5",
     group_address_setpoint_shift="1/2/3",
@@ -133,7 +133,7 @@ climate_setpoint_shift = Climate(
 
 climate_target_temp = Climate(
     xknx,
-    "TestClimateTT",
+    name="TestClimateTT",
     group_address_temperature="2/2/2",
     group_address_target_temperature="2/2/3",
     group_address_target_temperature_state="2/2/4",

@@ -27,7 +27,7 @@ Switches are simple representations of binary actors. They mainly support switch
 ## [](#header-2)Example
 
 ```python
-switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
+switch = Switch(xknx, name="TestOutlet", group_address="1/2/3")
 xknx.devices.async_add(switch)
 
 # Switching switch on

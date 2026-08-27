@@ -20,7 +20,7 @@ class TestScene:
     async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        scene = Scene(xknx, name="TestScene", group_address="1/2/1", scene_number=23)
         await scene.sync()
         assert xknx.telegrams.qsize() == 0
 
@@ -30,7 +30,7 @@ class TestScene:
     async def test_run(self) -> None:
         """Test running scene."""
         xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        scene = Scene(xknx, name="TestScene", group_address="1/2/1", scene_number=23)
         await scene.run()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -45,7 +45,7 @@ class TestScene:
     async def test_learn(self) -> None:
         """Test storing a scene."""
         xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        scene = Scene(xknx, name="TestScene", group_address="1/2/1", scene_number=23)
         await scene.learn()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -60,7 +60,7 @@ class TestScene:
     def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
-        scene = Scene(xknx, "TestScene", group_address="1/2/1", scene_number=23)
+        scene = Scene(xknx, name="TestScene", group_address="1/2/1", scene_number=23)
         assert scene.has_group_address(GroupAddress("1/2/1"))
         assert not scene.has_group_address(GroupAddress("2/2/2"))
 
@@ -71,7 +71,7 @@ class TestScene:
         after_update_callback = Mock()
         scene = Scene(
             xknx,
-            "TestScene",
+            name="TestScene",
             group_address="1/2/3",
             scene_number=1,
             device_updated_cb=after_update_callback,

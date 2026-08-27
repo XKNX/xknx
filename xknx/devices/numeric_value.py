@@ -30,6 +30,7 @@ class NumericValue(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         value_type: DPTParsable | type[DPTNumeric],
         name: str | None = None,
         group_address: GroupAddressesType = None,
@@ -40,7 +41,7 @@ class NumericValue(Device):
         device_updated_cb: DeviceCallbackType[NumericValue] | None = None,
     ) -> None:
         """Initialize Sensor class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
         if name is None:
             type_name = (
                 value_type.__name__ if isinstance(value_type, type) else value_type

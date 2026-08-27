@@ -36,6 +36,7 @@ class ClimateMode(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_operation_mode: GroupAddressesType = None,
         group_address_operation_mode_state: GroupAddressesType = None,
@@ -55,7 +56,7 @@ class ClimateMode(Device):
         device_updated_cb: DeviceCallbackType[ClimateMode] | None = None,
     ) -> None:
         """Initialize ClimateMode class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.remote_value_operation_mode = RemoteValueOperationMode(
             xknx,

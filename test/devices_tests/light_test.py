@@ -21,7 +21,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "TestLight",
+            name="TestLight",
             group_address_switch="1/2/3",
             group_address_switch_red="1/2/4",
             group_address_brightness_red="1/2/5",
@@ -37,7 +37,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_brightness="1/6/6",
         )
@@ -46,7 +46,7 @@ class TestLight:
     def test_supports_dimm_false(self) -> None:
         """Test supports_dimm attribute with a Light without dimmer."""
         xknx = XKNX()
-        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        light = Light(xknx, name="Diningroom.Light_1", group_address_switch="1/6/4")
         assert not light.supports_brightness
 
     #
@@ -57,7 +57,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_color="1/6/5",
         )
@@ -66,7 +66,7 @@ class TestLight:
     def test_supports_color_false(self) -> None:
         """Test supports_color false."""
         xknx = XKNX()
-        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        light = Light(xknx, name="Diningroom.Light_1", group_address_switch="1/6/4")
         assert not light.supports_color
 
     def test_supports_individual_color_true(self) -> None:
@@ -74,7 +74,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -95,7 +95,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Individual colors only brightness",
+            name="Individual colors only brightness",
             group_address_brightness_red="1/1/3",
             group_address_brightness_green="1/1/7",
             group_address_brightness_blue="1/1/11",
@@ -107,7 +107,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -127,7 +127,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_rgbw="1/6/5",
             group_address_color="1/6/6",
@@ -139,7 +139,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_color="1/6/6",
         )
@@ -150,7 +150,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -175,7 +175,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Individual colors only brightness",
+            name="Individual colors only brightness",
             group_address_brightness_red="1/1/3",
             group_address_brightness_green="1/1/7",
             group_address_brightness_blue="1/1/11",
@@ -188,7 +188,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -209,7 +209,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Hue and saturation",
+            name="Hue and saturation",
             group_address_switch="1/6/4",
             group_address_hue="1/6/5",
             group_address_saturation="1/6/6",
@@ -221,7 +221,7 @@ class TestLight:
         xknx = XKNX()
         light_hue = Light(
             xknx,
-            "Light hue only",
+            name="Light hue only",
             group_address_switch="1/6/4",
             group_address_hue="1/6/5",
         )
@@ -229,7 +229,7 @@ class TestLight:
 
         light_saturation = Light(
             xknx,
-            "Light saturation only",
+            name="Light saturation only",
             group_address_switch="1/6/4",
             group_address_saturation="1/6/5",
         )
@@ -240,7 +240,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_xyy_color="1/6/5",
         )
@@ -249,7 +249,7 @@ class TestLight:
     def test_supports_xyy_color_false(self) -> None:
         """Test supports_xyy_color false."""
         xknx = XKNX()
-        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        light = Light(xknx, name="Diningroom.Light_1", group_address_switch="1/6/4")
         assert not light.supports_xyy_color
 
     #
@@ -260,7 +260,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_tunable_white="1/6/6",
         )
@@ -269,7 +269,7 @@ class TestLight:
     def test_supports_tw_no(self) -> None:
         """Test supports_tw attribute with a Light without tunable white function."""
         xknx = XKNX()
-        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        light = Light(xknx, name="Diningroom.Light_1", group_address_switch="1/6/4")
         assert not light.supports_tunable_white
 
     #
@@ -280,7 +280,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/6/4",
             group_address_color_temperature="1/6/6",
         )
@@ -289,7 +289,7 @@ class TestLight:
     def test_supports_color_temp_false(self) -> None:
         """Test supports_color_temp attribute with a Light without color temperature function."""
         xknx = XKNX()
-        light = Light(xknx, "Diningroom.Light_1", group_address_switch="1/6/4")
+        light = Light(xknx, name="Diningroom.Light_1", group_address_switch="1/6/4")
         assert not light.supports_color_temperature
 
     #
@@ -347,7 +347,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -433,7 +433,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -493,7 +493,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Individual colors only brightness",
+            name="Individual colors only brightness",
             group_address_brightness_red="1/1/3",
             group_address_brightness_red_state="1/1/4",
             group_address_brightness_green="1/1/7",
@@ -568,7 +568,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -623,7 +623,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_brightness_red="1/1/3",
             group_address_brightness_red_state="1/1/4",
             group_address_brightness_green="1/1/7",
@@ -703,7 +703,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch="1/0/0",
             group_address_brightness="1/0/1",
             group_address_switch_red="1/1/1",
@@ -786,7 +786,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -846,11 +846,7 @@ class TestLight:
     async def test_set_individual_color_not_possible(self) -> None:
         """Test setting the color of a non light without color."""
         xknx = XKNX()
-        light = Light(
-            xknx,
-            "TestLight",
-            group_address_switch_red="1/1/1",
-        )
+        light = Light(xknx, name="TestLight", group_address_switch_red="1/1/1")
         xknx.devices.async_add(light)
 
         with patch("logging.Logger.warning") as mock_warn:
@@ -909,7 +905,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -985,7 +981,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "TestLight",
+            name="TestLight",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -1281,7 +1277,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "TestLight",
+            name="TestLight",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -1423,7 +1419,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "TestLight",
+            name="TestLight",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -1485,7 +1481,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Diningroom.Light_1",
+            name="Diningroom.Light_1",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -1523,7 +1519,7 @@ class TestLight:
 
         rgb_light = Light(
             xknx,
-            "TestRGBLight",
+            name="TestRGBLight",
             group_address_switch_red="1/1/1",
             group_address_switch_red_state="1/1/2",
             group_address_brightness_red="1/1/3",
@@ -1541,7 +1537,7 @@ class TestLight:
         xknx.devices.async_add(rgb_light)
         rgbw_light = Light(
             xknx,
-            "TestRGBWLight",
+            name="TestRGBWLight",
             group_address_switch="1/1/0",
             group_address_brightness_red="1/1/3",
             group_address_brightness_red_state="1/1/4",
@@ -1818,7 +1814,7 @@ class TestLight:
         xknx = XKNX()
         light = Light(
             xknx,
-            "Office.Light_1",
+            name="Office.Light_1",
             group_address_switch="1/7/1",
             group_address_switch_state="1/7/2",
             group_address_brightness="1/7/3",

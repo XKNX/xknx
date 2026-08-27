@@ -47,6 +47,7 @@ class Fan(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_speed: GroupAddressesType = None,
         group_address_speed_state: GroupAddressesType = None,
@@ -59,7 +60,7 @@ class Fan(Device):
         max_step: int | None = None,
     ) -> None:
         """Initialize fan class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.mode = FanSpeedMode.STEP if max_step else FanSpeedMode.PERCENT

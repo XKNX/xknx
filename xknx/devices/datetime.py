@@ -47,6 +47,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         localtime: bool | datetime.tzinfo = True,
         group_address: GroupAddressesType = None,
@@ -56,7 +57,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
         device_updated_cb: DeviceCallbackType[Self] | None = None,
     ) -> None:
         """Initialize DateTime class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
         self.localtime = bool(localtime)
         self._localtime_zone = (
             localtime if isinstance(localtime, datetime.tzinfo) else None

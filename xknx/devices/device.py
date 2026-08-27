@@ -29,6 +29,7 @@ class Device(ABC):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         device_updated_cb: DeviceCallbackType[Self] | None = None,
     ) -> None:

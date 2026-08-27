@@ -36,7 +36,7 @@ Shutters are simple representations of blind/roller cover actuators. With XKNX y
 ```python
 cover = Cover(
     xknx,
-    "TestCover",
+    name="TestCover",
     group_address_long="1/2/1",
     group_address_short="1/2/2",
     group_address_position="1/2/3",

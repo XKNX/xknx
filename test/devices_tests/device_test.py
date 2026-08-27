@@ -17,13 +17,13 @@ class TestDevice:
         """Test name defaulting to the class name when none is given."""
         xknx = XKNX()
         assert Device(xknx).name == "Device"
-        assert Device(xknx, None).name == "Device"
-        assert Device(xknx, "TestDevice").name == "TestDevice"
+        assert Device(xknx, name=None).name == "Device"
+        assert Device(xknx, name="TestDevice").name == "TestDevice"
 
     def test_name_is_passed_down_to_remote_values(self) -> None:
         """Test setting the name updates the RemoteValues of the device."""
         xknx = XKNX()
-        device = Switch(xknx, "TestSwitch", group_address="1/2/3")
+        device = Switch(xknx, name="TestSwitch", group_address="1/2/3")
         assert device.switch.device_name == "TestSwitch"
 
         device.name = "switch.test"
@@ -39,7 +39,9 @@ class TestDevice:
         """Test device updated cb is added to the device."""
         xknx = XKNX()
         after_update_callback = Mock()
-        device = Device(xknx, "TestDevice", device_updated_cb=after_update_callback)
+        device = Device(
+            xknx, name="TestDevice", device_updated_cb=after_update_callback
+        )
 
         device.after_update()
         after_update_callback.assert_called_with(device)
@@ -47,7 +49,7 @@ class TestDevice:
     def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
         xknx = XKNX()
-        device = Device(xknx, "TestDevice")
+        device = Device(xknx, name="TestDevice")
         after_update_callback1 = Mock()
         after_update_callback2 = Mock()
         device.register_device_updated_cb(after_update_callback1)
@@ -85,7 +87,7 @@ class TestDevice:
     def test_bad_callback(self, logging_exception_mock: Mock) -> None:
         """Test handling callback raising an exception."""
         xknx = XKNX()
-        device = Device(xknx, "TestDevice")
+        device = Device(xknx, name="TestDevice")
         good_callback_1 = Mock()
         bad_callback = Mock(side_effect=Exception("Boom"))
         good_callback_2 = Mock()
@@ -107,7 +109,7 @@ class TestDevice:
     async def test_process(self) -> None:
         """Test if telegram is handled by the correct process_* method."""
         xknx = XKNX()
-        device = Device(xknx, "TestDevice")
+        device = Device(xknx, name="TestDevice")
 
         with patch("xknx.devices.Device.process_group_read") as mock_group_read:
             telegram = Telegram(
@@ -135,7 +137,9 @@ class TestDevice:
     async def test_sync_with_wait(self) -> None:
         """Test sync with wait_for_result=True."""
         xknx = XKNX()
-        sensor = Sensor(xknx, "wind_speed_ms", "Sensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx, value_type="wind_speed_ms", name="Sensor", group_address_state="1/2/3"
+        )
 
         with patch(
             "xknx.remote_value.RemoteValue.read_state", new_callable=AsyncMock
@@ -146,13 +150,13 @@ class TestDevice:
     async def test_process_group_write(self) -> None:
         """Test if process_group_write. Nothing really to test here."""
         xknx = XKNX()
-        device = Device(xknx, "TestDevice")
+        device = Device(xknx, name="TestDevice")
         device.process_group_write(Telegram(destination_address=GroupAddress(1)))
 
     async def test_process_group_response(self) -> None:
         """Test if process_group_read. Testing if mapped to group_write."""
         xknx = XKNX()
-        device = Device(xknx, "TestDevice")
+        device = Device(xknx, name="TestDevice")
         with patch("xknx.devices.Device.process_group_write") as mock_group_write:
             device.process_group_response(Telegram(destination_address=GroupAddress(1)))
             mock_group_write.assert_called_with(
@@ -162,5 +166,5 @@ class TestDevice:
     async def test_process_group_read(self) -> None:
         """Test if process_group_read. Nothing really to test here."""
         xknx = XKNX()
-        device = Device(xknx, "TestDevice")
+        device = Device(xknx, name="TestDevice")
         device.process_group_read(Telegram(destination_address=GroupAddress(1)))
