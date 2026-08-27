@@ -20,7 +20,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from xknx.core import Task
-from xknx.dpt import RGBColor, RGBWColor, XYYColor
+from xknx.dpt import DPTAngle, DPTScaling, RGBColor, RGBWColor, XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -207,9 +207,9 @@ class Light(Device):
 
         self.hue = RemoteValueNumeric(
             xknx,
-            "angle",
-            group_address_hue,
-            group_address_hue_state,
+            value_type=DPTAngle,
+            group_address=group_address_hue,
+            group_address_state=group_address_hue_state,
             sync_state=sync_state,
             device_name=self.name,
             feature_name="Hue",
@@ -218,9 +218,9 @@ class Light(Device):
 
         self.saturation = RemoteValueNumeric(
             xknx,
-            "percent",
-            group_address_saturation,
-            group_address_saturation_state,
+            value_type=DPTScaling,
+            group_address=group_address_saturation,
+            group_address_state=group_address_saturation_state,
             sync_state=sync_state,
             device_name=self.name,
             feature_name="Saturation",
@@ -252,9 +252,9 @@ class Light(Device):
 
         self.color_temperature = RemoteValueNumeric(
             xknx,
-            color_temperature_type.value,
-            group_address_color_temperature,
-            group_address_color_temperature_state,
+            value_type=color_temperature_type.value,
+            group_address=group_address_color_temperature,
+            group_address_state=group_address_color_temperature_state,
             sync_state=sync_state,
             device_name=self.name,
             feature_name="Color temperature",
