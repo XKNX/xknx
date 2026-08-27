@@ -15,7 +15,14 @@ An instantiated device can be added to `xknx.devices` to receive telegrams and s
 ## [](#header-2)Common public interface for all Device classes
 
 * `xknx` is the XKNX object.
-* `name` is the name of the object.
+* `name` is the name of the object. It is optional and used for logging and string representations only - devices are never looked up by name. When omitted it defaults to the class name of the device - `Sensor`, `NumericValue` and `ExposeSensor` append their value type.
+  It can be changed at any time; the new name is passed down to the devices `RemoteValue` instances, so log messages and exceptions use it too.
+
+  ```python
+  light = Light(xknx, group_address_switch="1/2/3")
+  light.name  # "Light"
+  light.name = "light.kitchen_ceiling"
+  ```
 * `device_updated_cb` List of callbacks for each update.
 * `group_address*` Group address for a specific function. If a list is passed the first element is used for sending / reading,  the rest are passively updating state (listening group address).
 

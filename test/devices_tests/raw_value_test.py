@@ -60,8 +60,8 @@ class TestRawValue:
         xknx = XKNX()
         raw_value = RawValue(
             xknx,
+            payload_length,
             "Test",
-            payload_length=payload_length,
             group_address="1/2/3",
         )
         telegram = Telegram(
@@ -80,22 +80,22 @@ class TestRawValue:
         xknx = XKNX()
         responding = RawValue(
             xknx,
-            "TestSensor1",
             2,
+            "TestSensor1",
             group_address="1/1/1",
             respond_to_read=True,
         )
         non_responding = RawValue(
             xknx,
-            "TestSensor2",
             2,
+            "TestSensor2",
             group_address="1/1/1",
             respond_to_read=False,
         )
         responding_multiple = RawValue(
             xknx,
-            "TestSensor3",
             2,
+            "TestSensor3",
             group_address=["1/1/1", "3/3/3"],
             group_address_state="2/2/2",
             respond_to_read=True,
@@ -150,8 +150,8 @@ class TestRawValue:
         xknx = XKNX()
         sensor = RawValue(
             xknx,
-            "TestSensor",
             2,
+            "TestSensor",
             group_address="1/2/3",
         )
         after_update_callback = Mock()
@@ -175,8 +175,8 @@ class TestRawValue:
         xknx = XKNX()
         sensor = RawValue(
             xknx,
-            "TestSensor",
             2,
+            "TestSensor",
             group_address="1/2/3",
             always_callback=True,
         )
@@ -201,7 +201,7 @@ class TestRawValue:
     async def test_set_0(self) -> None:
         """Test set with raw value."""
         xknx = XKNX()
-        raw_value = RawValue(xknx, "TestSensor", 0, group_address="1/2/3")
+        raw_value = RawValue(xknx, 0, "TestSensor", group_address="1/2/3")
         await raw_value.set(True)
         assert xknx.telegrams.qsize() == 1
 
@@ -214,7 +214,7 @@ class TestRawValue:
     async def test_set_1(self) -> None:
         """Test set with raw value."""
         xknx = XKNX()
-        raw_value = RawValue(xknx, "TestSensor", 1, group_address="1/2/3")
+        raw_value = RawValue(xknx, 1, "TestSensor", group_address="1/2/3")
         await raw_value.set(75)
         assert xknx.telegrams.qsize() == 1
 
@@ -228,7 +228,7 @@ class TestRawValue:
         """Test RawValue string representation."""
 
         xknx = XKNX()
-        value = RawValue(xknx, "Raw", 1, group_address="1/2/3")
+        value = RawValue(xknx, 1, "Raw", group_address="1/2/3")
         value.remote_value.value = 4
         assert (
             str(value)

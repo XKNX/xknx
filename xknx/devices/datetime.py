@@ -47,7 +47,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         localtime: bool | datetime.tzinfo = True,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
@@ -75,7 +75,7 @@ class _DateTimeBase(Device, Generic[_RemoteValueTimeT]):
             group_address=group_address,
             group_address_state=group_address_state,
             sync_state=sync_state,
-            device_name=name,
+            device_name=self.name,
             after_update_cb=self.after_update,
         )
         self._broadcast_task: Task | None = None

@@ -46,7 +46,7 @@ class Climate(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address_temperature: GroupAddressesType = None,
         group_address_target_temperature: GroupAddressesType = None,
         group_address_target_temperature_state: GroupAddressesType = None,
@@ -211,6 +211,12 @@ class Climate(Device):
         yield self.swing
         yield self.horizontal_swing
         yield self.humidity
+
+    def _update_device_name(self) -> None:
+        """Pass the current device name down to the RemoteValues and the mode device."""
+        super()._update_device_name()
+        if self.mode is not None:
+            self.mode.name = self.name
 
     def group_addresses(self) -> set[DeviceGroupAddress]:
         """Return all group addresses of this Device."""

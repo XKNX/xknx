@@ -24,7 +24,7 @@ class Scene(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         scene_number: int = 1,
         device_updated_cb: DeviceCallbackType[Scene] | None = None,

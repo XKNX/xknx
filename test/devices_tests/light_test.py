@@ -16,6 +16,19 @@ from ..conftest import EventLoopClockAdvancer
 class TestLight:
     """Class for testing Light objects."""
 
+    def test_name_is_passed_down_to_individual_colors(self) -> None:
+        """Test setting the name updates the individual color RemoteValues too."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            "TestLight",
+            group_address_switch="1/2/3",
+            group_address_switch_red="1/2/4",
+            group_address_brightness_red="1/2/5",
+        )
+        light.name = "light.test"
+        assert {rv.device_name for rv in light._iter_remote_values()} == {"light.test"}
+
     #
     # TEST SUPPORT DIMMING
     #

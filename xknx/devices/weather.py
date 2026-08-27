@@ -87,7 +87,7 @@ class Weather(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address_temperature: GroupAddressesType = None,
         group_address_brightness_south: GroupAddressesType = None,
         group_address_brightness_north: GroupAddressesType = None,

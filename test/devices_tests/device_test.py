@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from xknx import XKNX
-from xknx.devices import Device, Sensor
+from xknx.devices import Device, Sensor, Switch
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
@@ -12,6 +12,28 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 @patch.multiple(Device, __abstractmethods__=set())
 class TestDevice:
     """Test class for Switch object."""
+
+    def test_default_name(self) -> None:
+        """Test name defaulting to the class name when none is given."""
+        xknx = XKNX()
+        assert Device(xknx).name == "Device"
+        assert Device(xknx, None).name == "Device"
+        assert Device(xknx, "TestDevice").name == "TestDevice"
+
+    def test_name_is_passed_down_to_remote_values(self) -> None:
+        """Test setting the name updates the RemoteValues of the device."""
+        xknx = XKNX()
+        device = Switch(xknx, "TestSwitch", group_address="1/2/3")
+        assert device.switch.device_name == "TestSwitch"
+
+        device.name = "switch.test"
+        assert device.name == "switch.test"
+        assert device.switch.device_name == "switch.test"
+
+        # setting None resets to the default name
+        device.name = None
+        assert device.name == "Switch"
+        assert device.switch.device_name == "Switch"
 
     def test_device_updated_cb(self) -> None:
         """Test device updated cb is added to the device."""

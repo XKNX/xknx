@@ -40,7 +40,7 @@ class ExposeSensor(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         respond_to_read: bool = True,
         value_type: DPTParsable | type[DPTBase] | None = None,
@@ -53,7 +53,7 @@ class ExposeSensor(Device):
 
         Args:
         xknx: XKNX instance to use for communication.
-        name: Name of the device.
+        name: Name of the device. Defaults to the class name and the value type.
         group_address: KNX group address to send the value to.
         respond_to_read: If True, respond to GroupValueRead telegrams with the
             current value.
@@ -68,6 +68,11 @@ class ExposeSensor(Device):
 
         """
         super().__init__(xknx, name, device_updated_cb)
+        if name is None:
+            type_name = (
+                value_type.__name__ if isinstance(value_type, type) else value_type
+            )
+            self._name = f"{type(self).__name__} {type_name}"
         self.respond_to_read = respond_to_read
         self.sensor_value: RemoteValueSensor | RemoteValueSwitch
         if value_type == "binary":

@@ -28,8 +28,8 @@ class RawValue(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
         payload_length: int,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
@@ -37,7 +37,7 @@ class RawValue(Device):
         always_callback: bool = False,
         device_updated_cb: DeviceCallbackType[RawValue] | None = None,
     ) -> None:
-        """Initialize Sensor class."""
+        """Initialize RawValue class."""
         super().__init__(xknx, name, device_updated_cb)
         self.always_callback = always_callback
         self.respond_to_read = respond_to_read

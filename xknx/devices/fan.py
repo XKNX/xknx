@@ -47,7 +47,7 @@ class Fan(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address_speed: GroupAddressesType = None,
         group_address_speed_state: GroupAddressesType = None,
         group_address_oscillation: GroupAddressesType = None,

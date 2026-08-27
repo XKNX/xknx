@@ -119,7 +119,7 @@ class Light(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address_switch: GroupAddressesType = None,
         group_address_switch_state: GroupAddressesType = None,
         group_address_brightness: GroupAddressesType = None,

@@ -30,7 +30,7 @@ class NumericValue(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
@@ -41,6 +41,11 @@ class NumericValue(Device):
     ) -> None:
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
+        if name is None:
+            type_name = (
+                value_type.__name__ if isinstance(value_type, type) else value_type
+            )
+            self._name = f"{type(self).__name__} {type_name}"
         self.always_callback = always_callback
         self.respond_to_read = respond_to_read
         self.sensor_value = RemoteValueNumeric(

@@ -31,7 +31,7 @@ class Switch(Device):
     def __init__(
         self,
         xknx: XKNX,
-        name: str,
+        name: str | None = None,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
