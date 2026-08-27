@@ -129,7 +129,7 @@ class TestStringRepresentations:
         sensor = Sensor(xknx, group_address_state="1/2/3", value_type="temperature")
         assert (
             str(sensor)
-            == '<Sensor name="Sensor" sensor=<None, 1/2/3, [], None /> value=None unit="°C"/>'
+            == '<Sensor name="Sensor temperature" sensor=<None, 1/2/3, [], None /> value=None unit="°C"/>'
         )
 
     def test_climate(self) -> None:

@@ -15,11 +15,11 @@ class TestSensor:
     """Test class for Sensor objects."""
 
     def test_default_name(self) -> None:
-        """Test name defaulting to the class name."""
+        """Test name defaulting to the class name and value type."""
         xknx = XKNX()
         sensor = Sensor(xknx, group_address_state="1/2/3", value_type="temperature")
-        assert sensor.name == "Sensor"
-        assert sensor.sensor_value.device_name == "Sensor"
+        assert sensor.name == "Sensor temperature"
+        assert sensor.sensor_value.device_name == "Sensor temperature"
 
     @pytest.mark.parametrize(
         ("value_type", "raw_payload", "expected_state"),

@@ -41,6 +41,8 @@ class NumericValue(Device):
     ) -> None:
         """Initialize Sensor class."""
         super().__init__(xknx, name, device_updated_cb)
+        if name is None:
+            self._name = f"{type(self).__name__} {value_type}"
         self.always_callback = always_callback
         self.respond_to_read = respond_to_read
         self.sensor_value = RemoteValueNumeric(
