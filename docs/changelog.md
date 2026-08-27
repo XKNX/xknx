@@ -42,7 +42,7 @@ nav_order: 2
 
 ### Devices
 
-- The `name` of a device is optional now and can be changed after instantiation. When no name is given it defaults to the class name of the device; `Sensor`, `NumericValue` and `ExposeSensor` append their value type, eg. `"Sensor temperature"`. Assigning `Device.name` passes the new name down to the devices `RemoteValue` instances, so log messages and exceptions use it too - previously the name was only copied to the remote values on instantiation and assigning a new one left them stale. Renaming a `Climate` renames its `mode` device as well.
+- The `name` of a device is optional now and can be changed after instantiation. When no name is given it defaults to the class name of the device. Assigning `Device.name` passes the new name down to the devices `RemoteValue` instances, so log messages and exceptions use it too - previously the name was only copied to the remote values on instantiation and assigning a new one left them stale. Renaming a `Climate` renames its `mode` device as well.
 
   ```python
   light = Light(xknx, group_address_switch="1/2/3")

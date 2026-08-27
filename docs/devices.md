@@ -15,7 +15,7 @@ An instantiated device can be added to `xknx.devices` to receive telegrams and s
 ## [](#header-2)Common public interface for all Device classes
 
 * `xknx` is the XKNX object.
-* `name` is the name of the object. It is optional and used for logging and string representations only - devices are never looked up by name. When omitted it defaults to the class name of the device (`Sensor`, `NumericValue` and `ExposeSensor` append their value type, eg. `"Sensor temperature"`).
+* `name` is the name of the object. It is optional and used for logging and string representations only - devices are never looked up by name. When omitted it defaults to the class name of the device.
   It can be changed at any time; the new name is passed down to the devices `RemoteValue` instances, so log messages and exceptions use it too.
 
   ```python

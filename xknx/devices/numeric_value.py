@@ -49,16 +49,9 @@ class NumericValue(Device):
             group_address_state=group_address_state,
             sync_state=sync_state,
             value_type=value_type,
-            device_name=name,
+            device_name=self.name,
             after_update_cb=self.after_update,
         )
-        self._update_device_name()
-
-    def _default_name(self) -> str:
-        """Return the name used when no name was given."""
-        if value_type := self.sensor_value.dpt_class.value_type:
-            return f"{type(self).__name__} {value_type}"
-        return super()._default_name()
 
     def _iter_remote_values(self) -> Iterator[RemoteValueNumeric]:
         """Iterate the devices RemoteValue classes."""
