@@ -43,9 +43,9 @@ class Device(ABC):
 
     @property
     def name(self) -> str:
-        """Return name of device."""
+        """Return name of device. Defaults to the class name."""
         if self._name is None:
-            return self._default_name()
+            return type(self).__name__
         return self._name
 
     @name.setter
@@ -53,10 +53,6 @@ class Device(ABC):
         """Set name of device and pass it down to its RemoteValues."""
         self._name = name
         self._update_device_name()
-
-    def _default_name(self) -> str:
-        """Return the name used when no name was given."""
-        return type(self).__name__
 
     def _update_device_name(self) -> None:
         """Pass the current device name down to all RemoteValues of this device."""
