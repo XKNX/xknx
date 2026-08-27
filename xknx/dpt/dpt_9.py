@@ -93,7 +93,6 @@ class DPTTemperature(DPT2ByteFloat):
     dpt_sub_number = 1
     value_type = "temperature"
     unit = "°C"
-    ha_device_class = "temperature"
 
     value_min = -273
     value_max = 670760
@@ -106,7 +105,6 @@ class DPTTemperatureDifference2Byte(DPT2ByteFloat):
     dpt_sub_number = 2
     value_type = "temperature_difference_2byte"
     unit = "K"
-    ha_device_class = "temperature"
 
     value_min = -670760
     value_max = 670760
@@ -131,7 +129,6 @@ class DPTLux(DPT2ByteFloat):
     dpt_sub_number = 4
     value_type = "illuminance"
     unit = "lx"
-    ha_device_class = "illuminance"
 
     value_min = 0
     value_max = 670760
@@ -144,7 +141,6 @@ class DPTWsp(DPT2ByteFloat):
     dpt_sub_number = 5
     value_type = "wind_speed_ms"
     unit = "m/s"
-    ha_device_class = "wind_speed"
 
     value_min = 0
     value_max = 670760
@@ -157,7 +153,6 @@ class DPTPressure2Byte(DPT2ByteFloat):
     dpt_sub_number = 6
     value_type = "pressure_2byte"
     unit = "Pa"
-    ha_device_class = "pressure"
 
     value_min = 0
     value_max = 670760
@@ -170,7 +165,6 @@ class DPTHumidity(DPT2ByteFloat):
     dpt_sub_number = 7
     value_type = "humidity"
     unit = "%"
-    ha_device_class = "humidity"
 
     value_min = 0
     value_max = 670760
@@ -225,7 +219,6 @@ class DPTVoltage(DPT2ByteFloat):
     dpt_sub_number = 20
     value_type = "voltage"
     unit = "mV"
-    ha_device_class = "voltage"
 
 
 class DPTCurrent(DPT2ByteFloat):
@@ -235,7 +228,6 @@ class DPTCurrent(DPT2ByteFloat):
     dpt_sub_number = 21
     value_type = "curr"
     unit = "mA"
-    ha_device_class = "current"
 
 
 class DPTPowerDensity(DPT2ByteFloat):
@@ -263,7 +255,6 @@ class DPTPower2Byte(DPT2ByteFloat):
     dpt_sub_number = 24
     value_type = "power_2byte"
     unit = "kW"
-    ha_device_class = "power"
 
 
 class DPTVolumeFlow(DPT2ByteFloat):
@@ -294,7 +285,6 @@ class DPTTemperatureF(DPT2ByteFloat):
     dpt_sub_number = 27
     value_type = "temperature_f"
     unit = "°F"
-    ha_device_class = "temperature"
 
     value_min = -459.6
     value_max = 670760
@@ -307,7 +297,6 @@ class DPTWspKmh(DPT2ByteFloat):
     dpt_sub_number = 28
     value_type = "wind_speed_kmh"
     unit = "km/h"
-    ha_device_class = "wind_speed"
 
     value_min = 0
     value_max = 670760

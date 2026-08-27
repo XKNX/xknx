@@ -131,7 +131,6 @@ class DPTLengthMm(DPT2ByteUnsigned):
     dpt_sub_number = 11
     value_type = "length_mm"
     unit = "mm"
-    ha_device_class = "distance"
 
 
 class DPTUElCurrentmA(DPT2ByteUnsigned):
@@ -141,7 +140,6 @@ class DPTUElCurrentmA(DPT2ByteUnsigned):
     dpt_sub_number = 12
     value_type = "current"
     unit = "mA"
-    ha_device_class = "current"
 
 
 class DPTBrightness(DPT2ByteUnsigned):
@@ -151,7 +149,6 @@ class DPTBrightness(DPT2ByteUnsigned):
     dpt_sub_number = 13
     value_type = "brightness"
     unit = "lx"
-    ha_device_class = "illuminance"
 
 
 class DPTColorTemperature(DPT2ByteUnsigned):

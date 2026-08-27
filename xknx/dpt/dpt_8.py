@@ -149,4 +149,3 @@ class DPTLengthM(DPT2ByteSigned):
     dpt_sub_number = 12
     value_type = "length_m"
     unit = "m"
-    ha_device_class = "distance"

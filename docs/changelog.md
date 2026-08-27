@@ -31,6 +31,7 @@ nav_order: 2
 - `Sensor`, `NumericValue` and `ExposeSensor` take `value_type` as their first argument after `xknx`, before `name`, and require it - like `payload_length` of `RawValue` above. `Sensor(xknx, "Name", value_type="temperature")` becomes `Sensor(xknx, "temperature", "Name")`. `value_type` never had a usable default: passing `None` raised `ConversionError`. `Notification` keeps its optional `value_type`, now defaulting to `"string"` instead of `None`.
 - `RemoteValueSensor`, `RemoteValueNumeric` and `RemoteValueString` take `value_type` as their first argument after `xknx` and require it. `RemoteValueString` no longer defaults to `DPTString`; pass `value_type="string"` explicitly.
 - `Scene.scene_value` is a `RemoteValueSceneControl` (DPT 18.001) instead of a `RemoteValueSceneNumber` (DPT 17.001), so its value carries the learn bit next to the scene number. Telegrams on the wire are unchanged: DPT 18.001 encodes an activation to the same octet DPT 17.001 does, and decodes one back the same way. The device callback is called for received learn telegrams of the devices `scene_number` now, not only for activations - the new `Scene.learn_requested` tells both apart.
+- Remove `ha_device_class` from `DPTBase` subclasses, `RemoteValueSensor`, `RemoteValueByLength`, `Sensor` and `NumericValue`. It mapped DPTs to Home Assistant sensor device classes - a downstream concern that Home Assistants KNX integration maintains itself since it also needs state classes and unit overrides the mapping never covered.
 
 ### Bugfixes
 

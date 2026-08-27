@@ -81,13 +81,6 @@ class RemoteValueByLength(RemoteValue[float]):
             return None
         return self._internal_dpt_class.unit
 
-    @property
-    def ha_device_class(self) -> str | None:
-        """Return a string representing the home assistant device class."""
-        if not self._internal_dpt_class:
-            return None
-        return getattr(self._internal_dpt_class, "ha_device_class", None)
-
     def _determine_dpt_class(self, payload: DPTArray | DPTBinary) -> type[DPTNumeric]:
         """Test if telegram payload may be parsed."""
         if isinstance(payload, DPTArray):
