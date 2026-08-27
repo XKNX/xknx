@@ -53,7 +53,7 @@ class ExposeSensor(Device):
 
         Args:
         xknx: XKNX instance to use for communication.
-        name: Name of the device.
+        name: Name of the device. Defaults to the class name and the value type.
         group_address: KNX group address to send the value to.
         respond_to_read: If True, respond to GroupValueRead telegrams with the
             current value.
@@ -68,6 +68,8 @@ class ExposeSensor(Device):
 
         """
         super().__init__(xknx, name, device_updated_cb)
+        if name is None:
+            self._name = f"{type(self).__name__} {value_type}"
         self.respond_to_read = respond_to_read
         self.sensor_value: RemoteValueSensor | RemoteValueSwitch
         if value_type == "binary":

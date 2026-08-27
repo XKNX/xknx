@@ -16,11 +16,15 @@ class TestExposeSensor:
     """Test class for Sensor objects."""
 
     def test_default_name(self) -> None:
-        """Test name defaulting to the class name."""
+        """Test name defaulting to the class name and value type."""
         xknx = XKNX()
         expose = ExposeSensor(xknx, group_address="1/2/3", value_type="humidity")
-        assert expose.name == "ExposeSensor"
-        assert expose.sensor_value.device_name == "ExposeSensor"
+        assert expose.name == "ExposeSensor humidity"
+        assert expose.sensor_value.device_name == "ExposeSensor humidity"
+
+        binary = ExposeSensor(xknx, group_address="1/2/3", value_type="binary")
+        assert binary.name == "ExposeSensor binary"
+        assert binary.sensor_value.device_name == "ExposeSensor binary"
 
     #
     # STR FUNCTIONS
