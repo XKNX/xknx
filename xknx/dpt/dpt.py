@@ -75,7 +75,6 @@ class DPTBase(ABC):
     dpt_sub_number: int | None = None
     value_type: str | None = None
     unit: str | None = None
-    ha_device_class: str | None = None
 
     @classmethod
     def dpt_number_str(cls) -> str:

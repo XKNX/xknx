@@ -64,11 +64,6 @@ class _RemoteValueGeneric(RemoteValue[ValueT]):
         """Return the unit of measurement."""
         return self.dpt_class.unit
 
-    @property
-    def ha_device_class(self) -> str | None:
-        """Return a string representing the home assistant device class."""
-        return getattr(self.dpt_class, "ha_device_class", None)
-
 
 class RemoteValueSensor(_RemoteValueGeneric[int | float | str]):
     """Abstraction for sensor DPT types."""

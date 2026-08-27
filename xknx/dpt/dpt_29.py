@@ -31,7 +31,6 @@ class DPTActiveEnergy8Byte(DPT8ByteSigned):
     dpt_sub_number = 10
     value_type = "active_energy_8byte"
     unit = "Wh"
-    ha_device_class = "energy"
 
 
 class DPTApparantEnergy8Byte(DPT8ByteSigned):

@@ -49,7 +49,6 @@ class DPTActiveEnergy(DPT4ByteSigned):
     dpt_sub_number = 10
     value_type = "active_energy"
     unit = "Wh"
-    ha_device_class = "energy"
 
 
 class DPTApparantEnergy(DPT4ByteSigned):
@@ -77,7 +76,6 @@ class DPTActiveEnergykWh(DPT4ByteSigned):
     dpt_sub_number = 13
     value_type = "active_energy_kwh"
     unit = "kWh"
-    ha_device_class = "energy"
 
 
 class DPTApparantEnergykVAh(DPT4ByteSigned):

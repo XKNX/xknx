@@ -30,7 +30,6 @@ class TestWeather:
         assert weather.has_group_address(GroupAddress("1/3/4"))
         assert weather.temperature == 21.28
         assert weather._temperature.unit_of_measurement == "°C"
-        assert weather._temperature.ha_device_class == "temperature"
 
     async def test_brightness(self) -> None:
         """Test resolve state for brightness east, west and south."""
@@ -75,19 +74,15 @@ class TestWeather:
 
         assert weather.brightness_east == 366346.24
         assert weather._brightness_east.unit_of_measurement == "lx"
-        assert weather._brightness_east.ha_device_class == "illuminance"
 
         assert weather.brightness_west == 365690.88
         assert weather._brightness_west.unit_of_measurement == "lx"
-        assert weather._brightness_west.ha_device_class == "illuminance"
 
         assert weather.brightness_south == 365035.52
         assert weather._brightness_south.unit_of_measurement == "lx"
-        assert weather._brightness_south.ha_device_class == "illuminance"
 
         assert weather.brightness_north == 365035.52
         assert weather._brightness_north.unit_of_measurement == "lx"
-        assert weather._brightness_north.ha_device_class == "illuminance"
 
     @pytest.mark.parametrize(
         ("value", "payload"),
@@ -110,7 +105,6 @@ class TestWeather:
 
         assert weather.air_pressure == value
         assert weather._air_pressure.unit_of_measurement == "Pa"
-        assert weather._air_pressure.ha_device_class == "pressure"
 
     async def test_humidity(self) -> None:
         """Test humidity telegram."""
@@ -126,7 +120,6 @@ class TestWeather:
 
         assert weather.humidity == 55.8
         assert weather._humidity.unit_of_measurement == "%"
-        assert weather._humidity.ha_device_class == "humidity"
 
     async def test_wind_speed(self) -> None:
         """Test wind speed received."""
@@ -144,7 +137,6 @@ class TestWeather:
 
         assert weather.wind_speed == 469237.76
         assert weather._wind_speed.unit_of_measurement == "m/s"
-        assert weather._wind_speed.ha_device_class == "wind_speed"
 
     async def test_wind_bearing(self) -> None:
         """Test wind bearing received."""
@@ -162,7 +154,6 @@ class TestWeather:
 
         assert weather.wind_bearing == 270
         assert weather._wind_bearing.unit_of_measurement == "°"
-        assert weather._wind_bearing.ha_device_class is None
 
     def test_state_lightning(self) -> None:
         """Test current_state returns lightning if wind alarm and rain alarm are true."""
