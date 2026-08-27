@@ -30,12 +30,12 @@ class NumericValue(Device):
     def __init__(
         self,
         xknx: XKNX,
+        value_type: DPTParsable | type[DPTNumeric],
         name: str | None = None,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
         respond_to_read: bool = False,
         sync_state: bool | int | float | str = True,
-        value_type: DPTParsable | type[DPTNumeric] | None = None,
         always_callback: bool = False,
         device_updated_cb: DeviceCallbackType[NumericValue] | None = None,
     ) -> None:
@@ -50,10 +50,10 @@ class NumericValue(Device):
         self.respond_to_read = respond_to_read
         self.sensor_value = RemoteValueNumeric(
             xknx,
+            value_type=value_type,
             group_address=group_address,
             group_address_state=group_address_state,
             sync_state=sync_state,
-            value_type=value_type,
             device_name=self.name,
             after_update_cb=self.after_update,
         )

@@ -12,6 +12,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from xknx.devices.fan import FanSpeedMode
+from xknx.dpt import DPTHumidity
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -191,9 +192,9 @@ class Climate(Device):
 
         self.humidity = RemoteValueNumeric(
             xknx,
+            value_type=DPTHumidity,
             group_address_state=group_address_humidity_state,
             sync_state=sync_state,
-            value_type="humidity",
             device_name=self.name,
             feature_name="Current humidity",
             after_update_cb=self.after_update,

@@ -34,9 +34,9 @@ class TestRemoteValueSensor:
         with pytest.raises(ConversionError):
             RemoteValueSensor(xknx=xknx, value_type="binary")
         with pytest.raises(ConversionError):
-            RemoteValueSensor(xknx=xknx, value_type=None)
-        with pytest.raises(ConversionError):
-            RemoteValueSensor(xknx=xknx)
+            RemoteValueSensor(xknx=xknx, value_type=None)  # type: ignore[arg-type]
+        with pytest.raises(TypeError):
+            RemoteValueSensor(xknx=xknx)  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
 
     def test_payload_length_defined(self) -> None:
         """Test if all members of DPTMAP implement payload_length."""
@@ -76,5 +76,5 @@ class TestRemoteValueNumeric:
             RemoteValueNumeric(xknx=xknx, value_type=16)
         with pytest.raises(ConversionError):
             RemoteValueNumeric(xknx=xknx, value_type="binary")
-        with pytest.raises(ConversionError):
-            RemoteValueNumeric(xknx=xknx)
+        with pytest.raises(TypeError):
+            RemoteValueNumeric(xknx=xknx)  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter

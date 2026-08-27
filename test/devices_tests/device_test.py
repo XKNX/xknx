@@ -135,9 +135,7 @@ class TestDevice:
     async def test_sync_with_wait(self) -> None:
         """Test sync with wait_for_result=True."""
         xknx = XKNX()
-        sensor = Sensor(
-            xknx, "Sensor", group_address_state="1/2/3", value_type="wind_speed_ms"
-        )
+        sensor = Sensor(xknx, "wind_speed_ms", "Sensor", group_address_state="1/2/3")
 
         with patch(
             "xknx.remote_value.RemoteValue.read_state", new_callable=AsyncMock

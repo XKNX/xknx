@@ -14,8 +14,8 @@ RawValue devices send uint values to the KNX bus. Received values update the dev
 ## [](#header-2)Interface
 
 - `xknx` is the XKNX object.
-- `name` is the name of the object.
-- `payload_length` is the appended byte size to a CEMI-Frame. `0` for DPT 1, 2 and 3.
+- `payload_length` is the appended byte size to a CEMI-Frame. `0` for DPT 1, 2 and 3. Required.
+- `name` is the name of the object. Defaults to `"RawValue"`.
 - `group_address` is the KNX group address of the raw value device. Used for sending.
 - `group_address_state` is the KNX group address of the raw value device.
 - `respond_to_read` if `True` GroupValueRead requests to the `group_address` are answered. Defaults to `False`

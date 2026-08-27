@@ -188,12 +188,7 @@ class TestSensorExposeLoop:
         xknx.cemi_handler = AsyncMock()
         await xknx.telegram_queue.start()
 
-        expose = ExposeSensor(
-            xknx,
-            "TestExpose",
-            group_address="1/1/1",
-            value_type=value_type,
-        )
+        expose = ExposeSensor(xknx, value_type, "TestExpose", group_address="1/1/1")
         xknx.devices.async_add(expose)
         assert expose.resolve_state() is None
         # set a value from expose - HA sends strings for new values
@@ -210,12 +205,7 @@ class TestSensorExposeLoop:
         assert expose.resolve_state() == test_value
 
         # init sensor after expose is set - with same group address
-        sensor = Sensor(
-            xknx,
-            "TestSensor",
-            group_address_state="1/1/1",
-            value_type=value_type,
-        )
+        sensor = Sensor(xknx, value_type, "TestSensor", group_address_state="1/1/1")
         xknx.devices.async_add(sensor)
         assert sensor.resolve_state() is None
 
@@ -262,12 +252,7 @@ class TestBinarySensorExposeLoop:
         xknx.cemi_handler = AsyncMock()
         await xknx.telegram_queue.start()
 
-        expose = ExposeSensor(
-            xknx,
-            "TestExpose",
-            group_address="1/1/1",
-            value_type=value_type,
-        )
+        expose = ExposeSensor(xknx, value_type, "TestExpose", group_address="1/1/1")
         xknx.devices.async_add(expose)
         assert expose.resolve_state() is None
 
@@ -339,12 +324,7 @@ class TestBinarySensorInternalGroupAddressExposeLoop:
         )
         await xknx.telegram_queue.start()
 
-        expose = ExposeSensor(
-            xknx,
-            "TestExpose",
-            group_address="i-test",
-            value_type=value_type,
-        )
+        expose = ExposeSensor(xknx, value_type, "TestExpose", group_address="i-test")
         xknx.devices.async_add(expose)
         assert expose.resolve_state() is None
 

@@ -2,10 +2,13 @@
 
 from unittest.mock import AsyncMock, Mock, call
 
+import pytest
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.devices import ExposeSensor
 from xknx.dpt import DPTArray, DPTBinary
+from xknx.exceptions import ConversionError
 from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
@@ -18,13 +21,23 @@ class TestExposeSensor:
     def test_default_name(self) -> None:
         """Test name defaulting to the class name and value type."""
         xknx = XKNX()
-        expose = ExposeSensor(xknx, group_address="1/2/3", value_type="humidity")
+        expose = ExposeSensor(xknx, "humidity", group_address="1/2/3")
         assert expose.name == "ExposeSensor humidity"
         assert expose.sensor_value.device_name == "ExposeSensor humidity"
 
-        binary = ExposeSensor(xknx, group_address="1/2/3", value_type="binary")
+        binary = ExposeSensor(xknx, "binary", group_address="1/2/3")
         assert binary.name == "ExposeSensor binary"
         assert binary.sensor_value.device_name == "ExposeSensor binary"
+
+    def test_value_type_required(self) -> None:
+        """Test that value_type is a required argument."""
+        xknx = XKNX()
+        with pytest.raises(TypeError):
+            ExposeSensor(xknx)  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
+        with pytest.raises(ConversionError):
+            ExposeSensor(xknx, None)  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            ExposeSensor(xknx, "no_dpt")
 
     #
     # STR FUNCTIONS
@@ -33,7 +46,7 @@ class TestExposeSensor:
         """Test resolve state with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="binary"
+            xknx, "binary", "TestSensor", group_address="1/2/3"
         )
         expose_sensor.process(
             Telegram(
@@ -49,7 +62,7 @@ class TestExposeSensor:
         """Test resolve state with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
+            xknx, "percent", "TestSensor", group_address="1/2/3"
         )
 
         expose_sensor.process(
@@ -66,7 +79,7 @@ class TestExposeSensor:
         """Test resolve state with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
 
         expose_sensor.process(
@@ -86,7 +99,7 @@ class TestExposeSensor:
         """Test set with binary sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="binary"
+            xknx, "binary", "TestSensor", group_address="1/2/3"
         )
         await expose_sensor.set(False)
         assert xknx.telegrams.qsize() == 1
@@ -100,7 +113,7 @@ class TestExposeSensor:
         """Test set with percent sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
+            xknx, "percent", "TestSensor", group_address="1/2/3"
         )
         await expose_sensor.set(75)
         assert xknx.telegrams.qsize() == 1
@@ -115,7 +128,7 @@ class TestExposeSensor:
         """Test set with temperature sensor."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
         await expose_sensor.set(21.0)
         assert xknx.telegrams.qsize() == 1
@@ -129,7 +142,7 @@ class TestExposeSensor:
         """Test initialize_value doesn't send, but is answered and compared against."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
+            xknx, "percent", "TestSensor", group_address="1/2/3"
         )
         expose_sensor.initialize_value(75)
         assert xknx.telegrams.qsize() == 0
@@ -160,7 +173,7 @@ class TestExposeSensor:
         """Test initialize_value with None clears the value again."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="percent"
+            xknx, "percent", "TestSensor", group_address="1/2/3"
         )
         expose_sensor.initialize_value(75)
         expose_sensor.initialize_value(None)
@@ -181,7 +194,7 @@ class TestExposeSensor:
         """Test reading binary expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", value_type="binary", group_address="1/2/3"
+            xknx, "binary", "TestSensor", group_address="1/2/3"
         )
         expose_sensor.sensor_value.value = True
 
@@ -198,7 +211,7 @@ class TestExposeSensor:
         """Test reading percent expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", value_type="percent", group_address="1/2/3"
+            xknx, "percent", "TestSensor", group_address="1/2/3"
         )
 
         expose_sensor.process(
@@ -221,7 +234,7 @@ class TestExposeSensor:
         """Test reading temperature expose sensor from bus."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", value_type="temperature", group_address="1/2/3"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
         expose_sensor.sensor_value.value = 21.0
 
@@ -239,8 +252,8 @@ class TestExposeSensor:
         xknx = XKNX()
         expose_sensor = ExposeSensor(
             xknx,
+            "temperature",
             "TestSensor",
-            value_type="temperature",
             group_address="1/2/3",
             respond_to_read=False,
         )
@@ -257,7 +270,7 @@ class TestExposeSensor:
         """Test expose sensor has group address."""
         xknx = XKNX()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", value_type="temperature", group_address="1/2/3"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
         assert expose_sensor.has_group_address(GroupAddress("1/2/3"))
         assert not expose_sensor.has_group_address(GroupAddress("1/2/4"))
@@ -271,7 +284,7 @@ class TestExposeSensor:
         xknx = XKNX()
         after_update_callback = Mock()
         expose_sensor = ExposeSensor(
-            xknx, "TestSensor", group_address="1/2/3", value_type="temperature"
+            xknx, "temperature", "TestSensor", group_address="1/2/3"
         )
         expose_sensor.register_device_updated_cb(after_update_callback)
         xknx.devices.async_add(expose_sensor)
@@ -291,18 +304,11 @@ class TestExposeSensor:
         await xknx.telegram_queue.start()
 
         expose_sensor_cd = ExposeSensor(
-            xknx,
-            "TestSensor",
-            group_address="1/2/3",
-            value_type="temperature",
-            cooldown=10,
+            xknx, "temperature", "TestSensor", group_address="1/2/3", cooldown=10
         )
         xknx.devices.async_add(expose_sensor_cd)
         expose_sensor_no_cd = ExposeSensor(
-            xknx,
-            "TestSensor",
-            group_address="1/2/4",
-            value_type="temperature",
+            xknx, "temperature", "TestSensor", group_address="1/2/4"
         )
         xknx.devices.async_add(expose_sensor_no_cd)
 
@@ -468,18 +474,11 @@ class TestExposeSensor:
         await xknx.telegram_queue.start()
 
         expose_sensor_cd = ExposeSensor(
-            xknx,
-            "TestSensor",
-            group_address="1/2/3",
-            value_type="temperature",
-            cooldown=10,
+            xknx, "temperature", "TestSensor", group_address="1/2/3", cooldown=10
         )
         xknx.devices.async_add(expose_sensor_cd)
         expose_sensor_no_cd = ExposeSensor(
-            xknx,
-            "TestSensor",
-            group_address="1/2/4",
-            value_type="temperature",
+            xknx, "temperature", "TestSensor", group_address="1/2/4"
         )
         xknx.devices.async_add(expose_sensor_no_cd)
         # reading during cooldown sends immediately, response starts cooldown
@@ -509,11 +508,7 @@ class TestExposeSensor:
         xknx = XKNX()
         xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         expose_sensor = ExposeSensor(
-            xknx,
-            "TestSensor",
-            group_address="1/2/3",
-            value_type="temperature",
-            cooldown=10,
+            xknx, "temperature", "TestSensor", group_address="1/2/3", cooldown=10
         )
 
         telegram_21_degree = Telegram(
@@ -567,9 +562,9 @@ class TestExposeSensor:
         xknx.cemi_handler = AsyncMock()
         expose_sensor = ExposeSensor(
             xknx,
+            "switch",
             "TestSensor",
             group_address="1/2/3",
-            value_type="switch",
             cooldown=2,
             periodic_send=10,
         )
@@ -663,11 +658,7 @@ class TestExposeSensor:
         xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         xknx.cemi_handler = AsyncMock()
         expose_sensor = ExposeSensor(
-            xknx,
-            "TestSensor",
-            group_address="1/2/3",
-            value_type="switch",
-            periodic_send=10,
+            xknx, "switch", "TestSensor", group_address="1/2/3", periodic_send=10
         )
         xknx.devices.async_add(expose_sensor)
         await xknx.start()
