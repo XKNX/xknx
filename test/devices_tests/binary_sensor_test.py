@@ -20,7 +20,7 @@ class TestBinarySensor:
     async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
-        binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
+        binaryinput = BinarySensor(xknx, name="TestInput", group_address_state="1/2/3")
 
         assert binaryinput.state is None
 
@@ -38,7 +38,7 @@ class TestBinarySensor:
         binaryinput.process(telegram_off)
         assert binaryinput.state is False
 
-        binaryinput2 = BinarySensor(xknx, "TestInput", "1/2/4")
+        binaryinput2 = BinarySensor(xknx, name="TestInput", group_address_state="1/2/4")
         assert binaryinput2.state is None
 
         telegram_off2 = Telegram(
@@ -52,7 +52,9 @@ class TestBinarySensor:
     async def test_process_invert(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
-        bs_invert = BinarySensor(xknx, "TestInput", "1/2/3", invert=True)
+        bs_invert = BinarySensor(
+            xknx, name="TestInput", group_address_state="1/2/3", invert=True
+        )
 
         assert bs_invert.state is None
 
@@ -80,8 +82,8 @@ class TestBinarySensor:
         after_update_callback = Mock()
         binaryinput = BinarySensor(
             xknx,
-            "TestInput",
-            "1/2/3",
+            name="TestInput",
+            group_address_state="1/2/3",
             reset_after=reset_after_sec,
             device_updated_cb=after_update_callback,
         )
@@ -116,7 +118,7 @@ class TestBinarySensor:
     async def test_process_wrong_payload(self) -> None:
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()
-        binary_sensor = BinarySensor(xknx, "Warning", group_address_state="1/2/3")
+        binary_sensor = BinarySensor(xknx, name="Warning", group_address_state="1/2/3")
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x1, 0x2, 0x3))),
@@ -132,7 +134,7 @@ class TestBinarySensor:
     def test_is_on(self) -> None:
         """Test is_on() and is_off() of a BinarySensor with state 'on'."""
         xknx = XKNX()
-        binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
+        binaryinput = BinarySensor(xknx, name="TestInput", group_address_state="1/2/3")
         assert not binaryinput.is_on()
         assert binaryinput.is_off()
         binaryinput._set_internal_state(True)
@@ -146,7 +148,7 @@ class TestBinarySensor:
     def test_is_off(self) -> None:
         """Test is_on() and is_off() of a BinarySensor with state 'off'."""
         xknx = XKNX()
-        binaryinput = BinarySensor(xknx, "TestInput", "1/2/3")
+        binaryinput = BinarySensor(xknx, name="TestInput", group_address_state="1/2/3")
         binaryinput._set_internal_state(False)
 
         assert not binaryinput.is_on()
@@ -159,7 +161,10 @@ class TestBinarySensor:
         """Test after_update_callback after state of binary sensor was changed."""
         xknx = XKNX()
         switch = BinarySensor(
-            xknx, "TestInput", group_address_state="1/2/3", ignore_internal_state=False
+            xknx,
+            name="TestInput",
+            group_address_state="1/2/3",
+            ignore_internal_state=False,
         )
         after_update_callback = Mock()
 
@@ -187,7 +192,7 @@ class TestBinarySensor:
         xknx = XKNX()
         switch = BinarySensor(
             xknx,
-            "TestInput",
+            name="TestInput",
             group_address_state="1/2/3",
             ignore_internal_state=True,
             context_timeout=_timeout,
@@ -232,7 +237,7 @@ class TestBinarySensor:
         xknx = XKNX()
         switch = BinarySensor(
             xknx,
-            "TestInput",
+            name="TestInput",
             group_address_state="1/2/3",
             ignore_internal_state=True,
             context_timeout=0,
@@ -260,7 +265,7 @@ class TestBinarySensor:
         xknx = XKNX()
         switch = BinarySensor(
             xknx,
-            "TestInput",
+            name="TestInput",
             group_address_state="1/2/3",
             ignore_internal_state=True,
         )
@@ -297,10 +302,7 @@ class TestBinarySensor:
         """Test process of GroupValueResponse telegrams."""
         xknx = XKNX()
         switch = BinarySensor(
-            xknx,
-            "TestInput",
-            group_address_state="1/2/3",
-            always_callback=True,
+            xknx, name="TestInput", group_address_state="1/2/3", always_callback=True
         )
         after_update_callback = Mock()
 
@@ -338,7 +340,7 @@ class TestBinarySensor:
         """Test counter functionality."""
         xknx = XKNX()
         switch = BinarySensor(
-            xknx, "TestInput", group_address_state="1/2/3", context_timeout=1
+            xknx, name="TestInput", group_address_state="1/2/3", context_timeout=1
         )
         with patch("time.time") as mock_time:
             mock_time.return_value = 1517000000.0
@@ -367,7 +369,7 @@ class TestBinarySensor:
         xknx = xknx_no_interface
         switch = BinarySensor(
             xknx,
-            "TestInput",
+            name="TestInput",
             group_address_state="1/2/3",
             context_timeout=1,
             reset_after=10,

@@ -24,13 +24,14 @@ class Scene(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address: GroupAddressesType = None,
         scene_number: int = 1,
         device_updated_cb: DeviceCallbackType[Scene] | None = None,
     ) -> None:
         """Initialize Sceneclass."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.scene_value = RemoteValueSceneControl(
             xknx,

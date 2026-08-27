@@ -18,23 +18,23 @@ class TestSensor:
     def test_default_name(self) -> None:
         """Test name defaulting to the class name and value type."""
         xknx = XKNX()
-        sensor = Sensor(xknx, "temperature", group_address_state="1/2/3")
+        sensor = Sensor(xknx, value_type="temperature", group_address_state="1/2/3")
         assert sensor.name == "Sensor temperature"
         assert sensor.sensor_value.device_name == "Sensor temperature"
 
         # a DPT class is named by its class name, not its repr
-        sensor = Sensor(xknx, DPTTemperature, group_address_state="1/2/3")
+        sensor = Sensor(xknx, value_type=DPTTemperature, group_address_state="1/2/3")
         assert sensor.name == "Sensor DPTTemperature"
 
     def test_value_type_required(self) -> None:
         """Test that value_type is a required argument."""
         xknx = XKNX()
         with pytest.raises(TypeError):
-            Sensor(xknx)  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter
+            Sensor(xknx)  # type: ignore[call-arg] # pylint: disable=missing-kwoa
         with pytest.raises(ConversionError):
-            Sensor(xknx, None)  # type: ignore[arg-type]
+            Sensor(xknx, value_type=None)  # type: ignore[arg-type]
         with pytest.raises(ConversionError):
-            Sensor(xknx, "no_dpt")
+            Sensor(xknx, value_type="no_dpt")
 
     @pytest.mark.parametrize(
         ("value_type", "raw_payload", "expected_state"),
@@ -700,7 +700,9 @@ class TestSensor:
     ) -> None:
         """Test sensor value types."""
         xknx = XKNX()
-        sensor = Sensor(xknx, value_type, "TestSensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx, value_type=value_type, name="TestSensor", group_address_state="1/2/3"
+        )
         sensor.process(
             Telegram(
                 destination_address=GroupAddress("1/2/3"),
@@ -715,8 +717,8 @@ class TestSensor:
         xknx = XKNX()
         sensor = Sensor(
             xknx,
-            "volume_liquid_litre",
-            "TestSensor",
+            value_type="volume_liquid_litre",
+            name="TestSensor",
             group_address_state="1/2/3",
             always_callback=False,
         )
@@ -758,7 +760,12 @@ class TestSensor:
     async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
-        sensor = Sensor(xknx, "temperature", "TestSensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx,
+            value_type="temperature",
+            name="TestSensor",
+            group_address_state="1/2/3",
+        )
         await sensor.sync()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -772,7 +779,12 @@ class TestSensor:
     def test_has_group_address(self) -> None:
         """Test sensor has group address."""
         xknx = XKNX()
-        sensor = Sensor(xknx, "temperature", "TestSensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx,
+            value_type="temperature",
+            name="TestSensor",
+            group_address_state="1/2/3",
+        )
         assert sensor.has_group_address(GroupAddress("1/2/3"))
         assert not sensor.has_group_address(GroupAddress("1/2/4"))
 
@@ -782,7 +794,12 @@ class TestSensor:
     async def test_process(self) -> None:
         """Test process / reading telegrams from telegram queue."""
         xknx = XKNX()
-        sensor = Sensor(xknx, "temperature", "TestSensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx,
+            value_type="temperature",
+            name="TestSensor",
+            group_address_state="1/2/3",
+        )
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -797,7 +814,12 @@ class TestSensor:
         """Test process / reading telegrams from telegram queue. Test if callback is called."""
 
         xknx = XKNX()
-        sensor = Sensor(xknx, "temperature", "TestSensor", group_address_state="1/2/3")
+        sensor = Sensor(
+            xknx,
+            value_type="temperature",
+            name="TestSensor",
+            group_address_state="1/2/3",
+        )
         after_update_callback = Mock()
         sensor.register_device_updated_cb(after_update_callback)
 

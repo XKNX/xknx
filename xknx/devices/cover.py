@@ -45,6 +45,7 @@ class Cover(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_long: GroupAddressesType = None,
         group_address_short: GroupAddressesType = None,
@@ -63,7 +64,7 @@ class Cover(Device):
         device_updated_cb: DeviceCallbackType[Cover] | None = None,
     ) -> None:
         """Initialize Cover class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
         # self.after_update for position changes is called after updating the
         # travelcalculator (in process_group_write and set_*) - angle changes
         # are updated from RemoteValue objects

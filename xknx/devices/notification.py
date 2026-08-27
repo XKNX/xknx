@@ -22,6 +22,7 @@ class Notification(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address: GroupAddressesType = None,
         group_address_state: GroupAddressesType = None,
@@ -31,7 +32,7 @@ class Notification(Device):
         device_updated_cb: DeviceCallbackType[Notification] | None = None,
     ) -> None:
         """Initialize notification class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.respond_to_read = respond_to_read
         self.remote_value = RemoteValueString(

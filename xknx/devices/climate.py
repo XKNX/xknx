@@ -47,6 +47,7 @@ class Climate(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_temperature: GroupAddressesType = None,
         group_address_target_temperature: GroupAddressesType = None,
@@ -77,7 +78,7 @@ class Climate(Device):
         group_address_horizontal_swing_state: GroupAddressesType = None,
     ) -> None:
         """Initialize Climate class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.min_temp = min_temp
         self.max_temp = max_temp

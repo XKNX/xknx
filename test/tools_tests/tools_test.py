@@ -133,7 +133,11 @@ async def test_tools_with_internal_addresses(xknx_no_interface: XKNX) -> None:
     internal_address = "i-test"
     test_type = "1byte_unsigned"
     number = NumericValue(
-        xknx, test_type, "Test", group_address=internal_address, respond_to_read=True
+        xknx,
+        value_type=test_type,
+        name="Test",
+        group_address=internal_address,
+        respond_to_read=True,
     )
     xknx.devices.async_add(number)
 

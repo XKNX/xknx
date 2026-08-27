@@ -95,6 +95,7 @@ class Weather(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_temperature: GroupAddressesType = None,
         group_address_brightness_south: GroupAddressesType = None,
@@ -114,7 +115,7 @@ class Weather(Device):
         invert_day_night: bool = False,
     ) -> None:
         """Initialize Weather class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self._temperature = RemoteValueNumeric(
             xknx,

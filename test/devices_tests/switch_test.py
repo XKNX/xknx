@@ -21,7 +21,7 @@ class TestSwitch:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         switch = Switch(
-            xknx, "TestOutlet", group_address_state="1/2/3", group_address="1/2/4"
+            xknx, name="TestOutlet", group_address_state="1/2/3", group_address="1/2/4"
         )
         await switch.sync()
         assert xknx.telegrams.qsize() == 1
@@ -34,7 +34,7 @@ class TestSwitch:
         """Test sync function / sending group reads to KNX bus. Test with Switch with explicit state address."""
         xknx = XKNX()
         switch = Switch(
-            xknx, "TestOutlet", group_address="1/2/3", group_address_state="1/2/4"
+            xknx, name="TestOutlet", group_address="1/2/3", group_address_state="1/2/4"
         )
         await switch.sync()
         assert xknx.telegrams.qsize() == 1
@@ -52,10 +52,16 @@ class TestSwitch:
         callback_mock = Mock()
 
         switch1 = Switch(
-            xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
+            xknx,
+            name="TestOutlet",
+            group_address="1/2/3",
+            device_updated_cb=callback_mock,
         )
         switch2 = Switch(
-            xknx, "TestOutlet", group_address="1/2/3", device_updated_cb=callback_mock
+            xknx,
+            name="TestOutlet",
+            group_address="1/2/3",
+            device_updated_cb=callback_mock,
         )
         assert switch1.state is None
         assert switch2.state is None
@@ -95,14 +101,14 @@ class TestSwitch:
 
         switch1 = Switch(
             xknx,
-            "TestOutlet",
+            name="TestOutlet",
             group_address="1/2/3",
             group_address_state="1/2/4",
             device_updated_cb=callback_mock,
         )
         switch2 = Switch(
             xknx,
-            "TestOutlet",
+            name="TestOutlet",
             group_address="1/2/3",
             group_address_state="1/2/4",
             device_updated_cb=callback_mock,
@@ -141,7 +147,7 @@ class TestSwitch:
     async def test_process_invert(self) -> None:
         """Test process / reading telegrams from telegram queue with inverted switch."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
+        switch = Switch(xknx, name="TestOutlet", group_address="1/2/3", invert=True)
         assert switch.state is None
 
         telegram_inv_on = Telegram(
@@ -165,7 +171,7 @@ class TestSwitch:
         xknx = XKNX()
         reset_after_sec = 1
         switch = Switch(
-            xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
+            xknx, name="TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -187,7 +193,7 @@ class TestSwitch:
         xknx = XKNX()
         reset_after_sec = 0.01
         switch = Switch(
-            xknx, "TestInput", group_address="1/2/3", reset_after=reset_after_sec
+            xknx, name="TestInput", group_address="1/2/3", reset_after=reset_after_sec
         )
         telegram_on = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -208,7 +214,7 @@ class TestSwitch:
     async def test_remove_device(self, xknx_no_interface: XKNX) -> None:
         """Test device removal cancels task."""
         xknx = xknx_no_interface
-        switch = Switch(xknx, "TestInput", group_address="1/2/3", reset_after=1)
+        switch = Switch(xknx, name="TestInput", group_address="1/2/3", reset_after=1)
         xknx.devices.async_add(switch)
         async with xknx:
             telegram_on = Telegram(
@@ -225,7 +231,7 @@ class TestSwitch:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
 
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        switch = Switch(xknx, name="TestOutlet", group_address="1/2/3")
 
         after_update_callback = Mock()
         switch.register_device_updated_cb(after_update_callback)
@@ -245,20 +251,14 @@ class TestSwitch:
         """Test respond_to_read function."""
         xknx = XKNX()
         responding = Switch(
-            xknx,
-            "TestSensor1",
-            group_address="1/1/1",
-            respond_to_read=True,
+            xknx, name="TestSensor1", group_address="1/1/1", respond_to_read=True
         )
         non_responding = Switch(
-            xknx,
-            "TestSensor2",
-            group_address="1/1/1",
-            respond_to_read=False,
+            xknx, name="TestSensor2", group_address="1/1/1", respond_to_read=False
         )
         responding_multiple = Switch(
             xknx,
-            "TestSensor3",
+            name="TestSensor3",
             group_address=["1/1/1", "3/3/3"],
             group_address_state="2/2/2",
             respond_to_read=True,
@@ -309,7 +309,7 @@ class TestSwitch:
     async def test_set_on(self) -> None:
         """Test switching on switch."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        switch = Switch(xknx, name="TestOutlet", group_address="1/2/3")
         await switch.set_on()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -324,7 +324,7 @@ class TestSwitch:
     async def test_set_off(self) -> None:
         """Test switching off switch."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        switch = Switch(xknx, name="TestOutlet", group_address="1/2/3")
         await switch.set_off()
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -339,7 +339,7 @@ class TestSwitch:
     async def test_set_invert(self) -> None:
         """Test switching on/off inverted switch."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3", invert=True)
+        switch = Switch(xknx, name="TestOutlet", group_address="1/2/3", invert=True)
 
         await switch.set_on()
         assert xknx.telegrams.qsize() == 1
@@ -363,7 +363,7 @@ class TestSwitch:
     def test_has_group_address(self) -> None:
         """Test has_group_address."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address="1/2/3")
+        switch = Switch(xknx, name="TestOutlet", group_address="1/2/3")
         assert switch.has_group_address(GroupAddress("1/2/3"))
         assert not switch.has_group_address(GroupAddress("2/2/2"))
 
@@ -375,7 +375,7 @@ class TestSwitch:
     def test_has_group_address_passive(self) -> None:
         """Test has_group_address with passive group address."""
         xknx = XKNX()
-        switch = Switch(xknx, "TestOutlet", group_address=["1/2/3", "4/4/4"])
+        switch = Switch(xknx, name="TestOutlet", group_address=["1/2/3", "4/4/4"])
         assert switch.has_group_address(GroupAddress("1/2/3"))
         assert switch.has_group_address(GroupAddress("4/4/4"))
         assert not switch.has_group_address(GroupAddress("2/2/2"))
@@ -392,7 +392,7 @@ class TestSwitch:
 
         switch1 = Switch(
             xknx,
-            "TestOutlet",
+            name="TestOutlet",
             group_address=["1/2/3", "4/4/4"],
             group_address_state=["1/2/30", "5/5/5"],
             device_updated_cb=callback_mock,

@@ -12,9 +12,7 @@ async def main() -> None:
     await xknx.start()
 
     sensor1 = BinarySensor(
-        xknx,
-        "DiningRoom.Motion.Sensor",
-        group_address_state="6/0/2",
+        xknx, name="DiningRoom.Motion.Sensor", group_address_state="6/0/2"
     )
     xknx.devices.async_add(sensor1)
     await sensor1.sync(wait_for_result=True)
@@ -22,8 +20,8 @@ async def main() -> None:
 
     sensor2 = Sensor(
         xknx,
-        "temperature",
-        "DiningRoom.Temperature.Sensor",
+        value_type="temperature",
+        name="DiningRoom.Temperature.Sensor",
         group_address_state="6/2/1",
     )
     xknx.devices.async_add(sensor2)

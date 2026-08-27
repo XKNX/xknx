@@ -18,16 +18,18 @@ class TestNotification:
     def test_value_type_default(self) -> None:
         """Test default value_type and an explicit one."""
         xknx = XKNX()
-        assert Notification(xknx, "Warning").remote_value.dpt_class is DPTString
+        assert Notification(xknx, name="Warning").remote_value.dpt_class is DPTString
         assert (
-            Notification(xknx, "Warning", value_type="latin_1").remote_value.dpt_class
+            Notification(
+                xknx, name="Warning", value_type="latin_1"
+            ).remote_value.dpt_class
             is DPTLatin1
         )
         with pytest.raises(ConversionError):
-            Notification(xknx, "Warning", value_type=None)  # type: ignore[arg-type]
+            Notification(xknx, name="Warning", value_type=None)  # type: ignore[arg-type]
         with pytest.raises(ConversionError):
             # only string DPTs are valid for Notification
-            Notification(xknx, "Warning", value_type="temperature")
+            Notification(xknx, name="Warning", value_type="temperature")
 
     #
     # SYNC
@@ -36,7 +38,7 @@ class TestNotification:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
         notification = Notification(
-            xknx, "Warning", group_address="1/2/3", group_address_state="1/2/4"
+            xknx, name="Warning", group_address="1/2/3", group_address_state="1/2/4"
         )
         await notification.sync()
         assert xknx.telegrams.qsize() == 1
@@ -51,7 +53,7 @@ class TestNotification:
     async def test_process(self) -> None:
         """Test process telegram with notification. Test if device was updated."""
         xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
+        notification = Notification(xknx, name="Warning", group_address="1/2/3")
         telegram_set = Telegram(
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
@@ -70,7 +72,7 @@ class TestNotification:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
 
         xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
+        notification = Notification(xknx, name="Warning", group_address="1/2/3")
         after_update_callback = Mock()
         notification.register_device_updated_cb(after_update_callback)
 
@@ -87,7 +89,7 @@ class TestNotification:
         after_update_callback = Mock()
         notification = Notification(
             xknx,
-            "Warning",
+            name="Warning",
             group_address="1/2/3",
             device_updated_cb=after_update_callback,
         )
@@ -106,7 +108,7 @@ class TestNotification:
         after_update_callback = Mock()
         notification = Notification(
             xknx,
-            "Warning",
+            name="Warning",
             group_address="1/2/3",
             device_updated_cb=after_update_callback,
         )
@@ -127,14 +129,14 @@ class TestNotification:
         xknx = XKNX()
         responding = Notification(
             xknx,
-            "TestSensor1",
+            name="TestSensor1",
             group_address="1/1/1",
             respond_to_read=True,
             value_type="latin_1",
         )
         non_responding = Notification(
             xknx,
-            "TestSensor2",
+            name="TestSensor2",
             group_address="1/1/1",
             respond_to_read=False,
             value_type="latin_1",
@@ -184,7 +186,7 @@ class TestNotification:
     async def test_set(self) -> None:
         """Test notificationing off notification."""
         xknx = XKNX()
-        notification = Notification(xknx, "Warning", group_address="1/2/3")
+        notification = Notification(xknx, name="Warning", group_address="1/2/3")
         await notification.set("Ein Prosit!")
         assert xknx.telegrams.qsize() == 1
         telegram = xknx.telegrams.get_nowait()
@@ -206,7 +208,7 @@ class TestNotification:
         """Test that a DPT 4 (single character) notification crops to payload_length."""
         xknx = XKNX()
         notification = Notification(
-            xknx, "Warning", group_address="1/2/3", value_type="character"
+            xknx, name="Warning", group_address="1/2/3", value_type="character"
         )
         # message longer than 1 char gets cropped to the DPT's payload_length (1)
         await notification.set("Hello")
@@ -224,7 +226,7 @@ class TestNotification:
         """Test has_group_address."""
         xknx = XKNX()
         notification = Notification(
-            xknx, "Warning", group_address="1/2/3", group_address_state="1/2/4"
+            xknx, name="Warning", group_address="1/2/3", group_address_state="1/2/4"
         )
         assert notification.has_group_address(GroupAddress("1/2/3"))
         assert notification.has_group_address(GroupAddress("1/2/4"))

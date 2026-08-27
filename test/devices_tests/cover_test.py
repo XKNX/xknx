@@ -22,7 +22,7 @@ class TestCover:
         xknx = XKNX()
         cover_short_stop = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
         )
@@ -30,7 +30,7 @@ class TestCover:
 
         cover_manual_stop = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_stop="1/4/15",
         )
@@ -41,7 +41,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_position="1/4/16",
             group_address_angle="1/4/18",
@@ -59,7 +59,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
             group_address_position="1/4/16",
@@ -71,7 +71,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
         )
@@ -82,7 +82,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
             group_address_angle="1/4/18",
@@ -94,7 +94,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
         )
@@ -107,14 +107,12 @@ class TestCover:
         """Test support_position_true."""
         xknx = XKNX()
         cover_locked = Cover(
-            xknx,
-            "Children.Venetian",
-            group_address_locked_state="1/4/14",
+            xknx, name="Children.Venetian", group_address_locked_state="1/4/14"
         )
         assert cover_locked.supports_locked
         cover_manual_stop = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_stop="1/4/15",
         )
@@ -128,7 +126,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSync",
+            name="TestCoverSync",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/3",
@@ -145,7 +143,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSyncState",
+            name="TestCoverSyncState",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -163,7 +161,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSyncAngle",
+            name="TestCoverSyncAngle",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/3",
@@ -185,7 +183,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSyncAngleState",
+            name="TestCoverSyncAngleState",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_angle="1/2/3",
@@ -206,7 +204,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSetUp",
+            name="TestCoverSetUp",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -229,7 +227,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverShortDown",
+            name="TestCoverShortDown",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -251,7 +249,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSetDownInverted",
+            name="TestCoverSetDownInverted",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -274,7 +272,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSetShortUp",
+            name="TestCoverSetShortUp",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -297,7 +295,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSetUpInverted",
+            name="TestCoverSetUpInverted",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -321,7 +319,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverSetDown",
+            name="TestCoverSetDown",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -344,7 +342,7 @@ class TestCover:
         xknx = XKNX()
         cover_short_stop = Cover(
             xknx,
-            "TestCoverStop",
+            name="TestCoverStop",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -388,7 +386,7 @@ class TestCover:
 
         cover_manual_stop = Cover(
             xknx,
-            "TestCoverManualStop",
+            name="TestCoverManualStop",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_stop="1/2/0",
@@ -408,7 +406,7 @@ class TestCover:
         xknx = XKNX()
         cover_short_stop = Cover(
             xknx,
-            "TestCoverStopAngle",
+            name="TestCoverStopAngle",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_angle="1/2/5",
@@ -466,7 +464,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverPosition",
+            name="TestCoverPosition",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -485,9 +483,7 @@ class TestCover:
         """Test moving cover - with no binary positioning supported."""
         xknx = XKNX()
         cover = Cover(
-            xknx,
-            "TestCoverPositionWithoutBinary",
-            group_address_position="1/2/3",
+            xknx, name="TestCoverPositionWithoutBinary", group_address_position="1/2/3"
         )
         await cover.set_down()
         assert xknx.telegrams.qsize() == 1
@@ -516,7 +512,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverPWPAD",
+            name="TestCoverPWPAD",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -544,7 +540,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverPWPAD",
+            name="TestCoverPWPAD",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -570,7 +566,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverPWPAUU",
+            name="TestCoverPWPAUU",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -597,7 +593,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverPWPAUD",
+            name="TestCoverPWPAUD",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position_state="1/2/4",
@@ -624,7 +620,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
             group_address_position_state="1/4/17",
@@ -645,7 +641,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "Children.Venetian",
+            name="Children.Venetian",
             group_address_long="1/4/14",
             group_address_short="1/4/15",
         )
@@ -664,7 +660,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessPosition",
+            name="TestCoverProcessPosition",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",
@@ -709,7 +705,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessAngle",
+            name="TestCoverProcessAngle",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_angle="1/2/3",
@@ -726,7 +722,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessLocked",
+            name="TestCoverProcessLocked",
             group_address_long="1/2/1",
             group_address_locked_state="1/2/4",
         )
@@ -741,7 +737,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessUp",
+            name="TestCoverProcessUp",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
         )
@@ -760,7 +756,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessDown",
+            name="TestCoverProcessDown",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
         )
@@ -779,7 +775,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessStop",
+            name="TestCoverProcessStop",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
         )
@@ -797,7 +793,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessShortStop",
+            name="TestCoverProcessShortStop",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
         )
@@ -816,7 +812,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverProcessCallback",
+            name="TestCoverProcessCallback",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_stop="1/2/3",
@@ -870,7 +866,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverIsTraveling",
+            name="TestCoverIsTraveling",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
             group_address_position="1/2/3",
@@ -942,7 +938,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverAutoStop",
+            name="TestCoverAutoStop",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
             travel_time_down=10,
@@ -981,7 +977,7 @@ class TestCover:
         callback_mock = Mock()
         cover = Cover(
             xknx,
-            "TestCoverPeriodicUpdate",
+            name="TestCoverPeriodicUpdate",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
             group_address_position="1/2/3",
@@ -1043,7 +1039,7 @@ class TestCover:
         xknx = xknx_no_interface
         cover = Cover(
             xknx,
-            "TestCoverRemoveTaskCancel",
+            name="TestCoverRemoveTaskCancel",
             group_address_long="1/2/1",
             group_address_stop="1/2/2",
             group_address_position_state="1/2/4",
@@ -1073,7 +1069,7 @@ class TestCover:
         xknx = XKNX()
         cover = Cover(
             xknx,
-            "TestCoverHasGroupAddress",
+            name="TestCoverHasGroupAddress",
             group_address_long="1/2/1",
             group_address_short="1/2/2",
             group_address_position="1/2/3",

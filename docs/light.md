@@ -169,7 +169,7 @@ await light.sync()
 ```python
 light = Light(
     xknx,
-    "Hue and saturation",
+    name="Hue and saturation",
     group_address_switch="1/1/1",
     group_address_switch_state="1/2/1",
     group_address_brightness="1/1/2",

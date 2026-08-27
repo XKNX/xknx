@@ -47,7 +47,7 @@ class TestDateTime:
         xknx = XKNX()
         test_device = test_cls(
             xknx,
-            "Test",
+            name="Test",
             group_address="1/2/3",
             localtime=False,
         )
@@ -78,7 +78,7 @@ class TestDateTime:
     ) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
-        test_device = cls(xknx, "Test", group_address="1/2/3")
+        test_device = cls(xknx, name="Test", group_address="1/2/3")
 
         with freeze_time("2017-01-07 09:13:14"):
             await test_device.sync()
@@ -94,7 +94,7 @@ class TestDateTime:
         xknx = XKNX()
         test_device = TimeDevice(
             xknx,
-            "TestDateTime",
+            name="TestDateTime",
             group_address="1/2/3",
             group_address_state="1/2/4",
             localtime=False,
@@ -119,7 +119,7 @@ class TestDateTime:
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
         test_device = TimeDevice(
-            xknx, "TestTime", group_address="1/2/3", localtime=localtime
+            xknx, name="TestTime", group_address="1/2/3", localtime=localtime
         )
 
         telegram_read = Telegram(
@@ -153,7 +153,7 @@ class TestDateTime:
         """Test test process a read telegram from KNX bus."""
         xknx = XKNX()
         test_device = DateTimeDevice(
-            xknx, "TestDateTime", group_address="1/2/3", localtime=localtime
+            xknx, name="TestDateTime", group_address="1/2/3", localtime=localtime
         )
 
         telegram_read = Telegram(
@@ -173,7 +173,7 @@ class TestDateTime:
         xknx = XKNX()
         test_device = TimeDevice(
             xknx,
-            "TestDateTime",
+            name="TestDateTime",
             group_address="1/2/3",
             localtime=False,
             respond_to_read=True,
@@ -206,7 +206,7 @@ class TestDateTime:
         xknx = XKNX()
         test_device = DateDevice(
             xknx,
-            "TestDateTime",
+            name="TestDateTime",
             group_address="1/2/3",
             group_address_state="1/2/4",
             localtime=True,
@@ -220,7 +220,7 @@ class TestDateTime:
         xknx = XKNX()
         test_device = DateDevice(
             xknx,
-            "TestDateTime",
+            name="TestDateTime",
             group_address="1/2/3",
             group_address_state="1/2/4",
             localtime=False,
@@ -241,7 +241,7 @@ class TestDateTime:
         """Test if background task works."""
         xknx = xknx_no_interface
         xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
-        test_device = TimeDevice(xknx, "TestDateTime", group_address="1/2/3")
+        test_device = TimeDevice(xknx, name="TestDateTime", group_address="1/2/3")
         xknx.devices.async_add(test_device)
         async with xknx:
             # initial time telegram
@@ -267,10 +267,7 @@ class TestDateTime:
         """Test if background task is not started when not using `localtime`."""
         xknx = xknx_no_interface
         test_device = TimeDevice(
-            xknx,
-            "TestDateTime",
-            group_address="1/2/3",
-            localtime=False,
+            xknx, name="TestDateTime", group_address="1/2/3", localtime=False
         )
         xknx.devices.async_add(test_device)
         async with xknx:

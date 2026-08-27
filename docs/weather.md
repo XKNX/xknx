@@ -17,7 +17,7 @@ The weather device is basically a set of sensors that you can obtain from your w
 async with XKNX() as xknx:
     weather = Weather(
         xknx,
-        "Home",
+        name="Home",
         group_address_temperature="7/0/1",
         group_address_brightness_south="7/0/5",
         group_address_brightness_east="7/0/4",
@@ -57,7 +57,7 @@ async with XKNX() as xknx:
 async with XKNX() as xknx:
     weather = Weather(
         xknx,
-        "Home",
+        name="Home",
         group_address_temperature="7/0/1",
         group_address_brightness_south="7/0/5",
         group_address_brightness_east="7/0/4",

@@ -32,6 +32,7 @@ class BinarySensor(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         name: str | None = None,
         group_address_state: GroupAddressesType = None,
         invert: bool = False,
@@ -43,7 +44,7 @@ class BinarySensor(Device):
         always_callback: bool = False,
     ) -> None:
         """Initialize BinarySensor class."""
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
 
         self.ignore_internal_state = ignore_internal_state or bool(context_timeout)
         self.always_callback = always_callback

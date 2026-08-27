@@ -16,7 +16,7 @@ async def main() -> None:
 
     weather = Weather(
         xknx,
-        "Home",
+        name="Home",
         group_address_temperature="7/0/1",
         group_address_brightness_south="7/0/5",
         group_address_brightness_east="7/0/4",

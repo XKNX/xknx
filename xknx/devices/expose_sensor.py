@@ -40,6 +40,7 @@ class ExposeSensor(Device):
     def __init__(
         self,
         xknx: XKNX,
+        *,
         value_type: DPTParsable | type[DPTBase],
         name: str | None = None,
         group_address: GroupAddressesType = None,
@@ -68,7 +69,7 @@ class ExposeSensor(Device):
             updated.
 
         """
-        super().__init__(xknx, name, device_updated_cb)
+        super().__init__(xknx, name=name, device_updated_cb=device_updated_cb)
         if name is None:
             type_name = (
                 value_type.__name__ if isinstance(value_type, type) else value_type

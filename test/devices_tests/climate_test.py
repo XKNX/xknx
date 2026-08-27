@@ -40,10 +40,13 @@ class TestClimate:
         """Test setting the name renames the mode device and its RemoteValues."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimateMode", group_address_operation_mode="1/2/5"
+            xknx, name="TestClimateMode", group_address_operation_mode="1/2/5"
         )
         climate = Climate(
-            xknx, "TestClimate", group_address_temperature="1/2/3", mode=climate_mode
+            xknx,
+            name="TestClimate",
+            group_address_temperature="1/2/3",
+            mode=climate_mode,
         )
         # the mode device keeps its own name until the climate device is renamed
         assert climate_mode.name == "TestClimateMode"
@@ -59,7 +62,7 @@ class TestClimate:
     def test_support_temperature(self) -> None:
         """Test supports_temperature flag."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
+        climate = Climate(xknx, name="TestClimate", group_address_temperature="1/2/3")
 
         assert climate.temperature.initialized
         assert not climate.target_temperature.initialized
@@ -67,7 +70,9 @@ class TestClimate:
     def test_support_target_temperature(self) -> None:
         """Test supports_target__temperature flag."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_target_temperature="1/2/3")
+        climate = Climate(
+            xknx, name="TestClimate", group_address_target_temperature="1/2/3"
+        )
 
         assert not climate.temperature.initialized
         assert climate.target_temperature.initialized
@@ -76,7 +81,7 @@ class TestClimate:
         """Test supports_supports_operation_mode flag. One group address for all modes."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/4"
+            xknx, name="TestClimate", group_address_operation_mode="1/2/4"
         )
         assert climate_mode.supports_operation_mode
 
@@ -84,7 +89,7 @@ class TestClimate:
         """Test supports_supports_operation_mode flag. Split group addresses for each mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode_protection="1/2/4"
+            xknx, name="TestClimate", group_address_operation_mode_protection="1/2/4"
         )
         assert climate_mode.supports_operation_mode
 
@@ -102,7 +107,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_on_off=address,
             group_address_on_off_state=state,
         )
@@ -116,7 +121,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_temperature="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -207,7 +212,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             group_address_setpoint_shift_state="1/2/4",
@@ -234,7 +239,7 @@ class TestClimate:
         after_update_callback = Mock()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/5",
             device_updated_cb=after_update_callback,
         )
@@ -257,7 +262,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_temperature="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -294,11 +299,11 @@ class TestClimate:
 
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimateMode", group_address_operation_mode="1/2/4"
+            xknx, name="TestClimateMode", group_address_operation_mode="1/2/4"
         )
         after_update_callback = Mock()
 
-        climate = Climate(xknx, "TestClimate", mode=climate_mode)
+        climate = Climate(xknx, name="TestClimate", mode=climate_mode)
         climate_mode.register_device_updated_cb(after_update_callback)
 
         # Note: the climate object processes the telegram, but the cb
@@ -318,7 +323,7 @@ class TestClimate:
         """Test set_operation_mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/4"
+            xknx, name="TestClimate", group_address_operation_mode="1/2/4"
         )
 
         for operation_mode in DPT_20102_MODES:
@@ -334,7 +339,7 @@ class TestClimate:
         """Test set_operation_mode with DPT20.105 controller."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_controller_mode="1/2/4"
+            xknx, name="TestClimate", group_address_controller_mode="1/2/4"
         )
 
         for controller_mode in DPTHVACContrMode.get_valid_values():
@@ -349,14 +354,14 @@ class TestClimate:
     async def test_set_operation_mode_not_supported(self) -> None:
         """Test set_operation_mode but not supported."""
         xknx = XKNX()
-        climate_mode = ClimateMode(xknx, "TestClimate")
+        climate_mode = ClimateMode(xknx, name="TestClimate")
         with pytest.raises(DeviceIllegalValue):
             await climate_mode.set_operation_mode(HVACOperationMode.AUTO)
 
     async def test_set_controller_mode_not_supported(self) -> None:
         """Test set_controller_mode but not supported."""
         xknx = XKNX()
-        climate_mode = ClimateMode(xknx, "TestClimate")
+        climate_mode = ClimateMode(xknx, name="TestClimate")
         with pytest.raises(DeviceIllegalValue):
             await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
 
@@ -364,7 +369,7 @@ class TestClimate:
         """Test set_operation_mode with controller status address defined."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_controller_status="1/2/4"
+            xknx, name="TestClimate", group_address_controller_status="1/2/4"
         )
 
         # needs to be initialized before it can be sent
@@ -403,7 +408,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/4",
             group_address_operation_mode_protection="1/2/5",
             group_address_operation_mode_economy="1/2/6",
@@ -440,7 +445,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
         )
@@ -525,13 +530,13 @@ class TestClimate:
     async def test_initialized_for_setpoint_shift_calculations(self) -> None:
         """Test initialized_for_setpoint_shift_calculations method."""
         xknx = XKNX()
-        climate1 = Climate(xknx, "TestClimate")
+        climate1 = Climate(xknx, name="TestClimate")
         xknx.devices.async_add(climate1)
         assert not climate1.initialized_for_setpoint_shift_calculations
 
         climate2 = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
         )
@@ -543,7 +548,7 @@ class TestClimate:
 
         climate3 = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
@@ -563,7 +568,7 @@ class TestClimate:
         xknx = XKNX()
         climate_dpt6 = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_temperature="1/2/1",
             group_address_target_temperature_state="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -591,7 +596,7 @@ class TestClimate:
 
         climate_dpt9 = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_temperature="1/2/1",
             group_address_target_temperature_state="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -623,7 +628,7 @@ class TestClimate:
     def test_uninitalized_for_target_temperature_min_max(self) -> None:
         """Test if target_temperature_min/target_temperature_max return non if not initialized."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate")
+        climate = Climate(xknx, name="TestClimate")
         assert climate.target_temperature_min is None
         assert climate.target_temperature_max is None
 
@@ -635,7 +640,7 @@ class TestClimate:
     ) -> None:
         """Test if target_temperature_min/target_temperature_max return overridden value if specified."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", min_temp="7", max_temp="35")
+        climate = Climate(xknx, name="TestClimate", min_temp="7", max_temp="35")
         assert climate.target_temperature_min == "7"
         assert climate.target_temperature_max == "35"
 
@@ -647,7 +652,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
@@ -675,7 +680,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
@@ -754,7 +759,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
@@ -833,7 +838,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT6010,
@@ -892,7 +897,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature_state="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -947,7 +952,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature_state="1/2/2",
             group_address_setpoint_shift="1/2/3",
             setpoint_shift_mode=SetpointShiftMode.DPT9002,
@@ -1008,7 +1013,7 @@ class TestClimate:
         xknx = XKNX()
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature_state="1/2/1",
             group_address_target_temperature="1/2/2",
         )
@@ -1019,7 +1024,7 @@ class TestClimate:
 
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature_state="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -1029,7 +1034,7 @@ class TestClimate:
 
         climate = Climate(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_target_temperature_state="1/2/1",
             group_address_target_temperature="1/2/2",
             group_address_setpoint_shift="1/2/3",
@@ -1043,7 +1048,7 @@ class TestClimate:
     async def test_sync(self) -> None:
         """Test sync function / sending group reads to KNX bus."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
+        climate = Climate(xknx, name="TestClimate", group_address_temperature="1/2/3")
         await climate.sync()
         assert xknx.telegrams.qsize() == 1
         telegram1 = xknx.telegrams.get_nowait()
@@ -1054,7 +1059,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/3",
             group_address_operation_mode_state="1/2/4",
         )
@@ -1068,7 +1073,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/23",
             group_address_controller_status_state="1/2/24",
         )
@@ -1082,7 +1087,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_controller_mode="1/2/13",
             group_address_controller_mode_state="1/2/14",
         )
@@ -1096,7 +1101,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/3",
             group_address_operation_mode_state="1/2/5",
             group_address_controller_status="1/2/4",
@@ -1119,7 +1124,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
         )
@@ -1132,9 +1137,9 @@ class TestClimate:
         """Test sync function / propagating to mode."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimateMode", group_address_operation_mode_state="1/2/4"
+            xknx, name="TestClimateMode", group_address_operation_mode_state="1/2/4"
         )
-        climate = Climate(xknx, "TestClimate", mode=climate_mode)
+        climate = Climate(xknx, name="TestClimate", mode=climate_mode)
 
         await climate.sync()
         assert xknx.telegrams.qsize() == 1
@@ -1144,7 +1149,9 @@ class TestClimate:
     async def test_sync_humidity(self) -> None:
         """Test sync function / sending group reads to KNX bus for humidity."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_humidity_state="1/2/16")
+        climate = Climate(
+            xknx, name="TestClimate", group_address_humidity_state="1/2/16"
+        )
         await climate.sync()
         assert xknx.telegrams.qsize() == 1
         telegram1 = xknx.telegrams.get_nowait()
@@ -1156,7 +1163,7 @@ class TestClimate:
     async def test_process_temperature(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if temperature is processed correctly."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
+        climate = Climate(xknx, name="TestClimate", group_address_temperature="1/2/3")
 
         telegram = Telegram(
             destination_address=GroupAddress("1/2/3"),
@@ -1170,7 +1177,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
         )
@@ -1205,7 +1212,7 @@ class TestClimate:
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_controller_mode="1/2/5"
+            xknx, name="TestClimate", group_address_controller_mode="1/2/5"
         )
         for controller_mode in DPTHVACContrMode.get_valid_values():
             telegram = Telegram(
@@ -1221,7 +1228,7 @@ class TestClimate:
         updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
             device_updated_cb=updated_cb,
@@ -1241,7 +1248,7 @@ class TestClimate:
         updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
             device_updated_cb=updated_cb,
@@ -1261,7 +1268,7 @@ class TestClimate:
         updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
             device_updated_cb=updated_cb,
@@ -1281,7 +1288,7 @@ class TestClimate:
         updated_cb = Mock()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/5",
             group_address_controller_status="1/2/3",
             device_updated_cb=updated_cb,
@@ -1299,7 +1306,7 @@ class TestClimate:
         """Test process / reading telegrams from telegram queue. Test if callback is executed when receiving temperature."""
 
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_temperature="1/2/3")
+        climate = Climate(xknx, name="TestClimate", group_address_temperature="1/2/3")
         after_update_callback = Mock()
         climate.register_device_updated_cb(after_update_callback)
 
@@ -1315,7 +1322,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="i-op-mode",
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
@@ -1338,7 +1345,9 @@ class TestClimate:
     async def test_process_humidity(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if humidity is processed correctly."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_humidity_state="1/2/16")
+        climate = Climate(
+            xknx, name="TestClimate", group_address_humidity_state="1/2/16"
+        )
         after_update_callback = Mock()
         climate.register_device_updated_cb(after_update_callback)
 
@@ -1358,7 +1367,7 @@ class TestClimate:
         """Test get_supported_operation_modes with combined group address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode="1/2/5"
+            xknx, name="TestClimate", group_address_operation_mode="1/2/5"
         )
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.AUTO,
@@ -1372,7 +1381,7 @@ class TestClimate:
         """Test supported modes with HVAC status group address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_controller_status="1/2/5"
+            xknx, name="TestClimate", group_address_controller_status="1/2/5"
         )
         assert set(climate_mode.operation_modes) == {
             HVACOperationMode.COMFORT,
@@ -1388,7 +1397,7 @@ class TestClimate:
     def test_supported_operation_modes_no_mode(self) -> None:
         """Test get_supported_operation_modes no operation_modes supported."""
         xknx = XKNX()
-        climate_mode = ClimateMode(xknx, "TestClimate")
+        climate_mode = ClimateMode(xknx, name="TestClimate")
         assert not climate_mode.operation_modes
 
     def test_supported_operation_modes_with_separate_addresses(self) -> None:
@@ -1396,7 +1405,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode_protection="1/2/5",
             group_address_operation_mode_economy="1/2/6",
             group_address_operation_mode_comfort="1/2/7",
@@ -1413,7 +1422,7 @@ class TestClimate:
         """Test get_supported_operation_modes with only economy mode supported."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx, "TestClimate", group_address_operation_mode_economy="1/2/7"
+            xknx, name="TestClimate", group_address_operation_mode_economy="1/2/7"
         )
         # If one binary climate object is set, this mode and Standby are supported.
         # All binary modes off -> Standby according to MDT heating actuator
@@ -1427,7 +1436,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_heat_cool="1/2/14",
             group_address_heat_cool_state="1/2/15",
         )
@@ -1441,9 +1450,7 @@ class TestClimate:
         """Test supported controller_modes with heat_cool_state address."""
         xknx = XKNX()
         climate_mode = ClimateMode(
-            xknx,
-            "TestClimate",
-            group_address_heat_cool_state="1/2/15",
+            xknx, name="TestClimate", group_address_heat_cool_state="1/2/15"
         )
         assert climate_mode.supports_controller_mode
         assert climate_mode.controller_modes == []  # only writable modes
@@ -1458,7 +1465,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/7",
             operation_modes=modes,
         )
@@ -1471,7 +1478,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode="1/2/7",
             operation_modes=str_modes,
         )
@@ -1488,7 +1495,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_operation_mode_standby="1/2/7",
             group_address_operation_mode_protection="1/2/8",
             operation_modes=str_modes,
@@ -1506,7 +1513,7 @@ class TestClimate:
         xknx = XKNX()
         climate_mode = ClimateMode(
             xknx,
-            "TestClimate",
+            name="TestClimate",
             group_address_controller_mode="1/2/7",
             controller_modes=str_modes,
         )
@@ -1519,17 +1526,13 @@ class TestClimate:
         str_modes = ["Heat", "Cool"]
         modes = []
         xknx = XKNX()
-        climate_mode = ClimateMode(
-            xknx,
-            "TestClimate",
-            controller_modes=str_modes,
-        )
+        climate_mode = ClimateMode(xknx, name="TestClimate", controller_modes=str_modes)
         assert climate_mode.controller_modes == modes
 
     async def test_process_power_status(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if DPT20.105 controller mode is set correctly."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
+        climate = Climate(xknx, name="TestClimate", group_address_on_off="1/2/2")
         telegram = Telegram(
             destination_address=GroupAddress("1/2/2"),
             payload=GroupValueWrite(DPTBinary(1)),
@@ -1538,7 +1541,7 @@ class TestClimate:
         assert climate.is_on is True
 
         climate_inv = Climate(
-            xknx, "TestClimate", group_address_on_off="1/2/2", on_off_invert=True
+            xknx, name="TestClimate", group_address_on_off="1/2/2", on_off_invert=True
         )
         telegram = Telegram(
             destination_address=GroupAddress("1/2/2"),
@@ -1550,7 +1553,7 @@ class TestClimate:
     async def test_power_on_off(self) -> None:
         """Test turn_on and turn_off functions."""
         xknx = XKNX()
-        climate = Climate(xknx, "TestClimate", group_address_on_off="1/2/2")
+        climate = Climate(xknx, name="TestClimate", group_address_on_off="1/2/2")
         xknx.devices.async_add(climate)
 
         await climate.turn_on()
@@ -1571,7 +1574,7 @@ class TestClimate:
         )
 
         climate_inv = Climate(
-            xknx, "TestClimate", group_address_on_off="1/2/2", on_off_invert=True
+            xknx, name="TestClimate", group_address_on_off="1/2/2", on_off_invert=True
         )
         xknx.devices.async_add(climate_inv)
 
@@ -1596,16 +1599,16 @@ class TestClimate:
         """Test is_active property."""
         xknx = XKNX()
         climate_active = Climate(
-            xknx, "TestClimate1", group_address_active_state="1/1/1"
+            xknx, name="TestClimate1", group_address_active_state="1/1/1"
         )
         xknx.devices.async_add(climate_active)
         climate_command = Climate(
-            xknx, "TestClimate2", group_address_command_value_state="2/2/2"
+            xknx, name="TestClimate2", group_address_command_value_state="2/2/2"
         )
         xknx.devices.async_add(climate_command)
         climate_active_command = Climate(
             xknx,
-            "TestClimate3",
+            name="TestClimate3",
             group_address_active_state="1/1/1",
             group_address_command_value_state="2/2/2",
         )
