@@ -59,6 +59,10 @@ nav_order: 2
   ```
 - Scene: add `learn()` to send a telegram with the learn bit set, telling actuators to store their current state as this scene. Received learn telegrams are decoded instead of logging a "Can not process" warning, so a Scene can serve as scene actuator: restore its state from the device callback when `learn_requested` is `False`, store it when it is `True`.
 
+### DPT
+
+- Add DPT 275.100 (`DPT_TempRoomSetpSetF16[4]`) and DPT 275.101 (`DPT_TempRoomSetpSetShiftF16[4]`) for RTSM (Room Temperature Setpoint Manager) comfort/standby/economy/building_protection setpoint arrays.
+
 ### Features
 
 - Add `dmp_interface_object_read_r`, `dmp_interface_object_write_r`, `dmp_interface_object_scan_r` and `dmp_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.2/§3.25.2/§3.28.2/§3.26.2, reading, writing, discovering and verifying Properties of a device's Interface Objects on an already-open `P2PConnection`. Read, write and verify split a request into as many `A_PropertyValue_Read`/`_Write` exchanges as it needs, bounded both by the 4-bit `nr_of_elem` field and by `max_apdu_length` - the device's `PID_MAX_APDU_LENGTH`, defaulting to the 15 octets of an L_Data_Standard frame. `read_r` also serves the `start_index=0` element count query. A read-back that doesn't match raises the new `PropertyVerificationError`; `scan_r` returns a list of `ScannedInterfaceObject`.
