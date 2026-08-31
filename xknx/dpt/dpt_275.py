@@ -10,8 +10,8 @@ Temperature Setpoint Manager) and related HVAC function blocks.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
-from typing import Any, Final
+from dataclasses import dataclass, field, fields as dataclass_fields
+from typing import Any, Final, Self
 
 from .dpt import DPTComplex, DPTComplexData
 from .dpt_9 import DPT2ByteFloat, DPTTemperature, DPTTemperatureDifference2Byte
@@ -59,8 +59,33 @@ def _unpack_float_or_not_used(
     return dpt_class.from_knx(DPTArray(raw))
 
 
+class _RoomTemperatureSetpointSet(DPTComplexData):
+    """Base for setpoint sets whose every field is an optional float."""
+
+    __slots__ = ()
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> Self:
+        """Init from a dictionary."""
+        result = {}
+        for field_ in dataclass_fields(cls):
+            name = field_.name
+            try:
+                value = data.get(name)
+                result[name] = float(value) if value is not None else None
+            except (TypeError, ValueError) as err:
+                raise ValueError(f"Invalid value for {name}: {err}") from err
+        return cls(**result)
+
+    def as_dict(self) -> dict[str, float | None]:
+        """Create a JSON serializable dictionary."""
+        return {
+            field_.name: getattr(self, field_.name) for field_ in dataclass_fields(self)
+        }
+
+
 @dataclass(slots=True)
-class RoomTemperatureSetpoints(DPTComplexData):
+class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
     """
     Representation of a room temperature setpoint set.
 
@@ -73,30 +98,9 @@ class RoomTemperatureSetpoints(DPTComplexData):
     economy: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
     building_protection: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
 
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> RoomTemperatureSetpoints:
-        """Init from a dictionary."""
-        result = {}
-        for field_name in ("comfort", "standby", "economy", "building_protection"):
-            try:
-                value = data.get(field_name)
-                result[field_name] = float(value) if value is not None else None
-            except (TypeError, ValueError) as err:
-                raise ValueError(f"Invalid value for {field_name}: {err}") from err
-        return cls(**result)
-
-    def as_dict(self) -> dict[str, float | None]:
-        """Create a JSON serializable dictionary."""
-        return {
-            "comfort": self.comfort,
-            "standby": self.standby,
-            "economy": self.economy,
-            "building_protection": self.building_protection,
-        }
-
 
 @dataclass(slots=True)
-class RoomTemperatureSetpointsShift(DPTComplexData):
+class RoomTemperatureSetpointsShift(_RoomTemperatureSetpointSet):
     """
     Representation of a room temperature setpoint shift set.
 
@@ -110,27 +114,6 @@ class RoomTemperatureSetpointsShift(DPTComplexData):
     building_protection: float | None = field(
         default=None, metadata=_RANGE_TEMPERATURE_DIFFERENCE
     )
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> RoomTemperatureSetpointsShift:
-        """Init from a dictionary."""
-        result = {}
-        for field_name in ("comfort", "standby", "economy", "building_protection"):
-            try:
-                value = data.get(field_name)
-                result[field_name] = float(value) if value is not None else None
-            except (TypeError, ValueError) as err:
-                raise ValueError(f"Invalid value for {field_name}: {err}") from err
-        return cls(**result)
-
-    def as_dict(self) -> dict[str, float | None]:
-        """Create a JSON serializable dictionary."""
-        return {
-            "comfort": self.comfort,
-            "standby": self.standby,
-            "economy": self.economy,
-            "building_protection": self.building_protection,
-        }
 
 
 class DPTRoomTemperatureSetpointSet(DPTComplex[RoomTemperatureSetpoints]):
