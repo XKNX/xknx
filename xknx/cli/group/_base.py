@@ -17,10 +17,10 @@ class GroupCommand(Command):
     help_text = "read, write and monitor group addresses"
 
     async def run(self, args: argparse.Namespace) -> int:
-        """Connect to the KNX bus and execute the command."""
+        """Connect to the KNX bus and run the command."""
         async with XKNX(connection_config=connection_config(args)) as xknx:
-            return await self.execute(xknx, args)
+            return await self.run_connected(xknx, args)
 
     @abstractmethod
-    async def execute(self, xknx: XKNX, args: argparse.Namespace) -> int:
+    async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Execute the command on a connected XKNX instance."""

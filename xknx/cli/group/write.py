@@ -42,7 +42,7 @@ class WriteCommand(GroupCommand):
 
     async def run(self, args: argparse.Namespace) -> int:
         """Validate the group address, value and value type before connecting."""
-        # parsed results are passed through to `execute`
+        # parsed results are passed through to `run_connected`
         args.group_address = GroupAddress(args.group_address)
         if args.type is not None:
             # convert before connecting to fail early for unknown types
@@ -62,7 +62,7 @@ class WriteCommand(GroupCommand):
             args.value = value
         return await super().run(args)
 
-    async def execute(self, xknx: XKNX, args: argparse.Namespace) -> int:
+    async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Send a GroupValueWrite telegram."""
         group_value_write(xknx, args.group_address, args.value, value_type=args.type)
         return 0

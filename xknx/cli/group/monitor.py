@@ -41,12 +41,12 @@ class MonitorCommand(GroupCommand):
 
     async def run(self, args: argparse.Namespace) -> int:
         """Parse the address filters before connecting."""
-        # parsed results are passed through to `execute`
+        # parsed results are passed through to `run_connected`
         if args.filter:
             args.filter = [AddressFilter(pattern) for pattern in args.filter]
         return await super().run(args)
 
-    async def execute(self, xknx: XKNX, args: argparse.Namespace) -> int:
+    async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Print telegrams from the KNX bus until interrupted."""
         xknx.telegram_queue.register_telegram_received_cb(print_telegram, args.filter)
         await xknx.loop_until_sigint()

@@ -28,13 +28,13 @@ class ReadCommand(GroupCommand):
 
     async def run(self, args: argparse.Namespace) -> int:
         """Validate the group address and value type before connecting."""
-        # parsed results are passed through to `execute`
+        # parsed results are passed through to `run_connected`
         args.group_address = GroupAddress(args.group_address)
         if args.type is not None:
             args.type = DPTBase.get_dpt(args.type)  # raises ValueError if unknown
         return await super().run(args)
 
-    async def execute(self, xknx: XKNX, args: argparse.Namespace) -> int:
+    async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Read the value of a group address and print it."""
         value = await read_group_value(xknx, args.group_address, value_type=args.type)
         if value is None:
