@@ -5,24 +5,29 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import argparse
 from typing import ClassVar
-from urllib.parse import urlsplit
 
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 
 
 def gateway_argument(value: str) -> tuple[str, int]:
     """Parse and validate a gateway 'host[:port]' command line argument."""
-    try:
-        split = urlsplit(f"//{value}")
-        host = split.hostname
-        port = split.port  # raises ValueError for invalid or out of range ports
-    except ValueError as err:
-        raise argparse.ArgumentTypeError(str(err)) from None
+    host, _, port_str = value.partition(":")
+    if "[" in value or ":" in port_str:
+        # the KNX/IP interface resolves IPv4 addresses only
+        raise argparse.ArgumentTypeError("IPv6 gateway addresses are not supported")
+    if any(char in value for char in "/@?#"):
+        raise argparse.ArgumentTypeError(f"expected 'host[:port]', got {value!r}")
     if not host:
         raise argparse.ArgumentTypeError(f"missing host in {value!r}")
-    if port == 0:
-        raise argparse.ArgumentTypeError("port out of range: 0")
-    return host, port if port is not None else DEFAULT_MCAST_PORT
+    port = DEFAULT_MCAST_PORT
+    if port_str:
+        try:
+            port = int(port_str)
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"invalid port {port_str!r}") from None
+        if not 1 <= port <= 65535:
+            raise argparse.ArgumentTypeError(f"port out of range: {port}")
+    return host, port
 
 
 def connection_config(args: argparse.Namespace) -> ConnectionConfig:

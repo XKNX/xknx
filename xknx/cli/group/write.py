@@ -7,6 +7,7 @@ import sys
 
 from xknx import XKNX
 from xknx.dpt import DPTBase
+from xknx.telegram import GroupAddress
 from xknx.tools import group_value_write
 
 from ._base import GroupCommand
@@ -40,10 +41,15 @@ class WriteCommand(GroupCommand):
         parser.add_argument("--type", help="DPT value type, e.g. 'percent' or '9.001'")
 
     async def run(self, args: argparse.Namespace) -> int:
-        """Validate the value and value type before connecting."""
+        """Validate the group address, value and value type before connecting."""
+        # parsed results are passed through to `execute`
+        args.group_address = GroupAddress(args.group_address)
         if args.type is not None:
-            # the raw string value is parsed by the DPT transcoder in `execute`
-            DPTBase.get_dpt(args.type)  # raises ValueError for unknown types
+            # convert before connecting to fail early for unknown types
+            # or invalid values
+            transcoder = DPTBase.get_dpt(args.type)
+            args.value = transcoder.to_knx(args.value)
+            args.type = transcoder
         else:
             value = parse_raw_value(args.value)
             if not isinstance(value, int) or not 0 <= value <= 63:

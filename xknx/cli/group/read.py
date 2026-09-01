@@ -7,6 +7,7 @@ import sys
 
 from xknx import XKNX
 from xknx.dpt import DPTBase
+from xknx.telegram import GroupAddress
 from xknx.tools import read_group_value
 
 from ._base import GroupCommand
@@ -26,9 +27,11 @@ class ReadCommand(GroupCommand):
         )
 
     async def run(self, args: argparse.Namespace) -> int:
-        """Validate the value type before connecting."""
+        """Validate the group address and value type before connecting."""
+        # parsed results are passed through to `execute`
+        args.group_address = GroupAddress(args.group_address)
         if args.type is not None:
-            DPTBase.get_dpt(args.type)  # raises ValueError for unknown types
+            args.type = DPTBase.get_dpt(args.type)  # raises ValueError if unknown
         return await super().run(args)
 
     async def execute(self, xknx: XKNX, args: argparse.Namespace) -> int:

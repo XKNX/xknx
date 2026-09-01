@@ -13,7 +13,7 @@ from xknx.cli._command import Command, connection_config, gateway_argument
 from xknx.cli.group._base import GroupCommand
 from xknx.cli.group.monitor import print_telegram
 from xknx.cli.group.write import parse_raw_value
-from xknx.dpt import DPTBinary
+from xknx.dpt import DPTBinary, DPTSwitch, DPTTemperature
 from xknx.exceptions import CommunicationError
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionType, GatewayDescriptor
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
@@ -71,8 +71,7 @@ def test_connection_config_automatic() -> None:
     [
         ("10.0.0.1", ("10.0.0.1", DEFAULT_MCAST_PORT)),
         ("10.0.0.1:1234", ("10.0.0.1", 1234)),
-        ("[2001:db8::1]", ("2001:db8::1", DEFAULT_MCAST_PORT)),
-        ("[2001:db8::1]:3671", ("2001:db8::1", 3671)),
+        ("gateway.example", ("gateway.example", DEFAULT_MCAST_PORT)),
     ],
 )
 def test_gateway_argument(raw: str, expected: tuple[str, int]) -> None:
@@ -87,7 +86,11 @@ def test_gateway_argument(raw: str, expected: tuple[str, int]) -> None:
         "10.0.0.1:0",  # port out of range
         "10.0.0.1:65536",  # port out of range
         "10.0.0.1:notaport",  # invalid port
-        "2001:db8::1",  # unbracketed IPv6 mis-splits into an invalid port
+        "2001:db8::1",  # IPv6 is not supported by the KNX/IP interface
+        "[2001:db8::1]:3671",  # IPv6 is not supported by the KNX/IP interface
+        "gateway.example/path",  # not plain 'host[:port]'
+        "user@gateway.example",  # not plain 'host[:port]'
+        "gateway.example?x=1",  # not plain 'host[:port]'
     ],
 )
 def test_gateway_argument_invalid(raw: str) -> None:
@@ -133,8 +136,8 @@ def test_read(capsys: pytest.CaptureFixture[str]) -> None:
         patch("xknx.cli.group.read.read_group_value", read_mock),
     ):
         assert main(["group", "read", "1/2/3", "--type", "temperature"]) == 0
-    assert read_mock.call_args.args[1] == "1/2/3"
-    assert read_mock.call_args.kwargs["value_type"] == "temperature"
+    assert read_mock.call_args.args[1] == GroupAddress("1/2/3")
+    assert read_mock.call_args.kwargs["value_type"] is DPTTemperature
     assert capsys.readouterr().out == "21.5\n"
 
 
@@ -156,20 +159,20 @@ def test_write() -> None:
         patch("xknx.cli.group.write.group_value_write", write_mock),
     ):
         assert main(["--gateway", "10.0.0.1", "group", "write", "1/2/3", "on"]) == 0
-    assert write_mock.call_args.args[1:] == ("1/2/3", True)
+    assert write_mock.call_args.args[1:] == (GroupAddress("1/2/3"), True)
     assert write_mock.call_args.kwargs["value_type"] is None
 
 
-def test_write_with_type_passes_raw_string() -> None:
-    """Test the write command passes the raw string to the DPT transcoder."""
+def test_write_with_type_converts_value() -> None:
+    """Test the write command converts the value with the DPT transcoder."""
     write_mock = Mock()
     with (
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
         patch("xknx.cli.group.write.group_value_write", write_mock),
     ):
         assert main(["group", "write", "1/2/3", "on", "--type", "switch"]) == 0
-    assert write_mock.call_args.args[1:] == ("1/2/3", "on")
-    assert write_mock.call_args.kwargs["value_type"] == "switch"
+    assert write_mock.call_args.args[1:] == (GroupAddress("1/2/3"), DPTBinary(True))
+    assert write_mock.call_args.kwargs["value_type"] is DPTSwitch
 
 
 @pytest.mark.parametrize(
@@ -196,6 +199,28 @@ def test_write_invalid_type(capsys: pytest.CaptureFixture[str]) -> None:
 def test_read_invalid_type(capsys: pytest.CaptureFixture[str]) -> None:
     """Test the read command rejects an unknown DPT type before connecting."""
     assert main(["group", "read", "1/2/3", "--type", "unknown"]) == 1
+    assert "Error:" in capsys.readouterr().err
+
+
+def test_write_invalid_value_for_type(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test the write command rejects an unconvertible value before connecting."""
+    assert main(["group", "write", "1/2/3", "nope", "--type", "temperature"]) == 1
+    assert "Error:" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["group", "read", "i-test"],  # internal group address
+        ["group", "write", "i-test", "on"],  # internal group address
+        ["group", "read", "99/9/9"],  # invalid group address
+    ],
+)
+def test_internal_or_invalid_group_address(
+    argv: list[str], capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test commands reject internal or invalid group addresses before connecting."""
+    assert main(argv) == 1
     assert "Error:" in capsys.readouterr().err
 
 
@@ -248,7 +273,10 @@ def test_monitor() -> None:
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
         patch("xknx.xknx.XKNX.loop_until_sigint", AsyncMock()) as loop_mock,
     ):
-        assert main(["group", "monitor", "--filter", "1/2/*,1/4/5-6"]) == 0
+        assert (
+            main(["group", "monitor", "--filter", "1/2/*", "--filter", "1/4/5-6,8"])
+            == 0
+        )
     loop_mock.assert_called_once()
 
 

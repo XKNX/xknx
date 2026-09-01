@@ -34,18 +34,20 @@ class MonitorCommand(GroupCommand):
         """Add the monitor command arguments."""
         parser.add_argument(
             "--filter",
-            help="comma-separated group address patterns, e.g. '1/2/*,1/4/5-6'",
+            action="append",
+            help="group address pattern, e.g. '1/2/*' or '1/4/5-6,8';"
+            " repeat the option for multiple filters",
         )
+
+    async def run(self, args: argparse.Namespace) -> int:
+        """Parse the address filters before connecting."""
+        # parsed results are passed through to `execute`
+        if args.filter:
+            args.filter = [AddressFilter(pattern) for pattern in args.filter]
+        return await super().run(args)
 
     async def execute(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Print telegrams from the KNX bus until interrupted."""
-        address_filters = (
-            [AddressFilter(pattern) for pattern in args.filter.split(",")]
-            if args.filter
-            else None
-        )
-        xknx.telegram_queue.register_telegram_received_cb(
-            print_telegram, address_filters
-        )
+        xknx.telegram_queue.register_telegram_received_cb(print_telegram, args.filter)
         await xknx.loop_until_sigint()
         return 0
