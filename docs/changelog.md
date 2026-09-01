@@ -55,6 +55,10 @@ nav_order: 2
   ```
 - Scene: add `learn()` to send a telegram with the learn bit set, telling actuators to store their current state as this scene. Received learn telegrams are decoded instead of logging a "Can not process" warning, so a Scene can serve as scene actuator: restore its state from the device callback when `learn_requested` is `False`, store it when it is `True`.
 
+### DPT
+
+- Add DPT 275.100 (`DPT_TempRoomSetpSetF16[4]`) and DPT 275.101 (`DPT_TempRoomSetpSetShiftF16[4]`) for RTSM (Room Temperature Setpoint Manager) comfort/standby/economy/building_protection setpoint arrays.
+
 ### Internals
 
 - `Devices` keeps a group address index of its registered devices instead of scanning every device on every incoming telegram. `Devices.devices_by_group_address()` is a dict lookup now - its result is unchanged, devices are still returned in registration order and a device carrying one group address on several of its `RemoteValue`s is still returned once. This relies on a devices group addresses being fixed when its `RemoteValue`s are created, which the library guarantees - assigning `RemoteValue.group_address` after `Devices.async_add()` was never supported and would now leave the index stale.
