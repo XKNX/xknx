@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### New Features
+
+- Add a command line interface. Installing xknx puts an `xknx` command on the path (also available via `python -m xknx`) providing `scan`, `group read`, `group write` and `group monitor` commands. See `xknx --help`.
+
 ### Breaking changes
 
 - Rename `xknx.management.management.MANAGAMENT_ACK_TIMEOUT` and `MANAGAMENT_CONNECTION_TIMEOUT` to `MANAGEMENT_ACK_TIMEOUT` and `MANAGEMENT_CONNECTION_TIMEOUT` - they were misspelled.
