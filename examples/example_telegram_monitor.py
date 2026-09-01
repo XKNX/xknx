@@ -25,7 +25,7 @@ def show_help() -> None:
     print("Option           Argument example")
     print("-i --ia          1.0.253                 Individual address to connect to")
     print(
-        "-f --filter      1/2/*,1/4/[5-6]         Filter for specific group addresses"
+        "-f --filter      1/2/*,1/4/5-6           Filter for specific group addresses"
     )
     print(
         "-k --knxproject  myproject.knxproj       Load KNX project file for address resolution"
@@ -33,8 +33,8 @@ def show_help() -> None:
     print("-h --help                                Print help")
     print()
     print("Example:")
-    print('python example_telegram_monitor.py -i "1.0.253" -f 1/2/*,1/4/[5-6]')
-    print("This will listen to all telegrams for group addresses 1/2/* and 1/4/[5-6].")
+    print('python example_telegram_monitor.py -i "1.0.253" -f 1/2/*,1/4/5-6')
+    print("This will listen to all telegrams for group addresses 1/2/* and 1/4/5-6.")
 
 
 def load_project(file_path: str) -> KNXProject:
