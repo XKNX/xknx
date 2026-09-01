@@ -102,7 +102,7 @@ class TestSensorExposeLoop:
         ("power_2byte", DPTArray((0x6D, 0x91)), 116736.00),
         ("power_density", DPTArray((0x65, 0x3E)), 54968.32),
         ("powerfactor", DPTArray((0xC5, 0x35, 0x28, 0x21)), -2898.508),
-        ("ppm", DPTArray((0xF3, 0xC8)), -176947.20),
+        ("ppm", DPTArray((0x6F, 0x90)), 158597.12),
         ("pressure", DPTArray((0xC5, 0xE6, 0xE6, 0x62)), -7388.798),
         ("pressure_2byte", DPTArray((0x7C, 0xF4)), 415498.24),
         ("pulse", DPTArray((0xFC,)), 252),
