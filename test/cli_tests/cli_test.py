@@ -224,45 +224,84 @@ def test_internal_or_invalid_group_address(
     assert "Error:" in capsys.readouterr().err
 
 
-def test_scan(capsys: pytest.CaptureFixture[str]) -> None:
-    """Test the scan command prints found gateways."""
-    gateway = GatewayDescriptor(
-        ip_addr="10.0.0.1",
-        port=3671,
-        name="TestGateway",
-        individual_address=IndividualAddress("1.0.0"),
-        supports_tunnelling=True,
-    )
+TEST_GATEWAY = GatewayDescriptor(
+    ip_addr="10.0.0.1",
+    port=3671,
+    name="TestGateway",
+    individual_address=IndividualAddress("1.0.0"),
+    supports_tunnelling=True,
+)
 
-    async def _scan(
-        *, stop_on_found: int | None = None
-    ) -> AsyncIterator[GatewayDescriptor]:
-        yield gateway
+
+def _scanner_mock(
+    gateways: list[GatewayDescriptor], error: Exception | None = None
+) -> Mock:
+    """Create a GatewayScanner mock yielding the given gateways."""
+
+    async def _scan() -> AsyncIterator[GatewayDescriptor]:
+        if error is not None:
+            raise error
+        for gateway in gateways:
+            yield gateway
 
     scanner_mock = Mock()
     scanner_mock.async_scan = _scan
-    scanner_mock.found_gateways = {"hpai": gateway}
-    with patch("xknx.cli.scan.GatewayScanner", return_value=scanner_mock):
-        assert main(["-v", "scan", "--timeout", "1"]) == 0
+    return scanner_mock
+
+
+def test_scan(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test the scan command with an explicit local IP prints found gateways."""
+    with patch(
+        "xknx.cli.scan.GatewayScanner", return_value=_scanner_mock([TEST_GATEWAY])
+    ) as scanner_cls:
+        assert main(["--local-ip", "10.0.0.2", "scan", "--timeout", "1"]) == 0
+    assert scanner_cls.call_args.kwargs["local_ip"] == "10.0.0.2"
+    assert scanner_cls.call_args.kwargs["timeout_in_seconds"] == 1.0
     out = capsys.readouterr().out
     assert "TestGateway" in out
     assert "1.0.0 10.0.0.1:3671" in out
     assert "tunnelling: UDP" in out
 
 
+def test_scan_local_ip_error(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test scan errors are raised when an explicit local IP was given."""
+    with patch(
+        "xknx.cli.scan.GatewayScanner",
+        return_value=_scanner_mock([], error=CommunicationError("bind failed")),
+    ):
+        assert main(["--local-ip", "10.0.0.2", "scan"]) == 1
+    assert "Error: bind failed" in capsys.readouterr().err
+
+
+def test_scan_all_interfaces(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test the scan command scans all non-loopback interfaces by default."""
+    local_ips = [
+        Mock(ip="10.0.0.2"),
+        Mock(ip="127.0.0.1"),  # loopback is skipped
+        Mock(ip="192.168.0.2"),
+        Mock(ip="172.20.0.2"),
+    ]
+    scanners = [
+        _scanner_mock([], error=CommunicationError("bind failed")),  # ignored
+        _scanner_mock([TEST_GATEWAY]),
+        _scanner_mock([TEST_GATEWAY]),  # same gateway heard on another interface
+    ]
+    with (
+        patch("xknx.cli.scan.get_local_ips", return_value=local_ips),
+        patch("xknx.cli.scan.GatewayScanner", side_effect=scanners) as scanner_cls,
+    ):
+        assert main(["-v", "scan"]) == 0
+    assert scanner_cls.call_count == 3
+    out = capsys.readouterr().out
+    assert out.count("TestGateway") == 1  # deduplicated
+
+
 def test_scan_no_gateways(capsys: pytest.CaptureFixture[str]) -> None:
     """Test the scan command without results."""
-
-    async def _scan(
-        *, stop_on_found: int | None = None
-    ) -> AsyncIterator[GatewayDescriptor]:
-        return
-        yield
-
-    scanner_mock = Mock()
-    scanner_mock.async_scan = _scan
-    scanner_mock.found_gateways = {}
-    with patch("xknx.cli.scan.GatewayScanner", return_value=scanner_mock):
+    with (
+        patch("xknx.cli.scan.get_local_ips", return_value=[Mock(ip="10.0.0.2")]),
+        patch("xknx.cli.scan.GatewayScanner", return_value=_scanner_mock([])),
+    ):
         assert main(["-vv", "scan"]) == 0
     assert "No gateways found." in capsys.readouterr().out
 
