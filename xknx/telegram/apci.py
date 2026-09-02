@@ -3741,81 +3741,6 @@ class KeyWrite(APCIRequest[KeyResponse]):
 
 
 @dataclass(slots=True)
-class PropertyValueWrite(APCI):
-    """
-    PropertyValueWrite service.
-
-    Payload indicates object, property, count, start and data itself.
-    """
-
-    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_WRITE
-
-    object_index: int = 0
-    property_id: int = 0
-    count: int = 1
-    start_index: int = 0
-    data: bytes = b""
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 5 + len(self.data)
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        if not 0 <= self.count <= 0xF:
-            raise ConversionError("Count out of range.")
-        if not 0 <= self.start_index <= 0xFFF:
-            raise ConversionError("Start index out of range.")
-
-        size = len(self.data)
-        payload = struct.pack(
-            f"!BBBB{size}s",
-            self.object_index,
-            self.property_id,
-            (self.count << 4) + (self.start_index >> 8),
-            self.start_index & 0xFF,
-            self.data,
-        )
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> PropertyValueWrite:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 6:
-            raise ConversionError(
-                f"Invalid length for A_PropertyValue_Write in CEMI: {raw.hex()}"
-            )
-        size = len(raw) - 6
-        (
-            object_index,
-            property_id,
-            count,
-            start_index,
-            data,
-        ) = struct.unpack(f"!BBBB{size}s", raw[2:])
-        return cls(
-            object_index=object_index,
-            property_id=property_id,
-            count=count >> 4,
-            start_index=(count & 0xF) * 256 + start_index,
-            data=data,
-        )
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return (
-            "<PropertyValueWrite "
-            f'object_index="{self.object_index}" '
-            f'property_id="{self.property_id}" '
-            f'count="{self.count}" '
-            f'start_index="{self.start_index}" '
-            f'data="{self.data.hex()}" '
-            "/>"
-        )
-
-
-@dataclass(slots=True)
 class PropertyValueResponse(APCI):
     """
     PropertyValueResponse service.
@@ -3882,6 +3807,81 @@ class PropertyValueResponse(APCI):
         """Return object as readable string."""
         return (
             "<PropertyValueResponse "
+            f'object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'count="{self.count}" '
+            f'start_index="{self.start_index}" '
+            f'data="{self.data.hex()}" '
+            "/>"
+        )
+
+
+@dataclass(slots=True)
+class PropertyValueWrite(APCIRequest[PropertyValueResponse]):
+    """
+    PropertyValueWrite service.
+
+    Payload indicates object, property, count, start and data itself.
+    """
+
+    CODE: ClassVar = APCIExtendedService.PROPERTY_VALUE_WRITE
+
+    object_index: int = 0
+    property_id: int = 0
+    count: int = 1
+    start_index: int = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 5 + len(self.data)
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if not 0 <= self.count <= 0xF:
+            raise ConversionError("Count out of range.")
+        if not 0 <= self.start_index <= 0xFFF:
+            raise ConversionError("Start index out of range.")
+
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BBBB{size}s",
+            self.object_index,
+            self.property_id,
+            (self.count << 4) + (self.start_index >> 8),
+            self.start_index & 0xFF,
+            self.data,
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> PropertyValueWrite:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 6:
+            raise ConversionError(
+                f"Invalid length for A_PropertyValue_Write in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 6
+        (
+            object_index,
+            property_id,
+            count,
+            start_index,
+            data,
+        ) = struct.unpack(f"!BBBB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            count=count >> 4,
+            start_index=(count & 0xF) * 256 + start_index,
+            data=data,
+        )
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<PropertyValueWrite "
             f'object_index="{self.object_index}" '
             f'property_id="{self.property_id}" '
             f'count="{self.count}" '
