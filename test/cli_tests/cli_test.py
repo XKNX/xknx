@@ -20,6 +20,13 @@ from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDir
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 
+@pytest.fixture(autouse=True)
+def _clean_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Remove xknx environment variables."""
+    monkeypatch.delenv("XKNX_GATEWAY", raising=False)
+    monkeypatch.delenv("XKNX_LOCAL_IP", raising=False)
+
+
 def _interface_mock() -> Mock:
     """Create a KNX/IP interface mock."""
     mock = Mock()
@@ -161,6 +168,44 @@ def test_write() -> None:
         assert main(["--gateway", "10.0.0.1", "group", "write", "1/2/3", "on"]) == 0
     assert write_mock.call_args.args[1:] == (GroupAddress("1/2/3"), True)
     assert write_mock.call_args.kwargs["value_type"] is None
+
+
+def test_defaults_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test the gateway and local IP default to environment variables."""
+    monkeypatch.setenv("XKNX_GATEWAY", "10.0.0.1:1234")
+    monkeypatch.setenv("XKNX_LOCAL_IP", "10.0.0.2")
+    with (
+        patch(
+            "xknx.xknx.knx_interface_factory", return_value=_interface_mock()
+        ) as factory_mock,
+        patch("xknx.cli.group.write.group_value_write"),
+    ):
+        assert main(["group", "write", "1/2/3", "on"]) == 0
+    config = factory_mock.call_args.kwargs["connection_config"]
+    assert config.connection_type is ConnectionType.TUNNELING
+    assert config.gateway_ip == "10.0.0.1"
+    assert config.gateway_port == 1234
+    assert config.local_ip == "10.0.0.2"
+
+
+def test_argument_overrides_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test an explicit --gateway wins over the environment variable."""
+    monkeypatch.setenv("XKNX_GATEWAY", "10.0.0.1")
+    with (
+        patch(
+            "xknx.xknx.knx_interface_factory", return_value=_interface_mock()
+        ) as factory_mock,
+        patch("xknx.cli.group.write.group_value_write"),
+    ):
+        assert main(["--gateway", "10.0.0.9", "group", "write", "1/2/3", "on"]) == 0
+    assert factory_mock.call_args.kwargs["connection_config"].gateway_ip == "10.0.0.9"
+
+
+def test_invalid_environment_gateway(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test an invalid $XKNX_GATEWAY exits with an argparse error."""
+    monkeypatch.setenv("XKNX_GATEWAY", ":3671")
+    with pytest.raises(SystemExit):
+        main(["group", "read", "1/2/3"])
 
 
 def test_write_with_type_converts_value() -> None:
