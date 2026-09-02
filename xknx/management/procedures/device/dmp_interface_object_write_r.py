@@ -104,10 +104,15 @@ async def dmp_interface_object_write_r(
                 start_index=current_index,
                 data=chunk_data,
             ),
-            expected=apci.PropertyValueResponse,
         )
-        # `expected` guarantees this via `P2PConnection._receive`
-        assert isinstance(response.payload, apci.PropertyValueResponse)
+        # PropertyValueWrite is not an APCIRequest, so P2PConnection.request()
+        # doesn't verify the response type for us here.
+        if not isinstance(response.payload, apci.PropertyValueResponse):
+            raise ManagementConnectionError(
+                f"Property write failed: object {object_index} PID {property_id} "
+                f"index {current_index} received unexpected response: "
+                f"{response.payload}"
+            )
 
         # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.2: "If the remote
         # application process has a problem, e.g., Interface Object or Property

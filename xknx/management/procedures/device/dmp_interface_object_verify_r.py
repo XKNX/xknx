@@ -109,10 +109,7 @@ async def dmp_interface_object_verify_r(
                 count=chunk_count,
                 start_index=current_index,
             ),
-            expected=apci.PropertyValueResponse,
         )
-        # `expected` guarantees this via `P2PConnection._receive`
-        assert isinstance(response.payload, apci.PropertyValueResponse)
 
         response_count = response.payload.count
         if response_count == 0:

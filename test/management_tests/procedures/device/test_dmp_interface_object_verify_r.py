@@ -11,7 +11,6 @@ from xknx.management.procedures.device.dmp_interface_object_verify_r import (
     dmp_interface_object_verify_r,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
-from xknx.util import asyncio_timeout
 
 RESPONDER_TIMEOUT = 1
 
@@ -66,7 +65,7 @@ def _process_response(
 async def _wait_for_request(xknx: XKNX, req_num: int) -> None:
     """Wait until the req_num-th request telegram has been sent (1-indexed)."""
     threshold = req_num * 2 - 1
-    async with asyncio_timeout(RESPONDER_TIMEOUT):
+    async with asyncio.timeout(RESPONDER_TIMEOUT):
         while xknx.cemi_handler.send_telegram.call_count < threshold:  # noqa: ASYNC110
             await asyncio.sleep(0)
 
