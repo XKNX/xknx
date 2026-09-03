@@ -40,6 +40,8 @@ When adding a new procedure follow the workflow:
 from .device import (
     FREE_ACCESS_KEY,
     ScannedInterfaceObject,
+    dm_function_property_write_r,
+    dm_function_property_write_r_conn,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
