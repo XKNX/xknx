@@ -53,6 +53,7 @@ from .device import (
     dmp_interface_object_scan_r,
     dmp_interface_object_verify_r,
     dmp_interface_object_write_r,
+    dmp_load_state_machine_write_r_co_io,
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
