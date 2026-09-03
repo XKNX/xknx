@@ -11,3 +11,9 @@ from .dmp_interface_object_scan_r import (
 )
 from .dmp_interface_object_verify_r import dmp_interface_object_verify_r
 from .dmp_interface_object_write_r import dmp_interface_object_write_r
+from .dmp_mem_read_r_co import dmp_mem_read_r_co
+from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
+from .dmp_mem_write_r_co import dmp_mem_write_r_co
+from .dmp_user_mem_read_r_co import dmp_user_mem_read_r_co
+from .dmp_user_mem_verify_r_co import dmp_user_mem_verify_r_co
+from .dmp_user_mem_write_r_co import dmp_user_mem_write_r_co

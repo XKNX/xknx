@@ -1,4 +1,4 @@
-"""Constants shared by the DMP_InterfaceObject* procedures."""
+"""Constants shared by the DMP_* device management procedures."""
 
 from __future__ import annotations
 
@@ -17,3 +17,27 @@ MAX_ELEMENTS_PER_REQUEST = (1 << 4) - 1
 # octet"). Subtracting this from a max_apdu_length budget gives the octets
 # left over for `data`.
 PROPERTY_VALUE_HEADER_OCTETS = 5
+
+# Fixed non-data octets of a Memory*-PDU (KNX v02.01.01 - Application Layer
+# 03.03.07 - §3.5.3 A_Memory_Read / §3.5.4 A_Memory_Write, Figures 74-76):
+# octet 6 is TPCI, octet 7 the APCI-carrying octet + count, octets 8-9 the 16
+# bit address, data from octet 10 - so 3 octets of header after the TPCI
+# octet, matching apci.MemoryRead.calculated_length() and the spec's own
+# error-handling clause ("number... greater than Maximum APDU Length - 3").
+# Same units as PROPERTY_VALUE_HEADER_OCTETS above.
+MEMORY_HEADER_OCTETS = 3
+# count is 6 bits in A_Memory_Read/_Write/_Response (1-63 octets, §3.5.3/4),
+# max value 2^6 - 1
+MEMORY_MAX_COUNT = (1 << 6) - 1
+
+# Fixed non-data octets of a UserMemory*-PDU (KNX v02.01.01 - Application
+# Layer 03.03.07 - §3.5.6.2 A_UserMemory_Read / §3.5.6.3 A_UserMemory_Write,
+# Figures 79-81): the extended 2 octet APCI (its second octet packing the 4
+# bit address extension and 4 bit count) + a 2 octet address = 4 octets of
+# header after the TPCI octet, matching apci.UserMemoryRead.calculated_length()
+# and the spec's own error-handling clause ("number... greater than Maximum
+# APDU Length - 4"). Same units as PROPERTY_VALUE_HEADER_OCTETS above.
+USER_MEMORY_HEADER_OCTETS = 4
+# count is 4 bits in A_UserMemory_Read/_Write/_Response (1-15 octets,
+# §3.5.6.2/3), max value 2^4 - 1
+USER_MEMORY_MAX_COUNT = (1 << 4) - 1
