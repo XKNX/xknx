@@ -146,6 +146,17 @@ async def test_dmp_user_mem_read_r_co_zero_size(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
+async def test_dmp_user_mem_read_r_co_negative_size(xknx_setup: XKNX) -> None:
+    """Test dmp_user_mem_read_r_co raises ValueError for a negative size."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"size must be >= 0, got -1"):
+        await dmp_user_mem_read_r_co(conn, address=0x1000, size=-1)
+    await conn.disconnect()
+
+
 async def test_dmp_user_mem_read_r_co_address_out_of_range(xknx_setup: XKNX) -> None:
     """Test dmp_user_mem_read_r_co raises ValueError for an address outside 0-0xFFFFF."""
     xknx = xknx_setup
@@ -154,6 +165,30 @@ async def test_dmp_user_mem_read_r_co_address_out_of_range(xknx_setup: XKNX) -> 
     conn = await xknx.management.connect(ia)
     with pytest.raises(ValueError, match=r"address must be 0-0xFFFFF, got 1048576"):
         await dmp_user_mem_read_r_co(conn, address=0x100000, size=1)
+    await conn.disconnect()
+
+
+async def test_dmp_user_mem_read_r_co_max_apdu_length_not_positive(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_user_mem_read_r_co raises ValueError for max_apdu_length <= 0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
+        await dmp_user_mem_read_r_co(conn, address=0x1000, size=1, max_apdu_length=0)
+    await conn.disconnect()
+
+
+async def test_dmp_user_mem_read_r_co_no_room_for_data(xknx_setup: XKNX) -> None:
+    """Test dmp_user_mem_read_r_co raises ValueError when max_apdu_length leaves no room for data."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"leaves no room for memory data"):
+        await dmp_user_mem_read_r_co(conn, address=0x1000, size=1, max_apdu_length=4)
     await conn.disconnect()
 
 

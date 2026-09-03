@@ -133,3 +133,58 @@ async def test_dmp_user_mem_verify_r_co_address_out_of_range(xknx_setup: XKNX) -
     with pytest.raises(ValueError, match=r"address must be 0-0xFFFFF, got 1048576"):
         await dmp_user_mem_verify_r_co(conn, address=0x100000, expected_data=b"\x01")
     await conn.disconnect()
+
+
+async def test_dmp_user_mem_verify_r_co_max_apdu_length_not_positive(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_user_mem_verify_r_co raises ValueError for max_apdu_length <= 0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
+        await dmp_user_mem_verify_r_co(
+            conn, address=0x1000, expected_data=b"\x01", max_apdu_length=0
+        )
+    await conn.disconnect()
+
+
+async def test_dmp_user_mem_verify_r_co_no_room_for_data(xknx_setup: XKNX) -> None:
+    """Test dmp_user_mem_verify_r_co raises ValueError when max_apdu_length leaves no room for data."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"leaves no room for memory data"):
+        await dmp_user_mem_verify_r_co(
+            conn, address=0x1000, expected_data=b"\x01", max_apdu_length=4
+        )
+    await conn.disconnect()
+
+
+async def test_dmp_user_mem_verify_r_co_error_short_response(xknx_setup: XKNX) -> None:
+    """Test dmp_user_mem_verify_r_co raises when a chunk's response is shorter than requested."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.UserMemoryResponse(address=0x1000, data=b"\x01\x02"),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(ManagementConnectionError, match=r"requested 3 octets, got 2"):
+        await dmp_user_mem_verify_r_co(
+            conn, address=0x1000, expected_data=b"\x01\x02\x03"
+        )
+    await responder
+
+    await conn.disconnect()

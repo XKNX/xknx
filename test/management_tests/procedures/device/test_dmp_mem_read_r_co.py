@@ -177,6 +177,17 @@ async def test_dmp_mem_read_r_co_max_apdu_length_not_positive(xknx_setup: XKNX) 
     await conn.disconnect()
 
 
+async def test_dmp_mem_read_r_co_no_room_for_data(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_read_r_co raises ValueError when max_apdu_length leaves no room for data."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"leaves no room for memory data"):
+        await dmp_mem_read_r_co(conn, address=0x1000, size=1, max_apdu_length=3)
+    await conn.disconnect()
+
+
 async def test_dmp_mem_read_r_co_error_short_response(xknx_setup: XKNX) -> None:
     """Test dmp_mem_read_r_co raises when a chunk's response is shorter than requested."""
     xknx = xknx_setup

@@ -219,3 +219,60 @@ async def test_dmp_mem_write_r_co_address_out_of_range(xknx_setup: XKNX) -> None
     with pytest.raises(ValueError, match=r"address must be 0-65535, got 65536"):
         await dmp_mem_write_r_co(conn, address=0x10000, data=b"\x01")
     await conn.disconnect()
+
+
+async def test_dmp_mem_write_r_co_max_apdu_length_not_positive(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_mem_write_r_co raises ValueError for max_apdu_length <= 0."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
+        await dmp_mem_write_r_co(conn, address=0x1000, data=b"\x01", max_apdu_length=0)
+    await conn.disconnect()
+
+
+async def test_dmp_mem_write_r_co_no_room_for_data(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_write_r_co raises ValueError when max_apdu_length leaves no room for data."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"leaves no room for memory data"):
+        await dmp_mem_write_r_co(conn, address=0x1000, data=b"\x01", max_apdu_length=3)
+    await conn.disconnect()
+
+
+async def test_dmp_mem_write_r_co_write_delay(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_write_r_co sleeps write_delay after each chunk when not verifying."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_calls(xknx, 1)
+        _process_response(xknx, ia, ack_seq=0)
+
+    responder = asyncio.create_task(respond())
+    start = asyncio.get_running_loop().time()
+    await dmp_mem_write_r_co(
+        conn, address=0x1000, data=b"\x01\x02\x03", write_delay=0.05
+    )
+    elapsed = asyncio.get_running_loop().time() - start
+    await responder
+
+    assert elapsed >= 0.05
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(
+            Telegram(
+                destination_address=ia,
+                tpci=tpci.TDataConnected(0),
+                payload=apci.MemoryWrite(address=0x1000, data=b"\x01\x02\x03"),
+            )
+        )
+    ]
+    await conn.disconnect()
