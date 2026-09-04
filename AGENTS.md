@@ -56,6 +56,7 @@ if they aren't already established elsewhere in the codebase.
 | v01.07.01 | Tunnelling | 03.08.04 |
 | v01.01.02 | KNX IP Secure | 03.08.09 |
 | v02.01.01 | Application Interface Layer | 03.04.01 |
+| v01.10.01 | Resources | 03.05.01 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
