@@ -39,6 +39,8 @@ nav_order: 2
 - Management: don't acknowledge a connected telegram from a device xknx has no open point-to-point connection with. The acknowledgement was sent before the connection was looked up, so a device that was not talking to us received a `T_Ack` and was then reported as "No active point-to-point connection for received telegram". KNX v01.02.03 - Transport Layer 03.03.04 - §5.4: no style of the connection oriented state machine acknowledges anything while CLOSED - including the styles that accept incoming connections.
 - Management: only telegrams of a point-to-point connection are handled by an open connection to their sender. The sender address alone decided that before, so an unnumbered telegram from a device we happened to hold a connection with - a broadcast response for example - was acknowledged, never reached the broadcast context it was meant for, and could be mistaken for the response of a pending point-to-point request.
 - Management: a repeated sequence number is acknowledged again instead of being acknowledged and dropped, and a sequence number that is neither the expected nor the previous one is answered with a negative acknowledgement instead of a positive one - Transport Layer 03.03.04 - §5.3 A3 and A4.
+- `apci.PropertyValueWrite` is an `APCIRequest[PropertyValueResponse]` now, like `PropertyValueRead` already was. It carries a KNX-spec-defined response (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.2) and was missed when the other point-to-point request services were converted, so `P2PConnection.request()` sent it without verifying or narrowing the response type.
+- `apci.PropertyValueRead`, `PropertyValueWrite` and `PropertyValueResponse` raise `ConversionError` for a `start_index` above 4095 instead of encoding it into the neighbouring `nr_of_elem` field - `to_knx()` silently emitted a frame addressing a different element with a different count.
 
 ### Connection
 
@@ -54,6 +56,10 @@ nav_order: 2
   light.name = "light.kitchen_ceiling"  # eg. in Home Assistants `async_added_to_hass()`
   ```
 - Scene: add `learn()` to send a telegram with the learn bit set, telling actuators to store their current state as this scene. Received learn telegrams are decoded instead of logging a "Can not process" warning, so a Scene can serve as scene actuator: restore its state from the device callback when `learn_requested` is `False`, store it when it is `True`.
+
+### Features
+
+- Add `dmp_interface_object_read_r`, `dmp_interface_object_write_r`, `dmp_interface_object_scan_r` and `dmp_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.2/§3.25.2/§3.28.2/§3.26.2, reading, writing, discovering and verifying Properties of a device's Interface Objects on an already-open `P2PConnection`. Read, write and verify split a request into as many `A_PropertyValue_Read`/`_Write` exchanges as it needs, bounded both by the 4-bit `nr_of_elem` field and by `max_apdu_length` - the device's `PID_MAX_APDU_LENGTH`, defaulting to the 15 octets of an L_Data_Standard frame. `read_r` also serves the `start_index=0` element count query. A read-back that doesn't match raises the new `PropertyVerificationError`; `scan_r` returns a list of `ScannedInterfaceObject`.
 
 ### Internals
 
