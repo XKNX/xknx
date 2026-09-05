@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
@@ -47,13 +47,19 @@ async def dmp_user_mem_verify_r_co(
         v01.10.01 - Resources 03.05.01 - §4.3.7). Defaults to the spec's
         fallback of 15 octets for a device whose actual value hasn't been
         read; pass the real value for a device known to support more.
-    :raises ValueError: If address is out of range or max_apdu_length is not
-        positive
-    :raises ManagementConnectionError: If a block's data doesn't match
-        expected, or a chunk's response carries fewer octets than requested
+    :raises ValueError: If address is out of range, the address range is out
+        of range, or max_apdu_length is not positive
+    :raises ManagementConnectionError: If a chunk's response carries fewer
+        octets than requested, or echoes a different address than requested
+    :raises VerificationError: If a block's data doesn't match expected
     """
     if not 0 <= address <= 0xFFFFF:
         raise ValueError(f"address must be 0-0xFFFFF, got {address}")
+    if expected_data and address + len(expected_data) - 1 > 0xFFFFF:
+        raise ValueError(
+            f"address + len(expected_data) - 1 must be <= 0xfffff, got "
+            f"{address + len(expected_data) - 1:#07x}"
+        )
     if max_apdu_length <= 0:
         raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
     if not expected_data:
@@ -76,6 +82,12 @@ async def dmp_user_mem_verify_r_co(
         response = await conn.request(
             apci.UserMemoryRead(address=current_address, count=len(expected_chunk))
         )
+        if response.payload.address != current_address:
+            raise ManagementConnectionError(
+                f"User memory verify failed: requested address "
+                f"{current_address:#07x}, response echoed "
+                f"{response.payload.address:#07x}"
+            )
         if len(response.payload.data) != len(expected_chunk):
             raise ManagementConnectionError(
                 f"User memory verify failed: address {current_address:#07x} "
@@ -83,7 +95,7 @@ async def dmp_user_mem_verify_r_co(
                 f"got {len(response.payload.data)}"
             )
         if response.payload.data != expected_chunk:
-            raise ManagementConnectionError(
+            raise VerificationError(
                 f"User memory verify mismatch at address {current_address:#07x}: "
                 f"expected {expected_chunk.hex()}, got {response.payload.data.hex()}"
             )

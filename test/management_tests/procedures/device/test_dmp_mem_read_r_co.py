@@ -166,6 +166,17 @@ async def test_dmp_mem_read_r_co_address_out_of_range(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
+async def test_dmp_mem_read_r_co_range_out_of_bounds(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_read_r_co raises ValueError when address + size - 1 overflows 0xFFFF."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(ValueError, match=r"address \+ size - 1 must be <= 0xffff"):
+        await dmp_mem_read_r_co(conn, address=0xFFFF, size=2)
+    await conn.disconnect()
+
+
 async def test_dmp_mem_read_r_co_max_apdu_length_not_positive(xknx_setup: XKNX) -> None:
     """Test dmp_mem_read_r_co raises ValueError for max_apdu_length <= 0."""
     xknx = xknx_setup
@@ -207,6 +218,31 @@ async def test_dmp_mem_read_r_co_error_short_response(xknx_setup: XKNX) -> None:
 
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match=r"requested 3 octets, got 2"):
+        await dmp_mem_read_r_co(conn, address=0x1000, size=3)
+    await responder
+
+    await conn.disconnect()
+
+
+async def test_dmp_mem_read_r_co_error_wrong_address_echoed(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_read_r_co raises when a response echoes a different address."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.MemoryResponse(address=0x2000, data=b"\x01\x02\x03"),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(ManagementConnectionError, match=r"response echoed 0x2000"):
         await dmp_mem_read_r_co(conn, address=0x1000, size=3)
     await responder
 

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.procedures.device.dmp_mem_verify_r_co import dmp_mem_verify_r_co
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
@@ -82,7 +82,7 @@ async def test_dmp_mem_verify_r_co_success(xknx_setup: XKNX) -> None:
 
 
 async def test_dmp_mem_verify_r_co_mismatch(xknx_setup: XKNX) -> None:
-    """Test dmp_mem_verify_r_co raises when the device's memory differs."""
+    """Test dmp_mem_verify_r_co raises VerificationError when the device's memory differs."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -99,7 +99,32 @@ async def test_dmp_mem_verify_r_co_mismatch(xknx_setup: XKNX) -> None:
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match=r"Memory verify mismatch"):
+    with pytest.raises(VerificationError, match=r"Memory verify mismatch"):
+        await dmp_mem_verify_r_co(conn, address=0x1000, expected_data=b"\x01\x02\x03")
+    await responder
+
+    await conn.disconnect()
+
+
+async def test_dmp_mem_verify_r_co_wrong_address_echoed(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_verify_r_co raises when a response echoes a different address."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.MemoryResponse(address=0x2000, data=b"\x01\x02\x03"),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(ManagementConnectionError, match=r"response echoed 0x2000"):
         await dmp_mem_verify_r_co(conn, address=0x1000, expected_data=b"\x01\x02\x03")
     await responder
 
@@ -173,6 +198,19 @@ async def test_dmp_mem_verify_r_co_address_out_of_range(xknx_setup: XKNX) -> Non
     conn = await xknx.management.connect(ia)
     with pytest.raises(ValueError, match=r"address must be 0-65535, got 65536"):
         await dmp_mem_verify_r_co(conn, address=0x10000, expected_data=b"\x01")
+    await conn.disconnect()
+
+
+async def test_dmp_mem_verify_r_co_range_out_of_bounds(xknx_setup: XKNX) -> None:
+    """Test dmp_mem_verify_r_co raises ValueError when address + len(expected_data) - 1 overflows 0xFFFF."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    with pytest.raises(
+        ValueError, match=r"address \+ len\(expected_data\) - 1 must be <= 0xffff"
+    ):
+        await dmp_mem_verify_r_co(conn, address=0xFFFF, expected_data=b"\x01\x02")
     await conn.disconnect()
 
 

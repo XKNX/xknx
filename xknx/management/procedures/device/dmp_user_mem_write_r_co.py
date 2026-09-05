@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
@@ -51,13 +51,20 @@ async def dmp_user_mem_write_r_co(
         v01.10.01 - Resources 03.05.01 - §4.3.7). Defaults to the spec's
         fallback of 15 octets for a device whose actual value hasn't been
         read; pass the real value for a device known to support more.
-    :raises ValueError: If address is out of range or max_apdu_length is not
-        positive
+    :raises ValueError: If address is out of range, the address range is out
+        of range, or max_apdu_length is not positive
     :raises ManagementConnectionError: If verify is enabled and the read-back
-        does not match what was written
+        echoes a different address than requested
+    :raises VerificationError: If verify is enabled and the read-back does
+        not match what was written
     """
     if not 0 <= address <= 0xFFFFF:
         raise ValueError(f"address must be 0-0xFFFFF, got {address}")
+    if data and address + len(data) - 1 > 0xFFFFF:
+        raise ValueError(
+            f"address + len(data) - 1 must be <= 0xfffff, got "
+            f"{address + len(data) - 1:#07x}"
+        )
     if max_apdu_length <= 0:
         raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
     if not data:
@@ -83,8 +90,14 @@ async def dmp_user_mem_write_r_co(
             response = await conn.request(
                 apci.UserMemoryRead(address=current_address, count=len(chunk))
             )
-            if response.payload.data != chunk:
+            if response.payload.address != current_address:
                 raise ManagementConnectionError(
+                    f"User memory verify failed: requested address "
+                    f"{current_address:#07x}, response echoed "
+                    f"{response.payload.address:#07x}"
+                )
+            if response.payload.data != chunk:
+                raise VerificationError(
                     f"User memory verify failed at address {current_address:#07x}: "
                     f"expected {chunk.hex()}, got {response.payload.data.hex()}"
                 )
