@@ -11,6 +11,7 @@ from xknx.dpt import (
     DPTLux,
     DPTPartsPerMillion,
     DPTTemperature,
+    DPTTemperatureDifference2Byte,
     DPTVoltage,
 )
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -91,8 +92,9 @@ class TestDPTFloat:
 
     def test_max(self) -> None:
         """Test parsing and streaming of DPT2ByteFloat with maximum value."""
-        assert DPT2ByteFloat.to_knx(DPT2ByteFloat.value_max) == DPTArray((0x7F, 0xFF))
-        assert DPT2ByteFloat.from_knx(DPTArray((0x7F, 0xFF))) == DPT2ByteFloat.value_max
+        assert DPT2ByteFloat.value_max == 670433.28
+        assert DPT2ByteFloat.to_knx(DPT2ByteFloat.value_max) == DPTArray((0x7F, 0xFE))
+        assert DPT2ByteFloat.from_knx(DPTArray((0x7F, 0xFE))) == DPT2ByteFloat.value_max
 
     def test_close_to_limit(self) -> None:
         """Test parsing and streaming of DPT2ByteFloat with numeric limit."""
@@ -106,10 +108,14 @@ class TestDPTFloat:
         assert DPT2ByteFloat.to_knx(DPT2ByteFloat.value_min) == DPTArray((0xF8, 0x00))
         assert DPT2ByteFloat.from_knx(DPTArray((0xF8, 0x00))) == DPT2ByteFloat.value_min
 
-    def test_close_to_max(self) -> None:
-        """Test parsing and streaming of DPT2ByteFloat with maximum value -1."""
-        assert DPT2ByteFloat.to_knx(670433.28) == DPTArray((0x7F, 0xFE))
-        assert DPT2ByteFloat.from_knx(DPTArray((0x7F, 0xFE))) == 670433.28
+    def test_invalid_data(self) -> None:
+        """Test that 0x7FFF is rejected as invalid data for every DPT 9.xxx."""
+        for dpt_class in (DPT2ByteFloat, DPTTemperature, DPTHumidity):
+            with pytest.raises(ConversionError):
+                dpt_class.from_knx(DPTArray((0x7F, 0xFF)))
+            # 0x7FFF would be the next encodable value above value_max
+            with pytest.raises(ConversionError):
+                dpt_class.to_knx(670760.96)
 
     def test_close_to_min(self) -> None:
         """Test parsing and streaming of DPT2ByteFloat with minimum value +1."""
@@ -142,7 +148,7 @@ class TestDPTFloat:
     def test_temperature_settings(self) -> None:
         """Test attributes of DPTTemperature."""
         assert DPTTemperature.value_min == -273
-        assert DPTTemperature.value_max == 670760
+        assert DPTTemperature.value_max == 670433.28
         assert DPTTemperature.unit == "°C"
         assert DPTTemperature.resolution == 0.01
 
@@ -157,12 +163,21 @@ class TestDPTFloat:
             DPTTemperature.from_knx(DPTArray((0xB1, 0xE6)))  # -1000
 
     #
+    # DPTTemperatureDifference2Byte
+    #
+    def test_temperature_difference_settings(self) -> None:
+        """Test attributes of DPTTemperatureDifference2Byte."""
+        assert DPTTemperatureDifference2Byte.value_min == -671088.64
+        assert DPTTemperatureDifference2Byte.value_max == 670433.28
+        assert DPTTemperatureDifference2Byte.unit == "K"
+
+    #
     # DPTLux
     #
     def test_lux_settings(self) -> None:
         """Test attributes of DPTLux."""
         assert DPTLux.value_min == 0
-        assert DPTLux.value_max == 670760
+        assert DPTLux.value_max == 670433.28
         assert DPTLux.unit == "lx"
         assert DPTLux.resolution == 0.01
 
@@ -177,7 +192,7 @@ class TestDPTFloat:
     def test_humidity_settings(self) -> None:
         """Test attributes of DPTHumidity."""
         assert DPTHumidity.value_min == 0
-        assert DPTHumidity.value_max == 670760
+        assert DPTHumidity.value_max == 670433.28
         assert DPTHumidity.unit == "%"
         assert DPTHumidity.resolution == 0.01
 
@@ -198,6 +213,8 @@ class TestDPTFloat:
     #
     def test_partspermillion_settings(self) -> None:
         """Test attributes of DPTPartsPerMillion."""
+        assert DPTPartsPerMillion.value_min == 0
+        assert DPTPartsPerMillion.value_max == 670433.28
         assert DPTPartsPerMillion.unit == "ppm"
 
     #
