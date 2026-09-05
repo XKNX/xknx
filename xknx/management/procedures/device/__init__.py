@@ -46,6 +46,7 @@ from .dmp_load_state_machine_write_r_co_io import dmp_load_state_machine_write_r
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
+from .dmp_prog_mode_switch_r_co import dmp_prog_mode_switch_r_co
 from .dmp_run_state_machine_read_r_io import dmp_run_state_machine_read_r_io
 from .dmp_run_state_machine_verify_r_io import dmp_run_state_machine_verify_r_io
 from .dmp_run_state_machine_write_r_io import dmp_run_state_machine_write_r_io

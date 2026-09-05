@@ -77,6 +77,7 @@ from .device import (
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
+    dmp_prog_mode_switch_r_co,
     dmp_run_state_machine_read_r_io,
     dmp_run_state_machine_verify_r_io,
     dmp_run_state_machine_write_r_io,
