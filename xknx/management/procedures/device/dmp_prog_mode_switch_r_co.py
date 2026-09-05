@@ -13,7 +13,7 @@ __all__ = ["dmp_prog_mode_switch_r_co"]
 _CURR_PROG_MODE_ADDRESS = 0x0060
 
 _PROG_MODE_BIT = 0b0000_0001
-_PARITY_BIT = 0b1000_0000
+_DONT_CARE_MASK = 0b0111_1110
 
 
 async def dmp_prog_mode_switch_r_co(conn: P2PConnection, mode: bool) -> None:
@@ -28,27 +28,22 @@ async def dmp_prog_mode_switch_r_co(conn: P2PConnection, mode: bool) -> None:
 
     That octet's bit 0 (``prog_mode``) is both set and read back as the
     Programming Mode state; bits 1-6 are don't-care and are echoed back
-    unchanged. Bit 7 (``p_parity``) is toggled here, not recomputed from
-    scratch: §4.26.3.4.1 "Usage by Management Client" is explicit that "the
-    variable p_parity shall be inverted, if the value of prog_mode is
-    changed" - so it is only flipped when ``mode`` differs from the device's
-    current state, and left untouched (along with the don't-care bits) when
-    it doesn't. This call still performs its read-modify-write in that
-    case, matching §3.13.2's sequence exactly, it just changes nothing.
-
-    calimero-core's ``ManagementProceduresImpl.setProgrammingMode()``
-    instead always recomputes bit 7 as the true even parity of bits 0-6.
-    Under the spec's own assumption that "a proper running system has
-    always a valid setting of p_parity" (§4.26.3.1, footnote 95), toggling
-    and recomputing agree - flipping exactly one bit always flips the
-    parity that was already correct for the rest. They would only diverge
-    if the device's own current parity were already invalid, a state the
-    spec itself calls out as abnormal ("[t]ypically the system is
-    restarted if p_parity is invalid", footnote 96) - and one this
-    procedure has no way to detect from a single read. The toggle here
-    matches what the spec explicitly requires of a Management Client;
-    recomputing would also be defensible, but isn't what §4.26.3.4.1 asks
-    for.
+    unchanged. Bit 7 (``p_parity``) is recomputed from scratch as the true
+    even parity of bits 0-6 - matching calimero-core's
+    ``ManagementProceduresImpl.setProgrammingMode()`` - rather than toggled:
+    §4.26.3.1 "Format and encoding" defines ``p_parity`` as "the parity bit
+    of the complete octet", and recomputing it satisfies that definition
+    unconditionally, including the one case a toggle cannot cover - the
+    device's own current parity already being invalid (a state
+    §4.26.3.4.1's footnote 96 calls abnormal: "[t]ypically the system is
+    restarted if p_parity is invalid"). §4.26.3.4.1 also requires that
+    "the variable p_parity shall be inverted, if the value of prog_mode is
+    changed"; recomputing satisfies this too whenever the device's current
+    parity was already valid, which is the only case that sentence
+    actually describes - flipping exactly one bit always flips the parity
+    that was already correct for the rest, so toggling and recomputing
+    agree there and only diverge on an already-invalid octet, where
+    recomputing repairs it instead of preserving the invalid value.
 
     :param conn: Active P2P connection to the device
     :param mode: True to switch Programming Mode on, False to switch it off
@@ -73,9 +68,9 @@ async def dmp_prog_mode_switch_r_co(conn: P2PConnection, mode: bool) -> None:
     current = response.payload.data[0]
 
     new_prog_mode = _PROG_MODE_BIT if mode else 0
-    new_byte = (current & ~_PROG_MODE_BIT) | new_prog_mode
-    if new_prog_mode != (current & _PROG_MODE_BIT):
-        new_byte ^= _PARITY_BIT
+    bits_0_to_6 = (current & _DONT_CARE_MASK) | new_prog_mode
+    parity = bits_0_to_6.bit_count() % 2
+    new_byte = bits_0_to_6 | (parity << 7)
 
     await conn.send_data(
         apci.MemoryWrite(address=_CURR_PROG_MODE_ADDRESS, data=bytes([new_byte]))
