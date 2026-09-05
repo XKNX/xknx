@@ -41,3 +41,19 @@ USER_MEMORY_HEADER_OCTETS = 4
 # count is 4 bits in A_UserMemory_Read/_Write/_Response (1-15 octets,
 # §3.5.6.2/3), max value 2^4 - 1
 USER_MEMORY_MAX_COUNT = (1 << 4) - 1
+
+# Fixed non-data octets of a FunctionPropertyCommand/FunctionPropertyState*-PDU,
+# matching apci.FunctionPropertyCommand.calculated_length(): the APCI-carrying
+# octet + object_index + property_id = 3. Same units as
+# PROPERTY_VALUE_HEADER_OCTETS above. Unlike Property/Memory services, a
+# Function Property command is not array-shaped, so an oversized command is
+# rejected outright rather than chunked - the spec describes no way to split
+# one across multiple PDUs.
+FUNCTION_PROPERTY_HEADER_OCTETS = 3
+
+# Fixed non-data octets of a FunctionPropertyExtCommand/FunctionPropertyExt-
+# State*-PDU, matching apci.FunctionPropertyExtCommand.calculated_length():
+# the extended 2 octet APCI + 2 octet Interface Object Type + 12 bit Object
+# Instance/12 bit Property ID packed into 3 octets = 6. Same non-chunking
+# rationale as FUNCTION_PROPERTY_HEADER_OCTETS above.
+FUNCTION_PROPERTY_EXT_HEADER_OCTETS = 6

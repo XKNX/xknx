@@ -2897,6 +2897,11 @@ class FunctionPropertyCommand(APCIRequest[FunctionPropertyStateResponse]):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if not 0 <= self.object_index <= 0xFF:
+            raise ConversionError("Object index out of range.")
+        if not 1 <= self.property_id <= 0xFF:
+            raise ConversionError("Property ID out of range.")
+
         size = len(self.data)
         payload = struct.pack(
             f"!BB{size}s", self.object_index, self.property_id, self.data
