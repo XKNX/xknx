@@ -251,3 +251,27 @@ async def test_dmp_ext_function_property_write_r_conn_command_too_long() -> None
 
     xknx.cemi_handler.send_telegram.assert_not_called()
     await conn.disconnect()
+
+
+async def test_dmp_ext_function_property_write_r_conn_max_apdu_length_not_positive() -> (
+    None
+):
+    """Test dmp_ext_function_property_write_r_conn raises ValueError for max_apdu_length <= 0."""
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    with pytest.raises(ValueError, match=r"max_apdu_length must be positive, got 0"):
+        await dmp_ext_function_property_write_r_conn(
+            conn,
+            interface_object_type=343,
+            object_instance=1,
+            property_id=52,
+            command=b"",
+            max_apdu_length=0,
+        )
+
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
