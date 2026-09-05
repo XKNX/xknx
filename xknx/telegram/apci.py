@@ -2872,8 +2872,8 @@ class FunctionPropertyCommand(APCIRequest[FunctionPropertyStateResponse]):
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
+    property_id: int
     object_index: int = 0
-    property_id: int = 0
     data: bytes = b""
 
     def calculated_length(self) -> int:

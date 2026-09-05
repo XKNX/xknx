@@ -60,6 +60,8 @@ async def dmp_ext_function_property_write_r_conn(
         and resulting state data)
     :raises ValueError: If ``command`` does not fit within ``max_apdu_length``
     """
+    if max_apdu_length <= 0:
+        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
     max_command_length = max_apdu_length - FUNCTION_PROPERTY_EXT_HEADER_OCTETS
     if len(command) > max_command_length:
         raise ValueError(
