@@ -2892,6 +2892,20 @@ class TestFunctionPropertyCommand:
             == '<FunctionPropertyCommand object_index="1" property_id="4" data="1234" />'
         )
 
+    def test_to_knx_object_index_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range object_index."""
+        payload = FunctionPropertyCommand(object_index=0x100, property_id=4)
+
+        with pytest.raises(ConversionError, match=r".*Object index.*"):
+            payload.to_knx()
+
+    def test_to_knx_property_id_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range property_id."""
+        payload = FunctionPropertyCommand(object_index=1, property_id=0)
+
+        with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
 
 class TestFunctionPropertyStateRead:
     """Test class for FunctionPropertyStateRead objects."""
