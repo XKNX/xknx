@@ -22,6 +22,15 @@ from .dmp_ext_load_state_machine_verify_r_co_io import (
 from .dmp_ext_load_state_machine_write_r_co_io import (
     dmp_ext_load_state_machine_write_r_co_io,
 )
+from .dmp_ext_run_state_machine_read_r_co_io import (
+    dmp_ext_run_state_machine_read_r_co_io,
+)
+from .dmp_ext_run_state_machine_verify_r_co_io import (
+    dmp_ext_run_state_machine_verify_r_co_io,
+)
+from .dmp_ext_run_state_machine_write_r_co_io import (
+    dmp_ext_run_state_machine_write_r_co_io,
+)
 from .dmp_interface_object_read_r import dmp_interface_object_read_r
 from .dmp_interface_object_scan_r import (
     ScannedInterfaceObject,
@@ -35,7 +44,11 @@ from .dmp_load_state_machine_write_r_co_io import dmp_load_state_machine_write_r
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
+from .dmp_run_state_machine_read_r_io import dmp_run_state_machine_read_r_io
+from .dmp_run_state_machine_verify_r_io import dmp_run_state_machine_verify_r_io
+from .dmp_run_state_machine_write_r_io import dmp_run_state_machine_write_r_io
 from .dmp_user_mem_read_r_co import dmp_user_mem_read_r_co
 from .dmp_user_mem_verify_r_co import dmp_user_mem_verify_r_co
 from .dmp_user_mem_write_r_co import dmp_user_mem_write_r_co
 from .load_state import LOAD_EVENT_SIZE, LoadState, MemoryType, SegmentType
+from .run_state import RUN_EVENT_SIZE, RunState
