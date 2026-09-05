@@ -49,6 +49,12 @@ from .device import (
     dmp_interface_object_scan_r,
     dmp_interface_object_verify_r,
     dmp_interface_object_write_r,
+    dmp_mem_read_r_co,
+    dmp_mem_verify_r_co,
+    dmp_mem_write_r_co,
+    dmp_user_mem_read_r_co,
+    dmp_user_mem_verify_r_co,
+    dmp_user_mem_write_r_co,
 )
 from .network import (
     nm_individual_address_check,

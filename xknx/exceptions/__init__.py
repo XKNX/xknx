@@ -22,6 +22,7 @@ from .exception import (
     TunnellingAckError,
     UnsupportedAPCIService,
     UnsupportedCEMIMessage,
+    VerificationError,
     XKNXException,
 )
 
@@ -47,5 +48,6 @@ __all__ = [
     "TunnellingAckError",
     "UnsupportedAPCIService",
     "UnsupportedCEMIMessage",
+    "VerificationError",
     "XKNXException",
 ]
