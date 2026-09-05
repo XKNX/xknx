@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from enum import IntEnum
 
+from xknx.exceptions import ManagementConnectionError
+
 # Write value width (KNX v01.10.01 - Resources 03.05.01 - §4.2.5
 # PID_LOAD_STATE_CONTROL: "The write value shall always be 10 octets.").
 LOAD_EVENT_SIZE = 10
@@ -59,6 +61,34 @@ class SegmentType(IntEnum):
     TASK_CTRL_2 = 0x05
     RELATIVE_ALLOCATION = 0x0A
     DATA_RELATIVE_ALLOCATION = 0x0B
+
+
+def decode_load_state(data: bytes, context: str) -> LoadState:
+    """
+    Map the Load State octet to :class:`LoadState`, erroring on unknowns.
+
+    ``PID_LOAD_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
+    Resources 03.05.01 - §4.2.5); the 10 octet width is a write-only value.
+    A length other than 1 is rejected here rather than just indexing
+    ``data[0]`` - a caller reading via ``dmp_interface_object_read_r`` only
+    checks ``nr_of_elem``, not the octet count, so a device echoing back its
+    10 octet write event (a load event *type*, not a load *state*) would
+    otherwise be silently decoded as a state.
+
+    :param context: A short description of what was read, for error
+        messages - e.g. ``"object 3"`` or ``"interface object type 343
+        instance 1"``, since callers address a Load State Machine either way.
+    """
+    if len(data) != 1:
+        raise ManagementConnectionError(
+            f"{context} Load State Machine returned {len(data)} octets, expected 1"
+        )
+    try:
+        return LoadState(data[0])
+    except ValueError as exc:
+        raise ManagementConnectionError(
+            f"{context} Load State Machine reported unknown state {data[0]:#04x}"
+        ) from exc
 
 
 def _pad(data: bytes) -> bytes:
