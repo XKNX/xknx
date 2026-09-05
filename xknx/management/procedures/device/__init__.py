@@ -12,6 +12,12 @@ from .dmp_ext_function_property_write_r import (
     dmp_ext_function_property_write_r,
     dmp_ext_function_property_write_r_conn,
 )
+from .dmp_ext_load_state_machine_read_r_co_io import (
+    dmp_ext_load_state_machine_read_r_co_io,
+)
+from .dmp_ext_load_state_machine_verify_r_co_io import (
+    dmp_ext_load_state_machine_verify_r_co_io,
+)
 from .dmp_interface_object_read_r import dmp_interface_object_read_r
 from .dmp_interface_object_scan_r import (
     ScannedInterfaceObject,
@@ -19,6 +25,8 @@ from .dmp_interface_object_scan_r import (
 )
 from .dmp_interface_object_verify_r import dmp_interface_object_verify_r
 from .dmp_interface_object_write_r import dmp_interface_object_write_r
+from .dmp_load_state_machine_read_r_io import dmp_load_state_machine_read_r_io
+from .dmp_load_state_machine_verify_r_io import dmp_load_state_machine_verify_r_io
 from .dmp_load_state_machine_write_r_co_io import dmp_load_state_machine_write_r_co_io
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
