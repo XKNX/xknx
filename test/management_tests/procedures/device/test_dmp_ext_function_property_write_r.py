@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import AsyncMock, call
 
+import pytest
+
 from xknx import XKNX
 from xknx.management.procedures.device.dmp_ext_function_property_write_r import (
     dmp_ext_function_property_write_r,
@@ -228,3 +230,24 @@ async def test_dmp_ext_function_property_write_r_opens_and_closes_connection() -
 
     disconnect = Telegram(destination_address=ia, tpci=tpci.TDisconnect())
     assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(disconnect)
+
+
+async def test_dmp_ext_function_property_write_r_conn_command_too_long() -> None:
+    """Test dmp_ext_function_property_write_r_conn rejects a command that doesn't fit max_apdu_length."""
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    with pytest.raises(ValueError, match=r"does not fit max_apdu_length 15"):
+        await dmp_ext_function_property_write_r_conn(
+            conn,
+            interface_object_type=343,
+            object_instance=1,
+            property_id=52,
+            command=b"\x00" * 10,
+        )
+
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
