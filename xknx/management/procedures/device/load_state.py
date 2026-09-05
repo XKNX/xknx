@@ -68,6 +68,14 @@ def _pad(data: bytes) -> bytes:
     return data + bytes(LOAD_EVENT_SIZE - len(data))
 
 
+def _uint(value: int, octets: int, name: str) -> bytes:
+    """Validate ``value`` fits an unsigned big-endian field, or raise ValueError."""
+    maximum = (1 << (octets * 8)) - 1
+    if not 0 <= value <= maximum:
+        raise ValueError(f"{name} must be 0-{maximum:#x}, got {value:#x}")
+    return value.to_bytes(octets, "big")
+
+
 def no_operation() -> bytes:
     """No Operation load event - has no effect (§3.31.3.6)."""
     return _pad(bytes([_LoadEvent.NO_OPERATION]))
@@ -106,11 +114,11 @@ def _alloc_abs_segment(
     """
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, segment_type])
-        + start_address.to_bytes(2, "big")
-        + length.to_bytes(2, "big")
-        + bytes(
-            [access_attributes & 0xFF, memory_type & 0xFF, memory_attributes & 0xFF]
-        )
+        + _uint(start_address, 2, "start_address")
+        + _uint(length, 2, "length")
+        + _uint(access_attributes, 1, "access_attributes")
+        + _uint(memory_type, 1, "memory_type")
+        + _uint(memory_attributes, 1, "memory_attributes")
     )
 
 
@@ -168,8 +176,8 @@ def alloc_abs_task_seg(
         raise ValueError("application_id must be 5 octets")
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, SegmentType.ABS_TASK])
-        + start_address.to_bytes(2, "big")
-        + bytes([pei_type & 0xFF])
+        + _uint(start_address, 2, "start_address")
+        + _uint(pei_type, 1, "pei_type")
         + application_id
     )
 
@@ -178,9 +186,9 @@ def task_ptr(init_addr: int, save_addr: int, pei_handler: int) -> bytes:
     """TaskPtr load event (segment type 3, §3.31.3.4)."""
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, SegmentType.TASK_PTR])
-        + init_addr.to_bytes(2, "big")
-        + save_addr.to_bytes(2, "big")
-        + pei_handler.to_bytes(2, "big")
+        + _uint(init_addr, 2, "init_addr")
+        + _uint(save_addr, 2, "save_addr")
+        + _uint(pei_handler, 2, "pei_handler")
     )
 
 
@@ -188,8 +196,8 @@ def task_ctrl_1(interface_object_address: int, nr_of_interface_objects: int) -> 
     """TaskCtrl1 load event (segment type 4, §3.31.3.4)."""
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, SegmentType.TASK_CTRL_1])
-        + interface_object_address.to_bytes(2, "big")
-        + bytes([nr_of_interface_objects & 0xFF])
+        + _uint(interface_object_address, 2, "interface_object_address")
+        + _uint(nr_of_interface_objects, 1, "nr_of_interface_objects")
     )
 
 
@@ -202,10 +210,10 @@ def task_ctrl_2(
     """TaskCtrl2 load event (segment type 5, §3.31.3.4)."""
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, SegmentType.TASK_CTRL_2])
-        + callback_addr.to_bytes(2, "big")
-        + comm_obj_ptr.to_bytes(2, "big")
-        + comm_obj_seg_ptr_1.to_bytes(2, "big")
-        + comm_obj_seg_ptr_2.to_bytes(2, "big")
+        + _uint(callback_addr, 2, "callback_addr")
+        + _uint(comm_obj_ptr, 2, "comm_obj_ptr")
+        + _uint(comm_obj_seg_ptr_1, 2, "comm_obj_seg_ptr_1")
+        + _uint(comm_obj_seg_ptr_2, 2, "comm_obj_seg_ptr_2")
     )
 
 
@@ -219,7 +227,7 @@ def relative_allocation(number_of_octets: int) -> bytes:
     """
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, SegmentType.RELATIVE_ALLOCATION])
-        + number_of_octets.to_bytes(2, "big")
+        + _uint(number_of_octets, 2, "number_of_octets")
     )
 
 
@@ -234,6 +242,7 @@ def data_relative_allocation(
     """
     return _pad(
         bytes([_LoadEvent.ADDITIONAL, SegmentType.DATA_RELATIVE_ALLOCATION])
-        + requested_memory_size.to_bytes(4, "big")
-        + bytes([mode & 0xFF, fill & 0xFF])
+        + _uint(requested_memory_size, 4, "requested_memory_size")
+        + _uint(mode, 1, "mode")
+        + _uint(fill, 1, "fill")
     )

@@ -351,7 +351,53 @@ async def test_dmp_load_state_machine_write_r_co_io_no_data(xknx_setup: XKNX) ->
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match=r"returned no data"):
+    with pytest.raises(
+        ManagementConnectionError, match=r"returned 0 octets, expected 1"
+    ):
+        await dmp_load_state_machine_write_r_co_io(
+            conn, object_index=2, event_data=start_loading()
+        )
+    await responder
+
+    await conn.disconnect()
+
+
+async def test_dmp_load_state_machine_write_r_co_io_echoed_event_not_state(
+    xknx_setup: XKNX,
+) -> None:
+    """
+    Test the procedure raises when the response echoes the 10 octet event instead of a 1 octet state.
+
+    A misbehaving device answering with the load event it just received
+    (rather than the resulting Load State) must not have its event type
+    byte silently misread as a Load State value.
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_calls(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            ack_seq=0,
+            payload=apci.PropertyValueResponse(
+                object_index=2,
+                property_id=5,
+                count=1,
+                start_index=1,
+                data=start_loading(),  # 10 octets, echoing the write instead of a state
+            ),
+            response_seq=0,
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(
+        ManagementConnectionError, match=r"returned 10 octets, expected 1"
+    ):
         await dmp_load_state_machine_write_r_co_io(
             conn, object_index=2, event_data=start_loading()
         )

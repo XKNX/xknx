@@ -102,6 +102,42 @@ def test_pad_rejects_oversized_event() -> None:
         load_state._pad(bytes(11))
 
 
+def test_alloc_abs_data_seg_start_address_out_of_range() -> None:
+    """Test alloc_abs_data_seg() raises ValueError for a start_address above 0xFFFF."""
+    with pytest.raises(ValueError, match=r"start_address must be 0-0xffff"):
+        load_state.alloc_abs_data_seg(0x10000, 1)
+
+
+def test_alloc_abs_data_seg_memory_type_out_of_range() -> None:
+    """Test alloc_abs_data_seg() raises ValueError for a memory_type above 0xFF."""
+    with pytest.raises(ValueError, match=r"memory_type must be 0-0xff"):
+        load_state.alloc_abs_data_seg(0, 1, memory_type=0x100)
+
+
+def test_task_ctrl_2_field_out_of_range() -> None:
+    """Test task_ctrl_2() raises ValueError for a field above 0xFFFF."""
+    with pytest.raises(ValueError, match=r"comm_obj_seg_ptr_2 must be 0-0xffff"):
+        load_state.task_ctrl_2(0, 0, 0, 0x10000)
+
+
+def test_relative_allocation_out_of_range() -> None:
+    """Test relative_allocation() raises ValueError for a count above 0xFFFF."""
+    with pytest.raises(ValueError, match=r"number_of_octets must be 0-0xffff"):
+        load_state.relative_allocation(0x10000)
+
+
+def test_data_relative_allocation_size_out_of_range() -> None:
+    """Test data_relative_allocation() raises ValueError for a size above 0xFFFFFFFF."""
+    with pytest.raises(ValueError, match=r"requested_memory_size must be 0-0xffffffff"):
+        load_state.data_relative_allocation(0x100000000)
+
+
+def test_negative_value_out_of_range() -> None:
+    """Test _uint() raises ValueError for a negative value."""
+    with pytest.raises(ValueError, match=r"init_addr must be 0-0xffff, got -0x1"):
+        load_state.task_ptr(-1, 0, 0)
+
+
 def test_all_events_are_ten_octets() -> None:
     """Test every load event builder produces exactly the fixed 10 octet width."""
     events = [
