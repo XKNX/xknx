@@ -25,12 +25,14 @@ human reference too.
 **Using it elsewhere.** Copy this file to
 `.claude/skills/knx-review/SKILL.md` in any repo to have it load on demand,
 paste it into `AGENTS.md` / `CLAUDE.md` to have it always in context, or
-hand it to an agent as a prompt prefix before a review. §0-§2 (spec access,
-KNX domain knowledge, procedure) and §5-§7 (tests, citations, reporting)
-apply to any KNX codebase; §3 (layer contracts), §4 (compatibility) and §8
-(checklists) are xknx-specific and are the parts to adapt for a different
-code base. In xknx itself, `AGENTS.md` carries the contributor conventions
-this document assumes (spec citation format, changelog rules, tooling).
+hand it to an agent as a prompt prefix before a review. §0 (spec access),
+§1 (KNX domain knowledge) and §5-§7 (tests, citations, reporting) apply to
+any KNX codebase; §2 (the end-to-end workflow) is portable except for the
+commands, which assume this repo's tooling; §3 (layer contracts), §4
+(compatibility) and §8 (checklists) are xknx-specific and are the parts to
+adapt for a different code base. In xknx itself, `AGENTS.md` carries the
+contributor conventions this document assumes (spec citation format,
+changelog rules, tooling).
 
 ---
 
@@ -275,26 +277,91 @@ spec's step sequence is a finding, not an optimization.
 
 ---
 
-## 2. Review procedure
+## 2. Working a review, end to end
 
-### Step 1 - Classify the change
+This is the mechanical procedure for "review
+`https://github.com/XKNX/xknx/pull/1937`". Steps 1-3 take a couple of
+minutes and change everything that follows - don't skip to reading the
+diff.
 
-Before reading the diff line by line, answer:
+### Step 1 - Read the PR before the code
+
+Pull the PR's own metadata first: title, body, linked issue, the filled-in
+template checkboxes, the commits, and **the review comments already there**.
+
+```
+# GitHub MCP tools
+pull_request_read(method="get",             owner="XKNX", repo="xknx", pullNumber=1937)
+pull_request_read(method="get_files",       owner="XKNX", repo="xknx", pullNumber=1937)
+pull_request_read(method="get_review_comments", ...)
+pull_request_read(method="get_comments",    ...)
+
+# or the gh CLI, where available
+gh pr view 1937 --repo XKNX/xknx --json title,body,files,reviews,comments,headRefName
+```
+
+What you are looking for:
+
+- **The claim.** What does the author say this fixes or adds? That claim is
+  what the tests and your review have to be measured against.
+- **The linked issue.** KNX bugs are usually reported with a bus dump, an
+  ETS screenshot or a device datasheet. That is ground truth handed to you -
+  read it before forming an opinion.
+- **What has already been said.** Never re-raise a point a maintainer
+  already made, and never contradict a decision already taken in the thread
+  without addressing it.
+- **The template checkboxes** (docs / tests / changelog). An unticked box is
+  a hint, a ticked-but-false box is a finding.
+- Dependency bumps and pure-CI PRs need none of the rest of this document -
+  say so and stop.
+
+### Step 2 - Classify: layer and blast radius
 
 1. **Which layer?** DPT transcoder / RemoteValue / Device / telegram-APCI /
-   cEMI / KNXnet-IP frame / io-connection / management / secure.
-2. **Does it change bytes on the wire, or only Python-side behavior?**
-   Wire changes need byte-level proof; everything else needs API-compat
-   thinking.
-3. **Blast radius.** A fix in `DPTBase`, `RemoteValue`, `Telegram` or
-   `CEMIHandler` touches every device and every downstream consumer. A new
-   `DPT` subclass touches only users of that DPT. Calibrate scrutiny to
-   this, not to diff size.
+   cEMI / KNXnet-IP frame / io-connection / management / secure. This picks
+   the contract in §3 and the checklist in §8.
+2. **Does it change bytes on the wire, or only Python-side behavior?** Wire
+   changes need byte-level proof; the rest needs API-compat thinking (§4).
+3. **Blast radius.** A change in `DPTBase`, `RemoteValue`, `Telegram` or
+   `CEMIHandler` touches every device and every downstream consumer; a new
+   DPT subclass touches only its users. Calibrate scrutiny to this, **not to
+   diff size** - the 3-line changes in the core are the dangerous ones.
+4. **Is it destructive?** Management procedures that write addresses,
+   restart or reprogram devices get the highest scrutiny (§3.8).
 
-### Step 2 - Establish ground truth before judging
+### Step 3 - Ask for what you're missing
+
+Ask now, not after you have written the review:
+
+- **The KNX Standard documents** (§0) if anything touches the wire.
+- **A bus capture / ETS screenshot** if the PR asserts how a real device
+  behaves and the linked issue doesn't already contain one.
+- **Which device / installation** it was tested against, for a fix that
+  exists because one manufacturer deviates from the spec.
+
+### Step 4 - Get the code locally
+
+Review the *files*, not the hunks. Most real xknx findings are about
+something **missing elsewhere in the file or in another file** - a
+RemoteValue not yielded by `_iter_remote_values()`, a DPT not exported in
+`__init__.py`, a device's `group_addresses()` not extended for a new
+sub-device. A unified diff cannot show you an absence.
+
+```
+git fetch origin pull/1937/head:pr-1937 && git checkout pr-1937
+git log --oneline origin/main..HEAD          # what the PR actually contains
+git diff origin/main...HEAD --stat           # scope
+# or: gh pr checkout 1937
+```
+
+Then, for each changed file, open the whole file and its siblings - the
+other DPT subclasses of the same main number, the other devices with the
+same shape, the test module that covers it.
+
+### Step 5 - Establish ground truth before judging
 
 Do not review a wire-format change against the diff's own reasoning. Get an
-independent reference for what the octets should be:
+independent reference for what the octets should be, in this order:
 
 - The KNX Standard document - **read the cited paragraph, don't take the
   citation's word for it**. If you don't have the documents, ask (§0);
@@ -308,23 +375,52 @@ If you cannot establish ground truth, say so in the review instead of
 approving on plausibility. "I could not verify the byte layout for DPT
 x.yyy; please add a reference" is a legitimate review outcome.
 
-### Step 3 - Read the diff against the layer contract
+### Step 6 - Read against the layer contract
 
-§3 lists the contract for each layer. Work through the applicable one.
+§3 has the contract for each layer; §8 has it as a checklist. Work through
+the applicable one line by line rather than reading the diff top to bottom -
+the checklist finds absences, reading finds mistakes, and you need both.
 
-### Step 4 - Read the tests as evidence, not decoration
+### Step 7 - Run the checks yourself
 
-See §5. The key question: **would these tests fail if the encoding were
-wrong?** A test that only round-trips the implementation against itself
-proves nothing.
+Never take CI's word for it, and never take the author's word for it:
 
-### Step 5 - Compatibility, changelog, citations
+```
+uv sync
+uv run pytest -q                             # full suite
+uv run pytest test/dpt_tests/dpt_9_float_test.py -q   # focused
+uv run prek run --all-files                  # ruff, format, mypy, pylint, codespell
+```
 
-See §4 and §6.
+Then **prove the tests are worth anything** - the single highest-value
+mechanical step in a bugfix review. Keep the PR's tests, revert its source,
+and confirm the new test goes red:
 
-### Step 6 - Report
+```
+git checkout origin/main -- xknx/     # PR's tests, main's source
+uv run pytest test/<the new test> -q  # MUST fail - if it passes, the test proves nothing
+git checkout HEAD -- xknx/            # restore
+```
 
-See §7.
+A test that still passes without the fix is a finding all by itself, and
+it is one you can state as a fact rather than an opinion.
+
+### Step 8 - Compatibility, changelog, citations
+
+§4 for what counts as breaking (and it is more than signatures), §6 for the
+citation rules.
+
+### Step 9 - Report
+
+Write the findings per §7, ranked. Default to **reporting in chat** - that
+is what "review this PR" usually means.
+
+**Posting to GitHub is a separate, outward-facing action: ask first**, then
+follow the repo's posting rules (inline comments via a pending review, the
+attribution footer, be frugal - one substantive review beats six nits).
+Never approve or merge on the user's behalf. If you can't verify something,
+that belongs in the review too - as an open question to the author, not as
+silence.
 
 ---
 
@@ -431,20 +527,89 @@ value. Contract points reviewers miss:
 
 ### 3.3 Devices (`xknx/devices/`)
 
+A `Device` composes RemoteValues into something a user configures, and adds
+the logic that has no equivalent on the bus - position prediction, setpoint
+arithmetic, colour model conversion, debouncing. Both halves need reviewing,
+and they fail in different ways.
+
+**The wiring - check this first, on every device PR**
+
 - **`_iter_remote_values()` must yield every RemoteValue the device owns.**
-  A forgotten one silently loses state updates, group-address registration
-  and device-name propagation. This is the single most common device bug;
-  check it against the `__init__` on every device PR.
+  Read it side by side with `__init__` and match them off one by one. A
+  forgotten RemoteValue silently loses state updates (`sync()`, the
+  StateUpdater), group-address registration (telegrams never reach it) and
+  device-name propagation - with no error anywhere. This is the single most
+  common device defect, and it is trivially checkable.
+- A device that owns a **sub-device** (as `Climate` owns `ClimateMode`) must
+  forward *all* of `group_addresses()`, `has_group_address()` and
+  `_update_device_name()`. Overriding one and forgetting the others is the
+  classic half-fix: the device works until someone renames it or looks up
+  which device owns an address.
+- A new constructor argument must be keyword-only, documented, and reflected
+  in `__str__` - which is covered by `test/str_test.py`.
+
+**Telegram handling**
+
 - `process_group_write()` / `process_group_response()` /
-  `process_group_read()` - the default is that devices ignore reads;
-  responses are treated like writes. A device that answers reads must be
-  deliberate about it.
+  `process_group_read()`: by default devices ignore reads, and responses are
+  treated like writes. Answering reads is a deliberate choice - `ExposeSensor`
+  is the device that does it (`respond_to_read=True`), because it is the one
+  representing a value *to* the bus rather than reading one from it.
+- The `always_callback` asymmetry in `BinarySensor` is deliberate: an
+  incoming **write** is an event and fires callbacks even when the state is
+  unchanged (someone pressed the button again), while a **response** is just
+  state and de-duplicates normally. If a PR unifies the two, that is a
+  behavior change for every button-press automation downstream.
+- Device state must be derived from its RemoteValues, not from a shadow copy
+  updated in the setters - the same reason `RemoteValue.set()` doesn't assign
+  `_value` (§3.2). Local state that is written before the telegram is
+  confirmed diverges from the bus.
 - `after_update()` swallows exceptions from consumer callbacks by design -
   don't "clean that up".
-- Background work goes through `xknx.task_registry`, not a bare
-  `asyncio.create_task()`; untracked tasks get garbage-collected mid-flight
+
+**Devices with local logic** - the parts where a plausible-looking diff is
+still wrong:
+
+- **Cover**: KNX position is `0 = open`, `100 = closed` - the inverse of
+  most UI conventions, and the single most common source of inverted-cover
+  bugs. `invert_updown` / `invert_position` / `invert_angle` are implemented
+  by swapping the scaling range (`range_from` / `range_to`), not by
+  arithmetic at the call site; a new inverted feature must follow that.
+  The `TravelCalculator` *predicts* position between state telegrams, so
+  review timing changes against `time_travel`-based tests, and check that
+  travel tasks are cancelled in `async_remove_tasks()`.
+- **Light**: several colour models coexist (individual RGBW switch/brightness,
+  DPT 232 RGB, DPT 251 RGBW, HS, xyY, tunable white, colour temperature).
+  A change to one must keep `supports_*` (derived from which RemoteValues are
+  `initialized`) and `current_*` consistent, and must not silently convert
+  between models. Individual-colour updates are debounced so that four
+  separate telegrams produce one callback - a change that bypasses the
+  debounce produces flicker and callback storms downstream.
+- **Climate**: target temperature is either written directly or expressed as
+  a **setpoint shift** against a base temperature, in `temperature_step`
+  units, clamped to `setpoint_shift_min/max`. Review the arithmetic in both
+  directions and at the clamps; an off-by-one-step here is a permanently
+  wrong room temperature. Check `initialized_for_setpoint_shift_calculations`
+  still guards every path that needs it.
+- **BinarySensor**: `context_timeout` / counter (multi-press detection) and
+  `reset_after` are task-driven; both must be cancelled in
+  `async_remove_tasks()` and tested with `time_travel`.
+- **ExposeSensor**: answers reads, and has cooldown / periodic-send tasks.
+  Changes here put *more* traffic on the bus - check the rate limiting
+  survives.
+
+**Tasks**
+
+- Background work goes through `xknx.task_registry` (or the device's
+  `async_start_tasks()` / `async_remove_tasks()`), never a bare
+  `asyncio.create_task()`: untracked tasks are garbage-collected mid-flight
   and don't restart after a reconnect.
-- Device attributes and callback timing are public API - see §4.
+- Every task started must be removable, and `async_remove_tasks()` must be
+  idempotent - it runs on device removal and on reconnect.
+
+**Docs and compat**: devices are the most user-facing layer. A new device or
+argument needs its page under `docs/`, and device attributes and callback
+timing are public API - see §4.
 
 ### 3.4 Telegram, APCI, addresses (`xknx/telegram/`)
 
@@ -808,8 +973,12 @@ confirm this byte layout" is a more useful review than a confident guess.
 
 ### New / changed device
 
-- [ ] Every RemoteValue yielded by `_iter_remote_values()`
-- [ ] Group read / write / response handling deliberate
+- [ ] Every RemoteValue in `__init__` also yielded by `_iter_remote_values()` (match them off one by one)
+- [ ] Sub-devices forwarded in `group_addresses()`, `has_group_address()` **and** `_update_device_name()`
+- [ ] New constructor arguments keyword-only, documented, reflected in `__str__`
+- [ ] Group read / write / response handling deliberate; `always_callback` asymmetry preserved
+- [ ] State derived from RemoteValues, not a shadow copy written before the telegram
+- [ ] Local logic checked at the edges: cover 0=open/100=closed and inversion via scaling range, setpoint-shift arithmetic at the clamps, colour models kept consistent
 - [ ] Tests assert telegram queue contents, not internals
 - [ ] Callbacks fire when expected and not when not
 - [ ] Tasks registered with `TaskRegistry`; removed in `async_remove_tasks()`
