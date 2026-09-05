@@ -7,6 +7,11 @@ from .dm_function_property_write_r import (
     dm_function_property_write_r,
     dm_function_property_write_r_conn,
 )
+from .dm_group_object_link_read_r_cl import (
+    GroupObjectLink,
+    dm_group_object_link_read_r_cl,
+)
+from .dm_group_object_link_write_r_cl import dm_group_object_link_write_r_cl
 from .dm_restart_r_co import dm_restart, dm_restart_r_co
 from .dmp_download_loadable_part_r_co_io import dmp_download_loadable_part_r_co_io
 from .dmp_ext_function_property_write_r import (
