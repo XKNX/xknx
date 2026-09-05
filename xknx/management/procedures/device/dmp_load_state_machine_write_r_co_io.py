@@ -61,12 +61,27 @@ async def dmp_load_state_machine_write_r_co_io(
     the spec's own minimum wait before a state transition may be considered
     failed (§4.23.2.1).
 
+    Note that a 10 octet ``event_data`` reaches
+    ``dmp_interface_object_write_r`` as a single ``PDT_CONTROL`` element,
+    whose ``A_PropertyValue_Write``-PDU overhead is
+    ``const.PROPERTY_VALUE_HEADER_OCTETS`` (5) - together exactly the 15
+    octets an L_Data_Standard frame carries after its TPCI octet
+    (``cemi.const.STANDARD_FRAME_MAX_NPDU_LENGTH``, this function's implicit
+    default via ``dmp_interface_object_write_r``). That a load event always
+    fits with nothing to spare is load-bearing, not coincidental - it is why
+    this function needs no ``max_apdu_length`` parameter of its own.
+
     :param conn: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)
     :param event_data: The 10 octet load event
     :param expected_state: If given, poll until the Load State Machine
         reaches this state (or ``LoadState.ERROR``, or ``poll_timeout``
-        elapses)
+        elapses). KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.2: "Illegal
+        additional events... shall be ignored and shall not lead to a change
+        of state" and "Unknown events shall be ignored" - a rejected event is
+        otherwise indistinguishable from one that is just slow to take
+        effect, so ``expected_state`` is the only way to detect it (as a
+        ``poll_timeout`` instead of a state change).
     :param poll_timeout: Seconds to poll for ``expected_state`` before giving
         up
     :param poll_interval: Seconds to wait between polls
@@ -131,10 +146,21 @@ async def _poll_for_state(
 
 
 def _decode(data: bytes, object_index: int) -> LoadState:
-    """Map the Load State octet to :class:`LoadState`, erroring on unknowns."""
-    if not data:
+    """
+    Map the Load State octet to :class:`LoadState`, erroring on unknowns.
+
+    ``PID_LOAD_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
+    Resources 03.05.01 - §4.2.5); the 10 octet width is a write-only value.
+    A length other than 1 is rejected here rather than just indexing
+    ``data[0]`` - ``dmp_interface_object_write_r``'s own guard only compares
+    ``nr_of_elem``, not the octet count, so a device echoing back its
+    10 octet write event (a load event *type*, not a load *state*) would
+    otherwise be silently decoded as a state.
+    """
+    if len(data) != 1:
         raise ManagementConnectionError(
-            f"object {object_index} Load State Machine returned no data"
+            f"object {object_index} Load State Machine returned {len(data)} "
+            f"octets, expected 1"
         )
     try:
         return LoadState(data[0])
