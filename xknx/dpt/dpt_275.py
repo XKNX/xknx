@@ -18,8 +18,11 @@ from .dpt_9 import DPT2ByteFloat, DPTTemperature, DPTTemperatureDifference2Byte
 from .payload import DPTArray, DPTBinary
 
 # "For all fields ... only the value 7FFFh shall be used to denote invalid
-# data." - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. This is the largest
-# value DPT2ByteFloat can encode, repurposed as a per-field "not used" marker.
+# data." - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. KNX v02.02.01 -
+# Datapoint Types 03.07.02 - §3.10 reserves the same pattern for the same
+# purpose across every DPT 9.xxx. A local constant because each field is
+# matched against it before from_knx() is called - this module maps the
+# pattern to None itself rather than letting the DPT 9 decoder see it.
 _NOT_USED = (0x7F, 0xFF)
 
 # Derived from DPTTemperature/DPTTemperatureDifference2Byte themselves so the
@@ -91,6 +94,10 @@ class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
 
     `comfort`, `standby`, `economy`, `building_protection`: absolute setpoint
     in °C, -273..670760; None if not used.
+
+    §9.4.1 tabulates the fields as "-273°C to 655,34°C". That maximum is a
+    U16 x 0,01 table artifact - the FB datapoint descriptions (§4.1.7.7.3/.4)
+    say full range - so the DPT 9.001 range of `DPTTemperature` applies.
     """
 
     comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
@@ -100,7 +107,7 @@ class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
 
 
 @dataclass(slots=True)
-class RoomTemperatureSetpointsShift(_RoomTemperatureSetpointSet):
+class RoomTemperatureSetpointShifts(_RoomTemperatureSetpointSet):
     """
     Representation of a room temperature setpoint shift set.
 
@@ -154,25 +161,25 @@ class DPTRoomTemperatureSetpointSet(DPTComplex[RoomTemperatureSetpoints]):
         )
 
 
-class DPTRoomTemperatureSetpointSetShift(DPTComplex[RoomTemperatureSetpointsShift]):
+class DPTRoomTemperatureSetpointShiftSet(DPTComplex[RoomTemperatureSetpointShifts]):
     """
-    Abstraction for KNX room temperature setpoint set shift (DPT 275.101).
+    Abstraction for KNX room temperature setpoint shift set (DPT 275.101).
 
     KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4.2
     """
 
-    data_type = RoomTemperatureSetpointsShift
+    data_type = RoomTemperatureSetpointShifts
     payload_type = DPTArray
     payload_length = 8
     dpt_main_number = 275
     dpt_sub_number = 101
-    value_type = "room_temperature_setpoint_set_shift"
+    value_type = "room_temperature_setpoint_shift_set"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpointsShift:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpointShifts:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        return RoomTemperatureSetpointsShift(
+        return RoomTemperatureSetpointShifts(
             comfort=_unpack_float_or_not_used(raw[0:2], DPTTemperatureDifference2Byte),
             standby=_unpack_float_or_not_used(raw[2:4], DPTTemperatureDifference2Byte),
             economy=_unpack_float_or_not_used(raw[4:6], DPTTemperatureDifference2Byte),
@@ -182,7 +189,7 @@ class DPTRoomTemperatureSetpointSetShift(DPTComplex[RoomTemperatureSetpointsShif
         )
 
     @classmethod
-    def _to_knx(cls, value: RoomTemperatureSetpointsShift) -> DPTArray:
+    def _to_knx(cls, value: RoomTemperatureSetpointShifts) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         return DPTArray(
             (

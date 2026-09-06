@@ -260,8 +260,8 @@ from .dpt_253 import DPTRelativeControlXYY, RelativeControlXYY
 from .dpt_254 import DPTRelativeControlRGB, RelativeControlRGB
 from .dpt_275 import (
     DPTRoomTemperatureSetpointSet,
-    DPTRoomTemperatureSetpointSetShift,
+    DPTRoomTemperatureSetpointShiftSet,
     RoomTemperatureSetpoints,
-    RoomTemperatureSetpointsShift,
+    RoomTemperatureSetpointShifts,
 )
 from .payload import DPTArray, DPTBinary

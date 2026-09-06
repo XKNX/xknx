@@ -7,9 +7,9 @@ import pytest
 from xknx.dpt import (
     DPTArray,
     DPTRoomTemperatureSetpointSet,
-    DPTRoomTemperatureSetpointSetShift,
+    DPTRoomTemperatureSetpointShiftSet,
     RoomTemperatureSetpoints,
-    RoomTemperatureSetpointsShift,
+    RoomTemperatureSetpointShifts,
 )
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -152,8 +152,8 @@ class TestDPTRoomTemperatureSetpointSet:
         ]
 
 
-class TestRoomTemperatureSetpointsShift:
-    """Test RoomTemperatureSetpointsShift class."""
+class TestRoomTemperatureSetpointShifts:
+    """Test RoomTemperatureSetpointShifts class."""
 
     @pytest.mark.parametrize(
         ("data", "value"),
@@ -165,16 +165,16 @@ class TestRoomTemperatureSetpointsShift:
                     "economy": -2.5,
                     "building_protection": -5.0,
                 },
-                RoomTemperatureSetpointsShift(2.5, 0.0, -2.5, -5.0),
+                RoomTemperatureSetpointShifts(2.5, 0.0, -2.5, -5.0),
             ),
-            ({}, RoomTemperatureSetpointsShift()),
+            ({}, RoomTemperatureSetpointShifts()),
         ],
     )
     def test_dict(
-        self, data: dict[str, Any], value: RoomTemperatureSetpointsShift
+        self, data: dict[str, Any], value: RoomTemperatureSetpointShifts
     ) -> None:
         """Test from_dict and as_dict methods."""
-        test_value = RoomTemperatureSetpointsShift.from_dict(data)
+        test_value = RoomTemperatureSetpointShifts.from_dict(data)
         assert test_value == value
         default_dict = {
             "comfort": None,
@@ -187,32 +187,32 @@ class TestRoomTemperatureSetpointsShift:
     def test_dict_invalid(self) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
-            RoomTemperatureSetpointsShift.from_dict({"comfort": "a"})
+            RoomTemperatureSetpointShifts.from_dict({"comfort": "a"})
 
 
-class TestDPTRoomTemperatureSetpointSetShift:
-    """Test class for KNX DPTRoomTemperatureSetpointSetShift objects (DPT 275.101)."""
+class TestDPTRoomTemperatureSetpointShiftSet:
+    """Test class for KNX DPTRoomTemperatureSetpointShiftSet objects (DPT 275.101)."""
 
     @pytest.mark.parametrize(
         ("value", "raw"),
         [
             (
-                RoomTemperatureSetpointsShift(2.5, 0.0, -2.5, -5.0),
+                RoomTemperatureSetpointShifts(2.5, 0.0, -2.5, -5.0),
                 (0x00, 0xFA, 0x00, 0x00, 0x87, 0x06, 0x86, 0x0C),
             ),
             (
-                RoomTemperatureSetpointsShift(),
+                RoomTemperatureSetpointShifts(),
                 (0x7F, 0xFF, 0x7F, 0xFF, 0x7F, 0xFF, 0x7F, 0xFF),
             ),
         ],
     )
     def test_value(
-        self, value: RoomTemperatureSetpointsShift, raw: tuple[int, ...]
+        self, value: RoomTemperatureSetpointShifts, raw: tuple[int, ...]
     ) -> None:
-        """Test DPTRoomTemperatureSetpointSetShift parsing and streaming."""
-        knx_value = DPTRoomTemperatureSetpointSetShift.to_knx(value)
+        """Test DPTRoomTemperatureSetpointShiftSet parsing and streaming."""
+        knx_value = DPTRoomTemperatureSetpointShiftSet.to_knx(value)
         assert knx_value == DPTArray(raw)
-        assert DPTRoomTemperatureSetpointSetShift.from_knx(knx_value) == value
+        assert DPTRoomTemperatureSetpointShiftSet.from_knx(knx_value) == value
 
     @pytest.mark.parametrize(
         "value",
@@ -221,20 +221,20 @@ class TestDPTRoomTemperatureSetpointSetShift:
             1,
             (0xFF, 0x4E),
             # out of DPTTemperatureDifference2Byte's range
-            RoomTemperatureSetpointsShift(comfort=-700_000.0),
+            RoomTemperatureSetpointShifts(comfort=-700_000.0),
             # encodes to the same bits as "not used" (0x7FFF)
-            RoomTemperatureSetpointsShift(comfort=670760.0),
+            RoomTemperatureSetpointShifts(comfort=670760.0),
         ],
     )
     def test_wrong_value_to_knx(self, value: Any) -> None:
-        """Test DPTRoomTemperatureSetpointSetShift parsing with wrong value."""
+        """Test DPTRoomTemperatureSetpointShiftSet parsing with wrong value."""
         with pytest.raises(ConversionError):
-            DPTRoomTemperatureSetpointSetShift.to_knx(value)
+            DPTRoomTemperatureSetpointShiftSet.to_knx(value)
 
     def test_wrong_value_from_knx(self) -> None:
-        """Test DPTRoomTemperatureSetpointSetShift parsing with wrong payload length."""
+        """Test DPTRoomTemperatureSetpointShiftSet parsing with wrong payload length."""
         with pytest.raises(CouldNotParseTelegram):
-            DPTRoomTemperatureSetpointSetShift.from_knx(DPTArray((0xFF, 0x4E)))
+            DPTRoomTemperatureSetpointShiftSet.from_knx(DPTArray((0xFF, 0x4E)))
 
     def test_get_dict_schema(self) -> None:
         """Test get_dict_schema returns correct schema."""
@@ -245,7 +245,7 @@ class TestDPTRoomTemperatureSetpointSetShift:
             "value_max": 670760.0,
             "resolution": 0.01,
         }
-        assert DPTRoomTemperatureSetpointSetShift.get_dict_schema() == [
+        assert DPTRoomTemperatureSetpointShiftSet.get_dict_schema() == [
             {"name": "comfort", **field_schema},
             {"name": "standby", **field_schema},
             {"name": "economy", **field_schema},

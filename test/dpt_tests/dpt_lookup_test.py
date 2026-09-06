@@ -201,8 +201,8 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
             None,
         ),
         (
-            "room_temperature_setpoint_set_shift",
-            DPTRoomTemperatureSetpointSetShift,
+            "room_temperature_setpoint_shift_set",
+            DPTRoomTemperatureSetpointShiftSet,
             275,
             101,
             None,
