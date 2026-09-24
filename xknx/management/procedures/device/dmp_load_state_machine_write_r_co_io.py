@@ -11,7 +11,7 @@ from xknx.profile.const import ResourceGenericPropertyId
 
 from .dmp_interface_object_read_r import dmp_interface_object_read_r
 from .dmp_interface_object_write_r import dmp_interface_object_write_r
-from .load_state import LOAD_EVENT_SIZE, LoadState
+from .load_state import LOAD_EVENT_SIZE, LoadState, decode_load_state
 
 __all__ = ["dmp_load_state_machine_write_r_co_io"]
 
@@ -103,7 +103,7 @@ async def dmp_load_state_machine_write_r_co_io(
         count=1,
         start_index=1,
     )
-    state = _decode(response, object_index)
+    state = decode_load_state(response, f"object {object_index}")
     if expected_state is None or state == expected_state:
         return state
     return await _poll_for_state(
@@ -141,31 +141,5 @@ async def _poll_for_state(
             count=1,
             start_index=1,
         )
-        state = _decode(data, object_index)
+        state = decode_load_state(data, f"object {object_index}")
     return state
-
-
-def _decode(data: bytes, object_index: int) -> LoadState:
-    """
-    Map the Load State octet to :class:`LoadState`, erroring on unknowns.
-
-    ``PID_LOAD_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
-    Resources 03.05.01 - §4.2.5); the 10 octet width is a write-only value.
-    A length other than 1 is rejected here rather than just indexing
-    ``data[0]`` - ``dmp_interface_object_write_r``'s own guard only compares
-    ``nr_of_elem``, not the octet count, so a device echoing back its
-    10 octet write event (a load event *type*, not a load *state*) would
-    otherwise be silently decoded as a state.
-    """
-    if len(data) != 1:
-        raise ManagementConnectionError(
-            f"object {object_index} Load State Machine returned {len(data)} "
-            f"octets, expected 1"
-        )
-    try:
-        return LoadState(data[0])
-    except ValueError as exc:
-        raise ManagementConnectionError(
-            f"object {object_index} Load State Machine reported unknown "
-            f"state {data[0]:#04x}"
-        ) from exc
