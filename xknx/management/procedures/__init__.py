@@ -56,6 +56,7 @@ from .device import (
     dmp_authorize2_r_co,
     dmp_authorize_r_co,
     dmp_connect_r_co,
+    dmp_download_loadable_part_r_co_io,
     dmp_ext_function_property_write_r,
     dmp_ext_function_property_write_r_conn,
     dmp_ext_load_state_machine_read_r_co_io,
