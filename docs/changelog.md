@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Features
+
+- Add DPT 225.001 (`DPT_ScalingSpeed`) as `DPTScalingSpeed` / `ScalingSpeed`, and `RemoteValueScalingSpeed`. `Light` gains `group_address_brightness_speed` / `group_address_brightness_speed_state` and `set_brightness()` takes an optional `transition_seconds`, so a light wired to a combined value/dimming-time object (e.g. a DALI gateway) can dim to a brightness over a given time instead of a fixed time configured in the actuator. `Light.supports_brightness` and `current_brightness` fall back to this object when the plain DPT 5.001 brightness object isn't configured; `Light.supports_brightness_transition` reports whether the combined object is available.
+
 ### Breaking changes
 
 - Rename `xknx.management.management.MANAGAMENT_ACK_TIMEOUT` and `MANAGAMENT_CONNECTION_TIMEOUT` to `MANAGEMENT_ACK_TIMEOUT` and `MANAGEMENT_CONNECTION_TIMEOUT` - they were misspelled.

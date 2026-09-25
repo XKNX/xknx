@@ -19,6 +19,8 @@ The Light object is either a representation of a binary or dimm actor, LED-contr
 - `group_address_switch_state` KNX group address for the state of the light. *DPT 1.001*
 - `group_address_brightness` KNX group address to set the brightness. *DPT 5.001*
 - `group_address_brightness_state` KNX group address for the current brightness state. *DPT 5.001*
+- `group_address_brightness_speed` KNX group address to set the brightness together with a transition time. *DPT 225.001*
+- `group_address_brightness_speed_state` KNX group address for the current combined brightness / transition time state. *DPT 225.001*
 - `group_address_color` KNX group address to set the RGB color. *DPT 232.600*
 - `group_address_color_state` KNX group address for the current RGB color. *DPT 232.600*
 - `group_address_rgbw` KNX group address to set the RGBW color. *DPT 251.600*
@@ -85,6 +87,9 @@ await light.set_off()
 
 # Set brightness
 await light.set_brightness(23)
+
+# Set brightness with a transition time in seconds (DPT 225.001)
+await light.set_brightness(230, transition_seconds=6.0)
 
 # Set color
 await light.set_color((20, 70, 200))
@@ -185,3 +190,26 @@ print(light.supports_hs_color)
 
 await light.set_hs_color((25, 40))
 ```
+
+## [](#header-2)Example: Light with combined brightness / dimming-time object
+
+Some actuators (e.g. DALI gateways) support setting the target brightness together
+with a dimming time in a single telegram (KNX DPT 225.001, `DPT_ScalingSpeed`)
+instead of a fixed dimming time configured in the actuators own parameters.
+
+```python
+light = Light(
+    xknx,
+    name="Dali light",
+    group_address_switch="1/1/1",
+    group_address_switch_state="1/2/1",
+    group_address_brightness_speed="1/1/2",
+    group_address_brightness_speed_state="1/2/2",
+)
+xknx.devices.async_add(light)
+print(light.supports_brightness_transition)
+
+# Dim to 90 % brightness over 6 seconds
+await light.set_brightness(230, transition_seconds=6.0)
+```
+
