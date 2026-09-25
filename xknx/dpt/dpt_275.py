@@ -14,16 +14,18 @@ from dataclasses import dataclass, field, fields as dataclass_fields
 from typing import Any, Final, Self
 
 from .dpt import DPTComplex, DPTComplexData
-from .dpt_9 import DPT2ByteFloat, DPTTemperature, DPTTemperatureDifference2Byte
+from .dpt_9 import (
+    DPT_9_INVALID_DATA,
+    DPT2ByteFloat,
+    DPTTemperature,
+    DPTTemperatureDifference2Byte,
+)
 from .payload import DPTArray, DPTBinary
 
 # "For all fields ... only the value 7FFFh shall be used to denote invalid
-# data." - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. KNX v02.02.01 -
-# Datapoint Types 03.07.02 - §3.10 reserves the same pattern for the same
-# purpose across every DPT 9.xxx. A local constant because each field is
-# matched against it before from_knx() is called - this module maps the
-# pattern to None itself rather than letting the DPT 9 decoder see it.
-_NOT_USED = (0x7F, 0xFF)
+# data." - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. That is the same
+# pattern DPT 9 reserves for invalid data, so each field maps it to None
+# before it reaches DPT2ByteFloat.from_knx(), which would reject it.
 
 # Derived from DPTTemperature/DPTTemperatureDifference2Byte themselves so the
 # schema can never drift from the range those classes actually encode/accept.
@@ -44,20 +46,15 @@ def _pack_float_or_not_used(
 ) -> tuple[int, ...]:
     """Serialize a single field, encoding None as the KNX "not used" pattern."""
     if value is None:
-        return _NOT_USED
-    raw = dpt_class.to_knx(value).value
-    if raw == _NOT_USED:
-        # dpt_class.value_max rounds to the same bit pattern as _NOT_USED, so a
-        # real value this close to it would silently read back as None instead.
-        raise ValueError(f"{value} is too close to {dpt_class.value_max} to encode")
-    return raw
+        return DPT_9_INVALID_DATA
+    return dpt_class.to_knx(value).value
 
 
 def _unpack_float_or_not_used(
     raw: tuple[int, ...], dpt_class: type[DPT2ByteFloat]
 ) -> float | None:
     """Parse a single field, decoding the KNX "not used" pattern as None."""
-    if raw == _NOT_USED:
+    if raw == DPT_9_INVALID_DATA:
         return None
     return dpt_class.from_knx(DPTArray(raw))
 
@@ -93,11 +90,13 @@ class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
     Representation of a room temperature setpoint set.
 
     `comfort`, `standby`, `economy`, `building_protection`: absolute setpoint
-    in °C, -273..670760; None if not used.
+    in °C, -273..670433.28; None if not used.
 
-    §9.4.1 tabulates the fields as "-273°C to 655,34°C". That maximum is a
-    U16 x 0,01 table artifact - the FB datapoint descriptions (§4.1.7.7.3/.4)
-    say full range - so the DPT 9.001 range of `DPTTemperature` applies.
+    KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4.1 tabulates the fields as
+    "-273°C to 655,34°C". That maximum is a U16 x 0,01 table artifact - the FB
+    datapoint descriptions (KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 -
+    §4.1.7.7.3/§4.1.7.7.4) say full range - so the DPT 9.001 range of
+    `DPTTemperature` applies.
     """
 
     comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
@@ -112,7 +111,7 @@ class RoomTemperatureSetpointShifts(_RoomTemperatureSetpointSet):
     Representation of a room temperature setpoint shift set.
 
     `comfort`, `standby`, `economy`, `building_protection`: setpoint shift
-    (delta value) in K, -670760..670760; None if not used.
+    (delta value) in K, -671088.64..670433.28; None if not used.
     """
 
     comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE_DIFFERENCE)

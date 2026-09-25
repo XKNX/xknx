@@ -93,6 +93,11 @@ class TestDPTRoomTemperatureSetpointSet:
                 RoomTemperatureSetpoints(comfort=21.0),
                 (0x0C, 0x1A, 0x7F, 0xFF, 0x7F, 0xFF, 0x7F, 0xFF),
             ),
+            (
+                # largest encodable value - 0x7FFE, one below "not used"
+                RoomTemperatureSetpoints(comfort=670433.28),
+                (0x7F, 0xFE, 0x7F, 0xFF, 0x7F, 0xFF, 0x7F, 0xFF),
+            ),
         ],
     )
     def test_value(self, value: RoomTemperatureSetpoints, raw: tuple[int, ...]) -> None:
@@ -121,7 +126,7 @@ class TestDPTRoomTemperatureSetpointSet:
             RoomTemperatureSetpoints(21.0, 19.0, 16.0, "a"),
             # below absolute zero - out of DPTTemperature's range
             RoomTemperatureSetpoints(comfort=-300.0),
-            # encodes to the same bits as "not used" (0x7FFF)
+            # above value_max - 0x7FFF is reserved for invalid data
             RoomTemperatureSetpoints(comfort=670760.0),
         ],
     )
@@ -135,13 +140,21 @@ class TestDPTRoomTemperatureSetpointSet:
         with pytest.raises(CouldNotParseTelegram):
             DPTRoomTemperatureSetpointSet.from_knx(DPTArray((0xFF, 0x4E)))
 
+    def test_from_knx_field_out_of_range(self) -> None:
+        """Test one field outside DPTTemperature's range rejects the whole payload."""
+        # standby 0xF800 is -671088.64 °C - only 0x7FFF means "not used"
+        with pytest.raises(ConversionError):
+            DPTRoomTemperatureSetpointSet.from_knx(
+                DPTArray((0x0C, 0x1A, 0xF8, 0x00, 0x7F, 0xFF, 0x7F, 0xFF))
+            )
+
     def test_get_dict_schema(self) -> None:
         """Test get_dict_schema returns correct schema."""
         field_schema = {
             "type": "float",
             "required": False,
             "value_min": -273.0,
-            "value_max": 670760.0,
+            "value_max": 670433.28,
             "resolution": 0.01,
         }
         assert DPTRoomTemperatureSetpointSet.get_dict_schema() == [
@@ -204,6 +217,11 @@ class TestDPTRoomTemperatureSetpointShiftSet:
                 RoomTemperatureSetpointShifts(),
                 (0x7F, 0xFF, 0x7F, 0xFF, 0x7F, 0xFF, 0x7F, 0xFF),
             ),
+            (
+                # smallest and largest encodable value - 0xF800 and 0x7FFE
+                RoomTemperatureSetpointShifts(comfort=-671088.64, standby=670433.28),
+                (0xF8, 0x00, 0x7F, 0xFE, 0x7F, 0xFF, 0x7F, 0xFF),
+            ),
         ],
     )
     def test_value(
@@ -222,7 +240,7 @@ class TestDPTRoomTemperatureSetpointShiftSet:
             (0xFF, 0x4E),
             # out of DPTTemperatureDifference2Byte's range
             RoomTemperatureSetpointShifts(comfort=-700_000.0),
-            # encodes to the same bits as "not used" (0x7FFF)
+            # above value_max - 0x7FFF is reserved for invalid data
             RoomTemperatureSetpointShifts(comfort=670760.0),
         ],
     )
@@ -241,8 +259,8 @@ class TestDPTRoomTemperatureSetpointShiftSet:
         field_schema = {
             "type": "float",
             "required": False,
-            "value_min": -670760.0,
-            "value_max": 670760.0,
+            "value_min": -671088.64,
+            "value_max": 670433.28,
             "resolution": 0.01,
         }
         assert DPTRoomTemperatureSetpointShiftSet.get_dict_schema() == [
