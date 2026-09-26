@@ -1,6 +1,8 @@
 """Unit test for KNX/IP Interface."""
 
-from collections.abc import AsyncGenerator
+import asyncio
+from collections.abc import AsyncGenerator, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 import threading
 from typing import Any
@@ -14,6 +16,7 @@ from xknx.io import (
     ConnectionConfig,
     ConnectionType,
     GatewayDescriptor,
+    KNXIPInterface,
     SecureConfig,
     knx_interface_factory,
 )
@@ -386,6 +389,89 @@ class TestKNXIPInterface:
             # thread and loop are cleaned up after unsuccessful start
             assert interface._connection_thread is None
             assert interface._thread_loop is None
+
+    @staticmethod
+    @contextmanager
+    def _patch_pending_routing_send() -> Iterator[
+        tuple[threading.Event, threading.Event]
+    ]:
+        """Patch routing so `send_cemi` never returns; yield started and cancelled events."""
+        started = threading.Event()
+        cancelled = threading.Event()
+
+        async def pending_send_cemi(_: Any) -> None:
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+
+        with (
+            patch("xknx.io.routing.Routing.connect"),
+            patch("xknx.io.routing.Routing.send_cemi", side_effect=pending_send_cemi),
+            patch("xknx.io.routing.Routing.disconnect"),
+        ):
+            yield started, cancelled
+
+    def _threaded_routing_interface(self) -> KNXIPInterface:
+        """Create a threaded routing interface without gateway scanning."""
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING, local_ip="127.0.0.1", threaded=True
+        )
+        return knx_interface_factory(self.xknx, connection_config)
+
+    async def test_threaded_stop_resolves_pending_request(self) -> None:
+        """Test a request in flight on the connection thread is resolved by stop()."""
+        with self._patch_pending_routing_send() as (started, cancelled):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            try:
+                request = asyncio.create_task(interface.send_cemi(Mock()))
+                assert await asyncio.to_thread(started.wait, 1)
+                await interface.stop()
+                with pytest.raises(CommunicationError):
+                    await asyncio.wait_for(request, timeout=1)
+                assert cancelled.is_set()
+            finally:
+                await interface.stop()
+
+    async def test_threaded_cancel_propagates_to_connection_thread(self) -> None:
+        """Test cancelling the awaiting task cancels the coroutine on the connection thread."""
+        with self._patch_pending_routing_send() as (started, cancelled):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            try:
+                request = asyncio.create_task(interface.send_cemi(Mock()))
+                assert await asyncio.to_thread(started.wait, 1)
+                request.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await request
+                assert await asyncio.to_thread(cancelled.wait, 1)
+            finally:
+                await interface.stop()
+
+    async def test_threaded_timeout_propagates_to_connection_thread(self) -> None:
+        """Test asyncio.timeout around a threaded request raises TimeoutError and cancels it."""
+        with self._patch_pending_routing_send() as (started, cancelled):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            timeout_cm = asyncio.timeout(None)
+
+            async def send_with_timeout() -> None:
+                async with timeout_cm:
+                    await interface.send_cemi(Mock())
+
+            try:
+                request = asyncio.create_task(send_with_timeout())
+                assert await asyncio.to_thread(started.wait, 1)
+                # expire only once the request is in flight on the connection thread
+                timeout_cm.reschedule(asyncio.get_running_loop().time())
+                with pytest.raises(TimeoutError):
+                    await request
+                assert await asyncio.to_thread(cancelled.wait, 1)
+            finally:
+                await interface.stop()
 
     async def test_start_secure_connection_knx_keys_user_id(self) -> None:
         """Test starting a secure connection from a knxkeys file with user_id."""
