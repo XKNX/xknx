@@ -1,5 +1,6 @@
 """Unit test for KNX/IP Interface."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from pathlib import Path
 import threading
@@ -386,6 +387,58 @@ class TestKNXIPInterface:
             # thread and loop are cleaned up after unsuccessful start
             assert interface._connection_thread is None
             assert interface._thread_loop is None
+
+    async def test_threaded_stop_resolves_pending_request(self) -> None:
+        """Test a request in flight on the connection thread is resolved by stop()."""
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING, local_ip="127.0.0.1", threaded=True
+        )
+
+        async def pending_send_cemi(_: Any) -> None:
+            await asyncio.Event().wait()
+
+        with (
+            patch("xknx.io.routing.Routing.connect"),
+            patch("xknx.io.routing.Routing.send_cemi", side_effect=pending_send_cemi),
+            patch("xknx.io.routing.Routing.disconnect"),
+        ):
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            request = asyncio.create_task(interface.send_cemi(Mock()))
+            await asyncio.sleep(0.05)
+            assert not request.done()
+            await interface.stop()
+            with pytest.raises(CommunicationError):
+                await asyncio.wait_for(request, timeout=1)
+
+    async def test_threaded_cancel_propagates_to_connection_thread(self) -> None:
+        """Test cancelling the awaiting task cancels the coroutine on the connection thread."""
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING, local_ip="127.0.0.1", threaded=True
+        )
+        thread_task_cancelled = threading.Event()
+
+        async def pending_send_cemi(_: Any) -> None:
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                thread_task_cancelled.set()
+                raise
+
+        with (
+            patch("xknx.io.routing.Routing.connect"),
+            patch("xknx.io.routing.Routing.send_cemi", side_effect=pending_send_cemi),
+            patch("xknx.io.routing.Routing.disconnect"),
+        ):
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            request = asyncio.create_task(interface.send_cemi(Mock()))
+            await asyncio.sleep(0.05)
+            request.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await request
+            assert await asyncio.to_thread(thread_task_cancelled.wait, 1)
+            await interface.stop()
 
     async def test_start_secure_connection_knx_keys_user_id(self) -> None:
         """Test starting a secure connection from a knxkeys file with user_id."""
