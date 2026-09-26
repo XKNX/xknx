@@ -497,7 +497,9 @@ async def _cancel_other_tasks() -> None:
     tasks = [task for task in asyncio.all_tasks() if task is not current_task]
     for task in tasks:
         task.cancel()
-    await asyncio.gather(*tasks, return_exceptions=True)
+    if tasks:
+        # time limited in case a task swallows the cancellation
+        await asyncio.wait(tasks, timeout=1)
 
 
 class KNXIPInterfaceThreaded(KNXIPInterface):
@@ -542,13 +544,15 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
         fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
         try:
-            return await asyncio.wrap_future(fut, loop=self._main_loop)
+            return await asyncio.wrap_future(fut)
         except asyncio.CancelledError:
             current_task = asyncio.current_task()
+            # cancelling() > 0: our caller (or asyncio.timeout) requested the cancellation
             if current_task is not None and current_task.cancelling():
                 raise
-            # cancelled from the connection thread side, not by our caller
-            raise CommunicationError("KNX connection thread stopped.") from None
+            raise CommunicationError(
+                "Request on KNX connection thread was cancelled."
+            ) from None
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
