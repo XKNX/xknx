@@ -67,13 +67,24 @@ class _RoomTemperatureSetpointSet(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
         """Init from a dictionary."""
+        names = [field_.name for field_ in dataclass_fields(cls)]
+        # Every field is optional, so a misspelled key would otherwise silently
+        # become "not used" (7FFFh) instead of the intended setpoint.
+        try:
+            unknown = data.keys() - names
+        except AttributeError as err:
+            raise ValueError(f"Invalid value for {cls.__name__}: {err}") from err
+        if unknown:
+            raise ValueError(
+                f"Unknown keys for {cls.__name__}: {sorted(map(str, unknown))}; "
+                f"valid keys: {names}"
+            )
         result = {}
-        for field_ in dataclass_fields(cls):
-            name = field_.name
+        for name in names:
+            value = data.get(name)
             try:
-                value = data.get(name)
                 result[name] = float(value) if value is not None else None
-            except (AttributeError, TypeError, ValueError) as err:
+            except (TypeError, ValueError) as err:
                 raise ValueError(f"Invalid value for {name}: {err}") from err
         return cls(**result)
 

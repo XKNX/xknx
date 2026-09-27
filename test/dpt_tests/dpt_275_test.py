@@ -61,9 +61,12 @@ class TestRoomTemperatureSetpoints:
             {"standby": "a"},
             {"economy": "a"},
             {"building_protection": "a"},
+            {"comfort": 21.0, "eco": 17.0},
+            21.0,
+            None,
         ],
     )
-    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+    def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             RoomTemperatureSetpoints.from_dict(data)
@@ -197,10 +200,17 @@ class TestRoomTemperatureSetpointShifts:
         }
         assert value.as_dict() == default_dict | data
 
-    def test_dict_invalid(self) -> None:
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"comfort": "a"},
+            {"comfort_shift": 1.0},
+        ],
+    )
+    def test_dict_invalid(self, data: dict[str, Any]) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
-            RoomTemperatureSetpointShifts.from_dict({"comfort": "a"})
+            RoomTemperatureSetpointShifts.from_dict(data)
 
 
 class TestDPTRoomTemperatureSetpointShiftSet:
