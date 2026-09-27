@@ -1,6 +1,6 @@
 """Unit test for Notification objects."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -81,7 +81,7 @@ class TestNotification:
             payload=GroupValueWrite(DPTString().to_knx("Ein Prosit!")),
         )
         notification.process(telegram_set)
-        after_update_callback.assert_called_with(notification)
+        after_update_callback.assert_called_with(notification, ANY)
 
     async def test_process_payload_invalid_length(self) -> None:
         """Test process wrong telegram (wrong payload length)."""

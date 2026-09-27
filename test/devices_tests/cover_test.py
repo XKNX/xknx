@@ -1,6 +1,6 @@
 """Unit test for Cover objects."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Cover
@@ -844,7 +844,7 @@ class TestCover:
                 payload=GroupValueWrite(payload),
             )
             cover.process(telegram)
-            after_update_callback.assert_called_with(cover)
+            after_update_callback.assert_called_with(cover, ANY)
             after_update_callback.reset_mock()
         # Stop only when cover is travelling
         telegram = Telegram(
@@ -854,7 +854,7 @@ class TestCover:
         after_update_callback.assert_not_called()
         await cover.set_down()
         cover.process(telegram)
-        after_update_callback.assert_called_with(cover)
+        after_update_callback.assert_called_with(cover, ANY)
 
         await cover.stop()  # clean up tasks
 

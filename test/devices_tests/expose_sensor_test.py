@@ -1,6 +1,6 @@
 """Unit test for Sensor objects."""
 
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import ANY, AsyncMock, Mock, call
 
 import pytest
 
@@ -291,7 +291,7 @@ class TestExposeSensor:
 
         await expose_sensor.set(21.0)
         xknx.devices.process(xknx.telegrams.get_nowait())
-        after_update_callback.assert_called_with(expose_sensor)
+        after_update_callback.assert_called_with(expose_sensor, ANY)
 
     #
     # TEST COOLDOWN

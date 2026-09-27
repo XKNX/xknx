@@ -8,11 +8,18 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
+from contextvars import ContextVar
+from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, Self, cast
 
 from xknx.remote_value import RemoteValue
-from xknx.telegram import GroupReadTelegram, GroupValueTelegram, Telegram
+from xknx.telegram import (
+    GroupReadTelegram,
+    GroupValueTelegram,
+    Telegram,
+    current_telegram_context,
+)
 from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 from xknx.typing import DeviceCallbackType
@@ -21,6 +28,39 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 
 logger = logging.getLogger("xknx.log")
+
+# Telegram currently processed by a device. Being a ContextVar, tasks started while
+# processing (debouncers, travel updates, counters) inherit it as their cause.
+_processing_telegram: ContextVar[Telegram | None] = ContextVar(
+    "xknx_processing_telegram", default=None
+)
+
+
+@dataclass(frozen=True, slots=True)
+class DeviceUpdate:
+    """
+    Cause of a device update passed to device updated callbacks.
+
+    Attributes:
+        telegram: The telegram that caused the update - incoming or outgoing. For
+            updates run from a task, this is the telegram that started the task, eg.
+            the one starting a covers travel. None if no telegram caused it, eg.
+            `RemoteValue.update_value()` or a movement started by `Cover.set_position()`
+            before its telegram was processed.
+        context: The application defined context of the update. `telegram.context`
+            if a telegram caused it, else the one of the active `telegram_context()`.
+
+    """
+
+    telegram: Telegram | None = None
+    context: Any = None
+
+    @classmethod
+    def current(cls) -> DeviceUpdate:
+        """Return the cause of an update happening now."""
+        if (telegram := _processing_telegram.get()) is not None:
+            return cls(telegram=telegram, context=telegram.context)
+        return cls(context=current_telegram_context())
 
 
 class Device(ABC):
@@ -108,9 +148,10 @@ class Device(ABC):
         *args: Any,  # a single argument may be passed if used as a RemoteValue callback
     ) -> None:
         """Execute callbacks after internal state has been changed."""
+        update = DeviceUpdate.current()
         for device_callback in self.device_updated_cbs:
             try:
-                device_callback(self)
+                device_callback(self, update)
             except Exception:  # pylint: disable=broad-except
                 logger.exception(
                     "Unexpected error while processing device_updated_cb for %s",
@@ -123,13 +164,19 @@ class Device(ABC):
             await remote_value.read_state(wait_for_result=wait_for_result)
 
     def process(self, telegram: Telegram) -> None:
-        """Process incoming telegram."""
-        if isinstance(telegram.payload, GroupValueWrite):
-            self.process_group_write(cast("Telegram[GroupValueWrite]", telegram))
-        elif isinstance(telegram.payload, GroupValueResponse):
-            self.process_group_response(cast("Telegram[GroupValueResponse]", telegram))
-        elif isinstance(telegram.payload, GroupValueRead):
-            self.process_group_read(cast("GroupReadTelegram", telegram))
+        """Process incoming or outgoing telegram."""
+        token = _processing_telegram.set(telegram)
+        try:
+            if isinstance(telegram.payload, GroupValueWrite):
+                self.process_group_write(cast("Telegram[GroupValueWrite]", telegram))
+            elif isinstance(telegram.payload, GroupValueResponse):
+                self.process_group_response(
+                    cast("Telegram[GroupValueResponse]", telegram)
+                )
+            elif isinstance(telegram.payload, GroupValueRead):
+                self.process_group_read(cast("GroupReadTelegram", telegram))
+        finally:
+            _processing_telegram.reset(token)
 
     def process_group_read(self, telegram: GroupReadTelegram) -> None:
         """Process incoming GroupValueRead telegrams."""

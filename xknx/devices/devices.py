@@ -13,7 +13,7 @@ from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
 from xknx.typing import DeviceCallbackType
 
-from .device import Device
+from .device import Device, DeviceUpdate
 
 
 class Devices:
@@ -97,10 +97,10 @@ class Devices:
             if not devices:
                 del self.__index[group_address]
 
-    def device_updated(self, device: Device) -> None:
+    def device_updated(self, device: Device, update: DeviceUpdate) -> None:
         """Call all registered device updated callbacks of device."""
         for device_updated_cb in self.device_updated_cbs:
-            device_updated_cb(device)
+            device_updated_cb(device, update)
 
     def process(self, telegram: Telegram) -> None:
         """Process telegram."""

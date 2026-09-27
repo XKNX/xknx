@@ -1,6 +1,6 @@
 """Unit test for Light objects."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Light
@@ -1329,7 +1329,7 @@ class TestLight:
             payload=GroupValueWrite(DPTBinary(1)),
         )
         light.process(telegram)
-        after_update_callback.assert_called_with(light)
+        after_update_callback.assert_called_with(light, ANY)
 
     async def test_process_dimm(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if brightness is processed."""

@@ -1,6 +1,6 @@
 """Unit test for Switch objects."""
 
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock
 
 from xknx import XKNX
 from xknx.devices import Switch
@@ -242,7 +242,7 @@ class TestSwitch:
         )
         switch.process(telegram)
 
-        after_update_callback.assert_called_with(switch)
+        after_update_callback.assert_called_with(switch, ANY)
 
     #
     # TEST RESPOND

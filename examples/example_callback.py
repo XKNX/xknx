@@ -3,13 +3,14 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.devices import Light
+from xknx.devices import DeviceUpdate, Light
 from xknx.io import ConnectionConfig, ConnectionType
 
 
-def light_callback(light: Light) -> None:
+def light_callback(light: Light, update: DeviceUpdate) -> None:
     """Run callback when the light changed any of its state."""
-    print(f"{light.name} - {light.state}")
+    source = update.telegram.source_address if update.telegram else None
+    print(f"{light.name} - {light.state} (source: {source})")
 
 
 async def main() -> None:

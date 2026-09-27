@@ -158,11 +158,13 @@ For all devices stored in the `devices` storage (see [above](#devices)) a callba
 ```python
 import asyncio
 from xknx import XKNX
-from xknx.devices import Device, Switch
+from xknx.devices import Device, DeviceUpdate, Switch
 
 
-def device_updated_cb(device: Device):
+def device_updated_cb(device: Device, update: DeviceUpdate):
     print("Callback received from {0}".format(device.name))
+    if update.telegram is not None:
+        print("caused by telegram from {0}".format(update.telegram.source_address))
 
 
 async def main():

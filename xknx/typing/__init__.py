@@ -12,7 +12,7 @@ else:
 
 if TYPE_CHECKING:
     from xknx.core.connection_manager import XknxConnectionState
-    from xknx.devices import Device
+    from xknx.devices import Device, DeviceUpdate
     from xknx.telegram import Telegram
 
 CallbackType = Callable[[], None]
@@ -20,7 +20,7 @@ CallbackType = Callable[[], None]
 ConnectionChangeCallbackType = Callable[["XknxConnectionState"], None]
 
 DeviceT = TypeVar("DeviceT", bound="Device")
-DeviceCallbackType = Callable[[DeviceT], None]
+DeviceCallbackType = Callable[[DeviceT, "DeviceUpdate"], None]
 
 TelegramCallbackType = Callable[["Telegram"], None]
 

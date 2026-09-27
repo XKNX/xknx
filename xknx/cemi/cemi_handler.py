@@ -155,8 +155,8 @@ class CEMIHandler:
                 self.handle_data_secure_key_issue(cemi.data, _cemi_data_is_data_secure)
                 return
 
-        telegram = cemi.data.telegram()
-        telegram.direction = TelegramDirection.INCOMING
+        # direction passed on creation so incoming telegrams never pick up a context
+        telegram = cemi.data.telegram(TelegramDirection.INCOMING)
         telegram.data_secure = _cemi_data_is_data_secure
         self.telegram_received(telegram)
 
@@ -178,7 +178,6 @@ class CEMIHandler:
         """Handle DataSecure telegrams with missing or invalid keys."""
         self.xknx.connection_manager.undecoded_data_secure += 1
         if isinstance(cemi_data.tpci, tpci.TDataGroup):
-            telegram = cemi_data.telegram()
-            telegram.direction = TelegramDirection.INCOMING
+            telegram = cemi_data.telegram(TelegramDirection.INCOMING)
             telegram.data_secure = received_data_secure
             self.xknx.telegram_queue.received_data_secure_group_key_issue(telegram)

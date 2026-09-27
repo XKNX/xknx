@@ -1,6 +1,6 @@
 """Unit test for NumericValue objects."""
 
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock
 
 import pytest
 
@@ -272,7 +272,7 @@ class TestNumericValue:
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor)
+        after_update_callback.assert_called_with(sensor, ANY)
         assert sensor.last_telegram == telegram
         # consecutive telegrams with same payload shall only trigger one callback
         after_update_callback.reset_mock()
@@ -298,12 +298,12 @@ class TestNumericValue:
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor)
+        after_update_callback.assert_called_with(sensor, ANY)
         assert sensor.last_telegram == telegram
         # every telegram shall trigger callback
         after_update_callback.reset_mock()
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor)
+        after_update_callback.assert_called_with(sensor, ANY)
 
     async def test_process_callback_set(self) -> None:
         """Test setting value. Test if callback is called."""
@@ -318,7 +318,7 @@ class TestNumericValue:
 
         await num_value.set(21.0)
         xknx.devices.process(xknx.telegrams.get_nowait())
-        after_update_callback.assert_called_with(num_value)
+        after_update_callback.assert_called_with(num_value, ANY)
 
     def test_string(self) -> None:
         """Test NumericValue string representation."""

@@ -20,7 +20,7 @@ import asyncio
 import re
 import sys
 
-from xknx.devices import Device
+from xknx.devices import Device, DeviceUpdate
 
 try:
     # The following library is not included.
@@ -64,7 +64,7 @@ RE_CURRENT = re.compile("Current_")
 RE_FREQUENCY = re.compile("Frequency_")
 
 
-def device_updated_cb(device: Device) -> None:
+def device_updated_cb(device: Device, update: DeviceUpdate) -> None:
     """Do something with the updated device."""
     # print(device.name + ' ' + str(device.resolve_state()) + ' ' + device.unit_of_measurement())
     value = None

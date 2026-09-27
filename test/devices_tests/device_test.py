@@ -1,6 +1,6 @@
 """Unit test for Switch objects."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from xknx import XKNX
 from xknx.devices import Device, Sensor, Switch
@@ -44,7 +44,7 @@ class TestDevice:
         )
 
         device.after_update()
-        after_update_callback.assert_called_with(device)
+        after_update_callback.assert_called_with(device, ANY)
 
     def test_process_callback(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if callback was called."""
@@ -57,15 +57,15 @@ class TestDevice:
 
         # Triggering first time. Both have to be called
         device.after_update()
-        after_update_callback1.assert_called_with(device)
-        after_update_callback2.assert_called_with(device)
+        after_update_callback1.assert_called_with(device, ANY)
+        after_update_callback2.assert_called_with(device, ANY)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
         # Triggering 2nd time. Both have to be called
         device.after_update()
-        after_update_callback1.assert_called_with(device)
-        after_update_callback2.assert_called_with(device)
+        after_update_callback1.assert_called_with(device, ANY)
+        after_update_callback2.assert_called_with(device, ANY)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
@@ -73,7 +73,7 @@ class TestDevice:
         device.unregister_device_updated_cb(after_update_callback1)
         device.after_update()
         after_update_callback1.assert_not_called()
-        after_update_callback2.assert_called_with(device)
+        after_update_callback2.assert_called_with(device, ANY)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
@@ -97,9 +97,9 @@ class TestDevice:
         device.register_device_updated_cb(good_callback_2)
 
         device.after_update()
-        good_callback_1.assert_called_with(device)
-        bad_callback.assert_called_with(device)
-        good_callback_2.assert_called_with(device)
+        good_callback_1.assert_called_with(device, ANY)
+        bad_callback.assert_called_with(device, ANY)
+        good_callback_2.assert_called_with(device, ANY)
 
         logging_exception_mock.assert_called_once_with(
             "Unexpected error while processing device_updated_cb for %s",
