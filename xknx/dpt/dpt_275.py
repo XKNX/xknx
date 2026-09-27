@@ -73,7 +73,7 @@ class _RoomTemperatureSetpointSet(DPTComplexData):
             try:
                 value = data.get(name)
                 result[name] = float(value) if value is not None else None
-            except (TypeError, ValueError) as err:
+            except (AttributeError, TypeError, ValueError) as err:
                 raise ValueError(f"Invalid value for {name}: {err}") from err
         return cls(**result)
 
@@ -93,10 +93,10 @@ class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
     in °C, -273..670433.28; None if not used.
 
     KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4.1 tabulates the fields as
-    "-273°C to 655,34°C". That maximum is a U16 x 0,01 table artifact - the FB
-    datapoint descriptions (KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 -
-    §4.1.7.7.3/§4.1.7.7.4) say full range - so the DPT 9.001 range of
-    `DPTTemperature` applies.
+    "-273°C to 655,34°C". That maximum looks like a U16 x 0,01 table artifact
+    (65534 x 0,01) - the FB datapoint descriptions (KNX v01.03.01 - HVAC S-Mode
+    FBs 07.19.20 - §4.1.7.7.3/§4.1.7.7.4/§5.8.4.3/§5.8.4.4) give the range as
+    "full" - so the DPT 9.001 range of `DPTTemperature` applies.
     """
 
     comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
@@ -112,6 +112,11 @@ class RoomTemperatureSetpointShifts(_RoomTemperatureSetpointSet):
 
     `comfort`, `standby`, `economy`, `building_protection`: setpoint shift
     (delta value) in K, -671088.64..670433.28; None if not used.
+
+    KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4.2 tabulates the fields as
+    "-670 760 K…670 760 K", but 670 760,96 K would be the 7FFFh invalid-data
+    pattern and the FB datapoint descriptions (§5.8.4.5/§5.8.4.6) say "full" -
+    so the DPT 9.002 range of `DPTTemperatureDifference2Byte` applies.
     """
 
     comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE_DIFFERENCE)
