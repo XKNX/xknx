@@ -13,7 +13,7 @@ from xknx.cli._command import Command, connection_config, gateway_argument
 from xknx.cli.group._base import GroupCommand
 from xknx.cli.group.monitor import print_telegram
 from xknx.cli.group.write import parse_raw_value
-from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
+from xknx.dpt import DPTArray, DPTBinary, DPTColorRGB, DPTSwitch, DPTTemperature
 from xknx.exceptions import CommunicationError, ConfirmationError
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionType, GatewayDescriptor
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
@@ -230,6 +230,60 @@ def test_write_with_type_converts_value() -> None:
         assert main(["group", "write", "1/2/3", "21.5", "--type", "temperature"]) == 0
     telegram = send_mock.call_args.args[0]
     assert telegram.payload == GroupValueWrite(DPTArray((0x0C, 0x33)))
+
+
+@pytest.mark.parametrize(
+    ("argv_value", "argv_type", "expected_payload"),
+    [
+        ("true", "switch", DPTBinary(True)),  # bool fallback for DPT 1.x
+        ("1", "switch", DPTBinary(True)),  # int fallback for DPT 1.x
+        ('{"red": 255, "green": 0, "blue": 0}', "232.600", DPTArray((255, 0, 0))),
+    ],
+)
+def test_write_value_parsing(
+    argv_value: str, argv_type: str, expected_payload: DPTBinary | DPTArray
+) -> None:
+    """Test fallback parsing and JSON values for typed writes."""
+    with (
+        patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()
+        ) as send_mock,
+    ):
+        assert main(["group", "write", "1/2/3", argv_value, "--type", argv_type]) == 0
+    assert send_mock.call_args.args[0].payload == GroupValueWrite(expected_payload)
+
+
+def test_write_invalid_json(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test the write command rejects malformed JSON before connecting."""
+    with patch("xknx.xknx.knx_interface_factory") as factory_mock:
+        assert main(["group", "write", "1/2/3", '{"red": ', "--type", "232.600"]) == 1
+    factory_mock.assert_not_called()
+    assert "Error: invalid JSON value" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (21.5, "21.5\n"),
+        (DPTSwitch.from_knx(DPTBinary(True)), "on\n"),
+        (
+            DPTColorRGB.from_knx(DPTArray((255, 0, 0))),
+            '{"red": 255, "green": 0, "blue": 0}\n',
+        ),
+        ((12, 51), "0c33\n"),  # raw payload read without --type
+    ],
+)
+def test_read_output_format(
+    value: object, expected: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test read output can be passed back to write."""
+    with (
+        patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
+        patch("xknx.cli.group.read.read_group_value", AsyncMock(return_value=value)),
+    ):
+        assert main(["group", "read", "1/2/3"]) == 0
+    assert capsys.readouterr().out == expected
 
 
 def test_write_confirmation_error(capsys: pytest.CaptureFixture[str]) -> None:
