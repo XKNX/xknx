@@ -46,6 +46,7 @@ nav_order: 2
 
 ### Connection
 
+- Threaded interface: a request still pending when the interface is stopped raises `CommunicationError` instead of never returning. `stop()` stopped the connection thread's loop without finishing the tasks on it, so the caller - and the executor thread blocked waiting for the result - hung forever, holding up the shutdown of the host application. Results from the connection thread are awaited with `asyncio.wrap_future()` now, so no executor thread is blocked, and cancelling the caller also cancels the request on the connection thread.
 - KNX IP Secure transports discard unencrypted frames instead of passing them to their callbacks. A secure session accepts a plain frame only for the handshake - `SessionRequest` outgoing, `SessionResponse` incoming - and raises `IPSecureError` when anything else is sent before the session is initialized. Secure routing keeps forwarding plain discovery and self description frames (`SearchRequest`, `SearchResponse`, `DescriptionRequest` and `DescriptionResponse`, extended variants included) since these services are never secured and share the multicast endpoint, but now drops every other plain frame - previously only `RoutingIndication` was dropped, so a plain `RoutingBusy` from any sender could still throttle outgoing telegrams. Frames that may not be encapsulated at all - a nested `SecureWrapper` and the Remote Configuration and Diagnosis service family - are discarded when received inside a `SecureWrapper`.
 
 ### Devices
