@@ -13,8 +13,8 @@ from xknx.cli._command import Command, connection_config, gateway_argument
 from xknx.cli.group._base import GroupCommand
 from xknx.cli.group.monitor import print_telegram
 from xknx.cli.group.write import parse_raw_value
-from xknx.dpt import DPTBinary, DPTSwitch, DPTTemperature
-from xknx.exceptions import CommunicationError
+from xknx.dpt import DPTArray, DPTBinary, DPTTemperature
+from xknx.exceptions import CommunicationError, ConfirmationError
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionType, GatewayDescriptor
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
@@ -168,15 +168,17 @@ def test_read_no_response(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_write() -> None:
-    """Test the write command."""
-    write_mock = Mock()
+    """Test the write command sends and awaits a GroupValueWrite telegram."""
     with (
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
-        patch("xknx.cli.group.write.group_value_write", write_mock),
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()
+        ) as send_mock,
     ):
         assert main(["group", "write", "1/2/3", "on", "--gateway", "10.0.0.1"]) == 0
-    assert write_mock.call_args.args[1:] == (GroupAddress("1/2/3"), True)
-    assert write_mock.call_args.kwargs["value_type"] is None
+    telegram = send_mock.call_args.args[0]
+    assert telegram.destination_address == GroupAddress("1/2/3")
+    assert telegram.payload == GroupValueWrite(DPTBinary(True))
 
 
 def test_defaults_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -187,7 +189,7 @@ def test_defaults_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
         patch(
             "xknx.xknx.knx_interface_factory", return_value=_interface_mock()
         ) as factory_mock,
-        patch("xknx.cli.group.write.group_value_write"),
+        patch("xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()),
     ):
         assert main(["group", "write", "1/2/3", "on"]) == 0
     config = factory_mock.call_args.kwargs["connection_config"]
@@ -204,7 +206,7 @@ def test_argument_overrides_environment(monkeypatch: pytest.MonkeyPatch) -> None
         patch(
             "xknx.xknx.knx_interface_factory", return_value=_interface_mock()
         ) as factory_mock,
-        patch("xknx.cli.group.write.group_value_write"),
+        patch("xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()),
     ):
         assert main(["group", "write", "1/2/3", "on", "--gateway", "10.0.0.9"]) == 0
     assert factory_mock.call_args.kwargs["connection_config"].gateway_ip == "10.0.0.9"
@@ -218,15 +220,29 @@ def test_invalid_environment_gateway(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_write_with_type_converts_value() -> None:
-    """Test the write command converts the value with the DPT transcoder."""
-    write_mock = Mock()
+    """Test the write command sends the DPT-encoded payload."""
     with (
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
-        patch("xknx.cli.group.write.group_value_write", write_mock),
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()
+        ) as send_mock,
     ):
-        assert main(["group", "write", "1/2/3", "on", "--type", "switch"]) == 0
-    assert write_mock.call_args.args[1:] == (GroupAddress("1/2/3"), DPTBinary(True))
-    assert write_mock.call_args.kwargs["value_type"] is DPTSwitch
+        assert main(["group", "write", "1/2/3", "21.5", "--type", "temperature"]) == 0
+    telegram = send_mock.call_args.args[0]
+    assert telegram.payload == GroupValueWrite(DPTArray((0x0C, 0x33)))
+
+
+def test_write_confirmation_error(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test a write without bus confirmation exits with an error."""
+    with (
+        patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram",
+            AsyncMock(side_effect=ConfirmationError("L_DATA_CON timed out")),
+        ),
+    ):
+        assert main(["group", "write", "1/2/3", "on"]) == 1
+    assert "Error:" in capsys.readouterr().err
 
 
 @pytest.mark.parametrize(

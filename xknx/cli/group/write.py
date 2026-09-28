@@ -6,7 +6,9 @@ import argparse
 import sys
 
 from xknx import XKNX
-from xknx.tools import group_value_write
+from xknx.dpt import DPTBinary
+from xknx.telegram import Telegram
+from xknx.telegram.apci import GroupValueWrite
 
 from .._command import dpt_argument, group_address_argument
 from ._base import GroupCommand
@@ -63,10 +65,15 @@ class WriteCommand(GroupCommand):
                     file=sys.stderr,
                 )
                 return 1
-            args.value = value
+            args.value = DPTBinary(value)
         return await super().run(args)
 
     async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
-        """Send a GroupValueWrite telegram."""
-        group_value_write(xknx, args.group_address, args.value, value_type=args.type)
+        """Send a GroupValueWrite telegram and wait for its confirmation."""
+        await xknx.cemi_handler.send_telegram(
+            Telegram(
+                destination_address=args.group_address,
+                payload=GroupValueWrite(args.value),
+            )
+        )
         return 0
