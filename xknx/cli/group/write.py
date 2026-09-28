@@ -17,6 +17,17 @@ from .._command import dpt_argument, group_address_argument
 from ._base import GroupCommand
 
 
+def parse_typed_value(raw: str) -> Any:
+    """Parse a command line value for a DPT transcoder: JSON, or a plain string."""
+    try:
+        return json.loads(raw)  # numbers, booleans and objects for structured DPTs
+    except json.JSONDecodeError as err:
+        if raw.lstrip().startswith(("{", "[")):
+            # a malformed structured value should not degrade to a string
+            raise ConversionError(f"invalid JSON value: {err}") from None
+        return raw  # plain strings, e.g. 'on' or 'comfort'
+
+
 def parse_raw_value(raw: str) -> bool | int | float | str:
     """Parse a raw command line value into a Python value."""
     if raw.lower() in ("on", "true"):
@@ -63,21 +74,7 @@ class WriteCommand(GroupCommand):
         if args.type is not None:
             # convert before connecting to fail early for invalid values -
             # the encoded payload is passed through to `run_connected`
-            value: Any = args.value
-            if value.startswith("{"):
-                # structured DPTs take a JSON object, e.g. '{"red": 255, ...}'
-                try:
-                    value = json.loads(value)
-                except json.JSONDecodeError as err:
-                    raise ConversionError(f"invalid JSON value: {err}") from None
-            try:
-                args.value = args.type.to_knx(value)
-            except ConversionError:
-                # retry with a parsed bool/int/float - e.g. 'true' for DPT 1.x
-                fallback = parse_raw_value(value) if isinstance(value, str) else value
-                if isinstance(fallback, str) or fallback is value:
-                    raise
-                args.value = args.type.to_knx(fallback)
+            args.value = args.type.to_knx(parse_typed_value(args.value))
         else:
             value = parse_raw_value(args.value)
             if not isinstance(value, int) or not 0 <= value <= 63:

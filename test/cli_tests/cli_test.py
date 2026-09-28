@@ -235,15 +235,18 @@ def test_write_with_type_converts_value() -> None:
 @pytest.mark.parametrize(
     ("argv_value", "argv_type", "expected_payload"),
     [
-        ("true", "switch", DPTBinary(True)),  # bool fallback for DPT 1.x
-        ("1", "switch", DPTBinary(True)),  # int fallback for DPT 1.x
+        ("true", "switch", DPTBinary(True)),  # JSON boolean
+        ("1", "switch", DPTBinary(True)),  # JSON number
+        ("0", "switch", DPTBinary(False)),  # JSON number
+        ("on", "switch", DPTBinary(True)),  # plain string - not JSON
+        ("comfort", "hvac_mode", DPTArray((0x01,))),  # enum name string
         ('{"red": 255, "green": 0, "blue": 0}', "232.600", DPTArray((255, 0, 0))),
     ],
 )
 def test_write_value_parsing(
     argv_value: str, argv_type: str, expected_payload: DPTBinary | DPTArray
 ) -> None:
-    """Test fallback parsing and JSON values for typed writes."""
+    """Test typed write values parse as JSON with a plain string fallback."""
     with (
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
         patch(
