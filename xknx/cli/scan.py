@@ -6,14 +6,13 @@ import argparse
 import asyncio
 import ipaddress
 import logging
-import sys
 
 from xknx import XKNX
 from xknx.exceptions import XKNXException
 from xknx.io import GatewayDescriptor, GatewayScanner
 from xknx.io.util import get_local_ips
 
-from ._command import Command
+from ._command import Command, add_local_ip_argument
 
 logger = logging.getLogger("xknx.cli")
 
@@ -50,6 +49,7 @@ class ScanCommand(Command):
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         """Add the scan command arguments."""
+        add_local_ip_argument(parser)
         parser.add_argument(
             "--timeout",
             type=float,
@@ -59,13 +59,6 @@ class ScanCommand(Command):
 
     async def run(self, args: argparse.Namespace) -> int:
         """Scan for KNX/IP gateways on all interfaces and print what is found."""
-        if args.gateway is not None:
-            print(
-                "Error: --gateway is not applicable to 'scan' - it uses"
-                " multicast discovery.",
-                file=sys.stderr,
-            )
-            return 2
         if args.local_ip is not None:
             local_ips = [args.local_ip]
         else:

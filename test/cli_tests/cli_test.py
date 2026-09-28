@@ -125,8 +125,10 @@ def test_connection_config_tunneling() -> None:
         ["group", "unknown"],  # unknown group subcommand
         ["group", "write", "1/2/3"],  # missing value
         ["unknown"],  # unknown subcommand
-        ["--gateway", ":3671", "scan"],  # invalid gateway
-        ["--gateway", "10.0.0.1:99999", "group", "read", "1/2/3"],  # port out of range
+        ["scan", "--gateway", "10.0.0.1"],  # scan takes no --gateway
+        ["group", "read", "1/2/3", "--gateway", ":3671"],  # invalid gateway
+        ["group", "read", "1/2/3", "--gateway", "10.0.0.1:99999"],  # port out of range
+        ["--gateway", "10.0.0.1", "group", "read", "1/2/3"],  # option before command
     ],
 )
 def test_parser_errors(argv: list[str]) -> None:
@@ -165,7 +167,7 @@ def test_write() -> None:
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
         patch("xknx.cli.group.write.group_value_write", write_mock),
     ):
-        assert main(["--gateway", "10.0.0.1", "group", "write", "1/2/3", "on"]) == 0
+        assert main(["group", "write", "1/2/3", "on", "--gateway", "10.0.0.1"]) == 0
     assert write_mock.call_args.args[1:] == (GroupAddress("1/2/3"), True)
     assert write_mock.call_args.kwargs["value_type"] is None
 
@@ -197,7 +199,7 @@ def test_argument_overrides_environment(monkeypatch: pytest.MonkeyPatch) -> None
         ) as factory_mock,
         patch("xknx.cli.group.write.group_value_write"),
     ):
-        assert main(["--gateway", "10.0.0.9", "group", "write", "1/2/3", "on"]) == 0
+        assert main(["group", "write", "1/2/3", "on", "--gateway", "10.0.0.9"]) == 0
     assert factory_mock.call_args.kwargs["connection_config"].gateway_ip == "10.0.0.9"
 
 
@@ -299,7 +301,7 @@ def test_scan(capsys: pytest.CaptureFixture[str]) -> None:
     with patch(
         "xknx.cli.scan.GatewayScanner", return_value=_scanner_mock([TEST_GATEWAY])
     ) as scanner_cls:
-        assert main(["--local-ip", "10.0.0.2", "scan", "--timeout", "1"]) == 0
+        assert main(["scan", "--local-ip", "10.0.0.2", "--timeout", "1"]) == 0
     assert scanner_cls.call_args.kwargs["local_ip"] == "10.0.0.2"
     assert scanner_cls.call_args.kwargs["timeout_in_seconds"] == 1.0
     out = capsys.readouterr().out
@@ -314,7 +316,7 @@ def test_scan_local_ip_error(capsys: pytest.CaptureFixture[str]) -> None:
         "xknx.cli.scan.GatewayScanner",
         return_value=_scanner_mock([], error=CommunicationError("bind failed")),
     ):
-        assert main(["--local-ip", "10.0.0.2", "scan"]) == 1
+        assert main(["scan", "--local-ip", "10.0.0.2"]) == 1
     assert "Error: bind failed" in capsys.readouterr().err
 
 
@@ -376,10 +378,17 @@ def test_keyboard_interrupt_exit_code() -> None:
         assert main(["group", "read", "1/2/3"]) == 130
 
 
-def test_scan_rejects_gateway(capsys: pytest.CaptureFixture[str]) -> None:
-    """Test the scan command rejects the --gateway option."""
-    assert main(["--gateway", "10.0.0.1", "scan"]) == 2
-    assert "--gateway is not applicable" in capsys.readouterr().err
+def test_scan_ignores_gateway_environment(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test the scan command is not affected by $XKNX_GATEWAY."""
+    monkeypatch.setenv("XKNX_GATEWAY", ":not even valid")
+    with (
+        patch("xknx.cli.scan.get_local_ips", return_value=[Mock(ip="10.0.0.2")]),
+        patch("xknx.cli.scan.GatewayScanner", return_value=_scanner_mock([])),
+    ):
+        assert main(["scan"]) == 0
+    assert "No gateways found." in capsys.readouterr().out
 
 
 def test_print_telegram(capsys: pytest.CaptureFixture[str]) -> None:

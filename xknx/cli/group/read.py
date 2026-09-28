@@ -21,6 +21,7 @@ class ReadCommand(GroupCommand):
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         """Add the read command arguments."""
+        super().configure(parser)
         parser.add_argument("group_address", help="KNX group address, e.g. '1/2/3'")
         parser.add_argument(
             "--type", help="DPT value type, e.g. 'temperature' or '9.001'"

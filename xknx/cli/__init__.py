@@ -6,14 +6,13 @@ import argparse
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 import logging
-import os
 import sys
 from typing import Any
 
 from xknx.exceptions import XKNXException
 
 from . import group, scan
-from ._command import Command, gateway_argument
+from ._command import Command
 
 __all__ = ["group", "main", "scan"]
 
@@ -37,19 +36,6 @@ def _parser() -> argparse.ArgumentParser:
         action="count",
         default=0,
         help="increase verbosity (-v: info, -vv: debug)",
-    )
-    parser.add_argument(
-        "--gateway",
-        type=gateway_argument,
-        default=os.environ.get("XKNX_GATEWAY"),
-        help="KNX/IP tunneling gateway as 'host[:port]'"
-        " (default: XKNX_GATEWAY environment variable, or automatic discovery)",
-    )
-    parser.add_argument(
-        "--local-ip",
-        default=os.environ.get("XKNX_LOCAL_IP"),
-        help="local IP address or interface name to use"
-        " (default: XKNX_LOCAL_IP environment variable)",
     )
     subparsers = parser.add_subparsers(
         title="commands",

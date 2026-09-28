@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import argparse
+import os
 from typing import ClassVar
 
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
@@ -28,6 +29,27 @@ def gateway_argument(value: str) -> tuple[str, int]:
         if not 1 <= port <= 65535:
             raise argparse.ArgumentTypeError(f"port out of range: {port}")
     return host, port
+
+
+def add_gateway_argument(parser: argparse.ArgumentParser) -> None:
+    """Add the --gateway option to a command parser."""
+    parser.add_argument(
+        "--gateway",
+        type=gateway_argument,
+        default=os.environ.get("XKNX_GATEWAY"),
+        help="KNX/IP gateway as 'host[:port]' for UDP tunneling"
+        " (default: XKNX_GATEWAY environment variable, or automatic discovery)",
+    )
+
+
+def add_local_ip_argument(parser: argparse.ArgumentParser) -> None:
+    """Add the --local-ip option to a command parser."""
+    parser.add_argument(
+        "--local-ip",
+        default=os.environ.get("XKNX_LOCAL_IP"),
+        help="local IP address or interface name to use"
+        " (default: XKNX_LOCAL_IP environment variable)",
+    )
 
 
 def connection_config(args: argparse.Namespace) -> ConnectionConfig:

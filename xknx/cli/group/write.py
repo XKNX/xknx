@@ -36,6 +36,7 @@ class WriteCommand(GroupCommand):
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         """Add the write command arguments."""
+        super().configure(parser)
         parser.add_argument("group_address", help="KNX group address, e.g. '1/2/3'")
         parser.add_argument("value", help="value to write, e.g. 'on', '50' or '21.5'")
         parser.add_argument("--type", help="DPT value type, e.g. 'percent' or '9.001'")

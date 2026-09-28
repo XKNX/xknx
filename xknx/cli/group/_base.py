@@ -7,7 +7,12 @@ import argparse
 
 from xknx import XKNX
 
-from .._command import Command, connection_config
+from .._command import (
+    Command,
+    add_gateway_argument,
+    add_local_ip_argument,
+    connection_config,
+)
 
 
 class GroupCommand(Command):
@@ -15,6 +20,11 @@ class GroupCommand(Command):
 
     name = "group"
     help_text = "read, write and monitor group addresses"
+
+    def configure(self, parser: argparse.ArgumentParser) -> None:
+        """Add the common group command arguments."""
+        add_gateway_argument(parser)
+        add_local_ip_argument(parser)
 
     async def run(self, args: argparse.Namespace) -> int:
         """Connect to the KNX bus and run the command."""

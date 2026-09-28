@@ -32,6 +32,7 @@ class MonitorCommand(GroupCommand):
 
     def configure(self, parser: argparse.ArgumentParser) -> None:
         """Add the monitor command arguments."""
+        super().configure(parser)
         parser.add_argument(
             "--filter",
             action="append",
