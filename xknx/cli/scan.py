@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import ipaddress
 import logging
+import sys
 
 from xknx import XKNX
 from xknx.exceptions import XKNXException
@@ -70,6 +71,7 @@ class ScanCommand(Command):
             ]
         xknx = XKNX()
         found: set[tuple[str, int]] = set()
+        errors: list[str] = []
         await asyncio.gather(
             *(
                 self._scan_interface(
@@ -77,13 +79,17 @@ class ScanCommand(Command):
                     local_ip=local_ip,
                     timeout=args.timeout,
                     found=found,
+                    errors=errors,
                     ignore_errors=args.local_ip is None,
                 )
                 for local_ip in dict.fromkeys(local_ips)
             )
         )
         if not found:
-            print("No gateways found.")
+            for failure in errors:
+                print(f"Scan failed on {failure}", file=sys.stderr)
+            print("No gateways found.", file=sys.stderr)
+            return 1
         return 0
 
     async def _scan_interface(
@@ -92,6 +98,7 @@ class ScanCommand(Command):
         local_ip: str,
         timeout: float,
         found: set[tuple[str, int]],
+        errors: list[str],
         ignore_errors: bool,
     ) -> None:
         """Scan for gateways on a single interface."""
@@ -108,4 +115,5 @@ class ScanCommand(Command):
         except (XKNXException, OSError) as err:
             if not ignore_errors:
                 raise
+            errors.append(f"{local_ip}: {err}")
             logger.debug("Scan failed on %s: %s", local_ip, err)

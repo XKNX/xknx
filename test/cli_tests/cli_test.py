@@ -404,8 +404,23 @@ def test_scan_no_gateways(capsys: pytest.CaptureFixture[str]) -> None:
         patch("xknx.cli.scan.get_local_ips", return_value=[Mock(ip="10.0.0.2")]),
         patch("xknx.cli.scan.GatewayScanner", return_value=_scanner_mock([])),
     ):
-        assert main(["-vv", "scan"]) == 0
-    assert "No gateways found." in capsys.readouterr().out
+        assert main(["-vv", "scan"]) == 1
+    assert "No gateways found." in capsys.readouterr().err
+
+
+def test_scan_all_interfaces_failed(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test the scan command reports interface errors when nothing is found."""
+    with (
+        patch("xknx.cli.scan.get_local_ips", return_value=[Mock(ip="10.0.0.2")]),
+        patch(
+            "xknx.cli.scan.GatewayScanner",
+            return_value=_scanner_mock([], error=CommunicationError("bind failed")),
+        ),
+    ):
+        assert main(["scan"]) == 1
+    err = capsys.readouterr().err
+    assert "Scan failed on 10.0.0.2: bind failed" in err
+    assert "No gateways found." in err
 
 
 def test_monitor() -> None:
@@ -442,8 +457,8 @@ def test_scan_ignores_gateway_environment(
         patch("xknx.cli.scan.get_local_ips", return_value=[Mock(ip="10.0.0.2")]),
         patch("xknx.cli.scan.GatewayScanner", return_value=_scanner_mock([])),
     ):
-        assert main(["scan"]) == 0
-    assert "No gateways found." in capsys.readouterr().out
+        assert main(["scan"]) == 1
+    assert "No gateways found." in capsys.readouterr().err
 
 
 def test_print_telegram(capsys: pytest.CaptureFixture[str]) -> None:
