@@ -100,19 +100,13 @@ class Command(ABC):
     """
     Base class for xknx CLI commands.
 
-    Direct subclasses form the top level of the command line interface.
-    A concrete subclass is a command; an abstract subclass with subclasses
-    of its own is a command group whose members are its direct subclasses
-    (see `xknx.cli.group`).
+    Commands are registered explicitly: top level commands and command
+    groups in `xknx.cli._parser()`, the commands of a group in the
+    `COMMANDS` tuple of the group's package (see `xknx.cli.group`).
     """
 
     name: ClassVar[str]
     help_text: ClassVar[str]
-
-    @classmethod
-    def subcommands(cls) -> list[type[Command]]:
-        """Return the directly derived command classes."""
-        return cls.__subclasses__()
 
     def configure(self, parser: argparse.ArgumentParser) -> None:  # noqa: B027
         """Add command specific arguments to the parser - optional override."""

@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from xknx.cli import main
-from xknx.cli._command import Command, connection_config, gateway_argument
-from xknx.cli.group._base import GroupCommand
+from xknx.cli import group, main
+from xknx.cli._command import connection_config, gateway_argument
+from xknx.cli.group import GroupCommand
 from xknx.cli.group.monitor import print_telegram
 from xknx.cli.group.write import parse_raw_value
 from xknx.dpt import DPTArray, DPTBinary, DPTColorRGB, DPTSwitch, DPTTemperature
@@ -55,14 +55,10 @@ def test_parse_raw_value(raw: str, expected: bool | int | float | str) -> None:
     assert type(result) is type(expected)
 
 
-def test_command_discovery() -> None:
-    """Test the command tree is built from direct subclasses."""
-    top_level = {
-        command.name: bool(command.subcommands()) for command in Command.subcommands()
-    }
-    assert top_level == {"scan": False, "group": True}
-    group_commands = {command.name for command in GroupCommand.subcommands()}
-    assert group_commands == {"read", "write", "monitor"}
+def test_command_registry() -> None:
+    """Test the registered group commands."""
+    assert [command.name for command in group.COMMANDS] == ["read", "write", "monitor"]
+    assert all(issubclass(command, GroupCommand) for command in group.COMMANDS)
 
 
 def test_connection_config_automatic() -> None:

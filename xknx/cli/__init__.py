@@ -13,6 +13,8 @@ from xknx.exceptions import ConversionError, XKNXException
 
 from . import group, scan
 from ._command import Command
+from .group import GroupCommand
+from .scan import ScanCommand
 
 __all__ = ["group", "main", "scan"]
 
@@ -23,6 +25,25 @@ def _add_command(subparsers: Any, command_cls: type[Command]) -> None:
     subparser = subparsers.add_parser(command.name, help=command.help_text)
     command.configure(subparser)
     subparser.set_defaults(func=command.run)
+
+
+def _add_command_group(
+    subparsers: Any,
+    name: str,
+    help_text: str,
+    command_classes: Sequence[type[Command]],
+) -> None:
+    """Register a command group and its commands with a subparsers action."""
+    group_parser = subparsers.add_parser(name, help=help_text)
+    group_subparsers = group_parser.add_subparsers(
+        title="commands",
+        metavar="<command>",
+        dest="subcommand",
+        required=True,
+        help=f"run 'xknx {name} <command> --help' for command specific options",
+    )
+    for command_cls in command_classes:
+        _add_command(group_subparsers, command_cls)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -45,23 +66,10 @@ def _parser() -> argparse.ArgumentParser:
         help="run 'xknx <command> --help' for command specific options",
     )
 
-    for command_cls in Command.subcommands():
-        if subcommand_classes := command_cls.subcommands():
-            group_parser = subparsers.add_parser(
-                command_cls.name, help=command_cls.help_text
-            )
-            group_subparsers = group_parser.add_subparsers(
-                title="commands",
-                metavar="<command>",
-                dest="subcommand",
-                required=True,
-                help=f"run 'xknx {command_cls.name} <command> --help'"
-                " for command specific options",
-            )
-            for subcommand_cls in subcommand_classes:
-                _add_command(group_subparsers, subcommand_cls)
-        else:
-            _add_command(subparsers, command_cls)
+    _add_command_group(
+        subparsers, GroupCommand.name, GroupCommand.help_text, group.COMMANDS
+    )
+    _add_command(subparsers, ScanCommand)
 
     return parser
 
