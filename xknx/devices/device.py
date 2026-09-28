@@ -29,8 +29,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("xknx.log")
 
-# Telegram currently processed by a device. Being a ContextVar, tasks started while
-# processing (debouncers, travel updates, counters) inherit it as their cause.
+# Telegram currently processed by a device. Being a ContextVar, tasks started by
+# devices while processing (debouncers, travel updates, counters) inherit it as their
+# cause. It is cleared while device updated callbacks run, so application code never
+# inherits it.
 _processing_telegram: ContextVar[Telegram | None] = ContextVar(
     "xknx_processing_telegram", default=None
 )
@@ -43,10 +45,12 @@ class DeviceUpdate:
 
     Attributes:
         telegram: The telegram that caused the update - incoming or outgoing. For
-            updates run from a task, this is the telegram that started the task, eg.
-            the one starting a covers travel. None if no telegram caused it, eg.
-            `RemoteValue.update_value()` or a movement started by `Cover.set_position()`
-            before its telegram was processed.
+            updates run from a task started by the device, this is the telegram that
+            started the task, eg. the one starting a covers travel. None if no telegram
+            caused it, eg. `RemoteValue.update_value()` or a movement started by
+            `Cover.set_position()` before its telegram was processed. Work scheduled
+            from a device updated callback doesn't inherit the cause - pass
+            `update.context` to `telegram_context()` to attribute it explicitly.
         context: The application defined context of the update. `telegram.context`
             if a telegram caused it, else the one of the active `telegram_context()`.
 
@@ -149,14 +153,19 @@ class Device(ABC):
     ) -> None:
         """Execute callbacks after internal state has been changed."""
         update = DeviceUpdate.current()
-        for device_callback in self.device_updated_cbs:
-            try:
-                device_callback(self, update)
-            except Exception:  # pylint: disable=broad-except
-                logger.exception(
-                    "Unexpected error while processing device_updated_cb for %s",
-                    self,
-                )
+        # callbacks get the cause as argument - work they schedule shall not inherit it
+        token = _processing_telegram.set(None)
+        try:
+            for device_callback in self.device_updated_cbs:
+                try:
+                    device_callback(self, update)
+                except Exception:  # pylint: disable=broad-except
+                    logger.exception(
+                        "Unexpected error while processing device_updated_cb for %s",
+                        self,
+                    )
+        finally:
+            _processing_telegram.reset(token)
 
     async def sync(self, wait_for_result: bool = False) -> None:
         """Read states of device from KNX bus."""

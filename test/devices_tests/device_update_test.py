@@ -1,6 +1,9 @@
 """Unit test for the cause of device updates passed to device updated callbacks."""
 
+import asyncio
 from unittest.mock import Mock, patch
+
+import pytest
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Cover, DeviceUpdate, Light, Switch
@@ -210,3 +213,54 @@ async def test_binary_sensor_counter(time_travel: EventLoopClockAdvancer) -> Non
     await time_travel(1)
     assert callback.call_count == 2
     callback.assert_called_with(binary_sensor, DeviceUpdate(telegram=telegram))
+
+
+@pytest.mark.parametrize("context", ["automation", None])
+async def test_callback_scheduled_action(
+    time_travel: EventLoopClockAdvancer, context: str | None
+) -> None:
+    """Test work scheduled from a device callback doesn't inherit the telegram cause."""
+    xknx = XKNX()
+    cover_callback = Mock()
+    cover = Cover(
+        xknx,
+        name="TestCover",
+        group_address_long="2/0/1",
+        group_address_stop="2/0/2",
+        group_address_position_state="2/0/4",
+        travel_time_down=10,
+        travel_time_up=10,
+        device_updated_cb=cover_callback,
+    )
+
+    async def automation() -> None:
+        with telegram_context(context):
+            await cover.set_position(50)
+
+    def switch_callback(switch: Switch, update: DeviceUpdate) -> None:
+        # like an event bus scheduling a listener that starts a new action
+        asyncio.get_running_loop().call_soon(
+            lambda: xknx.task_registry.background(automation())
+        )
+
+    switch = Switch(
+        xknx,
+        name="TestSwitch",
+        group_address="1/0/1",
+        device_updated_cb=switch_callback,
+    )
+    with patch("time.time") as mock_time:
+        mock_time.return_value = 1517000000.0
+        cover.process(_incoming("2/0/4", DPTArray(0)))
+        cover_callback.reset_mock()
+
+        switch.process(_incoming("1/0/1", DPTBinary(1), context="wall-switch"))
+        await time_travel(0)
+        cover_callback.assert_called_once_with(cover, DeviceUpdate(context=context))
+        assert xknx.telegrams.get_nowait().context == context
+
+        mock_time.return_value = 1517000001.0
+        await time_travel(1)
+        # periodic travel update keeps the cause of the action starting the travel
+        assert cover_callback.call_count == 2
+        cover_callback.assert_called_with(cover, DeviceUpdate(context=context))
