@@ -9,7 +9,7 @@ import logging
 import sys
 from typing import Any
 
-from xknx.exceptions import XKNXException
+from xknx.exceptions import ConversionError, XKNXException
 
 from . import group, scan
 from ._command import Command
@@ -85,6 +85,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         return asyncio.run(handler(args))
     except KeyboardInterrupt:
         return 130  # 128 + SIGINT
-    except (XKNXException, ValueError) as err:
+    except ConversionError as err:
+        print(f"Error: {err.description}", file=sys.stderr)
+        return 1
+    except XKNXException as err:
         print(f"Error: {err}", file=sys.stderr)
         return 1

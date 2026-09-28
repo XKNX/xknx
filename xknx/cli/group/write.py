@@ -6,10 +6,9 @@ import argparse
 import sys
 
 from xknx import XKNX
-from xknx.dpt import DPTBase
-from xknx.telegram import GroupAddress
 from xknx.tools import group_value_write
 
+from .._command import dpt_argument, group_address_argument
 from ._base import GroupCommand
 
 
@@ -37,20 +36,24 @@ class WriteCommand(GroupCommand):
     def configure(self, parser: argparse.ArgumentParser) -> None:
         """Add the write command arguments."""
         super().configure(parser)
-        parser.add_argument("group_address", help="KNX group address, e.g. '1/2/3'")
+        parser.add_argument(
+            "group_address",
+            type=group_address_argument,
+            help="KNX group address, e.g. '1/2/3'",
+        )
         parser.add_argument("value", help="value to write, e.g. 'on', '50' or '21.5'")
-        parser.add_argument("--type", help="DPT value type, e.g. 'percent' or '9.001'")
+        parser.add_argument(
+            "--type",
+            type=dpt_argument,
+            help="DPT value type, e.g. 'percent' or '9.001'",
+        )
 
     async def run(self, args: argparse.Namespace) -> int:
-        """Validate the group address, value and value type before connecting."""
-        # parsed results are passed through to `run_connected`
-        args.group_address = GroupAddress(args.group_address)
+        """Validate the value before connecting."""
         if args.type is not None:
-            # convert before connecting to fail early for unknown types
-            # or invalid values
-            transcoder = DPTBase.get_dpt(args.type)
-            args.value = transcoder.to_knx(args.value)
-            args.type = transcoder
+            # convert before connecting to fail early for invalid values -
+            # the encoded payload is passed through to `run_connected`
+            args.value = args.type.to_knx(args.value)
         else:
             value = parse_raw_value(args.value)
             if not isinstance(value, int) or not 0 <= value <= 63:

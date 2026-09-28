@@ -6,10 +6,9 @@ import argparse
 import sys
 
 from xknx import XKNX
-from xknx.dpt import DPTBase
-from xknx.telegram import GroupAddress
 from xknx.tools import read_group_value
 
+from .._command import dpt_argument, group_address_argument
 from ._base import GroupCommand
 
 
@@ -22,18 +21,16 @@ class ReadCommand(GroupCommand):
     def configure(self, parser: argparse.ArgumentParser) -> None:
         """Add the read command arguments."""
         super().configure(parser)
-        parser.add_argument("group_address", help="KNX group address, e.g. '1/2/3'")
         parser.add_argument(
-            "--type", help="DPT value type, e.g. 'temperature' or '9.001'"
+            "group_address",
+            type=group_address_argument,
+            help="KNX group address, e.g. '1/2/3'",
         )
-
-    async def run(self, args: argparse.Namespace) -> int:
-        """Validate the group address and value type before connecting."""
-        # parsed results are passed through to `run_connected`
-        args.group_address = GroupAddress(args.group_address)
-        if args.type is not None:
-            args.type = DPTBase.get_dpt(args.type)  # raises ValueError if unknown
-        return await super().run(args)
+        parser.add_argument(
+            "--type",
+            type=dpt_argument,
+            help="DPT value type, e.g. 'temperature' or '9.001'",
+        )
 
     async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Read the value of a group address and print it."""

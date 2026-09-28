@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 
 from xknx import XKNX
-from xknx.telegram import AddressFilter, Telegram
+from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
+from .._command import address_filter_argument
 from ._base import GroupCommand
 
 
@@ -36,16 +37,10 @@ class MonitorCommand(GroupCommand):
         parser.add_argument(
             "--filter",
             action="append",
+            type=address_filter_argument,
             help="group address pattern, e.g. '1/2/*' or '1/4/5-6,8';"
             " repeat the option for multiple filters",
         )
-
-    async def run(self, args: argparse.Namespace) -> int:
-        """Parse the address filters before connecting."""
-        # parsed results are passed through to `run_connected`
-        if args.filter:
-            args.filter = [AddressFilter(pattern) for pattern in args.filter]
-        return await super().run(args)
 
     async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Print telegrams from the KNX bus until interrupted."""

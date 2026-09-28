@@ -129,12 +129,19 @@ def test_connection_config_tunneling() -> None:
         ["group", "read", "1/2/3", "--gateway", ":3671"],  # invalid gateway
         ["group", "read", "1/2/3", "--gateway", "10.0.0.1:99999"],  # port out of range
         ["--gateway", "10.0.0.1", "group", "read", "1/2/3"],  # option before command
+        ["group", "read", "1/2/300"],  # group address out of range
+        ["group", "read", "i-test"],  # internal group address
+        ["group", "write", "i-test", "on"],  # internal group address
+        ["group", "read", "1/2/3", "--type", "unknown"],  # unknown DPT type
+        ["group", "write", "1/2/3", "1", "--type", "unknown"],  # unknown DPT type
+        ["group", "monitor", "--filter", "1-2-3/1"],  # invalid filter pattern
     ],
 )
 def test_parser_errors(argv: list[str]) -> None:
     """Test invalid command lines exit with an argparse error."""
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as exc_info:
         main(argv)
+    assert exc_info.value.code == 2
 
 
 def test_read(capsys: pytest.CaptureFixture[str]) -> None:
@@ -233,42 +240,20 @@ def test_write_with_type_converts_value() -> None:
 )
 def test_write_requires_type(value: str, capsys: pytest.CaptureFixture[str]) -> None:
     """Test the write command rejects values without --type before connecting."""
-    assert main(["group", "write", "1/2/3", value]) == 1
+    with patch("xknx.xknx.knx_interface_factory") as factory_mock:
+        assert main(["group", "write", "1/2/3", value]) == 1
+    factory_mock.assert_not_called()
     assert "--type is required" in capsys.readouterr().err
-
-
-def test_write_invalid_type(capsys: pytest.CaptureFixture[str]) -> None:
-    """Test the write command rejects an unknown DPT type before connecting."""
-    assert main(["group", "write", "1/2/3", "1", "--type", "unknown"]) == 1
-    assert "Error:" in capsys.readouterr().err
-
-
-def test_read_invalid_type(capsys: pytest.CaptureFixture[str]) -> None:
-    """Test the read command rejects an unknown DPT type before connecting."""
-    assert main(["group", "read", "1/2/3", "--type", "unknown"]) == 1
-    assert "Error:" in capsys.readouterr().err
 
 
 def test_write_invalid_value_for_type(capsys: pytest.CaptureFixture[str]) -> None:
     """Test the write command rejects an unconvertible value before connecting."""
-    assert main(["group", "write", "1/2/3", "nope", "--type", "temperature"]) == 1
-    assert "Error:" in capsys.readouterr().err
-
-
-@pytest.mark.parametrize(
-    "argv",
-    [
-        ["group", "read", "i-test"],  # internal group address
-        ["group", "write", "i-test", "on"],  # internal group address
-        ["group", "read", "99/9/9"],  # invalid group address
-    ],
-)
-def test_internal_or_invalid_group_address(
-    argv: list[str], capsys: pytest.CaptureFixture[str]
-) -> None:
-    """Test commands reject internal or invalid group addresses before connecting."""
-    assert main(argv) == 1
-    assert "Error:" in capsys.readouterr().err
+    with patch("xknx.xknx.knx_interface_factory") as factory_mock:
+        assert main(["group", "write", "1/2/3", "nope", "--type", "temperature"]) == 1
+    factory_mock.assert_not_called()
+    err = capsys.readouterr().err
+    assert "Error: Could not serialize DPTTemperature" in err
+    assert "<ConversionError" not in err
 
 
 TEST_GATEWAY = GatewayDescriptor(

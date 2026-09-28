@@ -7,7 +7,38 @@ import argparse
 import os
 from typing import ClassVar
 
+from xknx.dpt import DPTBase
+from xknx.exceptions import ConversionError, CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
+from xknx.telegram import AddressFilter, GroupAddress
+
+
+def group_address_argument(value: str) -> GroupAddress:
+    """Parse a group address command line argument."""
+    try:
+        return GroupAddress(value)
+    except CouldNotParseAddress as err:
+        raise argparse.ArgumentTypeError(
+            f"invalid group address {value!r}: {err.message}"
+        ) from None
+
+
+def dpt_argument(value: str) -> type[DPTBase]:
+    """Parse a DPT value type command line argument."""
+    try:
+        return DPTBase.get_dpt(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"unknown DPT value type {value!r}") from None
+
+
+def address_filter_argument(value: str) -> AddressFilter:
+    """Parse an address filter pattern command line argument."""
+    try:
+        return AddressFilter(value)
+    except (ConversionError, CouldNotParseAddress, ValueError):
+        raise argparse.ArgumentTypeError(
+            f"invalid address filter pattern {value!r}"
+        ) from None
 
 
 def gateway_argument(value: str) -> tuple[str, int]:
