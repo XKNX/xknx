@@ -532,10 +532,14 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     def _init_connection_loop(self, loop_loaded: threading.Event) -> None:
         """Start KNX/IP interface in its own thread."""
-        self._thread_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._thread_loop)
+        loop = asyncio.new_event_loop()
+        self._thread_loop = loop
+        asyncio.set_event_loop(loop)
         loop_loaded.set()
-        self._thread_loop.run_forever()
+        try:
+            loop.run_forever()
+        finally:
+            loop.close()
 
     async def _await_from_connection_thread(self, coro: Coroutine[Any, Any, T]) -> T:
         """Await coroutine in different thread."""
@@ -558,10 +562,15 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
         """Start KNX/IP interface."""
         if self._connection_thread is not None or self._thread_loop is not None:
             raise CommunicationError("KNX threaded interface already initialized.")
-        await self._main_loop.run_in_executor(None, self._init_connection_thread)
+        init_thread = self._main_loop.run_in_executor(
+            None, self._init_connection_thread
+        )
         try:
+            await asyncio.shield(init_thread)
             return await self._await_from_connection_thread(self._start())
-        except CommunicationError:
+        except (CommunicationError, asyncio.CancelledError):
+            # a cancelled start must not leave the thread starting up behind stop()
+            await init_thread
             await self.stop()
             raise
 
@@ -576,7 +585,7 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
             self._thread_loop = None
         if self._connection_thread is not None:
-            self._connection_thread.join()
+            await self._main_loop.run_in_executor(None, self._connection_thread.join)
             self._connection_thread = None
 
     def cemi_received(self, raw_cemi: bytes) -> None:
