@@ -8,24 +8,26 @@ states are read from, and its events written to, ``PID_RUN_STATE_CONTROL``
 event is a fixed 10 octet value; unused octets are 0 (KNX v02.01.02 -
 Management Procedures 03.05.02 - §3.34.3.1-3).
 
-Unlike :mod:`~.load_state`'s dozen builders, ``restart()``/``stop()``/
-``no_operation()`` are not re-exported from ``xknx.management.procedures`` -
+Like :mod:`~.load_state`, the builders are exported as the ``run_state``
+module (``procedures.run_state.restart()``), not as top-level procedures -
 ``no_operation`` would collide with ``load_state.no_operation``, and
 ``restart``/``stop`` read confusingly next to the unrelated
-``dm_restart``/``dm_restart_r_co`` device-restart procedures. Import this
-module instead: ``from xknx.management.procedures.device import run_state``.
+``dm_restart``/``dm_restart_r_co`` device-restart procedures.
+
+Bare ``§3.34.3.x`` references in this module are to KNX v02.01.02 -
+Management Procedures 03.05.02; Resources references are cited in full.
 """
 
 from __future__ import annotations
 
 from enum import IntEnum
 
-from xknx.exceptions import ManagementConnectionError
+from ._state_machine import EVENT_SIZE, decode_state, pad_event
 
 # Write value width (KNX v02.01.02 - Management Procedures 03.05.02 -
 # §3.34.3.1-3: each Run Control event is 1 octet of event code followed by
 # 9 reserved octets).
-RUN_EVENT_SIZE = 10
+RUN_EVENT_SIZE = EVENT_SIZE
 
 
 class RunState(IntEnum):
@@ -55,38 +57,21 @@ class _RunEvent(IntEnum):
 
 def decode_run_state(data: bytes, context: str) -> RunState:
     """
-    Map the Run State octet to :class:`RunState`, erroring on unknowns.
+    Map the 1 octet Run State read back from ``PID_RUN_STATE_CONTROL``.
 
-    ``PID_RUN_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
-    Resources 03.05.01 - §4.24.2.3.1, Table 95 "8 bit"); the 10 octet width
-    is a write-only value. A length other than 1 is rejected here rather
-    than just indexing ``data[0]`` - a caller reading via
-    ``dmp_interface_object_read_r`` only checks ``nr_of_elem``, not the
-    octet count, so a device echoing back its 10 octet write event (a run
-    event *type*, not a run *state*) would otherwise be silently decoded as
-    a state.
+    It reads back as exactly 1 octet (KNX v01.10.01 - Resources 03.05.01 -
+    §4.24.2.3.1, Table 95 "8 bit"); see :func:`~._state_machine.decode_state`.
 
     :param context: A short description of what was read, for error
         messages - e.g. ``"object 3"`` or ``"interface object type 343
-        instance 1"``, since callers address a Run State Machine either way.
+        instance 1"``.
     """
-    if len(data) != 1:
-        raise ManagementConnectionError(
-            f"{context} Run State Machine returned {len(data)} octets, expected 1"
-        )
-    try:
-        return RunState(data[0])
-    except ValueError as exc:
-        raise ManagementConnectionError(
-            f"{context} Run State Machine reported unknown state {data[0]:#04x}"
-        ) from exc
+    return decode_state(data, RunState, context, "Run State Machine")
 
 
 def _pad(data: bytes) -> bytes:
     """Pad a run event to its fixed 10 octet width."""
-    if len(data) > RUN_EVENT_SIZE:
-        raise ValueError(f"run event too long: {len(data)} > {RUN_EVENT_SIZE}")
-    return data + bytes(RUN_EVENT_SIZE - len(data))
+    return pad_event(data, "run")
 
 
 def no_operation() -> bytes:

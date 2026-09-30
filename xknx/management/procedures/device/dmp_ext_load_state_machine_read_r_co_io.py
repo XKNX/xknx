@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
-from xknx.telegram import apci
 
-from ._pdt_control import check_ext_echo, pdt_control_state_data
+from ._state_machine import ext_context, ext_read_state
 from .load_state import LoadState, decode_load_state
 
 __all__ = ["dmp_ext_load_state_machine_read_r_co_io"]
@@ -46,21 +47,14 @@ async def dmp_ext_load_state_machine_read_r_co_io(
         return code, the response doesn't echo the request, or the read Load
         State is not a valid state
     """
-    property_id = ResourceGenericPropertyId.PID_LOAD_STATE_CONTROL
-    response = await conn.request(
-        apci.FunctionPropertyExtStateRead(
-            interface_object_type=interface_object_type,
-            object_instance=object_instance,
-            property_id=property_id,
-        )
-    )
-    check_ext_echo(
-        response.payload, interface_object_type, object_instance, property_id
-    )
-    context = (
-        f"interface object type {interface_object_type} instance {object_instance}"
-    )
-    return decode_load_state(
-        pdt_control_state_data(response.payload, f"{context} Load State Machine read"),
-        context,
+    return await ext_read_state(
+        conn,
+        interface_object_type,
+        object_instance,
+        ResourceGenericPropertyId.PID_LOAD_STATE_CONTROL,
+        partial(
+            decode_load_state,
+            context=ext_context(interface_object_type, object_instance),
+        ),
+        "Load State Machine",
     )

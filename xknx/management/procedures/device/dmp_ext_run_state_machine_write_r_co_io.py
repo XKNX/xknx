@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
-from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
-from xknx.telegram import apci
 
+from ._pdt_control import pdt_control_state_data
+from ._state_machine import check_event_size, ext_context
 from .dmp_ext_function_property_write_r import dmp_ext_function_property_write_r_conn
-from .run_state import RUN_EVENT_SIZE, RunState, decode_run_state
+from .run_state import RunState, decode_run_state
 
 __all__ = ["dmp_ext_run_state_machine_write_r_co_io"]
 
@@ -19,7 +18,8 @@ async def dmp_ext_run_state_machine_write_r_co_io(
     interface_object_type: int,
     object_instance: int,
     event_data: bytes,
-    max_apdu_length: int = STANDARD_FRAME_MAX_NPDU_LENGTH,
+    *,
+    max_apdu_length: int,
 ) -> RunState:
     """
     Write a run event to an extended-addressed Run State Machine.
@@ -46,49 +46,48 @@ async def dmp_ext_run_state_machine_write_r_co_io(
     function-specific result to interpret - and is raised rather than
     returned.
 
-    Unlike the non-extended procedure, this one cannot use the spec's own
-    15-octet standard-frame fallback: the fixed 10 octet run event plus the
+    ``max_apdu_length`` is required: the fixed 10 octet run event plus the
     6 octet ``A_FunctionPropertyExtCommand`` header
     (``const.FUNCTION_PROPERTY_EXT_HEADER_OCTETS``) is 16 octets, one past
-    what an L_Data_Standard frame carries. A device answering only standard
-    frames can therefore never accept this procedure at all; call it only
-    for a device known to support L_Data_Extended frames, passing its real
-    ``PID_MAX_APDU_LENGTH`` (KNX v01.10.01 - Resources 03.05.01 - §4.3.7).
+    the 15 octet standard-frame fallback, and the spec allows no shorter
+    command ("The format of command shall be identical to the one specified
+    for DMP_RunStateMachineWrite_R_IO in 3.34.3"; KNX v02.01.01 -
+    Application Layer 03.03.07 - §3.4.8.4: "exactly the 10 octet data"). A
+    device answering only standard frames can never accept this procedure;
+    pass the device's real ``PID_MAX_APDU_LENGTH`` (KNX v01.10.01 -
+    Resources 03.05.01 - §4.3.7).
+
+    Unlike the non-extended procedure, this one doesn't poll for an expected
+    state (the "verify the resulting state" flag of DM_RunStateMachineWrite,
+    §3.34.1); follow it with
+    :func:`~.dmp_ext_run_state_machine_verify_r_co_io.dmp_ext_run_state_machine_verify_r_co_io`
+    or poll with
+    :func:`~.dmp_ext_run_state_machine_read_r_co_io.dmp_ext_run_state_machine_read_r_co_io`
+    instead.
 
     :param conn: Active P2P connection to the device
     :param interface_object_type: 16 bit Interface Object Type
     :param object_instance: 12 bit Object Instance
     :param event_data: The 10 octet run event
-    :param max_apdu_length: Caps the A_FunctionPropertyExtCommand-PDU to this
-        many octets - the device's PID_MAX_APDU_LENGTH. Must be at least 16
-        (6 octet header + the fixed 10 octet event) for this call to succeed
-        at all; defaults to the standard frame's 15 octets purely for
-        consistency with the rest of this family, which always fails here.
+    :param max_apdu_length: The device's PID_MAX_APDU_LENGTH; must be at
+        least 16 (6 octet header + the fixed 10 octet event)
     :return: The resulting Run State
     :raises ValueError: If ``event_data`` is not exactly 10 octets, or it
         does not fit within ``max_apdu_length``
     :raises ManagementConnectionError: If the device returns a negative
         return code, or the resulting Run State is not a valid state
     """
-    if len(event_data) != RUN_EVENT_SIZE:
-        raise ValueError(
-            f"event_data must be {RUN_EVENT_SIZE} octets, got {len(event_data)}"
-        )
+    check_event_size(event_data)
+    context = ext_context(interface_object_type, object_instance)
     response = await dmp_ext_function_property_write_r_conn(
         conn,
-        interface_object_type,
-        object_instance,
-        ResourceGenericPropertyId.PID_RUN_STATE_CONTROL,
-        event_data,
-        max_apdu_length,
+        interface_object_type=interface_object_type,
+        object_instance=object_instance,
+        property_id=ResourceGenericPropertyId.PID_RUN_STATE_CONTROL,
+        command=event_data,
+        max_apdu_length=max_apdu_length,
     )
-    if response.return_code != apci.ReturnCode.E_SUCCESS:
-        raise ManagementConnectionError(
-            f"interface object type {interface_object_type} instance "
-            f"{object_instance} Run State Machine write failed: "
-            f"{response.return_code.name}"
-        )
     return decode_run_state(
-        response.data,
-        f"interface object type {interface_object_type} instance {object_instance}",
+        pdt_control_state_data(response, f"{context} Run State Machine write"),
+        context,
     )

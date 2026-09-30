@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from xknx.exceptions import VerificationError
 from xknx.management.management import P2PConnection
 
+from ._state_machine import check_verified
 from .dmp_run_state_machine_read_r_io import dmp_run_state_machine_read_r_io
 from .run_state import RunState
 
@@ -37,8 +37,4 @@ async def dmp_run_state_machine_verify_r_io(
         ``expected_state``
     """
     state = await dmp_run_state_machine_read_r_io(conn, object_index)
-    if state != expected_state:
-        raise VerificationError(
-            f"object {object_index} Run State Machine verify failed: "
-            f"expected {expected_state.name}, got {state.name}"
-        )
+    check_verified(state, expected_state, f"object {object_index}", "Run State Machine")

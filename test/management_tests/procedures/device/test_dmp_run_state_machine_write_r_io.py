@@ -207,6 +207,72 @@ async def test_dmp_run_state_machine_write_r_io_polls_until_match(
     await conn.disconnect()
 
 
+async def test_dmp_run_state_machine_write_r_io_expected_state_collection(
+    xknx_setup: XKNX,
+) -> None:
+    """
+    Test polling stops at any state of an expected_state collection.
+
+    After Restart the "resulting state: Ready or Running" (KNX v02.01.02 -
+    Management Procedures 03.05.02 - §3.34.1) - a device that stays in Ready
+    is correct and must not time out.
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_calls(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            ack_seq=0,
+            payload=_run_state_response(2, RunState.STARTING),
+            response_seq=0,
+        )
+        await _wait_for_calls(xknx, 3)
+        _process_response(
+            xknx,
+            ia,
+            ack_seq=1,
+            payload=_run_state_response(2, RunState.READY),
+            response_seq=1,
+        )
+
+    responder = asyncio.create_task(respond())
+    state = await dmp_run_state_machine_write_r_io(
+        conn,
+        object_index=2,
+        event_data=restart(),
+        expected_state={RunState.READY, RunState.RUNNING},
+        poll_interval=0.01,
+        poll_timeout=1.0,
+    )
+    await responder
+
+    assert state == RunState.READY
+    await conn.disconnect()
+
+
+async def test_dmp_run_state_machine_write_r_io_empty_expected_state(
+    xknx_setup: XKNX,
+) -> None:
+    """Test an empty expected_state collection raises ValueError before sending."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    with pytest.raises(ValueError, match=r"expected_state must not be empty"):
+        await dmp_run_state_machine_write_r_io(
+            conn, object_index=2, event_data=restart(), expected_state=[]
+        )
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
+
+
 async def test_dmp_run_state_machine_write_r_io_poll_timeout(
     xknx_setup: XKNX,
 ) -> None:

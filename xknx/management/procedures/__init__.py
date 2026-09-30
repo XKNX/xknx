@@ -89,6 +89,7 @@ from .device import (
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,
     load_state,
+    run_state,
 )
 from .network import (
     nm_individual_address_check,

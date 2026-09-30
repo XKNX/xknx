@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from xknx.exceptions import ManagementConnectionError
+from functools import partial
+
 from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
-from xknx.telegram import apci
 
+from ._state_machine import ext_context, ext_read_state
 from .run_state import RunState, decode_run_state
 
 __all__ = ["dmp_ext_run_state_machine_read_r_co_io"]
@@ -34,29 +35,26 @@ async def dmp_ext_run_state_machine_read_r_co_io(
     always carries the 1 octet state, a negative one always carries none.
     So a negative ``return_code`` here is unambiguously an error, not a
     function-specific result to interpret - and is raised rather than
-    returned.
+    returned. The response must echo the requested Interface Object Type,
+    Object Instance and PID (MP §3.36.4), so a stale or mismatched response
+    isn't decoded as this object's Run State.
 
     :param conn: Active P2P connection to the device
     :param interface_object_type: 16 bit Interface Object Type
     :param object_instance: 12 bit Object Instance
     :return: The current Run State
     :raises ManagementConnectionError: If the device returns a negative
-        return code, or the read Run State is not a valid state
+        return code, the response doesn't echo the request, or the read
+        Run State is not a valid state
     """
-    response = await conn.request(
-        apci.FunctionPropertyExtStateRead(
-            interface_object_type=interface_object_type,
-            object_instance=object_instance,
-            property_id=ResourceGenericPropertyId.PID_RUN_STATE_CONTROL,
-        )
-    )
-    if response.payload.return_code != apci.ReturnCode.E_SUCCESS:
-        raise ManagementConnectionError(
-            f"interface object type {interface_object_type} instance "
-            f"{object_instance} Run State Machine read failed: "
-            f"{response.payload.return_code.name}"
-        )
-    return decode_run_state(
-        response.payload.data,
-        f"interface object type {interface_object_type} instance {object_instance}",
+    return await ext_read_state(
+        conn,
+        interface_object_type,
+        object_instance,
+        ResourceGenericPropertyId.PID_RUN_STATE_CONTROL,
+        partial(
+            decode_run_state,
+            context=ext_context(interface_object_type, object_instance),
+        ),
+        "Run State Machine",
     )

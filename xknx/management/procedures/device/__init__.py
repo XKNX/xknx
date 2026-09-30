@@ -1,7 +1,7 @@
 """KNX v02.01.02 - Management Procedures 03.05.02 - Device Management (DM_*) procedures."""
 
 # ruff: noqa: F401
-from . import load_state
+from . import load_state, run_state
 from .dm_authorize import FREE_ACCESS_KEY, dmp_authorize2_r_co, dmp_authorize_r_co
 from .dm_connect_r_co import dmp_connect_r_co
 from .dm_function_property_write_r import (

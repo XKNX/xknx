@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import asyncio
-import time
+from collections.abc import Collection
+from functools import partial
 
-from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
 
-from .dmp_interface_object_read_r import dmp_interface_object_read_r
+from ._state_machine import check_event_size, expected_states, poll_for_state
 from .dmp_interface_object_write_r import dmp_interface_object_write_r
-from .run_state import RUN_EVENT_SIZE, RunState, decode_run_state
+from .run_state import RunState, decode_run_state
 
 __all__ = ["dmp_run_state_machine_write_r_io"]
 
@@ -28,7 +27,7 @@ async def dmp_run_state_machine_write_r_io(
     object_index: int,
     event_data: bytes,
     *,
-    expected_state: RunState | None = None,
+    expected_state: RunState | Collection[RunState] | None = None,
     poll_timeout: float = _DEFAULT_POLL_TIMEOUT,
     poll_interval: float = _DEFAULT_POLL_INTERVAL,
 ) -> RunState:
@@ -59,63 +58,58 @@ async def dmp_run_state_machine_write_r_io(
     "verify the resulting state" flag bit (KNX v02.01.02 - Management
     Procedures 03.05.02 - §3.34.1).
 
+    A single expected state often can't express what the spec allows, so
+    ``expected_state`` also takes a collection and polling stops at any of
+    them:
+
+    - Restart: "resulting state: Ready or Running" (§3.34.1) - a device only
+      moves on from Ready "if the run conditions are fulfilled" (KNX
+      v01.10.01 - Resources 03.05.01 - §4.24.2.3.3), so pass
+      ``{RunState.READY, RunState.RUNNING}``.
+    - Stop: Terminated is required from Running, Halted optional, and
+      Terminated itself is optional (Resources Table 95/97; "BCU 2 goes to
+      Terminated and masks 0300h and 2300h to Halted"), so pass
+      ``{RunState.TERMINATED, RunState.HALTED}``.
+
+    Unlike the Load State Machine, "No error state is defined for the Run
+    State Machine" (Resources §4.24.2), so polling only ends on a match or
+    ``poll_timeout``.
+
     :param conn: Active P2P connection to the device
     :param object_index: Index of the interface object (0-255)
     :param event_data: The 10 octet run event
     :param expected_state: If given, poll until the Run State Machine
-        reaches this state (or ``poll_timeout`` elapses)
+        reaches this state - or any of them, if a collection is given - (or
+        ``poll_timeout`` elapses)
     :param poll_timeout: Seconds to poll for ``expected_state`` before giving
         up
     :param poll_interval: Seconds to wait between polls
     :return: The resulting Run State
-    :raises ValueError: If ``event_data`` is not exactly 10 octets
+    :raises ValueError: If ``event_data`` is not exactly 10 octets, or
+        ``expected_state`` is an empty collection
     :raises ManagementConnectionError: If the Run State Machine does not
         reach ``expected_state`` within ``poll_timeout``
     """
-    if len(event_data) != RUN_EVENT_SIZE:
-        raise ValueError(
-            f"event_data must be {RUN_EVENT_SIZE} octets, got {len(event_data)}"
-        )
+    check_event_size(event_data)
+    expected = expected_states(expected_state)
+    property_id = ResourceGenericPropertyId.PID_RUN_STATE_CONTROL
+    context = f"object {object_index}"
     response = await dmp_interface_object_write_r(
+        conn, object_index, property_id, event_data, count=1, start_index=1
+    )
+    state = decode_run_state(response, context)
+    if expected is None:
+        return state
+    return await poll_for_state(
         conn,
         object_index,
-        ResourceGenericPropertyId.PID_RUN_STATE_CONTROL,
-        event_data,
-        count=1,
-        start_index=1,
+        property_id,
+        partial(decode_run_state, context=context),
+        expected=expected,
+        state=state,
+        poll_timeout=poll_timeout,
+        poll_interval=poll_interval,
+        error_state=None,
+        context=context,
+        machine="Run State Machine",
     )
-    state = decode_run_state(response, f"object {object_index}")
-    if expected_state is None or state == expected_state:
-        return state
-    return await _poll_for_state(
-        conn, object_index, expected_state, poll_timeout, poll_interval, state
-    )
-
-
-async def _poll_for_state(
-    conn: P2PConnection,
-    object_index: int,
-    expected_state: RunState,
-    poll_timeout: float,
-    poll_interval: float,
-    state: RunState,
-) -> RunState:
-    """Re-read the Run State until it matches ``expected_state`` or times out."""
-    deadline = time.monotonic() + poll_timeout
-    while state != expected_state:
-        if time.monotonic() >= deadline:
-            raise ManagementConnectionError(
-                f"object {object_index} Run State Machine did not reach "
-                f"{expected_state.name} within {poll_timeout}s, "
-                f"last state {state.name}"
-            )
-        await asyncio.sleep(poll_interval)
-        data = await dmp_interface_object_read_r(
-            conn,
-            object_index,
-            ResourceGenericPropertyId.PID_RUN_STATE_CONTROL,
-            count=1,
-            start_index=1,
-        )
-        state = decode_run_state(data, f"object {object_index}")
-    return state

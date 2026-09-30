@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from xknx.exceptions import VerificationError
 from xknx.management.management import P2PConnection
 
+from ._state_machine import check_verified, ext_context
 from .dmp_ext_run_state_machine_read_r_co_io import (
     dmp_ext_run_state_machine_read_r_co_io,
 )
@@ -42,9 +42,9 @@ async def dmp_ext_run_state_machine_verify_r_co_io(
     state = await dmp_ext_run_state_machine_read_r_co_io(
         conn, interface_object_type, object_instance
     )
-    if state != expected_state:
-        raise VerificationError(
-            f"interface object type {interface_object_type} instance "
-            f"{object_instance} Run State Machine verify failed: "
-            f"expected {expected_state.name}, got {state.name}"
-        )
+    check_verified(
+        state,
+        expected_state,
+        ext_context(interface_object_type, object_instance),
+        "Run State Machine",
+    )

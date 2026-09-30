@@ -105,16 +105,15 @@ async def test_dmp_ext_run_state_machine_write_r_co_io_success() -> None:
     await conn.disconnect()
 
 
-async def test_dmp_ext_run_state_machine_write_r_co_io_default_max_apdu_length_never_fits() -> (
+async def test_dmp_ext_run_state_machine_write_r_co_io_standard_frame_never_fits() -> (
     None
 ):
     """
-    Test the procedure raises ValueError with the default max_apdu_length.
+    Test the procedure raises ValueError for a standard frame's max_apdu_length.
 
     A 6 octet A_FunctionPropertyExtCommand header plus the fixed 10 octet
     run event is 16 octets - one past what an L_Data_Standard frame's 15
-    octet default carries. A device answering only standard frames can
-    therefore never accept this procedure at all.
+    octets carry. That's why max_apdu_length has no default.
     """
     xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
@@ -128,6 +127,7 @@ async def test_dmp_ext_run_state_machine_write_r_co_io_default_max_apdu_length_n
             interface_object_type=343,
             object_instance=1,
             event_data=restart(),
+            max_apdu_length=15,
         )
 
     xknx.cemi_handler.send_telegram.assert_not_called()
@@ -146,6 +146,7 @@ async def test_dmp_ext_run_state_machine_write_r_co_io_wrong_event_length() -> N
             interface_object_type=343,
             object_instance=1,
             event_data=b"\x01\x00\x00",
+            max_apdu_length=16,
         )
     await conn.disconnect()
 
