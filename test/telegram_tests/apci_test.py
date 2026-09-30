@@ -3810,6 +3810,15 @@ class TestPropertyValueRead:
         with pytest.raises(ConversionError, match=r".*Count.*"):
             payload.to_knx()
 
+    def test_to_knx_conversion_error_start_index(self) -> None:
+        """Test the to_knx method for an out-of-range start_index."""
+        payload = PropertyValueRead(
+            object_index=1, property_id=4, count=2, start_index=4096
+        )
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = PropertyValueRead(
@@ -3866,6 +3875,15 @@ class TestPropertyValueWrite:
         with pytest.raises(ConversionError, match=r".*Count.*"):
             payload.to_knx()
 
+    def test_to_knx_conversion_error_start_index(self) -> None:
+        """Test the to_knx method for an out-of-range start_index."""
+        payload = PropertyValueWrite(
+            object_index=1, property_id=4, count=2, start_index=4096, data=b"\x12\x34"
+        )
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
+            payload.to_knx()
+
     def test_str(self) -> None:
         """Test the __str__ method."""
         payload = PropertyValueWrite(
@@ -3920,6 +3938,15 @@ class TestPropertyValueResponse:
         )
 
         with pytest.raises(ConversionError, match=r".*Count.*"):
+            payload.to_knx()
+
+    def test_to_knx_conversion_error_start_index(self) -> None:
+        """Test the to_knx method for an out-of-range start_index."""
+        payload = PropertyValueResponse(
+            object_index=1, property_id=4, count=2, start_index=4096, data=b"\x12\x34"
+        )
+
+        with pytest.raises(ConversionError, match=r".*Start index.*"):
             payload.to_knx()
 
     def test_str(self) -> None:

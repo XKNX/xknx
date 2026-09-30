@@ -1,8 +1,11 @@
 """Unit test for KNX/IP Interface."""
 
-from collections.abc import AsyncGenerator
+import asyncio
+from collections.abc import AsyncGenerator, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 import threading
+import time
 from typing import Any
 from unittest.mock import DEFAULT, Mock, patch
 
@@ -14,6 +17,7 @@ from xknx.io import (
     ConnectionConfig,
     ConnectionType,
     GatewayDescriptor,
+    KNXIPInterface,
     SecureConfig,
     knx_interface_factory,
 )
@@ -386,6 +390,158 @@ class TestKNXIPInterface:
             # thread and loop are cleaned up after unsuccessful start
             assert interface._connection_thread is None
             assert interface._thread_loop is None
+
+    @staticmethod
+    @contextmanager
+    def _patch_pending_routing_send() -> Iterator[
+        tuple[threading.Event, threading.Event]
+    ]:
+        """Patch routing so `send_cemi` never returns; yield started and cancelled events."""
+        started = threading.Event()
+        cancelled = threading.Event()
+
+        async def pending_send_cemi(_: Any) -> None:
+            started.set()
+            try:
+                await asyncio.Event().wait()
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+
+        with (
+            patch("xknx.io.routing.Routing.connect"),
+            patch("xknx.io.routing.Routing.send_cemi", side_effect=pending_send_cemi),
+            patch("xknx.io.routing.Routing.disconnect"),
+        ):
+            yield started, cancelled
+
+    def _threaded_routing_interface(self) -> KNXIPInterface:
+        """Create a threaded routing interface without gateway scanning."""
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.ROUTING, local_ip="127.0.0.1", threaded=True
+        )
+        return knx_interface_factory(self.xknx, connection_config)
+
+    async def test_threaded_stop_resolves_pending_request(self) -> None:
+        """Test a request in flight on the connection thread is resolved by stop()."""
+        with self._patch_pending_routing_send() as (started, cancelled):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            try:
+                request = asyncio.create_task(interface.send_cemi(Mock()))
+                assert await asyncio.to_thread(started.wait, 1)
+                await interface.stop()
+                with pytest.raises(CommunicationError):
+                    await asyncio.wait_for(request, timeout=1)
+                assert cancelled.is_set()
+            finally:
+                await interface.stop()
+
+    async def test_threaded_cancel_propagates_to_connection_thread(self) -> None:
+        """Test cancelling the awaiting task cancels the coroutine on the connection thread."""
+        with self._patch_pending_routing_send() as (started, cancelled):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            try:
+                request = asyncio.create_task(interface.send_cemi(Mock()))
+                assert await asyncio.to_thread(started.wait, 1)
+                request.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await request
+                assert await asyncio.to_thread(cancelled.wait, 1)
+            finally:
+                await interface.stop()
+
+    async def test_threaded_timeout_propagates_to_connection_thread(self) -> None:
+        """Test asyncio.timeout around a threaded request raises TimeoutError and cancels it."""
+        with self._patch_pending_routing_send() as (started, cancelled):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            timeout_cm = asyncio.timeout(None)
+
+            async def send_with_timeout() -> None:
+                async with timeout_cm:
+                    await interface.send_cemi(Mock())
+
+            try:
+                request = asyncio.create_task(send_with_timeout())
+                assert await asyncio.to_thread(started.wait, 1)
+                # expire only once the request is in flight on the connection thread
+                timeout_cm.reschedule(asyncio.get_running_loop().time())
+                with pytest.raises(TimeoutError):
+                    await request
+                assert await asyncio.to_thread(cancelled.wait, 1)
+            finally:
+                await interface.stop()
+
+    async def test_threaded_cancelled_start_stops_connection_thread(self) -> None:
+        """Test cancelling start() stops the connection thread it already started."""
+        started = threading.Event()
+
+        async def pending_start() -> None:
+            started.set()
+            await asyncio.Event().wait()
+
+        with patch("xknx.io.KNXIPInterface._start", side_effect=pending_start):
+            interface = self._threaded_routing_interface()
+            start = asyncio.create_task(interface.start())
+            assert await asyncio.to_thread(started.wait, 1)
+            connection_thread = interface._connection_thread
+            assert connection_thread is not None
+            start.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await start
+        assert interface._connection_thread is None
+        assert interface._thread_loop is None
+        assert not connection_thread.is_alive()
+
+    async def test_threaded_stop_closes_connection_loop(self) -> None:
+        """Test stop() closes the event loop of the connection thread."""
+        with (
+            patch("xknx.io.routing.Routing.connect"),
+            patch("xknx.io.routing.Routing.disconnect"),
+        ):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            thread_loop = interface._thread_loop
+            assert thread_loop is not None
+            await interface.stop()
+        assert thread_loop.is_closed()
+
+    async def test_threaded_stop_does_not_block_main_loop(self) -> None:
+        """Test the main loop keeps running while stop() waits for the connection thread."""
+        with (
+            patch("xknx.io.routing.Routing.connect"),
+            patch("xknx.io.routing.Routing.disconnect"),
+        ):
+            interface = self._threaded_routing_interface()
+            await interface.start()
+            thread_loop = interface._thread_loop
+            assert thread_loop is not None
+            close_loop = thread_loop.close
+
+            def slow_close() -> None:
+                # keeps the connection thread alive for a while after its loop stopped
+                time.sleep(0.2)
+                close_loop()
+
+            thread_loop.close = slow_close  # type: ignore[method-assign]
+            ticks = 0
+
+            async def tick() -> None:
+                nonlocal ticks
+                while True:
+                    ticks += 1
+                    await asyncio.sleep(0.01)
+
+            ticker = asyncio.create_task(tick())
+            await asyncio.sleep(0)
+            ticks_before_stop = ticks
+            try:
+                await interface.stop()
+            finally:
+                ticker.cancel()
+        assert ticks - ticks_before_stop > 5
 
     async def test_start_secure_connection_knx_keys_user_id(self) -> None:
         """Test starting a secure connection from a knxkeys file with user_id."""

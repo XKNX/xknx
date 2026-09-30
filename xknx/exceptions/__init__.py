@@ -17,10 +17,12 @@ from .exception import (
     ManagementConnectionError,
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
+    PropertyVerificationError,
     RequestResponseError,
     TunnellingAckError,
     UnsupportedAPCIService,
     UnsupportedCEMIMessage,
+    VerificationError,
     XKNXException,
 )
 
@@ -41,9 +43,11 @@ __all__ = [
     "ManagementConnectionError",
     "ManagementConnectionRefused",
     "ManagementConnectionTimeout",
+    "PropertyVerificationError",
     "RequestResponseError",
     "TunnellingAckError",
     "UnsupportedAPCIService",
     "UnsupportedCEMIMessage",
+    "VerificationError",
     "XKNXException",
 ]

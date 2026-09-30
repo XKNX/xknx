@@ -230,3 +230,11 @@ class ManagementConnectionRefused(ManagementConnectionError):
 
 class ManagementConnectionTimeout(ManagementConnectionError):
     """Exception class used when a management connection timed out."""
+
+
+class VerificationError(ManagementConnectionError):
+    """Exception class used when a read-back value doesn't match what was expected."""
+
+
+class PropertyVerificationError(VerificationError):
+    """Exception class used when a read-back Property value doesn't match what was expected."""
