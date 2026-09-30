@@ -859,6 +859,11 @@ class FunctionPropertyExtStateResponse(APCI):
     Interface Object Type, 12 bit Object Instance, 12 bit Property ID),
     followed by a 1 byte return_code and function-specific output data
     of variable length.
+
+    A function result "is defined in a function-specific way" (§3.4.8.3),
+    and NOTE 12 there warns that some existing functions return codes outside
+    the unified return code schema - so ``return_code`` is a ``ReturnCode``
+    where the value is one, and the raw ``int`` otherwise.
     """
 
     CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE
@@ -866,7 +871,7 @@ class FunctionPropertyExtStateResponse(APCI):
     interface_object_type: int
     object_instance: int
     property_id: int
-    return_code: ReturnCode
+    return_code: ReturnCode | int
     data: bytes = b""
 
     def calculated_length(self) -> int:
@@ -883,12 +888,11 @@ class FunctionPropertyExtStateResponse(APCI):
         interface_object_type, object_instance, property_id = (
             _unpack_function_property_ext_header(raw)
         )
+        return_code: ReturnCode | int
         try:
             return_code = ReturnCode(raw[7])
         except ValueError:
-            raise ConversionError(
-                f"Invalid return code for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
-            ) from None
+            return_code = raw[7]
 
         return cls(
             interface_object_type=interface_object_type,
@@ -904,19 +908,29 @@ class FunctionPropertyExtStateResponse(APCI):
             self.interface_object_type, self.object_instance, self.property_id
         )
 
+        return_code = (
+            self.return_code.value
+            if isinstance(self.return_code, ReturnCode)
+            else self.return_code
+        )
         return encode_cmd_and_payload(
             self.CODE,
-            appended_payload=header + bytes([self.return_code.value]) + self.data,
+            appended_payload=header + bytes([return_code]) + self.data,
         )
 
     def __str__(self) -> str:
         """Return object as readable string."""
+        return_code = (
+            self.return_code.name
+            if isinstance(self.return_code, ReturnCode)
+            else f"{self.return_code:#04x}"
+        )
         return (
             "<FunctionPropertyExtStateResponse "
             f'interface_object_type="{self.interface_object_type}" '
             f'object_instance="{self.object_instance}" '
             f'property_id="{self.property_id}" '
-            f'return_code="{self.return_code.name}" '
+            f'return_code="{return_code}" '
             f'data="{self.data.hex()}" />'
         )
 
@@ -2814,25 +2828,40 @@ class UserManufacturerInfoRead(APCIRequest[UserManufacturerInfoResponse]):
 
 @dataclass(slots=True)
 class FunctionPropertyStateResponse(APCI):
-    """FunctionPropertyStateResponse service."""
+    """
+    FunctionPropertyStateResponse service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3
+    A_FunctionPropertyState_Response. ``return_code`` is ``None`` when the
+    field is absent - the response a device sends if the addressed Property
+    is not of the Property Datatype PDT_Function ("the returned PDU shall not
+    contain the field return_code"); ``data`` is then empty as well.
+    """
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
 
     object_index: int = 0
     property_id: int = 0
-    return_code: int = 0
+    return_code: int | None = 0
     data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
+        if self.return_code is None:
+            return 3
         return 4 + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
+        if len(raw) < 4:
             raise ConversionError(
                 f"Invalid length for A_FunctionPropertyState_Response in CEMI: {raw.hex()}"
+            )
+        if len(raw) == 4:
+            object_index, property_id = struct.unpack("!BB", raw[2:])
+            return cls(
+                object_index=object_index, property_id=property_id, return_code=None
             )
         size = len(raw) - 5
         (
@@ -2850,6 +2879,14 @@ class FunctionPropertyStateResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if self.return_code is None:
+            if self.data:
+                raise ConversionError(
+                    "A_FunctionPropertyState_Response without return_code can't carry data."
+                )
+            payload = struct.pack("!BB", self.object_index, self.property_id)
+            return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
         size = len(self.data)
         payload = struct.pack(
             f"!BBB{size}s",
@@ -2873,7 +2910,7 @@ class FunctionPropertyCommand(APCIRequest[FunctionPropertyStateResponse]):
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
     object_index: int = 0
-    property_id: int = 1
+    property_id: int = 0
     data: bytes = b""
 
     def calculated_length(self) -> int:
@@ -2899,7 +2936,7 @@ class FunctionPropertyCommand(APCIRequest[FunctionPropertyStateResponse]):
         """Serialize to KNX/IP raw data."""
         if not 0 <= self.object_index <= 0xFF:
             raise ConversionError("Object index out of range.")
-        if not 1 <= self.property_id <= 0xFF:
+        if not 0 <= self.property_id <= 0xFF:
             raise ConversionError("Property ID out of range.")
 
         size = len(self.data)

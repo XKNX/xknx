@@ -668,12 +668,23 @@ class TestFunctionPropertyExtStateResponse:
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
             APCI.from_knx(bytes.fromhex("01d60011001033"))
 
-    def test_from_knx_invalid_return_code(self) -> None:
-        """Test from_knx raises ConversionError for an unknown return code."""
-        # return_code byte 0x01 is in the "Generic positive" range (01-1F)
-        # reserved by the spec but not assigned to any ReturnCode member.
-        with pytest.raises(ConversionError, match=r".*[Ii]nvalid.*return code.*"):
-            APCI.from_knx(bytes.fromhex("01d6001100103301"))
+    def test_from_knx_function_specific_return_code(self) -> None:
+        """Test from_knx keeps a return code outside ReturnCode as a raw int."""
+        # return_code 0x01 isn't a ReturnCode member - function results are
+        # function-specific (KNX v02.01.01 - Application Layer 03.03.07 -
+        # §3.4.8.3, NOTE 12), so it must be handed on, not rejected.
+        raw = bytes.fromhex("01d600110010330142")
+        payload = APCI.from_knx(raw)
+
+        assert payload == FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=0x01,
+            data=b"\x42",
+        )
+        assert payload.to_knx() == raw
+        assert 'return_code="0x01"' in str(payload)
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
@@ -2901,10 +2912,14 @@ class TestFunctionPropertyCommand:
 
     def test_to_knx_property_id_out_of_range(self) -> None:
         """Test to_knx raises ConversionError for an out of range property_id."""
-        payload = FunctionPropertyCommand(object_index=1, property_id=0)
+        payload = FunctionPropertyCommand(object_index=1, property_id=0x100)
 
         with pytest.raises(ConversionError, match=r".*Property ID.*"):
             payload.to_knx()
+
+    def test_default_to_knx(self) -> None:
+        """Test the default FunctionPropertyCommand (PID 0) still serializes."""
+        assert FunctionPropertyCommand().to_knx() == bytes([0x02, 0xC7, 0x00, 0x00])
 
 
 class TestFunctionPropertyStateRead:
@@ -2975,7 +2990,32 @@ class TestFunctionPropertyStateResponse:
     def test_from_knx_wrong_length(self) -> None:
         """Test from_knx raises ConversionError for a too-short APDU."""
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
-            APCI.from_knx(bytes([0x02, 0xC9, 0x01, 0x04]))
+            APCI.from_knx(bytes([0x02, 0xC9, 0x01]))
+
+    def test_without_return_code(self) -> None:
+        """
+        Test the response without return_code for a non-PDT_Function Property.
+
+        KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3: "the returned
+        PDU shall not contain the field return_code" and no data.
+        """
+        raw = bytes([0x02, 0xC9, 0x01, 0x04])
+        payload = APCI.from_knx(raw)
+
+        assert payload == FunctionPropertyStateResponse(
+            object_index=1, property_id=4, return_code=None
+        )
+        assert payload.calculated_length() == 3
+        assert payload.to_knx() == raw
+
+    def test_without_return_code_with_data(self) -> None:
+        """Test to_knx rejects data without a return_code."""
+        payload = FunctionPropertyStateResponse(
+            object_index=1, property_id=4, return_code=None, data=b"\x12"
+        )
+
+        with pytest.raises(ConversionError, match=r".*without return_code.*"):
+            payload.to_knx()
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""

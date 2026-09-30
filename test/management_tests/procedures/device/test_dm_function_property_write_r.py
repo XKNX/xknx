@@ -6,11 +6,14 @@ from unittest.mock import AsyncMock, call
 import pytest
 
 from xknx import XKNX
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.procedures.device.dm_function_property_write_r import (
     dm_function_property_write_r,
     dm_function_property_write_r_conn,
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
+
+from ....conftest import EventLoopClockAdvancer
 
 
 def _xknx_setup() -> XKNX:
@@ -53,7 +56,7 @@ def _state_response(
     sequence: int,
     object_index: int,
     property_id: int,
-    return_code: int,
+    return_code: int | None,
     data: bytes,
 ) -> Telegram:
     """Build an incoming FunctionPropertyStateResponse telegram."""
@@ -142,7 +145,9 @@ async def test_dm_function_property_write_r_conn_nonzero_return_code_not_raised(
     await conn.disconnect()
 
 
-async def test_dm_function_property_write_r_opens_and_closes_connection() -> None:
+async def test_dm_function_property_write_r_opens_and_closes_connection(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
     """Test dm_function_property_write_r opens and closes its own connection."""
     xknx = _xknx_setup()
     ia = IndividualAddress("4.0.10")
@@ -154,13 +159,39 @@ async def test_dm_function_property_write_r_opens_and_closes_connection() -> Non
     )
     await asyncio.sleep(0)
 
-    connect = Telegram(destination_address=ia, tpci=tpci.TConnect())
-    assert xknx.cemi_handler.send_telegram.call_args_list[0] == call(connect)
-
+    # DMP_Connect_RCo (KNX v02.01.02 - Management Procedures 03.05.02 -
+    # §3.30.1 precondition): T_Connect, then A_DeviceDescriptor_Read type 0
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(Telegram(destination_address=ia, tpci=tpci.TConnect())),
+        call(
+            Telegram(
+                destination_address=ia,
+                tpci=tpci.TDataConnected(0),
+                payload=apci.DeviceDescriptorRead(descriptor=0),
+            )
+        ),
+    ]
     xknx.management.process(_ack(ia, xknx, 0))
     xknx.management.process(
+        Telegram(
+            source_address=ia,
+            destination_address=xknx.current_address,
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TDataConnected(0),
+            payload=apci.DeviceDescriptorResponse(descriptor=0, value=0x07B0),
+        )
+    )
+    # wait out P2PConnection's rate limit before the second request
+    await time_travel(1)
+
+    assert (
+        call(_command_request(ia, 1, object_index=1, property_id=5, data=b"\xff"))
+        in xknx.cemi_handler.send_telegram.call_args_list
+    )
+    xknx.management.process(_ack(ia, xknx, 1))
+    xknx.management.process(
         _state_response(
-            ia, xknx, 0, object_index=1, property_id=5, return_code=0, data=b"\x99"
+            ia, xknx, 1, object_index=1, property_id=5, return_code=0, data=b"\x99"
         )
     )
     await asyncio.sleep(0)
@@ -205,4 +236,77 @@ async def test_dm_function_property_write_r_conn_max_apdu_length_not_positive() 
         )
 
     xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
+
+
+async def test_dm_function_property_write_r_conn_not_a_function_property() -> None:
+    """
+    Test a response without return_code is returned, not timed out.
+
+    KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3: for a Property
+    that isn't PDT_Function the device answers without return_code and data.
+    """
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        dm_function_property_write_r_conn(
+            conn, object_index=3, property_id=10, command=b"\x01"
+        )
+    )
+    await asyncio.sleep(0)
+
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(
+        _state_response(
+            ia, xknx, 0, object_index=3, property_id=10, return_code=None, data=b""
+        )
+    )
+
+    response = await task
+    assert response.return_code is None
+
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("object_index", "property_id"),
+    [(4, 10), (3, 11)],
+)
+async def test_dm_function_property_write_r_conn_echo_mismatch(
+    object_index: int, property_id: int
+) -> None:
+    """Test a response echoing a different object_index/property_id raises."""
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        dm_function_property_write_r_conn(
+            conn, object_index=3, property_id=10, command=b"\x01"
+        )
+    )
+    await asyncio.sleep(0)
+
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(
+        _state_response(
+            ia,
+            xknx,
+            0,
+            object_index=object_index,
+            property_id=property_id,
+            return_code=0,
+            data=b"",
+        )
+    )
+
+    with pytest.raises(ManagementConnectionError, match=r"does not match request"):
+        await task
+
     await conn.disconnect()

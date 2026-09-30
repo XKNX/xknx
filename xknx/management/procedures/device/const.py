@@ -53,7 +53,7 @@ FUNCTION_PROPERTY_HEADER_OCTETS = 3
 
 # Fixed non-data octets of a FunctionPropertyExtCommand/FunctionPropertyExt-
 # State*-PDU, matching apci.FunctionPropertyExtCommand.calculated_length():
-# the extended 2 octet APCI + 2 octet Interface Object Type + 12 bit Object
+# the APCI-carrying octet + 2 octet Interface Object Type + 12 bit Object
 # Instance/12 bit Property ID packed into 3 octets = 6. Same non-chunking
 # rationale as FUNCTION_PROPERTY_HEADER_OCTETS above.
 FUNCTION_PROPERTY_EXT_HEADER_OCTETS = 6

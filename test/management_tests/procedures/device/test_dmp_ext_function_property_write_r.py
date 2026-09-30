@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, call
 import pytest
 
 from xknx import XKNX
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.procedures.device.dmp_ext_function_property_write_r import (
     dmp_ext_function_property_write_r,
     dmp_ext_function_property_write_r_conn,
@@ -274,4 +275,49 @@ async def test_dmp_ext_function_property_write_r_conn_max_apdu_length_not_positi
         )
 
     xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("interface_object_type", "object_instance", "property_id"),
+    [(344, 2, 60), (343, 3, 60), (343, 2, 61)],
+)
+async def test_dmp_ext_function_property_write_r_conn_echo_mismatch(
+    interface_object_type: int, object_instance: int, property_id: int
+) -> None:
+    """Test a response echoing a different type/instance/PID raises."""
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        dmp_ext_function_property_write_r_conn(
+            conn,
+            interface_object_type=343,
+            object_instance=2,
+            property_id=60,
+            command=b"\x01",
+        )
+    )
+    await asyncio.sleep(0)
+
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(
+        _state_response(
+            ia,
+            xknx,
+            0,
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            return_code=apci.ReturnCode.E_SUCCESS,
+            data=b"",
+        )
+    )
+
+    with pytest.raises(ManagementConnectionError, match=r"does not match request"):
+        await task
+
     await conn.disconnect()

@@ -102,13 +102,16 @@ documented in the package docstring at
 `xknx/management/procedures/__init__.py`; that's the canonical version, kept
 in sync with the code. Summary:
 
-- `<spec_name>(xknx: XKNX, ...)` opens (and closes) its own connection or
-  broadcast via `xknx.management`.
-- `<spec_name>_conn(conn: P2PConnection, ...)` operates on an already-open
-  connection, for chaining several procedures over one connection. The
-  `_conn` suffix is an xknx-only naming convention, not a KNX spec name —
-  `dm_restart_r_co` is the one exception, since `RCo` is the real KNX name
-  for that connection-based variant of DM_Restart.
+- `<spec_name>(conn: P2PConnection, ...)` operates on an already-open
+  connection, for chaining several procedures over one connection. This is
+  the common form.
+- Optionally, a wrapper `<spec_name>(xknx: XKNX, individual_address, ...)`
+  opens (and closes) the connection itself via `xknx.management`; the
+  connection form of such a procedure is then named `<spec_name>_conn`.
+  The `_conn` suffix is an xknx-only naming convention, not a KNX spec
+  name — `dm_restart_r_co` is the one exception, since `RCo` is the real
+  KNX name for that connection-based variant of DM_Restart.
+- Broadcast-only procedures take `xknx` under the bare name.
 
 ## Running tests and checks
 

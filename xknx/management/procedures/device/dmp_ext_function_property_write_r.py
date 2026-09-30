@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
@@ -22,6 +23,7 @@ __all__ = [
 
 async def dmp_ext_function_property_write_r_conn(
     conn: P2PConnection,
+    *,
     interface_object_type: int,
     object_instance: int,
     property_id: int,
@@ -35,8 +37,8 @@ async def dmp_ext_function_property_write_r_conn(
     03.05.02 - §3.30.2. Addresses the interface object by Interface Object
     Type + Object Instance rather than the connection-local object index
     :func:`~.dm_function_property_write_r.dm_function_property_write_r_conn`
-    uses. If used in point-to-point connection-oriented mode (as this
-    ``_conn`` variant does), a DMP_Connect_RCo must be performed first.
+    uses. Unlike §3.30.1, §3.30.2 has no DMP_Connect_RCo precondition, so
+    none is performed here or in :func:`dmp_ext_function_property_write_r`.
 
     As with the base (non-extended) procedure, ``return_code``'s meaning and
     error handling are Function Property specific and depend on the
@@ -59,6 +61,8 @@ async def dmp_ext_function_property_write_r_conn(
     :return: The device's A_FunctionPropertyExtState_Response (return code
         and resulting state data)
     :raises ValueError: If ``command`` does not fit within ``max_apdu_length``
+    :raises ManagementConnectionError: If the response echoes a different
+        Interface Object Type, Object Instance or Property ID than requested
     """
     if max_apdu_length <= 0:
         raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
@@ -78,12 +82,25 @@ async def dmp_ext_function_property_write_r_conn(
             data=command,
         )
     )
-    return response.payload
+    payload = response.payload
+    requested = (interface_object_type, object_instance, property_id)
+    echoed = (
+        payload.interface_object_type,
+        payload.object_instance,
+        payload.property_id,
+    )
+    if echoed != requested:
+        raise ManagementConnectionError(
+            "Extended Function Property response for (interface_object_type, "
+            f"object_instance, property_id) {echoed} does not match request {requested}"
+        )
+    return payload
 
 
 async def dmp_ext_function_property_write_r(
     xknx: XKNX,
     individual_address: IndividualAddressableType,
+    *,
     interface_object_type: int,
     object_instance: int,
     property_id: int,
@@ -115,9 +132,9 @@ async def dmp_ext_function_property_write_r(
     ) as conn:
         return await dmp_ext_function_property_write_r_conn(
             conn,
-            interface_object_type,
-            object_instance,
-            property_id,
-            command,
-            max_apdu_length,
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            command=command,
+            max_apdu_length=max_apdu_length,
         )
