@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceDevicePropertyId
 
@@ -16,6 +17,10 @@ __all__ = ["IdentifiedDevice", "dm_identify_r"]
 # identified by this procedure's second step report Device Descriptor Type
 # 0 = 0300h.
 _MGT_MODEL_DD0 = 0x0300
+# KNX v01.10.01 - Resources 03.05.01 - §4.3.23 PID_MGT_DESCRIPTOR_01:
+# "Property Datatype: PDT_GENERIC_10", "The Property Value shall be a 10
+# octet value".
+_MGT_DESCRIPTOR_01_OCTETS = 10
 
 
 @dataclass(slots=True)
@@ -26,7 +31,8 @@ class IdentifiedDevice:
 
     management_model: bytes | None
     """
-    ``PID_MGT_DESCRIPTOR_01`` (10 octets), if ``device_descriptor_type_0``
+    ``PID_MGT_DESCRIPTOR_01`` (10 octets, KNX v01.10.01 - Resources
+    03.05.01 - §4.3.23), if ``device_descriptor_type_0``
     is 0300h - ``None`` for any other Device Descriptor value, since the
     spec's own step 2 only applies to that one. §3.4.2 calls out two known
     values, ``01000000000000000000h`` and ``01000001000000000000h``, as
@@ -41,10 +47,11 @@ async def dm_identify_r(conn: P2PConnection) -> IdentifiedDevice:
     Identify a device by its Device Descriptor and, for one legacy type, its management model.
 
     DM_Identify_R — KNX v02.01.02 - Management Procedures 03.05.02 - §3.4.2.
-    Requires an established connection (DM_Connect must be executed first;
-    step 1 of this procedure is exactly
-    :func:`~.dm_connect_r_co.dmp_connect_r_co`, reused here rather than
-    repeating its own ``A_DeviceDescriptor_Read``).
+    The spec allows the connection-oriented or connectionless mode and has
+    no DM_Connect precondition; this implementation needs an open
+    ``P2PConnection`` (T_Connect only). Step 1 is
+    :func:`~.dm_connect_r_co.dmp_connect_r_co` itself, so don't run it
+    separately beforehand.
 
     Step 2 - reading ``PID_MGT_DESCRIPTOR_01`` - only applies to devices
     reporting Device Descriptor Type 0 = 0300h ("continue with identified
@@ -56,7 +63,7 @@ async def dm_identify_r(conn: P2PConnection) -> IdentifiedDevice:
         management model
     :raises ManagementConnectionError: If the device does not respond with
         Device Descriptor Type 0, or (when applicable) step 2's response
-        carries an unexpected element count
+        carries an unexpected element count or isn't 10 octets
     """
     device_descriptor_type_0 = await dmp_connect_r_co(conn)
     if device_descriptor_type_0 != _MGT_MODEL_DD0:
@@ -71,6 +78,11 @@ async def dm_identify_r(conn: P2PConnection) -> IdentifiedDevice:
         count=1,
         start_index=1,
     )
+    if len(management_model) != _MGT_DESCRIPTOR_01_OCTETS:
+        raise ManagementConnectionError(
+            f"PID_MGT_DESCRIPTOR_01 returned {len(management_model)} octets, "
+            f"expected {_MGT_DESCRIPTOR_01_OCTETS}"
+        )
     return IdentifiedDevice(
         device_descriptor_type_0=device_descriptor_type_0,
         management_model=management_model,

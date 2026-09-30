@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from xknx import XKNX
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.procedures.device.dm_identify_r import (
     IdentifiedDevice,
     dm_identify_r,
@@ -136,4 +137,49 @@ async def test_dm_identify_r_legacy_device_reads_management_model(
             object_index=0, property_id=72, count=1, start_index=1
         ),
     )
+    await conn.disconnect()
+
+
+async def test_dm_identify_r_wrong_management_model_length(xknx_setup: XKNX) -> None:
+    """
+    Test PID_MGT_DESCRIPTOR_01 must be 10 octets.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.3.23: "The Property Value shall
+    be a 10 octet value".
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=apci.DeviceDescriptorResponse(descriptor=0, value=0x0300),
+        )
+        await _wait_for_request(xknx, 2)
+        _process_response(
+            xknx,
+            ia,
+            seq=1,
+            payload=apci.PropertyValueResponse(
+                object_index=0,
+                property_id=72,
+                count=1,
+                start_index=1,
+                data=bytes(9),
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(
+        ManagementConnectionError,
+        match=r"PID_MGT_DESCRIPTOR_01 returned 9 octets, expected 10",
+    ):
+        await dm_identify_r(conn)
+    await responder
     await conn.disconnect()
