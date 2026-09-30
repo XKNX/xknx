@@ -1,6 +1,6 @@
 """Unit test for devices container within XKNX."""
 
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -258,15 +258,15 @@ class TestDevices:
 
         # Triggering first device. Both callbacks to be called
         device1.after_update()
-        after_update_callback1.assert_called_with(device1, ANY)
-        after_update_callback2.assert_called_with(device1, ANY)
+        after_update_callback1.assert_called_with(device1)
+        after_update_callback2.assert_called_with(device1)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
         # Triggering 2nd device. Both callbacks have to be called
         device2.after_update()
-        after_update_callback1.assert_called_with(device2, ANY)
-        after_update_callback2.assert_called_with(device2, ANY)
+        after_update_callback1.assert_called_with(device2)
+        after_update_callback2.assert_called_with(device2)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 
@@ -276,7 +276,7 @@ class TestDevices:
         # Triggering first device. Only second callback has to be called
         device1.after_update()
         after_update_callback1.assert_not_called()
-        after_update_callback2.assert_called_with(device1, ANY)
+        after_update_callback2.assert_called_with(device1)
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
 

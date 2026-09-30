@@ -30,7 +30,7 @@ def telegram_context(context: Any) -> Iterator[None]:
 
     Every outgoing `Telegram` created inside the `with` block - and inside tasks
     started from it - carries `context` in `Telegram.context`. xknx never reads it;
-    it is passed on to device callbacks in `DeviceUpdate.context`.
+    it is exposed to device callbacks in `Device.last_update.context`.
 
         with telegram_context(my_context):
             await light.set_on()

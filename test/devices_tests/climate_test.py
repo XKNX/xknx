@@ -1,7 +1,7 @@
 """Unit test for Climate objects."""
 
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -224,12 +224,12 @@ class TestClimate:
 
         climate.target_temperature.set(23.00)
         xknx.devices.process(xknx.telegrams.get_nowait())
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
         await climate.set_setpoint_shift(-2)
         xknx.devices.process(xknx.telegrams.get_nowait())
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
     async def test_process_callback_mode(self) -> None:
@@ -245,7 +245,7 @@ class TestClimate:
         )
 
         await climate_mode.set_operation_mode(HVACOperationMode.COMFORT)
-        after_update_callback.assert_called_with(climate_mode, ANY)
+        after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
         await climate_mode.set_operation_mode(HVACOperationMode.COMFORT)
@@ -253,7 +253,7 @@ class TestClimate:
         after_update_callback.reset_mock()
 
         await climate_mode.set_operation_mode(HVACOperationMode.BUILDING_PROTECTION)
-        after_update_callback.assert_called_with(climate_mode, ANY)
+        after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
     async def test_process_callback_updated_via_telegram(self) -> None:
@@ -275,7 +275,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTTemperature.to_knx(23)),
         )
         climate.process(telegram)
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
         telegram = Telegram(
@@ -283,7 +283,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTTemperature.to_knx(23)),
         )
         climate.process(telegram)
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
         telegram = Telegram(
@@ -291,7 +291,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTValue1Count.to_knx(-4)),
         )
         climate.process(telegram)
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
         after_update_callback.reset_mock()
 
     async def test_climate_mode_process_callback_updated_via_telegram(self) -> None:
@@ -313,7 +313,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray(1)),
         )
         climate.process(telegram)
-        after_update_callback.assert_called_with(climate_mode, ANY)
+        after_update_callback.assert_called_with(climate_mode)
         after_update_callback.reset_mock()
 
     #
@@ -1315,7 +1315,7 @@ class TestClimate:
             payload=GroupValueWrite(DPTTemperature().to_knx(21.34)),
         )
         climate.process(telegram)
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
 
     async def test_process_heat_cool(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if heat/cool is set correctly."""
@@ -1358,7 +1358,7 @@ class TestClimate:
         climate.process(telegram)
 
         assert climate.humidity.value == 45.6
-        after_update_callback.assert_called_with(climate, ANY)
+        after_update_callback.assert_called_with(climate)
 
     #
     # SUPPORTED OPERATION MODES

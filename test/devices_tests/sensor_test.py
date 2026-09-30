@@ -1,6 +1,6 @@
 """Unit test for Sensor objects."""
 
-from unittest.mock import ANY, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -828,5 +828,5 @@ class TestSensor:
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor, ANY)
+        after_update_callback.assert_called_with(sensor)
         assert sensor.last_telegram == telegram

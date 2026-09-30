@@ -1,6 +1,6 @@
 """Unit test for RawValue objects."""
 
-from unittest.mock import ANY, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -156,7 +156,7 @@ class TestRawValue:
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor, ANY)
+        after_update_callback.assert_called_with(sensor)
         assert sensor.last_telegram == telegram
         # consecutive telegrams with same payload shall only trigger one callback
         after_update_callback.reset_mock()
@@ -182,12 +182,12 @@ class TestRawValue:
             payload=GroupValueWrite(DPTArray((0x01, 0x02))),
         )
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor, ANY)
+        after_update_callback.assert_called_with(sensor)
         assert sensor.last_telegram == telegram
         # every telegram shall trigger callback
         after_update_callback.reset_mock()
         sensor.process(telegram)
-        after_update_callback.assert_called_with(sensor, ANY)
+        after_update_callback.assert_called_with(sensor)
 
     #
     # TEST SET

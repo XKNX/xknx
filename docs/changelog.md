@@ -35,17 +35,6 @@ nav_order: 2
 - Remove `ha_device_class` from `DPTBase` subclasses, `RemoteValueSensor`, `RemoteValueByLength`, `Sensor` and `NumericValue`. Home Assistant shall maintain this itself.
 - DPT 9.xxx: `value_max` is `670433.28` for all 2 byte float types - it was `670760.96` on `DPT2ByteFloat` and `670760` on most subtypes, which encode to `0x7FFF`. KNX v02.02.01 - Datapoint Types 03.07.02 - §3.10 reserves that pattern: "For all Datapoint Types 9.xxx, the encoded value 7FFFh shall always be used to denote invalid data", and gives the range as `[-671 088,64 ... 670 433,28]`. So xknx sent the invalid-data pattern as a regular value and decoded a received one to `670760.96` instead of rejecting it - `from_knx()` raises `ConversionError` on `0x7FFF` now, and `to_knx()` rejects anything above `670433.28`. A device sending `0x7FFF` - a thermostat with an unconfigured setpoint for example - is reported as a conversion error instead of a nonsensical reading.
 - DPT 9.xxx lower bounds follow the same table: `DPTTemperatureDifference2Byte` (9.002), `DPTTemperatureA` (9.003), `DPTTime1` (9.010) and `DPTTime2` (9.011) accept `-671088.64` instead of `-670760`, and `DPTPartsPerMillion` (9.008) - specified as `0 ppm ... 670 433,28 ppm` - rejects negative values now like the other subtypes with a `0` minimum do.
-- Device updated callbacks receive a second argument: a `DeviceUpdate` describing what caused the update - see "Features" below. This applies to callbacks registered on a device and to `XKNX(device_updated_cb=...)`.
-
-  ```python
-  # before
-  def device_updated_cb(device: Device) -> None: ...
-
-  # now
-  def device_updated_cb(device: Device, update: DeviceUpdate) -> None:
-      if update.telegram is not None:
-          print(f"{device.name} updated by {update.telegram.source_address}")
-  ```
 
 ### Bugfixes
 
@@ -72,15 +61,16 @@ nav_order: 2
 
 ### Features
 
-- Device updates tell their cause. `DeviceUpdate.telegram` is the incoming or outgoing telegram that caused an update. Updates run later from a task keep the telegram that started it - eg. the periodic travel updates of a `Cover`, debounced individual color updates of a `Light` or the counter updates of a `BinarySensor` after `context_timeout`. It is `None` for updates not caused by a telegram, like `RemoteValue.update_value()`. Work scheduled from a device updated callback doesn't inherit the cause - an application action started from there is attributed to its own `telegram_context()`, not to the telegram that triggered the callback.
+- Devices tell the cause of their latest update in `Device.last_update`, set before device updated callbacks are called. `DeviceUpdate.telegram` is the incoming or outgoing telegram that caused the update. Updates run later from a task keep the telegram that started it - eg. the periodic travel updates of a `Cover`, debounced individual color updates of a `Light` or the counter updates of a `BinarySensor` after `context_timeout`. It is `None` for updates not caused by a telegram, like `RemoteValue.update_value()`. Work scheduled from a device updated callback doesn't inherit the cause - an application action started from there is attributed to its own `telegram_context()`, not to the telegram that triggered the callback. `last_update` always describes the latest update, so copy it inside the callback if work scheduled from there needs the cause of this specific update.
 - `Telegram.context` carries an application defined object identifying the origin of a telegram. xknx never reads it. Outgoing telegrams created inside `with xknx.telegram.telegram_context(context):` - or in tasks started from it, like the auto stop of a `Cover` - carry `context`. For incoming telegrams it may be set by a telegram received callback, which runs before devices process the telegram. `DeviceUpdate.context` is the context of the causing telegram, or of the active `telegram_context()` for updates not caused by a telegram. This lets an application relate a device update to its own action or to the received telegram - eg. to show which KNX device, or which user, changed a state.
 
   ```python
   with telegram_context(my_context):
       await light.set_on()
 
-  def light_updated_cb(light: Light, update: DeviceUpdate) -> None:
-      update.context  # my_context - once the outgoing telegram was processed
+  def light_updated_cb(light: Light) -> None:
+      light.last_update.context  # my_context - once the outgoing telegram was processed
+      light.last_update.telegram  # the outgoing telegram
   ```
 - Add `dmp_interface_object_read_r`, `dmp_interface_object_write_r`, `dmp_interface_object_scan_r` and `dmp_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.2/§3.25.2/§3.28.2/§3.26.2, reading, writing, discovering and verifying Properties of a device's Interface Objects on an already-open `P2PConnection`. Read, write and verify split a request into as many `A_PropertyValue_Read`/`_Write` exchanges as it needs, bounded both by the 4-bit `nr_of_elem` field and by `max_apdu_length` - the device's `PID_MAX_APDU_LENGTH`, defaulting to the 15 octets of an L_Data_Standard frame. `read_r` also serves the `start_index=0` element count query. A read-back that doesn't match raises the new `PropertyVerificationError`; `scan_r` returns a list of `ScannedInterfaceObject`.
 - `dm_restart_r_co` and `dm_restart` support a Master Reset now, via `master_reset=True`, `erase_code` and `channel_number` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3 DM_Restart_RCo, which covers both restart kinds as one Management Procedure distinguished by its `mpp_RestartType` parameter. Unlike a Basic Restart, a Master Reset is confirmed at the application layer by an `A_Restart_Response`-PDU, so both functions return the parsed `apci.RestartMasterResetResponse` for a Master Reset, or `None` for a Basic Restart as before; a non-zero error code raises `ManagementConnectionError`. `erase_code` defaults to 01h "Confirmed Restart" and is validated to 01h-08h (KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.1.2.3.1, Table 4 - the only defined values; 00h and 09h-FFh are reserved and a Management Client must not send them). The response's `process_time` is not merely informational - the spec mandates it as the minimum wait before the Management Client may retry communication.

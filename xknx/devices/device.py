@@ -37,7 +37,7 @@ _processing_telegram: ContextVar[Telegram | None] = ContextVar(
 @dataclass(frozen=True, slots=True)
 class DeviceUpdate:
     """
-    Cause of a device update passed to device updated callbacks.
+    Cause of a device update - see `Device.last_update`.
 
     Attributes:
         telegram: The telegram that caused the update - incoming or outgoing. For
@@ -46,7 +46,7 @@ class DeviceUpdate:
             caused it, eg. `RemoteValue.update_value()` or a movement started by
             `Cover.set_position()` before its telegram was processed. Work scheduled
             from a device updated callback doesn't inherit the cause - pass
-            `update.context` to `telegram_context()` to attribute it explicitly.
+            `last_update.context` to `telegram_context()` to attribute it explicitly.
         context: The application defined context of the update. `telegram.context`
             if a telegram caused it, else the one of the active `telegram_context()`.
 
@@ -58,6 +58,9 @@ class DeviceUpdate:
 
 class Device(ABC):
     """Base class for devices."""
+
+    # cause of the latest update - set before device updated callbacks are called
+    last_update: DeviceUpdate = DeviceUpdate()
 
     def __init__(
         self,
@@ -142,15 +145,15 @@ class Device(ABC):
     ) -> None:
         """Execute callbacks after internal state has been changed."""
         if (telegram := _processing_telegram.get()) is not None:
-            update = DeviceUpdate(telegram=telegram, context=telegram.context)
+            self.last_update = DeviceUpdate(telegram=telegram, context=telegram.context)
         else:
-            update = DeviceUpdate(context=_current_telegram_context.get())
-        # callbacks get the cause as argument - work they schedule shall not inherit it
+            self.last_update = DeviceUpdate(context=_current_telegram_context.get())
+        # callbacks read `last_update` - work they schedule shall not inherit the cause
         token = _processing_telegram.set(None)
         try:
             for device_callback in self.device_updated_cbs:
                 try:
-                    device_callback(self, update)
+                    device_callback(self)
                 except Exception:  # pylint: disable=broad-except
                     logger.exception(
                         "Unexpected error while processing device_updated_cb for %s",

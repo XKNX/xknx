@@ -1,6 +1,6 @@
 """Unit test for Scene objects."""
 
-from unittest.mock import ANY, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -83,7 +83,7 @@ class TestScene:
                 payload=GroupValueWrite(DPTArray((0x00,))),
             )
         )
-        after_update_callback.assert_called_with(scene, ANY)
+        after_update_callback.assert_called_with(scene)
 
         after_update_callback.reset_mock()
         scene.process(
@@ -105,7 +105,7 @@ class TestScene:
         )
         # a request to store the scene calls the callback too - `learn_requested`
         # tells it apart from an activation
-        after_update_callback.assert_called_with(scene, ANY)
+        after_update_callback.assert_called_with(scene)
         assert scene.learn_requested
         assert not caplog.records
 
@@ -127,5 +127,5 @@ class TestScene:
                 payload=GroupValueWrite(DPTArray((0x00,))),  # same number, activate
             )
         )
-        after_update_callback.assert_called_with(scene, ANY)
+        after_update_callback.assert_called_with(scene)
         assert not scene.learn_requested

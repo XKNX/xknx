@@ -3,10 +3,10 @@
 import asyncio
 
 from xknx import XKNX
-from xknx.devices import DeviceUpdate, Scene
+from xknx.devices import Scene
 
 
-def scene_updated_cb(scene: Scene, update: DeviceUpdate) -> None:
+def scene_updated_cb(scene: Scene) -> None:
     """Handle a telegram for the scene number of this device."""
     if scene.learn_requested:
         # a learn telegram tells actuators to store their current state
