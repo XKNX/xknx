@@ -41,6 +41,7 @@ def _response(
     sending_address: int,
     start_index: int,
     group_address_list: list[GroupAddress],
+    group_object_number: int = 3,
 ) -> Telegram:
     """Build an incoming LinkResponse telegram."""
     return Telegram(
@@ -49,7 +50,7 @@ def _response(
         direction=TelegramDirection.INCOMING,
         tpci=tpci.TDataConnected(sequence),
         payload=apci.LinkResponse(
-            group_object_number=3,
+            group_object_number=group_object_number,
             sending_address=sending_address,
             start_index=start_index,
             group_address_list=group_address_list,
@@ -205,6 +206,53 @@ async def test_dm_group_object_link_write_r_cl_negative_response_raises() -> Non
     )
 
     with pytest.raises(ManagementConnectionError, match=r"negative A_Link_Response"):
+        await task
+
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("group_object_number", "start_index", "match"),
+    [
+        (4, 1, r"A_Link_Response for group object 4 does not match"),
+        (3, 7, r"start_index 7, expected 1"),
+    ],
+)
+async def test_dm_group_object_link_write_r_cl_echo_mismatch(
+    group_object_number: int, start_index: int, match: str
+) -> None:
+    """
+    Test a response not echoing group_object_number with start_index 1 raises.
+
+    KNX v02.01.02 - Management Procedures 03.05.02 - §3.37.3: the positive
+    response is "group_object_number = GO.number, ... start_index = 1".
+    """
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    ga = GroupAddress("1/1/1")
+    task = asyncio.create_task(
+        dm_group_object_link_write_r_cl(conn, group_object_number=3, group_address=ga)
+    )
+    await asyncio.sleep(0)
+
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(
+        _response(
+            ia,
+            xknx,
+            0,
+            sending_address=0,
+            start_index=start_index,
+            group_address_list=[ga],
+            group_object_number=group_object_number,
+        )
+    )
+
+    with pytest.raises(ManagementConnectionError, match=match):
         await task
 
     await conn.disconnect()

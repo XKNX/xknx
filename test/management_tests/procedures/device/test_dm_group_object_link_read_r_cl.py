@@ -182,36 +182,110 @@ async def test_dm_group_object_link_read_r_cl_exact_multiple_of_six(
     await conn.disconnect()
 
 
-async def test_dm_group_object_link_read_r_cl_more_than_eighteen_raises(
-    xknx_setup: XKNX,
-) -> None:
-    """Test the procedure raises when a 4th chunk would require start_index > 15."""
-    xknx = xknx_setup
+async def _read_with_responses(
+    xknx: XKNX, responses: list[tuple[int, int, list[GroupAddress]]]
+) -> GroupObjectLink:
+    """Run the procedure, answering each request with (group object, start_index, GAs)."""
     ia = IndividualAddress("4.0.10")
     conn = await xknx.management.connect(ia)
     xknx.cemi_handler.send_telegram.reset_mock()
 
-    full_chunk = [GroupAddress(f"1/1/{i}") for i in range(1, 7)]
-
     async def respond() -> None:
-        for req_num, start_index in enumerate([1, 7, 13], start=1):
+        for req_num, (group_object_number, start_index, gas) in enumerate(
+            responses, start=1
+        ):
             await _wait_for_request(xknx, req_num)
             _respond(
                 xknx,
                 ia,
                 req_num - 1,
-                3,
+                group_object_number,
                 sending_address=1,
                 start_index=start_index,
-                group_address_list=full_chunk,
+                group_address_list=gas,
             )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(
-        ManagementConnectionError,
-        match=r"more than 18 Group Addresses linked",
-    ):
-        await dm_group_object_link_read_r_cl(conn, group_object_number=3)
-    await responder
+    try:
+        return await dm_group_object_link_read_r_cl(conn, group_object_number=3)
+    finally:
+        await responder
+        await conn.disconnect()
 
-    await conn.disconnect()
+
+def _gas(first: int, last: int) -> list[GroupAddress]:
+    """Group Addresses 1/1/first to 1/1/last."""
+    return [GroupAddress(f"1/1/{i}") for i in range(first, last + 1)]
+
+
+async def test_dm_group_object_link_read_r_cl_exactly_eighteen(
+    xknx_setup: XKNX,
+) -> None:
+    """
+    Test a Group Object with exactly 18 linked Group Addresses is read completely.
+
+    After three full chunks (1, 7, 13) the probe at start_index 15 returns
+    entries 15-18 - 4 addresses, so there is no 19th.
+    """
+    result = await _read_with_responses(
+        xknx_setup,
+        [
+            (3, 1, _gas(1, 6)),
+            (3, 7, _gas(7, 12)),
+            (3, 13, _gas(13, 18)),
+            (3, 15, _gas(15, 18)),
+        ],
+    )
+    assert result.group_addresses == _gas(1, 18)
+    sent = [
+        call.args[0].payload.start_index
+        for call in xknx_setup.cemi_handler.send_telegram.call_args_list
+        if isinstance(call.args[0].payload, apci.LinkRead)
+    ]
+    assert sent == [1, 7, 13, 15]
+
+
+async def test_dm_group_object_link_read_r_cl_eighteen_probe_negative(
+    xknx_setup: XKNX,
+) -> None:
+    """Test a negative response to the start_index 15 probe also means the 18 are complete."""
+    result = await _read_with_responses(
+        xknx_setup,
+        [(3, 1, _gas(1, 6)), (3, 7, _gas(7, 12)), (3, 13, _gas(13, 18)), (3, 0, [])],
+    )
+    assert result.group_addresses == _gas(1, 18)
+
+
+async def test_dm_group_object_link_read_r_cl_more_than_eighteen_raises(
+    xknx_setup: XKNX,
+) -> None:
+    """Test the probe at start_index 15 returning more than 4 addresses raises."""
+    with pytest.raises(
+        ManagementConnectionError, match=r"more than 18 Group Addresses linked"
+    ):
+        await _read_with_responses(
+            xknx_setup,
+            [
+                (3, 1, _gas(1, 6)),
+                (3, 7, _gas(7, 12)),
+                (3, 13, _gas(13, 18)),
+                (3, 15, _gas(15, 19)),
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    ("response", "match"),
+    [
+        ((4, 1, _gas(1, 2)), r"A_Link_Response for group object 4 does not match"),
+        ((3, 2, _gas(1, 2)), r"start_index 2 does not match request \(1\)"),
+    ],
+)
+async def test_dm_group_object_link_read_r_cl_echo_mismatch(
+    xknx_setup: XKNX,
+    response: tuple[int, int, list[GroupAddress]],
+    match: str,
+) -> None:
+    """Test a response echoing a different group object or start_index raises."""
+    with pytest.raises(ManagementConnectionError, match=match):
+        await _read_with_responses(xknx_setup, [response])

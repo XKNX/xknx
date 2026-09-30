@@ -24,8 +24,11 @@ async def dm_group_object_link_write_r_cl(
     Add or remove a Group Address link on a Group Object.
 
     DM_GroupObjectLink_Write_RCl — KNX v02.01.02 - Management Procedures
-    03.05.02 - §3.37.3. Requires an established connection (DM_Connect must
-    be executed first). The Management Client is responsible for having
+    03.05.02 - §3.37.3. "RCl" is the point-to-point connectionless mode and
+    the spec has no DM_Connect step; xknx has no connectionless
+    point-to-point request API, so this runs over an open
+    ``P2PConnection`` (T_Data_Connected, which KNX v02.01.01 - Application
+    Layer 03.03.07 - Table 1 also allows for A_Link_*). The Management Client is responsible for having
     already checked ``group_address`` is free before adding it (§3.37.1) -
     this procedure does not do that itself.
 
@@ -46,7 +49,8 @@ async def dm_group_object_link_write_r_cl(
         Group Addresses and the sending address index
     :raises ManagementConnectionError: If the device responds with a
         negative A_Link_Response (§3.37.1: table full, non-existing Group
-        Object, invalid reserved bits, ...)
+        Object, invalid reserved bits, ...), or the response doesn't echo
+        ``group_object_number`` with ``start_index`` 1 (§3.37.3)
     """
     response = await conn.request(
         apci.LinkWrite(
@@ -57,10 +61,20 @@ async def dm_group_object_link_write_r_cl(
         )
     )
     payload = response.payload
+    if payload.group_object_number != group_object_number:
+        raise ManagementConnectionError(
+            f"A_Link_Response for group object {payload.group_object_number} "
+            f"does not match request (group object {group_object_number})"
+        )
     if payload.start_index == 0 and not payload.group_address_list:
         raise ManagementConnectionError(
             f"group object {group_object_number}: negative A_Link_Response "
             f"writing group address {group_address}"
+        )
+    if payload.start_index != 1:
+        raise ManagementConnectionError(
+            f"group object {group_object_number}: A_Link_Response start_index "
+            f"{payload.start_index}, expected 1"
         )
     return GroupObjectLink(
         sending_address=payload.sending_address,
