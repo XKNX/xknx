@@ -42,11 +42,6 @@ def telegram_context(context: Any) -> Iterator[None]:
         _current_telegram_context.reset(token)
 
 
-def current_telegram_context() -> Any:
-    """Return the context set by the innermost active `telegram_context()`."""
-    return _current_telegram_context.get()
-
-
 class TelegramDirection(Enum):
     """Enum class for the communication direction of a telegram (from KNX bus or to KNX bus)."""
 

@@ -14,7 +14,6 @@ from .telegram import (
     Telegram,
     TelegramDecodedData,
     TelegramDirection,
-    current_telegram_context,
     telegram_context,
 )
 
@@ -28,6 +27,5 @@ __all__ = [
     "Telegram",
     "TelegramDecodedData",
     "TelegramDirection",
-    "current_telegram_context",
     "telegram_context",
 ]

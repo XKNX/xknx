@@ -14,14 +14,10 @@ import logging
 from typing import TYPE_CHECKING, Any, Self, cast
 
 from xknx.remote_value import RemoteValue
-from xknx.telegram import (
-    GroupReadTelegram,
-    GroupValueTelegram,
-    Telegram,
-    current_telegram_context,
-)
+from xknx.telegram import GroupReadTelegram, GroupValueTelegram, Telegram
 from xknx.telegram.address import DeviceGroupAddress
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.telegram import _current_telegram_context
 from xknx.typing import DeviceCallbackType
 
 if TYPE_CHECKING:
@@ -58,13 +54,6 @@ class DeviceUpdate:
 
     telegram: Telegram | None = None
     context: Any = None
-
-    @classmethod
-    def current(cls) -> DeviceUpdate:
-        """Return the cause of an update happening now."""
-        if (telegram := _processing_telegram.get()) is not None:
-            return cls(telegram=telegram, context=telegram.context)
-        return cls(context=current_telegram_context())
 
 
 class Device(ABC):
@@ -152,7 +141,10 @@ class Device(ABC):
         *args: Any,  # a single argument may be passed if used as a RemoteValue callback
     ) -> None:
         """Execute callbacks after internal state has been changed."""
-        update = DeviceUpdate.current()
+        if (telegram := _processing_telegram.get()) is not None:
+            update = DeviceUpdate(telegram=telegram, context=telegram.context)
+        else:
+            update = DeviceUpdate(context=_current_telegram_context.get())
         # callbacks get the cause as argument - work they schedule shall not inherit it
         token = _processing_telegram.set(None)
         try:

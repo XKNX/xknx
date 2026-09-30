@@ -7,7 +7,6 @@ from xknx.telegram import (
     Telegram,
     TelegramDecodedData,
     TelegramDirection,
-    current_telegram_context,
     telegram_context,
 )
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
@@ -37,7 +36,6 @@ class TestTelegram:
         context = object()
         assert Telegram(GroupAddress("1/2/3")).context is None
         with telegram_context(context):
-            assert current_telegram_context() is context
             assert Telegram(GroupAddress("1/2/3")).context is context
             explicit = object()
             assert Telegram(GroupAddress("1/2/3"), context=explicit).context is explicit
@@ -49,7 +47,7 @@ class TestTelegram:
             with telegram_context(None):
                 assert Telegram(GroupAddress("1/2/3")).context is None
             assert Telegram(GroupAddress("1/2/3")).context is context
-        assert current_telegram_context() is None
+        assert Telegram(GroupAddress("1/2/3")).context is None
         assert "context" not in repr(Telegram(GroupAddress("1/2/3"), context=context))
 
     def test_telegram_not_equal(self) -> None:
