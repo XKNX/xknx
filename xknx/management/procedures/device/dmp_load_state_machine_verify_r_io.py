@@ -18,7 +18,9 @@ async def dmp_load_state_machine_verify_r_io(
     Verify an interface object's Load State Machine is in the expected state.
 
     DMP_LoadStateMachineVerify_R_IO — KNX v02.01.02 - Management Procedures
-    03.05.02 - §3.32.3. Requires an established connection (DM_Connect must
+    03.05.02 - §3.32.3. The spec heads this paragraph "DM_LoadStateMachine-
+    Verify_R_IO" (without the P), apparently a typo - every sibling uses
+    DMP_. Requires an established connection (DM_Connect must
     be executed first). Read-only - unlike
     :func:`~.dmp_load_state_machine_write_r_co_io.dmp_load_state_machine_write_r_co_io`'s
     own optional ``expected_state`` polling, this does not write anything

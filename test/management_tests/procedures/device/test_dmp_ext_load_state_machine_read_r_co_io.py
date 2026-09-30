@@ -165,3 +165,52 @@ async def test_dmp_ext_load_state_machine_read_r_co_io_unknown_state() -> None:
         await task
 
     await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("interface_object_type", "object_instance", "property_id"),
+    [(344, 1, 5), (343, 2, 5), (343, 1, 6)],
+)
+async def test_dmp_ext_load_state_machine_read_r_co_io_echo_mismatch(
+    interface_object_type: int, object_instance: int, property_id: int
+) -> None:
+    """
+    Test a response echoing a different type/instance/PID raises.
+
+    KNX v02.01.02 - Management Procedures 03.05.02 - §3.33.4: the response
+    carries the same object_type, object_instance and PID as the request.
+    """
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        dmp_ext_load_state_machine_read_r_co_io(
+            conn, interface_object_type=343, object_instance=1
+        )
+    )
+    await asyncio.sleep(0)
+
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(
+        Telegram(
+            source_address=ia,
+            destination_address=xknx.current_address,
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TDataConnected(0),
+            payload=apci.FunctionPropertyExtStateResponse(
+                interface_object_type=interface_object_type,
+                object_instance=object_instance,
+                property_id=property_id,
+                return_code=apci.ReturnCode.E_SUCCESS,
+                data=bytes([1]),
+            ),
+        )
+    )
+
+    with pytest.raises(ManagementConnectionError, match=r"does not match request"):
+        await task
+
+    await conn.disconnect()
