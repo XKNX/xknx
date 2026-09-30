@@ -3,23 +3,24 @@
 from __future__ import annotations
 
 from xknx.cemi.const import STANDARD_FRAME_MAX_NPDU_LENGTH
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import MEMORY_EXTENDED_HEADER_OCTETS, MEMORY_EXTENDED_MAX_COUNT
+from ._memory import (
+    EXTENDED_MEMORY,
+    is_negative_return_code,
+    memory_chunks,
+    memory_extended_write_crc,
+)
 
 __all__ = ["dmp_mem_write_extended_r"]
 
 # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.9.2.1, Table 4 "Write
 # Return Codes": 01h is a second positive code specific to
-# A_MemoryExtended_Write_Response ("CRC over original data"), not part of
-# the generic device management schema apci.ReturnCode covers - a device
-# may confirm a write with a CRC16-CCITT instead of a bare E_SUCCESS,
-# entirely at its own discretion (footnote 12: "[w]hether or not the MaS
-# replies with a CRC is implementation dependent"). Treated as success here;
-# the CRC itself is not verified - use dmp_mem_verify_extended_r for an
-# explicit read-back comparison instead.
+# A_MemoryExtended_Write_Response ("CRC over original data") - a device may
+# confirm a write with a CRC16-CCITT instead of a bare E_SUCCESS, at its own
+# discretion (footnote 12). The CRC is checked when it's sent.
 _E_SUCCESS_WITH_CRC = 0x01
 
 
@@ -33,8 +34,9 @@ async def dmp_mem_write_extended_r(
     Write a contiguous block of data to a KNX device's 16 MiB extended address space.
 
     DMP_MemWrite_Extended_R — KNX v02.01.02 - Management Procedures 03.05.02
-    - §3.22. Requires an established connection (DM_Connect must be executed
-    first). The Verify Mode of the Management Server shall not be used (see
+    - §3.22. The spec allows the connection-oriented or connectionless mode;
+    this implementation uses the connection-oriented one - pass an open
+    ``P2PConnection``. The Verify Mode of the Management Server shall not be used (see
     the spec's "Use" clause).
 
     Unlike :func:`~.dmp_mem_write_r_co.dmp_mem_write_r_co`'s
@@ -44,11 +46,14 @@ async def dmp_mem_write_extended_r(
     confirmed service" - its response's ``return_code`` is the completion
     signal for each chunk, so there is nothing here to verify or delay for.
     A device may confirm with either ``E_SUCCESS`` or, at its own discretion,
-    a positive ``E_SUCCESS_WITH_CRC`` (§3.4.9.2.1, Table 4) carrying a
-    CRC16-CCITT over the chunk just written - both are accepted as success
-    here; the CRC itself is not verified, use
+    ``E_SUCCESS_WITH_CRC`` (§3.4.9.2.1, Table 4) carrying a CRC16-CCITT over
+    the count, 24 bit address and data of the chunk. That CRC is checked
+    against what was sent; "If the MaS does not use the CRC, the MaC is not
+    required to verify the memory" (footnote 12), otherwise use
     :func:`~.dmp_mem_verify_extended_r.dmp_mem_verify_extended_r` for an
-    explicit read-back comparison instead.
+    explicit read-back comparison. Only a negative return code (A0h-FFh) is
+    an error - the response figures reserve every other value for positive
+    confirmations.
 
     :param conn: Active P2P connection to the device
     :param address: Start address in device memory (0-16777215)
@@ -64,49 +69,34 @@ async def dmp_mem_write_extended_r(
         max_apdu_length is not positive
     :raises ManagementConnectionError: If a chunk's response carries a
         negative return code, or echoes a different address than requested
+    :raises VerificationError: If a chunk's response carries a CRC that
+        doesn't match the data written
     """
-    if not 0 <= address <= 0xFFFFFF:
-        raise ValueError(f"address must be 0-16777215, got {address}")
-    if data and address + len(data) - 1 > 0xFFFFFF:
-        raise ValueError(
-            f"address + len(data) - 1 must be <= 0xffffff, got "
-            f"{address + len(data) - 1:#08x}"
-        )
-    if max_apdu_length <= 0:
-        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
-    if not data:
-        return
-
-    max_chunk_size = min(
-        MEMORY_EXTENDED_MAX_COUNT, max_apdu_length - MEMORY_EXTENDED_HEADER_OCTETS
-    )
-    if max_chunk_size <= 0:
-        raise ValueError(
-            f"max_apdu_length {max_apdu_length} leaves no room for memory data "
-            f"(header is {MEMORY_EXTENDED_HEADER_OCTETS} octets)"
-        )
-
-    offset = 0
-    current_address = address
-
-    while offset < len(data):
-        chunk = data[offset : offset + max_chunk_size]
+    for chunk_address, offset, length in memory_chunks(
+        EXTENDED_MEMORY, address, len(data), max_apdu_length, size_name="len(data)"
+    ):
+        chunk = data[offset : offset + length]
         response = await conn.request(
-            apci.MemoryExtendedWrite(address=current_address, data=chunk)
+            apci.MemoryExtendedWrite(address=chunk_address, data=chunk)
         )
         payload = response.payload
-        if payload.return_code not in (
-            apci.ReturnCode.E_SUCCESS.value,
-            _E_SUCCESS_WITH_CRC,
-        ):
+        if is_negative_return_code(payload.return_code):
             raise ManagementConnectionError(
-                f"Extended memory write failed: address {current_address:#08x} "
+                f"Extended memory write failed: address "
+                f"{EXTENDED_MEMORY.format_address(chunk_address)} "
                 f"return code {payload.return_code:#04x}"
             )
-        if payload.address != current_address:
+        if payload.address != chunk_address:
             raise ManagementConnectionError(
                 f"Extended memory write failed: requested address "
-                f"{current_address:#08x}, response echoed {payload.address:#08x}"
+                f"{EXTENDED_MEMORY.format_address(chunk_address)}, response echoed "
+                f"{EXTENDED_MEMORY.format_address(payload.address)}"
             )
-        current_address += len(chunk)
-        offset += len(chunk)
+        if payload.return_code == _E_SUCCESS_WITH_CRC:
+            expected_crc = memory_extended_write_crc(chunk_address, chunk)
+            if payload.confirmation_data != expected_crc:
+                raise VerificationError(
+                    f"Extended memory write CRC mismatch at address "
+                    f"{EXTENDED_MEMORY.format_address(chunk_address)}: expected "
+                    f"{expected_crc.hex()}, got {payload.confirmation_data.hex()}"
+                )

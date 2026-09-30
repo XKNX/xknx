@@ -7,7 +7,7 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import USER_MEMORY_HEADER_OCTETS, USER_MEMORY_MAX_COUNT
+from ._memory import USER_MEMORY, memory_chunks
 
 __all__ = ["dmp_user_mem_read_r_co"]
 
@@ -40,48 +40,25 @@ async def dmp_user_mem_read_r_co(
     :raises ManagementConnectionError: If a chunk's response carries fewer
         octets than requested, or echoes a different address than requested
     """
-    if size < 0:
-        raise ValueError(f"size must be >= 0, got {size}")
-    if not 0 <= address <= 0xFFFFF:
-        raise ValueError(f"address must be 0-0xFFFFF, got {address}")
-    if size and address + size - 1 > 0xFFFFF:
-        raise ValueError(
-            f"address + size - 1 must be <= 0xfffff, got {address + size - 1:#07x}"
-        )
-    if max_apdu_length <= 0:
-        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
-
-    max_chunk_size = min(
-        USER_MEMORY_MAX_COUNT, max_apdu_length - USER_MEMORY_HEADER_OCTETS
-    )
-    if max_chunk_size <= 0:
-        raise ValueError(
-            f"max_apdu_length {max_apdu_length} leaves no room for memory data "
-            f"(header is {USER_MEMORY_HEADER_OCTETS} octets)"
-        )
-
     data = bytearray()
-    remaining = size
-    current_address = address
-
-    while remaining > 0:
-        chunk_size = min(remaining, max_chunk_size)
+    for chunk_address, _, chunk_size in memory_chunks(
+        USER_MEMORY, address, size, max_apdu_length
+    ):
         response = await conn.request(
-            apci.UserMemoryRead(address=current_address, count=chunk_size)
+            apci.UserMemoryRead(address=chunk_address, count=chunk_size)
         )
-        if response.payload.address != current_address:
+        if response.payload.address != chunk_address:
             raise ManagementConnectionError(
                 f"User memory read failed: requested address "
-                f"{current_address:#07x}, response echoed "
-                f"{response.payload.address:#07x}"
+                f"{USER_MEMORY.format_address(chunk_address)}, response echoed "
+                f"{USER_MEMORY.format_address(response.payload.address)}"
             )
         if len(response.payload.data) != chunk_size:
             raise ManagementConnectionError(
-                f"User memory read failed: address {current_address:#07x} "
-                f"requested {chunk_size} octets, got {len(response.payload.data)}"
+                f"User memory read failed: address "
+                f"{USER_MEMORY.format_address(chunk_address)} requested "
+                f"{chunk_size} octets, got {len(response.payload.data)}"
             )
         data.extend(response.payload.data)
-        current_address += chunk_size
-        remaining -= chunk_size
 
     return bytes(data)

@@ -7,7 +7,7 @@ from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import MEMORY_EXTENDED_HEADER_OCTETS, MEMORY_EXTENDED_MAX_COUNT
+from ._memory import EXTENDED_MEMORY, is_negative_return_code, memory_chunks
 
 __all__ = ["dmp_mem_verify_extended_r"]
 
@@ -22,8 +22,9 @@ async def dmp_mem_verify_extended_r(
     Verify that a KNX device's extended-addressed memory matches expected data, block by block.
 
     DMP_MemVerify_Extended_R — KNX v02.01.02 - Management Procedures
-    03.05.02 - §3.23. Requires an established connection (DM_Connect must
-    be executed first). Read-only - unlike
+    03.05.02 - §3.23. The spec allows the connection-oriented or
+    connectionless mode; this implementation uses the connection-oriented
+    one - pass an open ``P2PConnection``. Read-only - unlike
     :func:`~.dmp_mem_write_extended_r.dmp_mem_write_extended_r`, does not
     write anything first. The spec notes this produces the same amount of
     bus traffic as a plain write and is only useful against a device with
@@ -47,56 +48,39 @@ async def dmp_mem_verify_extended_r(
         carries fewer octets than requested
     :raises VerificationError: If a block's data doesn't match expected
     """
-    if not 0 <= address <= 0xFFFFFF:
-        raise ValueError(f"address must be 0-16777215, got {address}")
-    if expected_data and address + len(expected_data) - 1 > 0xFFFFFF:
-        raise ValueError(
-            f"address + len(expected_data) - 1 must be <= 0xffffff, got "
-            f"{address + len(expected_data) - 1:#08x}"
-        )
-    if max_apdu_length <= 0:
-        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
-    if not expected_data:
-        return
-
-    max_chunk_size = min(
-        MEMORY_EXTENDED_MAX_COUNT, max_apdu_length - MEMORY_EXTENDED_HEADER_OCTETS
-    )
-    if max_chunk_size <= 0:
-        raise ValueError(
-            f"max_apdu_length {max_apdu_length} leaves no room for memory data "
-            f"(header is {MEMORY_EXTENDED_HEADER_OCTETS} octets)"
-        )
-
-    offset = 0
-    current_address = address
-
-    while offset < len(expected_data):
-        expected_chunk = expected_data[offset : offset + max_chunk_size]
+    for chunk_address, offset, length in memory_chunks(
+        EXTENDED_MEMORY,
+        address,
+        len(expected_data),
+        max_apdu_length,
+        size_name="len(expected_data)",
+    ):
+        expected_chunk = expected_data[offset : offset + length]
         response = await conn.request(
-            apci.MemoryExtendedRead(address=current_address, count=len(expected_chunk))
+            apci.MemoryExtendedRead(address=chunk_address, count=length)
         )
         payload = response.payload
-        if payload.return_code != apci.ReturnCode.E_SUCCESS.value:
+        if is_negative_return_code(payload.return_code):
             raise ManagementConnectionError(
-                f"Extended memory verify failed: address {current_address:#08x} "
+                f"Extended memory verify failed: address "
+                f"{EXTENDED_MEMORY.format_address(chunk_address)} "
                 f"return code {payload.return_code:#04x}"
             )
-        if payload.address != current_address:
+        if payload.address != chunk_address:
             raise ManagementConnectionError(
                 f"Extended memory verify failed: requested address "
-                f"{current_address:#08x}, response echoed {payload.address:#08x}"
+                f"{EXTENDED_MEMORY.format_address(chunk_address)}, response echoed "
+                f"{EXTENDED_MEMORY.format_address(payload.address)}"
             )
-        if len(payload.data) != len(expected_chunk):
+        if len(payload.data) != length:
             raise ManagementConnectionError(
-                f"Extended memory verify failed: address {current_address:#08x} "
-                f"requested {len(expected_chunk)} octets, got {len(payload.data)}"
+                f"Extended memory verify failed: address "
+                f"{EXTENDED_MEMORY.format_address(chunk_address)} requested "
+                f"{length} octets, got {len(payload.data)}"
             )
         if payload.data != expected_chunk:
             raise VerificationError(
                 f"Extended memory verify mismatch at address "
-                f"{current_address:#08x}: expected {expected_chunk.hex()}, "
-                f"got {payload.data.hex()}"
+                f"{EXTENDED_MEMORY.format_address(chunk_address)}: "
+                f"expected {expected_chunk.hex()}, got {payload.data.hex()}"
             )
-        current_address += len(expected_chunk)
-        offset += len(expected_chunk)

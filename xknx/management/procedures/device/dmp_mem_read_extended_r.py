@@ -7,7 +7,7 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import MEMORY_EXTENDED_HEADER_OCTETS, MEMORY_EXTENDED_MAX_COUNT
+from ._memory import EXTENDED_MEMORY, is_negative_return_code, memory_chunks
 
 __all__ = ["dmp_mem_read_extended_r"]
 
@@ -22,8 +22,9 @@ async def dmp_mem_read_extended_r(
     Read a contiguous block of memory from a KNX device's 16 MiB extended address space.
 
     DMP_MemRead_Extended_R — KNX v02.01.02 - Management Procedures 03.05.02
-    - §3.24. Requires an established connection (DM_Connect must be executed
-    first). Unlike :func:`~.dmp_mem_read_r_co.dmp_mem_read_r_co`'s
+    - §3.24. The spec allows the connection-oriented or connectionless mode;
+    this implementation uses the connection-oriented one - pass an open
+    ``P2PConnection``. Unlike :func:`~.dmp_mem_read_r_co.dmp_mem_read_r_co`'s
     ``A_Memory_Read`` (16 bit address, no confirmed error indication),
     ``A_MemoryExtended_Read`` (KNX v02.01.01 - Application Layer 03.03.07 -
     §3.4.9.1) addresses the full 24 bit space and returns an explicit
@@ -43,56 +44,35 @@ async def dmp_mem_read_extended_r(
     :raises ValueError: If size is negative, the address range is out of
         range, or max_apdu_length is not positive
     :raises ManagementConnectionError: If a chunk's response carries a
-        negative return code, echoes a different address than requested, or
+        negative return code (A0h-FFh), echoes a different address than requested, or
         carries fewer octets than requested
     """
-    if size < 0:
-        raise ValueError(f"size must be >= 0, got {size}")
-    if not 0 <= address <= 0xFFFFFF:
-        raise ValueError(f"address must be 0-16777215, got {address}")
-    if size and address + size - 1 > 0xFFFFFF:
-        raise ValueError(
-            f"address + size - 1 must be <= 0xffffff, got {address + size - 1:#08x}"
-        )
-    if max_apdu_length <= 0:
-        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
-
-    max_chunk_size = min(
-        MEMORY_EXTENDED_MAX_COUNT, max_apdu_length - MEMORY_EXTENDED_HEADER_OCTETS
-    )
-    if max_chunk_size <= 0:
-        raise ValueError(
-            f"max_apdu_length {max_apdu_length} leaves no room for memory data "
-            f"(header is {MEMORY_EXTENDED_HEADER_OCTETS} octets)"
-        )
-
     data = bytearray()
-    remaining = size
-    current_address = address
-
-    while remaining > 0:
-        chunk_size = min(remaining, max_chunk_size)
+    for chunk_address, _, chunk_size in memory_chunks(
+        EXTENDED_MEMORY, address, size, max_apdu_length
+    ):
         response = await conn.request(
-            apci.MemoryExtendedRead(address=current_address, count=chunk_size)
+            apci.MemoryExtendedRead(address=chunk_address, count=chunk_size)
         )
         payload = response.payload
-        if payload.return_code != apci.ReturnCode.E_SUCCESS.value:
+        if is_negative_return_code(payload.return_code):
             raise ManagementConnectionError(
-                f"Extended memory read failed: address {current_address:#08x} "
+                f"Extended memory read failed: address "
+                f"{EXTENDED_MEMORY.format_address(chunk_address)} "
                 f"return code {payload.return_code:#04x}"
             )
-        if payload.address != current_address:
+        if payload.address != chunk_address:
             raise ManagementConnectionError(
                 f"Extended memory read failed: requested address "
-                f"{current_address:#08x}, response echoed {payload.address:#08x}"
+                f"{EXTENDED_MEMORY.format_address(chunk_address)}, response echoed "
+                f"{EXTENDED_MEMORY.format_address(payload.address)}"
             )
         if len(payload.data) != chunk_size:
             raise ManagementConnectionError(
-                f"Extended memory read failed: address {current_address:#08x} "
-                f"requested {chunk_size} octets, got {len(payload.data)}"
+                f"Extended memory read failed: address "
+                f"{EXTENDED_MEMORY.format_address(chunk_address)} requested "
+                f"{chunk_size} octets, got {len(payload.data)}"
             )
         data.extend(payload.data)
-        current_address += chunk_size
-        remaining -= chunk_size
 
     return bytes(data)

@@ -59,11 +59,12 @@ FUNCTION_PROPERTY_HEADER_OCTETS = 3
 FUNCTION_PROPERTY_EXT_HEADER_OCTETS = 6
 
 # Fixed non-data octets of a MemoryExtended*-PDU (KNX v02.01.01 - Application
-# Layer 03.03.07 - §3.4.9.1/.2 A_MemoryExtended_Read/_Write, Figures 66-69):
+# Layer 03.03.07 - §3.4.9.1/.2 A_MemoryExtended_Read/_Write, Figures 66-71):
 # matching apci.MemoryExtendedWrite.calculated_length()/
-# MemoryExtendedReadResponse.calculated_length() (count/return_code (1) + 24
-# bit address (3) = 5, one more than MEMORY_HEADER_OCTETS since the address
-# is 24 bit here instead of 16 bit). Same units as PROPERTY_VALUE_HEADER_OCTETS
+# MemoryExtendedReadResponse.calculated_length(): the second octet of the
+# extended APCI (1) + count/return_code (1) + 24 bit address (3) = 5, two
+# more than MEMORY_HEADER_OCTETS (whose count shares the APCI octet and
+# whose address is only 16 bit). Same units as PROPERTY_VALUE_HEADER_OCTETS
 # above; the spec's own "10 octets" fallback for a device that doesn't
 # support L_Data_Extended frames (§3.22 DMP_MemWrite_Extended_R) is exactly
 # STANDARD_FRAME_MAX_NPDU_LENGTH (15) minus this.

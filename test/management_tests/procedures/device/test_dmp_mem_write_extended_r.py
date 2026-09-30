@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import ManagementConnectionError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.procedures.device.dmp_mem_write_extended_r import (
     dmp_mem_write_extended_r,
 )
@@ -91,11 +91,13 @@ async def test_dmp_mem_write_extended_r_success_with_crc_accepted(
     xknx_setup: XKNX,
 ) -> None:
     """
-    Test dmp_mem_write_extended_r accepts E_SUCCESS_WITH_CRC (01h) as success.
+    Test dmp_mem_write_extended_r accepts E_SUCCESS_WITH_CRC (01h) with a matching CRC.
 
     KNX v02.01.01 - Application Layer 03.03.07 - §3.4.9.2.1, Table 4: a
     device may confirm a write with this return code instead of a bare
-    E_SUCCESS, carrying a CRC16-CCITT as confirmation_data.
+    E_SUCCESS, carrying a CRC16-CCITT over count + address + data as
+    confirmation_data. BB45h was computed with calimero-core's
+    ManagementClientImpl.crc16Ccitt() algorithm over 03 100000 010203.
     """
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
@@ -110,7 +112,7 @@ async def test_dmp_mem_write_extended_r_success_with_crc_accepted(
             ia,
             seq=0,
             payload=_response(
-                0x100000, return_code=0x01, confirmation_data=b"\x12\x34"
+                0x100000, return_code=0x01, confirmation_data=b"\xbb\x45"
             ),
         )
 
@@ -262,6 +264,79 @@ async def test_dmp_mem_write_extended_r_wrong_address_echoed(xknx_setup: XKNX) -
     responder = asyncio.create_task(respond())
     with pytest.raises(ManagementConnectionError, match=r"response echoed 0x200000"):
         await dmp_mem_write_extended_r(conn, address=0x100000, data=b"\x01\x02\x03")
+    await responder
+
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("return_code", "confirmation_data", "error", "match"),
+    [
+        (
+            0x01,
+            b"\x12\x34",
+            VerificationError,
+            r"CRC mismatch .* expected bb45, got 1234",
+        ),
+        (0xA0, b"", ManagementConnectionError, r"return code 0xa0"),
+    ],
+)
+async def test_dmp_mem_write_extended_r_crc_mismatch_and_negative_codes(
+    xknx_setup: XKNX,
+    return_code: int,
+    confirmation_data: bytes,
+    error: type[Exception],
+    match: str,
+) -> None:
+    """Test a wrong CRC and a specific negative return code (A0h) both raise."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx,
+            ia,
+            seq=0,
+            payload=_response(
+                0x100000, return_code=return_code, confirmation_data=confirmation_data
+            ),
+        )
+
+    responder = asyncio.create_task(respond())
+    with pytest.raises(error, match=match):
+        await dmp_mem_write_extended_r(conn, address=0x100000, data=b"\x01\x02\x03")
+    await responder
+
+    await conn.disconnect()
+
+
+async def test_dmp_mem_write_extended_r_other_positive_return_code(
+    xknx_setup: XKNX,
+) -> None:
+    """
+    Test a return code that isn't negative is accepted.
+
+    The A_MemoryExtended_Write_Response figures reserve every value other
+    than 00h/01h and the negative A0h-FFh for future positive confirmations.
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    async def respond() -> None:
+        await _wait_for_request(xknx, 1)
+        _process_response(
+            xknx, ia, seq=0, payload=_response(0x100000, return_code=0x02)
+        )
+
+    responder = asyncio.create_task(respond())
+    await dmp_mem_write_extended_r(conn, address=0x100000, data=b"\x01\x02\x03")
     await responder
 
     await conn.disconnect()

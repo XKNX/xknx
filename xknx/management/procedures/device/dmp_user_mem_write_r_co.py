@@ -9,7 +9,7 @@ from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import USER_MEMORY_HEADER_OCTETS, USER_MEMORY_MAX_COUNT
+from ._memory import USER_MEMORY, memory_chunks
 
 __all__ = ["dmp_user_mem_write_r_co"]
 
@@ -58,51 +58,27 @@ async def dmp_user_mem_write_r_co(
     :raises VerificationError: If verify is enabled and the read-back does
         not match what was written
     """
-    if not 0 <= address <= 0xFFFFF:
-        raise ValueError(f"address must be 0-0xFFFFF, got {address}")
-    if data and address + len(data) - 1 > 0xFFFFF:
-        raise ValueError(
-            f"address + len(data) - 1 must be <= 0xfffff, got "
-            f"{address + len(data) - 1:#07x}"
-        )
-    if max_apdu_length <= 0:
-        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
-    if not data:
-        return
-
-    max_chunk_size = min(
-        USER_MEMORY_MAX_COUNT, max_apdu_length - USER_MEMORY_HEADER_OCTETS
-    )
-    if max_chunk_size <= 0:
-        raise ValueError(
-            f"max_apdu_length {max_apdu_length} leaves no room for memory data "
-            f"(header is {USER_MEMORY_HEADER_OCTETS} octets)"
-        )
-
-    offset = 0
-    current_address = address
-
-    while offset < len(data):
-        chunk = data[offset : offset + max_chunk_size]
-        await conn.send_data(apci.UserMemoryWrite(address=current_address, data=chunk))
+    for chunk_address, offset, length in memory_chunks(
+        USER_MEMORY, address, len(data), max_apdu_length, size_name="len(data)"
+    ):
+        chunk = data[offset : offset + length]
+        await conn.send_data(apci.UserMemoryWrite(address=chunk_address, data=chunk))
 
         if verify:
             response = await conn.request(
-                apci.UserMemoryRead(address=current_address, count=len(chunk))
+                apci.UserMemoryRead(address=chunk_address, count=len(chunk))
             )
-            if response.payload.address != current_address:
+            if response.payload.address != chunk_address:
                 raise ManagementConnectionError(
                     f"User memory verify failed: requested address "
-                    f"{current_address:#07x}, response echoed "
-                    f"{response.payload.address:#07x}"
+                    f"{USER_MEMORY.format_address(chunk_address)}, response echoed "
+                    f"{USER_MEMORY.format_address(response.payload.address)}"
                 )
             if response.payload.data != chunk:
                 raise VerificationError(
-                    f"User memory verify failed at address {current_address:#07x}: "
+                    f"User memory verify failed at address "
+                    f"{USER_MEMORY.format_address(chunk_address)}: "
                     f"expected {chunk.hex()}, got {response.payload.data.hex()}"
                 )
         elif write_delay > 0:
             await asyncio.sleep(write_delay)
-
-        current_address += len(chunk)
-        offset += len(chunk)
