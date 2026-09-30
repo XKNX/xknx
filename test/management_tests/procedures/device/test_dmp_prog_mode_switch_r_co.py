@@ -12,6 +12,8 @@ from xknx.management.procedures.device.dmp_prog_mode_switch_r_co import (
 )
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
+from ....conftest import EventLoopClockAdvancer
+
 
 def _xknx_setup() -> XKNX:
     """Set up XKNX with mocked cemi_handler."""
@@ -220,9 +222,37 @@ async def test_dmp_prog_mode_switch_r_co_wrong_length_raises() -> None:
     xknx.management.process(_ack(ia, xknx, 0))
     xknx.management.process(_read_response(ia, xknx, 0, data=b""))
 
-    with pytest.raises(
-        ManagementConnectionError, match=r"returned 0 octets, expected 1"
-    ):
+    with pytest.raises(ManagementConnectionError, match=r"requested 1 octets, got 0"):
         await task
 
+    await conn.disconnect()
+
+
+async def test_dmp_prog_mode_switch_r_co_verify(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test verify=True reads the written octet back and compares it."""
+    xknx = _xknx_setup()
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(dmp_prog_mode_switch_r_co(conn, mode=True, verify=True))
+    await asyncio.sleep(0)
+
+    xknx.management.process(_ack(ia, xknx, 0))
+    xknx.management.process(_read_response(ia, xknx, 0, data=bytes([0b1101_0100])))
+    await asyncio.sleep(0)
+    xknx.management.process(_ack(ia, xknx, 1))
+    # wait out P2PConnection's rate limit before the read-back request
+    await time_travel(1)
+
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        _read_request(ia, 2)
+    )
+    xknx.management.process(_ack(ia, xknx, 2))
+    xknx.management.process(_read_response(ia, xknx, 1, data=bytes([0b0101_0101])))
+
+    await task
     await conn.disconnect()
