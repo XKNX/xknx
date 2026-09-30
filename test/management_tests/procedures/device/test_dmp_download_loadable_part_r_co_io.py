@@ -212,8 +212,8 @@ async def test_dmp_download_loadable_part_r_co_io_unload_polls_until_unloaded(
         conn,
         object_index=2,
         load_data=load_data,
-        unload_poll_timeout=1.0,
-        unload_poll_interval=0.01,
+        poll_timeout=1.0,
+        poll_interval=0.01,
     )
     await responder
 
@@ -268,8 +268,8 @@ async def test_dmp_download_loadable_part_r_co_io_unload_timeout(
             conn,
             object_index=2,
             load_data=load_data,
-            unload_poll_timeout=0.3,
-            unload_poll_interval=0.05,
+            poll_timeout=0.3,
+            poll_interval=0.05,
         )
     await responder
 
@@ -365,4 +365,147 @@ async def test_dmp_download_loadable_part_r_co_io_load_completed_wrong_state_rai
     await responder
 
     load_data.assert_awaited_once()
+    await conn.disconnect()
+
+
+async def test_dmp_download_loadable_part_r_co_io_load_completing_polled(
+    xknx_setup: XKNX,
+) -> None:
+    """
+    Test Load Completed polls through LOAD_COMPLETING until LOADED.
+
+    KNX v01.10.01 - Resources 03.05.01 - Table 93 / §4.23.2.4.1: a device
+    with a slow completion reports LoadCompleting first and the client
+    re-reads until it changes.
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    load_data = AsyncMock()
+
+    responder = asyncio.create_task(
+        _respond_in_sequence(
+            xknx,
+            ia,
+            [
+                LoadState.UNLOADED,
+                LoadState.LOADING,
+                LoadState.LOAD_COMPLETING,
+                LoadState.LOAD_COMPLETING,
+                LoadState.LOADED,
+            ],
+        )
+    )
+    await dmp_download_loadable_part_r_co_io(
+        conn, object_index=2, load_data=load_data, poll_interval=0.01
+    )
+    await responder
+
+    assert _sent_events(xknx) == [unload(), start_loading(), load_completed()]
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("states", "match"),
+    [
+        # Unload answered with something other than UNLOADING/UNLOADED
+        ([LoadState.LOADED], r"Unload failed: expected UNLOADED, got LOADED"),
+        # UNLOADING, then a state that isn't UNLOADED - no further retries
+        (
+            [LoadState.UNLOADING, LoadState.LOADED],
+            r"entered LOADED \(expected UNLOADED\)",
+        ),
+    ],
+)
+async def test_dmp_download_loadable_part_r_co_io_unload_breaks_on_other_state(
+    xknx_setup: XKNX, states: list[LoadState], match: str
+) -> None:
+    """
+    Test Unload only retries while UNLOADING and breaks with an error otherwise.
+
+    KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.4: "If data is
+    equal 04 (unloading) read Property and verify value / if data is equal
+    00 (unloaded) continue / else break with error".
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    load_data = AsyncMock()
+
+    responder = asyncio.create_task(_respond_in_sequence(xknx, ia, states))
+    with pytest.raises(ManagementConnectionError, match=match):
+        await dmp_download_loadable_part_r_co_io(
+            conn, object_index=2, load_data=load_data, poll_interval=0.01
+        )
+    await responder
+
+    load_data.assert_not_awaited()
+    await conn.disconnect()
+
+
+async def test_dmp_download_loadable_part_r_co_io_without_unload(
+    xknx_setup: XKNX,
+) -> None:
+    """Test unload_first=False skips the optional Unload step."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    load_data = AsyncMock()
+
+    responder = asyncio.create_task(
+        _respond_in_sequence(xknx, ia, [LoadState.LOADING, LoadState.LOADED])
+    )
+    await dmp_download_loadable_part_r_co_io(
+        conn, object_index=2, load_data=load_data, unload_first=False
+    )
+    await responder
+
+    assert _sent_events(xknx) == [start_loading(), load_completed()]
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "match"),
+    [
+        (
+            {"additional_load_controls": [load_completed()]},
+            r"only contain Additional Load Controls events \(first octet 03h\), got 02h",
+        ),
+        (
+            {"additional_load_controls": [bytes([0x03, 0x00])]},
+            r"event_data must be 10 octets, got 2",
+        ),
+        ({"poll_interval": 3.5}, r"poll_interval must be more than 0"),
+    ],
+)
+async def test_dmp_download_loadable_part_r_co_io_invalid_arguments(
+    xknx_setup: XKNX, kwargs: dict[str, object], match: str
+) -> None:
+    """Test invalid arguments raise ValueError before anything is sent."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    load_data = AsyncMock()
+    with pytest.raises(ValueError, match=match):
+        await dmp_download_loadable_part_r_co_io(
+            conn,
+            object_index=2,
+            load_data=load_data,
+            **kwargs,  # type: ignore[arg-type]
+        )
+
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    load_data.assert_not_awaited()
     await conn.disconnect()

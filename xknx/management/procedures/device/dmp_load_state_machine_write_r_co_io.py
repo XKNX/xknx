@@ -8,7 +8,12 @@ from functools import partial
 from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
 
-from ._state_machine import check_event_size, expected_states, poll_for_state
+from ._state_machine import (
+    check_event_size,
+    check_load_poll_interval,
+    expected_states,
+    poll_for_state,
+)
 from .dmp_interface_object_write_r import dmp_interface_object_write_r
 from .load_state import LoadState, decode_load_state
 
@@ -21,9 +26,6 @@ __all__ = ["dmp_load_state_machine_write_r_co_io"]
 # failed."
 _DEFAULT_POLL_TIMEOUT = 30.0
 _DEFAULT_POLL_INTERVAL = 1.0
-# KNX v01.10.01 - Resources 03.05.01 - §4.23.2.4.1: "The period for reading
-# shall not exceed half the TL-timeout, i.e. 3 seconds."
-_MAX_POLL_INTERVAL = 3.0
 
 
 async def dmp_load_state_machine_write_r_co_io(
@@ -106,11 +108,7 @@ async def dmp_load_state_machine_write_r_co_io(
         ``poll_timeout``
     """
     check_event_size(event_data)
-    if not 0 < poll_interval <= _MAX_POLL_INTERVAL:
-        raise ValueError(
-            f"poll_interval must be more than 0 and at most {_MAX_POLL_INTERVAL}s, "
-            f"got {poll_interval}"
-        )
+    check_load_poll_interval(poll_interval)
     expected = expected_states(expected_state)
     property_id = ResourceGenericPropertyId.PID_LOAD_STATE_CONTROL
     context = f"object {object_index}"
