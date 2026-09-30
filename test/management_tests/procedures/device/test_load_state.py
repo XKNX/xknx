@@ -28,21 +28,48 @@ def test_unload() -> None:
 def test_alloc_abs_data_seg() -> None:
     """Test alloc_abs_data_seg() encodes 03h 00h SSSS EEEE AA TT MM 00h."""
     result = load_state.alloc_abs_data_seg(
-        0x1234, 0x0100, access_attributes=0x12, memory_type=3, memory_attributes=0x80
+        0x1234,
+        0x0100,
+        access_attributes=0x12,
+        memory_type=load_state.MemoryType.EEPROM,
+        checksum_control=True,
     )
     assert result == bytes([0x03, 0x00, 0x12, 0x34, 0x01, 0x00, 0x12, 0x03, 0x80, 0x00])
 
 
 def test_alloc_abs_data_seg_defaults() -> None:
-    """Test alloc_abs_data_seg() defaults access/memory fields to 0."""
-    result = load_state.alloc_abs_data_seg(0x0010, 0x0020)
-    assert result == bytes([0x03, 0x00, 0x00, 0x10, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00])
+    """Test alloc_abs_data_seg() defaults access attributes and checksum control to 0."""
+    result = load_state.alloc_abs_data_seg(
+        0x0010, 0x0020, memory_type=load_state.MemoryType.ZERO_PAGE_RAM
+    )
+    assert result == bytes([0x03, 0x00, 0x00, 0x10, 0x00, 0x20, 0x00, 0x01, 0x00, 0x00])
+
+
+@pytest.mark.parametrize("memory_type", [0, 4, 7])
+def test_alloc_abs_data_seg_undefined_memory_type(memory_type: int) -> None:
+    """
+    Test alloc_abs_data_seg() rejects a memory type the spec doesn't define.
+
+    KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.3.4 only defines
+    1 Zero page RAM, 2 RAM and 3 EEPROM.
+    """
+    with pytest.raises(ValueError, match=r"is not a valid MemoryType"):
+        load_state.alloc_abs_data_seg(0, 1, memory_type=memory_type)  # type: ignore[arg-type]
+
+
+def test_alloc_abs_data_seg_memory_type_is_required() -> None:
+    """Test alloc_abs_data_seg() has no memory_type default (0 is undefined)."""
+    with pytest.raises(TypeError, match=r"memory_type"):
+        load_state.alloc_abs_data_seg(0, 1)  # type: ignore[call-arg]  # pylint: disable=missing-kwoa
 
 
 def test_alloc_abs_stack_seg() -> None:
     """Test alloc_abs_stack_seg() encodes 03h 01h SSSS EEEE AA TT MM 00h."""
     result = load_state.alloc_abs_stack_seg(
-        0x2000, 0x0080, access_attributes=0xFF, memory_type=2, memory_attributes=0
+        0x2000,
+        0x0080,
+        access_attributes=0xFF,
+        memory_type=load_state.MemoryType.RAM,
     )
     assert result == bytes([0x03, 0x01, 0x20, 0x00, 0x00, 0x80, 0xFF, 0x02, 0x00, 0x00])
 
@@ -86,12 +113,14 @@ def test_relative_allocation() -> None:
 
 def test_data_relative_allocation() -> None:
     """Test data_relative_allocation() encodes 03h 0Bh + 4 octet size + mode + fill + 2 reserved."""
-    result = load_state.data_relative_allocation(0x00010000, mode=1, fill=0xFF)
+    result = load_state.data_relative_allocation(
+        0x00010000, fill_memory=True, fill=0xFF
+    )
     assert result == bytes([0x03, 0x0B, 0x00, 0x01, 0x00, 0x00, 0x01, 0xFF, 0x00, 0x00])
 
 
 def test_data_relative_allocation_defaults() -> None:
-    """Test data_relative_allocation() defaults mode/fill to 0."""
+    """Test data_relative_allocation() defaults fill_memory/fill to off/0."""
     result = load_state.data_relative_allocation(0x10)
     assert result == bytes([0x03, 0x0B, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00])
 
@@ -105,13 +134,15 @@ def test_pad_rejects_oversized_event() -> None:
 def test_alloc_abs_data_seg_start_address_out_of_range() -> None:
     """Test alloc_abs_data_seg() raises ValueError for a start_address above 0xFFFF."""
     with pytest.raises(ValueError, match=r"start_address must be 0-0xffff"):
-        load_state.alloc_abs_data_seg(0x10000, 1)
+        load_state.alloc_abs_data_seg(0x10000, 1, memory_type=load_state.MemoryType.RAM)
 
 
-def test_alloc_abs_data_seg_memory_type_out_of_range() -> None:
-    """Test alloc_abs_data_seg() raises ValueError for a memory_type above 0xFF."""
-    with pytest.raises(ValueError, match=r"memory_type must be 0-0xff"):
-        load_state.alloc_abs_data_seg(0, 1, memory_type=0x100)
+def test_alloc_abs_data_seg_access_attributes_out_of_range() -> None:
+    """Test alloc_abs_data_seg() raises ValueError for access_attributes above 0xFF."""
+    with pytest.raises(ValueError, match=r"access_attributes must be 0-0xff"):
+        load_state.alloc_abs_data_seg(
+            0, 1, memory_type=load_state.MemoryType.RAM, access_attributes=0x100
+        )
 
 
 def test_task_ctrl_2_field_out_of_range() -> None:
@@ -145,8 +176,8 @@ def test_all_events_are_ten_octets() -> None:
         load_state.start_loading(),
         load_state.load_completed(),
         load_state.unload(),
-        load_state.alloc_abs_data_seg(0, 0),
-        load_state.alloc_abs_stack_seg(0, 0),
+        load_state.alloc_abs_data_seg(0, 0, memory_type=load_state.MemoryType.RAM),
+        load_state.alloc_abs_stack_seg(0, 0, memory_type=load_state.MemoryType.RAM),
         load_state.alloc_abs_task_seg(0, 0, b"\x00" * 5),
         load_state.task_ptr(0, 0, 0),
         load_state.task_ctrl_1(0, 0),

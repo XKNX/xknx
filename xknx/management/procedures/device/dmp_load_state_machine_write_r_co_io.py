@@ -11,7 +11,7 @@ from xknx.profile.const import ResourceGenericPropertyId
 
 from .dmp_interface_object_read_r import dmp_interface_object_read_r
 from .dmp_interface_object_write_r import dmp_interface_object_write_r
-from .load_state import LOAD_EVENT_SIZE, LoadState
+from .load_state import LOAD_EVENT_SIZE, LoadState, decode_load_state
 
 __all__ = ["dmp_load_state_machine_write_r_co_io"]
 
@@ -22,6 +22,9 @@ __all__ = ["dmp_load_state_machine_write_r_co_io"]
 # failed."
 _DEFAULT_POLL_TIMEOUT = 30.0
 _DEFAULT_POLL_INTERVAL = 1.0
+# KNX v01.10.01 - Resources 03.05.01 - §4.23.2.4.1: "The period for reading
+# shall not exceed half the TL-timeout, i.e. 3 seconds."
+_MAX_POLL_INTERVAL = 3.0
 
 
 async def dmp_load_state_machine_write_r_co_io(
@@ -61,6 +64,15 @@ async def dmp_load_state_machine_write_r_co_io(
     the spec's own minimum wait before a state transition may be considered
     failed (§4.23.2.1).
 
+    While polling through LoadCompleting, KNX v01.10.01 - Resources 03.05.01
+    - §4.23.2.4.1 limits the read period to half the TL-timeout (3 seconds),
+    so ``poll_interval`` is capped there. The same clause says the MaC
+    "shall try to re-establish the connection periodically" if the device
+    drops it during that transition (NOTE 86: "A device may be offline
+    during state LoadCompleting"); this function works on the given
+    ``conn`` and can't reconnect, so that is left to the caller - a dropped
+    connection surfaces as ``ManagementConnectionError``.
+
     Note that a 10 octet ``event_data`` reaches
     ``dmp_interface_object_write_r`` as a single ``PDT_CONTROL`` element,
     whose ``A_PropertyValue_Write``-PDU overhead is
@@ -84,9 +96,11 @@ async def dmp_load_state_machine_write_r_co_io(
         ``poll_timeout`` instead of a state change).
     :param poll_timeout: Seconds to poll for ``expected_state`` before giving
         up
-    :param poll_interval: Seconds to wait between polls
+    :param poll_interval: Seconds to wait between polls, more than 0 and at
+        most 3
     :return: The resulting Load State
-    :raises ValueError: If ``event_data`` is not exactly 10 octets
+    :raises ValueError: If ``event_data`` is not exactly 10 octets, or
+        ``poll_interval`` is outside (0, 3]
     :raises ManagementConnectionError: If the Load State Machine reaches
         ``LoadState.ERROR``, or does not reach ``expected_state`` within
         ``poll_timeout``
@@ -94,6 +108,11 @@ async def dmp_load_state_machine_write_r_co_io(
     if len(event_data) != LOAD_EVENT_SIZE:
         raise ValueError(
             f"event_data must be {LOAD_EVENT_SIZE} octets, got {len(event_data)}"
+        )
+    if not 0 < poll_interval <= _MAX_POLL_INTERVAL:
+        raise ValueError(
+            f"poll_interval must be more than 0 and at most {_MAX_POLL_INTERVAL}s, "
+            f"got {poll_interval}"
         )
     response = await dmp_interface_object_write_r(
         conn,
@@ -103,7 +122,7 @@ async def dmp_load_state_machine_write_r_co_io(
         count=1,
         start_index=1,
     )
-    state = _decode(response, object_index)
+    state = decode_load_state(response, f"object {object_index}")
     if expected_state is None or state == expected_state:
         return state
     return await _poll_for_state(
@@ -141,31 +160,5 @@ async def _poll_for_state(
             count=1,
             start_index=1,
         )
-        state = _decode(data, object_index)
+        state = decode_load_state(data, f"object {object_index}")
     return state
-
-
-def _decode(data: bytes, object_index: int) -> LoadState:
-    """
-    Map the Load State octet to :class:`LoadState`, erroring on unknowns.
-
-    ``PID_LOAD_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
-    Resources 03.05.01 - §4.2.5); the 10 octet width is a write-only value.
-    A length other than 1 is rejected here rather than just indexing
-    ``data[0]`` - ``dmp_interface_object_write_r``'s own guard only compares
-    ``nr_of_elem``, not the octet count, so a device echoing back its
-    10 octet write event (a load event *type*, not a load *state*) would
-    otherwise be silently decoded as a state.
-    """
-    if len(data) != 1:
-        raise ManagementConnectionError(
-            f"object {object_index} Load State Machine returned {len(data)} "
-            f"octets, expected 1"
-        )
-    try:
-        return LoadState(data[0])
-    except ValueError as exc:
-        raise ManagementConnectionError(
-            f"object {object_index} Load State Machine reported unknown "
-            f"state {data[0]:#04x}"
-        ) from exc

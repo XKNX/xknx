@@ -127,6 +127,33 @@ async def test_dmp_load_state_machine_write_r_co_io_wrong_event_length(
     await conn.disconnect()
 
 
+@pytest.mark.parametrize("poll_interval", [0, -1, 3.01])
+async def test_dmp_load_state_machine_write_r_co_io_poll_interval_out_of_range(
+    xknx_setup: XKNX, poll_interval: float
+) -> None:
+    """
+    Test the procedure rejects a poll_interval outside (0, 3] seconds.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.23.2.4.1: "The period for
+    reading shall not exceed half the TL-timeout, i.e. 3 seconds."
+    """
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    with pytest.raises(ValueError, match=r"poll_interval must be more than 0"):
+        await dmp_load_state_machine_write_r_co_io(
+            conn,
+            object_index=2,
+            event_data=start_loading(),
+            expected_state=LoadState.LOADING,
+            poll_interval=poll_interval,
+        )
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    await conn.disconnect()
+
+
 async def test_dmp_load_state_machine_write_r_co_io_expected_state_matches_immediately(
     xknx_setup: XKNX,
 ) -> None:
