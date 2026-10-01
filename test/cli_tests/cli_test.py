@@ -13,7 +13,14 @@ from xknx.cli._command import connection_config, gateway_argument
 from xknx.cli.group import GroupCommand
 from xknx.cli.group.monitor import print_telegram
 from xknx.cli.group.write import parse_raw_value
-from xknx.dpt import DPTArray, DPTBinary, DPTColorRGB, DPTSwitch, DPTTemperature
+from xknx.dpt import (
+    DPTArray,
+    DPTBinary,
+    DPTColorRGB,
+    DPTString,
+    DPTSwitch,
+    DPTTemperature,
+)
 from xknx.exceptions import CommunicationError, ConfirmationError
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionType, GatewayDescriptor
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
@@ -237,6 +244,10 @@ def test_write_with_type_converts_value() -> None:
         ("on", "switch", DPTBinary(True)),  # plain string - not JSON
         ("comfort", "hvac_mode", DPTArray((0x01,))),  # enum name string
         ('{"red": 255, "green": 0, "blue": 0}', "232.600", DPTArray((255, 0, 0))),
+        # string DPT values are literal text, never JSON-decoded
+        ("null", "string", DPTString.to_knx("null")),
+        ("true", "string", DPTString.to_knx("true")),
+        ("1e2", "string", DPTString.to_knx("1e2")),
     ],
 )
 def test_write_value_parsing(
@@ -256,9 +267,22 @@ def test_write_value_parsing(
 def test_write_invalid_json(capsys: pytest.CaptureFixture[str]) -> None:
     """Test the write command rejects malformed JSON before connecting."""
     with patch("xknx.xknx.knx_interface_factory") as factory_mock:
-        assert main(["group", "write", "1/2/3", '{"red": ', "--type", "232.600"]) == 1
+        assert main(["group", "write", "1/2/3", '{"red": ', "--type", "232.600"]) == 2
     factory_mock.assert_not_called()
     assert "Error: invalid JSON value" in capsys.readouterr().err
+
+
+def test_write_raw_hex_payload() -> None:
+    """Test a typeless hex value - as printed by read - writes a raw payload."""
+    with (
+        patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()
+        ) as send_mock,
+    ):
+        assert main(["group", "write", "1/2/3", "0c33"]) == 0
+    telegram = send_mock.call_args.args[0]
+    assert telegram.payload == GroupValueWrite(DPTArray((0x0C, 0x33)))
 
 
 @pytest.mark.parametrize(
@@ -310,7 +334,7 @@ def test_write_confirmation_error(capsys: pytest.CaptureFixture[str]) -> None:
 def test_write_requires_type(value: str, capsys: pytest.CaptureFixture[str]) -> None:
     """Test the write command rejects values without --type before connecting."""
     with patch("xknx.xknx.knx_interface_factory") as factory_mock:
-        assert main(["group", "write", "1/2/3", value]) == 1
+        assert main(["group", "write", "1/2/3", value]) == 2
     factory_mock.assert_not_called()
     assert "--type is required" in capsys.readouterr().err
 
@@ -318,7 +342,7 @@ def test_write_requires_type(value: str, capsys: pytest.CaptureFixture[str]) -> 
 def test_write_invalid_value_for_type(capsys: pytest.CaptureFixture[str]) -> None:
     """Test the write command rejects an unconvertible value before connecting."""
     with patch("xknx.xknx.knx_interface_factory") as factory_mock:
-        assert main(["group", "write", "1/2/3", "nope", "--type", "temperature"]) == 1
+        assert main(["group", "write", "1/2/3", "nope", "--type", "temperature"]) == 2
     factory_mock.assert_not_called()
     err = capsys.readouterr().err
     assert "Error: Could not serialize DPTTemperature" in err

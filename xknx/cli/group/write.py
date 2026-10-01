@@ -8,7 +8,7 @@ import sys
 from typing import Any
 
 from xknx import XKNX
-from xknx.dpt import DPTBinary
+from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTComplex, DPTString
 from xknx.exceptions import ConversionError
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueWrite
@@ -17,14 +17,20 @@ from .._command import dpt_argument, group_address_argument
 from ._base import GroupCommand
 
 
-def parse_typed_value(raw: str) -> Any:
-    """Parse a command line value for a DPT transcoder: JSON, or a plain string."""
-    try:
-        return json.loads(raw)  # numbers, booleans and objects for structured DPTs
-    except json.JSONDecodeError as err:
-        if raw.lstrip().startswith(("{", "[")):
-            # a malformed structured value should not degrade to a string
+def parse_typed_value(raw: str, transcoder: type[DPTBase]) -> Any:
+    """Parse a command line value for a DPT transcoder."""
+    if issubclass(transcoder, DPTComplex):
+        # structured DPTs take a JSON object, e.g. '{"red": 255, ...}'
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError as err:
             raise ConversionError(f"invalid JSON value: {err}") from None
+    if issubclass(transcoder, DPTString):
+        # literal text - don't interpret 'true', 'null' or '1e2'
+        return raw
+    try:
+        return json.loads(raw)  # numbers and booleans, e.g. '21.5' or 'true'
+    except json.JSONDecodeError:
         return raw  # plain strings, e.g. 'on' or 'comfort'
 
 
@@ -43,6 +49,19 @@ def parse_raw_value(raw: str) -> bool | int | float | str:
             return raw
 
 
+def parse_raw_payload(raw: str) -> DPTBinary | DPTArray | None:
+    """Parse an untyped payload: 'on'/'off', an integer 0-63 or a hex byte string."""
+    value = parse_raw_value(raw)
+    if isinstance(value, int) and 0 <= value <= 63:
+        return DPTBinary(value)
+    if isinstance(value, str) and value:
+        try:
+            return DPTArray(tuple(bytes.fromhex(value)))
+        except ValueError:
+            return None
+    return None
+
+
 class WriteCommand(GroupCommand):
     """Write a value to a group address."""
 
@@ -59,9 +78,9 @@ class WriteCommand(GroupCommand):
         )
         parser.add_argument(
             "value",
-            help="value to write: 'on'/'off' or a raw integer 0-63 without --type,"
-            " otherwise a value for the given DPT, e.g. '21.5' with --type 9.001"
-            " or a JSON object for structured DPTs",
+            help="value to write: 'on'/'off', a raw integer 0-63 or a hex byte"
+            " string without --type, otherwise a value for the given DPT,"
+            " e.g. '21.5' with --type 9.001 or a JSON object for structured DPTs",
         )
         parser.add_argument(
             "--type",
@@ -74,17 +93,21 @@ class WriteCommand(GroupCommand):
         if args.type is not None:
             # convert before connecting to fail early for invalid values -
             # the encoded payload is passed through to `run_connected`
-            args.value = args.type.to_knx(parse_typed_value(args.value))
+            try:
+                args.value = args.type.to_knx(parse_typed_value(args.value, args.type))
+            except ConversionError as err:
+                print(f"Error: {err.description}", file=sys.stderr)
+                return 2
         else:
-            value = parse_raw_value(args.value)
-            if not isinstance(value, int) or not 0 <= value <= 63:
+            payload = parse_raw_payload(args.value)
+            if payload is None:
                 print(
-                    "Error: --type is required for values other than 'on'/'off' "
-                    "or raw integers 0-63.",
+                    "Error: --type is required for values other than 'on'/'off',"
+                    " raw integers 0-63 or hex byte strings.",
                     file=sys.stderr,
                 )
-                return 1
-            args.value = DPTBinary(value)
+                return 2
+            args.value = payload
         return await super().run(args)
 
     async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
