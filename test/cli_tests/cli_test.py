@@ -141,6 +141,9 @@ def test_connection_config_tunneling() -> None:
         ["group", "read", "1/2/3", "--type", "unknown"],  # unknown DPT type
         ["group", "write", "1/2/3", "1", "--type", "unknown"],  # unknown DPT type
         ["group", "monitor", "--filter", "1-2-3/1"],  # invalid filter pattern
+        ["scan", "--timeout", "0"],  # timeout must be positive
+        ["scan", "--timeout", "-1"],  # timeout must be positive
+        ["scan", "--timeout", "abc"],  # invalid timeout
     ],
 )
 def test_parser_errors(argv: list[str]) -> None:
@@ -432,6 +435,15 @@ def test_scan_no_gateways(capsys: pytest.CaptureFixture[str]) -> None:
     ):
         assert main(["-vv", "scan"]) == 1
     assert "No gateways found." in capsys.readouterr().err
+
+
+def test_scan_no_usable_interface(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test the scan command reports when no usable interface exists."""
+    with patch(
+        "xknx.cli.scan.get_local_ips", return_value=[Mock(ip="127.0.0.1")]
+    ):  # only loopback
+        assert main(["scan"]) == 1
+    assert "no usable network interface" in capsys.readouterr().err
 
 
 def test_scan_all_interfaces_failed(capsys: pytest.CaptureFixture[str]) -> None:

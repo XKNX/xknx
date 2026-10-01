@@ -18,6 +18,17 @@ from ._command import Command, add_local_ip_argument
 logger = logging.getLogger("xknx.cli")
 
 
+def timeout_argument(value: str) -> float:
+    """Parse a positive timeout command line argument."""
+    try:
+        timeout = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"invalid timeout {value!r}") from None
+    if timeout <= 0:
+        raise argparse.ArgumentTypeError(f"timeout must be positive: {value}")
+    return timeout
+
+
 def _print_gateway(gateway: GatewayDescriptor) -> None:
     """Print a found gateway."""
     tunnelling = (
@@ -53,7 +64,7 @@ class ScanCommand(Command):
         add_local_ip_argument(parser)
         parser.add_argument(
             "--timeout",
-            type=float,
+            type=timeout_argument,
             default=3.0,
             help="scan timeout in seconds (default: 3)",
         )
@@ -63,12 +74,15 @@ class ScanCommand(Command):
         if args.local_ip is not None:
             local_ips = [args.local_ip]
         else:
+            # get_local_ips() filters to IPv4, whose `ip` is always a str
             local_ips = [
                 ip.ip
                 for ip in get_local_ips()
-                if isinstance(ip.ip, str)
-                and not ipaddress.IPv4Address(ip.ip).is_loopback
+                if not ipaddress.IPv4Address(ip.ip).is_loopback
             ]
+        if not local_ips:
+            print("Error: no usable network interface found.", file=sys.stderr)
+            return 1
         xknx = XKNX()
         found: set[tuple[str, int]] = set()
         errors: list[str] = []
