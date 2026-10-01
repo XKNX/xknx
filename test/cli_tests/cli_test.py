@@ -413,14 +413,23 @@ def test_scan(capsys: pytest.CaptureFixture[str]) -> None:
     assert "tunnelling: UDP" in out
 
 
-def test_scan_local_ip_error(capsys: pytest.CaptureFixture[str]) -> None:
-    """Test scan errors are raised when an explicit local IP was given."""
+@pytest.mark.parametrize(
+    "error",
+    [
+        CommunicationError("bind failed"),
+        OSError(99, "Cannot assign requested address"),  # EADDRNOTAVAIL
+    ],
+)
+def test_scan_local_ip_error(
+    error: Exception, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Test scan errors are reported when an explicit local IP was given."""
     with patch(
         "xknx.cli.scan.GatewayScanner",
-        return_value=_scanner_mock([], error=CommunicationError("bind failed")),
+        return_value=_scanner_mock([], error=error),
     ):
         assert main(["scan", "--local-ip", "10.0.0.2"]) == 1
-    assert "Error: bind failed" in capsys.readouterr().err
+    assert f"Error: {error}" in capsys.readouterr().err
 
 
 def test_scan_all_interfaces(capsys: pytest.CaptureFixture[str]) -> None:

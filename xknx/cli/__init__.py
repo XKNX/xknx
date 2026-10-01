@@ -98,6 +98,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ConversionError as err:
         print(f"Error: {err.description}", file=sys.stderr)
         return 1
-    except XKNXException as err:
+    except (XKNXException, OSError) as err:
         print(f"Error: {err}", file=sys.stderr)
         return 1
