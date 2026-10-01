@@ -24,6 +24,7 @@ An instantiated device can be added to `xknx.devices` to receive telegrams and s
   light.name = "light.kitchen_ceiling"
   ```
 * `device_updated_cb` List of callbacks for each update.
+* `last_update` Cause of the latest update, set before `device_updated_cb` callbacks are called - a `DeviceUpdate` with the `telegram` causing it (or `None`) and its application defined `context` (`Telegram.context`, or the one of the active `xknx.telegram.telegram_context()`).
 * `group_address*` Group address for a specific function. If a list is passed the first element is used for sending / reading,  the rest are passively updating state (listening group address).
 
 * `group_addresses()` Returns a set of all configured group addresses of this Device.

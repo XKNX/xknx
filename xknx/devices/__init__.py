@@ -5,7 +5,7 @@ from .climate import Climate
 from .climate_mode import ClimateMode
 from .cover import Cover
 from .datetime import DateDevice, DateTimeDevice, TimeDevice
-from .device import Device
+from .device import Device, DeviceUpdate
 from .devices import Devices
 from .expose_sensor import ExposeSensor
 from .fan import Fan
@@ -27,6 +27,7 @@ __all__ = [
     "DateDevice",
     "DateTimeDevice",
     "Device",
+    "DeviceUpdate",
     "Devices",
     "ExposeSensor",
     "Fan",
