@@ -10,10 +10,10 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from xknx.cli import group, main
-from xknx.cli._command import connection_config, gateway_argument
+from xknx.cli._command import connection_config, format_value, gateway_argument
 from xknx.cli.group import GroupCommand
 from xknx.cli.group.monitor import _block_forever, print_telegram
-from xknx.cli.group.write import parse_raw_value
+from xknx.cli.group.write import parse_raw_payload, parse_raw_value
 from xknx.dpt import (
     DPTArray,
     DPTBinary,
@@ -276,6 +276,24 @@ def test_write_invalid_json(capsys: pytest.CaptureFixture[str]) -> None:
     assert "Error: invalid JSON value" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        DPTArray((0x21,)),  # all-digit hex - must not become the integer 21
+        DPTArray((0x0C, 0x33)),
+        DPTArray((0x00,)),
+    ],
+)
+def test_raw_payload_round_trip(payload: DPTArray) -> None:
+    """Test raw payloads printed by read parse back to the same payload."""
+    assert parse_raw_payload(format_value(payload.value)) == payload
+
+
+def test_raw_integer_is_binary_payload() -> None:
+    """Test an unprefixed integer is a 6-bit payload, not raw bytes."""
+    assert parse_raw_payload("21") == DPTBinary(21)
+
+
 def test_write_raw_hex_payload() -> None:
     """Test a typeless hex value - as printed by read - writes a raw payload."""
     with (
@@ -284,7 +302,7 @@ def test_write_raw_hex_payload() -> None:
             "xknx.cemi.cemi_handler.CEMIHandler.send_telegram", AsyncMock()
         ) as send_mock,
     ):
-        assert main(["group", "write", "1/2/3", "0c33"]) == 0
+        assert main(["group", "write", "1/2/3", "0x0c33"]) == 0
     telegram = send_mock.call_args.args[0]
     assert telegram.payload == GroupValueWrite(DPTArray((0x0C, 0x33)))
 
@@ -298,7 +316,7 @@ def test_write_raw_hex_payload() -> None:
             DPTColorRGB.from_knx(DPTArray((255, 0, 0))),
             '{"red": 255, "green": 0, "blue": 0}\n',
         ),
-        ((12, 51), "0c33\n"),  # raw payload read without --type
+        ((12, 51), "0x0c33\n"),  # raw payload read without --type
     ],
 )
 def test_read_output_format(
@@ -333,6 +351,9 @@ def test_write_confirmation_error(capsys: pytest.CaptureFixture[str]) -> None:
         "something",  # string requires a transcoder
         "100",  # out of DPTBinary range
         "-1",  # out of DPTBinary range
+        "0c33",  # raw bytes need the 0x prefix
+        "0x",  # no bytes
+        "0x123",  # odd number of hex digits
     ],
 )
 def test_write_requires_type(value: str, capsys: pytest.CaptureFixture[str]) -> None:
@@ -538,7 +559,7 @@ def test_print_telegram(capsys: pytest.CaptureFixture[str]) -> None:
     )
     print_telegram(array_telegram)
     # raw payloads print like `group read` output
-    assert "| 0c33" in capsys.readouterr().out
+    assert "| 0x0c33" in capsys.readouterr().out
 
     read_telegram = Telegram(
         destination_address=GroupAddress("1/2/3"),

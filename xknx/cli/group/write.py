@@ -50,15 +50,16 @@ def parse_raw_value(raw: str) -> bool | int | float | str:
 
 
 def parse_raw_payload(raw: str) -> DPTBinary | DPTArray | None:
-    """Parse an untyped payload: 'on'/'off', an integer 0-63 or a hex byte string."""
+    """Parse an untyped payload: 'on'/'off', an integer 0-63 or '0x' hex bytes."""
+    if raw[:2].lower() == "0x":
+        try:
+            payload = bytes.fromhex(raw[2:])
+        except ValueError:
+            return None
+        return DPTArray(tuple(payload)) if payload else None
     value = parse_raw_value(raw)
     if isinstance(value, int) and 0 <= value <= 63:
         return DPTBinary(value)
-    if isinstance(value, str) and value:
-        try:
-            return DPTArray(tuple(bytes.fromhex(value)))
-        except ValueError:
-            return None
     return None
 
 
@@ -78,8 +79,8 @@ class WriteCommand(GroupCommand):
         )
         parser.add_argument(
             "value",
-            help="value to write: 'on'/'off', a raw integer 0-63 or a hex byte"
-            " string without --type, otherwise a value for the given DPT,"
+            help="value to write: 'on'/'off', a raw integer 0-63 or raw bytes"
+            " like '0x0c33' without --type, otherwise a value for the given DPT,"
             " e.g. '21.5' with --type 9.001 or a JSON object for structured DPTs",
         )
         parser.add_argument(
@@ -103,7 +104,7 @@ class WriteCommand(GroupCommand):
             if payload is None:
                 print(
                     "Error: --type is required for values other than 'on'/'off',"
-                    " raw integers 0-63 or hex byte strings.",
+                    " raw integers 0-63 or raw bytes like '0x0c33'.",
                     file=sys.stderr,
                 )
                 return 2

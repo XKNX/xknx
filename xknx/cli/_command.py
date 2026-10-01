@@ -21,7 +21,8 @@ def format_value(value: Any) -> str:
     if isinstance(value, DPTEnumData):
         return value.name.lower()
     if isinstance(value, tuple):  # raw payload read without a DPT
-        return bytes(value).hex()
+        # the prefix tells it apart from a 6-bit integer, e.g. 0x21 vs 21
+        return f"0x{bytes(value).hex()}"
     return str(value)
 
 
