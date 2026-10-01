@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 from collections.abc import AsyncIterator
+import re
 import runpy
 import sys
 from unittest.mock import AsyncMock, Mock, patch
@@ -91,22 +92,25 @@ def test_gateway_argument(raw: str, expected: tuple[str, int]) -> None:
 
 
 @pytest.mark.parametrize(
-    "raw",
+    ("raw", "message"),
     [
-        ":3671",  # missing host
-        "10.0.0.1:0",  # port out of range
-        "10.0.0.1:65536",  # port out of range
-        "10.0.0.1:notaport",  # invalid port
-        "2001:db8::1",  # IPv6 is not supported by the KNX/IP interface
-        "[2001:db8::1]:3671",  # IPv6 is not supported by the KNX/IP interface
-        "gateway.example/path",  # not plain 'host[:port]'
-        "user@gateway.example",  # not plain 'host[:port]'
-        "gateway.example?x=1",  # not plain 'host[:port]'
+        (":3671", "missing host"),
+        ("10.0.0.1:", "missing port"),
+        ("10.0.0.1:0", "port out of range"),
+        ("10.0.0.1:65536", "port out of range"),
+        ("10.0.0.1:notaport", "invalid port"),
+        ("10.0.0.1:3671:99", "expected 'host[:port]'"),
+        ("[10.0.0.1]:3671", "expected 'host[:port]'"),
+        ("2001:db8::1", "IPv6"),  # not supported by the KNX/IP interface
+        ("[2001:db8::1]:3671", "IPv6"),  # not supported by the KNX/IP interface
+        ("gateway.example/path", "expected 'host[:port]'"),
+        ("user@gateway.example", "expected 'host[:port]'"),
+        ("gateway.example?x=1", "expected 'host[:port]'"),
     ],
 )
-def test_gateway_argument_invalid(raw: str) -> None:
-    """Test invalid gateway arguments are rejected."""
-    with pytest.raises(argparse.ArgumentTypeError):
+def test_gateway_argument_invalid(raw: str, message: str) -> None:
+    """Test invalid gateway arguments are rejected with a matching message."""
+    with pytest.raises(argparse.ArgumentTypeError, match=re.escape(message)):
         gateway_argument(raw)
 
 

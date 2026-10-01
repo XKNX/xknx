@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import argparse
+import ipaddress
 import json
 import os
 from typing import Any, ClassVar
@@ -54,16 +55,30 @@ def address_filter_argument(value: str) -> AddressFilter:
         ) from None
 
 
+def _is_ipv6_address(value: str) -> bool:
+    """Return if value is an IPv6 address, optionally as '[address]:port'."""
+    host = value[1 : value.find("]")] if value.startswith("[") else value
+    try:
+        ipaddress.IPv6Address(host)
+    except ValueError:
+        return False
+    return True
+
+
 def gateway_argument(value: str) -> tuple[str, int]:
     """Parse and validate a gateway 'host[:port]' command line argument."""
-    host, _, port_str = value.partition(":")
-    if "[" in value or ":" in port_str:
-        # the KNX/IP interface resolves IPv4 addresses only
-        raise argparse.ArgumentTypeError("IPv6 gateway addresses are not supported")
+    if value.startswith("[") or value.count(":") > 1:
+        if _is_ipv6_address(value):
+            # the KNX/IP interface resolves IPv4 addresses only
+            raise argparse.ArgumentTypeError("IPv6 gateway addresses are not supported")
+        raise argparse.ArgumentTypeError(f"expected 'host[:port]', got {value!r}")
     if any(char in value for char in "/@?#"):
         raise argparse.ArgumentTypeError(f"expected 'host[:port]', got {value!r}")
+    host, separator, port_str = value.partition(":")
     if not host:
         raise argparse.ArgumentTypeError(f"missing host in {value!r}")
+    if separator and not port_str:
+        raise argparse.ArgumentTypeError(f"missing port in {value!r}")
     port = DEFAULT_MCAST_PORT
     if port_str:
         try:
