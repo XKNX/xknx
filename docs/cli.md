@@ -34,8 +34,10 @@ xknx group read 1/2/3 --type temperature
 
 Write a value to a group address and wait for the bus confirmation.
 Without `--type`, `on`/`off` and raw integers 0-63 are sent as 1-bit or
-6-bit payloads; with `--type`, the value is encoded by that datapoint type.
-Structured datapoint types take a JSON object:
+6-bit payloads, and a hex byte string like `0c33` - as printed by
+`group read` - is sent as a raw payload; with `--type`, the value is
+encoded by that datapoint type. Structured datapoint types take a JSON
+object; string datapoint types take the value as literal text:
 
 ```shell
 xknx group write 1/2/3 on
