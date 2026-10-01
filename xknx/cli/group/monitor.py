@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
+import contextlib
+import signal
 
 from xknx import XKNX
 from xknx.telegram import Telegram
@@ -45,5 +48,21 @@ class MonitorCommand(GroupCommand):
     async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Print telegrams from the KNX bus until interrupted."""
         xknx.telegram_queue.register_telegram_received_cb(print_telegram, args.filter)
-        await xknx.loop_until_sigint()
+        await self._wait_for_sigint()
         return 0
+
+    @staticmethod
+    async def _wait_for_sigint() -> None:
+        """Block until the first Ctrl+C, leaving teardown interruptible."""
+        sigint_received = asyncio.Event()
+        loop = asyncio.get_running_loop()
+        with contextlib.suppress(NotImplementedError):  # signals need Unix
+            # Windows: Ctrl+C raises KeyboardInterrupt through asyncio instead
+            loop.add_signal_handler(signal.SIGINT, sigint_received.set)
+        try:
+            await sigint_received.wait()
+        finally:
+            # a second Ctrl+C - e.g. during a hanging disconnect - uses the
+            # default handler again and raises KeyboardInterrupt
+            with contextlib.suppress(NotImplementedError):
+                loop.remove_signal_handler(signal.SIGINT)
