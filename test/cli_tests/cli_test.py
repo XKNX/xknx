@@ -524,6 +524,15 @@ def test_print_telegram(capsys: pytest.CaptureFixture[str]) -> None:
     assert "1/2/3" in out
     assert "| 1" in out
 
+    array_telegram = Telegram(
+        destination_address=GroupAddress("1/2/3"),
+        direction=TelegramDirection.INCOMING,
+        payload=GroupValueWrite(DPTArray((0x0C, 0x33))),
+    )
+    print_telegram(array_telegram)
+    # raw payloads print like `group read` output
+    assert "| 0c33" in capsys.readouterr().out
+
     read_telegram = Telegram(
         destination_address=GroupAddress("1/2/3"),
         direction=TelegramDirection.INCOMING,

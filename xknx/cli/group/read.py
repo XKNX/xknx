@@ -3,27 +3,13 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from typing import Any
 
 from xknx import XKNX
-from xknx.dpt import DPTComplexData, DPTEnumData
 from xknx.tools import read_group_value
 
-from .._command import dpt_argument, group_address_argument
+from .._command import dpt_argument, format_value, group_address_argument
 from ._base import GroupCommand
-
-
-def format_value(value: Any) -> str:
-    """Format a read value so it can be passed back to `group write`."""
-    if isinstance(value, DPTComplexData):
-        return json.dumps(value.as_dict())
-    if isinstance(value, DPTEnumData):
-        return value.name.lower()
-    if isinstance(value, tuple):  # raw payload read without --type
-        return bytes(value).hex()
-    return str(value)
 
 
 class ReadCommand(GroupCommand):

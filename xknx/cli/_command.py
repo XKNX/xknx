@@ -4,13 +4,25 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import argparse
+import json
 import os
-from typing import ClassVar
+from typing import Any, ClassVar
 
-from xknx.dpt import DPTBase
+from xknx.dpt import DPTBase, DPTComplexData, DPTEnumData
 from xknx.exceptions import ConversionError, CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.telegram import AddressFilter, GroupAddress
+
+
+def format_value(value: Any) -> str:
+    """Format a value so it can be passed back to `group write`."""
+    if isinstance(value, DPTComplexData):
+        return json.dumps(value.as_dict())
+    if isinstance(value, DPTEnumData):
+        return value.name.lower()
+    if isinstance(value, tuple):  # raw payload read without a DPT
+        return bytes(value).hex()
+    return str(value)
 
 
 def group_address_argument(value: str) -> GroupAddress:

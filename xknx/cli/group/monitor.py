@@ -11,15 +11,14 @@ from xknx import XKNX
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from .._command import address_filter_argument
+from .._command import address_filter_argument, format_value
 from ._base import GroupCommand
 
 
 def print_telegram(telegram: Telegram) -> None:
     """Print a received telegram."""
-    payload: str | int | tuple[int, ...]
     if isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
-        payload = telegram.payload.value.value
+        payload = format_value(telegram.payload.value.value)
     else:
         payload = telegram.payload.__class__.__name__
     print(
