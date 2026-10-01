@@ -3,9 +3,7 @@
 import argparse
 import asyncio
 from collections.abc import AsyncIterator
-import os
 import runpy
-import signal
 import sys
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -14,7 +12,7 @@ import pytest
 from xknx.cli import group, main
 from xknx.cli._command import connection_config, gateway_argument
 from xknx.cli.group import GroupCommand
-from xknx.cli.group.monitor import MonitorCommand, print_telegram
+from xknx.cli.group.monitor import _block_forever, print_telegram
 from xknx.cli.group.write import parse_raw_value
 from xknx.dpt import (
     DPTArray,
@@ -465,9 +463,7 @@ def test_monitor() -> None:
     """Test the monitor command runs until interrupted."""
     with (
         patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
-        patch(
-            "xknx.cli.group.monitor.MonitorCommand._wait_for_sigint", AsyncMock()
-        ) as wait_mock,
+        patch("xknx.cli.group.monitor._block_forever", AsyncMock()) as wait_mock,
     ):
         assert (
             main(["group", "monitor", "--filter", "1/2/*", "--filter", "1/4/5-6,8"])
@@ -476,15 +472,26 @@ def test_monitor() -> None:
     wait_mock.assert_called_once()
 
 
-async def test_wait_for_sigint() -> None:
-    """Test the SIGINT handler is installed locally and removed afterwards."""
-    loop = asyncio.get_running_loop()
-    task = asyncio.create_task(MonitorCommand._wait_for_sigint())
-    await asyncio.sleep(0)  # let the handler install
-    os.kill(os.getpid(), signal.SIGINT)
-    await asyncio.wait_for(task, timeout=1)
-    # the handler was removed - a second SIGINT would raise KeyboardInterrupt
-    assert loop.remove_signal_handler(signal.SIGINT) is False
+async def test_block_forever() -> None:
+    """Test the monitor wait helper blocks until cancelled."""
+    task = asyncio.create_task(_block_forever())
+    await asyncio.sleep(0)
+    assert not task.done()
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+
+def test_monitor_interrupted() -> None:
+    """Test Ctrl+C ends the monitor command with exit code 130."""
+    with (
+        patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
+        patch(
+            "xknx.cli.group.monitor._block_forever",
+            AsyncMock(side_effect=KeyboardInterrupt),
+        ),
+    ):
+        assert main(["group", "monitor"]) == 130
 
 
 def test_keyboard_interrupt_exit_code() -> None:

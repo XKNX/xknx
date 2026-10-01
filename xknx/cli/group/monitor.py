@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import contextlib
-import signal
 
 from xknx import XKNX
 from xknx.telegram import Telegram
@@ -13,6 +11,11 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from .._command import address_filter_argument, format_value
 from ._base import GroupCommand
+
+
+async def _block_forever() -> None:
+    """Wait until the running task is cancelled."""
+    await asyncio.Event().wait()
 
 
 def print_telegram(telegram: Telegram) -> None:
@@ -47,21 +50,8 @@ class MonitorCommand(GroupCommand):
     async def run_connected(self, xknx: XKNX, args: argparse.Namespace) -> int:
         """Print telegrams from the KNX bus until interrupted."""
         xknx.telegram_queue.register_telegram_received_cb(print_telegram, args.filter)
-        await self._wait_for_sigint()
+        # Ctrl+C ends the command with exit code 130: asyncio.run() cancels
+        # this task so the connection is torn down cleanly, and a second
+        # Ctrl+C - e.g. during a disconnect to a gone gateway - aborts that.
+        await _block_forever()
         return 0
-
-    @staticmethod
-    async def _wait_for_sigint() -> None:
-        """Block until the first Ctrl+C, leaving teardown interruptible."""
-        sigint_received = asyncio.Event()
-        loop = asyncio.get_running_loop()
-        with contextlib.suppress(NotImplementedError):  # signals need Unix
-            # Windows: Ctrl+C raises KeyboardInterrupt through asyncio instead
-            loop.add_signal_handler(signal.SIGINT, sigint_received.set)
-        try:
-            await sigint_received.wait()
-        finally:
-            # a second Ctrl+C - e.g. during a hanging disconnect - uses the
-            # default handler again and raises KeyboardInterrupt
-            with contextlib.suppress(NotImplementedError):
-                loop.remove_signal_handler(signal.SIGINT)
