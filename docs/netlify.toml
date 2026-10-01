@@ -1,0 +1,11 @@
+# Netlify builds and deploys the documentation site from this directory
+# (the base directory of the Netlify site). The Ruby version comes from
+# `.ruby-version`, the gems from `Gemfile.lock`; see README.md.
+
+[build]
+  # Skip the build when nothing in docs/ changed since the last successful
+  # deploy. `:/docs` is a pathspec relative to the repository root, so the
+  # check works regardless of the directory Netlify runs it from. The first
+  # build of a branch has no previous deploy to compare against - both refs
+  # are the same commit then - and must not be skipped.
+  ignore = "[ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet \"$CACHED_COMMIT_REF\" \"$COMMIT_REF\" -- :/docs"
