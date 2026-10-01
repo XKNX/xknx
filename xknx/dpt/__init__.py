@@ -248,6 +248,7 @@ from .dpt_29 import (
     DPTApparantEnergy8Byte,
     DPTReactiveEnergy8Byte,
 )
+from .dpt_225 import DPTScalingSpeed, ScalingSpeed
 from .dpt_232 import DPTColorRGB, RGBColor
 from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
 from .dpt_242 import DPTColorXYY, XYYColor
