@@ -24,7 +24,7 @@ from xknx.dpt import (
     DPTSwitch,
     DPTTemperature,
 )
-from xknx.exceptions import CommunicationError, ConfirmationError
+from xknx.exceptions import CommunicationError, ConfirmationError, ConversionError
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionType, GatewayDescriptor
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
@@ -540,6 +540,19 @@ def test_print_telegram(capsys: pytest.CaptureFixture[str]) -> None:
     )
     print_telegram(read_telegram)
     assert "GroupValueRead" in capsys.readouterr().out
+
+
+def test_runtime_conversion_error(capsys: pytest.CaptureFixture[str]) -> None:
+    """Test a ConversionError at runtime - e.g. an undecodable payload - exits 1."""
+    with (
+        patch("xknx.xknx.knx_interface_factory", return_value=_interface_mock()),
+        patch(
+            "xknx.cli.group.read.read_group_value",
+            AsyncMock(side_effect=ConversionError("Payload invalid")),
+        ),
+    ):
+        assert main(["group", "read", "1/2/3", "--type", "temperature"]) == 1
+    assert "Error: Payload invalid" in capsys.readouterr().err
 
 
 def test_communication_error(capsys: pytest.CaptureFixture[str]) -> None:
