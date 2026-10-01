@@ -7,7 +7,7 @@ from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.management import P2PConnection
 from xknx.telegram import apci
 
-from .const import USER_MEMORY_HEADER_OCTETS, USER_MEMORY_MAX_COUNT
+from ._memory import USER_MEMORY, memory_chunks
 
 __all__ = ["dmp_user_mem_verify_r_co"]
 
@@ -53,51 +53,33 @@ async def dmp_user_mem_verify_r_co(
         octets than requested, or echoes a different address than requested
     :raises VerificationError: If a block's data doesn't match expected
     """
-    if not 0 <= address <= 0xFFFFF:
-        raise ValueError(f"address must be 0-0xFFFFF, got {address}")
-    if expected_data and address + len(expected_data) - 1 > 0xFFFFF:
-        raise ValueError(
-            f"address + len(expected_data) - 1 must be <= 0xfffff, got "
-            f"{address + len(expected_data) - 1:#07x}"
-        )
-    if max_apdu_length <= 0:
-        raise ValueError(f"max_apdu_length must be positive, got {max_apdu_length}")
-    if not expected_data:
-        return
-
-    max_chunk_size = min(
-        USER_MEMORY_MAX_COUNT, max_apdu_length - USER_MEMORY_HEADER_OCTETS
-    )
-    if max_chunk_size <= 0:
-        raise ValueError(
-            f"max_apdu_length {max_apdu_length} leaves no room for memory data "
-            f"(header is {USER_MEMORY_HEADER_OCTETS} octets)"
-        )
-
-    offset = 0
-    current_address = address
-
-    while offset < len(expected_data):
-        expected_chunk = expected_data[offset : offset + max_chunk_size]
+    for chunk_address, offset, length in memory_chunks(
+        USER_MEMORY,
+        address,
+        len(expected_data),
+        max_apdu_length,
+        size_name="len(expected_data)",
+    ):
+        expected_chunk = expected_data[offset : offset + length]
         response = await conn.request(
-            apci.UserMemoryRead(address=current_address, count=len(expected_chunk))
+            apci.UserMemoryRead(address=chunk_address, count=length)
         )
-        if response.payload.address != current_address:
+        payload = response.payload
+        if payload.address != chunk_address:
             raise ManagementConnectionError(
                 f"User memory verify failed: requested address "
-                f"{current_address:#07x}, response echoed "
-                f"{response.payload.address:#07x}"
+                f"{USER_MEMORY.format_address(chunk_address)}, response echoed "
+                f"{USER_MEMORY.format_address(payload.address)}"
             )
-        if len(response.payload.data) != len(expected_chunk):
+        if len(payload.data) != length:
             raise ManagementConnectionError(
-                f"User memory verify failed: address {current_address:#07x} "
-                f"requested {len(expected_chunk)} octets, "
-                f"got {len(response.payload.data)}"
+                f"User memory verify failed: address "
+                f"{USER_MEMORY.format_address(chunk_address)} requested "
+                f"{length} octets, got {len(payload.data)}"
             )
-        if response.payload.data != expected_chunk:
+        if payload.data != expected_chunk:
             raise VerificationError(
-                f"User memory verify mismatch at address {current_address:#07x}: "
-                f"expected {expected_chunk.hex()}, got {response.payload.data.hex()}"
+                f"User memory verify mismatch at address "
+                f"{USER_MEMORY.format_address(chunk_address)}: "
+                f"expected {expected_chunk.hex()}, got {payload.data.hex()}"
             )
-        current_address += len(expected_chunk)
-        offset += len(expected_chunk)
