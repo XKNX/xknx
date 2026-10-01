@@ -50,7 +50,11 @@ When adding a new procedure follow the workflow:
 # ruff: noqa: F401
 from .device import (
     FREE_ACCESS_KEY,
+    LOAD_EVENT_SIZE,
+    LoadState,
+    MemoryType,
     ScannedInterfaceObject,
+    SegmentType,
     dm_function_property_write_r,
     dm_function_property_write_r_conn,
     dm_restart,
@@ -60,16 +64,19 @@ from .device import (
     dmp_connect_r_co,
     dmp_ext_function_property_write_r,
     dmp_ext_function_property_write_r_conn,
+    dmp_ext_load_state_machine_write_r_co_io,
     dmp_interface_object_read_r,
     dmp_interface_object_scan_r,
     dmp_interface_object_verify_r,
     dmp_interface_object_write_r,
+    dmp_load_state_machine_write_r_co_io,
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
     dmp_user_mem_read_r_co,
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,
+    load_state,
 )
 from .network import (
     nm_individual_address_check,
