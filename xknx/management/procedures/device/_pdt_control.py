@@ -34,6 +34,26 @@ def is_positive_return_code(return_code: apci.ReturnCode | int) -> bool:
     return value <= _MAX_POSITIVE_RETURN_CODE
 
 
+def check_ext_echo(
+    payload: apci.FunctionPropertyExtStateResponse,
+    interface_object_type: int,
+    object_instance: int,
+    property_id: int,
+) -> None:
+    """Raise if the response doesn't echo the requested type, instance and PID."""
+    requested = (interface_object_type, object_instance, property_id)
+    echoed = (
+        payload.interface_object_type,
+        payload.object_instance,
+        payload.property_id,
+    )
+    if echoed != requested:
+        raise ManagementConnectionError(
+            "Extended Function Property response for (interface_object_type, "
+            f"object_instance, property_id) {echoed} does not match request {requested}"
+        )
+
+
 def pdt_control_state_data(
     payload: apci.FunctionPropertyExtStateResponse, what: str
 ) -> bytes:
