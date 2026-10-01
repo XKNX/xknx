@@ -29,18 +29,18 @@ def _add_command(subparsers: Any, command_cls: type[Command]) -> None:
 
 def _add_command_group(
     subparsers: Any,
-    name: str,
-    help_text: str,
+    group_cls: type[Command],
     command_classes: Sequence[type[Command]],
 ) -> None:
     """Register a command group and its commands with a subparsers action."""
-    group_parser = subparsers.add_parser(name, help=help_text)
+    group_parser = subparsers.add_parser(group_cls.name, help=group_cls.help_text)
     group_subparsers = group_parser.add_subparsers(
         title="commands",
         metavar="<command>",
         dest="subcommand",
         required=True,
-        help=f"run 'xknx {name} <command> --help' for command specific options",
+        help=f"run 'xknx {group_cls.name} <command> --help'"
+        " for command specific options",
     )
     for command_cls in command_classes:
         _add_command(group_subparsers, command_cls)
@@ -67,7 +67,9 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     _add_command_group(
-        subparsers, GroupCommand.name, GroupCommand.help_text, group.COMMANDS
+        subparsers,
+        GroupCommand,  # type: ignore[type-abstract]  # only name/help_text are read
+        group.COMMANDS,
     )
     _add_command(subparsers, ScanCommand)
 
