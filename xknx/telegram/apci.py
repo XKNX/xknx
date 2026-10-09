@@ -848,67 +848,6 @@ def _unpack_function_property_ext_header(raw: bytes) -> tuple[int, int, int]:
 
 
 @dataclass(slots=True)
-class FunctionPropertyExtCommand(APCI):
-    """
-    FunctionPropertyExtCommand service.
-
-    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.1
-    A_FunctionPropertyExtCommand.
-
-    Payload contains a 16 bit Interface Object Type, a 12 bit Object
-    Instance, a 12 bit Property ID, and function-specific input data of
-    variable length.
-    """
-
-    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_COMMAND
-
-    interface_object_type: int
-    object_instance: int
-    property_id: int
-    data: bytes = b""
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 6 + len(self.data)
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> FunctionPropertyExtCommand:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 7:
-            raise ConversionError(
-                f"Invalid length for A_FunctionPropertyExtCommand in CEMI: {raw.hex()}"
-            )
-        interface_object_type, object_instance, property_id = (
-            _unpack_function_property_ext_header(raw)
-        )
-
-        return cls(
-            interface_object_type=interface_object_type,
-            object_instance=object_instance,
-            property_id=property_id,
-            data=raw[7:],
-        )
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        header = _pack_function_property_ext_header(
-            self.interface_object_type, self.object_instance, self.property_id
-        )
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=header + self.data)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return (
-            "<FunctionPropertyExtCommand "
-            f'interface_object_type="{self.interface_object_type}" '
-            f'object_instance="{self.object_instance}" '
-            f'property_id="{self.property_id}" '
-            f'data="{self.data.hex()}" />'
-        )
-
-
-@dataclass(slots=True)
 class FunctionPropertyExtStateResponse(APCI):
     """
     FunctionPropertyExtStateResponse service.
@@ -978,6 +917,67 @@ class FunctionPropertyExtStateResponse(APCI):
             f'object_instance="{self.object_instance}" '
             f'property_id="{self.property_id}" '
             f'return_code="{self.return_code.name}" '
+            f'data="{self.data.hex()}" />'
+        )
+
+
+@dataclass(slots=True)
+class FunctionPropertyExtCommand(APCIRequest[FunctionPropertyExtStateResponse]):
+    """
+    FunctionPropertyExtCommand service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.1
+    A_FunctionPropertyExtCommand.
+
+    Payload contains a 16 bit Interface Object Type, a 12 bit Object
+    Instance, a 12 bit Property ID, and function-specific input data of
+    variable length.
+    """
+
+    CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_COMMAND
+
+    interface_object_type: int
+    object_instance: int
+    property_id: int
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        return 6 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyExtCommand:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) < 7:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyExtCommand in CEMI: {raw.hex()}"
+            )
+        interface_object_type, object_instance, property_id = (
+            _unpack_function_property_ext_header(raw)
+        )
+
+        return cls(
+            interface_object_type=interface_object_type,
+            object_instance=object_instance,
+            property_id=property_id,
+            data=raw[7:],
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        header = _pack_function_property_ext_header(
+            self.interface_object_type, self.object_instance, self.property_id
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=header + self.data)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return (
+            "<FunctionPropertyExtCommand "
+            f'interface_object_type="{self.interface_object_type}" '
+            f'object_instance="{self.object_instance}" '
+            f'property_id="{self.property_id}" '
             f'data="{self.data.hex()}" />'
         )
 
@@ -2813,8 +2813,85 @@ class UserManufacturerInfoRead(APCIRequest[UserManufacturerInfoResponse]):
 
 
 @dataclass(slots=True)
-class FunctionPropertyCommand(APCI):
-    """FunctionPropertyCommand service."""
+class FunctionPropertyStateResponse(APCI):
+    """
+    FunctionPropertyStateResponse service.
+
+    KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3: a device answers
+    without the fields return_code and data if the addressed Property is not
+    of the Property Datatype PDT_Function - `return_code` is None then.
+    """
+
+    CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
+
+    object_index: int = 0
+    property_id: int = 0
+    return_code: int | None = 0
+    data: bytes = b""
+
+    def calculated_length(self) -> int:
+        """Get length of APCI payload."""
+        if self.return_code is None:
+            return 3
+        return 4 + len(self.data)
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
+        """Parse/deserialize from KNX/IP raw data."""
+        if len(raw) == 4:
+            object_index, property_id = struct.unpack("!BB", raw[2:])
+            return cls(
+                object_index=object_index,
+                property_id=property_id,
+                return_code=None,
+            )
+        if len(raw) < 5:
+            raise ConversionError(
+                f"Invalid length for A_FunctionPropertyState_Response in CEMI: {raw.hex()}"
+            )
+        size = len(raw) - 5
+        (
+            object_index,
+            property_id,
+            return_code,
+            data,
+        ) = struct.unpack(f"!BBB{size}s", raw[2:])
+        return cls(
+            object_index=object_index,
+            property_id=property_id,
+            return_code=return_code,
+            data=data,
+        )
+
+    def to_knx(self) -> bytearray:
+        """Serialize to KNX/IP raw data."""
+        if self.return_code is None:
+            payload = struct.pack("!BB", self.object_index, self.property_id)
+            return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+        size = len(self.data)
+        payload = struct.pack(
+            f"!BBB{size}s",
+            self.object_index,
+            self.property_id,
+            self.return_code,
+            self.data,
+        )
+
+        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<FunctionPropertyStateResponse object_index="{self.object_index}" property_id="{self.property_id}" return_code="{self.return_code}" data="{self.data.hex()}" />'
+
+
+@dataclass(slots=True)
+class FunctionPropertyCommand(APCIRequest[FunctionPropertyStateResponse]):
+    """
+    FunctionPropertyCommand service.
+
+    KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.1: the remote
+    application shall respond with an A_FunctionPropertyState_Response-PDU.
+    """
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_COMMAND
 
@@ -2853,60 +2930,6 @@ class FunctionPropertyCommand(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<FunctionPropertyCommand object_index="{self.object_index}" property_id="{self.property_id}" data="{self.data.hex()}" />'
-
-
-@dataclass(slots=True)
-class FunctionPropertyStateResponse(APCI):
-    """FunctionPropertyStateResponse service."""
-
-    CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
-
-    object_index: int = 0
-    property_id: int = 0
-    return_code: int = 0
-    data: bytes = b""
-
-    def calculated_length(self) -> int:
-        """Get length of APCI payload."""
-        return 4 + len(self.data)
-
-    @classmethod
-    def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
-        """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
-            raise ConversionError(
-                f"Invalid length for A_FunctionPropertyState_Response in CEMI: {raw.hex()}"
-            )
-        size = len(raw) - 5
-        (
-            object_index,
-            property_id,
-            return_code,
-            data,
-        ) = struct.unpack(f"!BBB{size}s", raw[2:])
-        return cls(
-            object_index=object_index,
-            property_id=property_id,
-            return_code=return_code,
-            data=data,
-        )
-
-    def to_knx(self) -> bytearray:
-        """Serialize to KNX/IP raw data."""
-        size = len(self.data)
-        payload = struct.pack(
-            f"!BBB{size}s",
-            self.object_index,
-            self.property_id,
-            self.return_code,
-            self.data,
-        )
-
-        return encode_cmd_and_payload(self.CODE, appended_payload=payload)
-
-    def __str__(self) -> str:
-        """Return object as readable string."""
-        return f'<FunctionPropertyStateResponse object_index="{self.object_index}" property_id="{self.property_id}" return_code="{self.return_code}" data="{self.data.hex()}" />'
 
 
 @dataclass(slots=True)

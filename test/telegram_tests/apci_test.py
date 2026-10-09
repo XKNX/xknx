@@ -2961,7 +2961,24 @@ class TestFunctionPropertyStateResponse:
     def test_from_knx_wrong_length(self) -> None:
         """Test from_knx raises ConversionError for a too-short APDU."""
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
-            APCI.from_knx(bytes([0x02, 0xC9, 0x01, 0x04]))
+            APCI.from_knx(bytes([0x02, 0xC9, 0x01]))
+
+    def test_without_return_code(self) -> None:
+        """Test the response to a Property that is not a Function Property."""
+        # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3: neither
+        # return_code nor data
+        raw = bytes([0x02, 0xC9, 0x01, 0x04])
+        payload = FunctionPropertyStateResponse(
+            object_index=1, property_id=4, return_code=None
+        )
+
+        assert APCI.from_knx(raw) == payload
+        assert payload.to_knx() == raw
+        assert payload.calculated_length() == len(raw) - 1
+        assert (
+            str(payload)
+            == '<FunctionPropertyStateResponse object_index="1" property_id="4" return_code="None" data="" />'
+        )
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
