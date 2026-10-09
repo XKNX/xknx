@@ -33,6 +33,7 @@ from .self_description import request_description
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 
 if TYPE_CHECKING:
+    from xknx.knxip import TunnellingFeatureResponse, TunnellingFeatureType
     from xknx.xknx import XKNX
 
     from .interface import Interface
@@ -490,6 +491,24 @@ class KNXIPInterface:
             return await self._interface.request_description()
         return None
 
+    def _tunnel(self) -> _Tunnel:
+        """Return the connected tunnel or raise CommunicationError."""
+        if not isinstance(self._interface, _Tunnel):
+            raise CommunicationError("KNX/IP interface is not a connected tunnel")
+        return self._interface
+
+    async def tunnelling_feature_get(
+        self, feature_type: TunnellingFeatureType
+    ) -> TunnellingFeatureResponse:
+        """Read an Interface Feature of the tunnelling server - see `_Tunnel.feature_get()`."""
+        return await self._tunnel().feature_get(feature_type)
+
+    async def tunnelling_feature_set(
+        self, feature_type: TunnellingFeatureType, data: bytes
+    ) -> TunnellingFeatureResponse:
+        """Write an Interface Feature of the tunnelling server - see `_Tunnel.feature_set()`."""
+        return await self._tunnel().feature_set(feature_type, data)
+
 
 async def _cancel_other_tasks() -> None:
     """Cancel all tasks of the running loop except the current one."""
@@ -608,3 +627,19 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
                 self._interface.request_description()
             )
         return None
+
+    async def tunnelling_feature_get(
+        self, feature_type: TunnellingFeatureType
+    ) -> TunnellingFeatureResponse:
+        """Read an Interface Feature of the tunnelling server - see `_Tunnel.feature_get()`."""
+        return await self._await_from_connection_thread(
+            self._tunnel().feature_get(feature_type)
+        )
+
+    async def tunnelling_feature_set(
+        self, feature_type: TunnellingFeatureType, data: bytes
+    ) -> TunnellingFeatureResponse:
+        """Write an Interface Feature of the tunnelling server - see `_Tunnel.feature_set()`."""
+        return await self._await_from_connection_thread(
+            self._tunnel().feature_set(feature_type, data)
+        )

@@ -7,7 +7,7 @@ from pathlib import Path
 import threading
 import time
 from typing import Any
-from unittest.mock import DEFAULT, Mock, patch
+from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import pytest
 
@@ -23,6 +23,7 @@ from xknx.io import (
 )
 from xknx.io.routing import Routing, SecureGroup, SecureRouting
 from xknx.io.tunnel import SecureTunnel, TCPTunnel, UDPTunnel
+from xknx.knxip import TunnellingFeatureType
 from xknx.knxip.dib import TunnelingSlotStatus
 from xknx.secure import load_keyring
 from xknx.telegram import IndividualAddress
@@ -859,3 +860,67 @@ class TestKNXIPInterface:
                 interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_secure.assert_called_once_with()
+
+    async def test_tunnelling_feature_without_tunnel(self) -> None:
+        """Test Tunnelling Feature services need a connected tunnel."""
+        interface = knx_interface_factory(self.xknx, ConnectionConfig())
+        with pytest.raises(CommunicationError):
+            await interface.tunnelling_feature_get(
+                TunnellingFeatureType.MAX_APDU_LENGTH
+            )
+        interface._interface = Mock(spec=Routing)
+        with pytest.raises(CommunicationError):
+            await interface.tunnelling_feature_set(
+                TunnellingFeatureType.MAX_APDU_LENGTH, b"\x00\xf8"
+            )
+
+    async def test_tunnelling_feature(self) -> None:
+        """Test Tunnelling Feature services are passed to the tunnel."""
+        interface = knx_interface_factory(self.xknx, ConnectionConfig())
+        tunnel = Mock(spec=UDPTunnel)
+        tunnel.feature_get = AsyncMock(return_value="get")
+        tunnel.feature_set = AsyncMock(return_value="set")
+        interface._interface = tunnel
+        feature = TunnellingFeatureType.MAX_APDU_LENGTH
+        assert await interface.tunnelling_feature_get(feature) == "get"
+        tunnel.feature_get.assert_called_once_with(feature)
+        assert await interface.tunnelling_feature_set(feature, b"\x01") == "set"
+        tunnel.feature_set.assert_called_once_with(feature, b"\x01")
+
+    async def test_threaded_tunnelling_feature(self) -> None:
+        """Test Tunnelling Feature services run on the connection thread."""
+        # pylint: disable=attribute-defined-outside-init
+        self.main_thread = threading.get_ident()
+
+        def assert_thread(*args: Any, **kwargs: dict[str, Any]) -> Any:
+            """Test threaded connection."""
+            assert self.main_thread != threading.get_ident()
+            return DEFAULT
+
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.TUNNELING,
+            gateway_ip="127.0.0.1",
+            threaded=True,
+        )
+        feature = TunnellingFeatureType.MAX_APDU_LENGTH
+        with (
+            patch("xknx.io.tunnel.UDPTunnel.connect", side_effect=assert_thread),
+            patch("xknx.io.tunnel.UDPTunnel.disconnect", side_effect=assert_thread),
+            patch(
+                "xknx.io.tunnel._Tunnel.feature_get",
+                side_effect=assert_thread,
+                return_value="get",
+            ) as feature_get_mock,
+            patch(
+                "xknx.io.tunnel._Tunnel.feature_set",
+                side_effect=assert_thread,
+                return_value="set",
+            ) as feature_set_mock,
+        ):
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert await interface.tunnelling_feature_get(feature) == "get"
+            feature_get_mock.assert_called_once_with(feature)
+            assert await interface.tunnelling_feature_set(feature, b"\x01") == "set"
+            feature_set_mock.assert_called_once_with(feature, b"\x01")
+            await interface.stop()
