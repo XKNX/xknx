@@ -27,6 +27,111 @@ class ResourceObjectType(IntEnum):
     OBJECT_RF_MEDIUM_OBJECT = 0x0013
 
 
+class PropertyDataType(IntEnum):
+    """
+    Property Datatype (PDT) of an Interface Object Property.
+
+    See KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1
+    Table 6. 26h-2Eh and 37h-3Bh are reserved.
+    """
+
+    PDT_CONTROL = 0x00
+    PDT_CHAR = 0x01
+    PDT_UNSIGNED_CHAR = 0x02
+    PDT_INT = 0x03
+    PDT_UNSIGNED_INT = 0x04
+    PDT_KNX_FLOAT = 0x05
+    PDT_DATE = 0x06
+    PDT_TIME = 0x07
+    PDT_LONG = 0x08
+    PDT_UNSIGNED_LONG = 0x09
+    PDT_FLOAT = 0x0A
+    PDT_DOUBLE = 0x0B
+    PDT_CHAR_BLOCK = 0x0C
+    PDT_POLL_GROUP_SETTINGS = 0x0D
+    PDT_SHORT_CHAR_BLOCK = 0x0E
+    PDT_DATE_TIME = 0x0F
+    PDT_VARIABLE_LENGTH = 0x10
+    PDT_GENERIC_01 = 0x11
+    PDT_GENERIC_02 = 0x12
+    PDT_GENERIC_03 = 0x13
+    PDT_GENERIC_04 = 0x14
+    PDT_GENERIC_05 = 0x15
+    PDT_GENERIC_06 = 0x16
+    PDT_GENERIC_07 = 0x17
+    PDT_GENERIC_08 = 0x18
+    PDT_GENERIC_09 = 0x19
+    PDT_GENERIC_10 = 0x1A
+    PDT_GENERIC_11 = 0x1B
+    PDT_GENERIC_12 = 0x1C
+    PDT_GENERIC_13 = 0x1D
+    PDT_GENERIC_14 = 0x1E
+    PDT_GENERIC_15 = 0x1F
+    PDT_GENERIC_16 = 0x20
+    PDT_GENERIC_17 = 0x21
+    PDT_GENERIC_18 = 0x22
+    PDT_GENERIC_19 = 0x23
+    PDT_GENERIC_20 = 0x24
+    PDT_REFERENCE = 0x25
+    PDT_UTF_8 = 0x2F
+    PDT_VERSION = 0x30
+    PDT_ALARM_INFO = 0x31
+    PDT_BINARY_INFORMATION = 0x32
+    PDT_BITSET8 = 0x33
+    PDT_BITSET16 = 0x34
+    PDT_ENUM8 = 0x35
+    PDT_SCALING = 0x36
+    PDT_NE_VL = 0x3C
+    PDT_NE_FL = 0x3D
+    PDT_FUNCTION = 0x3E
+    PDT_ESCAPE = 0x3F
+
+    @property
+    def size(self) -> int | None:
+        """
+        Return the length of one element in octets.
+
+        `None` if the length isn't fixed by the PDT alone:
+        - PDT_CONTROL is 1 octet read and 10 octets written.
+        - PDT_VARIABLE_LENGTH, PDT_UTF-8, PDT_NE_VL, PDT_NE_FL, PDT_FUNCTION
+          and PDT_ESCAPE are variable or usage dependent.
+        - PDT_REFERENCE is listed with 8 octets in Table 6, but its format in
+          §4.2 is 10 octets.
+        """
+        return _PROPERTY_DATA_TYPE_SIZES.get(self)
+
+
+_PROPERTY_DATA_TYPE_SIZES: dict[PropertyDataType, int] = {
+    PropertyDataType.PDT_CHAR: 1,
+    PropertyDataType.PDT_UNSIGNED_CHAR: 1,
+    PropertyDataType.PDT_INT: 2,
+    PropertyDataType.PDT_UNSIGNED_INT: 2,
+    PropertyDataType.PDT_KNX_FLOAT: 2,
+    PropertyDataType.PDT_DATE: 3,
+    PropertyDataType.PDT_TIME: 3,
+    PropertyDataType.PDT_LONG: 4,
+    PropertyDataType.PDT_UNSIGNED_LONG: 4,
+    PropertyDataType.PDT_FLOAT: 4,
+    PropertyDataType.PDT_DOUBLE: 8,
+    PropertyDataType.PDT_CHAR_BLOCK: 10,
+    PropertyDataType.PDT_POLL_GROUP_SETTINGS: 3,
+    PropertyDataType.PDT_SHORT_CHAR_BLOCK: 5,
+    PropertyDataType.PDT_DATE_TIME: 8,
+    **{
+        PropertyDataType(PropertyDataType.PDT_GENERIC_01 + offset): offset + 1
+        for offset in range(20)
+    },
+    PropertyDataType.PDT_VERSION: 2,
+    PropertyDataType.PDT_ALARM_INFO: 6,
+    # a single bit on the least significant position of one octet
+    PropertyDataType.PDT_BINARY_INFORMATION: 1,
+    PropertyDataType.PDT_BITSET8: 1,
+    PropertyDataType.PDT_BITSET16: 2,
+    PropertyDataType.PDT_ENUM8: 1,
+    PropertyDataType.PDT_SCALING: 1,
+}
+
+
 ResourcePropertyId = IntEnum
 
 
