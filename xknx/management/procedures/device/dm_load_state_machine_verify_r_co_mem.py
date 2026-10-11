@@ -5,8 +5,8 @@ from __future__ import annotations
 from xknx.management.management import P2PConnection
 from xknx.profile.const import LoadState, ResourceObjectType
 
-from ._load_state_machine import check_state
 from .dmp_load_state_machine_read_r_co_mem import dmp_load_state_machine_read_r_co_mem
+from .load_state_machine import check_state
 
 __all__ = ["dm_load_state_machine_verify_r_co_mem"]
 

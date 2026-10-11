@@ -5,15 +5,10 @@ from __future__ import annotations
 from xknx.management.management import P2PConnection
 from xknx.profile.const import LoadEvent, LoadState, ResourceObjectType
 
-from ._load_state_machine import (
-    EXPECTED_STATE,
-    LOAD_CONTROL_LENGTH,
-    MEM_MANAGEMENT_CONTROL_ADDRESS,
-    check_state,
-    mem_load_state_address,
-)
+from .const import LOAD_CONTROL_LENGTH, MEM_MANAGEMENT_CONTROL_ADDRESS
 from .dmp_load_state_machine_read_r_co_mem import dmp_load_state_machine_read_r_co_mem
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
+from .load_state_machine import EXPECTED_STATE, check_mem_state_machine, check_state
 
 __all__ = ["dmp_load_state_machine_write_r_co_mem"]
 
@@ -45,7 +40,7 @@ async def dmp_load_state_machine_write_r_co_mem(
         OBJECT_ASSOCIATION_TABLE, OBJECT_APPLICATION_PROGRAM or
         OBJECT_INTERFACE_PROGRAM (PEI program)
     :param event: The Load Event
-    :param event_data: The data following the state machine / event octet - eg.
+    :param event_data: The data following the state machine / event octet - e.g.
         segment type, segment ID and the allocation of an AllocAbsDataSeg
         event. At most 10 octets; filled up with 00h.
     :param verify: Read the load state up to 3 times until it is the one
@@ -59,7 +54,7 @@ async def dmp_load_state_machine_write_r_co_mem(
     :raises ManagementConnectionError: If the device returns no data or an
         unknown state
     """
-    mem_load_state_address(state_machine)
+    check_mem_state_machine(state_machine)
     if len(event_data) > LOAD_CONTROL_LENGTH:
         raise ValueError(
             f"event_data must be at most {LOAD_CONTROL_LENGTH} octets, "
@@ -75,7 +70,7 @@ async def dmp_load_state_machine_write_r_co_mem(
     if not verify or expected is None:
         return state
     for _ in range(MAX_STATE_READS - 1):
-        if state is expected:
+        if state == expected:
             return state
         state = await dmp_load_state_machine_read_r_co_mem(conn, state_machine)
     check_state(state, expected)

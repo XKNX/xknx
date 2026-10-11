@@ -5,8 +5,12 @@ from __future__ import annotations
 from xknx.management.management import P2PConnection
 from xknx.profile.const import LoadState, ResourceObjectType
 
-from ._load_state_machine import decode_load_state, mem_load_state_address
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
+from .load_state_machine import (
+    MEM_LOAD_STATE_ADDRESS,
+    check_mem_state_machine,
+    decode_load_state,
+)
 
 __all__ = ["dmp_load_state_machine_read_r_co_mem"]
 
@@ -31,5 +35,6 @@ async def dmp_load_state_machine_read_r_co_mem(
     :raises ManagementConnectionError: If the device returns no data or an
         unknown state
     """
-    address = mem_load_state_address(state_machine)
+    check_mem_state_machine(state_machine)
+    address = MEM_LOAD_STATE_ADDRESS[state_machine]
     return decode_load_state(await dmp_mem_read_r_co(conn, address, 1))

@@ -7,7 +7,7 @@ from xknx.management.management import P2PConnection
 from xknx.profile.const import LoadState, ResourceGenericPropertyId
 from xknx.telegram import Telegram, apci
 
-from ._load_state_machine import decode_load_state
+from .load_state_machine import decode_load_state
 
 __all__ = ["dmp_ext_load_state_machine_read_r_co_io"]
 

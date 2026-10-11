@@ -8,10 +8,7 @@ from collections.abc import Awaitable, Callable
 from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.profile.const import LoadEvent, LoadState, ResourceObjectType
 
-# The value written to PID_LOAD_STATE_CONTROL is always 10 octets: the event,
-# then additional information for it - KNX v01.10.01 - Resources 03.05.01 -
-# §4.2.5 and KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.3.
-LOAD_CONTROL_LENGTH = 10
+from .const import LOAD_CONTROL_LENGTH, LOAD_STATE_MAX_POLL_INTERVAL
 
 # State reached after a successful event - KNX v01.10.01 - Resources 03.05.01 -
 # §4.23.2.3.3, Table 94. No Operation leaves the state unchanged.
@@ -21,22 +18,20 @@ EXPECTED_STATE = {
     LoadEvent.ADDITIONAL_LOAD_CONTROLS: LoadState.LOADING,
     LoadEvent.UNLOAD: LoadState.UNLOADED,
 }
-# Optional intermediate state a Load State Machine may report on the way to
-# the expected one - KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.2.
-INTERMEDIATE_STATE = {
-    LoadEvent.LOAD_COMPLETED: LoadState.LOAD_COMPLETING,
-    LoadEvent.UNLOAD: LoadState.UNLOADING,
+# Optional intermediate states a Load State Machine may report on the way to
+# the final one - KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.3, Table 94.
+# A device still in LoadCompleting may answer any event with LoadCompleting and
+# ignore it; Unload may also pass through Unloading.
+INTERMEDIATE_STATES = {
+    LoadEvent.START_LOADING: frozenset({LoadState.LOAD_COMPLETING}),
+    LoadEvent.LOAD_COMPLETED: frozenset({LoadState.LOAD_COMPLETING}),
+    LoadEvent.ADDITIONAL_LOAD_CONTROLS: frozenset({LoadState.LOAD_COMPLETING}),
+    LoadEvent.UNLOAD: frozenset({LoadState.UNLOADING, LoadState.LOAD_COMPLETING}),
 }
-# KNX v01.10.01 - Resources 03.05.01 - §4.23.2.1: "The transitions between the
-# states shall be less than 30 seconds. This time shall be the minimum delay
-# during which a MaC shall wait after sending a load event until
-# interpretation of the load event with the expected state transition to be
-# failed."
-TRANSITION_TIMEOUT = 30.0
 
-# Memory mapped Load State Machines of mask version 070nh (BIM M112) - KNX
-# v02.01.02 - Management Procedures 03.05.02 - §3.31.2, §3.32.2 and §3.33.2.
-MEM_MANAGEMENT_CONTROL_ADDRESS = 0x0104
+# Fixed address of the load state of each memory mapped Load State Machine of
+# mask version 070nh (BIM M112) - KNX v02.01.02 - Management Procedures
+# 03.05.02 - §3.31.2, §3.32.2 and §3.33.2.
 MEM_LOAD_STATE_ADDRESS = {
     ResourceObjectType.OBJECT_ADDRESS_TABLE: 0xB6EA,
     ResourceObjectType.OBJECT_ASSOCIATION_TABLE: 0xB6EB,
@@ -67,19 +62,24 @@ def load_control_data(event: LoadEvent, event_data: bytes) -> bytes:
     return bytes([event]) + event_data.ljust(LOAD_CONTROL_LENGTH - 1, b"\x00")
 
 
-def mem_load_state_address(state_machine: ResourceObjectType) -> int:
-    """Return the memory address of a BIM M112 Load State Machine's state."""
-    try:
-        return MEM_LOAD_STATE_ADDRESS[state_machine]
-    except KeyError:
+def check_poll_interval(poll_interval: float) -> None:
+    """Raise ValueError if `poll_interval` exceeds the allowed reading period."""
+    if poll_interval > LOAD_STATE_MAX_POLL_INTERVAL:
         raise ValueError(
-            f"No memory mapped Load State Machine for {state_machine!r}"
-        ) from None
+            f"poll_interval must be at most {LOAD_STATE_MAX_POLL_INTERVAL:g} "
+            f"seconds, got {poll_interval:g}"
+        )
+
+
+def check_mem_state_machine(state_machine: ResourceObjectType) -> None:
+    """Raise ValueError if `state_machine` has no memory mapped Load State Machine."""
+    if state_machine not in MEM_LOAD_STATE_ADDRESS:
+        raise ValueError(f"No memory mapped Load State Machine for {state_machine!r}")
 
 
 def check_state(state: LoadState, expected: LoadState) -> None:
     """Raise VerificationError if `state` is not `expected`."""
-    if state is not expected:
+    if state != expected:
         raise VerificationError(
             f"Load State Machine is in state {state.name}, expected {expected.name}"
         )
@@ -96,15 +96,20 @@ async def await_expected_state(
     Return the state reached by `event`, reading again while it is intermediate.
 
     Raises VerificationError if the state is not the expected one for `event`,
-    or the intermediate state lasts longer than `timeout` seconds.
+    or an intermediate state lasts longer than `timeout` seconds.
     """
     expected = EXPECTED_STATE.get(event)
     if expected is None:
         return state
-    intermediate = INTERMEDIATE_STATE.get(event)
+    intermediate = INTERMEDIATE_STATES[event]
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout
-    while state is intermediate and loop.time() < deadline:
+    while state in intermediate:
+        if loop.time() >= deadline:
+            raise VerificationError(
+                f"Load State Machine is still in state {state.name} after the "
+                f"{timeout:g} s timeout, expected {expected.name}"
+            )
         await asyncio.sleep(poll_interval)
         state = await read_state()
     check_state(state, expected)

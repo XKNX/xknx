@@ -5,10 +5,10 @@ from __future__ import annotations
 from xknx.management.management import P2PConnection
 from xknx.profile.const import LoadState, ResourceGenericPropertyId
 
-from ._load_state_machine import check_state
 from .dmp_ext_load_state_machine_read_r_co_io import (
     dmp_ext_load_state_machine_read_r_co_io,
 )
+from .load_state_machine import check_state
 
 __all__ = ["dmp_ext_load_state_machine_verify_r_co_io"]
 
