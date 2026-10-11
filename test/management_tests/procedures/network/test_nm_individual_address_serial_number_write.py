@@ -65,9 +65,28 @@ def _address_in_use(xknx: XKNX, individual_address: IndividualAddress) -> None:
     )
 
 
+def _address_check_answered(individual_address: IndividualAddress) -> list[Telegram]:
+    """Telegrams of an address check a device answers."""
+    return [
+        Telegram(destination_address=individual_address, tpci=tpci.TConnect()),
+        Telegram(
+            destination_address=individual_address,
+            tpci=tpci.TDataConnected(0),
+            payload=apci.DeviceDescriptorRead(descriptor=0),
+        ),
+        Telegram(
+            source_address=IndividualAddress(0),
+            destination_address=individual_address,
+            tpci=tpci.TAck(0),
+        ),
+        Telegram(destination_address=individual_address, tpci=tpci.TDisconnect()),
+    ]
+
+
 def _serial_response(
     serial_number: bytes, individual_address: IndividualAddress
 ) -> Telegram:
+    """Response of the device with the serial number, sent from its address."""
     return Telegram(
         source_address=individual_address,
         destination_address=GroupAddress("0/0/0"),
@@ -207,6 +226,11 @@ async def test_nm_individual_address_serial_number_write_address_in_use(
         )
     )
 
+    read_address = Telegram(
+        destination_address=GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressSerialRead(serial=serial_number),
+    )
+
     await time_travel(0)
     _address_in_use(xknx, individual_address)
     await time_travel(0)
@@ -214,19 +238,19 @@ async def test_nm_individual_address_serial_number_write_address_in_use(
     xknx.management.process(
         _serial_response(serial_number, IndividualAddress("15.15.255"))
     )
-    with pytest.raises(ManagementConnectionError, match="already in use"):
+    with pytest.raises(ManagementConnectionError, match="in use by another device"):
         await task
 
-    assert not any(
-        isinstance(c.args[0].payload, apci.IndividualAddressSerialWrite)
-        for c in xknx.cemi_handler.send_telegram.call_args_list
-    )
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        *map(call, _address_check_answered(individual_address)),
+        call(read_address),
+    ]
 
 
-async def test_nm_individual_address_serial_number_write_address_in_use_by_itself(
+async def test_nm_individual_address_serial_number_write_address_in_use_no_serial(
     time_travel: EventLoopClockAdvancer,
 ) -> None:
-    """Test the address is written when the device with the serial number uses it."""
+    """Test nothing is written when the address is in use and the serial number doesn't answer."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     serial_number = b"aabbccddeeff"
@@ -238,22 +262,52 @@ async def test_nm_individual_address_serial_number_write_address_in_use_by_itsel
         )
     )
 
+    read_address = Telegram(
+        destination_address=GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressSerialRead(serial=serial_number),
+    )
+
+    await time_travel(0)
+    _address_in_use(xknx, individual_address)
+    await time_travel(0)
+    # no device with the serial number answers
+    await time_travel(3)
+    with pytest.raises(ManagementConnectionError, match="no device with serial"):
+        await task
+
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        *map(call, _address_check_answered(individual_address)),
+        call(read_address),
+    ]
+
+
+async def test_nm_individual_address_serial_number_write_address_in_use_by_itself(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test nothing is written when the device with the serial number already uses the address."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    serial_number = b"aabbccddeeff"
+    individual_address = IndividualAddress("1.1.5")
+
+    task = asyncio.create_task(
+        nm_individual_address_serial_number_write(
+            xknx=xknx, serial=serial_number, individual_address=individual_address
+        )
+    )
+
+    read_address = Telegram(
+        destination_address=GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressSerialRead(serial=serial_number),
+    )
+
     await time_travel(0)
     _address_in_use(xknx, individual_address)
     await time_travel(0)
     xknx.management.process(_serial_response(serial_number, individual_address))
-    await time_travel(0)
-    xknx.management.process(_serial_response(serial_number, individual_address))
     await task
 
-    assert (
-        call(
-            Telegram(
-                destination_address=GroupAddress("0/0/0"),
-                payload=apci.IndividualAddressSerialWrite(
-                    serial=serial_number, address=individual_address
-                ),
-            )
-        )
-        in xknx.cemi_handler.send_telegram.call_args_list
-    )
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        *map(call, _address_check_answered(individual_address)),
+        call(read_address),
+    ]
