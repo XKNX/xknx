@@ -14,7 +14,11 @@ from .dmp_interface_object_write_r import dmp_interface_object_write_r
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
-from .dmp_prog_mode_switch_r_co import PROG_MODE_ADDRESS, dmp_prog_mode_switch_r_co
+from .dmp_prog_mode_switch_r_co import (
+    PROG_MODE_ADDRESS,
+    dm_prog_mode_switch,
+    dmp_prog_mode_switch_r_co,
+)
 from .dmp_user_mem_read_r_co import dmp_user_mem_read_r_co
 from .dmp_user_mem_verify_r_co import dmp_user_mem_verify_r_co
 from .dmp_user_mem_write_r_co import dmp_user_mem_write_r_co

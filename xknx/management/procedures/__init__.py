@@ -41,6 +41,7 @@ from .device import (
     FREE_ACCESS_KEY,
     PROG_MODE_ADDRESS,
     ScannedInterfaceObject,
+    dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
