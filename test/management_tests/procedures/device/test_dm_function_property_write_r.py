@@ -127,8 +127,11 @@ async def test_dm_function_property_write_r_connectionless(
     ]
 
 
-async def test_dm_function_property_write_r_wrong_property(xknx_setup: XKNX) -> None:
-    """Test a response for another Function Property raises."""
+@pytest.mark.parametrize(("object_index", "property_id"), [(3, 53), (4, 52)])
+async def test_dm_function_property_write_r_wrong_property(
+    xknx_setup: XKNX, object_index: int, property_id: int
+) -> None:
+    """Test a response for another Interface Object or Property raises."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -143,7 +146,9 @@ async def test_dm_function_property_write_r_wrong_property(xknx_setup: XKNX) -> 
                     direction=TelegramDirection.INCOMING,
                     tpci=tpci.TDataIndividual(),
                     payload=apci.FunctionPropertyStateResponse(
-                        object_index=3, property_id=53, return_code=0
+                        object_index=object_index,
+                        property_id=property_id,
+                        return_code=0,
                     ),
                 )
             )

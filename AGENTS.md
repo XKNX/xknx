@@ -106,9 +106,12 @@ in sync with the code. Summary:
   broadcast via `xknx.management`.
 - `<spec_name>_conn(conn: P2PConnection, ...)` operates on an already-open
   connection, for chaining several procedures over one connection. The
-  `_conn` suffix is an xknx-only naming convention, not a KNX spec name —
-  `dm_restart_r_co` is the one exception, since `RCo` is the real KNX name
-  for that connection-based variant of DM_Restart.
+  `_conn` suffix is an xknx-only naming convention, not a KNX spec name.
+- Procedures whose KNX name already ends in `_R` or `_RCo` (e.g.
+  `dm_restart_r_co`, `dmp_interface_object_read_r`) take `conn` under that
+  name, without the `_conn` suffix. Where the spec allows the connectionless
+  communication mode as well, `conn` may also be a `ConnectionlessP2P` from
+  `xknx.management.connectionless()`.
 
 ## Running tests and checks
 

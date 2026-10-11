@@ -21,12 +21,14 @@ def fixture_xknx_setup() -> XKNX:
     return xknx
 
 
-def _response(property_id: int = 7) -> apci.FunctionPropertyExtStateResponse:
+def _response(
+    interface_object_type: int = 0x0B, object_instance: int = 1, property_id: int = 7
+) -> apci.FunctionPropertyExtStateResponse:
     return apci.FunctionPropertyExtStateResponse(
-        interface_object_type=0x0B,
-        object_instance=1,
+        interface_object_type=interface_object_type,
+        object_instance=object_instance,
         property_id=property_id,
-        return_code=apci.ReturnCode.E_SUCCESS,
+        return_code=0x00,
         data=b"\x2a",
     )
 
@@ -81,15 +83,46 @@ async def test_dmp_ext_function_property_write_r(xknx_setup: XKNX) -> None:
     ]
 
 
-async def test_dmp_ext_function_property_write_r_wrong_property(
+async def test_dmp_ext_function_property_write_r_specific_return_code(
     xknx_setup: XKNX,
 ) -> None:
-    """Test a response for another Function Property raises."""
+    """Test a function specific return code is returned as is."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
+    # return_code 21h, no data
+    response = apci.APCI.from_knx(bytes.fromhex("01d6000b00100721"))
 
     async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
-        responder = asyncio.create_task(_respond(xknx, ia, _response(property_id=8)))
+        responder = asyncio.create_task(_respond(xknx, ia, response))
+        result = await dmp_ext_function_property_write_r(
+            connectionless,
+            interface_object_type=0x0B,
+            object_instance=1,
+            property_id=7,
+        )
+        await responder
+
+    assert result.return_code == 0x21
+    assert result.data == b""
+
+
+@pytest.mark.parametrize(
+    ("interface_object_type", "object_instance", "property_id"),
+    [(0x0B, 1, 8), (0x0C, 1, 7), (0x0B, 2, 7)],
+)
+async def test_dmp_ext_function_property_write_r_wrong_property(
+    xknx_setup: XKNX,
+    interface_object_type: int,
+    object_instance: int,
+    property_id: int,
+) -> None:
+    """Test a response for another Interface Object or Property raises."""
+    xknx = xknx_setup
+    ia = IndividualAddress("4.0.10")
+    response = _response(interface_object_type, object_instance, property_id)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        responder = asyncio.create_task(_respond(xknx, ia, response))
         with pytest.raises(ManagementConnectionError):
             await dmp_ext_function_property_write_r(
                 connectionless,

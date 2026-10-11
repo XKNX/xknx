@@ -35,6 +35,13 @@ nav_order: 2
 - Remove `ha_device_class` from `DPTBase` subclasses, `RemoteValueSensor`, `RemoteValueByLength`, `Sensor` and `NumericValue`. Home Assistant shall maintain this itself.
 - DPT 9.xxx: `value_max` is `670433.28` for all 2 byte float types - it was `670760.96` on `DPT2ByteFloat` and `670760` on most subtypes, which encode to `0x7FFF`. KNX v02.02.01 - Datapoint Types 03.07.02 - §3.10 reserves that pattern: "For all Datapoint Types 9.xxx, the encoded value 7FFFh shall always be used to denote invalid data", and gives the range as `[-671 088,64 ... 670 433,28]`. So xknx sent the invalid-data pattern as a regular value and decoded a received one to `670760.96` instead of rejecting it - `from_knx()` raises `ConversionError` on `0x7FFF` now, and `to_knx()` rejects anything above `670433.28`. A device sending `0x7FFF` - a thermostat with an unconfigured setpoint for example - is reported as a conversion error instead of a nonsensical reading.
 - DPT 9.xxx lower bounds follow the same table: `DPTTemperatureDifference2Byte` (9.002), `DPTTemperatureA` (9.003), `DPTTime1` (9.010) and `DPTTime2` (9.011) accept `-671088.64` instead of `-670760`, and `DPTPartsPerMillion` (9.008) - specified as `0 ppm ... 670 433,28 ppm` - rejects negative values now like the other subtypes with a `0` minimum do.
+- `apci.FunctionPropertyExtStateResponse.return_code` is an `int` instead of a `ReturnCode`. KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3 defines return code ranges without assigning codes to them, and its NOTE 12 states that existing Function Properties may return codes not compatible with the unified return code schema. A response carrying such a code raised `ConversionError` while parsing, so it was dropped.
+
+  ```python
+  response.return_code == ReturnCode.E_SUCCESS  # before
+  response.return_code == ReturnCode.E_SUCCESS.value  # now
+  ReturnCode(response.return_code)  # now - for a code defined in ReturnCode
+  ```
 
 ### Bugfixes
 
@@ -43,7 +50,7 @@ nav_order: 2
 - Management: a repeated sequence number is acknowledged again instead of being acknowledged and dropped, and a sequence number that is neither the expected nor the previous one is answered with a negative acknowledgement instead of a positive one - Transport Layer 03.03.04 - §5.3 A3 and A4.
 - `apci.PropertyValueWrite` is an `APCIRequest[PropertyValueResponse]` now, like `PropertyValueRead` already was. It carries a KNX-spec-defined response (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.2) and was missed when the other point-to-point request services were converted, so `P2PConnection.request()` sent it without verifying or narrowing the response type.
 - `apci.PropertyValueRead`, `PropertyValueWrite` and `PropertyValueResponse` raise `ConversionError` for a `start_index` above 4095 instead of encoding it into the neighbouring `nr_of_elem` field - `to_knx()` silently emitted a frame addressing a different element with a different count.
-- `FunctionPropertyStateResponse` parses a response without `return_code` and `data` - KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3, the answer of a device to a Function Property service on a Property that is not of the Property Datatype PDT_Function. It raised `ConversionError` before. `return_code` is `None` for such a response.
+- `FunctionPropertyStateResponse` parses a response without `return_code` and `data` - KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3, the answer of a device to a Function Property service on a Property that is not of the Property Datatype PDT_Function. It raised `ConversionError` before. `return_code` is `None` for such a response. `to_knx()` raises `ConversionError` for a `FunctionPropertyStateResponse` with `data` but without `return_code`.
 
 ### Connection
 

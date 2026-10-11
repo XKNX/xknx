@@ -24,9 +24,15 @@ Most procedures come in two forms:
   - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.
-    ``dm_restart_r_co`` is the one exception — ``RCo`` is the actual KNX
-    v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name for
-    the connection-based variant of DM_Restart, not the xknx convention.
+
+Procedures whose KNX name already ends in ``_R`` or in a communication mode
+suffix such as ``_RCo`` (KNX v02.01.02 - Management Procedures 03.05.02 -
+§1.2, Table 1) take ``conn`` under that name, without the ``_conn`` suffix, e.g.
+``dm_restart_r_co`` or ``dmp_interface_object_read_r``. ``conn`` is an open
+``P2PConnection``. Where the spec allows the connectionless communication
+mode as well, it may also be a ``ConnectionlessP2P`` from
+``xknx.management.connectionless()``, e.g. for ``dm_function_property_write_r``
+(§3.30.1) and ``dmp_ext_function_property_write_r`` (§3.30.2).
 
 When adding a new procedure follow the workflow:
 
