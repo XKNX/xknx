@@ -1,7 +1,6 @@
 """Tests for nm_individual_address_write — KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 NM_IndividualAddress_Write."""
 
 import asyncio
-import importlib
 from unittest.mock import AsyncMock, call
 
 import pytest
@@ -23,11 +22,6 @@ from xknx.telegram import (
 )
 
 from ....conftest import EventLoopClockAdvancer
-
-# The package re-exports the procedure under the module's name, so import the module itself.
-procedure_module = importlib.import_module(
-    "xknx.management.procedures.network.nm_individual_address_write"
-)
 
 
 async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) -> None:
@@ -498,107 +492,211 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         await task
 
 
-class _FakeConnection:
-    async def __aenter__(self) -> "_FakeConnection":
-        return self
-
-    async def __aexit__(self, *args: object) -> None:
-        return None
-
-
-def _patch_bus(
-    monkeypatch: pytest.MonkeyPatch, responses: list[list[IndividualAddress]]
-) -> tuple[XKNX, list[float | None]]:
-    """Fake a bus with a free target address whose devices answer ``responses`` in turn."""
-    timeouts: list[float | None] = []
-
-    async def fake_check(xknx: XKNX, individual_address: IndividualAddress) -> bool:
-        return False
-
-    async def fake_read(
-        xknx: XKNX, timeout: float | None = 3, raise_if_multiple: bool = False
-    ) -> list[IndividualAddress]:
-        timeouts.append(timeout)
-        await asyncio.sleep(timeout or 0)
-        return responses.pop(0) if responses else []
-
-    async def fake_check_conn(conn: object) -> bool:
-        return True
-
-    async def fake_restart(conn: object) -> None:
-        return None
-
-    monkeypatch.setattr(procedure_module, "nm_individual_address_check", fake_check)
-    monkeypatch.setattr(procedure_module, "nm_individual_address_read", fake_read)
-    monkeypatch.setattr(
-        procedure_module, "nm_individual_address_check_conn", fake_check_conn
-    )
-    monkeypatch.setattr(procedure_module, "dm_restart_r_co", fake_restart)
-    xknx = XKNX()
-    xknx.cemi_handler = AsyncMock()
-    monkeypatch.setattr(
-        type(xknx.management), "connection", lambda self, address: _FakeConnection()
-    )
-    return xknx, timeouts
-
-
-def _address_writes(xknx: XKNX) -> list[IndividualAddress]:
-    """Return the addresses broadcast with A_IndividualAddress_Write."""
-    return [
-        c.args[0].payload.address
-        for c in xknx.cemi_handler.send_telegram.call_args_list
-        if isinstance(c.args[0].payload, apci.IndividualAddressWrite)
-    ]
-
-
 async def test_nm_individual_address_write_waits_for_programming_mode(
-    monkeypatch: pytest.MonkeyPatch, time_travel: EventLoopClockAdvancer
+    time_travel: EventLoopClockAdvancer,
 ) -> None:
     """Test A_IndividualAddress_Read is repeated until a device is in programming mode."""
-    xknx, timeouts = _patch_bus(monkeypatch, [[], [], [IndividualAddress("15.15.255")]])
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address_old = IndividualAddress("15.15.255")
+    individual_address_new = IndividualAddress("1.1.4")
 
-    task = asyncio.create_task(
-        nm_individual_address_write(xknx, "1.1.4", wait_for_programming_mode=10)
+    connect = Telegram(destination_address=individual_address_new, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
     )
-    for _ in range(3):
-        await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
-    await task
+    address_reply_message = Telegram(
+        source_address=individual_address_old,
+        destination_address=GroupAddress("0/0/0"),
+        direction=TelegramDirection.INCOMING,
+        payload=apci.IndividualAddressResponse(),
+    )
+    device_desc_resp = Telegram(
+        source_address=individual_address_new,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorResponse(),
+    )
+    ack = Telegram(
+        source_address=individual_address_new,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TAck(0),
+    )
+    ack2 = Telegram(
+        destination_address=individual_address_new,
+        source_address=IndividualAddress(0),
+        tpci=tpci.TAck(0),
+    )
+    disconnect = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDisconnect(),
+    )
+    individual_address_read = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+    individual_address_write = Telegram(
+        GroupAddress("0/0/0"),
+        payload=apci.IndividualAddressWrite(address=individual_address_new),
+    )
+    task = asyncio.create_task(
+        nm_individual_address_write(
+            xknx, individual_address_new, wait_for_programming_mode=10
+        )
+    )
 
-    assert timeouts == [PROGRAMMING_MODE_POLL_TIMEOUT] * 3
-    assert _address_writes(xknx) == [IndividualAddress("1.1.4")]
+    # make sure first request (address check) times out
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+
+    # no device in programming mode during the first two reads
+    await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+        call(device_desc_read),  # due to retransmit
+        call(disconnect),
+        call(individual_address_read),
+        call(individual_address_read),
+        call(individual_address_read),
+    ]
+
+    # send response to device in programming mode
+    xknx.management.process(address_reply_message)
+    await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+
+    # confirm device is up and running
+    xknx.management.process(ack)
+    xknx.management.process(device_desc_resp)
+
+    assert xknx.cemi_handler.send_telegram.call_args_list[7:] == [
+        call(individual_address_write),
+        call(connect),
+        call(device_desc_read),
+        call(ack2),
+    ]
+
+    await task
 
 
 async def test_nm_individual_address_write_wait_times_out(
-    monkeypatch: pytest.MonkeyPatch, time_travel: EventLoopClockAdvancer
+    time_travel: EventLoopClockAdvancer,
 ) -> None:
     """Test waiting for programming mode ends after ``wait_for_programming_mode``."""
-    xknx, timeouts = _patch_bus(monkeypatch, [])
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address_new = IndividualAddress("1.1.4")
+
+    connect = Telegram(destination_address=individual_address_new, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    disconnect = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDisconnect(),
+    )
+    individual_address_read = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
 
     task = asyncio.create_task(
-        nm_individual_address_write(xknx, "1.1.4", wait_for_programming_mode=2.5)
+        nm_individual_address_write(
+            xknx, individual_address_new, wait_for_programming_mode=2.5
+        )
     )
-    for _ in range(3):
-        await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+
+    # make sure first request (address check) times out
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+
+    # reads of 1 s, 1 s and 0.5 s - nobody answers
+    await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    assert not task.done()
+    await time_travel(0.5)
+    assert task.done()
     with pytest.raises(
         ManagementConnectionError, match="No device in programming mode"
     ):
         await task
 
-    assert len(timeouts) == 3
-    assert _address_writes(xknx) == []
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+        call(device_desc_read),  # due to retransmit
+        call(disconnect),
+        call(individual_address_read),
+        call(individual_address_read),
+        call(individual_address_read),
+    ]
 
 
 async def test_nm_individual_address_write_reads_once_by_default(
-    monkeypatch: pytest.MonkeyPatch, time_travel: EventLoopClockAdvancer
+    time_travel: EventLoopClockAdvancer,
 ) -> None:
-    """Test without ``wait_for_programming_mode`` programming mode is read once."""
-    xknx, timeouts = _patch_bus(monkeypatch, [])
+    """Test without ``wait_for_programming_mode`` programming mode is read once for 3 s."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    individual_address_new = IndividualAddress("1.1.4")
 
-    task = asyncio.create_task(nm_individual_address_write(xknx, "1.1.4"))
-    await time_travel(3)
+    connect = Telegram(destination_address=individual_address_new, tpci=tpci.TConnect())
+    device_desc_read = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    disconnect = Telegram(
+        destination_address=individual_address_new,
+        tpci=tpci.TDisconnect(),
+    )
+    individual_address_read = Telegram(
+        GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
+    )
+
+    task = asyncio.create_task(
+        nm_individual_address_write(xknx, individual_address_new)
+    )
+
+    # make sure first request (address check) times out
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+
+    # no read is repeated after 1 s
+    await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    assert not task.done()
+    await time_travel(2)
+    assert task.done()
     with pytest.raises(
         ManagementConnectionError, match="No device in programming mode"
     ):
         await task
 
-    assert timeouts == [3]
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(connect),
+        call(device_desc_read),
+        call(device_desc_read),  # due to retransmit
+        call(disconnect),
+        call(individual_address_read),
+    ]
+
+
+@pytest.mark.parametrize("wait_for_programming_mode", [0, -1])
+async def test_nm_individual_address_write_wait_invalid(
+    wait_for_programming_mode: float,
+) -> None:
+    """Test ``wait_for_programming_mode`` has to be greater than 0."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+
+    with pytest.raises(ValueError, match="greater than 0"):
+        await nm_individual_address_write(
+            xknx, "1.1.4", wait_for_programming_mode=wait_for_programming_mode
+        )
+
+    assert xknx.cemi_handler.send_telegram.call_args_list == []

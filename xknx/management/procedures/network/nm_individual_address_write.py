@@ -31,22 +31,35 @@ PROGRAMMING_MODE_POLL_TIMEOUT = 1.0
 async def nm_individual_address_write(
     xknx: XKNX,
     individual_address: IndividualAddressableType,
+    *,
     wait_for_programming_mode: float | None = None,
 ) -> None:
     """
     Write the individual address of a single device in programming mode.
 
+    The time-out of each A_IndividualAddress_Read differs: without
+    ``wait_for_programming_mode`` programming mode is read once with the 3 s of
+    NM_IndividualAddress_Read (KNX v02.01.02 - Management Procedures 03.05.02 - §2.2),
+    with it every read uses the 1 s of KNX v02.01.02 - Management Procedures
+    03.05.02 - §2.3 step 2.
+
     :param xknx: the XKNX object
     :param individual_address: address to be written to KNX device
-    :param wait_for_programming_mode: Seconds to wait for a device in programming
-        mode, eg. while the user presses its programming button. A_IndividualAddress_Read
-        is repeated with a time-out of PROGRAMMING_MODE_POLL_TIMEOUT until a device
-        answers, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2
-        describes. ``None`` (the default) reads once.
+    :param wait_for_programming_mode: Seconds (> 0) to wait for a device in
+        programming mode, e.g. while the user presses its programming button.
+        A_IndividualAddress_Read is repeated with a time-out of
+        PROGRAMMING_MODE_POLL_TIMEOUT until a device answers, as KNX v02.01.02 -
+        Management Procedures 03.05.02 - §2.3 step 2 describes. The last read is
+        shortened to end at the deadline. ``None`` (the default) reads once.
+    :raises ValueError: If ``wait_for_programming_mode`` is not greater than 0
     :raises ManagementConnectionError: If no device or more than one device is in
         programming mode, another device already uses ``individual_address``, or the
         device doesn't answer at the new address
     """
+    if wait_for_programming_mode is not None and wait_for_programming_mode <= 0:
+        raise ValueError(
+            f"wait_for_programming_mode must be greater than 0, got {wait_for_programming_mode}."
+        )
     logger.debug("Writing individual address %s to device.", individual_address)
 
     # check if the address is already occupied on the network
@@ -104,9 +117,13 @@ async def _devices_in_programming_mode(
     loop = asyncio.get_running_loop()
     deadline = loop.time() + wait
     while True:
+        remaining = deadline - loop.time()
+        # the last read ends at the deadline
         devices = await nm_individual_address_read(
-            xknx, timeout=PROGRAMMING_MODE_POLL_TIMEOUT, raise_if_multiple=True
+            xknx,
+            timeout=min(PROGRAMMING_MODE_POLL_TIMEOUT, remaining),
+            raise_if_multiple=True,
         )
-        if devices or loop.time() >= deadline:
+        if devices or remaining <= PROGRAMMING_MODE_POLL_TIMEOUT:
             return devices
         logger.debug("Waiting for a device in programming mode.")
