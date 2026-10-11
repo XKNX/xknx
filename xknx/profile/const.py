@@ -89,7 +89,7 @@ class PropertyDataType(IntEnum):
     @property
     def size(self) -> int | None:
         """
-        Return the length of one element in octets.
+        Return the size in octets per element (Type-Length in Table 6).
 
         `None` if the length isn't fixed by the PDT alone:
         - PDT_CONTROL is 1 octet read and 10 octets written.

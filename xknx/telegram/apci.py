@@ -3969,6 +3969,10 @@ class PropertyDescriptionResponse(APCI):
     write_enable bit and the 6 bit PDT, `access` the octet holding the 4 bit
     read_level and write_level. `writable`, `pdt`, `read_level` and
     `write_level` give the single fields.
+
+    If the Interface Object or the Property doesn't exist, `type_`, `max_count`
+    and `access` are all zero, so `max_count == 0` means the Property doesn't
+    exist and `pdt` then reads as PDT_CONTROL.
     """
 
     CODE: ClassVar = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
