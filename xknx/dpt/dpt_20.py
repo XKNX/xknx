@@ -1,4 +1,4 @@
-"""Implementation of different KNX DPT HVAC Operation modes."""
+"""Implementation of KNX DPT 20.xxx 1 octet enumerations."""
 
 from __future__ import annotations
 
@@ -9,6 +9,55 @@ from typing import Any
 from .dpt import DPTComplex, DPTComplexData, DPTEnum, DPTEnumData
 from .dpt_1 import HeatCool
 from .payload import DPTArray, DPTBinary
+
+
+class ErrorClassSystem(DPTEnumData):
+    """
+    Enum for the KNX system error classes.
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21: values 19 to 255 are
+    reserved and shall not be used.
+    """
+
+    NO_FAULT = 0
+    GENERAL_DEVICE_FAULT = 1
+    COMMUNICATION_FAULT = 2
+    CONFIGURATION_FAULT = 3
+    HARDWARE_FAULT = 4
+    SOFTWARE_FAULT = 5
+    INSUFFICIENT_NON_VOLATILE_MEMORY = 6
+    INSUFFICIENT_VOLATILE_MEMORY = 7
+    MEMORY_ALLOCATION_COMMAND_WITH_SIZE_0_RECEIVED = 8
+    CRC_ERROR = 9
+    WATCHDOG_RESET_DETECTED = 10
+    INVALID_OPCODE_DETECTED = 11
+    GENERAL_PROTECTION_FAULT = 12
+    MAXIMAL_TABLE_LENGTH_EXCEEDED = 13
+    UNDEFINED_LOAD_COMMAND_RECEIVED = 14
+    GROUP_ADDRESS_TABLE_IS_NOT_SORTED = 15
+    INVALID_CONNECTION_NUMBER = 16
+    INVALID_GROUP_OBJECT_NUMBER = 17
+    GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH = 18
+
+
+class DPTErrorClassSystem(DPTEnum[ErrorClassSystem]):
+    """
+    Abstraction for KNX system error class.
+
+    DPT 20.011 - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21. Also the
+    Datapoint Type of `PID_ERROR_CODE` - KNX v01.10.01 - Resources 03.05.01 -
+    §4.2.28.
+    """
+
+    dpt_main_number = 20
+    dpt_sub_number = 11
+    value_type = "error_class_system"
+    data_type = ErrorClassSystem
+
+    @classmethod
+    def _to_knx(cls, value: ErrorClassSystem) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 class HVACOperationMode(DPTEnumData):
