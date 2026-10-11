@@ -150,8 +150,11 @@ class Management:
         Nothing is sent to open or close it - while the context is open, the
         T_Data_Individual telegrams the device sends us are handed to it instead
         of being dropped. Only one context per device can be open at a time, as
-        a response could not be told apart otherwise. A connection-oriented
-        `connection()` to the same device may be open alongside it.
+        a response could not be told apart otherwise.
+
+        A connection-oriented `connection()` to the same device may be open at
+        the same time - T_Data_Connected telegrams go to the connection,
+        T_Data_Individual telegrams to this context.
         """
         if address in self._connectionless:
             raise ManagementConnectionError(
@@ -294,13 +297,21 @@ class ConnectionlessP2P:
 
     KNX v01.02.03 - Transport Layer 03.03.04 - §1.5: the point-to-point
     connectionless communication mode uses T_Data_Individual - no transport
-    connection, no sequence numbers and no acknowledgements. Several
+    connection and no sequence numbers. §3.6: T_Data_Individual is neither
+    acknowledged nor confirmed by the remote Transport Layer entity. Several
     management procedures may use it instead of a connection, eg.
     DM_FunctionProperty_Write_R (KNX v02.01.02 - Management Procedures
     03.05.02 - §3.30.1). Open it with `Management.connectionless()`.
     """
 
-    __slots__ = ("_last_response_time", "address", "queue", "rate_limit", "xknx")
+    __slots__ = (
+        "_last_response_time",
+        "_request_lock",
+        "address",
+        "queue",
+        "rate_limit",
+        "xknx",
+    )
 
     def __init__(
         self,
@@ -314,6 +325,7 @@ class ConnectionlessP2P:
         self.rate_limit = rate_limit
         self.queue: asyncio.Queue[Telegram] = asyncio.Queue()
         self._last_response_time: float = 0
+        self._request_lock = asyncio.Lock()
 
     def process(self, telegram: Telegram) -> None:
         """Queue a T_Data_Individual telegram received from the device."""
@@ -338,17 +350,11 @@ class ConnectionlessP2P:
 
     @overload
     async def request(
-        self,
-        payload: APCIRequest[APCIResponseT],
-        timeout: float = MANAGEMENT_CONNECTION_TIMEOUT,
+        self, payload: APCIRequest[APCIResponseT]
     ) -> Telegram[APCIResponseT]: ...
     @overload
-    async def request(
-        self, payload: APCI, timeout: float = MANAGEMENT_CONNECTION_TIMEOUT
-    ) -> Telegram: ...
-    async def request(
-        self, payload: APCI, timeout: float = MANAGEMENT_CONNECTION_TIMEOUT
-    ) -> Telegram:
+    async def request(self, payload: APCI) -> Telegram: ...
+    async def request(self, payload: APCI) -> Telegram:
         """
         Send a payload to the KNX device and wait for the response.
 
@@ -360,31 +366,39 @@ class ConnectionlessP2P:
 
         Telegrams queued before the request is sent are discarded, so a late
         response to an earlier request that timed out is not mistaken for this
-        one's.
-        """
-        if self.rate_limit:
-            # time in seconds since the last request operation
-            time_diff = time.time() - self._last_response_time
-            wait_time = 1 / self.rate_limit
-            if time_diff < wait_time:
-                await asyncio.sleep(wait_time - time_diff)
+        one's. Raises `ManagementConnectionTimeout` if no response arrives
+        within `MANAGEMENT_CONNECTION_TIMEOUT` seconds.
 
-        expected = payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
-        while not self.queue.empty():
-            self.queue.get_nowait()
-        await self.send(payload)
-        try:
-            async with asyncio.timeout(timeout):
-                while True:
-                    telegram = await self.queue.get()
-                    if expected is None or isinstance(telegram.payload, expected):
-                        break
-        except TimeoutError:
-            raise ManagementConnectionTimeout(
-                f"Timeout while waiting for {expected}"
-            ) from None
-        self._last_response_time = time.time()
-        return telegram
+        Concurrent calls are serialized - the next request is sent only after
+        the previous one got its response or timed out, as nothing in a
+        response tells which request it answers.
+        """
+        async with self._request_lock:
+            if self.rate_limit:
+                # time in seconds since the last request operation
+                time_diff = time.time() - self._last_response_time
+                wait_time = 1 / self.rate_limit
+                if time_diff < wait_time:
+                    await asyncio.sleep(wait_time - time_diff)
+
+            expected = (
+                payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
+            )
+            while not self.queue.empty():
+                self.queue.get_nowait()
+            await self.send(payload)
+            try:
+                async with asyncio.timeout(MANAGEMENT_CONNECTION_TIMEOUT):
+                    while True:
+                        telegram = await self.queue.get()
+                        if expected is None or isinstance(telegram.payload, expected):
+                            break
+            except TimeoutError:
+                raise ManagementConnectionTimeout(
+                    f"Timeout while waiting for {expected}"
+                ) from None
+            self._last_response_time = time.time()
+            return telegram
 
 
 class P2PConnection:
