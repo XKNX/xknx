@@ -46,7 +46,10 @@ class DPTErrorClassSystem(DPTEnum[ErrorClassSystem]):
 
     DPT 20.011 - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21. Also the
     Datapoint Type of `PID_ERROR_CODE` - KNX v01.10.01 - Resources 03.05.01 -
-    §4.2.28.
+    §4.2.28: it holds the last error that occurred before the load state
+    'Error' was set, and is reset to 0 (no fault) when the load state changes
+    from 'Error' to a different state. A device may implement a subset of the
+    error classes only.
     """
 
     dpt_main_number = 20
