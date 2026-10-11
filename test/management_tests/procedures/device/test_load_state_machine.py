@@ -12,6 +12,7 @@ from xknx.management.management import P2PConnection
 from xknx.management.procedures import (
     dm_load_state_machine_verify_r_co_mem,
     dm_load_state_machine_verify_r_io,
+    dmp_download_loadable_part_r_co_io,
     dmp_ext_load_state_machine_read_r_co_io,
     dmp_ext_load_state_machine_verify_r_co_io,
     dmp_ext_load_state_machine_write_r_co_io,
@@ -19,6 +20,7 @@ from xknx.management.procedures import (
     dmp_load_state_machine_read_r_io,
     dmp_load_state_machine_write_r_co_io,
     dmp_load_state_machine_write_r_co_mem,
+    dmp_mem_write_r_co,
 )
 from xknx.profile.const import LoadEvent, LoadState, ResourceObjectType
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
@@ -343,3 +345,100 @@ async def test_ext_write_r_co_io(xknx: XKNX) -> None:
             data=b"\x04" + bytes(9),
         )
     ]
+
+
+def _write(event: int, data: bytes = b"") -> apci.PropertyValueWrite:
+    return apci.PropertyValueWrite(
+        object_index=3,
+        property_id=PID_LOAD_STATE_CONTROL,
+        count=1,
+        start_index=1,
+        data=bytes([event]) + data.ljust(9, b"\x00"),
+    )
+
+
+async def test_download_loadable_part(xknx: XKNX) -> None:
+    """Test the complete download sequence of one loadable part."""
+    conn = await _connect(xknx)
+    server = asyncio.create_task(
+        _serve(
+            xknx,
+            [
+                _property_response(b"\x00"),  # Unload -> Unloaded
+                _property_response(b"\x02"),  # Start Loading -> Loading
+                _property_response(b"\x02"),  # Additional Load Control -> Loading
+                None,  # data written by `load`
+                _property_response(b"\x01"),  # Load Completed -> Loaded
+            ],
+        )
+    )
+
+    async def load() -> None:
+        await dmp_mem_write_r_co(conn, 0x4000, b"\x01\x02")
+
+    await dmp_download_loadable_part_r_co_io(
+        conn, 3, load, additional_load_controls=[b"\x0a\x00\x20"]
+    )
+    await server
+    assert _sent_requests(xknx) == [
+        _write(0x04),
+        _write(0x01),
+        _write(0x03, b"\x0a\x00\x20"),
+        apci.MemoryWrite(address=0x4000, data=b"\x01\x02"),
+        _write(0x02),
+    ]
+
+
+async def test_download_loadable_part_intermediate_states(xknx: XKNX) -> None:
+    """Test that Unloading and LoadCompleting are read again until they end."""
+    conn = await _connect(xknx)
+    server = asyncio.create_task(
+        _serve(
+            xknx,
+            [
+                _property_response(b"\x04"),  # Unload -> Unloading
+                _property_response(b"\x00"),  # read -> Unloaded
+                _property_response(b"\x02"),  # Start Loading -> Loading
+                _property_response(b"\x05"),  # Load Completed -> LoadCompleting
+                _property_response(b"\x01"),  # read -> Loaded
+            ],
+        )
+    )
+    load = AsyncMock()
+    await dmp_download_loadable_part_r_co_io(conn, 3, load, poll_interval=0)
+    await server
+    load.assert_awaited_once()
+
+
+async def test_download_loadable_part_without_unload(xknx: XKNX) -> None:
+    """Test that the Unload step is optional."""
+    conn = await _connect(xknx)
+    server = asyncio.create_task(
+        _serve(xknx, [_property_response(b"\x02"), _property_response(b"\x01")])
+    )
+    await dmp_download_loadable_part_r_co_io(conn, 3, AsyncMock(), unload=False)
+    await server
+    assert _sent_requests(xknx) == [_write(0x01), _write(0x02)]
+
+
+async def test_download_loadable_part_stops_on_wrong_state(xknx: XKNX) -> None:
+    """Test that a step not leading to the expected state stops the download."""
+    conn = await _connect(xknx)
+    server = asyncio.create_task(
+        _serve(xknx, [_property_response(b"\x00"), _property_response(b"\x03")])
+    )
+    load = AsyncMock()
+    with pytest.raises(VerificationError):
+        await dmp_download_loadable_part_r_co_io(conn, 3, load)
+    await server
+    load.assert_not_awaited()
+
+
+async def test_download_loadable_part_control_too_long(xknx: XKNX) -> None:
+    """Test that an additional load control longer than 9 octets is rejected first."""
+    conn = await _connect(xknx)
+    with pytest.raises(ValueError):
+        await dmp_download_loadable_part_r_co_io(
+            conn, 3, AsyncMock(), additional_load_controls=[bytes(10)]
+        )
+    assert _sent_requests(xknx) == []

@@ -6,6 +6,7 @@ from .dm_connect_r_co import dmp_connect_r_co
 from .dm_load_state_machine_verify_r_co_mem import dm_load_state_machine_verify_r_co_mem
 from .dm_load_state_machine_verify_r_io import dm_load_state_machine_verify_r_io
 from .dm_restart_r_co import dm_restart, dm_restart_r_co
+from .dmp_download_loadable_part_r_co_io import dmp_download_loadable_part_r_co_io
 from .dmp_ext_load_state_machine_read_r_co_io import (
     dmp_ext_load_state_machine_read_r_co_io,
 )
