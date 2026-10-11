@@ -6,6 +6,9 @@ import logging
 from typing import TYPE_CHECKING
 
 from xknx.exceptions import ManagementConnectionError
+from xknx.management.procedures.network.nm_individual_address_check import (
+    nm_individual_address_check,
+)
 from xknx.management.procedures.network.nm_individual_address_serial_number_read import (
     nm_individual_address_serial_number_read,
 )
@@ -21,8 +24,30 @@ logger = logging.getLogger("xknx.management.procedures")
 async def nm_individual_address_serial_number_write(
     xknx: XKNX, serial: bytes, individual_address: IndividualAddressableType
 ) -> None:
-    """Write individual address to device with specified serial number."""
+    """
+    Write individual address to device with specified serial number.
+
+    KNX v02.01.02 - Management Procedures 03.05.02 - §2.5 requires the procedure
+    to ensure that the assigned Individual Address is unique. So if a device
+    already answers at ``individual_address``, the address is only written when
+    that device is the one with ``serial`` - otherwise nothing is written.
+
+    :param xknx: the XKNX object
+    :param serial: KNX Serial Number of the device
+    :param individual_address: address to be written to the device
+    :raises ManagementConnectionError: If another device already uses
+        ``individual_address``, or the device doesn't confirm the new address
+    """
     individual_address = IndividualAddress(individual_address)
+    if await nm_individual_address_check(xknx, individual_address):
+        current = await nm_individual_address_serial_number_read(
+            xknx=xknx, serial=serial
+        )
+        if current != individual_address:
+            raise ManagementConnectionError(
+                f"Individual address {individual_address} is already in use by another "
+                f"device, cannot write it to device with serial {serial!r}."
+            )
     await xknx.management.broadcast.send(
         payload=apci.IndividualAddressSerialWrite(
             address=individual_address,
