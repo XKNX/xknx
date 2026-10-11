@@ -28,6 +28,13 @@ from xknx.knxip.dib import TunnelingSlotStatus
 from xknx.secure import load_keyring
 from xknx.telegram import IndividualAddress
 
+GATEWAY_TUNNELLING_V2 = GatewayDescriptor(
+    ip_addr="10.1.2.3",
+    port=3671,
+    supports_tunnelling=True,
+    supports_tunnelling_tcp=True,
+)
+
 
 class TestKNXIPInterface:
     """Test class for KNX interface objects."""
@@ -878,6 +885,7 @@ class TestKNXIPInterface:
         """Test Tunnelling Feature services are passed to the tunnel."""
         interface = knx_interface_factory(self.xknx, ConnectionConfig())
         tunnel = Mock(spec=UDPTunnel)
+        tunnel.request_description = AsyncMock(return_value=GATEWAY_TUNNELLING_V2)
         tunnel.feature_get = AsyncMock(return_value="get")
         tunnel.feature_set = AsyncMock(return_value="set")
         interface._interface = tunnel
@@ -886,6 +894,32 @@ class TestKNXIPInterface:
         tunnel.feature_get.assert_called_once_with(feature)
         assert await interface.tunnelling_feature_set(feature, b"\x01") == "set"
         tunnel.feature_set.assert_called_once_with(feature, b"\x01")
+
+    async def test_tunnelling_feature_without_tunnelling_v2(self) -> None:
+        """Test Tunnelling Feature services need a server announcing Tunnelling v2."""
+        interface = knx_interface_factory(self.xknx, ConnectionConfig())
+        tunnel = Mock(spec=UDPTunnel)
+        tunnel.request_description = AsyncMock(return_value=None)
+        interface._interface = tunnel
+        feature = TunnellingFeatureType.MAX_APDU_LENGTH
+        # no description received
+        with pytest.raises(CommunicationError, match="description"):
+            await interface.tunnelling_feature_get(feature)
+        # Tunnelling v1 server
+        tunnel.request_description.return_value = GatewayDescriptor(
+            ip_addr="10.1.2.3", port=3671, supports_tunnelling=True
+        )
+        with pytest.raises(CommunicationError, match="Tunnelling v2"):
+            await interface.tunnelling_feature_get(feature)
+        # the description from gateway discovery is used
+        interface._gateway_info = GatewayDescriptor(
+            ip_addr="10.1.2.3", port=3671, supports_tunnelling=True
+        )
+        with pytest.raises(CommunicationError, match="Tunnelling v2"):
+            await interface.tunnelling_feature_set(feature, b"\x01")
+        assert tunnel.request_description.call_count == 2
+        tunnel.feature_get.assert_not_called()
+        tunnel.feature_set.assert_not_called()
 
     async def test_threaded_tunnelling_feature(self) -> None:
         """Test Tunnelling Feature services run on the connection thread."""
@@ -906,6 +940,11 @@ class TestKNXIPInterface:
         with (
             patch("xknx.io.tunnel.UDPTunnel.connect", side_effect=assert_thread),
             patch("xknx.io.tunnel.UDPTunnel.disconnect", side_effect=assert_thread),
+            patch(
+                "xknx.io.tunnel._Tunnel.request_description",
+                side_effect=assert_thread,
+                return_value=GATEWAY_TUNNELLING_V2,
+            ),
             patch(
                 "xknx.io.tunnel._Tunnel.feature_get",
                 side_effect=assert_thread,

@@ -9,7 +9,7 @@ import pytest
 from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
-from xknx.exceptions import CommunicationError, TunnellingAckError
+from xknx.exceptions import CommunicationError
 from xknx.io import TCPTunnel, UDPTunnel
 from xknx.io.const import (
     CONNECTIONSTATE_REQUEST_TIMEOUT,
@@ -32,6 +32,7 @@ from xknx.knxip import (
     KNXIPFrame,
     TunnellingAck,
     TunnellingFeatureGet,
+    TunnellingFeatureInfo,
     TunnellingFeatureResponse,
     TunnellingFeatureSet,
     TunnellingFeatureType,
@@ -45,7 +46,7 @@ from xknx.telegram import (
     TelegramDirection,
     tpci,
 )
-from xknx.telegram.apci import GroupValueWrite
+from xknx.telegram.apci import GroupValueWrite, ReturnCode
 
 from ..conftest import EventLoopClockAdvancer
 
@@ -594,10 +595,20 @@ class TestUDPTunnel:
         mock_transport_send: Mock,
         time_travel: EventLoopClockAdvancer,
     ) -> None:
-        """Test a server ignoring Tunnelling Feature services."""
+        """Test a feature request not acknowledged twice closes the tunnel."""
         self.tunnel.transport.transport = Mock()
         self.tunnel.communication_channel = 1
         self.tunnel.sequence_number = 23
+        feature_get = call(
+            KNXIPFrame.init_from_body(
+                TunnellingFeatureGet(
+                    communication_channel_id=1,
+                    sequence_counter=23,
+                    feature_type=TunnellingFeatureType.MAX_APDU_LENGTH,
+                )
+            ),
+            addr=None,
+        )
 
         task = asyncio.create_task(
             self.tunnel.feature_get(TunnellingFeatureType.MAX_APDU_LENGTH)
@@ -605,12 +616,135 @@ class TestUDPTunnel:
         # no ACK - repeated once with the same sequence counter
         await time_travel(1)
         await time_travel(1)
-        assert mock_transport_send.call_count == 2
-        with pytest.raises(TunnellingAckError):
+        # 2x TunnellingFeatureGet + 1x DisconnectRequest (`auto_reconnect` is False)
+        assert mock_transport_send.call_args_list[:2] == [feature_get, feature_get]
+        assert isinstance(
+            mock_transport_send.call_args_list[2].args[0].body, DisconnectRequest
+        )
+        mock_transport_stop.assert_called_once()
+        with pytest.raises(CommunicationError):
             await task
-        # the tunnel is kept
-        mock_transport_stop.assert_not_called()
         assert self.tunnel.sequence_number == 24
+        assert self.tunnel._feature_response_waiter is None
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    async def test_feature_get_tunnel_closed(
+        self,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a pending feature request fails when the tunnel is closed."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel.sequence_number = 23
+
+        task = asyncio.create_task(
+            self.tunnel.feature_get(TunnellingFeatureType.MAX_APDU_LENGTH)
+        )
+        await time_travel(0)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=23)), HPAI()
+        )
+        await time_travel(0)
+        assert not task.done()
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                DisconnectRequest(communication_channel_id=1, control_endpoint=HPAI())
+            ),
+            HPAI(),
+        )
+        await time_travel(0)
+        assert task.done()
+        with pytest.raises(CommunicationError):
+            await task
+        mock_transport_stop.assert_called_once()
+        assert self.tunnel._feature_response_waiter is None
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_feature_get_error_without_data(
+        self,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a response with an error Return Code and no data reaches the caller."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel.sequence_number = 23
+        self.tunnel._sequence.expected = 15
+
+        task = asyncio.create_task(
+            self.tunnel.feature_get(TunnellingFeatureType.MAX_APDU_LENGTH)
+        )
+        await time_travel(0)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=23)), HPAI()
+        )
+        await time_travel(0)
+        raw = KNXIPFrame.init_from_body(
+            TunnellingFeatureResponse(
+                communication_channel_id=1,
+                sequence_counter=15,
+                feature_type=TunnellingFeatureType.MAX_APDU_LENGTH,
+                return_code=ReturnCode.E_ADDRESS_VOID,
+            )
+        ).to_knx()
+        frame, _ = KNXIPFrame.from_knx(raw)
+        self.tunnel.transport.handle_knxipframe(frame, HPAI())
+        await time_travel(0)
+        response = await task
+        assert response.return_code is ReturnCode.E_ADDRESS_VOID
+        assert response.data == b""
+        assert mock_transport_send.call_args_list[-1] == call(
+            KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=15)), addr=None
+        )
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    async def test_feature_info(
+        self,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test TunnellingFeatureInfo is acknowledged, sequence checked and dropped."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel._sequence.expected = 7
+        info = TunnellingFeatureInfo(
+            communication_channel_id=1,
+            sequence_counter=7,
+            feature_type=TunnellingFeatureType.BUS_CONNECTION_STATUS,
+            data=b"\x01",
+        )
+        ack = call(
+            KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=7)), addr=None
+        )
+
+        self.tunnel.transport.handle_knxipframe(KNXIPFrame.init_from_body(info), HPAI())
+        await time_travel(0)
+        assert mock_transport_send.call_args_list == [ack]
+        assert self.tunnel._sequence.expected == 8
+        # repeated - acknowledged again
+        self.tunnel.transport.handle_knxipframe(KNXIPFrame.init_from_body(info), HPAI())
+        await time_travel(0)
+        assert mock_transport_send.call_args_list == [ack, ack]
+        assert self.tunnel._sequence.expected == 8
+        mock_transport_send.reset_mock()
+        # wrong sequence number - no ACK, disconnect after 2 seconds without valid frame
+        wrong = deepcopy(info)
+        wrong.sequence_counter = 3
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(wrong), HPAI()
+        )
+        await time_travel(0)
+        mock_transport_send.assert_not_called()
+        mock_transport_stop.assert_not_called()
+        await time_travel(2)
+        mock_transport_stop.assert_called_once()
+        assert self.tunnel._sequence.expected == 8
+        self.cemi_received_mock.assert_not_called()
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     async def test_feature_get_no_response(
@@ -937,3 +1071,22 @@ class TestTCPTunnel:
         # no TUNNELLING_ACK over TCP
         assert mock_transport_send.call_count == 1
         assert self.tunnel.sequence_number == 24
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_feature_info(
+        self,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test TunnellingFeatureInfo is dropped over TCP - no TUNNELLING_ACK."""
+        self.tunnel.communication_channel = 1
+        info = TunnellingFeatureInfo(
+            communication_channel_id=1,
+            sequence_counter=7,
+            feature_type=TunnellingFeatureType.BUS_CONNECTION_STATUS,
+            data=b"\x01",
+        )
+        self.tunnel.transport.handle_knxipframe(KNXIPFrame.init_from_body(info), HPAI())
+        await time_travel(0)
+        mock_transport_send.assert_not_called()
+        self.cemi_received_mock.assert_not_called()
