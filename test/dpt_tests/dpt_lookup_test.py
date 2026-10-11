@@ -236,6 +236,7 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
         ("torque", DPTTorque, 14, 75, "Nm"),
         ("trigger", DPTTrigger, 1, 17, None),
         ("up_down", DPTUpDown, 1, 8, None),
+        ("version", DPTVersion, 217, 1, None),
         ("voltage", DPTVoltage, 9, 20, "mV"),
         ("volume", DPTVolume, 14, 76, "m³"),
         ("volume_flow", DPTVolumeFlow, 9, 25, "L/h"),
