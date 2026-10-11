@@ -1,6 +1,7 @@
 """Tests for nm_individual_address_write — KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 NM_IndividualAddress_Write."""
 
 import asyncio
+import importlib
 from unittest.mock import AsyncMock, call
 
 import pytest
@@ -9,6 +10,7 @@ from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import MANAGEMENT_CONNECTION_TIMEOUT
 from xknx.management.procedures.network.nm_individual_address_write import (
+    PROGRAMMING_MODE_POLL_TIMEOUT,
     nm_individual_address_write,
 )
 from xknx.telegram import (
@@ -21,6 +23,11 @@ from xknx.telegram import (
 )
 
 from ....conftest import EventLoopClockAdvancer
+
+# The package re-exports the procedure under the module's name, so import the module itself.
+procedure_module = importlib.import_module(
+    "xknx.management.procedures.network.nm_individual_address_write"
+)
 
 
 async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) -> None:
@@ -489,3 +496,109 @@ async def test_nm_individual_address_write_address_found_other_in_programming_mo
         match=f"A device was found with {individual_address}, cannot continue with programming.",
     ):
         await task
+
+
+class _FakeConnection:
+    async def __aenter__(self) -> "_FakeConnection":
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        return None
+
+
+def _patch_bus(
+    monkeypatch: pytest.MonkeyPatch, responses: list[list[IndividualAddress]]
+) -> tuple[XKNX, list[float | None]]:
+    """Fake a bus with a free target address whose devices answer ``responses`` in turn."""
+    timeouts: list[float | None] = []
+
+    async def fake_check(xknx: XKNX, individual_address: IndividualAddress) -> bool:
+        return False
+
+    async def fake_read(
+        xknx: XKNX, timeout: float | None = 3, raise_if_multiple: bool = False
+    ) -> list[IndividualAddress]:
+        timeouts.append(timeout)
+        await asyncio.sleep(timeout or 0)
+        return responses.pop(0) if responses else []
+
+    async def fake_check_conn(conn: object) -> bool:
+        return True
+
+    async def fake_restart(conn: object) -> None:
+        return None
+
+    monkeypatch.setattr(procedure_module, "nm_individual_address_check", fake_check)
+    monkeypatch.setattr(procedure_module, "nm_individual_address_read", fake_read)
+    monkeypatch.setattr(
+        procedure_module, "nm_individual_address_check_conn", fake_check_conn
+    )
+    monkeypatch.setattr(procedure_module, "dm_restart_r_co", fake_restart)
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    monkeypatch.setattr(
+        type(xknx.management), "connection", lambda self, address: _FakeConnection()
+    )
+    return xknx, timeouts
+
+
+def _address_writes(xknx: XKNX) -> list[IndividualAddress]:
+    """Return the addresses broadcast with A_IndividualAddress_Write."""
+    return [
+        c.args[0].payload.address
+        for c in xknx.cemi_handler.send_telegram.call_args_list
+        if isinstance(c.args[0].payload, apci.IndividualAddressWrite)
+    ]
+
+
+async def test_nm_individual_address_write_waits_for_programming_mode(
+    monkeypatch: pytest.MonkeyPatch, time_travel: EventLoopClockAdvancer
+) -> None:
+    """Test A_IndividualAddress_Read is repeated until a device is in programming mode."""
+    xknx, timeouts = _patch_bus(monkeypatch, [[], [], [IndividualAddress("15.15.255")]])
+
+    task = asyncio.create_task(
+        nm_individual_address_write(xknx, "1.1.4", wait_for_programming_mode=10)
+    )
+    for _ in range(3):
+        await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    await task
+
+    assert timeouts == [PROGRAMMING_MODE_POLL_TIMEOUT] * 3
+    assert _address_writes(xknx) == [IndividualAddress("1.1.4")]
+
+
+async def test_nm_individual_address_write_wait_times_out(
+    monkeypatch: pytest.MonkeyPatch, time_travel: EventLoopClockAdvancer
+) -> None:
+    """Test waiting for programming mode ends after ``wait_for_programming_mode``."""
+    xknx, timeouts = _patch_bus(monkeypatch, [])
+
+    task = asyncio.create_task(
+        nm_individual_address_write(xknx, "1.1.4", wait_for_programming_mode=2.5)
+    )
+    for _ in range(3):
+        await time_travel(PROGRAMMING_MODE_POLL_TIMEOUT)
+    with pytest.raises(
+        ManagementConnectionError, match="No device in programming mode"
+    ):
+        await task
+
+    assert len(timeouts) == 3
+    assert _address_writes(xknx) == []
+
+
+async def test_nm_individual_address_write_reads_once_by_default(
+    monkeypatch: pytest.MonkeyPatch, time_travel: EventLoopClockAdvancer
+) -> None:
+    """Test without ``wait_for_programming_mode`` programming mode is read once."""
+    xknx, timeouts = _patch_bus(monkeypatch, [])
+
+    task = asyncio.create_task(nm_individual_address_write(xknx, "1.1.4"))
+    await time_travel(3)
+    with pytest.raises(
+        ManagementConnectionError, match="No device in programming mode"
+    ):
+        await task
+
+    assert timeouts == [3]

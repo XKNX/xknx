@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -22,16 +23,29 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("xknx.management.procedures")
 
+# Time-out of each A_IndividualAddress_Read while waiting for a device in programming
+# mode - KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2.
+PROGRAMMING_MODE_POLL_TIMEOUT = 1.0
+
 
 async def nm_individual_address_write(
     xknx: XKNX,
     individual_address: IndividualAddressableType,
+    wait_for_programming_mode: float | None = None,
 ) -> None:
     """
     Write the individual address of a single device in programming mode.
 
     :param xknx: the XKNX object
     :param individual_address: address to be written to KNX device
+    :param wait_for_programming_mode: Seconds to wait for a device in programming
+        mode, eg. while the user presses its programming button. A_IndividualAddress_Read
+        is repeated with a time-out of PROGRAMMING_MODE_POLL_TIMEOUT until a device
+        answers, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2
+        describes. ``None`` (the default) reads once.
+    :raises ManagementConnectionError: If no device or more than one device is in
+        programming mode, another device already uses ``individual_address``, or the
+        device doesn't answer at the new address
     """
     logger.debug("Writing individual address %s to device.", individual_address)
 
@@ -45,9 +59,8 @@ async def nm_individual_address_write(
         )
 
     # check which devices are in programming mode
-    dev_pgm_mode = await nm_individual_address_read(
-        xknx, raise_if_multiple=True
-    )  # raises exception if more than one device in programming mode
+    # raises exception if more than one device in programming mode
+    dev_pgm_mode = await _devices_in_programming_mode(xknx, wait_for_programming_mode)
     if not dev_pgm_mode:
         logger.debug("No device in programming mode detected.")
         raise ManagementConnectionError("No device in programming mode detected.")
@@ -80,3 +93,20 @@ async def nm_individual_address_write(
             )
         logger.debug("Restarting device, exiting programming mode.")
         await dm_restart_r_co(connection)
+
+
+async def _devices_in_programming_mode(
+    xknx: XKNX, wait: float | None
+) -> list[IndividualAddress]:
+    """Read the devices in programming mode, polling for up to ``wait`` seconds."""
+    if wait is None:
+        return await nm_individual_address_read(xknx, raise_if_multiple=True)
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + wait
+    while True:
+        devices = await nm_individual_address_read(
+            xknx, timeout=PROGRAMMING_MODE_POLL_TIMEOUT, raise_if_multiple=True
+        )
+        if devices or loop.time() >= deadline:
+            return devices
+        logger.debug("Waiting for a device in programming mode.")
