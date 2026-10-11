@@ -39,6 +39,7 @@ When adding a new procedure follow the workflow:
 # ruff: noqa: F401
 from .device import (
     FREE_ACCESS_KEY,
+    PROG_MODE_ADDRESS,
     ScannedInterfaceObject,
     dm_restart,
     dm_restart_r_co,
@@ -52,6 +53,7 @@ from .device import (
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
+    dmp_prog_mode_switch_r_co,
     dmp_user_mem_read_r_co,
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,
