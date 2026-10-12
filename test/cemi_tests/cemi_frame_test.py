@@ -3,10 +3,14 @@
 import pytest
 
 from xknx.cemi import (
+    CEMIAdditionalInfoType,
     CEMIAddressType,
+    CEMIBusmonData,
+    CEMIBusmonitorStatus,
     CEMIFlags,
     CEMIFrame,
     CEMIFrameType,
+    CEMIInfo,
     CEMILData,
     CEMIMessageCode,
     CEMIMPropReadRequest,
@@ -235,7 +239,7 @@ def test_from_knx_with_not_implemented_cemi() -> None:
         UnsupportedCEMIMessage, match=r".*Could not handle CEMIMessageCode:.*"
     ):
         CEMIFrame.from_knx(
-            get_data(CEMIMessageCode.L_BUSMON_IND.value, 0, 0, 0, 0, 2, 0, [])
+            get_data(CEMIMessageCode.L_RAW_IND.value, 0, 0, 0, 0, 2, 0, [])
         )
 
 
@@ -400,6 +404,164 @@ def test_frame_type_not_validated_when_parsing() -> None:
     assert frame.data.payload == GroupValueWrite(DPTArray(bytes(range(16))))
     # serializing it again corrects the Frame Type flag
     assert not frame.to_knx()[2] & 0x80
+
+
+def test_busmon_ind() -> None:
+    """Test parsing and serializing an L_Busmon.ind."""
+    # Busmonitor Status Info and relative timestamp
+    # as in KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.5.8.1
+    raw = bytes.fromhex("2b0703010904021234bc110a0a0ce100813e")
+    frame = CEMIFrame.from_knx(raw)
+    assert frame.code is CEMIMessageCode.L_BUSMON_IND
+    assert frame.info.busmonitor_status == CEMIBusmonitorStatus(
+        lost=True, sequence_number=1
+    )
+    assert frame.info.timestamp_relative == 0x1234
+    assert frame.info.extended_relative_timestamp is None
+    assert frame.data == CEMIBusmonData(raw_frame=bytes.fromhex("bc110a0a0ce100813e"))
+    assert frame.calculated_length() == len(raw)
+    assert frame.to_knx() == raw
+    assert repr(frame) == (
+        '<CEMIFrame code="L_BUSMON_IND" info="CEMIInfo("03010904021234")" '
+        'data="CEMIBusmonData(raw_frame="bc110a0a0ce100813e")" />'
+    )
+
+
+def test_busmon_ind_acknowledgement() -> None:
+    """Test parsing an L_Busmon.ind of an acknowledgement frame."""
+    raw = bytes.fromhex("2b000c")
+    frame = CEMIFrame.from_knx(raw)
+    assert frame.info == CEMIInfo()
+    assert frame.data == CEMIBusmonData(raw_frame=b"\x0c")
+    assert frame.to_knx() == raw
+
+
+def test_busmon_ind_create() -> None:
+    """Test creating an L_Busmon.ind."""
+    frame = CEMIFrame(
+        code=CEMIMessageCode.L_BUSMON_IND,
+        info=CEMIInfo.init_from_items(
+            [
+                (CEMIAdditionalInfoType.EXTENDED_RELATIVE_TIMESTAMP, bytes(4)),
+                (
+                    CEMIAdditionalInfoType.BUSMONITOR_STATUS_INFO,
+                    bytes((CEMIBusmonitorStatus(sequence_number=7).to_knx(),)),
+                ),
+            ]
+        ),
+        data=CEMIBusmonData(raw_frame=b"\xcc"),
+    )
+    # sorted in ascending order of their Type IDs
+    assert frame.to_knx() == bytes.fromhex("2b09030107060400000000cc")
+
+
+def test_busmon_ind_without_frame() -> None:
+    """Test an L_Busmon.ind without frame data."""
+    with pytest.raises(CouldNotParseCEMI, match=r"L_Busmon.ind without frame data"):
+        CEMIFrame.from_knx(bytes.fromhex("2b00"))
+
+
+@pytest.mark.parametrize("raw", ["2b", "2b0503010004"])
+def test_additional_info_exceeds_frame(raw: str) -> None:
+    """Test Additional Information Length exceeding the frame."""
+    with pytest.raises(CouldNotParseCEMI, match=r"Additional Information exceeds"):
+        CEMIFrame.from_knx(bytes.fromhex(raw))
+
+
+@pytest.mark.parametrize(
+    ("raw", "status"),
+    [
+        (0x00, CEMIBusmonitorStatus()),
+        (0x80, CEMIBusmonitorStatus(frame_error=True)),
+        (0x40, CEMIBusmonitorStatus(bit_error=True)),
+        (0x20, CEMIBusmonitorStatus(parity_error=True)),
+        (0x10, CEMIBusmonitorStatus(overflow=True)),
+        (0x08, CEMIBusmonitorStatus(lost=True)),
+        (0x05, CEMIBusmonitorStatus(sequence_number=5)),
+        (
+            0xFF,
+            CEMIBusmonitorStatus(
+                frame_error=True,
+                bit_error=True,
+                parity_error=True,
+                overflow=True,
+                lost=True,
+                sequence_number=7,
+            ),
+        ),
+    ],
+)
+def test_busmonitor_status(raw: int, status: CEMIBusmonitorStatus) -> None:
+    """Test parsing and serializing the Busmonitor Status Info."""
+    assert CEMIBusmonitorStatus.from_knx(raw) == status
+    assert status.to_knx() == raw
+
+
+def test_busmonitor_status_invalid_sequence_number() -> None:
+    """Test serializing an out of range sequence number."""
+    with pytest.raises(ConversionError, match=r"Sequence number out of range"):
+        CEMIBusmonitorStatus(sequence_number=8).to_knx()
+
+
+def test_additional_info_items() -> None:
+    """Test reading Additional Information fields."""
+    info = CEMIInfo(bytes.fromhex("0301800402ffff060400010203fe0300c501"))
+    assert info.items() == [
+        (0x03, b"\x80"),
+        (0x04, b"\xff\xff"),
+        (0x06, bytes.fromhex("00010203")),
+        (0xFE, bytes.fromhex("00c501")),
+    ]
+    assert info.busmonitor_status == CEMIBusmonitorStatus(frame_error=True)
+    assert info.timestamp_relative == 0xFFFF
+    assert info.extended_relative_timestamp == 0x00010203
+    assert info.get(CEMIAdditionalInfoType.MANUFACTURER_SPECIFIC_DATA) == bytes.fromhex(
+        "00c501"
+    )
+    assert info.get(CEMIAdditionalInfoType.RF_MEDIUM_INFO) is None
+    assert CEMIInfo.init_from_items(info.items()) == info
+
+
+def test_additional_info_empty() -> None:
+    """Test no Additional Information."""
+    info = CEMIInfo()
+    assert not info.items()
+    assert info.busmonitor_status is None
+    assert info.timestamp_relative is None
+    assert info.extended_relative_timestamp is None
+
+
+@pytest.mark.parametrize(
+    ("raw", "items"),
+    [
+        # field exceeding the Additional Information is ignored
+        ("0301000404ffff", [(0x03, b"\x00")]),
+        # lone Type ID octet
+        ("030100fe", [(0x03, b"\x00")]),
+    ],
+)
+def test_additional_info_malformed(raw: str, items: list[tuple[int, bytes]]) -> None:
+    """Test malformed Additional Information fields are ignored."""
+    info = CEMIInfo(bytes.fromhex(raw))
+    assert info.items() == items
+    assert info.timestamp_relative is None
+
+
+def test_additional_info_unexpected_length() -> None:
+    """Test fields of a known Type ID with an unexpected length are ignored."""
+    info = CEMIInfo(bytes.fromhex("030200000401ff0602ffff"))
+    assert info.busmonitor_status is None
+    assert info.timestamp_relative is None
+    assert info.extended_relative_timestamp is None
+
+
+def test_l_data_ind_with_additional_info() -> None:
+    """Test L_Data.ind keeps parsing with Additional Information."""
+    raw = bytes.fromhex("2906060400000064bce0110a0a0c010081")
+    frame = CEMIFrame.from_knx(raw)
+    assert frame.info.extended_relative_timestamp == 100
+    assert isinstance(frame.data, CEMILData)
+    assert frame.to_knx() == raw
 
 
 def get_prop(
