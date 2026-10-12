@@ -25,10 +25,12 @@ from xknx.knxip import (
     ConnectRequestInformation,
     DisconnectRequest,
     DisconnectResponse,
+    ErrorCode,
     HostProtocol,
     KNXIPFrame,
     KNXIPServiceType,
     TunnellingAck,
+    TunnellingLayer,
     TunnellingRequest,
 )
 from xknx.telegram import IndividualAddress
@@ -63,6 +65,7 @@ class _Tunnel(Interface):
         "_src_address",
         "auto_reconnect",
         "auto_reconnect_wait",
+        "busmonitor",
         "cemi_received_callback",
         "communication_channel",
         "local_hpai",
@@ -79,11 +82,13 @@ class _Tunnel(Interface):
         cemi_received_callback: CEMIBytesCallbackType,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
+        busmonitor: bool = False,
     ) -> None:
         """Initialize Tunnel class."""
         self.xknx = xknx
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
+        self.busmonitor = busmonitor
 
         self.communication_channel: int | None = None
         self.local_hpai: HPAI = HPAI()
@@ -150,7 +155,7 @@ class _Tunnel(Interface):
             # close transport to prevent open file descriptors
             self.transport.stop()
             raise CommunicationError(
-                "Tunnel connection could not be established"
+                f"Tunnel connection could not be established: {ex}"
             ) from ex
 
         self._tunnel_established()
@@ -250,9 +255,26 @@ class _Tunnel(Interface):
         connect = Connect(
             transport=self.transport,
             local_hpai=self.local_hpai,
-            cri=ConnectRequestInformation(individual_address=self._requested_address),
+            cri=ConnectRequestInformation(
+                knx_layer=(
+                    TunnellingLayer.BUSMONITOR_LAYER
+                    if self.busmonitor
+                    else TunnellingLayer.DATA_LINK_LAYER
+                ),
+                individual_address=self._requested_address,
+            ),
         )
-        response = await connect.request()
+        try:
+            response = await connect.request()
+        except RequestResponseError as err:
+            if not self.busmonitor or err.error_code is None:
+                raise
+            raise RequestResponseError(
+                "Server does not support bus monitor tunnels"
+                if err.error_code is ErrorCode.E_TUNNELLING_LAYER
+                else f"Server rejected bus monitor tunnel: {err.error_code.name}",
+                error_code=err.error_code,
+            ) from err
         self.communication_channel = response.communication_channel
         # assign data_endpoint received from server
         self._data_endpoint_addr = (
@@ -338,12 +360,23 @@ class _Tunnel(Interface):
 
         A transport layer confirmation shall be awaited before sending the next telegram.
         """
+        self._raise_if_busmonitor()
         raw_cemi = cemi.to_knx()
         async with self._send_ready():
             try:
                 await self._tunnelling_request(raw_cemi)
             finally:
                 self._increase_sequence_number()
+
+    def _raise_if_busmonitor(self) -> None:
+        """
+        Raise CommunicationError in bus monitor mode.
+
+        A client in bus monitor mode shall not send
+        KNX v01.07.01 - Tunnelling 03.08.04 - §2.4
+        """
+        if self.busmonitor:
+            raise CommunicationError("Sending is not possible in bus monitor mode")
 
     async def _tunnelling_request(self, raw_cemi: bytes) -> None:
         """Send CEMI Frame to tunnelling server."""
@@ -450,6 +483,7 @@ class UDPTunnel(_Tunnel):
         route_back: bool = False,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
+        busmonitor: bool = False,
     ) -> None:
         """Initialize Tunnel class."""
         self.gateway_ip = gateway_ip
@@ -462,6 +496,7 @@ class UDPTunnel(_Tunnel):
             cemi_received_callback=cemi_received_callback,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
+            busmonitor=busmonitor,
         )
         self._sequence = IncomingSequenceCounter()
         self._invalid_sequence_number_reconnect_task: asyncio.Task[None] | None = None
@@ -512,6 +547,7 @@ class UDPTunnel(_Tunnel):
         connection by sending a DISCONNECT_REQUEST frame to the other devices
         control endpoint.
         """
+        self._raise_if_busmonitor()
         raw_cemi = cemi.to_knx()
         async with self._send_ready():
             try:
@@ -681,6 +717,7 @@ class TCPTunnel(_Tunnel):
         individual_address: IndividualAddress | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
+        busmonitor: bool = False,
     ) -> None:
         """Initialize Tunnel class."""
         self.gateway_ip = gateway_ip
@@ -690,6 +727,7 @@ class TCPTunnel(_Tunnel):
             cemi_received_callback=cemi_received_callback,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
+            busmonitor=busmonitor,
         )
         # TCP always uses 0.0.0.0:0
         self.local_hpai = HPAI(protocol=HostProtocol.IPV4_TCP)
@@ -729,6 +767,7 @@ class SecureTunnel(TCPTunnel):
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
         device_authentication_password: str | None = None,
+        busmonitor: bool = False,
     ) -> None:
         """Initialize SecureTunnel class."""
         self._device_authentication_password = device_authentication_password
@@ -741,6 +780,7 @@ class SecureTunnel(TCPTunnel):
             gateway_port=gateway_port,
             auto_reconnect=auto_reconnect,
             auto_reconnect_wait=auto_reconnect_wait,
+            busmonitor=busmonitor,
         )
 
     def _init_transport(self) -> None:

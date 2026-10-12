@@ -74,6 +74,15 @@ class KNXIPInterface:
 
     async def _start(self) -> None:
         """Start interface. Connecting KNX/IP device with the selected method."""
+        connection_type = self.connection_config.connection_type
+        if self.connection_config.busmonitor and connection_type in (
+            ConnectionType.ROUTING,
+            ConnectionType.ROUTING_SECURE,
+        ):
+            raise XKNXException(
+                "Bus monitor mode is only supported for tunnelling connections, "
+                f"not for {connection_type.name}"
+            )
         if gateway_ip := self.connection_config.gateway_ip:
             gateway_ip = await util.validate_ip(gateway_ip, address_name="Gateway IP")
         if local_ip := self.connection_config.local_ip:
@@ -161,6 +170,17 @@ class KNXIPInterface:
             ):
                 logger.debug("Skipping %s. No match in keyring file", gateway)
                 continue
+            if self.connection_config.busmonitor and not (
+                gateway.supports_tunnelling_tcp
+                or (
+                    gateway.supports_tunnelling
+                    and not gateway.tunnelling_requires_secure
+                )
+            ):
+                logger.debug(
+                    "Skipping %s. Bus monitor mode requires tunnelling", gateway
+                )
+                continue
             try:
                 if gateway.supports_tunnelling_tcp:
                     if gateway.tunnelling_requires_secure:
@@ -226,6 +246,7 @@ class KNXIPInterface:
             cemi_received_callback=self.cemi_received,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
+            busmonitor=self.connection_config.busmonitor,
         )
         await self._interface.connect()
 
@@ -289,6 +310,7 @@ class KNXIPInterface:
             user_password=user_password,
             device_authentication_password=device_authentication_password,
             cemi_received_callback=self.cemi_received,
+            busmonitor=self.connection_config.busmonitor,
         )
         await self._interface.connect()
 
@@ -380,6 +402,7 @@ class KNXIPInterface:
             cemi_received_callback=self.cemi_received,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
+            busmonitor=self.connection_config.busmonitor,
         )
         await self._interface.connect()
 

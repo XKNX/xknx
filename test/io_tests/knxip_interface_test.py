@@ -12,7 +12,11 @@ from unittest.mock import DEFAULT, Mock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
+from xknx.exceptions.exception import (
+    CommunicationError,
+    InvalidSecureConfiguration,
+    XKNXException,
+)
 from xknx.io import (
     ConnectionConfig,
     ConnectionType,
@@ -316,6 +320,120 @@ class TestKNXIPInterface:
                 interface._interface.cemi_received_callback == interface.cemi_received
             )
             connect_routing.assert_called_once_with()
+
+    @pytest.mark.parametrize(
+        ("connection_type", "tunnel_class"),
+        [
+            (ConnectionType.TUNNELING, UDPTunnel),
+            (ConnectionType.TUNNELING_TCP, TCPTunnel),
+        ],
+    )
+    async def test_start_busmonitor_tunnel_connection(
+        self, connection_type: ConnectionType, tunnel_class: type[UDPTunnel | TCPTunnel]
+    ) -> None:
+        """Test starting a tunnel in bus monitor mode."""
+        connection_config = ConnectionConfig(
+            connection_type=connection_type,
+            gateway_ip="127.0.0.2",
+            busmonitor=True,
+        )
+        with patch(f"xknx.io.tunnel.{tunnel_class.__name__}.connect") as connect:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, tunnel_class)
+            assert interface._interface.busmonitor is True
+            connect.assert_called_once_with()
+
+        # data link layer tunnel by default
+        connection_config.busmonitor = False
+        with patch(f"xknx.io.tunnel.{tunnel_class.__name__}.connect"):
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, tunnel_class)
+            assert interface._interface.busmonitor is False
+
+    async def test_start_busmonitor_secure_tunnel_connection(self) -> None:
+        """Test starting a secure tunnel in bus monitor mode."""
+        connection_config = ConnectionConfig(
+            connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+            gateway_ip="192.168.1.1",
+            secure_config=SecureConfig(
+                user_id=3,
+                device_authentication_password="authenticationcode",
+                user_password="user1",
+            ),
+            busmonitor=True,
+        )
+        with patch("xknx.io.tunnel.SecureTunnel.connect") as connect_secure:
+            interface = knx_interface_factory(self.xknx, connection_config)
+            await interface.start()
+            assert isinstance(interface._interface, SecureTunnel)
+            assert interface._interface.busmonitor is True
+            connect_secure.assert_called_once_with()
+
+    @pytest.mark.parametrize(
+        "connection_type", [ConnectionType.ROUTING, ConnectionType.ROUTING_SECURE]
+    )
+    async def test_busmonitor_routing_rejected(
+        self, connection_type: ConnectionType
+    ) -> None:
+        """Test bus monitor mode is rejected for routing connections."""
+        connection_config = ConnectionConfig(
+            connection_type=connection_type,
+            local_ip="127.0.0.1",
+            busmonitor=True,
+        )
+        interface = knx_interface_factory(self.xknx, connection_config)
+        with (
+            patch("xknx.io.KNXIPInterface._start_routing") as start_routing,
+            patch("xknx.io.KNXIPInterface._start_secure_routing") as start_secure,
+            pytest.raises(
+                XKNXException,
+                match=rf"only supported for tunnelling connections, not for {connection_type.name}",
+            ),
+        ):
+            await interface.start()
+        start_routing.assert_not_called()
+        start_secure.assert_not_called()
+
+    async def test_start_automatic_busmonitor(self) -> None:
+        """Test automatic connection in bus monitor mode only uses tunnelling."""
+        connection_config = ConnectionConfig(busmonitor=True)
+        interface = knx_interface_factory(self.xknx, connection_config)
+
+        async def gateway_generator_mock(_: Any) -> AsyncGenerator[GatewayDescriptor]:
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.1", port=3671, supports_routing=True
+            )
+            secure_udp_interface = GatewayDescriptor(
+                ip_addr="10.1.2.2",
+                port=3671,
+                supports_tunnelling=True,
+                supports_routing=True,
+            )
+            secure_udp_interface.tunnelling_requires_secure = True
+            yield secure_udp_interface
+            yield GatewayDescriptor(
+                ip_addr="10.1.2.3", port=3671, supports_tunnelling=True
+            )
+
+        with (
+            patch(
+                "xknx.io.knxip_interface.GatewayScanner.async_scan",
+                new=gateway_generator_mock,
+            ),
+            patch(
+                "xknx.io.KNXIPInterface._start_tunnelling_udp",
+            ) as start_tunnelling_udp_mock,
+            patch(
+                "xknx.io.KNXIPInterface._start_routing",
+            ) as start_routing_mock,
+        ):
+            await interface.start()
+            start_routing_mock.assert_not_called()
+            start_tunnelling_udp_mock.assert_called_once_with(
+                gateway_ip="10.1.2.3", gateway_port=3671, local_ip=None
+            )
 
     async def test_threaded_connection(self) -> None:
         """Test starting threaded connection."""

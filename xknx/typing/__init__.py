@@ -11,11 +11,14 @@ else:
     from typing_extensions import TypeVar as TypeVar
 
 if TYPE_CHECKING:
+    from xknx.cemi import CEMIFrame
     from xknx.core.connection_manager import XknxConnectionState
     from xknx.devices import Device
     from xknx.telegram import Telegram
 
 CallbackType = Callable[[], None]
+
+CEMIFrameCallbackType = Callable[["CEMIFrame"], None]
 
 ConnectionChangeCallbackType = Callable[["XknxConnectionState"], None]
 

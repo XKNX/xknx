@@ -9,6 +9,8 @@ can be a remote server when using IP tunnelling or a local server when using IP 
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -23,8 +25,9 @@ from xknx.exceptions import (
 from xknx.secure.data_secure import DataSecure, is_data_secure
 from xknx.secure.keyring import Keyring
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, tpci
+from xknx.typing import CEMIFrameCallbackType
 
-from .cemi_frame import CEMIFrame, CEMILData
+from .cemi_frame import CEMIBusmonData, CEMIFrame, CEMILData
 from .const import CEMIMessageCode
 
 if TYPE_CHECKING:
@@ -40,13 +43,39 @@ REQUEST_TO_CONFIRMATION_TIMEOUT = 3
 class CEMIHandler:
     """Class for handling CEMI frames from/to the TelegramQueue."""
 
-    __slots__ = ("_l_data_confirmation_event", "data_secure", "xknx")
+    __slots__ = (
+        "_busmonitor_frame_received_cbs",
+        "_l_data_confirmation_event",
+        "data_secure",
+        "xknx",
+    )
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize CEMIHandler class."""
         self.xknx = xknx
         self.data_secure: DataSecure | None = None
         self._l_data_confirmation_event = asyncio.Event()
+        self._busmonitor_frame_received_cbs: list[CEMIFrameCallbackType] = []
+
+    def register_busmonitor_frame_received_cb(
+        self, busmonitor_frame_received_cb: CEMIFrameCallbackType
+    ) -> Callable[[], None]:
+        """
+        Register callback for received L_Busmon.ind frames. Returns unregister function.
+
+        The callback receives the `CEMIFrame`; its `data` is a `CEMIBusmonData`.
+        """
+        self._busmonitor_frame_received_cbs.append(busmonitor_frame_received_cb)
+        return partial(
+            self.unregister_busmonitor_frame_received_cb, busmonitor_frame_received_cb
+        )
+
+    def unregister_busmonitor_frame_received_cb(
+        self, busmonitor_frame_received_cb: CEMIFrameCallbackType
+    ) -> None:
+        """Unregister callback for received L_Busmon.ind frames."""
+        if busmonitor_frame_received_cb in self._busmonitor_frame_received_cbs:
+            self._busmonitor_frame_received_cbs.remove(busmonitor_frame_received_cb)
 
     def data_secure_init(self, keyring: Keyring | None) -> None:
         """Initialize DataSecure."""
@@ -117,6 +146,9 @@ class CEMIHandler:
 
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming CEMI Frames."""
+        if isinstance(cemi.data, CEMIBusmonData):
+            self.busmonitor_frame_received(cemi)
+            return
         if not isinstance(cemi.data, CEMILData):
             logger.debug("Ignoring incoming non-link-layer CEMI: %s", cemi)
             return
@@ -159,6 +191,18 @@ class CEMIHandler:
         telegram.direction = TelegramDirection.INCOMING
         telegram.data_secure = _cemi_data_is_data_secure
         self.telegram_received(telegram)
+
+    def busmonitor_frame_received(self, cemi: CEMIFrame) -> None:
+        """Forward L_Busmon.ind frames to registered callbacks."""
+        logger.debug("Incoming CEMI: %s", cemi)
+        self.xknx.connection_manager.cemi_count_incoming += 1
+        for callback in self._busmonitor_frame_received_cbs:
+            try:
+                callback(cemi)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Unexpected error in busmonitor_frame_received_cb for %s", cemi
+                )
 
     def telegram_received(self, telegram: Telegram) -> None:
         """Forward Telegram to upper layer."""
