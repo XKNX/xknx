@@ -23,7 +23,7 @@ from xknx.exceptions import (
     UnsupportedCEMIMessage,
 )
 from xknx.profile.const import ResourceObjectType, ResourcePropertyId
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram
+from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import APCI
 from xknx.telegram.tpci import TPCI, TDataBroadcast
 
@@ -164,11 +164,14 @@ class CEMILData(CEMIData):
             payload=telegram.payload,
         )
 
-    def telegram(self) -> Telegram:
+    def telegram(
+        self, direction: TelegramDirection = TelegramDirection.OUTGOING
+    ) -> Telegram:
         """Return Telegram from a CEMILData."""
 
         return Telegram(
             destination_address=self.dst_addr,
+            direction=direction,
             payload=self.payload,
             source_address=self.src_addr,
             tpci=self.tpci,
