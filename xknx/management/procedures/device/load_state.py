@@ -1,0 +1,310 @@
+"""
+Load State Machine states and load events.
+
+The Load State Machine is specified in KNX v01.10.01 - Resources 03.05.01 -
+§4.23.2 "Load State Machine - Realisation Type 1 (Property based)": its
+states are read from, and its events written to, ``PID_LOAD_STATE_CONTROL``
+(property id 5, ``xknx.profile.const.ResourceGenericPropertyId``). The
+"Additional Load Controls" event (03h) and its subtypes carry the segment
+allocation/task control data a Load Procedure uses; their encoding is
+specified in KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.3.4
+(see :mod:`~.dmp_load_state_machine_write_r_co_io`). Every load event is a
+fixed 10 octet value; unused octets are 0.
+
+Bare ``§3.31.3.x`` references in this module are to KNX v02.01.02 -
+Management Procedures 03.05.02; Resources references are cited in full.
+
+These builders are exported as the ``load_state`` module
+(``procedures.load_state.unload()``), not as top-level procedures.
+"""
+
+from __future__ import annotations
+
+from enum import IntEnum
+
+from xknx.exceptions import ManagementConnectionError
+
+# Write value width (KNX v01.10.01 - Resources 03.05.01 - §4.2.5
+# PID_LOAD_STATE_CONTROL: "The write value shall always be 10 octets.").
+LOAD_EVENT_SIZE = 10
+
+
+class LoadState(IntEnum):
+    """
+    State reported when reading ``PID_LOAD_STATE_CONTROL``.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.1, Table 92. ``UNLOADING``
+    and ``LOAD_COMPLETING`` are optional intermediate states a device may
+    report while an Unload or LoadCompleted transition is still in progress.
+    """
+
+    UNLOADED = 0
+    LOADED = 1
+    LOADING = 2
+    ERROR = 3
+    UNLOADING = 4
+    LOAD_COMPLETING = 5
+
+
+class _LoadEvent(IntEnum):
+    """First octet of a load event (KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.2, Table 93)."""
+
+    NO_OPERATION = 0x00
+    START_LOADING = 0x01
+    LOAD_COMPLETED = 0x02
+    ADDITIONAL = 0x03
+    UNLOAD = 0x04
+
+
+class MemoryType(IntEnum):
+    """
+    Memory type of an AllocAbsDataSeg/AllocAbsStackSeg load event.
+
+    KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.3.4: "bit 0…2
+    memory type: 1 Zero page RAM, 2 RAM, 3 EEPROM; bit 3…7 Reserved. Shall
+    be zero" - 0 and 4-7 are not defined.
+    """
+
+    ZERO_PAGE_RAM = 1
+    RAM = 2
+    EEPROM = 3
+
+
+class SegmentType(IntEnum):
+    """Second octet of an ``ADDITIONAL`` load event (KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.3.4)."""
+
+    ABS_DATA = 0x00
+    ABS_STACK = 0x01
+    ABS_TASK = 0x02
+    TASK_PTR = 0x03
+    TASK_CTRL_1 = 0x04
+    TASK_CTRL_2 = 0x05
+    RELATIVE_ALLOCATION = 0x0A
+    DATA_RELATIVE_ALLOCATION = 0x0B
+
+
+def decode_load_state(data: bytes, context: str) -> LoadState:
+    """
+    Map the Load State octet to :class:`LoadState`, erroring on unknowns.
+
+    ``PID_LOAD_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
+    Resources 03.05.01 - §4.2.5); the 10 octet width is a write-only value.
+    A length other than 1 is rejected here rather than just indexing
+    ``data[0]`` - a caller reading via ``dmp_interface_object_read_r`` only
+    checks ``nr_of_elem``, not the octet count, so a device echoing back its
+    10 octet write event (a load event *type*, not a load *state*) would
+    otherwise be silently decoded as a state.
+
+    :param context: A short description of what was read, for error
+        messages - e.g. ``"object 3"`` or ``"interface object type 343
+        instance 1"``, since callers address a Load State Machine either way.
+    """
+    if len(data) != 1:
+        raise ManagementConnectionError(
+            f"{context} Load State Machine returned {len(data)} octets, expected 1"
+        )
+    try:
+        return LoadState(data[0])
+    except ValueError as exc:
+        raise ManagementConnectionError(
+            f"{context} Load State Machine reported unknown state {data[0]:#04x}"
+        ) from exc
+
+
+def _pad(data: bytes) -> bytes:
+    """Pad a load event to its fixed 10 octet width."""
+    if len(data) > LOAD_EVENT_SIZE:
+        raise ValueError(f"load event too long: {len(data)} > {LOAD_EVENT_SIZE}")
+    return data + bytes(LOAD_EVENT_SIZE - len(data))
+
+
+def _uint(value: int, octets: int, name: str) -> bytes:
+    """Validate ``value`` fits an unsigned big-endian field, or raise ValueError."""
+    maximum = (1 << (octets * 8)) - 1
+    if not 0 <= value <= maximum:
+        raise ValueError(f"{name} must be 0-{maximum:#x}, got {value:#x}")
+    return value.to_bytes(octets, "big")
+
+
+def no_operation() -> bytes:
+    """No Operation load event - has no effect (§3.31.3.6)."""
+    return _pad(bytes([_LoadEvent.NO_OPERATION]))
+
+
+def start_loading() -> bytes:
+    """Start Loading load event - Load State Machine transitions to Loading (§3.31.3.2)."""
+    return _pad(bytes([_LoadEvent.START_LOADING]))
+
+
+def load_completed() -> bytes:
+    """Load Completed load event - Load State Machine transitions to Loaded (§3.31.3.3)."""
+    return _pad(bytes([_LoadEvent.LOAD_COMPLETED]))
+
+
+def unload() -> bytes:
+    """Unload load event - Load State Machine transitions to Unloaded (§3.31.3.1)."""
+    return _pad(bytes([_LoadEvent.UNLOAD]))
+
+
+def _alloc_abs_segment(
+    segment_type: SegmentType,
+    start_address: int,
+    length: int,
+    *,
+    memory_type: MemoryType,
+    access_attributes: int,
+    checksum_control: bool,
+) -> bytes:
+    """
+    Shared layout of AllocAbsDataSeg/AllocAbsStackSeg (§3.31.3.4).
+
+    Access attributes: bits 0-3 write access level, bits 4-7 read access
+    level. Memory type: see :class:`MemoryType`, bits 3-7 are reserved.
+    Memory attributes: bit 7 enables checksum control, "bit 0…6 Reserved.
+    Shall be zero" - so the octet is either 00h or 80h.
+    """
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, segment_type])
+        + _uint(start_address, 2, "start_address")
+        + _uint(length, 2, "length")
+        + _uint(access_attributes, 1, "access_attributes")
+        + bytes([MemoryType(memory_type)])
+        + bytes([0x80 if checksum_control else 0x00])
+    )
+
+
+def alloc_abs_data_seg(
+    start_address: int,
+    length: int,
+    *,
+    memory_type: MemoryType,
+    access_attributes: int = 0,
+    checksum_control: bool = False,
+) -> bytes:
+    """
+    AllocAbsDataSeg load event: absolute allocation of data (segment type 0, §3.31.3.4).
+
+    :raises ValueError: If a field is out of range, or ``memory_type`` is
+        not a :class:`MemoryType`
+    """
+    return _alloc_abs_segment(
+        SegmentType.ABS_DATA,
+        start_address,
+        length,
+        memory_type=memory_type,
+        access_attributes=access_attributes,
+        checksum_control=checksum_control,
+    )
+
+
+def alloc_abs_stack_seg(
+    start_address: int,
+    length: int,
+    *,
+    memory_type: MemoryType,
+    access_attributes: int = 0,
+    checksum_control: bool = False,
+) -> bytes:
+    """
+    AllocAbsStackSeg load event: absolute allocation of a stack (segment type 1, §3.31.3.4).
+
+    :raises ValueError: If a field is out of range, or ``memory_type`` is
+        not a :class:`MemoryType`
+    """
+    return _alloc_abs_segment(
+        SegmentType.ABS_STACK,
+        start_address,
+        length,
+        memory_type=memory_type,
+        access_attributes=access_attributes,
+        checksum_control=checksum_control,
+    )
+
+
+def alloc_abs_task_seg(
+    start_address: int,
+    pei_type: int,
+    application_id: bytes,
+) -> bytes:
+    """
+    AllocAbsTaskSeg load event: absolute task segment allocation (segment type 2, §3.31.3.4).
+
+    ``application_id`` is the 5 octet Application ID / Table ID: Software
+    Manufacturer ID (2), Manufacturer Specific Application Software ID (2)
+    and Version of the Application Software (1).
+    """
+    if len(application_id) != 5:
+        raise ValueError("application_id must be 5 octets")
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, SegmentType.ABS_TASK])
+        + _uint(start_address, 2, "start_address")
+        + _uint(pei_type, 1, "pei_type")
+        + application_id
+    )
+
+
+def task_ptr(init_addr: int, save_addr: int, pei_handler: int) -> bytes:
+    """TaskPtr load event (segment type 3, §3.31.3.4)."""
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, SegmentType.TASK_PTR])
+        + _uint(init_addr, 2, "init_addr")
+        + _uint(save_addr, 2, "save_addr")
+        + _uint(pei_handler, 2, "pei_handler")
+    )
+
+
+def task_ctrl_1(interface_object_address: int, nr_of_interface_objects: int) -> bytes:
+    """TaskCtrl1 load event (segment type 4, §3.31.3.4)."""
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, SegmentType.TASK_CTRL_1])
+        + _uint(interface_object_address, 2, "interface_object_address")
+        + _uint(nr_of_interface_objects, 1, "nr_of_interface_objects")
+    )
+
+
+def task_ctrl_2(
+    callback_addr: int,
+    comm_obj_ptr: int,
+    comm_obj_seg_ptr_1: int,
+    comm_obj_seg_ptr_2: int,
+) -> bytes:
+    """TaskCtrl2 load event (segment type 5, §3.31.3.4)."""
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, SegmentType.TASK_CTRL_2])
+        + _uint(callback_addr, 2, "callback_addr")
+        + _uint(comm_obj_ptr, 2, "comm_obj_ptr")
+        + _uint(comm_obj_seg_ptr_1, 2, "comm_obj_seg_ptr_1")
+        + _uint(comm_obj_seg_ptr_2, 2, "comm_obj_seg_ptr_2")
+    )
+
+
+def relative_allocation(number_of_octets: int) -> bytes:
+    """
+    Relative Allocation load event (subtype 0Ah, §3.31.3.4).
+
+    Sets the maximum size (in octets) of the loadable part being loaded; the
+    Load State Machine changes to Error if the device does not support the
+    requested size.
+    """
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, SegmentType.RELATIVE_ALLOCATION])
+        + _uint(number_of_octets, 2, "number_of_octets")
+    )
+
+
+def data_relative_allocation(
+    requested_memory_size: int, *, fill_memory: bool = False, fill: int = 0
+) -> bytes:
+    """
+    Build the Data Relative Allocation load event (subtype 0Bh, §3.31.3.4).
+
+    ``fill_memory`` sets mode bit 0: the allocated memory is filled with
+    ``fill``; otherwise the existing memory contents are kept. Mode bits 1-7
+    "are reserved and shall be 0".
+    """
+    return _pad(
+        bytes([_LoadEvent.ADDITIONAL, SegmentType.DATA_RELATIVE_ALLOCATION])
+        + _uint(requested_memory_size, 4, "requested_memory_size")
+        + bytes([0x01 if fill_memory else 0x00])
+        + _uint(fill, 1, "fill")
+    )
