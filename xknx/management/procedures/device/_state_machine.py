@@ -29,6 +29,11 @@ EVENT_SIZE = 10
 
 StateT = TypeVar("StateT", bound=IntEnum)
 
+# KNX v01.10.01 - Resources 03.05.01 - §4.23.2.4.1: while polling through
+# LoadCompleting, "The period for reading shall not exceed half the
+# TL-timeout, i.e. 3 seconds."
+MAX_LOAD_POLL_INTERVAL = 3.0
+
 
 def pad_event(data: bytes, kind: str) -> bytes:
     """Pad an event to its fixed 10 octet width."""
@@ -73,6 +78,15 @@ def decode_state(
         ) from exc
 
 
+def check_load_poll_interval(poll_interval: float) -> None:
+    """Raise ValueError if ``poll_interval`` is outside (0, 3] seconds."""
+    if not 0 < poll_interval <= MAX_LOAD_POLL_INTERVAL:
+        raise ValueError(
+            f"poll_interval must be more than 0 and at most "
+            f"{MAX_LOAD_POLL_INTERVAL}s, got {poll_interval}"
+        )
+
+
 def expected_states(
     expected_state: StateT | Collection[StateT] | None,
 ) -> frozenset[StateT] | None:
@@ -104,16 +118,19 @@ async def poll_for_state(
     error_state: StateT | None,
     context: str,
     machine: str,
+    transient: frozenset[StateT] | None = None,
 ) -> StateT:
     """
     Re-read the state until it is one of ``expected`` or ``poll_timeout`` elapses.
 
     :param state: The state the write's own response reported
     :param error_state: A state that ends polling with an error right away
+    :param transient: If given, only these states keep polling; any other
+        state that isn't expected ends it with an error right away
     """
     deadline = time.monotonic() + poll_timeout
     while state not in expected:
-        if state == error_state:
+        if state == error_state or (transient is not None and state not in transient):
             raise ManagementConnectionError(
                 f"{context} {machine} entered {state.name} "
                 f"(expected {_names(expected)})"
