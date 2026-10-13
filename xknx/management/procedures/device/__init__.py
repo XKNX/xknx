@@ -3,7 +3,15 @@
 # ruff: noqa: F401
 from .dm_authorize import FREE_ACCESS_KEY, dmp_authorize2_r_co, dmp_authorize_r_co
 from .dm_connect_r_co import dmp_connect_r_co
+from .dm_function_property_write_r import (
+    dm_function_property_write_r,
+    dm_function_property_write_r_conn,
+)
 from .dm_restart_r_co import dm_restart, dm_restart_r_co
+from .dmp_ext_function_property_write_r import (
+    dmp_ext_function_property_write_r,
+    dmp_ext_function_property_write_r_conn,
+)
 from .dmp_interface_object_read_r import dmp_interface_object_read_r
 from .dmp_interface_object_scan_r import (
     ScannedInterfaceObject,

@@ -17,16 +17,27 @@ import ``procedures`` via ``from xknx.management import procedures``, import
 individual functions via ``from xknx.management.procedures import <func>``, or
 access them as attributes such as ``procedures.<func>``.
 
-Most procedures come in two forms:
+Procedures come in up to two forms:
 
-  - ``<spec_name>(xknx: XKNX, ...)`` opens (and closes) whatever P2P
-    connections or broadcasts it needs on its own, via ``xknx.management``.
-  - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
-    already-open connection, for chaining several procedures over one
-    connection. This suffix is an xknx convention, not a KNX spec name.
-    ``dm_restart_r_co`` is the one exception — ``RCo`` is the actual KNX
-    v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name for
-    the connection-based variant of DM_Restart, not the xknx convention.
+  - ``<spec_name>(conn: P2PConnection, ...)`` operates on an already-open
+    connection, so several procedures can be chained over one connection.
+    This is the common form, used by every procedure that runs over a
+    point-to-point connection unless it also has the wrapper below. Where
+    the spec allows connectionless mode too (``_R``, ``_RCl``), it is
+    noted in the procedure's docstring that xknx runs it over ``conn``.
+  - Optionally, a wrapper ``<spec_name>(xknx: XKNX, individual_address,
+    ...)`` that opens (and closes) the connection or broadcast itself via
+    ``xknx.management``. A procedure that has this wrapper takes ``conn``
+    under ``<spec_name>_conn`` instead - this suffix is an xknx convention,
+    not a KNX spec name (e.g. ``dm_function_property_write_r`` /
+    ``dm_function_property_write_r_conn``,
+    ``nm_individual_address_check`` / ``nm_individual_address_check_conn``).
+    ``dm_restart`` / ``dm_restart_r_co`` is the one exception - ``RCo`` is
+    the actual KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.3
+    procedure name for the connection-based variant of DM_Restart.
+
+Procedures that only use broadcasts (e.g. ``nm_individual_address_read``)
+have no connection to share and take ``xknx`` under the bare name.
 
 When adding a new procedure follow the workflow:
 
@@ -40,11 +51,15 @@ When adding a new procedure follow the workflow:
 from .device import (
     FREE_ACCESS_KEY,
     ScannedInterfaceObject,
+    dm_function_property_write_r,
+    dm_function_property_write_r_conn,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
     dmp_authorize_r_co,
     dmp_connect_r_co,
+    dmp_ext_function_property_write_r,
+    dmp_ext_function_property_write_r_conn,
     dmp_interface_object_read_r,
     dmp_interface_object_scan_r,
     dmp_interface_object_verify_r,
