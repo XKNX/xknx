@@ -22,11 +22,11 @@ from __future__ import annotations
 
 from enum import IntEnum
 
-from xknx.exceptions import ManagementConnectionError
+from ._state_machine import EVENT_SIZE, decode_state, pad_event
 
 # Write value width (KNX v01.10.01 - Resources 03.05.01 - §4.2.5
 # PID_LOAD_STATE_CONTROL: "The write value shall always be 10 octets.").
-LOAD_EVENT_SIZE = 10
+LOAD_EVENT_SIZE = EVENT_SIZE
 
 
 class LoadState(IntEnum):
@@ -85,37 +85,21 @@ class SegmentType(IntEnum):
 
 def decode_load_state(data: bytes, context: str) -> LoadState:
     """
-    Map the Load State octet to :class:`LoadState`, erroring on unknowns.
+    Map the 1 octet Load State read back from ``PID_LOAD_STATE_CONTROL``.
 
-    ``PID_LOAD_STATE_CONTROL`` reads back as exactly 1 octet (KNX v01.10.01 -
-    Resources 03.05.01 - §4.2.5); the 10 octet width is a write-only value.
-    A length other than 1 is rejected here rather than just indexing
-    ``data[0]`` - a caller reading via ``dmp_interface_object_read_r`` only
-    checks ``nr_of_elem``, not the octet count, so a device echoing back its
-    10 octet write event (a load event *type*, not a load *state*) would
-    otherwise be silently decoded as a state.
+    It reads back as exactly 1 octet (KNX v01.10.01 - Resources 03.05.01 -
+    §4.2.5); see :func:`~._state_machine.decode_state`.
 
     :param context: A short description of what was read, for error
         messages - e.g. ``"object 3"`` or ``"interface object type 343
-        instance 1"``, since callers address a Load State Machine either way.
+        instance 1"``.
     """
-    if len(data) != 1:
-        raise ManagementConnectionError(
-            f"{context} Load State Machine returned {len(data)} octets, expected 1"
-        )
-    try:
-        return LoadState(data[0])
-    except ValueError as exc:
-        raise ManagementConnectionError(
-            f"{context} Load State Machine reported unknown state {data[0]:#04x}"
-        ) from exc
+    return decode_state(data, LoadState, context, "Load State Machine")
 
 
 def _pad(data: bytes) -> bytes:
     """Pad a load event to its fixed 10 octet width."""
-    if len(data) > LOAD_EVENT_SIZE:
-        raise ValueError(f"load event too long: {len(data)} > {LOAD_EVENT_SIZE}")
-    return data + bytes(LOAD_EVENT_SIZE - len(data))
+    return pad_event(data, "load")
 
 
 def _uint(value: int, octets: int, name: str) -> bytes:

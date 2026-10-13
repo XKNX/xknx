@@ -6,8 +6,9 @@ from xknx.management.management import P2PConnection
 from xknx.profile.const import ResourceGenericPropertyId
 
 from ._pdt_control import pdt_control_state_data
+from ._state_machine import check_event_size, ext_context
 from .dmp_ext_function_property_write_r import dmp_ext_function_property_write_r_conn
-from .load_state import LOAD_EVENT_SIZE, LoadState, decode_load_state
+from .load_state import LoadState, decode_load_state
 
 __all__ = ["dmp_ext_load_state_machine_write_r_co_io"]
 
@@ -57,13 +58,8 @@ async def dmp_ext_load_state_machine_write_r_co_io(
         return code, the response doesn't echo the request, or the resulting
         Load State is not a valid state
     """
-    if len(event_data) != LOAD_EVENT_SIZE:
-        raise ValueError(
-            f"event_data must be {LOAD_EVENT_SIZE} octets, got {len(event_data)}"
-        )
-    context = (
-        f"interface object type {interface_object_type} instance {object_instance}"
-    )
+    check_event_size(event_data)
+    context = ext_context(interface_object_type, object_instance)
     response = await dmp_ext_function_property_write_r_conn(
         conn,
         interface_object_type=interface_object_type,
