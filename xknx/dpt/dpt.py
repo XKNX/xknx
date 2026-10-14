@@ -174,11 +174,23 @@ class DPTBase(ABC):
     def transcoder_by_dpt(
         cls: type[Self], dpt_main: int, dpt_sub: int | None = None
     ) -> type[Self] | None:
-        """Return Class reference of DPTBase subclass with matching DPT number."""
+        """
+        Return Class reference of DPTBase subclass with matching DPT number.
+
+        Without `dpt_sub`, a class for the whole main number is returned. If there is none,
+        but exactly one class with that main number, that one is returned: "Datapoint Types
+        with the same main number thus have the same format and encoding." - KNX v02.02.01 -
+        Datapoint Types 03.07.02 - §1.1. With several classes of that main number (e.g. 3.007
+        and 3.008) the choice is ambiguous and None is returned.
+        """
+        same_main: list[type[Self]] = []
         for dpt in cls.dpt_class_tree():
-            if dpt.has_distinct_dpt_numbers():
-                if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
+            if dpt.has_distinct_dpt_numbers() and dpt_main == dpt.dpt_main_number:
+                if dpt_sub == dpt.dpt_sub_number:
                     return dpt
+                same_main.append(dpt)
+        if dpt_sub is None and len(same_main) == 1:
+            return same_main[0]
         return None
 
     @classmethod
