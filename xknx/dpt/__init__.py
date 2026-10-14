@@ -242,6 +242,8 @@ from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
 from .dpt_19 import DPTDateTime
 from .dpt_20 import DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from .dpt_24 import DPTVariableLatin1
+from .dpt_28 import DPTUTF8
 from .dpt_29 import (
     DPT8ByteSigned,
     DPTActiveEnergy8Byte,
