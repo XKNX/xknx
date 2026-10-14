@@ -237,19 +237,36 @@ from .dpt_14 import (
     DPTWeight,
     DPTWork,
 )
+from .dpt_15 import AccessData, DPTAccessData
 from .dpt_16 import DPTLatin1, DPTString
 from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
 from .dpt_19 import DPTDateTime
 from .dpt_20 import DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from .dpt_26 import DPTSceneInfo, SceneInfo
+from .dpt_27 import CombinedInfoOnOff, DPTCombinedInfoOnOff
 from .dpt_29 import (
     DPT8ByteSigned,
     DPTActiveEnergy8Byte,
     DPTApparantEnergy8Byte,
     DPTReactiveEnergy8Byte,
 )
+from .dpt_222 import (
+    DPTRoomTemperatureSetpoints,
+    DPTRoomTemperatureSetpointShifts,
+    RoomTemperatureSetpoints,
+    RoomTemperatureSetpointShifts,
+)
+from .dpt_225 import (
+    DPTScalingSpeed,
+    DPTScalingStepTime,
+    ScalingSpeed,
+    ScalingStepTime,
+)
 from .dpt_232 import DPTColorRGB, RGBColor
 from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
+from .dpt_240 import CombinedPosition, DPTCombinedPosition
+from .dpt_241 import DPTStatusSAB, StatusSAB
 from .dpt_242 import DPTColorXYY, XYYColor
 from .dpt_243 import DPTColorXYYTransition, XYYColorTransition
 from .dpt_249 import ColorTemperatureTransition, DPTColorTemperatureTransition
