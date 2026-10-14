@@ -242,20 +242,132 @@ from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
 from .dpt_19 import DPTDateTime
 from .dpt_20 import DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from .dpt_21 import (
+    ChannelActivation8,
+    DeviceControl,
+    DPTChannelActivation8,
+    DPTDeviceControl,
+    DPTForceSign,
+    DPTForceSignCool,
+    DPTFuelTypeSet,
+    DPTLightActuatorErrorInfo,
+    DPTPhasesStatus,
+    DPTRFFilterInfo,
+    DPTRFModeInfo,
+    DPTSecurityReport,
+    DPTStatusAHU,
+    DPTStatusGen,
+    DPTStatusRCC,
+    DPTStatusRHC,
+    DPTStatusSDHWC,
+    DPTVirtualDryContact,
+    ForcingSignal,
+    ForcingSignalCool,
+    FuelTypeSet,
+    GeneralStatus,
+    LightActuatorErrorInfo,
+    PhasesStatus,
+    RFFilterInfo,
+    RFModeInfo,
+    RoomCoolingControllerStatus,
+    RoomHeatingControllerStatus,
+    SecurityReport,
+    SolarDHWControllerStatus,
+    VentilationControllerStatus,
+    VirtualDryContact,
+)
+from .dpt_22 import (
+    ChannelActivation16,
+    DPTChannelActivation16,
+    DPTMedia,
+    DPTStatusDHWC,
+    DPTStatusRHCC,
+    Media,
+    StatusDHWC,
+    StatusRHCC,
+)
+from .dpt_25 import DoubleNibble, DPTDoubleNibble
 from .dpt_29 import (
     DPT8ByteSigned,
     DPTActiveEnergy8Byte,
     DPTApparantEnergy8Byte,
     DPTReactiveEnergy8Byte,
 )
+from .dpt_30 import ChannelActivation24, DPTChannelActivation24
+from .dpt_206 import (
+    BuildingMode,
+    BuildingModeNext,
+    DHWMode,
+    DHWModeNext,
+    DPTBuildingModeNext,
+    DPTDHWModeNext,
+    DPTHVACModeNext,
+    DPTOccModeNext,
+    HVACModeNext,
+    OccupancyMode,
+    OccupancyModeNext,
+)
+from .dpt_207 import (
+    ActuatorPositionDemand,
+    ActuatorPositionStatus,
+    BoilerControllerDemand,
+    BurnerControllerStatus,
+    DPTActPosDemAbs,
+    DPTLockSign,
+    DPTStatusAct,
+    DPTStatusBUC,
+    DPTStatusLightingActuator,
+    DPTValueDemBOC,
+    LightingActuatorStatus,
+    LockingSignal,
+)
+from .dpt_219 import AlarmInfo, DPTAlarmInfo
+from .dpt_229 import DPTMeteringValue, MeteringValue
+from .dpt_230 import DPTMBusAddress, MBusAddress
 from .dpt_232 import DPTColorRGB, RGBColor
+from .dpt_234 import DPTLanguageCodeAlpha2ASCII, DPTRegionCodeAlpha2ASCII
 from .dpt_235 import DPTTariffActiveEnergy, TariffActiveEnergy
+from .dpt_236 import DPTPrioritisedModeControl, PrioritisedModeControl
+from .dpt_237 import (
+    DALIAddressIndicator,
+    DALIControlGearDiagnostic,
+    DPTDALIControlGearDiagnostic,
+)
+from .dpt_238 import DALIDiagnostics, DPTDALIDiagnostics, DPTSceneConfig, SceneConfig
 from .dpt_242 import DPTColorXYY, XYYColor
 from .dpt_243 import DPTColorXYYTransition, XYYColorTransition
+from .dpt_244 import (
+    ConverterFailure,
+    ConverterMode,
+    ConverterStatus,
+    ConverterTestPending,
+    DPTConverterStatus,
+)
+from .dpt_245 import (
+    ConverterTestResult,
+    ConverterTestResultCode,
+    ConverterTestStartMethod,
+    DPTConverterTestResult,
+)
+from .dpt_246 import BatteryInfo, DPTBatteryInfo
+from .dpt_247 import ConverterTestInfo, DPTConverterTestInfo
+from .dpt_248 import ConverterInfoFix, ConverterInfoValid, DPTConverterInfoFix
 from .dpt_249 import ColorTemperatureTransition, DPTColorTemperatureTransition
 from .dpt_250 import ColorTemperatureControl, DPTColorTemperatureControl
 from .dpt_251 import DPTColorRGBW, RGBWColor
 from .dpt_252 import DPTRelativeControlRGBW, RelativeControlRGBW
 from .dpt_253 import DPTRelativeControlXYY, RelativeControlXYY
 from .dpt_254 import DPTRelativeControlRGB, RelativeControlRGB
+from .dpt_255 import DPTGeographicalLocation, GeographicalLocation
+from .dpt_272 import ConverterInfo, DPTConverterInfo
+from .dpt_273 import (
+    DPTForecastAbsoluteHumidity,
+    DPTForecastAirPollutants,
+    DPTForecastCO2,
+    DPTForecastRelativeHumidity,
+    DPTForecastSunIntensity,
+    DPTForecastTemperature,
+    DPTForecastWindSpeed,
+    Forecast,
+)
 from .payload import DPTArray, DPTBinary

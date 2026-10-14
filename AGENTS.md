@@ -57,6 +57,7 @@ if they aren't already established elsewhere in the codebase.
 | v01.01.02 | KNX IP Secure | 03.08.09 |
 | v02.01.01 | Application Interface Layer | 03.04.01 |
 | v01.10.01 | Resources | 03.05.01 |
+| v01.03.08 | RF Metering protocol | 10.03 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
