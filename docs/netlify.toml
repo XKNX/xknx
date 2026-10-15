@@ -1,0 +1,7 @@
+# Netlify reads this file from the base directory (docs/) set in the Netlify UI;
+# it overrides the build command configured there.
+[build]
+  # Netlify skips its own `bundle install` when it restores a dependency cache.
+  # Bundler then falls back to `.bundle/config` and can't find the cached gems,
+  # so install and build here, reading the same Bundler config.
+  command = "bundle install && bundle exec jekyll build"
