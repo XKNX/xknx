@@ -35,6 +35,7 @@ nav_order: 2
 - Remove `ha_device_class` from `DPTBase` subclasses, `RemoteValueSensor`, `RemoteValueByLength`, `Sensor` and `NumericValue`. Home Assistant shall maintain this itself.
 - DPT 9.xxx: `value_max` is `670433.28` for all 2 byte float types - it was `670760.96` on `DPT2ByteFloat` and `670760` on most subtypes, which encode to `0x7FFF`. KNX v02.02.01 - Datapoint Types 03.07.02 - §3.10 reserves that pattern: "For all Datapoint Types 9.xxx, the encoded value 7FFFh shall always be used to denote invalid data", and gives the range as `[-671 088,64 ... 670 433,28]`. So xknx sent the invalid-data pattern as a regular value and decoded a received one to `670760.96` instead of rejecting it - `from_knx()` raises `ConversionError` on `0x7FFF` now, and `to_knx()` rejects anything above `670433.28`. A device sending `0x7FFF` - a thermostat with an unconfigured setpoint for example - is reported as a conversion error instead of a nonsensical reading.
 - DPT 9.xxx lower bounds follow the same table: `DPTTemperatureDifference2Byte` (9.002), `DPTTemperatureA` (9.003), `DPTTime1` (9.010) and `DPTTime2` (9.011) accept `-671088.64` instead of `-670760`, and `DPTPartsPerMillion` (9.008) - specified as `0 ppm ... 670 433,28 ppm` - rejects negative values now like the other subtypes with a `0` minimum do.
+- Remove `xknx.management.application_layer_enum`. The module only re-exported `ReturnCode`, which moved to `xknx.telegram.apci` in 3.17.0 and has been deprecated there since. Import `ReturnCode` from `xknx.telegram.apci`.
 
 ### Bugfixes
 
