@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- `DPTBase.transcoder_by_dpt()` and `parse_transcoder()` find a main number without a sub number (`10`, `"DPT-10"`, `{"main": 10, "sub": None}`) also when xknx has no class for the whole main number, through a fixed table of subtypes: 3.007, 4.002, 10.001, 11.001, 16.001, 17.001, 18.001, 19.001, 235.001, 242.600, 249.600 and 250.600 - the default subtype of the KNX master data, its only subtype, or (4.002) the character set that includes the other one. KNX v02.02.01 - Datapoint Types 03.07.02 - §1.1: "Datapoint Types with the same main number thus have the same format and encoding." Main numbers whose subtypes give the same encoding different meanings - 20, 232, 251, 252, 254 - still return `None`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -83,10 +89,6 @@ nav_order: 2
 - Management: a repeated sequence number is acknowledged again instead of being acknowledged and dropped, and a sequence number that is neither the expected nor the previous one is answered with a negative acknowledgement instead of a positive one - KNX v01.02.03 - Transport Layer 03.03.04 - §5.3 A3 and A4.
 - `apci.PropertyValueWrite` is an `APCIRequest[PropertyValueResponse]` now, like `PropertyValueRead` already was. It carries a KNX-spec-defined response (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.4.2) and was missed when the other point-to-point request services were converted, so `P2PConnection.request()` sent it without verifying or narrowing the response type.
 - `apci.PropertyValueRead`, `PropertyValueWrite` and `PropertyValueResponse` raise `ConversionError` for a `start_index` above 4095 instead of encoding it into the neighbouring `nr_of_elem` field - `to_knx()` silently emitted a frame addressing a different element with a different count.
-
-### DPT
-
-- `DPTBase.transcoder_by_dpt()` and `parse_transcoder()` find a main number without a sub number (`10`, `"DPT-10"`, `{"main": 10, "sub": None}`) also when xknx has no class for the whole main number but exactly one class with that main number - e.g. `DPTTime`, `DPTDate`, `DPTSceneNumber`, `DPTSceneControl`, `DPTDateTime` and `DPTColorRGB`. KNX v02.02.01 - Datapoint Types 03.07.02 - §1.1: "Datapoint Types with the same main number thus have the same format and encoding." Main numbers with several classes (e.g. 3, 16, 20) still return `None`.
 
 ### Internals
 
