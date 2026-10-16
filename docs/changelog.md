@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Bugfixes
+
+- Keyring signature: a string is prefixed with its length as a 7-bit encoded integer, like `System.IO.BinaryWriter.Write(string)` writes it. The length was a single octet, so `verify_keyring_signature()` computed a different signature for a keyring with a value of 128 octets or more - e.g. the `Senders` of a group address with many senders - and raised `ValueError` for one above 255 octets.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
