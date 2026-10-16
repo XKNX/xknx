@@ -6,6 +6,13 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Features
+
+- Write KNX keyring files (`.knxkeys`). `Keyring.to_xml(password)` serializes a `Keyring` - its backbone, interfaces with their group address assignments, group address keys and devices - from its decrypted attributes, encrypted and signed with the given password. `save_keyring()` and `sync_save_keyring()` save it to a file, so a loaded keyring can be saved with a different password, or a keyring built from scratch can be stored.
+- Parse the `SerialNumber` of a keyring `Device` to `XMLDevice.serial_number`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
