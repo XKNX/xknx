@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- `DPTBase.transcoder_by_dpt()` and `parse_transcoder()` find a main number without a sub number (`10`, `"DPT-10"`, `{"main": 10, "sub": None}`) also when xknx has no class for the whole main number, through a fixed table of subtypes: 3.007, 4.002, 10.001, 11.001, 16.001, 17.001, 18.001, 19.001, 235.001, 242.600, 249.600 and 250.600 - the default subtype of the KNX master data, its only subtype, or (4.002) the character set that includes the other one. KNX v02.02.01 - Datapoint Types 03.07.02 - §1.1: "Datapoint Types with the same main number thus have the same format and encoding." Main numbers whose subtypes give the same encoding different meanings - 20, 232, 251, 252, 254 - still return `None`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
