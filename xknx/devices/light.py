@@ -5,6 +5,7 @@ It provides functionality for
 
 * switching light 'on' and 'off'.
 * setting the brightness.
+* setting the brightness with a transition time (DPT 225.001).
 * setting the color.
 * setting the relative color temperature (tunable white).
 * setting the absolute color temperature.
@@ -20,7 +21,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from xknx.core import Task
-from xknx.dpt import DPTAngle, DPTScaling, RGBColor, RGBWColor, XYYColor
+from xknx.dpt import DPTAngle, DPTScaling, RGBColor, RGBWColor, ScalingSpeed, XYYColor
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -29,6 +30,7 @@ from xknx.remote_value import (
     RemoteValueColorXYY,
     RemoteValueNumeric,
     RemoteValueScaling,
+    RemoteValueScalingSpeed,
     RemoteValueSwitch,
 )
 from xknx.remote_value.remote_value import RVCallbackType
@@ -125,6 +127,8 @@ class Light(Device):
         group_address_switch_state: GroupAddressesType = None,
         group_address_brightness: GroupAddressesType = None,
         group_address_brightness_state: GroupAddressesType = None,
+        group_address_brightness_speed: GroupAddressesType = None,
+        group_address_brightness_speed_state: GroupAddressesType = None,
         group_address_color: GroupAddressesType = None,
         group_address_color_state: GroupAddressesType = None,
         group_address_rgbw: GroupAddressesType = None,
@@ -184,6 +188,16 @@ class Light(Device):
             after_update_cb=self.after_update,
             range_from=0,
             range_to=255,
+        )
+
+        self.brightness_speed = RemoteValueScalingSpeed(
+            xknx,
+            group_address_brightness_speed,
+            group_address_brightness_speed_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Brightness speed",
+            after_update_cb=self.after_update,
         )
 
         self.color = RemoteValueColorRGB(
@@ -332,6 +346,7 @@ class Light(Device):
         """Iterate the devices RemoteValue classes calling after_update_cb immediately."""
         yield self.switch
         yield self.brightness
+        yield self.brightness_speed
         yield self.color
         yield self.rgbw
         yield self.hue
@@ -385,7 +400,12 @@ class Light(Device):
     @property
     def supports_brightness(self) -> bool:
         """Return if light supports brightness."""
-        return self.brightness.initialized
+        return self.brightness.initialized or self.brightness_speed.initialized
+
+    @property
+    def supports_brightness_transition(self) -> bool:
+        """Return if light supports setting brightness with a transition time."""
+        return self.brightness_speed.initialized
 
     @property
     def supports_color(self) -> bool:
@@ -449,10 +469,34 @@ class Light(Device):
     @property
     def current_brightness(self) -> int | None:
         """Return current brightness of light between 0..255."""
-        return self.brightness.value
+        if self.brightness.initialized:
+            return self.brightness.value
+        if self.brightness_speed.value is not None:
+            return round(self.brightness_speed.value.percent / 100 * 255)
+        return None
 
-    async def set_brightness(self, brightness: int) -> None:
-        """Set brightness of light."""
+    async def set_brightness(
+        self, brightness: int, transition_seconds: float | None = None
+    ) -> None:
+        """
+        Set brightness of light.
+
+        If `transition_seconds` is given, the brightness is set via the combined
+        value/dimming-time object (KNX DPT 225.001) instead of the plain brightness
+        object - the device has to support and be configured for this.
+        """
+        if transition_seconds is not None:
+            if not self.supports_brightness_transition:
+                logger.warning(
+                    "Dimming with transition time not supported for device %s",
+                    self.get_name(),
+                )
+                return
+            percent = round(brightness / 255 * 100)
+            self.brightness_speed.set(
+                ScalingSpeed(time_period=transition_seconds, percent=percent)
+            )
+            return
         if not self.supports_brightness:
             logger.warning("Dimming not supported for device %s", self.get_name())
             return

@@ -698,6 +698,62 @@ class TestLight:
                 "Dimming not supported for device %s", "TestLight"
             )
 
+    async def test_set_brightness_with_transition(self) -> None:
+        """Test setting the brightness with a transition time via DPT 225.001."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_brightness_speed="1/2/5",
+        )
+        assert light.supports_brightness
+        assert light.supports_brightness_transition
+        await light.set_brightness(230, transition_seconds=6.0)
+        assert xknx.telegrams.qsize() == 1
+        telegram = xknx.telegrams.get_nowait()
+        assert telegram == Telegram(
+            destination_address=GroupAddress("1/2/5"),
+            payload=GroupValueWrite(DPTArray((0x00, 0x3C, 0xE6))),
+        )
+
+    async def test_set_brightness_with_transition_not_supported(self) -> None:
+        """Test setting the brightness with a transition time when not configured."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_brightness="1/2/5",
+        )
+        xknx.devices.async_add(light)
+
+        with patch("logging.Logger.warning") as mock_warn:
+            await light.set_brightness(23, transition_seconds=6.0)
+            assert xknx.telegrams.qsize() == 0
+            mock_warn.assert_called_with(
+                "Dimming with transition time not supported for device %s",
+                "TestLight",
+            )
+
+    async def test_current_brightness_from_speed(self) -> None:
+        """Test current_brightness falls back to the scaling speed object."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_brightness_speed="1/2/5",
+            group_address_brightness_speed_state="1/2/6",
+        )
+        assert light.current_brightness is None
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/6"),
+            payload=GroupValueWrite(DPTArray((0x00, 0x3C, 0xFF))),
+        )
+        light.process(telegram)
+        assert light.current_brightness == 255
+
     async def test_set_individual_color_with_gloabl_switch(self) -> None:
         """Test switching on and dimming a Light with global addresses."""
         xknx = XKNX()
