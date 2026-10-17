@@ -6,6 +6,18 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.25. Its value is a `SceneInfo` with `scene_number` (1..64, transmitted as 0..63 like DPT 17.001 and 18.001) and `active` - `False` when the scene is reported inactive. The reserved bit is sent as 0 and ignored when received.
+- Add DPT 15.000 `DPTAccessData` with `value_type` "access_data" - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.16. Its value `AccessData` holds the six digit `access_code` (D6..D1 as int 0..999999), the `detection_error`, `permission`, `read_right_to_left` and `encrypted` flags (E, P, D, C) and the 4 bit `index`.
+- Add DPT 27.001 `DPTCombinedInfoOnOff` with `CombinedInfoOnOff` - value type `combined_info_on_off` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.26.1. The combined On/Off state of up to 16 outputs of a multi channel binary actuator in one telegram. Each field `output_1` .. `output_16` is `True` for On, `False` for Off and `None` for a not valid state - its mask bit is 0.
+- Add DPT 222.100 `DPTRoomTemperatureSetpoints` (value_type `room_temperature_setpoints`) and DPT 222.101 `DPTRoomTemperatureSetpointShifts` (value_type `room_temperature_setpoint_shifts`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.23.1/§4.23.2, room temperature setpoints in °C and setpoint shifts in K as three 2 byte floats. Their values `RoomTemperatureSetpoints` and `RoomTemperatureSetpointShifts` carry `comfort`, `standby` and `economy` as `float`, or `None` for the invalid data value `0x7FFF`.
+- Add DPT 225.001 `DPTScalingSpeed` (value_type `scaling_speed`) and DPT 225.002 `DPTScalingStepTime` (value_type `scaling_step_time`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.44.1/§3.44.2. They decode to the new `ScalingSpeed` and `ScalingStepTime` dataclasses, each with `time_period` in ms - 100 ms resolution for 225.001, 1 ms for 225.002 - and `percent` 0.4..100 % encoded like DPT 5.001. A time period or percent of 0 is out of the specified range and raises `ConversionError`.
+- Add `DPTCombinedPosition` (DPT 240.800, value_type `combined_position`) with `CombinedPosition` data for the height and slats position of shutters and blinds, each 0..100 % or `None` if marked invalid - KNX v02.02.01 - Datapoint Types 03.07.02 - §7.2.1.
+- Add `DPTStatusSAB` (DPT 241.800 DPT_StatusSAB, value_type `status_sab`) with `StatusSAB` data class: height and slats position of a shutter & sunblind actuator in percent - `None` if invalid - and its status bits as defined in KNX v02.02.01 - Datapoint Types 03.07.02 - §7.4.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
