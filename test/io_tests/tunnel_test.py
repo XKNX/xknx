@@ -9,7 +9,7 @@ import pytest
 from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
-from xknx.exceptions import CommunicationError
+from xknx.exceptions import CommunicationError, RequestResponseError
 from xknx.io import TCPTunnel, UDPTunnel
 from xknx.io.const import CONNECTIONSTATE_REQUEST_TIMEOUT, HEARTBEAT_RATE
 from xknx.io.gateway_scanner import GatewayDescriptor
@@ -18,6 +18,7 @@ from xknx.knxip import (
     ConnectionStateRequest,
     ConnectionStateResponse,
     ConnectRequest,
+    ConnectRequestInformation,
     ConnectResponse,
     ConnectResponseData,
     DescriptionRequest,
@@ -27,6 +28,7 @@ from xknx.knxip import (
     ErrorCode,
     KNXIPFrame,
     TunnellingAck,
+    TunnellingLayer,
     TunnellingRequest,
 )
 from xknx.knxip.knxip_enum import HostProtocol
@@ -442,6 +444,137 @@ class TestUDPTunnel:
         assert self.tunnel._reconnect_task is None
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+    async def test_busmonitor_connect_send(
+        self,
+        mock_transport_connect: Mock,
+        mock_transport_getsockname: Mock,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a bus monitor tunnel requests the bus monitor layer and does not send."""
+        self.tunnel.busmonitor = True
+        local_endpoint = HPAI("192.168.1.1", 12345)
+        mock_transport_getsockname.return_value = ("192.168.1.1", 12345)
+
+        connect_frame = KNXIPFrame.init_from_body(
+            ConnectRequest(
+                control_endpoint=local_endpoint,
+                data_endpoint=local_endpoint,
+                cri=ConnectRequestInformation(
+                    knx_layer=TunnellingLayer.BUSMONITOR_LAYER
+                ),
+            )
+        )
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        mock_transport_send.assert_called_once_with(connect_frame)
+        # KNX Layer 80h - Tunnelling 03.08.04 - §5.4.3.1
+        assert connect_frame.to_knx()[-4:] == bytes.fromhex("04048000")
+
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                ConnectResponse(
+                    communication_channel=23,
+                    data_endpoint=HPAI("192.168.1.2", 56789),
+                    crd=ConnectResponseData(individual_address=IndividualAddress(7)),
+                )
+            ),
+            HPAI("192.168.1.2", 3671),
+        )
+        await connection_task
+        assert self.tunnel.communication_channel == 23
+
+        # sending is rejected without a frame on the wire
+        mock_transport_send.reset_mock()
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress(1),
+                    payload=GroupValueWrite(DPTArray((1,))),
+                ),
+                src_addr=IndividualAddress(7),
+            ),
+        )
+        with pytest.raises(
+            CommunicationError, match=r"Sending is not possible in bus monitor mode"
+        ):
+            await self.tunnel.send_cemi(test_cemi)
+        mock_transport_send.assert_not_called()
+        assert self.tunnel.sequence_number == 0
+
+        # L_Busmon.ind frames are passed to the callback
+        raw_busmon = bytes.fromhex("2b00cc")
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                TunnellingRequest(
+                    communication_channel_id=23,
+                    sequence_counter=0,
+                    raw_cemi=raw_busmon,
+                )
+            ),
+            HPAI("192.168.1.2", 56789),
+        )
+        self.cemi_received_mock.assert_called_once_with(raw_busmon)
+        # TunnellingAck is sent in bus monitor mode
+        mock_transport_send.assert_called_once_with(
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=23, sequence_counter=0)
+            ),
+            addr=("192.168.1.2", 56789),
+        )
+
+    @pytest.mark.parametrize(
+        ("error_code", "err_msg"),
+        [
+            (
+                ErrorCode.E_NO_MORE_CONNECTIONS,
+                r"Server rejected bus monitor tunnel: E_NO_MORE_CONNECTIONS",
+            ),
+            (
+                ErrorCode.E_TUNNELLING_LAYER,
+                r"Server does not support bus monitor tunnels",
+            ),
+        ],
+    )
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+    async def test_busmonitor_connect_rejected(
+        self,
+        mock_transport_connect: Mock,
+        mock_transport_getsockname: Mock,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+        error_code: ErrorCode,
+        err_msg: str,
+    ) -> None:
+        """Test a rejected bus monitor tunnel raises CommunicationError."""
+        self.tunnel.busmonitor = True
+        mock_transport_getsockname.return_value = ("192.168.1.1", 12345)
+
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                ConnectResponse(communication_channel=0, status_code=error_code)
+            ),
+            HPAI("192.168.1.2", 3671),
+        )
+        with pytest.raises(CommunicationError, match=err_msg) as exc_info:
+            await connection_task
+        assert isinstance(exc_info.value.__cause__, RequestResponseError)
+        assert exc_info.value.__cause__.error_code is error_code
+        assert self.tunnel.communication_channel is None
+        mock_transport_stop.assert_called_once()
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
     async def test_tunnel_request_description(
         self,
@@ -693,3 +826,71 @@ class TestTCPTunnel:
         await time_travel(0)
         # third retry had an error - tunnel lost
         mock_tunnel_lost.assert_called_once()
+
+    @pytest.mark.parametrize(
+        ("individual_address", "raw_cri"),
+        [
+            (None, "04048000"),
+            # Extended CRI - KNX v01.07.01 - Tunnelling 03.08.04 - §5.4.3.2
+            (IndividualAddress("1.1.250"), "0604800011fa"),
+        ],
+    )
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
+    async def test_busmonitor_connect_send(
+        self,
+        mock_transport_stop: MagicMock,
+        mock_transport_send: MagicMock,
+        mock_transport_connect: MagicMock,
+        time_travel: EventLoopClockAdvancer,
+        individual_address: IndividualAddress | None,
+        raw_cri: str,
+    ) -> None:
+        """Test a TCP bus monitor tunnel requests the bus monitor layer and does not send."""
+        tunnel = TCPTunnel(
+            self.xknx,
+            gateway_ip="192.168.1.2",
+            gateway_port=3671,
+            individual_address=individual_address,
+            cemi_received_callback=self.cemi_received_mock,
+            auto_reconnect=False,
+            busmonitor=True,
+        )
+        connection_task = asyncio.create_task(tunnel.connect())
+        await time_travel(0)
+        mock_transport_connect.assert_called_once()
+        connect_frame = mock_transport_send.call_args.args[0]
+        assert isinstance(connect_frame.body, ConnectRequest)
+        assert connect_frame.body.cri.knx_layer is TunnellingLayer.BUSMONITOR_LAYER
+        assert connect_frame.to_knx().endswith(bytes.fromhex(raw_cri))
+
+        tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                ConnectResponse(
+                    communication_channel=23,
+                    data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                    crd=ConnectResponseData(individual_address=IndividualAddress(7)),
+                )
+            ),
+            HPAI(ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP),
+        )
+        await connection_task
+        mock_transport_send.reset_mock()
+
+        with pytest.raises(
+            CommunicationError, match=r"Sending is not possible in bus monitor mode"
+        ):
+            await tunnel.send_cemi(
+                CEMIFrame(
+                    code=CEMIMessageCode.L_DATA_REQ,
+                    data=CEMILData.init_from_telegram(
+                        Telegram(
+                            destination_address=GroupAddress(1),
+                            payload=GroupValueWrite(DPTArray((1,))),
+                        )
+                    ),
+                )
+            )
+        mock_transport_send.assert_not_called()
+        tunnel.stop_heartbeat()
