@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Features
+
+- `xknx.secure.FactoryDefaultSetupKey` parses the code printed on a KNX Data Secure device - its KNX Serial Number and FDSK, checked by their CRC - and creates it with `to_code()`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
