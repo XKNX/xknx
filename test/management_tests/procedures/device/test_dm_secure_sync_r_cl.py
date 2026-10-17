@@ -15,11 +15,13 @@ from xknx.management.procedures.device.dm_secure_sync_r_cl import (
 from xknx.secure.data_secure import DataSecure
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
+from ....conftest import EventLoopClockAdvancer
+
 DEVICE = IndividualAddress("15.15.0")
 TOOL_KEY = bytes(range(16))
 # KNX v02.01.01 - Application Layer 03.03.07 - Annex C.1.4 S-A_Sync.res (Challenge 3)
 SYNC_RES = apci.SecureAPDU.from_knx(
-    bytes.fromhex("03F1" "93" "aaaaaaaaaaa9" "9c023ad25e146470693e638d" "5b70cac4")
+    bytes.fromhex("03F193aaaaaaaaaaa99c023ad25e146470693e638d5b70cac4")
 )
 
 
@@ -74,7 +76,7 @@ async def test_dm_secure_sync_r_cl_conn() -> None:
     assert data_secure.get_sequence_number() == 4
 
 
-async def test_dm_secure_sync_r_cl(time_travel) -> None:  # type: ignore[no-untyped-def]
+async def test_dm_secure_sync_r_cl(time_travel: EventLoopClockAdvancer) -> None:
     """Without a response the request is repeated once, then the procedure fails."""
     xknx, data_secure = _setup()
     task = asyncio.create_task(dm_secure_sync_r_cl(xknx, DEVICE))

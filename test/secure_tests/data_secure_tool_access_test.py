@@ -26,11 +26,9 @@ CHALLENGE = bytes.fromhex("000000000003")
 TOOL_TO_DEVICE = bytes.fromhex("FF67FF00")
 DEVICE_TO_TOOL = bytes.fromhex("FF00FF67")
 # Annex C.1.3 S-A_Sync.req (SCF 92h, SeqNr_local 1, KNX Serial Number 0, Challenge 3)
-SYNC_REQ = bytes.fromhex("03F1" "92" "000000000001" "000000000000" "c1cf4506f09bd79fab55")
+SYNC_REQ = bytes.fromhex("03F192000000000001000000000000c1cf4506f09bd79fab55")
 # Annex C.1.4 S-A_Sync.res (SCF 93h, Random AA..AA, SeqNr_remote 3, SeqNr_local 4)
-SYNC_RES = bytes.fromhex(
-    "03F1" "93" "aaaaaaaaaaa9" "9c023ad25e146470693e638d" "5b70cac4"
-)
+SYNC_RES = bytes.fromhex("03F193aaaaaaaaaaa99c023ad25e146470693e638d5b70cac4")
 # Annex C.1.1: A_PropertyValue_Write of PID_GRP_KEY_TABLE as S-A_Data with SeqNr 4
 PROPERTY_WRITE = apci.PropertyValueWrite(
     object_index=5,
@@ -40,11 +38,11 @@ PROPERTY_WRITE = apci.PropertyValueWrite(
     data=bytes(range(0x20, 0x30)),
 )
 SECURE_PROPERTY_WRITE = bytes.fromhex(
-    "03F1" "90" "000000000004" "6767242a2308ca76a11774214ee4cf5d94909f743d05" "0d8fc168"
+    "03F1900000000000046767242a2308ca76a11774214ee4cf5d94909f743d050d8fc168"
 )
 # Annex C.1.2: its A_PropertyValue_Response as S-A_Data with SeqNr 3
 SECURE_PROPERTY_RESPONSE = bytes.fromhex(
-    "03F1" "90" "000000000003" "706f533105503557cb2b24f1dd341b60b7e017ecd6b0" "6849a72b"
+    "03F190000000000003706f533105503557cb2b24f1dd341b60b7e017ecd6b06849a72b"
 )
 
 
