@@ -299,7 +299,7 @@ class ConnectionlessP2P:
     connectionless communication mode uses T_Data_Individual - no transport
     connection and no sequence numbers. §3.6: T_Data_Individual is neither
     acknowledged nor confirmed by the remote Transport Layer entity. Several
-    management procedures may use it instead of a connection, eg.
+    management procedures may use it instead of a connection, e.g.
     DM_FunctionProperty_Write_R (KNX v02.01.02 - Management Procedures
     03.05.02 - §3.30.1). Open it with `Management.connectionless()`.
     """
