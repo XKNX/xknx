@@ -6,6 +6,13 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Features
+
+- Parse and serialize cEMI L_Busmon.ind frames - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.5.8.1. The new `CEMIBusmonData` holds the frame as received on the medium in `raw_frame`. `CEMIInfo` reads the Additional Information fields now: `items()` and `get()` return them as Type ID and data, `busmonitor_status` the Busmonitor Status Info (03h) as `CEMIBusmonitorStatus`, `timestamp_relative` (04h) and `extended_relative_timestamp` (06h) the timestamps in ticks - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.4.3. `CEMIInfo.init_from_items()` creates it from Type ID and data pairs. An Additional Information Length exceeding the frame raises `CouldNotParseCEMI`.
+- Add `parse_tp1_frame()` to `xknx.cemi`, decoding a raw TP1 frame to a `TP1DataFrame` - L_Data_Standard or L_Data_Extended - or a `TP1Acknowledgement` - ACK, NAK, BUSY or NAK+BUSY - KNX v01.03.03 - Communication Medium TP1 03.02.02 - §2.2. `TP1DataFrame` holds source and destination address, priority, repeat flag, hop count, frame type, TPDU and check octet; `checksum_valid` tells if the check octet matches. `cemi_l_data()` and `telegram()` parse the TPDU to `CEMILData` or `Telegram`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
