@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Management
+
+- Add connectionless point-to-point communication - KNX v01.02.03 - Transport Layer 03.03.04 - §1.5, telegrams sent as `T_Data_Individual` without a transport connection. `async with xknx.management.connectionless(address) as connectionless:` provides a `ConnectionlessP2P` with `send()` and `request()`, like `P2PConnection`. While it is open, the `T_Data_Individual` telegrams the device sends are handed to it - they were dropped as unhandled before, so a response to a connectionless request could not be received. `request()` returns the first telegram carrying the payload's `RESPONSE_TYPE` and skips any other, and raises `ManagementConnectionTimeout` if none arrives within 6 seconds, like `P2PConnection.request()`. Concurrent `request()` calls are sent one after the other, as nothing in a response tells which request it answers. A `connection()` to the same device may be open at the same time.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
