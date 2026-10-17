@@ -90,7 +90,11 @@ class FactoryDefaultSetupKey:
 
     def to_code(self) -> str:
         """Return the code as printed on a device."""
-        data = self.serial_number + self.key + bytes((_crc4(self.serial_number + self.key) << 4,))
+        data = (
+            self.serial_number
+            + self.key
+            + bytes((_crc4(self.serial_number + self.key) << 4,))
+        )
         text = base64.b32encode(data).decode("ascii")[:_CODE_LENGTH]
         return "-".join(
             text[i : i + _GROUP_LENGTH] for i in range(0, _CODE_LENGTH, _GROUP_LENGTH)

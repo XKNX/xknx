@@ -12,7 +12,9 @@ CODE = "AD5BEN-CWPAAA-CAQDAQ-CQMBYI-BEFAWD-ANBYH6"
 
 def test_to_code() -> None:
     """The code has six groups of six base32 characters."""
-    assert FactoryDefaultSetupKey(serial_number=SERIAL_NUMBER, key=KEY).to_code() == CODE
+    assert (
+        FactoryDefaultSetupKey(serial_number=SERIAL_NUMBER, key=KEY).to_code() == CODE
+    )
 
 
 @pytest.mark.parametrize(
