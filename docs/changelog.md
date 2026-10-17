@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.42, the 2 octet `U5U5U6` encoding of `magic_number`, `version_number` and `revision_number`. It is the format of `PID_VERSION` and of other version information like software, hardware or data-interface versions; `str(KNXVersion(0, 0, 13))` gives `"0.0.13"`. Invalid version information is encoded as 31.31.63 - `KNXVersion.INVALID`, checked by `is_invalid`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
