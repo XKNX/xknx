@@ -9,7 +9,15 @@ from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConfirmationError
-from xknx.telegram import GroupAddress, IndividualAddress, Telegram, apci, tpci
+from xknx.telegram import (
+    GroupAddress,
+    IndividualAddress,
+    Telegram,
+    TelegramDirection,
+    apci,
+    telegram_context,
+    tpci,
+)
 
 from ..conftest import EventLoopClockAdvancer
 
@@ -96,6 +104,25 @@ def test_incoming_cemi(mock_management_process: MagicMock) -> None:
     assert not xknx.telegrams.qsize()
     mock_management_process.assert_not_called()
     assert xknx.connection_manager.cemi_count_incoming == 1
+
+
+def test_incoming_cemi_ignores_telegram_context() -> None:
+    """Test incoming telegrams don't pick up the context of the receiving task."""
+    xknx = XKNX()
+    test_cemi = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress(1),
+                payload=apci.GroupValueWrite(DPTArray((1,))),
+            )
+        ),
+    )
+    with telegram_context(object()):
+        xknx.cemi_handler.handle_cemi_frame(test_cemi)
+    telegram = xknx.telegrams.get_nowait()
+    assert telegram.direction is TelegramDirection.INCOMING
+    assert telegram.context is None
 
 
 @pytest.mark.parametrize(
