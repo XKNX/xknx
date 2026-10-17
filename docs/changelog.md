@@ -6,6 +6,17 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Features
+
+- KNX Data Secure point-to-point with the Tool Key (Tool Access): `DataSecure` takes a `tool_key_table` and gets `set_tool_key()` and `remove_tool_key()`. Frames to such a device are secured with its Tool Key - or its FDSK while it is in its delivery state - and its secured frames are verified and decrypted. `Keyring.get_tool_keys()` returns the Tool Keys of the devices of a keyring; they are not used automatically.
+- Management procedure `dm_secure_sync_r_cl()` / `dm_secure_sync_r_cl_conn()` - KNX v02.01.02 - Management Procedures 03.05.02 - §4.2 DM_SecureSync_RCl: synchronizes the Sequence Numbers with a device using the S-A_Sync service (KNX v02.01.01 - Application Layer 03.03.07 - §5.3.2) before the first secured frame. `DataSecure.sync_request()` and `SecureData.init_sync_request()` / `init_sync_response()` with their `get_*` counterparts build and verify the S-A_Sync PDUs.
+
+### Bugfixes
+
+- Data Secure: B0 of a frame with a non-zero TPCI octet - e.g. T_Data_Connected - shifted the TPCI twice and raised `ValueError`. The TPCI octet is used as sent now (KNX v02.01.01 - Application Layer 03.03.07 - Annex C.1.3).
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
