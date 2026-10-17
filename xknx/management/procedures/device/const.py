@@ -18,6 +18,18 @@ MAX_ELEMENTS_PER_REQUEST = (1 << 4) - 1
 # left over for `data`.
 PROPERTY_VALUE_HEADER_OCTETS = 5
 
+# nr_of_elem is a full octet in the A_PropertyExtValue_* PDUs (KNX v02.01.01 -
+# Application Layer 03.03.07 - §3.4.5 Figures 49-52), max value 2^8 - 1
+MAX_EXT_ELEMENTS_PER_REQUEST = (1 << 8) - 1
+# start_index is 16 bits in the same PDUs, max value 2^16 - 1
+MAX_EXT_START_INDEX = (1 << 16) - 1
+
+# Fixed non-data octets of a PropertyExtValue*-PDU, in the same units as
+# PROPERTY_VALUE_HEADER_OCTETS above and apci.PropertyExtValueWriteCon.
+# calculated_length(): the second APCI octet + interface_object_type (2) +
+# object_instance/property_id (3) + nr_of_elem (1) + start_index (2) = 9.
+PROPERTY_EXT_VALUE_HEADER_OCTETS = 9
+
 # Fixed non-data octets of a Memory*-PDU (KNX v02.01.01 - Application Layer
 # 03.03.07 - §3.5.3 A_Memory_Read / §3.5.4 A_Memory_Write, Figures 74-76):
 # octet 6 is TPCI, octet 7 the APCI-carrying octet + count, octets 8-9 the 16

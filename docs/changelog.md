@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Management
+
+- Add `dmp_ext_interface_object_read_r`, `dmp_ext_interface_object_write_con_r`, `dmp_ext_interface_object_write_uncon_r` and `dmp_ext_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.4/§3.25.4/§3.25.5/§3.26.3, the counterparts of the procedures above that address an Interface Object by its Interface Object Type and Object Instance with the `A_PropertyExtValue_*` services instead of by its object index. Blocks are sized by `max_apdu_length` and the 8-bit `nr_of_elem` field of these services, and `write_con_r` fails on a return code other than `E_SUCCESS`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
