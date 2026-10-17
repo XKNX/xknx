@@ -23,3 +23,7 @@ preinstalled, so the build doesn't have to compile Ruby from source;
 `Gemfile.lock` is locked with the Bundler version that Ruby ships.
 When bumping `.ruby-version`, check that the version is preinstalled
 on Netlify's current build image and re-lock with that Ruby's Bundler.
+Don't commit `.bundle/`: Netlify writes its own `.bundle/config` pointing
+at its gem cache and only reinstalls gems when that directory is missing.
+To install gems into `vendor/bundle` locally, run
+`bundle config set --local path vendor/bundle` once.
