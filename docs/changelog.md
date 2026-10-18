@@ -12,6 +12,10 @@ nav_order: 2
 
 - Add Tunnelling Feature services - KNX v01.07.01 - Tunnelling 03.08.04 - §3.2/§3.3: `UDPTunnel` and `TCPTunnel` read and write Interface Features of the tunnelling server with `feature_get()` and `feature_set()`, e.g. `await xknx.knxip_interface.tunnelling_feature_get(TunnellingFeatureType.MAX_APDU_LENGTH)`; `KNXIPInterface.tunnelling_feature_get()` and `tunnelling_feature_set()` run them on the connection thread of a threaded interface. They return the `TunnellingFeatureResponse`, whose `return_code` tells whether the server supports the feature. As required by §3.1, the request shares the sequence counter and the confirmation of `TunnellingRequest` - a `TunnellingFeatureResponse` from the server is acknowledged and sequence checked like an incoming `TunnellingRequest` now, and no longer logged as a service that is not implemented. A `TunnellingFeatureInfo`, sent by the server after enabling `INTERFACE_FEATURE_INFO_ENABLE`, is acknowledged and sequence checked the same way and dropped. As a server without Tunnelling Feature services ignores the request (§3.5), `KNXIPInterface` checks the server's description first and raises `CommunicationError` if it does not announce Tunnelling v2 (KNX v01.06.02 - Core 03.08.02 - §7.6.2/§7.7.2). A request that is not acknowledged after its repetition closes the tunnel like a `TunnellingRequest` (§2.6.1), and a pending request fails when the tunnel is closed.
 
+### DPT
+
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -1736,7 +1740,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1745,7 +1748,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
