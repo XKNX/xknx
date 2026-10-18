@@ -308,3 +308,21 @@ class TestDPTForecastSubtypes:
             below = (0xA0, 0xAD) if value_min < -10 else (0x84, 0x18)
             with pytest.raises(ConversionError):
                 dpt.from_knx(DPTArray((0x01, 0x00, 0x00, 0x00, 0x7F, 0xFF, *below)))
+
+
+def test_forecast_from_dict_rejects_unknown_keys() -> None:
+    """Test a misspelled key is rejected instead of sending an invalid field."""
+    with pytest.raises(ValueError):
+        Forecast.from_dict({"delay_tme": 5})
+    with pytest.raises(ConversionError):
+        DPTForecastTemperature.to_knx({"delay_tme": 5})
+    with pytest.raises(ValueError):
+        Forecast.from_dict(None)  # type: ignore[arg-type]
+
+
+def test_forecast_equal_minimum_and_maximum() -> None:
+    """Test a maximum equal to the minimum is accepted."""
+    value = Forecast(maximum_value=20.0, minimum_value=20.0)
+    assert DPTForecastTemperature.from_knx(DPTForecastTemperature.to_knx(value)) == (
+        value
+    )

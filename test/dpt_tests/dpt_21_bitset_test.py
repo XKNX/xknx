@@ -207,6 +207,8 @@ class TestDPT21Common:
     ) -> None:
         """Test every raw value of the defined bits."""
         for raw in range(1 << len(names)):
+            if transcoder is DPTRFModeInfo and not raw & 0x01:
+                continue  # asynchronous = 0 is not allowed on send
             value = transcoder.from_knx(DPTArray(raw))
             assert transcoder.to_knx(value) == DPTArray(raw)
             assert transcoder.to_knx(value.as_dict()) == DPTArray(raw)
@@ -250,7 +252,7 @@ class TestDPT21Common:
         value_type: str,
         names: tuple[str, ...],
     ) -> None:
-        """Test from_dict accepts 0 and 1 and ignores unknown keys."""
+        """Test from_dict accepts 0 and 1 and rejects unknown keys."""
         data_type = transcoder.data_type
         assert data_type.from_dict({names[-1]: 1}) == data_type.from_dict(
             {names[-1]: True}
@@ -259,8 +261,10 @@ class TestDPT21Common:
             {names[-1]: False}
         )
         assert data_type.from_dict({names[-1]: 1}).as_dict()[names[-1]] is True
-        assert data_type.from_dict({"unknown": True}) == data_type()
-        assert transcoder.to_knx({"unknown": True}) == transcoder.to_knx(data_type())
+        with pytest.raises(ValueError):
+            data_type.from_dict({"unknown": True})
+        with pytest.raises(ConversionError):
+            transcoder.to_knx({"unknown": True})
 
     def test_dict_invalid(
         self,
@@ -273,7 +277,9 @@ class TestDPT21Common:
         with pytest.raises(ValueError):
             transcoder.data_type.from_dict({names[0]: None})
         with pytest.raises(ValueError):
-            transcoder.data_type.from_dict({names[0]: 1.0})
+            transcoder.data_type.from_dict({names[0]: 2})
+        with pytest.raises(ValueError):
+            transcoder.data_type.from_dict({names[0]: "1"})
         with pytest.raises(ValueError):
             transcoder.data_type.from_dict([names[0]])  # type: ignore[arg-type]
 
@@ -327,10 +333,14 @@ class TestDPT21Specific:
         assert DPTRFModeInfo.to_knx(RFModeInfo()) == DPTArray(0x01)
         assert DPTRFModeInfo.to_knx({}) == DPTArray(0x01)
         assert DPTRFModeInfo.to_knx({"bibat_master": True}) == DPTArray(0x03)
-        # 0 is not allowed for asynchronous but still decoded
+        # 0 is not allowed for asynchronous: rejected on send, still decoded
         assert DPTRFModeInfo.from_knx(DPTArray(0x04)) == RFModeInfo(
             asynchronous=False, bibat_slave=True
         )
+        with pytest.raises(ConversionError):
+            DPTRFModeInfo.to_knx(RFModeInfo(asynchronous=False))
+        with pytest.raises(ConversionError):
+            DPTRFModeInfo.to_knx({"asynchronous": False})
         assert DPTRFModeInfo.get_dict_schema()[0] == {
             "name": "asynchronous",
             "type": "boolean",

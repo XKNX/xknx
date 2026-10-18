@@ -156,3 +156,10 @@ class TestDPTPrioritisedModeControl:
             DPTBase.parse_transcoder("prioritised_mode_control")
             is DPTPrioritisedModeControl
         )
+
+
+def test_to_knx_coerces_deactivate_priority() -> None:
+    """Test a non-bool flag of a constructed dataclass is sent as one bit."""
+    assert DPTPrioritisedModeControl.to_knx(
+        PrioritisedModeControl(0, 0, 2)  # type: ignore[arg-type]
+    ) == DPTArray(0x80)

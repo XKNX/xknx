@@ -166,7 +166,7 @@ class DPTConverterTestResult(DPTComplex[ConverterTestResult]):
     def _to_knx(cls, value: ConverterTestResult) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         if not 0 <= value.duration_test_discharge_time <= 510:
-            raise ValueError(
+            raise ConversionError(
                 "Discharge time out of range 0..510: "
                 f"{value.duration_test_discharge_time}"
             )
@@ -174,7 +174,7 @@ class DPTConverterTestResult(DPTComplex[ConverterTestResult]):
         if charge_level is None:
             charge_level = 0xFF
         elif not 0 <= charge_level <= 254:
-            raise ValueError(f"Charge level out of range 0..254: {charge_level}")
+            raise ConversionError(f"Charge level out of range 0..254: {charge_level}")
         return DPTArray(
             (
                 ConverterTestResultCode(value.function_test_result).value << 4

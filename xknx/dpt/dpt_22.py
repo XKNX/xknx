@@ -13,12 +13,8 @@ from .payload import DPTArray, DPTBinary
 
 
 @dataclass(slots=True)
-class StatusDHWC(_BitsetData):
-    """
-    Representation of a DHW controller status.
-
-    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1
-    """
+class DHWControllerStatus(_BitsetData):
+    """Value of DPT 22.100 DPT_StatusDHWC."""
 
     fault: bool = False
     dhw_load_active: bool = False
@@ -41,23 +37,27 @@ class StatusDHWC(_BitsetData):
     }
 
 
-class DPTStatusDHWC(DPTComplex[StatusDHWC]):
-    """Abstraction for KNX 2 octet DHW controller status (DPT 22.100)."""
+class DPTStatusDHWC(DPTComplex[DHWControllerStatus]):
+    """
+    Abstraction for KNX 2 octet DHW Controller Status (DPT 22.100 DPT_StatusDHWC).
 
-    data_type = StatusDHWC
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1
+    """
+
+    data_type = DHWControllerStatus
     payload_type = DPTArray
     payload_length = 2
     dpt_main_number = 22
     dpt_sub_number = 100
-    value_type = "status_dhwc"
+    value_type = "dhw_controller_status"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> StatusDHWC:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> DHWControllerStatus:
         """Parse/deserialize from KNX/IP raw data."""
-        return StatusDHWC.from_raw(_from_b16(cls.validate_payload(payload)))
+        return DHWControllerStatus.from_raw(_from_b16(cls.validate_payload(payload)))
 
     @classmethod
-    def _to_knx(cls, value: StatusDHWC) -> DPTArray:
+    def _to_knx(cls, value: DHWControllerStatus) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         return _to_b16(value.to_raw())
 
@@ -83,15 +83,13 @@ _RHCC_HEAT_COOL_MODE_BIT = 8
 
 
 @dataclass(slots=True)
-class StatusRHCC(DPTComplexData):
+class RoomHeatingCoolingControllerStatus(DPTComplexData):
     """
-    Representation of a room heating / cooling controller status.
+    Value of DPT 22.101 DPT_StatusRHCC.
 
     `heat_cool_mode`: HeatCool; defaults to heating.
     `dew_point_status`, `frost_alarm`, `overheat_alarm`: True if in alarm.
     All other fields: True if the status is active.
-
-    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.2
     """
 
     fault: bool = False
@@ -111,9 +109,14 @@ class StatusRHCC(DPTComplexData):
     overheat_alarm: bool = False
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> StatusRHCC:
-        """Init from a dictionary."""
-        flags = bits_from_dict(data, _RHCC_BITS)
+    def from_dict(cls, data: Mapping[str, Any]) -> RoomHeatingCoolingControllerStatus:
+        """Init from a dictionary. Missing keys take the field default."""
+        if not isinstance(data, Mapping):
+            raise ValueError(f"Invalid data for {cls.__name__}: {data!r}")
+        flags = bits_from_dict(
+            {key: value for key, value in data.items() if key != "heat_cool_mode"},
+            _RHCC_BITS,
+        )
         heat_cool_mode = HeatCool.parse(data.get("heat_cool_mode", HeatCool.HEAT))
         return cls(heat_cool_mode=heat_cool_mode, **flags)
 
@@ -126,27 +129,33 @@ class StatusRHCC(DPTComplexData):
         return result
 
 
-class DPTStatusRHCC(DPTComplex[StatusRHCC]):
-    """Abstraction for KNX 2 octet room heating / cooling controller status (DPT 22.101)."""
+class DPTStatusRHCC(DPTComplex[RoomHeatingCoolingControllerStatus]):
+    """
+    Abstraction for KNX 2 octet Room Heating/Cooling Controller Status (DPT 22.101 DPT_StatusRHCC).
 
-    data_type = StatusRHCC
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.2
+    """
+
+    data_type = RoomHeatingCoolingControllerStatus
     payload_type = DPTArray
     payload_length = 2
     dpt_main_number = 22
     dpt_sub_number = 101
-    value_type = "status_rhcc"
+    value_type = "room_heating_cooling_controller_status"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> StatusRHCC:
+    def from_knx(
+        cls, payload: DPTArray | DPTBinary
+    ) -> RoomHeatingCoolingControllerStatus:
         """Parse/deserialize from KNX/IP raw data."""
         raw = _from_b16(cls.validate_payload(payload))
-        return StatusRHCC(
+        return RoomHeatingCoolingControllerStatus(
             heat_cool_mode=HeatCool(bool(raw >> _RHCC_HEAT_COOL_MODE_BIT & 1)),
             **bits_from_raw(raw, _RHCC_BITS),
         )
 
     @classmethod
-    def _to_knx(cls, value: StatusRHCC) -> DPTArray:
+    def _to_knx(cls, value: RoomHeatingCoolingControllerStatus) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         heat_cool_mode = HeatCool.parse(value.heat_cool_mode)
         return _to_b16(
@@ -156,12 +165,8 @@ class DPTStatusRHCC(DPTComplex[StatusRHCC]):
 
 
 @dataclass(slots=True)
-class Media(_BitsetData):
-    """
-    Representation of supported KNX media.
-
-    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.3.1
-    """
+class SupportedMedia(_BitsetData):
+    """Value of DPT 22.1000 DPT_Media: the KNX media a device supports."""
 
     tp1: bool = False
     pl110: bool = False
@@ -176,23 +181,27 @@ class Media(_BitsetData):
     }
 
 
-class DPTMedia(DPTComplex[Media]):
-    """Abstraction for KNX 2 octet supported media (DPT 22.1000)."""
+class DPTMedia(DPTComplex[SupportedMedia]):
+    """
+    Abstraction for KNX 2 octet Media (DPT 22.1000 DPT_Media).
 
-    data_type = Media
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.3.1
+    """
+
+    data_type = SupportedMedia
     payload_type = DPTArray
     payload_length = 2
     dpt_main_number = 22
     dpt_sub_number = 1000
-    value_type = "media"
+    value_type = "supported_media"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> Media:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> SupportedMedia:
         """Parse/deserialize from KNX/IP raw data."""
-        return Media.from_raw(_from_b16(cls.validate_payload(payload)))
+        return SupportedMedia.from_raw(_from_b16(cls.validate_payload(payload)))
 
     @classmethod
-    def _to_knx(cls, value: Media) -> DPTArray:
+    def _to_knx(cls, value: SupportedMedia) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         return _to_b16(value.to_raw())
 
@@ -200,12 +209,12 @@ class DPTMedia(DPTComplex[Media]):
 @dataclass(slots=True)
 class ChannelActivation16(_BitsetData):
     """
-    Representation of the activation state of 16 channels.
+    Value of DPT 22.1010 DPT_Channel_Activation_16.
 
     `channel_<n>`: True if the visual effect of channel n is active.
-    Channel n is bit n-1.
-
-    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.3.2
+    Bit n is channel n+1, as the spec says. The master data (DPST-22-1010) lists
+    channel 1 as the most significant bit instead, i.e. the opposite order; the
+    spec is followed.
     """
 
     channel_1: bool = False
@@ -231,7 +240,11 @@ class ChannelActivation16(_BitsetData):
 
 
 class DPTChannelActivation16(DPTComplex[ChannelActivation16]):
-    """Abstraction for KNX 2 octet channel activation for 16 channels (DPT 22.1010)."""
+    """
+    Abstraction for KNX 2 octet Channel Activation for 16 channels (DPT 22.1010).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.3.2
+    """
 
     data_type = ChannelActivation16
     payload_type = DPTArray

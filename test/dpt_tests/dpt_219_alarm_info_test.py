@@ -5,14 +5,8 @@ from typing import Any
 import pytest
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary, DPTComplex
-from xknx.dpt.dpt_219 import (
-    AlarmErrorClassHVAC,
-    AlarmErrorClassSystem,
-    AlarmInfo,
-    AlarmPriority,
-    ApplicationArea,
-    DPTAlarmInfo,
-)
+from xknx.dpt.dpt_20 import ApplicationArea, ErrorClassHVAC, ErrorClassSystem, Priority
+from xknx.dpt.dpt_219 import AlarmInfo, DPTAlarmInfo
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 _BITS = (
@@ -30,7 +24,7 @@ def _alarm(**kwargs: Any) -> AlarmInfo:
     """Return an AlarmInfo with defaults for the required fields."""
     defaults: dict[str, Any] = {
         "log_number": 0,
-        "alarm_priority": AlarmPriority.HIGH,
+        "alarm_priority": Priority.HIGH,
         "application_area": ApplicationArea.NO_FAULT,
         "error_class": 0,
     }
@@ -59,7 +53,7 @@ class TestAlarmInfo:
                 },
                 AlarmInfo(
                     log_number=7,
-                    alarm_priority=AlarmPriority.MEDIUM,
+                    alarm_priority=Priority.MEDIUM,
                     application_area=ApplicationArea.HVAC_VAC,
                     error_class=3,
                     ack_sup=True,
@@ -134,7 +128,7 @@ class TestAlarmInfo:
                 "log_number": 0,
                 "application_area": "lighting",
                 "error_class": 0,
-                "locked": 1,
+                "locked": 2,
             },
             {
                 "log_number": 0,
@@ -155,27 +149,27 @@ class TestAlarmInfo:
             (
                 ApplicationArea.SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST,
                 3,
-                AlarmErrorClassSystem.CONFIGURATION_FAULT,
+                ErrorClassSystem.CONFIGURATION_FAULT,
             ),
             (
                 ApplicationArea.SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST,
                 18,
-                AlarmErrorClassSystem.GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH,
+                ErrorClassSystem.GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH,
             ),
             (ApplicationArea.SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST, 19, None),
-            (ApplicationArea.HVAC_GENERAL_FBS, 1, AlarmErrorClassHVAC.SENSOR_FAULT),
+            (ApplicationArea.HVAC_GENERAL_FBS, 1, ErrorClassHVAC.SENSOR_FAULT),
             (
                 ApplicationArea.HVAC_HOT_WATER_HEATING,
                 2,
-                AlarmErrorClassHVAC.PROCESS_FAULT_CONTROLLER_FAULT,
+                ErrorClassHVAC.PROCESS_FAULT_CONTROLLER_FAULT,
             ),
             (
                 ApplicationArea.HVAC_DIRECT_ELECTRICAL_HEATING,
                 3,
-                AlarmErrorClassHVAC.ACTUATOR_FAULT,
+                ErrorClassHVAC.ACTUATOR_FAULT,
             ),
-            (ApplicationArea.HVAC_TERMINAL_UNITS, 4, AlarmErrorClassHVAC.OTHER_FAULT),
-            (ApplicationArea.HVAC_VAC, 0, AlarmErrorClassHVAC.NO_FAULT),
+            (ApplicationArea.HVAC_TERMINAL_UNITS, 4, ErrorClassHVAC.OTHER_FAULT),
+            (ApplicationArea.HVAC_VAC, 0, ErrorClassHVAC.NO_FAULT),
             (ApplicationArea.HVAC_VAC, 5, None),
             (ApplicationArea.NO_FAULT, 0, None),
             (ApplicationArea.LIGHTING, 1, None),
@@ -188,7 +182,7 @@ class TestAlarmInfo:
         self,
         application_area: ApplicationArea,
         error_class: int,
-        expected: AlarmErrorClassSystem | AlarmErrorClassHVAC | None,
+        expected: ErrorClassSystem | ErrorClassHVAC | None,
     ) -> None:
         """Test the error class Enum depending on the application area."""
         value = _alarm(application_area=application_area, error_class=error_class)
@@ -221,7 +215,7 @@ class TestDPTAlarmInfo:
             (
                 _alarm(
                     log_number=0x12,
-                    alarm_priority=AlarmPriority.LOW,
+                    alarm_priority=Priority.LOW,
                     application_area=ApplicationArea.SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST,
                     error_class=2,
                     ack_sup=True,
@@ -250,13 +244,13 @@ class TestDPTAlarmInfo:
     @pytest.mark.parametrize(
         ("raw", "priority"),
         [
-            (0x00, AlarmPriority.HIGH),
-            (0x01, AlarmPriority.MEDIUM),
-            (0x02, AlarmPriority.LOW),
+            (0x00, Priority.HIGH),
+            (0x01, Priority.MEDIUM),
+            (0x02, Priority.LOW),
             (0x03, None),
         ],
     )
-    def test_alarm_priority(self, raw: int, priority: AlarmPriority | None) -> None:
+    def test_alarm_priority(self, raw: int, priority: Priority | None) -> None:
         """Test every alarm priority value."""
         payload = DPTArray((0x00, raw, 0x00, 0x00, 0x00, 0x00))
         assert DPTAlarmInfo.from_knx(payload).alarm_priority is priority
@@ -330,7 +324,7 @@ class TestDPTAlarmInfo:
             _alarm(error_class=256),
             _alarm(error_class="a"),
             _alarm(application_area=1),
-            _alarm(application_area=AlarmPriority.HIGH),
+            _alarm(application_area=Priority.HIGH),
             _alarm(alarm_priority=0),
             _alarm(alarm_priority=ApplicationArea.NO_FAULT),
             {"log_number": 0, "application_area": "lighting"},

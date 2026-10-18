@@ -254,3 +254,13 @@ class TestDPTDALIDiagnostics:
         """Test lookup by DPT number and value_type."""
         assert DPTBase.parse_transcoder("238.600") is DPTDALIDiagnostics
         assert DPTBase.parse_transcoder("dali_diagnostics") is DPTDALIDiagnostics
+
+
+def test_dali_diagnostics_to_knx_coerces_flags() -> None:
+    """Test non-bool flags of a constructed dataclass are sent as one bit each."""
+    assert DPTDALIDiagnostics.to_knx(
+        DALIDiagnostics(1, lamp_failure=2)  # type: ignore[arg-type]
+    ) == DPTArray(0x41)
+    assert DPTDALIDiagnostics.to_knx(
+        DALIDiagnostics(1, ballast_failure=2)  # type: ignore[arg-type]
+    ) == DPTArray(0x81)

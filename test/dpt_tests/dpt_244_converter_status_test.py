@@ -91,7 +91,7 @@ class TestConverterStatus:
             },
             {
                 "mode": "normal",
-                "hardwired_inhibit_active": 1,
+                "hardwired_inhibit_active": 2,
                 "hardwired_switch_on": False,
                 "function_test_pending": "unknown",
                 "duration_test_pending": "unknown",

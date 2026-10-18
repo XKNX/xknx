@@ -55,7 +55,7 @@ class TestBatteryInfo:
             {},
             {"battery_failure": False, "battery_duration_failure": False},
             {
-                "battery_failure": 1,
+                "battery_failure": 2,
                 "battery_duration_failure": False,
                 "battery_fully_charged": False,
             },

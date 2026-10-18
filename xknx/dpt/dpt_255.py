@@ -23,6 +23,9 @@ class GeographicalLocation(DPTComplexData):
 
     `longitude`: float -180..180 degrees
     `latitude`: float -90..90 degrees
+
+    The spec gives the range of both fields as "See F32"; the limits of
+    ±180° and ±90° are an xknx addition.
     """
 
     longitude: float = field(metadata=_LONGITUDE_RANGE)

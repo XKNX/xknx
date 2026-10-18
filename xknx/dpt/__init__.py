@@ -279,13 +279,13 @@ from .dpt_21 import (
 )
 from .dpt_22 import (
     ChannelActivation16,
+    DHWControllerStatus,
     DPTChannelActivation16,
     DPTMedia,
     DPTStatusDHWC,
     DPTStatusRHCC,
-    Media,
-    StatusDHWC,
-    StatusRHCC,
+    RoomHeatingCoolingControllerStatus,
+    SupportedMedia,
 )
 from .dpt_25 import DoubleNibble, DPTDoubleNibble
 from .dpt_26 import DPTSceneInfo, SceneInfo
@@ -298,16 +298,13 @@ from .dpt_29 import (
 )
 from .dpt_30 import ChannelActivation24, DPTChannelActivation24
 from .dpt_206 import (
-    BuildingMode,
     BuildingModeNext,
-    DHWMode,
     DHWModeNext,
     DPTBuildingModeNext,
     DPTDHWModeNext,
     DPTHVACModeNext,
     DPTOccModeNext,
     HVACModeNext,
-    OccupancyMode,
     OccupancyModeNext,
 )
 from .dpt_207 import (
@@ -337,7 +334,7 @@ from .dpt_225 import (
     ScalingSpeed,
     ScalingStepTime,
 )
-from .dpt_229 import DPTMeteringValue, MeteringValue
+from .dpt_229 import DPTMeteringValue, MeteringValue, MeteringValueUnit
 from .dpt_230 import DPTMBusAddress, MBusAddress
 from .dpt_232 import DPTColorRGB, RGBColor
 from .dpt_234 import DPTLanguageCodeAlpha2ASCII, DPTRegionCodeAlpha2ASCII

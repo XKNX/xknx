@@ -19,9 +19,9 @@ nav_order: 2
 - Add DPT 241.800 (`DPTStatusSAB`, value_type `"status_sab"`)
 - Add DPT 21.001, 21.002, 21.100-21.106, 21.601, 21.1000-21.1002, 21.1010, 21.1200 and 21.1201 8-bit sets (`DPTStatusGen`, `DPTDeviceControl`, `DPTForceSign`, ...) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.22, §4.4, §6.4.1, §8.2, §9.6, §9.7.
 - Add DPT 22.100 `DPTStatusDHWC`, 22.101 `DPTStatusRHCC`, 22.1000 `DPTMedia` and 22.1010 `DPTChannelActivation16` 16-bit sets, 25.1000 `DPTDoubleNibble` and 30.1010 `DPTChannelActivation24` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1, §4.5.2, §8.3.1, §8.3.2, §8.4, §8.5.1.
-- Add DPT 206.100 `DPTHVACModeNext`, 206.102 `DPTDHWModeNext`, 206.104 `DPTOccModeNext` and 206.105 `DPTBuildingModeNext` with the new enums `DHWMode`, `OccupancyMode` and `BuildingMode` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.
+- Add DPT 206.100 `DPTHVACModeNext`, 206.102 `DPTDHWModeNext`, 206.104 `DPTOccModeNext` and 206.105 `DPTBuildingModeNext` with the new enums `DHWMode` (20.103), `OccupancyMode` (20.003) and `BuildingMode` (20.002) in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.
 - Add DPT 207.100 `DPTStatusBUC`, 207.101 `DPTLockSign`, 207.102 `DPTValueDemBOC`, 207.104 `DPTActPosDemAbs`, 207.105 `DPTStatusAct` and 207.600 `DPTStatusLightingActuator` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13, §6.5.1.
-- Add DPT 219.001 `DPTAlarmInfo`, 229.001 `DPTMeteringValue` and 230.1000 `DPTMBusAddress` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.29, §3.45.1, §8.6.
+- Add DPT 219.001 `DPTAlarmInfo`, 229.001 `DPTMeteringValue` and 230.1000 `DPTMBusAddress` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.29, §3.45.1, §8.6. The enums they use are in `xknx.dpt.dpt_20`: `Priority` (20.004), `ApplicationArea` (20.006), `ErrorClassSystem` (20.011), `ErrorClassHVAC` (20.012) and `MeteringDeviceType` (20.114).
 - Add DPT 234.001 `DPTLanguageCodeAlpha2ASCII`, 234.002 `DPTRegionCodeAlpha2ASCII`, 236.001 `DPTPrioritisedModeControl`, 237.600 `DPTDALIControlGearDiagnostic`, 238.001 `DPTSceneConfig` and 238.600 `DPTDALIDiagnostics` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.47, §3.49, §6.7.1, §3.50.1, §6.8.1.
 - Add the DALI emergency converter DPTs 244.600 `DPTConverterStatus`, 245.600 `DPTConverterTestResult`, 246.600 `DPTBatteryInfo`, 247.600 `DPTConverterTestInfo`, 248.600 `DPTConverterInfoFix` and 272.600 `DPTConverterInfo` - KNX v02.02.01 - Datapoint Types 03.07.02 - §6.11-§6.15, §6.22.
 - Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
@@ -1751,6 +1751,7 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
+
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1759,6 +1760,7 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()

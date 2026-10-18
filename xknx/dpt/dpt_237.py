@@ -122,12 +122,16 @@ class DPTDALIControlGearDiagnostic(DPTComplex[DALIControlGearDiagnostic]):
         address_indicator = DALIAddressIndicator.parse(value.address_indicator)
         address_max = _address_max(address_indicator)
         if not 0 <= value.address <= address_max:
-            raise ValueError(f"Address out of range 0..{address_max}: {value.address}")
+            raise ConversionError(
+                f"Address out of range 0..{address_max}: {value.address}"
+            )
         return DPTArray(
             (
-                value.converter_error << 2
-                | value.ballast_failure << 1
-                | value.lamp_failure,
-                value.read_request << 7 | address_indicator.value << 6 | value.address,
+                bool(value.converter_error) << 2
+                | bool(value.ballast_failure) << 1
+                | bool(value.lamp_failure),
+                bool(value.read_request) << 7
+                | address_indicator.value << 6
+                | value.address,
             )
         )

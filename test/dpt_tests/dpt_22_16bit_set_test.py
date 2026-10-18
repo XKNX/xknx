@@ -8,13 +8,13 @@ from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt_1 import HeatCool
 from xknx.dpt.dpt_22 import (
     ChannelActivation16,
+    DHWControllerStatus,
     DPTChannelActivation16,
     DPTMedia,
     DPTStatusDHWC,
     DPTStatusRHCC,
-    Media,
-    StatusDHWC,
-    StatusRHCC,
+    RoomHeatingCoolingControllerStatus,
+    SupportedMedia,
 )
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -66,38 +66,40 @@ class TestDPTStatusDHWC:
     )
     def test_single_bit(self, field: str, raw: tuple[int, ...]) -> None:
         """Test each bit of DPTStatusDHWC."""
-        value = StatusDHWC(**{field: True})
+        value = DHWControllerStatus(**{field: True})
         assert DPTStatusDHWC.to_knx(value) == DPTArray(raw)
         assert DPTStatusDHWC.from_knx(DPTArray(raw)) == value
 
     @pytest.mark.parametrize(
         ("value", "raw"),
         [
-            (StatusDHWC(), (0x00, 0x00)),
-            (StatusDHWC(**dict.fromkeys(DHWC_FIELDS, True)), (0x00, 0xFF)),
+            (DHWControllerStatus(), (0x00, 0x00)),
+            (DHWControllerStatus(**dict.fromkeys(DHWC_FIELDS, True)), (0x00, 0xFF)),
             (
-                StatusDHWC(dhw_load_active=True, solar_energy_support=True),
+                DHWControllerStatus(dhw_load_active=True, solar_energy_support=True),
                 (0x00, 0x42),
             ),
         ],
     )
-    def test_values(self, value: StatusDHWC, raw: tuple[int, ...]) -> None:
+    def test_values(self, value: DHWControllerStatus, raw: tuple[int, ...]) -> None:
         """Test DPTStatusDHWC parsing and streaming."""
         assert DPTStatusDHWC.to_knx(value) == DPTArray(raw)
         assert DPTStatusDHWC.from_knx(DPTArray(raw)) == value
 
     def test_reserved_bits_ignored(self) -> None:
         """Test reserved bits 8..15 are ignored on receive."""
-        assert DPTStatusDHWC.from_knx(DPTArray((0xFF, 0x01))) == StatusDHWC(fault=True)
+        assert DPTStatusDHWC.from_knx(DPTArray((0xFF, 0x01))) == DHWControllerStatus(
+            fault=True
+        )
 
     def test_dict(self) -> None:
         """Test from_dict and as_dict methods."""
-        assert StatusDHWC.from_dict({"legio_prot_active": True}) == StatusDHWC(
-            legio_prot_active=True
-        )
-        assert StatusDHWC(fault=True).as_dict() == dict.fromkeys(DHWC_FIELDS, False) | {
-            "fault": True
-        }
+        assert DHWControllerStatus.from_dict(
+            {"legio_prot_active": True}
+        ) == DHWControllerStatus(legio_prot_active=True)
+        assert DHWControllerStatus(fault=True).as_dict() == dict.fromkeys(
+            DHWC_FIELDS, False
+        ) | {"fault": True}
         assert DPTStatusDHWC.to_knx({"dhw_push_active": True}) == DPTArray((0x00, 0x08))
 
     @pytest.mark.parametrize(
@@ -112,14 +114,14 @@ class TestDPTStatusDHWC:
     def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
-            StatusDHWC.from_dict(data)
+            DHWControllerStatus.from_dict(data)
         with pytest.raises(ConversionError):
             DPTStatusDHWC.to_knx(data)
 
     def test_to_knx_wrong_value(self) -> None:
         """Test serializing a field with a wrong value."""
         with pytest.raises(ConversionError):
-            DPTStatusDHWC.to_knx(StatusDHWC(fault="a"))  # type: ignore[arg-type]
+            DPTStatusDHWC.to_knx(DHWControllerStatus(fault="a"))  # type: ignore[arg-type]
 
     @pytest.mark.parametrize(
         "payload",
@@ -140,7 +142,7 @@ class TestDPTStatusDHWC:
     def test_lookup(self) -> None:
         """Test lookup of DPTStatusDHWC."""
         assert DPTBase.parse_transcoder("22.100") is DPTStatusDHWC
-        assert DPTBase.parse_transcoder("status_dhwc") is DPTStatusDHWC
+        assert DPTBase.parse_transcoder("dhw_controller_status") is DPTStatusDHWC
 
 
 class TestDPTStatusRHCC:
@@ -167,57 +169,80 @@ class TestDPTStatusRHCC:
     )
     def test_single_bit(self, field: str, raw: tuple[int, ...]) -> None:
         """Test each flag of DPTStatusRHCC (with cooling mode, bit 8 = 0)."""
-        value = StatusRHCC(heat_cool_mode=HeatCool.COOL, **{field: True})
+        value = RoomHeatingCoolingControllerStatus(
+            heat_cool_mode=HeatCool.COOL, **{field: True}
+        )
         assert DPTStatusRHCC.to_knx(value) == DPTArray(raw)
         assert DPTStatusRHCC.from_knx(DPTArray(raw)) == value
 
     @pytest.mark.parametrize(
         ("value", "raw"),
         [
-            (StatusRHCC(), (0x01, 0x00)),  # default: heating
-            (StatusRHCC(heat_cool_mode=HeatCool.HEAT), (0x01, 0x00)),
-            (StatusRHCC(heat_cool_mode=HeatCool.COOL), (0x00, 0x00)),
-            (StatusRHCC(**dict.fromkeys(RHCC_FLAGS, True)), (0x7F, 0xFF)),
+            (RoomHeatingCoolingControllerStatus(), (0x01, 0x00)),  # default: heating
             (
-                StatusRHCC(
+                RoomHeatingCoolingControllerStatus(heat_cool_mode=HeatCool.HEAT),
+                (0x01, 0x00),
+            ),
+            (
+                RoomHeatingCoolingControllerStatus(heat_cool_mode=HeatCool.COOL),
+                (0x00, 0x00),
+            ),
+            (
+                RoomHeatingCoolingControllerStatus(**dict.fromkeys(RHCC_FLAGS, True)),
+                (0x7F, 0xFF),
+            ),
+            (
+                RoomHeatingCoolingControllerStatus(
                     heat_cool_mode=HeatCool.COOL,
                     **dict.fromkeys(RHCC_FLAGS, True),
                 ),
                 (0x7E, 0xFF),
             ),
             (
-                StatusRHCC(fault=True, frost_alarm=True),
+                RoomHeatingCoolingControllerStatus(fault=True, frost_alarm=True),
                 (0x21, 0x01),
             ),
         ],
     )
-    def test_values(self, value: StatusRHCC, raw: tuple[int, ...]) -> None:
+    def test_values(
+        self, value: RoomHeatingCoolingControllerStatus, raw: tuple[int, ...]
+    ) -> None:
         """Test DPTStatusRHCC parsing and streaming."""
         assert DPTStatusRHCC.to_knx(value) == DPTArray(raw)
         assert DPTStatusRHCC.from_knx(DPTArray(raw)) == value
 
     def test_reserved_bit_ignored(self) -> None:
         """Test reserved bit 15 is ignored on receive."""
-        assert DPTStatusRHCC.from_knx(DPTArray((0x80, 0x00))) == StatusRHCC(
-            heat_cool_mode=HeatCool.COOL
-        )
+        assert DPTStatusRHCC.from_knx(
+            DPTArray((0x80, 0x00))
+        ) == RoomHeatingCoolingControllerStatus(heat_cool_mode=HeatCool.COOL)
 
     @pytest.mark.parametrize(
         ("data", "value"),
         [
-            ({}, StatusRHCC()),
-            ({"heat_cool_mode": "cool"}, StatusRHCC(heat_cool_mode=HeatCool.COOL)),
-            ({"heat_cool_mode": "heat"}, StatusRHCC(heat_cool_mode=HeatCool.HEAT)),
+            ({}, RoomHeatingCoolingControllerStatus()),
+            (
+                {"heat_cool_mode": "cool"},
+                RoomHeatingCoolingControllerStatus(heat_cool_mode=HeatCool.COOL),
+            ),
+            (
+                {"heat_cool_mode": "heat"},
+                RoomHeatingCoolingControllerStatus(heat_cool_mode=HeatCool.HEAT),
+            ),
             (
                 {"heat_cool_mode": HeatCool.COOL, "overheat_alarm": True},
-                StatusRHCC(heat_cool_mode=HeatCool.COOL, overheat_alarm=True),
+                RoomHeatingCoolingControllerStatus(
+                    heat_cool_mode=HeatCool.COOL, overheat_alarm=True
+                ),
             ),
-            ({"fault": True}, StatusRHCC(fault=True)),
+            ({"fault": True}, RoomHeatingCoolingControllerStatus(fault=True)),
         ],
     )
-    def test_dict(self, data: dict[str, Any], value: StatusRHCC) -> None:
+    def test_dict(
+        self, data: dict[str, Any], value: RoomHeatingCoolingControllerStatus
+    ) -> None:
         """Test from_dict and as_dict methods."""
-        assert StatusRHCC.from_dict(data) == value
+        assert RoomHeatingCoolingControllerStatus.from_dict(data) == value
         assert value.as_dict() == (
             dict.fromkeys(RHCC_FLAGS, False)
             | {"heat_cool_mode": value.heat_cool_mode.name.lower()}
@@ -237,16 +262,16 @@ class TestDPTStatusRHCC:
     def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
-            StatusRHCC.from_dict(data)
+            RoomHeatingCoolingControllerStatus.from_dict(data)
         with pytest.raises(ConversionError):
             DPTStatusRHCC.to_knx(data)
 
     def test_to_knx_wrong_value(self) -> None:
         """Test serializing fields with a wrong value."""
         with pytest.raises(ConversionError):
-            DPTStatusRHCC.to_knx(StatusRHCC(fault="a"))  # type: ignore[arg-type]
+            DPTStatusRHCC.to_knx(RoomHeatingCoolingControllerStatus(fault="a"))  # type: ignore[arg-type]
         with pytest.raises(ConversionError):
-            DPTStatusRHCC.to_knx(StatusRHCC(heat_cool_mode="a"))  # type: ignore[arg-type]
+            DPTStatusRHCC.to_knx(RoomHeatingCoolingControllerStatus(heat_cool_mode="a"))  # type: ignore[arg-type]
 
     @pytest.mark.parametrize(
         "payload",
@@ -275,7 +300,10 @@ class TestDPTStatusRHCC:
     def test_lookup(self) -> None:
         """Test lookup of DPTStatusRHCC."""
         assert DPTBase.parse_transcoder("22.101") is DPTStatusRHCC
-        assert DPTBase.parse_transcoder("status_rhcc") is DPTStatusRHCC
+        assert (
+            DPTBase.parse_transcoder("room_heating_cooling_controller_status")
+            is DPTStatusRHCC
+        )
 
 
 class TestDPTMedia:
@@ -284,33 +312,33 @@ class TestDPTMedia:
     @pytest.mark.parametrize(
         ("value", "raw"),
         [
-            (Media(), (0x00, 0x00)),
-            (Media(tp1=True), (0x00, 0x02)),
-            (Media(pl110=True), (0x00, 0x04)),
-            (Media(rf=True), (0x00, 0x10)),
-            (Media(knx_ip=True), (0x00, 0x20)),
-            (Media(tp1=True, rf=True, knx_ip=True), (0x00, 0x32)),
-            (Media(tp1=True, pl110=True, rf=True, knx_ip=True), (0x00, 0x36)),
+            (SupportedMedia(), (0x00, 0x00)),
+            (SupportedMedia(tp1=True), (0x00, 0x02)),
+            (SupportedMedia(pl110=True), (0x00, 0x04)),
+            (SupportedMedia(rf=True), (0x00, 0x10)),
+            (SupportedMedia(knx_ip=True), (0x00, 0x20)),
+            (SupportedMedia(tp1=True, rf=True, knx_ip=True), (0x00, 0x32)),
+            (SupportedMedia(tp1=True, pl110=True, rf=True, knx_ip=True), (0x00, 0x36)),
         ],
     )
-    def test_values(self, value: Media, raw: tuple[int, ...]) -> None:
+    def test_values(self, value: SupportedMedia, raw: tuple[int, ...]) -> None:
         """Test DPTMedia parsing and streaming."""
         assert DPTMedia.to_knx(value) == DPTArray(raw)
         assert DPTMedia.from_knx(DPTArray(raw)) == value
 
     def test_reserved_bits_ignored(self) -> None:
         """Test reserved bits 0, 3 and 6..15 are ignored on receive."""
-        assert DPTMedia.from_knx(DPTArray((0xFF, 0xC9))) == Media()
-        assert DPTMedia.from_knx(DPTArray((0xFF, 0xFF))) == Media(
+        assert DPTMedia.from_knx(DPTArray((0xFF, 0xC9))) == SupportedMedia()
+        assert DPTMedia.from_knx(DPTArray((0xFF, 0xFF))) == SupportedMedia(
             tp1=True, pl110=True, rf=True, knx_ip=True
         )
 
     def test_dict(self) -> None:
         """Test from_dict and as_dict methods."""
-        assert Media.from_dict({"tp1": True, "knx_ip": True}) == Media(
-            tp1=True, knx_ip=True
-        )
-        assert Media(rf=True).as_dict() == {
+        assert SupportedMedia.from_dict(
+            {"tp1": True, "knx_ip": True}
+        ) == SupportedMedia(tp1=True, knx_ip=True)
+        assert SupportedMedia(rf=True).as_dict() == {
             "tp1": False,
             "pl110": False,
             "rf": True,
@@ -322,7 +350,7 @@ class TestDPTMedia:
     def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
-            Media.from_dict(data)
+            SupportedMedia.from_dict(data)
         with pytest.raises(ConversionError):
             DPTMedia.to_knx(data)
 
@@ -345,7 +373,7 @@ class TestDPTMedia:
     def test_lookup(self) -> None:
         """Test lookup of DPTMedia."""
         assert DPTBase.parse_transcoder("22.1000") is DPTMedia
-        assert DPTBase.parse_transcoder("media") is DPTMedia
+        assert DPTBase.parse_transcoder("supported_media") is DPTMedia
 
 
 class TestDPTChannelActivation16:
@@ -426,3 +454,14 @@ class TestDPTChannelActivation16:
         assert DPTBase.parse_transcoder("channel_activation_16") is (
             DPTChannelActivation16
         )
+
+
+def test_room_heating_cooling_controller_status_unknown_key() -> None:
+    """Test unknown keys are rejected, heat_cool_mode is accepted."""
+    with pytest.raises(ValueError):
+        RoomHeatingCoolingControllerStatus.from_dict({"faul": True})
+    with pytest.raises(ValueError):
+        RoomHeatingCoolingControllerStatus.from_dict(None)  # type: ignore[arg-type]
+    assert RoomHeatingCoolingControllerStatus.from_dict(
+        {"fault": True, "heat_cool_mode": "cool"}
+    ) == RoomHeatingCoolingControllerStatus(fault=True, heat_cool_mode=HeatCool.COOL)

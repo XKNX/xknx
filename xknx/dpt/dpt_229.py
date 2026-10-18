@@ -111,9 +111,9 @@ class MeteringValue(DPTComplexData):
         bits: dict[str, bool] = {}
         for name in _STATUS_BITS:
             bit = data.get(name, False)
-            if not isinstance(bit, bool):
+            if bit not in (True, False):
                 raise ValueError(f"Invalid value for {name}: {bit!r}")
-            bits[name] = bit
+            bits[name] = bool(bit)
         return cls(
             counter_value=counter_value,
             unit=unit,

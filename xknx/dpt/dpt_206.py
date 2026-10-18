@@ -1,4 +1,8 @@
-"""Implementation of KNX DPT 206 mode and time delay data point types."""
+"""
+Implementation of KNX DPT 206 mode and time delay data point types.
+
+KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12
+"""
 
 from __future__ import annotations
 
@@ -9,39 +13,19 @@ from typing import Any, Final, TypeVar
 from ..exceptions import ConversionError
 from .dpt import DPTComplex, DPTComplexData, DPTComplexFieldSchema, DPTEnumData
 from .dpt_7 import DPTTimePeriodMin
-from .dpt_20 import HVACOperationMode
+from .dpt_20 import BuildingMode, DHWMode, HVACOperationMode, OccupancyMode
 from .payload import DPTArray, DPTBinary
 
 RANGE_DELAY_TIME: Final[dict[str, int]] = {"value_min": 1, "value_max": 65_535}
 
-
-class DHWMode(DPTEnumData):
-    """Enum for the KNX domestic hot water modes (DPT 20.103)."""
-
-    AUTO = 0
-    LEGIO_PROTECT = 1
-    NORMAL = 2
-    REDUCED = 3
-    OFF_FROST_PROTECT = 4
-
-
-class OccupancyMode(DPTEnumData):
-    """Enum for the KNX occupancy modes (DPT 20.003)."""
-
-    OCCUPIED = 0
-    STANDBY = 1
-    NOT_OCCUPIED = 2
-
-
-class BuildingMode(DPTEnumData):
-    """Enum for the KNX building modes (DPT 20.002)."""
-
-    BUILDING_IN_USE = 0
-    BUILDING_NOT_USED = 1
-    BUILDING_PROTECTION = 2
-
-
 _EnumT = TypeVar("_EnumT", bound=DPTEnumData)
+
+
+def _check_mapping(data: Any, name: str) -> Mapping[str, Any]:
+    """Raise ValueError if `data` is not a mapping."""
+    if not isinstance(data, Mapping):
+        raise ValueError(f"Invalid value for {name}: {data!r}")
+    return data
 
 
 def _delay_time_from_dict(data: Mapping[str, Any]) -> int | None:
@@ -89,16 +73,16 @@ def _to_raw(delay_time: int | None, mode: int) -> DPTArray:
     if delay_time is None:
         return DPTArray((0x00, 0x00, mode))
     if not 1 <= delay_time <= 65_535:
-        raise ValueError(f"Delay time out of range 1..65535: {delay_time}")
+        raise ConversionError(f"Delay time out of range 1..65535: {delay_time}")
     return DPTArray((*DPTTimePeriodMin.to_knx(delay_time).value, mode))
 
 
 @dataclass(slots=True)
 class HVACModeNext(DPTComplexData):
     """
-    Representation of an HVAC mode and its time delay.
+    Value of DPT 206.100 DPT_HVACModeNext: an HVAC mode and its time delay.
 
-    `mode`: HVACOperationMode (AUTO is not supported); None if undefined
+    `mode`: HVACOperationMode (DPT 20.102; AUTO is not supported); None if undefined
     `delay_time`: int 1..65535 minutes; None if undefined
     """
 
@@ -108,6 +92,7 @@ class HVACModeNext(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> HVACModeNext:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             mode=_mode_from_dict(data, HVACOperationMode),
             delay_time=_delay_time_from_dict(data),
@@ -130,7 +115,11 @@ class HVACModeNext(DPTComplexData):
 
 
 class DPTHVACModeNext(DPTComplex[HVACModeNext]):
-    """Abstraction for KNX 3 octet HVAC mode and time delay (DPT 206.100)."""
+    """
+    Abstraction for KNX 3 octet HVAC Mode & Time delay (DPT 206.100 DPT_HVACModeNext).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.1
+    """
 
     data_type = HVACModeNext
     payload_type = DPTArray
@@ -159,16 +148,16 @@ class DPTHVACModeNext(DPTComplex[HVACModeNext]):
             return _to_raw(value.delay_time, 0)
         mode = HVACOperationMode(value.mode)
         if mode is HVACOperationMode.AUTO:
-            raise ValueError("HVAC mode AUTO is not supported")
+            raise ConversionError("HVAC mode AUTO is not supported")
         return _to_raw(value.delay_time, mode.value)
 
 
 @dataclass(slots=True)
 class DHWModeNext(DPTComplexData):
     """
-    Representation of a domestic hot water mode and its time delay.
+    Value of DPT 206.102 DPT_DHWModeNext: a domestic hot water mode and its time delay.
 
-    `mode`: DHWMode (AUTO is not supported); None if undefined
+    `mode`: DHWMode (DPT 20.103; AUTO is not supported); None if undefined
     `delay_time`: int 1..65535 minutes; None if undefined
     """
 
@@ -178,6 +167,7 @@ class DHWModeNext(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> DHWModeNext:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             mode=_mode_from_dict(data, DHWMode),
             delay_time=_delay_time_from_dict(data),
@@ -200,7 +190,11 @@ class DHWModeNext(DPTComplexData):
 
 
 class DPTDHWModeNext(DPTComplex[DHWModeNext]):
-    """Abstraction for KNX 3 octet DHW mode and time delay (DPT 206.102)."""
+    """
+    Abstraction for KNX 3 octet DHW Mode & Time delay (DPT 206.102 DPT_DHWModeNext).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.2
+    """
 
     data_type = DHWModeNext
     payload_type = DPTArray
@@ -229,16 +223,16 @@ class DPTDHWModeNext(DPTComplex[DHWModeNext]):
             return _to_raw(value.delay_time, 0)
         mode = DHWMode(value.mode)
         if mode is DHWMode.AUTO:
-            raise ValueError("DHW mode AUTO is not supported")
+            raise ConversionError("DHW mode AUTO is not supported")
         return _to_raw(value.delay_time, mode.value)
 
 
 @dataclass(slots=True)
 class OccupancyModeNext(DPTComplexData):
     """
-    Representation of an occupancy mode and its time delay.
+    Value of DPT 206.104 DPT_OccModeNext: an occupancy mode and its time delay.
 
-    `mode`: OccupancyMode
+    `mode`: OccupancyMode (DPT 20.003)
     `delay_time`: int 1..65535 minutes; None if the next mode is not available
     """
 
@@ -248,6 +242,7 @@ class OccupancyModeNext(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> OccupancyModeNext:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         mode = _mode_from_dict(data, OccupancyMode)
         if mode is None:
             raise ValueError("Missing required key: 'mode'")
@@ -262,7 +257,11 @@ class OccupancyModeNext(DPTComplexData):
 
 
 class DPTOccModeNext(DPTComplex[OccupancyModeNext]):
-    """Abstraction for KNX 3 octet occupancy mode and time delay (DPT 206.104)."""
+    """
+    Abstraction for KNX 3 octet Occupancy Mode & Time delay (DPT 206.104 DPT_OccModeNext).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.3
+    """
 
     data_type = OccupancyModeNext
     payload_type = DPTArray
@@ -294,9 +293,9 @@ class DPTOccModeNext(DPTComplex[OccupancyModeNext]):
 @dataclass(slots=True)
 class BuildingModeNext(DPTComplexData):
     """
-    Representation of a building mode and its time delay.
+    Value of DPT 206.105 DPT_BuildingModeNext: a building mode and its time delay.
 
-    `mode`: BuildingMode
+    `mode`: BuildingMode (DPT 20.002)
     `delay_time`: int 1..65535 minutes; None if the next mode is not available
     """
 
@@ -306,6 +305,7 @@ class BuildingModeNext(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> BuildingModeNext:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         mode = _mode_from_dict(data, BuildingMode)
         if mode is None:
             raise ValueError("Missing required key: 'mode'")
@@ -320,7 +320,13 @@ class BuildingModeNext(DPTComplexData):
 
 
 class DPTBuildingModeNext(DPTComplex[BuildingModeNext]):
-    """Abstraction for KNX 3 octet building mode and time delay (DPT 206.105)."""
+    """
+    Abstraction for KNX 3 octet Building Mode & Time delay (DPT 206.105 DPT_BuildingModeNext).
+
+    The format line of the spec says "N8U16", its octet diagram and field table
+    U16N8 (delay time first), which is implemented.
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.4
+    """
 
     data_type = BuildingModeNext
     payload_type = DPTArray

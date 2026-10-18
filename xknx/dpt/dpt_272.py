@@ -106,9 +106,13 @@ class DPTConverterInfo(DPTComplex[ConverterInfo]):
         if emergency_level is None:
             emergency_level = 0xFF
         elif not 0 <= emergency_level <= 254:
-            raise ValueError(f"Emergency level out of range 0..254: {emergency_level}")
+            raise ConversionError(
+                f"Emergency level out of range 0..254: {emergency_level}"
+            )
         if not 0 <= value.short_address <= 63:
-            raise ValueError(f"Short address out of range 0..63: {value.short_address}")
+            raise ConversionError(
+                f"Short address out of range 0..63: {value.short_address}"
+            )
         return DPTArray(
             (
                 ConverterInfoValid(value.info_valid).value,

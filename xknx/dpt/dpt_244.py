@@ -84,8 +84,9 @@ class ConverterStatus(DPTComplexData):
             failure = ConverterFailure.parse(data["failure"])
         except (KeyError, TypeError) as err:
             raise ValueError(f"Invalid value for ConverterStatus: {err}") from err
-        if not isinstance(hardwired_inhibit_active, bool) or not isinstance(
-            hardwired_switch_on, bool
+        if hardwired_inhibit_active not in (True, False) or hardwired_switch_on not in (
+            True,
+            False,
         ):
             raise ValueError(
                 "Invalid value for ConverterStatus boolean fields: "
@@ -93,8 +94,8 @@ class ConverterStatus(DPTComplexData):
             )
         return cls(
             mode=mode,
-            hardwired_inhibit_active=hardwired_inhibit_active,
-            hardwired_switch_on=hardwired_switch_on,
+            hardwired_inhibit_active=bool(hardwired_inhibit_active),
+            hardwired_switch_on=bool(hardwired_switch_on),
             function_test_pending=function_test_pending,
             duration_test_pending=duration_test_pending,
             partial_duration_test_pending=partial_duration_test_pending,

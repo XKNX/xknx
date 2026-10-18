@@ -1,25 +1,35 @@
-"""Implementation of KNX DPT 207 8-bit value and 8-bit set data point types."""
+"""
+Implementation of KNX DPT 207 8-bit value and 8-bit set data point types.
+
+KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13 and §6.5.1
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Final
+from typing import Any
 
 from ..exceptions import ConversionError
 from .dpt import DPTComplex, DPTComplexData
-from .dpt_5 import DPTScaling
+from .dpt_5 import DPTPercentU8, DPTScaling
+from .helpers.metadata import RANGE_PERCENT
 from .payload import DPTArray, DPTBinary
 
-RANGE_PERCENT: Final[dict[str, int]] = {"value_min": 0, "value_max": 100}
+
+def _check_mapping(data: Any, name: str) -> Mapping[str, Any]:
+    """Raise ValueError if `data` is not a mapping."""
+    if not isinstance(data, Mapping):
+        raise ValueError(f"Invalid value for {name}: {data!r}")
+    return data
 
 
 def _bool_from_dict(data: Mapping[str, Any], key: str) -> bool:
     """Parse an optional boolean of a dictionary, defaulting to False."""
     value = data.get(key, False)
-    if not isinstance(value, bool):
+    if value not in (True, False):
         raise ValueError(f"Invalid value for {key}: {value!r}")
-    return value
+    return bool(value)
 
 
 def _percent_from_dict(data: Mapping[str, Any], key: str) -> int | None:
@@ -49,12 +59,17 @@ def _percent_from_knx(dpt: type[DPTComplex[Any]], raw: int) -> int:
 
 
 def _percent_to_knx(value: int | None) -> int:
-    """Return the raw value of a percent value with 1 % resolution; None as 0."""
+    """
+    Return the raw value of a percent value with 1 % resolution; None as 0.
+
+    Encoded like DPT 5.004 (U8, 1 % resolution), limited to 0..100 %.
+    """
     if value is None:
         return 0
-    if not 0 <= value <= 100:
-        raise ValueError(f"Percent value out of range 0..100: {value}")
-    return value
+    raw = DPTPercentU8.to_knx(value).value[0]
+    if raw > 100:
+        raise ConversionError(f"Percent value out of range 0..100: {value}")
+    return raw
 
 
 def _bit(raw: int, bit: int) -> bool:
@@ -64,13 +79,13 @@ def _bit(raw: int, bit: int) -> bool:
 
 def _bits(*bits: bool) -> int:
     """Return the attributes octet of bits starting with bit 0."""
-    return sum(int(bit) << index for index, bit in enumerate(bits))
+    return sum(bool(bit) << index for index, bit in enumerate(bits))
 
 
 @dataclass(slots=True)
 class BurnerControllerStatus(DPTComplexData):
     """
-    Representation of a burner controller status.
+    Value of DPT 207.100 DPT_StatusBUC: a burner controller status.
 
     `relative_power`: int 0..100 %; None if invalid
     `fault`: burner failure
@@ -86,6 +101,7 @@ class BurnerControllerStatus(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> BurnerControllerStatus:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             relative_power=_percent_from_dict(data, "relative_power"),
             fault=_bool_from_dict(data, "fault"),
@@ -104,7 +120,11 @@ class BurnerControllerStatus(DPTComplexData):
 
 
 class DPTStatusBUC(DPTComplex[BurnerControllerStatus]):
-    """Abstraction for KNX 2 octet burner controller status (DPT 207.100)."""
+    """
+    Abstraction for KNX 2 octet Status Burner Controller (DPT 207.100 DPT_StatusBUC).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13.1
+    """
 
     data_type = BurnerControllerStatus
     payload_type = DPTArray
@@ -143,10 +163,11 @@ class DPTStatusBUC(DPTComplex[BurnerControllerStatus]):
 @dataclass(slots=True)
 class LockingSignal(DPTComplexData):
     """
-    Representation of a locking signal.
+    Value of DPT 207.101 DPT_LockSign: a locking signal.
 
     `power_reduction`: int 0..100 % requested power reduction;
-        None if no power reduction is requested
+        None if no power reduction is requested (the LockRequest bit is the
+        validity of this field)
     `critical`: overload is critical
     """
 
@@ -156,6 +177,7 @@ class LockingSignal(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> LockingSignal:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             power_reduction=_percent_from_dict(data, "power_reduction"),
             critical=_bool_from_dict(data, "critical"),
@@ -170,7 +192,11 @@ class LockingSignal(DPTComplexData):
 
 
 class DPTLockSign(DPTComplex[LockingSignal]):
-    """Abstraction for KNX 2 octet locking signal (DPT 207.101)."""
+    """
+    Abstraction for KNX 2 octet Locking Signal (DPT 207.101 DPT_LockSign).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13.2
+    """
 
     data_type = LockingSignal
     payload_type = DPTArray
@@ -202,7 +228,7 @@ class DPTLockSign(DPTComplex[LockingSignal]):
 @dataclass(slots=True)
 class BoilerControllerDemand(DPTComplexData):
     """
-    Representation of a boiler controller demand signal.
+    Value of DPT 207.102 DPT_ValueDemBOC: a boiler controller demand signal.
 
     `relative_demand`: int 0..100 % for a modulating burner
     `stage_1_control`: operation of stage 1 or base stage on
@@ -216,6 +242,7 @@ class BoilerControllerDemand(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> BoilerControllerDemand:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             relative_demand=_required_percent_from_dict(data, "relative_demand"),
             stage_1_control=_bool_from_dict(data, "stage_1_control"),
@@ -232,7 +259,11 @@ class BoilerControllerDemand(DPTComplexData):
 
 
 class DPTValueDemBOC(DPTComplex[BoilerControllerDemand]):
-    """Abstraction for KNX 2 octet boiler controller demand signal (DPT 207.102)."""
+    """
+    Abstraction for KNX 2 octet Boiler Controller Demand Signal (DPT 207.102 DPT_ValueDemBOC).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13.3
+    """
 
     data_type = BoilerControllerDemand
     payload_type = DPTArray
@@ -265,7 +296,7 @@ class DPTValueDemBOC(DPTComplex[BoilerControllerDemand]):
 @dataclass(slots=True)
 class ActuatorPositionDemand(DPTComplexData):
     """
-    Representation of an actuator position demand.
+    Value of DPT 207.104 DPT_ActPosDemAbs: an actuator position demand.
 
     `position`: int 0..100 % absolute actuator position demand; None if invalid (no demand)
     `absolute_load_priority`: absolute load priority
@@ -281,6 +312,7 @@ class ActuatorPositionDemand(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ActuatorPositionDemand:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             position=_percent_from_dict(data, "position"),
             absolute_load_priority=_bool_from_dict(data, "absolute_load_priority"),
@@ -299,7 +331,11 @@ class ActuatorPositionDemand(DPTComplexData):
 
 
 class DPTActPosDemAbs(DPTComplex[ActuatorPositionDemand]):
-    """Abstraction for KNX 2 octet actuator position demand (DPT 207.104)."""
+    """
+    Abstraction for KNX 2 octet Actuator Position Demand (DPT 207.104 DPT_ActPosDemAbs).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13.4
+    """
 
     data_type = ActuatorPositionDemand
     payload_type = DPTArray
@@ -338,7 +374,7 @@ class DPTActPosDemAbs(DPTComplex[ActuatorPositionDemand]):
 @dataclass(slots=True)
 class ActuatorPositionStatus(DPTComplexData):
     """
-    Representation of an actuator position status.
+    Value of DPT 207.105 DPT_StatusAct: an actuator position status.
 
     `position`: int 0..100 % actual actuator position
     `failure`: actuator has a failure
@@ -358,6 +394,7 @@ class ActuatorPositionStatus(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ActuatorPositionStatus:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             position=_required_percent_from_dict(data, "position"),
             failure=_bool_from_dict(data, "failure"),
@@ -380,7 +417,11 @@ class ActuatorPositionStatus(DPTComplexData):
 
 
 class DPTStatusAct(DPTComplex[ActuatorPositionStatus]):
-    """Abstraction for KNX 2 octet actuator position status (DPT 207.105)."""
+    """
+    Abstraction for KNX 2 octet Actuator Position Status (DPT 207.105 DPT_StatusAct).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13.5
+    """
 
     data_type = ActuatorPositionStatus
     payload_type = DPTArray
@@ -422,7 +463,7 @@ class DPTStatusAct(DPTComplex[ActuatorPositionStatus]):
 @dataclass(slots=True)
 class LightingActuatorStatus(DPTComplexData):
     """
-    Representation of a lighting actuator status.
+    Value of DPT 207.600 DPT_StatusLightingActuator: a lighting actuator status.
 
     `lighting_level`: int 0..100 % current lighting level; None if invalid
     `locked`: actuator is locked
@@ -446,6 +487,7 @@ class LightingActuatorStatus(DPTComplexData):
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> LightingActuatorStatus:
         """Init from a dictionary."""
+        data = _check_mapping(data, cls.__name__)
         return cls(
             lighting_level=_percent_from_dict(data, "lighting_level"),
             locked=_bool_from_dict(data, "locked"),
@@ -474,7 +516,11 @@ class LightingActuatorStatus(DPTComplexData):
 
 
 class DPTStatusLightingActuator(DPTComplex[LightingActuatorStatus]):
-    """Abstraction for KNX 2 octet lighting actuator status (DPT 207.600)."""
+    """
+    Abstraction for KNX 2 octet Status Lighting Actuator (DPT 207.600 DPT_StatusLightingActuator).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §6.5.1
+    """
 
     data_type = LightingActuatorStatus
     payload_type = DPTArray

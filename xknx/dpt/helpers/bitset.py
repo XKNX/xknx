@@ -10,9 +10,9 @@ from ..dpt import DPTComplexData
 
 def _to_bit(name: str, value: Any) -> bool:
     """Validate a bit value; accepts bool and the ints 0 and 1."""
-    if isinstance(value, int) and value in (0, 1):
-        return bool(value)
-    raise ValueError(f"Invalid value for `{name}`: {value!r}")
+    if value not in (True, False):
+        raise ValueError(f"Invalid value for `{name}`: {value!r}")
+    return bool(value)
 
 
 def bits_from_dict(data: Mapping[str, Any], bits: Mapping[str, int]) -> dict[str, bool]:
@@ -20,10 +20,17 @@ def bits_from_dict(data: Mapping[str, Any], bits: Mapping[str, int]) -> dict[str
     Read the fields named in `bits` from a dictionary.
 
     Only keys present in `data` are returned, so missing fields take their
-    dataclass default. Unknown keys are ignored.
+    dataclass default. Every field is optional, so an unknown key (e.g. a
+    misspelled one) raises ValueError instead of being silently ignored.
     """
     if not isinstance(data, Mapping):
         raise ValueError(f"Invalid data for bit set: {data!r}")
+    unknown = data.keys() - bits.keys()
+    if unknown:
+        raise ValueError(
+            f"Unknown keys for bit set: {sorted(map(str, unknown))}; "
+            f"valid keys: {list(bits)}"
+        )
     return {name: _to_bit(name, data[name]) for name in bits if name in data}
 
 

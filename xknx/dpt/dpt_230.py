@@ -4,42 +4,42 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 from ..exceptions import ConversionError
-from .dpt import DPTComplex, DPTComplexData, DPTEnumData
-from .helpers.metadata import RANGE_UINT8, RANGE_UINT16
+from .dpt import DPTComplex, DPTComplexData
+from .dpt_20 import MeteringDeviceType
+from .helpers.metadata import RANGE_UINT8, RANGE_UINT16, RANGE_UINT32
 from .payload import DPTArray, DPTBinary
 
-_RANGE_UINT32 = {"value_min": 0, "value_max": 4_294_967_295}
+
+def _medium(code: int) -> MeteringDeviceType | int:
+    """Return the medium of a code; a code the KNX table does not list as int."""
+    try:
+        return MeteringDeviceType(code)
+    except ValueError:
+        return code
 
 
-class MBusMedium(DPTEnumData):
-    """
-    Measured medium (device type) of an M-Bus meter.
+def _medium_from_dict(medium: Any) -> MeteringDeviceType | int:
+    """Parse a medium given by name or by its code 0..255."""
+    if isinstance(medium, bool):
+        raise ValueError(f"Invalid medium: {medium!r}")
+    if isinstance(medium, int):
+        if not 0 <= medium <= 255:
+            raise ValueError(f"Medium code out of range 0..255: {medium}")
+        return _medium(medium)
+    return MeteringDeviceType.parse(medium)
 
-    Encoding according to EN 13757-3, limited to the media supported by KNX:
-    KNX v01.03.08 - RF Metering protocol 10.03 - §3.1.5.3 Table 1. Named like
-    DPT_Metering_DeviceType (20.114), which uses the same codes.
-    """
 
-    OTHER = 0x00
-    OIL_METER = 0x01
-    ELECTRICITY_METER = 0x02
-    GAS_METER = 0x03
-    HEAT_METER = 0x04
-    STEAM_METER = 0x05
-    WARM_WATER_METER = 0x06
-    WATER_METER = 0x07
-    HEAT_COST_ALLOCATOR = 0x08
-    COOLING_LOAD_METER_OUTLET = 0x0A
-    COOLING_LOAD_METER_INLET = 0x0B
-    HEAT_INLET = 0x0C
-    HEAT_AND_COOL = 0x0D
-    BREAKER = 0x20
-    VALVE = 0x21
-    WASTE_WATER_METER = 0x28
-    GARBAGE = 0x29
+@dataclass(slots=True)
+class _MBusAddressSchemaFields:
+    """The fields of MBusAddress for its dict schema: `medium` as enum."""
+
+    manufacturer_id: int = field(metadata=RANGE_UINT16)
+    identification_number: int = field(metadata=RANGE_UINT32)
+    version: int = field(metadata=RANGE_UINT8)
+    medium: MeteringDeviceType
 
 
 @dataclass(slots=True)
@@ -50,13 +50,23 @@ class MBusAddress(DPTComplexData):
     `manufacturer_id`: int 0..65535 M-Bus manufacturer code
     `identification_number`: int 0..4294967295, manufacturer specific encoding
     `version`: int 0..255 device version, manufacturer specific
-    `medium`: MBusMedium
+    `medium`: MeteringDeviceType (DPT 20.114), or the int code 0..255 of a
+        medium the KNX table does not list
+
+    The media are those of KNX v01.03.08 - RF Metering protocol 10.03 -
+    §3.1.5.3 Table 1, which has cooling load meter inlet as 0Ah and outlet as
+    0Bh. DPT 20.114 and the M-Bus device types of EN 13757-3 have them the other
+    way around (0Ah outlet, 0Bh inlet), which is followed. Real meters also send
+    EN 13757-3 codes the KNX table does not list; these are kept as int rather
+    than rejected.
     """
 
     manufacturer_id: int = field(metadata=RANGE_UINT16)
-    identification_number: int = field(metadata=_RANGE_UINT32)
+    identification_number: int = field(metadata=RANGE_UINT32)
     version: int = field(metadata=RANGE_UINT8)
-    medium: MBusMedium
+    medium: MeteringDeviceType | int
+
+    _dict_schema_fields_class: ClassVar[type | None] = _MBusAddressSchemaFields
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> MBusAddress:
@@ -66,7 +76,7 @@ class MBusAddress(DPTComplexData):
                 manufacturer_id=int(data["manufacturer_id"]),
                 identification_number=int(data["identification_number"]),
                 version=int(data["version"]),
-                medium=MBusMedium.parse(data["medium"]),
+                medium=_medium_from_dict(data["medium"]),
             )
         except KeyError as err:
             raise ValueError(f"Missing required key: {err}") from err
@@ -79,7 +89,11 @@ class MBusAddress(DPTComplexData):
             "manufacturer_id": self.manufacturer_id,
             "identification_number": self.identification_number,
             "version": self.version,
-            "medium": self.medium.name.lower(),
+            "medium": (
+                self.medium.name.lower()
+                if isinstance(self.medium, MeteringDeviceType)
+                else self.medium
+            ),
         }
 
 
@@ -101,23 +115,26 @@ class DPTMBusAddress(DPTComplex[MBusAddress]):
     def from_knx(cls, payload: DPTArray | DPTBinary) -> MBusAddress:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        try:
-            medium = MBusMedium(raw[7])
-        except ValueError:
-            raise ConversionError(
-                f"Payload not supported for {cls.dpt_name()}", raw=raw
-            ) from None
         return MBusAddress(
             manufacturer_id=int.from_bytes(raw[0:2], "big"),
             identification_number=int.from_bytes(raw[2:6], "big"),
             version=raw[6],
-            medium=medium,
+            medium=_medium(raw[7]),
         )
 
     @classmethod
     def _to_knx(cls, value: MBusAddress) -> DPTArray:
         """Serialize to KNX/IP raw data."""
-        if not isinstance(value.medium, MBusMedium):
+        medium = (
+            value.medium.value
+            if isinstance(value.medium, MeteringDeviceType)
+            else value.medium
+        )
+        if (
+            not isinstance(medium, int)
+            or isinstance(medium, bool)
+            or not 0 <= medium <= 255
+        ):
             raise ConversionError(f"Invalid medium for {cls.dpt_name()}", value=value)
         try:
             return DPTArray(
@@ -125,7 +142,7 @@ class DPTMBusAddress(DPTComplex[MBusAddress]):
                     *value.manufacturer_id.to_bytes(2, "big"),
                     *value.identification_number.to_bytes(4, "big"),
                     *value.version.to_bytes(1, "big"),
-                    value.medium.value,
+                    medium,
                 )
             )
         except OverflowError as err:

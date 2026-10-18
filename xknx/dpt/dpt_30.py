@@ -14,12 +14,12 @@ from .payload import DPTArray, DPTBinary
 @dataclass(slots=True)
 class ChannelActivation24(_BitsetData):
     """
-    Representation of the activation state of 24 channels.
+    Value of DPT 30.1010 DPT_Channel_Activation_24.
 
     `channel_<n>`: True if the visual effect of channel n is active.
-    Channel n is bit n-1.
-
-    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.5.1
+    Bit n is channel n+1, as the spec says. The master data (DPST-30-1010) lists
+    channel 1 as the most significant bit instead, i.e. the opposite order; the
+    spec is followed.
     """
 
     channel_1: bool = False
@@ -53,7 +53,11 @@ class ChannelActivation24(_BitsetData):
 
 
 class DPTChannelActivation24(DPTComplex[ChannelActivation24]):
-    """Abstraction for KNX 3 octet channel activation for 24 channels (DPT 30.1010)."""
+    """
+    Abstraction for KNX 3 octet Channel Activation for 24 channels (DPT 30.1010).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.5.1
+    """
 
     data_type = ChannelActivation24
     payload_type = DPTArray

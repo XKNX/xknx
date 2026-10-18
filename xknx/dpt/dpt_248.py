@@ -42,7 +42,9 @@ class ConverterInfoFix(DPTComplexData):
         None if unknown
     `emergency_max_level`: maximum brightness level in emergency mode 0..254;
         None if unknown
-    `rated_duration`: rated duration of the emergency light in minutes 0..255
+    `rated_duration`: rated duration of the emergency light ("backup time")
+        0..255; the spec states no unit, only "According to DALI Cmd. 249,
+        mapped on DPT 7.006", so the raw value is kept
     `integral_emergency_control_gear` .. `relight_in_rest_mode_supported`:
         gear features
     """
@@ -76,11 +78,20 @@ class ConverterInfoFix(DPTComplexData):
         except (KeyError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for ConverterInfoFix: {err}") from err
         for name, feature in zip(_GEAR_FEATURES, features, strict=True):
-            if not isinstance(feature, bool):
+            if feature not in (True, False):
                 raise ValueError(
                     f"Invalid value for ConverterInfoFix value `{name}`: {feature}"
                 )
-        return cls(info_valid, min_level, max_level, rated_duration, *features)
+        return cls(
+            info_valid=info_valid,
+            emergency_min_level=min_level,
+            emergency_max_level=max_level,
+            rated_duration=rated_duration,
+            **{
+                name: bool(feature)
+                for name, feature in zip(_GEAR_FEATURES, features, strict=True)
+            },
+        )
 
     def as_dict(self) -> dict[str, str | int | bool | None]:
         """Create a JSON serializable dictionary."""
@@ -98,7 +109,7 @@ def _encode_level(level: int | None) -> int:
     if level is None:
         return 0xFF
     if not 0 <= level <= 254:
-        raise ValueError(f"Level out of range 0..254: {level}")
+        raise ConversionError(f"Level out of range 0..254: {level}")
     return level
 
 
@@ -127,18 +138,21 @@ class DPTConverterInfoFix(DPTComplex[ConverterInfoFix]):
                 f"Could not parse {cls.dpt_name()}: {err}", raw=raw
             ) from err
         return ConverterInfoFix(
-            info_valid,
-            raw[1] if raw[1] != 0xFF else None,
-            raw[2] if raw[2] != 0xFF else None,
-            raw[3],
-            *(bool(raw[4] >> bit & 0b1) for bit in range(len(_GEAR_FEATURES))),
+            info_valid=info_valid,
+            emergency_min_level=raw[1] if raw[1] != 0xFF else None,
+            emergency_max_level=raw[2] if raw[2] != 0xFF else None,
+            rated_duration=raw[3],
+            **{
+                name: bool(raw[4] >> bit & 0b1)
+                for bit, name in enumerate(_GEAR_FEATURES)
+            },
         )
 
     @classmethod
     def _to_knx(cls, value: ConverterInfoFix) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         if not 0 <= value.rated_duration <= 255:
-            raise ValueError(
+            raise ConversionError(
                 f"Rated duration out of range 0..255: {value.rated_duration}"
             )
         features = 0

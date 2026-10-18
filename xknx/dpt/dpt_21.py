@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import ClassVar
 
+from ..exceptions import ConversionError
 from .dpt import DPTComplex
 from .helpers.bitset import _BitsetData
 from .payload import DPTArray, DPTBinary
@@ -446,7 +447,9 @@ class RFModeInfo(_BitsetData):
     """
     Value of DPT 21.1000 DPT_RF_ModeInfo.
 
-    `asynchronous` shall always be set (0 is not allowed), hence it defaults to True.
+    `asynchronous` shall always be set ("0 = value not allowed"), hence it
+    defaults to True and `False` is rejected on send. A received 0 is kept as
+    `False` rather than rejected.
     """
 
     asynchronous: bool = True
@@ -482,6 +485,11 @@ class DPTRFModeInfo(DPTComplex[RFModeInfo]):
     @classmethod
     def _to_knx(cls, value: RFModeInfo) -> DPTArray:
         """Serialize to KNX/IP raw data."""
+        if not value.asynchronous:
+            raise ConversionError(
+                f"`asynchronous` = False is not allowed for {cls.dpt_name()}",
+                value=value,
+            )
         return DPTArray(value.to_raw())
 
 
@@ -563,7 +571,13 @@ class DPTSecurityReport(DPTComplex[SecurityReport]):
 
 @dataclass(slots=True)
 class ChannelActivation8(_BitsetData):
-    """Value of DPT 21.1010 DPT_Channel_Activation_8. Bit n is channel n+1."""
+    """
+    Value of DPT 21.1010 DPT_Channel_Activation_8.
+
+    Bit n is channel n+1, as the spec says ("bn (n = 0 to 7): Activation state
+    of channel n+1"). The master data (DPST-21-1010) lists channel 1 as the most
+    significant bit instead, i.e. the opposite order; the spec is followed.
+    """
 
     channel_1: bool = False
     channel_2: bool = False
@@ -604,7 +618,12 @@ class DPTChannelActivation8(DPTComplex[ChannelActivation8]):
 
 @dataclass(slots=True)
 class VirtualDryContact(_BitsetData):
-    """Value of DPT 21.1200 DPT_VirtualDryContact. True = contact closed."""
+    """
+    Value of DPT 21.1200 DPT_VirtualDryContact. True = contact closed.
+
+    The spec names the bits "bx: Status of Virtual Dry Contact X" with x = 0..7;
+    the fields count the contacts from 1 instead (`contact_1` is b0).
+    """
 
     contact_1: bool = False
     contact_2: bool = False
@@ -645,7 +664,12 @@ class DPTVirtualDryContact(DPTComplex[VirtualDryContact]):
 
 @dataclass(slots=True)
 class PhasesStatus(_BitsetData):
-    """Value of DPT 21.1201 DPT_Phases_Status. True = phase present."""
+    """
+    Value of DPT 21.1201 DPT_Phases_Status. True = phase present.
+
+    The spec names the bits "bx: Status of Phase X" with x = 0..2; the fields
+    count the phases from 1 instead, like L1, L2 and L3 (`phase_1` is b0).
+    """
 
     phase_1: bool = False
     phase_2: bool = False

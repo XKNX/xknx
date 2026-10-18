@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..exceptions import ConversionError
 from .dpt import DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
@@ -40,9 +41,9 @@ class BatteryInfo(DPTComplexData):
         except (KeyError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for BatteryInfo: {err}") from err
         if (
-            not isinstance(battery_failure, bool)
-            or not isinstance(battery_duration_failure, bool)
-            or not isinstance(battery_fully_charged, bool)
+            battery_failure not in (True, False)
+            or battery_duration_failure not in (True, False)
+            or battery_fully_charged not in (True, False)
         ):
             raise ValueError(
                 "Invalid value for BatteryInfo boolean fields: "
@@ -50,9 +51,9 @@ class BatteryInfo(DPTComplexData):
                 f"{battery_fully_charged=}"
             )
         return cls(
-            battery_failure=battery_failure,
-            battery_duration_failure=battery_duration_failure,
-            battery_fully_charged=battery_fully_charged,
+            battery_failure=bool(battery_failure),
+            battery_duration_failure=bool(battery_duration_failure),
+            battery_fully_charged=bool(battery_fully_charged),
             charge_level=charge_level,
         )
 
@@ -98,7 +99,7 @@ class DPTBatteryInfo(DPTComplex[BatteryInfo]):
         if charge_level is None:
             charge_level = 0xFF
         elif not 0 <= charge_level <= 254:
-            raise ValueError(f"Charge level out of range 0..254: {charge_level}")
+            raise ConversionError(f"Charge level out of range 0..254: {charge_level}")
         return DPTArray(
             (
                 bool(value.battery_fully_charged) << 2

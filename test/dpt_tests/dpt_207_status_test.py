@@ -212,7 +212,7 @@ def test_from_knx_wrong_payload(
         (DPTStatusBUC, BurnerControllerStatus(101)),
         (DPTStatusBUC, BurnerControllerStatus(-1)),
         (DPTStatusBUC, {"relative_power": "a"}),
-        (DPTStatusBUC, {"fault": 1}),
+        (DPTStatusBUC, {"fault": 2}),
         (DPTLockSign, LockingSignal(101)),
         (DPTLockSign, {"critical": "yes"}),
         (DPTValueDemBOC, BoilerControllerDemand(101)),
@@ -282,7 +282,7 @@ def test_from_dict(
         (LockingSignal, {"power_reduction": [5]}),
         (BoilerControllerDemand, {}),
         (BoilerControllerDemand, {"relative_demand": None}),
-        (ActuatorPositionDemand, {"emergency_demand": 0}),
+        (ActuatorPositionDemand, {"emergency_demand": 2}),
         (ActuatorPositionStatus, {"failure": False}),
         (LightingActuatorStatus, {"locked": None}),
     ],
@@ -430,3 +430,32 @@ def test_lookup(dpt_class: type[DPTBase], dpt_number: str, value_type: str) -> N
     """Test lookup by DPT number and value_type."""
     assert DPTBase.parse_transcoder(dpt_number) is dpt_class
     assert DPTBase.parse_transcoder(value_type) is dpt_class
+
+
+def test_to_knx_coerces_percent_and_flags() -> None:
+    """Test a float percent is rounded like DPT 5.004 and flags are sent as bits."""
+    assert DPTStatusAct.to_knx(ActuatorPositionStatus(50.4)) == DPTArray((50, 0))  # type: ignore[arg-type]
+    assert DPTStatusAct.to_knx(
+        ActuatorPositionStatus(0, failure=2)  # type: ignore[arg-type]
+    ) == DPTArray((0, 0x01))
+    with pytest.raises(ConversionError):
+        DPTStatusAct.to_knx(ActuatorPositionStatus(101))
+    with pytest.raises(ConversionError):
+        DPTStatusBUC.to_knx(BurnerControllerStatus(relative_power=-1))
+
+
+@pytest.mark.parametrize(
+    "data_class",
+    [
+        BurnerControllerStatus,
+        LockingSignal,
+        BoilerControllerDemand,
+        ActuatorPositionDemand,
+        ActuatorPositionStatus,
+        LightingActuatorStatus,
+    ],
+)
+def test_from_dict_not_a_mapping(data_class: type[DPTComplexData]) -> None:
+    """Test from_dict with a non-mapping raises ValueError."""
+    with pytest.raises(ValueError):
+        data_class.from_dict(None)  # type: ignore[arg-type]

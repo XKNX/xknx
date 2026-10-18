@@ -198,3 +198,13 @@ class TestDPTDALIControlGearDiagnostic:
             DPTBase.parse_transcoder("dali_control_gear_diagnostic")
             is DPTDALIControlGearDiagnostic
         )
+
+
+def test_to_knx_coerces_flags() -> None:
+    """Test non-bool flags of a constructed dataclass are sent as one bit each."""
+    assert DPTDALIControlGearDiagnostic.to_knx(
+        DALIControlGearDiagnostic(1, lamp_failure=2)  # type: ignore[arg-type]
+    ) == DPTArray((0x01, 0x01))
+    assert DPTDALIControlGearDiagnostic.to_knx(
+        DALIControlGearDiagnostic(1, read_request=2)  # type: ignore[arg-type]
+    ) == DPTArray((0x00, 0x81))

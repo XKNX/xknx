@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..exceptions import ConversionError
 from .dpt import DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
 
@@ -84,13 +85,13 @@ class DPTPrioritisedModeControl(DPTComplex[PrioritisedModeControl]):
     def _to_knx(cls, value: PrioritisedModeControl) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         if not 0 <= value.priority_level <= 7:
-            raise ValueError(
+            raise ConversionError(
                 f"Priority level out of range 0..7: {value.priority_level}"
             )
         if not 0 <= value.mode_level <= 15:
-            raise ValueError(f"Mode level out of range 0..15: {value.mode_level}")
+            raise ConversionError(f"Mode level out of range 0..15: {value.mode_level}")
         return DPTArray(
-            value.deactivate_priority << 7
+            bool(value.deactivate_priority) << 7
             | value.priority_level << 4
             | value.mode_level
         )

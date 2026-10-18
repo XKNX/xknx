@@ -20,10 +20,11 @@ from .dpt_9 import (
     DPTTemperature,
     DPTWsp,
 )
+from .dpt_275 import _pack_float_or_not_used, _unpack_float_or_not_used
+from .helpers.metadata import RANGE_PERCENT
 from .payload import DPTArray, DPTBinary
 
-# 7FFFh denotes invalid data for DPT 9 - also sent for fields marked invalid
-_INVALID_F16 = (0x7F, 0xFF)
+_FIELDS = ("delay_time", "probability", "maximum_value", "minimum_value")
 _F16_RANGE = {
     "value_min": DPT2ByteFloat.value_min,
     "value_max": DPT2ByteFloat.value_max,
@@ -51,15 +52,24 @@ class Forecast(DPTComplexData):
     delay_time: int | None = field(
         default=None, metadata={"value_min": 1, "value_max": 65_535}
     )
-    probability: int | None = field(
-        default=None, metadata={"value_min": 0, "value_max": 100}
-    )
+    probability: int | None = field(default=None, metadata=RANGE_PERCENT)
     maximum_value: float | None = field(default=None, metadata=_F16_RANGE)
     minimum_value: float | None = field(default=None, metadata=_F16_RANGE)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Forecast:
         """Init from a dictionary."""
+        # Every field is optional, so a misspelled key would otherwise silently
+        # become an invalid (not sent) field.
+        try:
+            unknown = data.keys() - _FIELDS
+        except AttributeError as err:
+            raise ValueError(f"Invalid value for Forecast: {err}") from err
+        if unknown:
+            raise ValueError(
+                f"Unknown keys for Forecast: {sorted(map(str, unknown))}; "
+                f"valid keys: {list(_FIELDS)}"
+            )
         try:
             delay_time = data.get("delay_time")
             probability = data.get("probability")
@@ -92,22 +102,18 @@ class Forecast(DPTComplexData):
 
 
 def _check_minimum_maximum(value: Forecast) -> None:
-    """Raise ConversionError if the maximum value is lower than the minimum value."""
+    """
+    Raise ConversionError if the maximum value is lower than the minimum value.
+
+    The spec says the maximum "is higher than" the minimum; equal values are
+    accepted deliberately, a forecast of a single value is meaningful.
+    """
     if (
         value.maximum_value is not None
         and value.minimum_value is not None
         and value.maximum_value < value.minimum_value
     ):
         raise ConversionError("Maximum value is lower than minimum value", value=value)
-
-
-def _f16_from_knx(
-    raw: tuple[int, ...], value_transcoder: type[DPT2ByteFloat]
-) -> float | None:
-    """Parse a 2-octet float value; None for invalid data."""
-    if raw == _INVALID_F16:
-        return None
-    return value_transcoder.from_knx(DPTArray(raw))
 
 
 def _forecast_from_knx(
@@ -128,12 +134,12 @@ def _forecast_from_knx(
             else None
         ),
         maximum_value=(
-            _f16_from_knx(raw[4:6], value_transcoder)
+            _unpack_float_or_not_used(raw[4:6], value_transcoder)
             if mask & _MAXIMUM_VALUE_VALID
             else None
         ),
         minimum_value=(
-            _f16_from_knx(raw[6:8], value_transcoder)
+            _unpack_float_or_not_used(raw[6:8], value_transcoder)
             if mask & _MINIMUM_VALUE_VALID
             else None
         ),
@@ -159,16 +165,8 @@ def _forecast_to_knx(
         if value.probability is not None
         else (0,)
     )
-    maximum_value = (
-        value_transcoder.to_knx(value.maximum_value).value
-        if value.maximum_value is not None
-        else _INVALID_F16
-    )
-    minimum_value = (
-        value_transcoder.to_knx(value.minimum_value).value
-        if value.minimum_value is not None
-        else _INVALID_F16
-    )
+    maximum_value = _pack_float_or_not_used(value.maximum_value, value_transcoder)
+    minimum_value = _pack_float_or_not_used(value.minimum_value, value_transcoder)
     mask = (
         (value.delay_time is not None) << 3
         | (value.probability is not None) << 2
@@ -287,7 +285,9 @@ class DPTForecastAbsoluteHumidity(DPTComplex[Forecast]):
     """
     Abstraction for KNX 8 octet absolute humidity forecast (DPT 273.004).
 
-    The spec refers to DPT 9.007 (%) for minimum and maximum value.
+    The spec refers to DPT 9.007 (%) for minimum and maximum value, which is
+    implemented as written; KNX v01.01.01 - Weather data 07.01.06 - §3.6 encodes
+    the absolute humidity itself as DPT 9.029 (g/m³) instead.
     KNX v02.02.01 - Datapoint Types 03.07.02 - §10.1
     """
 

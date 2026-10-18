@@ -99,7 +99,7 @@ class TestMeteringValue:
             {"counter_value": None, "unit": "energy_wh"},
             {"counter_value": 0, "unit": "invalid"},
             {"counter_value": 0, "unit": "energy_wh", "exponent": "a"},
-            {"counter_value": 0, "unit": "energy_wh", "fault": 1},
+            {"counter_value": 0, "unit": "energy_wh", "fault": 2},
             {"counter_value": 0, "unit": "energy_wh", "in_alarm": "true"},
         ],
     )

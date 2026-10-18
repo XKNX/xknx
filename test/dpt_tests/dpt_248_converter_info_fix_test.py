@@ -114,7 +114,7 @@ class TestConverterInfoFix:
                 "info_valid": "valid",
                 "rated_duration": 0,
                 **_features_dict(),
-                "auto_test_capability": 1,
+                "auto_test_capability": 2,
             },
         ],
     )

@@ -11,6 +11,110 @@ from .dpt_1 import HeatCool
 from .payload import DPTArray, DPTBinary
 
 
+class BuildingMode(DPTEnumData):
+    """
+    Enum for the KNX building modes.
+
+    DPT 20.002 DPT_BuildingMode - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21
+    """
+
+    BUILDING_IN_USE = 0
+    BUILDING_NOT_USED = 1
+    BUILDING_PROTECTION = 2
+
+
+class OccupancyMode(DPTEnumData):
+    """
+    Enum for the KNX occupancy modes.
+
+    DPT 20.003 DPT_OccMode - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21
+    """
+
+    OCCUPIED = 0
+    STANDBY = 1
+    NOT_OCCUPIED = 2
+
+
+class Priority(DPTEnumData):
+    """
+    Enum for the KNX priorities; 0 is the highest priority.
+
+    DPT 20.004 DPT_Priority - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21.
+    Its value 3 'void' (no priority) is represented as None by the data point
+    types using this enum.
+    """
+
+    HIGH = 0
+    MEDIUM = 1
+    LOW = 2
+
+
+class ApplicationArea(DPTEnumData):
+    """
+    Enum for the KNX application areas; other values are reserved.
+
+    DPT 20.006 DPT_ApplicationArea - KNX v02.02.01 - Datapoint Types 03.07.02 -
+    §3.21. The codes correspond to the numbering of the parts in Volume 7 of
+    the KNX Standard.
+    """
+
+    NO_FAULT = 0
+    SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST = 1
+    HVAC_GENERAL_FBS = 10
+    HVAC_HOT_WATER_HEATING = 11
+    HVAC_DIRECT_ELECTRICAL_HEATING = 12
+    HVAC_TERMINAL_UNITS = 13
+    HVAC_VAC = 14
+    LIGHTING = 20
+    SECURITY = 30
+    LOAD_MANAGEMENT = 40
+    SHUTTERS_AND_BLINDS = 50
+
+
+class ErrorClassSystem(DPTEnumData):
+    """
+    Enum for the KNX system error classes.
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21: values 19 to 255 are
+    reserved and shall not be used.
+    """
+
+    NO_FAULT = 0
+    GENERAL_DEVICE_FAULT = 1
+    COMMUNICATION_FAULT = 2
+    CONFIGURATION_FAULT = 3
+    HARDWARE_FAULT = 4
+    SOFTWARE_FAULT = 5
+    INSUFFICIENT_NON_VOLATILE_MEMORY = 6
+    INSUFFICIENT_VOLATILE_MEMORY = 7
+    MEMORY_ALLOCATION_COMMAND_WITH_SIZE_0_RECEIVED = 8
+    CRC_ERROR = 9
+    WATCHDOG_RESET_DETECTED = 10
+    INVALID_OPCODE_DETECTED = 11
+    GENERAL_PROTECTION_FAULT = 12
+    MAXIMAL_TABLE_LENGTH_EXCEEDED = 13
+    UNDEFINED_LOAD_COMMAND_RECEIVED = 14
+    GROUP_ADDRESS_TABLE_IS_NOT_SORTED = 15
+    INVALID_CONNECTION_NUMBER = 16
+    INVALID_GROUP_OBJECT_NUMBER = 17
+    GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH = 18
+
+
+class ErrorClassHVAC(DPTEnumData):
+    """
+    Enum for the KNX HVAC error classes; values 5 to 255 are reserved.
+
+    DPT 20.012 DPT_ErrorClass_HVAC - KNX v02.02.01 - Datapoint Types 03.07.02 -
+    §3.21
+    """
+
+    NO_FAULT = 0
+    SENSOR_FAULT = 1
+    PROCESS_FAULT_CONTROLLER_FAULT = 2
+    ACTUATOR_FAULT = 3
+    OTHER_FAULT = 4
+
+
 class HVACOperationMode(DPTEnumData):
     """Enum for the different KNX HVAC operation modes."""
 
@@ -37,6 +141,20 @@ class DPTHVACMode(DPTEnum[HVACOperationMode]):
     def _to_knx(cls, value: HVACOperationMode) -> DPTArray:
         """Return the raw KNX value for an Enum member."""
         return DPTArray(value.value)
+
+
+class DHWMode(DPTEnumData):
+    """
+    Enum for the KNX domestic hot water modes.
+
+    DPT 20.103 DPT_DHWMode - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.3
+    """
+
+    AUTO = 0
+    LEGIO_PROTECT = 1
+    NORMAL = 2
+    REDUCED = 3
+    OFF_FROST_PROTECT = 4
 
 
 class HVACControllerMode(DPTEnumData):
@@ -79,6 +197,35 @@ class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
     def _to_knx(cls, value: HVACControllerMode) -> DPTArray:
         """Return the raw KNX value for an Enum member."""
         return DPTArray(value.value)
+
+
+class MeteringDeviceType(DPTEnumData):
+    """
+    Enum for the KNX metering device types (measured media).
+
+    DPT 20.114 DPT_Metering_DeviceType - KNX v02.02.01 - Datapoint Types
+    03.07.02 - §4.3. The codes are those of the M-Bus device types (EN 13757-3)
+    supported by KNX; the other M-Bus codes are reserved.
+    """
+
+    OTHER = 0x00
+    OIL_METER = 0x01
+    ELECTRICITY_METER = 0x02
+    GAS_METER = 0x03
+    HEAT_METER = 0x04
+    STEAM_METER = 0x05
+    WARM_WATER_METER = 0x06
+    WATER_METER = 0x07
+    HEAT_COST_ALLOCATOR = 0x08
+    COOLING_LOAD_METER_OUTLET = 0x0A
+    COOLING_LOAD_METER_INLET = 0x0B
+    HEAT_INLET = 0x0C
+    HEAT_AND_COOL = 0x0D
+    BREAKER = 0x20
+    VALVE = 0x21
+    WASTE_WATER_METER = 0x28
+    GARBAGE = 0x29
+    VOID = 0xFF
 
 
 @dataclass(slots=True)

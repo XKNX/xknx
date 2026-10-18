@@ -17,12 +17,10 @@ _REPETITIONS_MAX = 3
 @dataclass(slots=True)
 class DoubleNibble(DPTComplexData):
     """
-    Representation of busy and nak repetitions.
+    Value of DPT 25.1000 DPT_DoubleNibble: busy and nak repetitions.
 
     `busy`: int 0..3; number of busy repetitions.
     `nak`: int 0..3; number of nak repetitions.
-
-    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.4
     """
 
     busy: int = field(metadata={"value_min": 0, "value_max": _REPETITIONS_MAX})
@@ -47,7 +45,11 @@ class DoubleNibble(DPTComplexData):
 
 
 class DPTDoubleNibble(DPTComplex[DoubleNibble]):
-    """Abstraction for KNX 1 octet busy and nak repetitions (DPT 25.1000)."""
+    """
+    Abstraction for KNX 1 octet Busy and Nak Repetitions (DPT 25.1000 DPT_DoubleNibble).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §8.4
+    """
 
     data_type = DoubleNibble
     payload_type = DPTArray

@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..exceptions import ConversionError
 from .dpt import DPTComplex, DPTComplexData
 from .dpt_17 import DPTSceneNumber
 from .payload import DPTArray, DPTBinary
@@ -159,7 +160,9 @@ class DPTDALIDiagnostics(DPTComplex[DALIDiagnostics]):
     def _to_knx(cls, value: DALIDiagnostics) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         if not 0 <= value.address <= 63:
-            raise ValueError(f"Address out of range 0..63: {value.address}")
+            raise ConversionError(f"Address out of range 0..63: {value.address}")
         return DPTArray(
-            value.ballast_failure << 7 | value.lamp_failure << 6 | value.address
+            bool(value.ballast_failure) << 7
+            | bool(value.lamp_failure) << 6
+            | value.address
         )

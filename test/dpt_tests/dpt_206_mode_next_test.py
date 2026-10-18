@@ -5,18 +5,15 @@ from typing import Any
 import pytest
 
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
-from xknx.dpt.dpt_20 import HVACOperationMode
+from xknx.dpt.dpt_20 import BuildingMode, DHWMode, HVACOperationMode, OccupancyMode
 from xknx.dpt.dpt_206 import (
-    BuildingMode,
     BuildingModeNext,
-    DHWMode,
     DHWModeNext,
     DPTBuildingModeNext,
     DPTDHWModeNext,
     DPTHVACModeNext,
     DPTOccModeNext,
     HVACModeNext,
-    OccupancyMode,
     OccupancyModeNext,
 )
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -428,3 +425,13 @@ def test_lookup(dpt_class: type[DPTBase], dpt_number: str, value_type: str) -> N
     """Test lookup by DPT number and value_type."""
     assert DPTBase.parse_transcoder(dpt_number) is dpt_class
     assert DPTBase.parse_transcoder(value_type) is dpt_class
+
+
+@pytest.mark.parametrize(
+    "data_class",
+    [HVACModeNext, DHWModeNext, OccupancyModeNext, BuildingModeNext],
+)
+def test_from_dict_not_a_mapping(data_class: type[Any]) -> None:
+    """Test from_dict with a non-mapping raises ValueError."""
+    with pytest.raises(ValueError):
+        data_class.from_dict(None)

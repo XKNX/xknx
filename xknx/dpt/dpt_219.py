@@ -7,84 +7,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..exceptions import ConversionError
-from .dpt import DPTComplex, DPTComplexData, DPTEnumData
+from .dpt import DPTComplex, DPTComplexData
+from .dpt_20 import ApplicationArea, ErrorClassHVAC, ErrorClassSystem, Priority
 from .helpers.metadata import RANGE_UINT8
 from .payload import DPTArray, DPTBinary
 
 _PRIORITY_VOID = 0x03
-
-
-class AlarmPriority(DPTEnumData):
-    """Alarm priority according to DPT_Priority (20.004); 0 is the highest priority."""
-
-    HIGH = 0
-    MEDIUM = 1
-    LOW = 2
-
-
-class ApplicationArea(DPTEnumData):
-    """
-    Application area of an alarm according to DPT_ApplicationArea (20.006).
-
-    The codes correspond to the numbering of the parts in Volume 7 of the KNX
-    Standard; other values are reserved.
-    """
-
-    NO_FAULT = 0
-    SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST = 1
-    HVAC_GENERAL_FBS = 10
-    HVAC_HOT_WATER_HEATING = 11
-    HVAC_DIRECT_ELECTRICAL_HEATING = 12
-    HVAC_TERMINAL_UNITS = 13
-    HVAC_VAC = 14
-    LIGHTING = 20
-    SECURITY = 30
-    LOAD_MANAGEMENT = 40
-    SHUTTERS_AND_BLINDS = 50
-
-
-class AlarmErrorClassSystem(DPTEnumData):
-    """
-    Error class of an alarm in the application area 'system'.
-
-    Encoding of DPT_ErrorClass_System (20.011), which is the encoding used in
-    the FB Technical Alarm; values 19 to 255 are reserved.
-    """
-
-    NO_FAULT = 0
-    GENERAL_DEVICE_FAULT = 1
-    COMMUNICATION_FAULT = 2
-    CONFIGURATION_FAULT = 3
-    HARDWARE_FAULT = 4
-    SOFTWARE_FAULT = 5
-    INSUFFICIENT_NON_VOLATILE_MEMORY = 6
-    INSUFFICIENT_VOLATILE_MEMORY = 7
-    MEMORY_ALLOCATION_COMMAND_WITH_SIZE_0_RECEIVED = 8
-    CRC_ERROR = 9
-    WATCHDOG_RESET_DETECTED = 10
-    INVALID_OPCODE_DETECTED = 11
-    GENERAL_PROTECTION_FAULT = 12
-    MAXIMAL_TABLE_LENGTH_EXCEEDED = 13
-    UNDEFINED_LOAD_COMMAND_RECEIVED = 14
-    GROUP_ADDRESS_TABLE_IS_NOT_SORTED = 15
-    INVALID_CONNECTION_NUMBER = 16
-    INVALID_GROUP_OBJECT_NUMBER = 17
-    GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH = 18
-
-
-class AlarmErrorClassHVAC(DPTEnumData):
-    """
-    Error class of an alarm in the HVAC application areas.
-
-    Encoding of DPT_ErrorClass_HVAC (20.012), which is the encoding used in
-    the FB Technical Alarm; values 5 to 255 are reserved.
-    """
-
-    NO_FAULT = 0
-    SENSOR_FAULT = 1
-    PROCESS_FAULT_CONTROLLER_FAULT = 2
-    ACTUATOR_FAULT = 3
-    OTHER_FAULT = 4
 
 
 _HVAC_AREAS = frozenset(
@@ -106,8 +34,8 @@ class AlarmInfo(DPTComplexData):
     Representation of an alarm information.
 
     `log_number`: int 0..255
-    `alarm_priority`: AlarmPriority; None for 'no priority' (void)
-    `application_area`: ApplicationArea
+    `alarm_priority`: Priority (DPT 20.004); None for 'no priority' (void)
+    `application_area`: ApplicationArea (DPT 20.006)
     `error_class`: int 0..255; its meaning depends on `application_area`,
         see `error_class_enum`
     `ack_sup`, `time_stamp_sup`, `alarm_text_sup`, `error_code_sup`: bool
@@ -117,7 +45,7 @@ class AlarmInfo(DPTComplexData):
     """
 
     log_number: int = field(metadata=RANGE_UINT8)
-    alarm_priority: AlarmPriority | None
+    alarm_priority: Priority | None
     application_area: ApplicationArea
     error_class: int = field(metadata=RANGE_UINT8)
     ack_sup: bool = False
@@ -129,20 +57,23 @@ class AlarmInfo(DPTComplexData):
     locked: bool = False
 
     @property
-    def error_class_enum(self) -> AlarmErrorClassSystem | AlarmErrorClassHVAC | None:
+    def error_class_enum(self) -> ErrorClassSystem | ErrorClassHVAC | None:
         """
         Return the error class as Enum of its application area.
 
         Error classes are standardised for the application areas 'system' and
-        HVAC only. None for other application areas and for reserved codes.
+        HVAC only: ErrorClassSystem (DPT 20.011) and ErrorClassHVAC (DPT 20.012).
+        §3.29 Note 6 lists the codes 0..5 for 'system' only (Note 7 the HVAC
+        codes); the codes 6..18 come from DPT 20.011. None for other
+        application areas and for reserved codes.
         """
         try:
             if self.application_area is (
                 ApplicationArea.SYSTEM_AND_FUNCTIONS_OF_COMMON_INTEREST
             ):
-                return AlarmErrorClassSystem(self.error_class)
+                return ErrorClassSystem(self.error_class)
             if self.application_area in _HVAC_AREAS:
-                return AlarmErrorClassHVAC(self.error_class)
+                return ErrorClassHVAC(self.error_class)
         except ValueError:
             pass
         return None
@@ -154,7 +85,7 @@ class AlarmInfo(DPTComplexData):
             log_number = int(data["log_number"])
             _priority = data.get("alarm_priority")
             alarm_priority = (
-                AlarmPriority.parse(_priority) if _priority is not None else None
+                Priority.parse(_priority) if _priority is not None else None
             )
             application_area = ApplicationArea.parse(data["application_area"])
             error_class = int(data["error_class"])
@@ -165,9 +96,9 @@ class AlarmInfo(DPTComplexData):
         bits: dict[str, bool] = {}
         for name in _ATTRIBUTE_BITS + _STATUS_BITS:
             bit = data.get(name, False)
-            if not isinstance(bit, bool):
+            if bit not in (True, False):
                 raise ValueError(f"Invalid value for {name}: {bit!r}")
-            bits[name] = bit
+            bits[name] = bool(bit)
         return cls(
             log_number=log_number,
             alarm_priority=alarm_priority,
@@ -222,7 +153,7 @@ class DPTAlarmInfo(DPTComplex[AlarmInfo]):
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
         try:
-            alarm_priority = AlarmPriority(raw[1]) if raw[1] != _PRIORITY_VOID else None
+            alarm_priority = Priority(raw[1]) if raw[1] != _PRIORITY_VOID else None
             application_area = ApplicationArea(raw[2])
         except ValueError:
             raise ConversionError(
@@ -256,8 +187,7 @@ class DPTAlarmInfo(DPTComplex[AlarmInfo]):
                     f"{name} out of range 0..255 for {cls.dpt_name()}", value=value
                 )
         if not isinstance(value.application_area, ApplicationArea) or not (
-            value.alarm_priority is None
-            or isinstance(value.alarm_priority, AlarmPriority)
+            value.alarm_priority is None or isinstance(value.alarm_priority, Priority)
         ):
             raise ConversionError(
                 f"Invalid application area or alarm priority for {cls.dpt_name()}",
