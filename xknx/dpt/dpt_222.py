@@ -8,7 +8,7 @@ from typing import Any, Self
 
 from .dpt import DPTComplex, DPTComplexData
 from .dpt_9 import (
-    _INVALID_DATA,
+    DPT_9_INVALID_DATA,
     DPT2ByteFloat,
     DPTTemperature,
     DPTTemperatureDifference2Byte,
@@ -59,7 +59,7 @@ def _decode(
     """Decode three 2-octet floats; 7FFFh decodes to `None`."""
     comfort, standby, economy = (
         None
-        if raw[i : i + 2] == _INVALID_DATA
+        if raw[i : i + 2] == DPT_9_INVALID_DATA
         else transcoder.from_knx(DPTArray(raw[i : i + 2]))
         for i in (0, 2, 4)
     )
@@ -73,7 +73,7 @@ def _encode(
     """Encode three 2-octet floats; `None` encodes to 7FFFh."""
     raw: list[int] = []
     for value in values:
-        raw.extend(_INVALID_DATA if value is None else transcoder.to_knx(value).value)
+        raw.extend(DPT_9_INVALID_DATA if value is None else transcoder.to_knx(value).value)
     return DPTArray(raw)
 
 
