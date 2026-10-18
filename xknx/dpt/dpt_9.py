@@ -13,7 +13,7 @@ from .payload import DPTArray, DPTBinary
 
 # "For all Datapoint Types 9.xxx, the encoded value 7FFFh shall always be used to
 # denote invalid data." - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.10
-_INVALID_DATA = (0x7F, 0xFF)
+DPT_9_INVALID_DATA = (0x7F, 0xFF)
 
 
 class DPT2ByteFloat(DPTNumeric):
@@ -29,7 +29,7 @@ class DPT2ByteFloat(DPTNumeric):
     payload_length = 2
 
     # KNX v02.02.01 - Datapoint Types 03.07.02 - §3.10. The maximum is 0x7FFE;
-    # 0x7FFF is reserved for invalid data - see `_INVALID_DATA` below.
+    # 0x7FFF is reserved for invalid data - see `DPT_9_INVALID_DATA` above.
     value_min = -671088.64
     value_max = 670433.28
     resolution = 0.01
@@ -38,7 +38,7 @@ class DPT2ByteFloat(DPTNumeric):
     def from_knx(cls, payload: DPTArray | DPTBinary) -> float:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        if raw == _INVALID_DATA:
+        if raw == DPT_9_INVALID_DATA:
             raise ConversionError(f"Invalid data for {cls.dpt_name()}", raw=raw)
         data = (raw[0] * 256) + raw[1]
         exponent = (data >> 11) & 0x0F
