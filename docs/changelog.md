@@ -10,6 +10,13 @@ nav_order: 2
 
 ### DPT
 
+- Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
+- Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
+- Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
+- Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)
+- Add DPT 225.001 (`DPTScalingSpeed`, value_type `"scaling_speed"`) and DPT 225.002 (`DPTScalingStepTime`, value_type `"scaling_step_time"`)
+- Add DPT 240.800 (`DPTCombinedPosition`, value_type `"combined_position"`)
+- Add DPT 241.800 (`DPTStatusSAB`, value_type `"status_sab"`)
 - Add DPT 24.001 `DPTVariableLatin1` (value_type "variable_latin_1") and DPT 28.001 `DPTUTF8` (value_type "utf_8") - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.24 and §3.27.1. Unlike the 14 octet DPT 16 strings their length is variable: the string is terminated by a single NULL and the payload carries no length information. `payload_length` is the longest payload an L_Data_Extended frame carries (253 octets, the NULL included); a longer string raises `ConversionError`. A received payload is read up to its first NULL.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
