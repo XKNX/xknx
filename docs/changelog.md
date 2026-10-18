@@ -10,6 +10,13 @@ nav_order: 2
 
 ### DPT
 
+- Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
+- Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
+- Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
+- Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)
+- Add DPT 225.001 (`DPTScalingSpeed`, value_type `"scaling_speed"`) and DPT 225.002 (`DPTScalingStepTime`, value_type `"scaling_step_time"`)
+- Add DPT 240.800 (`DPTCombinedPosition`, value_type `"combined_position"`)
+- Add DPT 241.800 (`DPTStatusSAB`, value_type `"status_sab"`)
 - Add DPT 21.001, 21.002, 21.100-21.106, 21.601, 21.1000-21.1002, 21.1010, 21.1200 and 21.1201 8-bit sets (`DPTStatusGen`, `DPTDeviceControl`, `DPTForceSign`, ...) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.22, §4.4, §6.4.1, §8.2, §9.6, §9.7.
 - Add DPT 22.100 `DPTStatusDHWC`, 22.101 `DPTStatusRHCC`, 22.1000 `DPTMedia` and 22.1010 `DPTChannelActivation16` 16-bit sets, 25.1000 `DPTDoubleNibble` and 30.1010 `DPTChannelActivation24` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1, §4.5.2, §8.3.1, §8.3.2, §8.4, §8.5.1.
 - Add DPT 206.100 `DPTHVACModeNext`, 206.102 `DPTDHWModeNext`, 206.104 `DPTOccModeNext` and 206.105 `DPTBuildingModeNext` with the new enums `DHWMode`, `OccupancyMode` and `BuildingMode` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.

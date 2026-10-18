@@ -237,6 +237,7 @@ from .dpt_14 import (
     DPTWeight,
     DPTWork,
 )
+from .dpt_15 import AccessData, DPTAccessData
 from .dpt_16 import DPTLatin1, DPTString
 from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
@@ -287,6 +288,8 @@ from .dpt_22 import (
     StatusRHCC,
 )
 from .dpt_25 import DoubleNibble, DPTDoubleNibble
+from .dpt_26 import DPTSceneInfo, SceneInfo
+from .dpt_27 import CombinedInfoOnOff, DPTCombinedInfoOnOff
 from .dpt_29 import (
     DPT8ByteSigned,
     DPTActiveEnergy8Byte,
@@ -322,6 +325,18 @@ from .dpt_207 import (
     LockingSignal,
 )
 from .dpt_219 import AlarmInfo, DPTAlarmInfo
+from .dpt_222 import (
+    DPTRoomTemperatureSetpoints3,
+    DPTRoomTemperatureSetpointShifts3,
+    RoomTemperatureSetpoints3,
+    RoomTemperatureSetpointShifts3,
+)
+from .dpt_225 import (
+    DPTScalingSpeed,
+    DPTScalingStepTime,
+    ScalingSpeed,
+    ScalingStepTime,
+)
 from .dpt_229 import DPTMeteringValue, MeteringValue
 from .dpt_230 import DPTMBusAddress, MBusAddress
 from .dpt_232 import DPTColorRGB, RGBColor
@@ -334,6 +349,8 @@ from .dpt_237 import (
     DPTDALIControlGearDiagnostic,
 )
 from .dpt_238 import DALIDiagnostics, DPTDALIDiagnostics, DPTSceneConfig, SceneConfig
+from .dpt_240 import CombinedPosition, DPTCombinedPosition
+from .dpt_241 import DPTStatusSAB, StatusSAB
 from .dpt_242 import DPTColorXYY, XYYColor
 from .dpt_243 import DPTColorXYYTransition, XYYColorTransition
 from .dpt_244 import (
