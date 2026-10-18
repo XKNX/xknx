@@ -93,6 +93,19 @@ class TestKNXDateTime:
         assert value.as_dict() == default_dict | data
 
     @pytest.mark.parametrize(
+        "value",
+        [
+            KNXDateTime(2024, 7, 28, 22, 59, 17),
+            KNXDateTime(2024, 7, 28, 22, 59, 17, day_of_week=KNXDayOfWeek.SUNDAY),
+            KNXDateTime(),
+        ],
+    )
+    def test_dict_round_trip(self, value: KNXDateTime) -> None:
+        """Test as_dict output - also with an invalid day of week (None) - is read back."""
+        assert KNXDateTime.from_dict(value.as_dict()) == value
+        assert DPTDateTime.from_knx(DPTDateTime.to_knx(value.as_dict())) == value
+
+    @pytest.mark.parametrize(
         "data",
         [
             # invalid data
