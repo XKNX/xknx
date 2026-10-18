@@ -301,11 +301,16 @@ def test_dpt_lookup(
         (4, DPTCharacterLatin1),
         (10, DPTTime),
         (11, DPTDate),
+        (15, DPTAccessData),
         (16, DPTLatin1),
         (17, DPTSceneNumber),
         (18, DPTSceneControl),
         (19, DPTDateTime),
+        (26, DPTSceneInfo),
+        (27, DPTCombinedInfoOnOff),
         (235, DPTTariffActiveEnergy),
+        (240, DPTCombinedPosition),
+        (241, DPTStatusSAB),
         (242, DPTColorXYY),
         (249, DPTColorTemperatureTransition),
         (250, DPTColorTemperatureControl),
@@ -319,7 +324,7 @@ def test_main_number_subtype(main: int, dpt_class: type[DPTBase]) -> None:
     assert DPTBase.parse_transcoder({"main": main, "sub": None}) is dpt_class
 
 
-@pytest.mark.parametrize("main", [20, 232, 251, 252, 254])
+@pytest.mark.parametrize("main", [20, 222, 225, 232, 251, 252, 254])
 def test_main_number_ambiguous(main: int) -> None:
     """Test a main number whose subtypes have different meanings stays unresolved."""
     assert DPTBase.transcoder_by_dpt(dpt_main=main) is None

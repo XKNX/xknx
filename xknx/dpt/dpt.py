@@ -45,11 +45,16 @@ _MAIN_NUMBER_SUBTYPES: Final[dict[int, int]] = {
     4: 2,  # ISO 8859-1 includes ASCII (4.001): decodes both
     10: 1,  # default subtype in the KNX master data
     11: 1,  # the only subtype in the KNX master data
+    15: 0,  # the only subtype in the KNX master data
     16: 1,  # default subtype in the KNX master data; ISO 8859-1 includes ASCII (16.000)
     17: 1,  # the only subtype in the KNX master data
     18: 1,  # the only subtype in the KNX master data
     19: 1,  # default subtype in the KNX master data
+    26: 1,  # the only subtype in the KNX master data
+    27: 1,  # the only subtype in the KNX master data
     235: 1,  # the only subtype in the KNX master data
+    240: 800,  # the only subtype in the KNX master data
+    241: 800,  # the only subtype in the KNX master data
     242: 600,  # the only subtype in the KNX master data
     249: 600,  # the only subtype in the KNX master data
     250: 600,  # the only subtype in the KNX master data
@@ -212,7 +217,8 @@ class DPTBase(ABC):
                 and dpt_sub == dpt.dpt_sub_number
             ):
                 return dpt
-        if dpt_sub is None and (sub := _MAIN_NUMBER_SUBTYPES.get(dpt_main)):
+        # `is not None`: 15.000 has the sub number 0
+        if dpt_sub is None and (sub := _MAIN_NUMBER_SUBTYPES.get(dpt_main)) is not None:
             return cls.transcoder_by_dpt(dpt_main, sub)
         return None
 
