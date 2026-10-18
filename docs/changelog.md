@@ -12,6 +12,10 @@ nav_order: 2
 
 - Add `dmp_prog_mode_switch_r_co(conn, mode)` and `dm_prog_mode_switch(xknx, individual_address, mode)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off, for example to give an already addressed device a new individual address without pressing its programming button. `dmp_prog_mode_switch_r_co` works on an already-open `P2PConnection`; `dm_prog_mode_switch` opens and closes its own connection. It reads `curr_prog_mode` at `PROG_MODE_ADDRESS` (60h) and, only if `prog_mode` (bit 0) differs from `mode`, writes it back with bit 0 set to `mode` and the parity bit 7 inverted, keeping the shared bits 1-6 (KNX v01.10.01 - Resources 03.05.01 - §4.26.3). This applies to devices realising the Programming Mode as Realisation Type 2; Realisation Type 1 devices use `PID_PROGMODE` of the Device Object instead.
 
+### DPT
+
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -1736,7 +1740,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1745,7 +1748,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
