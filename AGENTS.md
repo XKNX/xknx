@@ -17,7 +17,7 @@ Examples from the codebase:
 
 ```
 KNX v02.01.02 - Management Procedures 03.05.02 - §2.19
-KNX v01.02.02 - Transport Layer 03.03.04 - §2 TPDU
+KNX v01.02.03 - Transport Layer 03.03.04 - §2 TPDU
 ```
 
 ### Why the version matters
@@ -25,7 +25,7 @@ KNX v01.02.02 - Transport Layer 03.03.04 - §2 TPDU
 The KNX Standard is published as a set of separate documents (one per
 volume/part/chapter), and **different documents carry different version
 numbers** — they are not all released together under one overall version.
-Transport Layer (03.03.04) is at `v01.02.02`, while the Management
+Transport Layer (03.03.04) is at `v01.02.03`, while the Management
 Procedures document (03.05.02) is at `v02.01.02`. A citation with the
 document number but no version is ambiguous: the cited paragraph's
 content, numbering, or even its existence can differ between versions of
@@ -46,7 +46,7 @@ if they aren't already established elsewhere in the codebase.
 |---|---|---|
 | v02.01.02 | Management Procedures | 03.05.02 |
 | v02.01.01 | Application Layer | 03.03.07 |
-| v01.02.02 | Transport Layer | 03.03.04 |
+| v01.02.03 | Transport Layer | 03.03.04 |
 | v02.02.01 | Datapoint Types | 03.07.02 |
 | v01.02.02 | Logical Tag Extended | 10.01 |
 | v01.05.02 | Routing | 03.08.05 |
@@ -86,7 +86,7 @@ Document numbers within a volume follow `<volume>.<chapter>[.<subchapter>]`
 (e.g. `03.03.07` = Volume 3, chapter 3, subchapter 7). The chapter/
 subchapter structure doesn't tell you the version — two documents in the
 same volume, even adjacent subchapters, can still be at different versions
-(e.g. Transport Layer 03.03.04 at v01.02.02 vs. Application Layer 03.03.07
+(e.g. Transport Layer 03.03.04 at v01.02.03 vs. Application Layer 03.03.07
 at v02.01.01), so the numbering scheme is only useful for finding *which*
 document to ask about, never for guessing its version.
 

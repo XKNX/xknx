@@ -96,7 +96,7 @@ class _RoomTemperatureSetpointSet(DPTComplexData):
 
 
 @dataclass(slots=True)
-class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
+class RoomTemperatureSetpoints4(_RoomTemperatureSetpointSet):
     """
     Representation of a room temperature setpoint set.
 
@@ -117,7 +117,7 @@ class RoomTemperatureSetpoints(_RoomTemperatureSetpointSet):
 
 
 @dataclass(slots=True)
-class RoomTemperatureSetpointShifts(_RoomTemperatureSetpointSet):
+class RoomTemperatureSetpointShifts4(_RoomTemperatureSetpointSet):
     """
     Representation of a room temperature setpoint shift set.
 
@@ -138,25 +138,25 @@ class RoomTemperatureSetpointShifts(_RoomTemperatureSetpointSet):
     )
 
 
-class DPTRoomTemperatureSetpointSet(DPTComplex[RoomTemperatureSetpoints]):
+class DPTRoomTemperatureSetpoints4(DPTComplex[RoomTemperatureSetpoints4]):
     """
     Abstraction for KNX room temperature setpoint set (DPT 275.100).
 
     KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4.1
     """
 
-    data_type = RoomTemperatureSetpoints
+    data_type = RoomTemperatureSetpoints4
     payload_type = DPTArray
     payload_length = 8
     dpt_main_number = 275
     dpt_sub_number = 100
-    value_type = "room_temperature_setpoint_set"
+    value_type = "room_temperature_setpoints_4"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpoints:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpoints4:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        return RoomTemperatureSetpoints(
+        return RoomTemperatureSetpoints4(
             comfort=_unpack_float_or_not_used(raw[0:2], DPTTemperature),
             standby=_unpack_float_or_not_used(raw[2:4], DPTTemperature),
             economy=_unpack_float_or_not_used(raw[4:6], DPTTemperature),
@@ -164,7 +164,7 @@ class DPTRoomTemperatureSetpointSet(DPTComplex[RoomTemperatureSetpoints]):
         )
 
     @classmethod
-    def _to_knx(cls, value: RoomTemperatureSetpoints) -> DPTArray:
+    def _to_knx(cls, value: RoomTemperatureSetpoints4) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         return DPTArray(
             (
@@ -176,25 +176,25 @@ class DPTRoomTemperatureSetpointSet(DPTComplex[RoomTemperatureSetpoints]):
         )
 
 
-class DPTRoomTemperatureSetpointShiftSet(DPTComplex[RoomTemperatureSetpointShifts]):
+class DPTRoomTemperatureSetpointShifts4(DPTComplex[RoomTemperatureSetpointShifts4]):
     """
     Abstraction for KNX room temperature setpoint shift set (DPT 275.101).
 
     KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4.2
     """
 
-    data_type = RoomTemperatureSetpointShifts
+    data_type = RoomTemperatureSetpointShifts4
     payload_type = DPTArray
     payload_length = 8
     dpt_main_number = 275
     dpt_sub_number = 101
-    value_type = "room_temperature_setpoint_shift_set"
+    value_type = "room_temperature_setpoint_shifts_4"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpointShifts:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpointShifts4:
         """Parse/deserialize from KNX/IP raw data."""
         raw = cls.validate_payload(payload)
-        return RoomTemperatureSetpointShifts(
+        return RoomTemperatureSetpointShifts4(
             comfort=_unpack_float_or_not_used(raw[0:2], DPTTemperatureDifference2Byte),
             standby=_unpack_float_or_not_used(raw[2:4], DPTTemperatureDifference2Byte),
             economy=_unpack_float_or_not_used(raw[4:6], DPTTemperatureDifference2Byte),
@@ -204,7 +204,7 @@ class DPTRoomTemperatureSetpointShiftSet(DPTComplex[RoomTemperatureSetpointShift
         )
 
     @classmethod
-    def _to_knx(cls, value: RoomTemperatureSetpointShifts) -> DPTArray:
+    def _to_knx(cls, value: RoomTemperatureSetpointShifts4) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         return DPTArray(
             (

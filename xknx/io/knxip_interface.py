@@ -33,8 +33,6 @@ from .self_description import request_description
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 
 if TYPE_CHECKING:
-    import concurrent
-
     from xknx.xknx import XKNX
 
     from .interface import Interface
@@ -493,6 +491,17 @@ class KNXIPInterface:
         return None
 
 
+async def _cancel_other_tasks() -> None:
+    """Cancel all tasks of the running loop except the current one."""
+    current_task = asyncio.current_task()
+    tasks = [task for task in asyncio.all_tasks() if task is not current_task]
+    for task in tasks:
+        task.cancel()
+    if tasks:
+        # time limited in case a task swallows the cancellation
+        await asyncio.wait(tasks, timeout=1)
+
+
 class KNXIPInterfaceThreaded(KNXIPInterface):
     """Class for managing KNX/IP Tunneling or Routing connections."""
 
@@ -523,10 +532,14 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
 
     def _init_connection_loop(self, loop_loaded: threading.Event) -> None:
         """Start KNX/IP interface in its own thread."""
-        self._thread_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._thread_loop)
+        loop = asyncio.new_event_loop()
+        self._thread_loop = loop
+        asyncio.set_event_loop(loop)
         loop_loaded.set()
-        self._thread_loop.run_forever()
+        try:
+            loop.run_forever()
+        finally:
+            loop.close()
 
     async def _await_from_connection_thread(self, coro: Coroutine[Any, Any, T]) -> T:
         """Await coroutine in different thread."""
@@ -534,25 +547,30 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             raise CommunicationError("KNX connection thread not initialized.")
 
         fut = asyncio.run_coroutine_threadsafe(coro, self._thread_loop)
-        finished = threading.Event()
-
-        def fut_finished_cb(_: concurrent.futures.Future[T]) -> None:
-            """Fire threading.Event when the future is finished."""
-            finished.set()
-
-        fut.add_done_callback(fut_finished_cb)
-        # wait on that event in an executor, yielding control to _main_loop
-        await self._main_loop.run_in_executor(None, finished.wait)
-        return fut.result()
+        try:
+            return await asyncio.wrap_future(fut)
+        except asyncio.CancelledError:
+            current_task = asyncio.current_task()
+            # cancelling() > 0: our caller (or asyncio.timeout) requested the cancellation
+            if current_task is not None and current_task.cancelling():
+                raise
+            raise CommunicationError(
+                "Request on KNX connection thread was cancelled."
+            ) from None
 
     async def start(self) -> None:
         """Start KNX/IP interface."""
         if self._connection_thread is not None or self._thread_loop is not None:
             raise CommunicationError("KNX threaded interface already initialized.")
-        await self._main_loop.run_in_executor(None, self._init_connection_thread)
+        init_thread = self._main_loop.run_in_executor(
+            None, self._init_connection_thread
+        )
         try:
+            await asyncio.shield(init_thread)
             return await self._await_from_connection_thread(self._start())
-        except CommunicationError:
+        except (CommunicationError, asyncio.CancelledError):
+            # a cancelled start must not leave the thread starting up behind stop()
+            await init_thread
             await self.stop()
             raise
 
@@ -562,10 +580,12 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             await self._await_from_connection_thread(self._interface.disconnect())
             self._interface = None
         if self._thread_loop is not None:
+            # resolve requests still awaited from the main loop before stopping
+            await self._await_from_connection_thread(_cancel_other_tasks())
             self._thread_loop.call_soon_threadsafe(self._thread_loop.stop)
             self._thread_loop = None
         if self._connection_thread is not None:
-            self._connection_thread.join()
+            await self._main_loop.run_in_executor(None, self._connection_thread.join)
             self._connection_thread = None
 
     def cemi_received(self, raw_cemi: bytes) -> None:
