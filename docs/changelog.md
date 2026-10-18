@@ -11,6 +11,7 @@ nav_order: 2
 ### DPT
 
 - Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.42, the 2 octet `U5U5U6` encoding of `magic_number`, `version_number` and `revision_number`. It is the format of `PID_VERSION` and of other version information like software, hardware or data-interface versions; `str(KNXVersion(0, 0, 13))` gives `"0.0.13"`. Invalid version information is encoded as 31.31.63 - `KNXVersion.INVALID`, checked by `is_invalid`.
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
 # 4.0.0 Typed and tidy 2026-10-15
 
@@ -1736,7 +1737,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1745,7 +1745,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
