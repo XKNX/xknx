@@ -12,6 +12,10 @@ nav_order: 2
 
 - Add `dmp_ext_interface_object_read_r`, `dmp_ext_interface_object_write_con_r`, `dmp_ext_interface_object_write_uncon_r` and `dmp_ext_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.4/§3.25.4/§3.25.5/§3.26.3, the counterparts of the procedures above that address an Interface Object by its Interface Object Type and Object Instance with the `A_PropertyExtValue_*` services instead of by its object index. Blocks are sized by `max_apdu_length` and the 8-bit `nr_of_elem` field of these services, and `write_con_r` fails on a return code other than `E_SUCCESS`.
 
+### DPT
+
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -1736,7 +1740,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1745,7 +1748,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
