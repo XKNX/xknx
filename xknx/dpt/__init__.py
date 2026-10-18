@@ -370,4 +370,10 @@ from .dpt_273 import (
     DPTForecastWindSpeed,
     Forecast,
 )
+from .dpt_275 import (
+    DPTRoomTemperatureSetpoints4,
+    DPTRoomTemperatureSetpointShifts4,
+    RoomTemperatureSetpoints4,
+    RoomTemperatureSetpointShifts4,
+)
 from .payload import DPTArray, DPTBinary

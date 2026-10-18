@@ -18,6 +18,7 @@ nav_order: 2
 - Add DPT 234.001 `DPTLanguageCodeAlpha2ASCII`, 234.002 `DPTRegionCodeAlpha2ASCII`, 236.001 `DPTPrioritisedModeControl`, 237.600 `DPTDALIControlGearDiagnostic`, 238.001 `DPTSceneConfig` and 238.600 `DPTDALIDiagnostics` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.47, §3.49, §6.7.1, §3.50.1, §6.8.1.
 - Add the DALI emergency converter DPTs 244.600 `DPTConverterStatus`, 245.600 `DPTConverterTestResult`, 246.600 `DPTBatteryInfo`, 247.600 `DPTConverterTestInfo`, 248.600 `DPTConverterInfoFix` and 272.600 `DPTConverterInfo` - KNX v02.02.01 - Datapoint Types 03.07.02 - §6.11-§6.15, §6.22.
 - Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
 # 4.0.0 Typed and tidy 2026-10-15
 
@@ -1743,7 +1744,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1752,7 +1752,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
