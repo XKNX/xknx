@@ -16,10 +16,7 @@ def _parse_flags(
     data: Mapping[str, Any], defaults: Mapping[str, bool], name: str
 ) -> dict[str, bool]:
     """Return boolean fields from a dictionary; raise ValueError for invalid values."""
-    try:
-        flags = {key: data.get(key, default) for key, default in defaults.items()}
-    except AttributeError as err:
-        raise ValueError(f"Invalid value for {name}: {err}") from err
+    flags = {key: data.get(key, default) for key, default in defaults.items()}
     for key, flag in flags.items():
         if flag not in (True, False):
             raise ValueError(f"Invalid value for {name} value `{key}`: {flag}")

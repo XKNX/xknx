@@ -70,13 +70,10 @@ class Forecast(DPTComplexData):
                 f"Unknown keys for Forecast: {sorted(map(str, unknown))}; "
                 f"valid keys: {list(_FIELDS)}"
             )
-        try:
-            delay_time = data.get("delay_time")
-            probability = data.get("probability")
-            maximum_value = data.get("maximum_value")
-            minimum_value = data.get("minimum_value")
-        except AttributeError as err:
-            raise ValueError(f"Invalid value for Forecast: {err}") from err
+        delay_time = data.get("delay_time")
+        probability = data.get("probability")
+        maximum_value = data.get("maximum_value")
+        minimum_value = data.get("minimum_value")
         try:
             return cls(
                 delay_time=int(delay_time) if delay_time is not None else None,

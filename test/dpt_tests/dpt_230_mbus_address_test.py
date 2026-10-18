@@ -119,6 +119,12 @@ class TestMBusAddress:
                 "version": 0,
                 "medium": None,
             },
+            {
+                "manufacturer_id": 0,
+                "identification_number": 0,
+                "version": 0,
+                "medium": 256,
+            },
         ],
     )
     def test_dict_invalid(self, data: dict[str, Any]) -> None:
