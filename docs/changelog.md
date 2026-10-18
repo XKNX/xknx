@@ -12,6 +12,10 @@ nav_order: 2
 
 - Keyring signature: a string is prefixed with its length as a 7-bit encoded integer, like `System.IO.BinaryWriter.Write(string)` writes it. The length was a single octet, so `verify_keyring_signature()` computed a different signature for a keyring with a value of 128 octets or more - e.g. the `Senders` of a group address with many senders - and raised `ValueError` for one above 255 octets.
 
+### DPT
+
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -1736,7 +1740,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1745,7 +1748,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
