@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from xknx import XKNX
-from xknx.devices import Device, Sensor, Switch
+from xknx.devices import Cover, Device, Light, Sensor, Switch
 from xknx.dpt import DPTArray
 from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
@@ -168,3 +168,30 @@ class TestDevice:
         xknx = XKNX()
         device = Device(xknx, name="TestDevice")
         device.process_group_read(Telegram(destination_address=GroupAddress(1)))
+
+    def test_is_state_address(self) -> None:
+        """Test state addresses are those only used to receive state."""
+        xknx = XKNX()
+        light = Light(
+            xknx,
+            name="TestLight",
+            group_address_switch="1/2/3",
+            group_address_switch_state="1/2/4",
+            group_address_brightness="1/2/5",
+            group_address_brightness_state=["1/2/6", "1/2/7"],
+        )
+        assert not light.is_state_address(GroupAddress("1/2/3"))
+        assert light.is_state_address(GroupAddress("1/2/4"))
+        assert not light.is_state_address(GroupAddress("1/2/5"))
+        assert light.is_state_address(GroupAddress("1/2/6"))
+        assert light.is_state_address(GroupAddress("1/2/7"))
+        assert not light.is_state_address(GroupAddress("0/0/1"))
+
+        # state address of one RemoteValue, writing address of another
+        cover = Cover(
+            xknx,
+            name="TestCover",
+            group_address_position="1/2/3",
+            group_address_position_state="1/2/3",
+        )
+        assert not cover.is_state_address(GroupAddress("1/2/3"))

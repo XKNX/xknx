@@ -15,7 +15,11 @@ from typing import TYPE_CHECKING, Any, Self, cast
 
 from xknx.remote_value import RemoteValue
 from xknx.telegram import GroupReadTelegram, GroupValueTelegram, Telegram
-from xknx.telegram.address import DeviceGroupAddress
+from xknx.telegram.address import (
+    DeviceGroupAddress,
+    GroupAddress,
+    InternalGroupAddress,
+)
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 from xknx.telegram.telegram import _current_telegram_context
 from xknx.typing import DeviceCallbackType
@@ -49,11 +53,17 @@ class DeviceUpdate:
             `last_update.context` to `telegram_context()` to attribute it explicitly.
         context: The application defined context of the update. `telegram.context`
             if a telegram caused it, else the one of the active `telegram_context()`.
+        from_state_address: True if `telegram` was sent to a group address the device
+            only uses to receive state - a `group_address_*_state` or a passive
+            address given with it. Such a telegram reports a state, eg. an actuators
+            feedback, rather than commanding a change. False if the address is also
+            used for writing or if no telegram caused the update.
 
     """
 
     telegram: Telegram | None = None
     context: Any = None
+    from_state_address: bool = False
 
 
 class Device(ABC):
@@ -145,7 +155,15 @@ class Device(ABC):
     ) -> None:
         """Execute callbacks after internal state has been changed."""
         if (telegram := _processing_telegram.get()) is not None:
-            self.last_update = DeviceUpdate(telegram=telegram, context=telegram.context)
+            destination = telegram.destination_address
+            self.last_update = DeviceUpdate(
+                telegram=telegram,
+                context=telegram.context,
+                from_state_address=isinstance(
+                    destination, GroupAddress | InternalGroupAddress
+                )
+                and self.is_state_address(destination),
+            )
         else:
             self.last_update = DeviceUpdate(context=_current_telegram_context.get())
         # callbacks read `last_update` - work they schedule shall not inherit the cause
@@ -207,3 +225,18 @@ class Device(ABC):
             group_address in remote_value.group_addresses()
             for remote_value in self._iter_remote_values()
         )
+
+    def is_state_address(self, group_address: DeviceGroupAddress) -> bool:
+        """
+        Return if `group_address` is only used to receive state by this device.
+
+        True if it is a state address of a RemoteValue of this device and not a
+        writing address of any - see `RemoteValue.is_state_address()`.
+        """
+        is_state_address = False
+        for remote_value in self._iter_remote_values():
+            if remote_value.is_state_address(group_address):
+                is_state_address = True
+            elif group_address in remote_value.group_addresses():
+                return False
+        return is_state_address

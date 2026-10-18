@@ -231,6 +231,30 @@ class TestRemoteValue:
             GroupAddress("2/2/20"),
         ]
 
+    def test_is_state_address(self) -> None:
+        """Test state addresses are those given as state, unless also used for writing."""
+        xknx = XKNX()
+        remote_value = RemoteValue(
+            xknx,
+            group_address=["1/2/3", "1/1/1"],
+            group_address_state=["2/3/4", "2/2/2", "1/1/1"],
+        )
+        assert not remote_value.is_state_address(GroupAddress("1/2/3"))
+        assert remote_value.is_state_address(GroupAddress("2/3/4"))
+        assert remote_value.is_state_address(GroupAddress("2/2/2"))
+        # passive address given on both sides
+        assert not remote_value.is_state_address(GroupAddress("1/1/1"))
+        assert not remote_value.is_state_address(GroupAddress("0/0/1"))
+
+        remote_value_shared = RemoteValue(
+            xknx, group_address="1/2/3", group_address_state="1/2/3"
+        )
+        assert not remote_value_shared.is_state_address(GroupAddress("1/2/3"))
+
+        remote_value_state_only = RemoteValue(xknx, group_address_state="1/2/3")
+        assert remote_value_state_only.is_state_address(GroupAddress("1/2/3"))
+        assert not RemoteValue(xknx).is_state_address(GroupAddress("1/2/3"))
+
     def test_process_passive_address(self) -> None:
         """Test if passive group addresses are processed."""
         xknx = XKNX()
