@@ -18,6 +18,10 @@ nav_order: 2
 - Add bus monitor mode for tunnels - `ConnectionConfig(busmonitor=True)` requests TUNNEL_BUSMONITOR (80h) in the connect request - KNX v01.07.01 - Tunnelling 03.08.04 - §2.2.4 and §5.4.3.1. Received L_Busmon.ind frames are passed to callbacks registered with `CEMIHandler.register_busmonitor_frame_received_cb()`, which returns an unregister function; they don't reach the telegram queue. Sending raises `CommunicationError` in bus monitor mode, as a client in bus monitor mode shall not send - §2.4. Routing connections raise `XKNXException` for bus monitor mode; automatic connections only use tunnelling devices. When the server rejects a bus monitor tunnel, the `CommunicationError` names the error code from the connect response.
 - The `CommunicationError` raised when a tunnel connection can not be established includes its cause in the message now.
 
+### DPT
+
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -1742,7 +1746,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1751,7 +1754,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
