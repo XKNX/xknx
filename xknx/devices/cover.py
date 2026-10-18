@@ -386,6 +386,10 @@ class Cover(Device):
         """Return if cover is traveling at the moment."""
         return self.travelcalculator.is_traveling()
 
+    def remaining_travel_time(self) -> float:
+        """Return the estimated seconds until the designated position is reached. 0 if not traveling."""
+        return self.travelcalculator.remaining_travel_time()
+
     def position_reached(self) -> bool:
         """Return if cover has reached its final position."""
         return self.travelcalculator.position_reached()

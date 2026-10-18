@@ -279,6 +279,34 @@ class TestTravelCalculator:
             assert not travelcalculator.is_traveling()
             assert travelcalculator.position_reached()
 
+    def test_remaining_travel_time(self) -> None:
+        """Test the estimated time until the designated position is reached."""
+        travelcalculator = TravelCalculator(25, 50)
+        assert travelcalculator.remaining_travel_time() == 0
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1580000000.0
+            travelcalculator.set_position(40)
+            assert travelcalculator.remaining_travel_time() == 0
+
+            # 20 steps down at 4 steps / sec
+            travelcalculator.start_travel(60)
+            assert travelcalculator.remaining_travel_time() == 5
+            mock_time.return_value = 1580000002.0
+            assert travelcalculator.remaining_travel_time() == 3
+            # a position update re-estimates from the known position
+            travelcalculator.update_position(56)
+            assert travelcalculator.remaining_travel_time() == 1
+            mock_time.return_value = 1580000003.0
+            assert travelcalculator.position_reached()
+            assert travelcalculator.remaining_travel_time() == 0
+
+            # 60 steps up at 2 steps / sec
+            travelcalculator.start_travel(0)
+            assert travelcalculator.remaining_travel_time() == 30
+            mock_time.return_value = 1580000013.0
+            travelcalculator.stop()
+            assert travelcalculator.remaining_travel_time() == 0
+
     def test_is_opening_closing(self) -> None:
         """Test reports is_opening and is_closing."""
         travelcalculator = TravelCalculator(25, 50)

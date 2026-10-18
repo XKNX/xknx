@@ -930,6 +930,33 @@ class TestCover:
             assert not cover.is_opening()
             assert not cover.is_closing()
 
+    async def test_remaining_travel_time(self) -> None:
+        """Test the estimated time until the designated position is reached."""
+        xknx = XKNX()
+        cover = Cover(
+            xknx,
+            name="TestCover",
+            group_address_long="1/2/1",
+            group_address_position_state="1/2/4",
+            travel_time_down=10,
+            travel_time_up=20,
+        )
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1517000000.0
+            assert cover.remaining_travel_time() == 0
+            cover.travelcalculator.set_position(0)
+            await cover.set_down()
+            assert cover.remaining_travel_time() == 10
+
+            mock_time.return_value = 1517000004.0
+            assert cover.remaining_travel_time() == 6
+
+            mock_time.return_value = 1517000010.0
+            assert not cover.is_traveling()
+            assert cover.remaining_travel_time() == 0
+            await cover.set_up()
+            assert cover.remaining_travel_time() == 20
+
     #
     # TEST TASKS
     #

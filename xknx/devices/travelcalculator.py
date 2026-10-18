@@ -110,6 +110,20 @@ class TravelCalculator:
         """Return if cover is traveling."""
         return self.current_position() != self._travel_to_position
 
+    def remaining_travel_time(self) -> float:
+        """Return the estimated seconds until the designated position is reached. 0 if not traveling."""
+        if (
+            self._travel_to_position is None
+            or self._last_known_position is None
+            or not self.is_traveling()
+        ):
+            return 0.0
+        travel_time = self.calculate_travel_time(
+            from_position=self._last_known_position,
+            to_position=self._travel_to_position,
+        )
+        return max(0.0, self._last_known_position_timestamp + travel_time - time.time())
+
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return (
