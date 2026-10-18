@@ -12,6 +12,10 @@ nav_order: 2
 
 - `nm_individual_address_serial_number_write` ensures the Individual Address it assigns is unique, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.5 requires. §2.5 names no mechanism for this, so the address is checked the same way NM_IndividualAddress_Write (KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 1) does. If a device already answers at the address and it is the one with the given serial number, nothing is written, like §2.3 step 3; if it is another device, or no device with the serial number answers, `ManagementConnectionError` is raised and nothing is written. Before, the address was written regardless, so two devices could end up sharing it. When no device answers at the address, the check adds about 6 s to every call before the write.
 
+### DPT
+
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
@@ -1736,7 +1740,6 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
-
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1745,7 +1748,6 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
-
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
