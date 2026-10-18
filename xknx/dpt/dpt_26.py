@@ -28,11 +28,11 @@ class SceneInfo(DPTComplexData):
         try:
             scene_number = int(data["scene_number"])
             active = data.get("active", True)
-        except (KeyError, TypeError, ValueError) as err:
+        except (AttributeError, KeyError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for SceneInfo: {err}") from err
-        if active not in (True, False):
+        if not isinstance(active, bool):
             raise ValueError(f"Invalid value for SceneInfo value `active`: {active}")
-        return cls(scene_number=scene_number, active=bool(active))
+        return cls(scene_number=scene_number, active=active)
 
     def as_dict(self) -> dict[str, int | bool]:
         """Create a JSON serializable dictionary."""
@@ -72,5 +72,7 @@ class DPTSceneInfo(DPTComplex[SceneInfo]):
         """Serialize to KNX/IP raw data."""
         if not 1 <= value.scene_number <= 64:
             raise ValueError(f"Scene number out of range 1..64: {value}")
+        if not isinstance(value.active, bool):
+            raise ValueError(f"Invalid value for `active`: {value.active}")
         inactive = 0 if value.active else 0x40
-        return DPTArray(inactive | (value.scene_number - 1))
+        return DPTArray((inactive | (value.scene_number - 1),))

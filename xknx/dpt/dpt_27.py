@@ -48,11 +48,11 @@ class CombinedInfoOnOff(DPTComplexData):
                 state = data.get(name)
             except AttributeError as err:
                 raise ValueError(f"Invalid value for CombinedInfoOnOff: {err}") from err
-            if state is not None and state not in (True, False):
+            if state is not None and not isinstance(state, bool):
                 raise ValueError(
                     f"Invalid value for CombinedInfoOnOff `{name}`: {state}"
                 )
-            states[name] = None if state is None else bool(state)
+            states[name] = state
         return cls(**states)
 
     def as_dict(self) -> dict[str, bool | None]:

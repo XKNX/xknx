@@ -2,165 +2,115 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass, field, fields as dataclass_fields
-from typing import Any, Self
+from dataclasses import dataclass, field
 
-from .dpt import DPTComplex, DPTComplexData
-from .dpt_9 import (
-    DPT_9_INVALID_DATA,
-    DPT2ByteFloat,
-    DPTTemperature,
-    DPTTemperatureDifference2Byte,
+from .dpt import DPTComplex
+from .dpt_9 import DPTTemperature, DPTTemperatureDifference2Byte
+from .dpt_275 import (
+    _RANGE_TEMPERATURE,
+    _RANGE_TEMPERATURE_DIFFERENCE,
+    _pack_float_or_not_used,
+    _RoomTemperatureSetpointSet,
+    _unpack_float_or_not_used,
 )
 from .payload import DPTArray, DPTBinary
 
-_RANGE_SETPOINT = {
-    "value_min": DPTTemperature.value_min,
-    "value_max": DPTTemperature.value_max,
-    "resolution": DPTTemperature.resolution,
-}
-_RANGE_SETPOINT_SHIFT = {
-    "value_min": DPTTemperatureDifference2Byte.value_min,
-    "value_max": DPTTemperatureDifference2Byte.value_max,
-    "resolution": DPTTemperatureDifference2Byte.resolution,
-}
-
-
-class _ComfortStandbyEconomy(DPTComplexData):
-    """Base for the comfort / standby / economy float triples; `None` is invalid data."""
-
-    __slots__ = ()
-
-    @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> Self:
-        """Init from a dictionary."""
-        result: dict[str, float | None] = {}
-        for field_ in dataclass_fields(cls):
-            value = data.get(field_.name)
-            if value is not None:
-                try:
-                    value = float(value)
-                except (TypeError, ValueError) as err:
-                    raise ValueError(f"Invalid value for {field_.name}: {err}") from err
-            result[field_.name] = value
-        return cls(**result)
-
-    def as_dict(self) -> dict[str, float | None]:
-        """Create a JSON serializable dictionary."""
-        return {
-            field_.name: getattr(self, field_.name) for field_ in dataclass_fields(self)
-        }
-
-
-def _decode(
-    raw: tuple[int, ...], transcoder: type[DPT2ByteFloat]
-) -> tuple[float | None, float | None, float | None]:
-    """Decode three 2-octet floats; 7FFFh decodes to `None`."""
-    comfort, standby, economy = (
-        None
-        if raw[i : i + 2] == DPT_9_INVALID_DATA
-        else transcoder.from_knx(DPTArray(raw[i : i + 2]))
-        for i in (0, 2, 4)
-    )
-    return comfort, standby, economy
-
-
-def _encode(
-    values: tuple[float | None, float | None, float | None],
-    transcoder: type[DPT2ByteFloat],
-) -> DPTArray:
-    """Encode three 2-octet floats; `None` encodes to 7FFFh."""
-    raw: list[int] = []
-    for value in values:
-        raw.extend(DPT_9_INVALID_DATA if value is None else transcoder.to_knx(value).value)
-    return DPTArray(raw)
-
 
 @dataclass(slots=True)
-class RoomTemperatureSetpoints(_ComfortStandbyEconomy):
+class RoomTemperatureSetpoints3(_RoomTemperatureSetpointSet):
     """
     Representation of room temperature setpoints in °C.
 
     `comfort`, `standby`, `economy`: float -273..670433.28; None if invalid.
     """
 
-    comfort: float | None = field(default=None, metadata=_RANGE_SETPOINT)
-    standby: float | None = field(default=None, metadata=_RANGE_SETPOINT)
-    economy: float | None = field(default=None, metadata=_RANGE_SETPOINT)
+    comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
+    standby: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
+    economy: float | None = field(default=None, metadata=_RANGE_TEMPERATURE)
 
 
 @dataclass(slots=True)
-class RoomTemperatureSetpointShifts(_ComfortStandbyEconomy):
+class RoomTemperatureSetpointShifts3(_RoomTemperatureSetpointSet):
     """
     Representation of room temperature setpoint shifts in K.
 
     `comfort`, `standby`, `economy`: float -671088.64..670433.28; None if invalid.
     """
 
-    comfort: float | None = field(default=None, metadata=_RANGE_SETPOINT_SHIFT)
-    standby: float | None = field(default=None, metadata=_RANGE_SETPOINT_SHIFT)
-    economy: float | None = field(default=None, metadata=_RANGE_SETPOINT_SHIFT)
+    comfort: float | None = field(default=None, metadata=_RANGE_TEMPERATURE_DIFFERENCE)
+    standby: float | None = field(default=None, metadata=_RANGE_TEMPERATURE_DIFFERENCE)
+    economy: float | None = field(default=None, metadata=_RANGE_TEMPERATURE_DIFFERENCE)
 
 
-class DPTRoomTemperatureSetpoints(DPTComplex[RoomTemperatureSetpoints]):
+class DPTRoomTemperatureSetpoints3(DPTComplex[RoomTemperatureSetpoints3]):
     """
     Abstraction for KNX 6 octet room temperature setpoints (DPT 222.100).
 
     DPT_TempRoomSetpSetF16[3] - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.23.1
+    7FFFh denotes invalid data per field and maps to `None`.
     """
 
-    data_type = RoomTemperatureSetpoints
+    data_type = RoomTemperatureSetpoints3
     payload_type = DPTArray
     payload_length = 6
     dpt_main_number = 222
     dpt_sub_number = 100
-    value_type = "room_temperature_setpoints"
+    value_type = "room_temperature_setpoints_3"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpoints:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpoints3:
         """Parse/deserialize from KNX/IP raw data."""
-        comfort, standby, economy = _decode(
-            cls.validate_payload(payload), DPTTemperature
-        )
-        return RoomTemperatureSetpoints(
-            comfort=comfort, standby=standby, economy=economy
+        raw = cls.validate_payload(payload)
+        return RoomTemperatureSetpoints3(
+            comfort=_unpack_float_or_not_used(raw[0:2], DPTTemperature),
+            standby=_unpack_float_or_not_used(raw[2:4], DPTTemperature),
+            economy=_unpack_float_or_not_used(raw[4:6], DPTTemperature),
         )
 
     @classmethod
-    def _to_knx(cls, value: RoomTemperatureSetpoints) -> DPTArray:
+    def _to_knx(cls, value: RoomTemperatureSetpoints3) -> DPTArray:
         """Serialize to KNX/IP raw data."""
-        return _encode((value.comfort, value.standby, value.economy), DPTTemperature)
+        return DPTArray(
+            (
+                *_pack_float_or_not_used(value.comfort, DPTTemperature),
+                *_pack_float_or_not_used(value.standby, DPTTemperature),
+                *_pack_float_or_not_used(value.economy, DPTTemperature),
+            )
+        )
 
 
-class DPTRoomTemperatureSetpointShifts(DPTComplex[RoomTemperatureSetpointShifts]):
+class DPTRoomTemperatureSetpointShifts3(DPTComplex[RoomTemperatureSetpointShifts3]):
     """
     Abstraction for KNX 6 octet room temperature setpoint shifts (DPT 222.101).
 
     DPT_TempRoomSetpSetShiftF16[3] - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.23.2
+    7FFFh denotes invalid data per field and maps to `None`.
     """
 
-    data_type = RoomTemperatureSetpointShifts
+    data_type = RoomTemperatureSetpointShifts3
     payload_type = DPTArray
     payload_length = 6
     dpt_main_number = 222
     dpt_sub_number = 101
-    value_type = "room_temperature_setpoint_shifts"
+    value_type = "room_temperature_setpoint_shifts_3"
 
     @classmethod
-    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpointShifts:
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> RoomTemperatureSetpointShifts3:
         """Parse/deserialize from KNX/IP raw data."""
-        comfort, standby, economy = _decode(
-            cls.validate_payload(payload), DPTTemperatureDifference2Byte
-        )
-        return RoomTemperatureSetpointShifts(
-            comfort=comfort, standby=standby, economy=economy
+        raw = cls.validate_payload(payload)
+        return RoomTemperatureSetpointShifts3(
+            comfort=_unpack_float_or_not_used(raw[0:2], DPTTemperatureDifference2Byte),
+            standby=_unpack_float_or_not_used(raw[2:4], DPTTemperatureDifference2Byte),
+            economy=_unpack_float_or_not_used(raw[4:6], DPTTemperatureDifference2Byte),
         )
 
     @classmethod
-    def _to_knx(cls, value: RoomTemperatureSetpointShifts) -> DPTArray:
+    def _to_knx(cls, value: RoomTemperatureSetpointShifts3) -> DPTArray:
         """Serialize to KNX/IP raw data."""
-        return _encode(
-            (value.comfort, value.standby, value.economy),
-            DPTTemperatureDifference2Byte,
+        return DPTArray(
+            (
+                *_pack_float_or_not_used(value.comfort, DPTTemperatureDifference2Byte),
+                *_pack_float_or_not_used(value.standby, DPTTemperatureDifference2Byte),
+                *_pack_float_or_not_used(value.economy, DPTTemperatureDifference2Byte),
+            )
         )

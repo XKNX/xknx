@@ -1,8 +1,4 @@
-"""
-Implementation of KNX DPT 15 Access Data.
-
-KNX v02.02.01 - Datapoint Types 03.07.02 - §3.16
-"""
+"""Implementation of KNX DPT 15 Access Data."""
 
 from __future__ import annotations
 
@@ -54,16 +50,9 @@ class AccessData(DPTComplexData):
         except (AttributeError, TypeError, ValueError) as err:
             raise ValueError(f"Invalid value for AccessData: {err}") from err
         for key, flag in flags.items():
-            if flag not in (True, False):
+            if not isinstance(flag, bool):
                 raise ValueError(f"Invalid value for AccessData value `{key}`: {flag}")
-        return cls(
-            access_code=access_code,
-            detection_error=bool(flags["detection_error"]),
-            permission=bool(flags["permission"]),
-            read_right_to_left=bool(flags["read_right_to_left"]),
-            encrypted=bool(flags["encrypted"]),
-            index=index,
-        )
+        return cls(access_code=access_code, index=index, **flags)
 
     def as_dict(self) -> dict[str, int | bool]:
         """Create a JSON serializable dictionary."""
@@ -78,7 +67,11 @@ class AccessData(DPTComplexData):
 
 
 class DPTAccessData(DPTComplex[AccessData]):
-    """Abstraction for KNX 4 octet access data (DPT 15.000)."""
+    """
+    Abstraction for KNX 4 octet access data (DPT 15.000).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §3.16
+    """
 
     data_type = AccessData
     payload_type = DPTArray
@@ -113,6 +106,9 @@ class DPTAccessData(DPTComplex[AccessData]):
             )
         if not 0 <= value.index <= INDEX_MAX:
             raise ValueError(f"Index out of range 0..{INDEX_MAX}: {value.index}")
+        for key in _FLAG_FIELDS:
+            if not isinstance(flag := getattr(value, key), bool):
+                raise ValueError(f"Invalid value for `{key}`: {flag}")
         return DPTArray(
             (
                 *bytes.fromhex(f"{value.access_code:06d}"),

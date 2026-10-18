@@ -32,6 +32,7 @@ class TestCombinedPosition:
                 CombinedPosition(None, 75),
             ),
             ({"height_position": "30", "slats_position": 40}, CombinedPosition(30, 40)),
+            # an empty dict is a valid telegram with both positions invalid
             ({}, CombinedPosition()),
         ],
     )
@@ -49,9 +50,13 @@ class TestCombinedPosition:
             {"height_position": "a", "slats_position": 0},
             {"height_position": 0, "slats_position": "a"},
             {"height_position": [1]},
+            1,
+            None,
+            "height_position",
+            [("height_position", 1)],
         ],
     )
-    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+    def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid values."""
         with pytest.raises(ValueError):
             CombinedPosition.from_dict(data)

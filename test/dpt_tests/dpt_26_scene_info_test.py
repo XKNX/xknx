@@ -44,9 +44,15 @@ class TestSceneInfo:
             {"scene_number": None, "active": True},
             {"scene_number": 1, "active": "a"},
             {"scene_number": 1, "active": None},
+            {"scene_number": 1, "active": 1},
+            {"scene_number": 1, "active": 0},
+            1,
+            None,
+            "scene_number",
+            [("scene_number", 1)],
         ],
     )
-    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+    def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             SceneInfo.from_dict(data)
@@ -102,7 +108,9 @@ class TestDPTSceneInfo:
             {"scene_number": 0},
             {"scene_number": 65},
             {"scene_number": 1, "active": "a"},
+            {"scene_number": 1, "active": 1},
             {"active": True},
+            SceneInfo(scene_number=1, active=0),  # type: ignore[arg-type]
         ],
     )
     def test_to_knx_invalid(self, value: SceneInfo | dict[str, Any]) -> None:

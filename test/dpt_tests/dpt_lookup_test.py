@@ -197,8 +197,8 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
         ("resistance", DPTResistance, 14, 60, "Ω"),
         ("resistivity", DPTResistivity, 14, 61, "Ωm"),
         (
-            "room_temperature_setpoint_shifts",
-            DPTRoomTemperatureSetpointShifts,
+            "room_temperature_setpoint_shifts_3",
+            DPTRoomTemperatureSetpointShifts3,
             222,
             101,
             None,
@@ -210,7 +210,7 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
             101,
             None,
         ),
-        ("room_temperature_setpoints", DPTRoomTemperatureSetpoints, 222, 100, None),
+        ("room_temperature_setpoints_3", DPTRoomTemperatureSetpoints3, 222, 100, None),
         (
             "room_temperature_setpoints_4",
             DPTRoomTemperatureSetpoints4,

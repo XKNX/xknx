@@ -70,6 +70,8 @@ class TestAccessData:
             {"access_code": 1, "detection_error": None},
             {"access_code": 1, "read_right_to_left": 2},
             {"access_code": 1, "encrypted": "yes"},
+            {"access_code": 1, "permission": 1},
+            {"access_code": 1, "detection_error": 0},
         ],
     )
     def test_dict_invalid(self, data: dict[str, Any]) -> None:
@@ -77,10 +79,11 @@ class TestAccessData:
         with pytest.raises(ValueError):
             AccessData.from_dict(data)
 
-    def test_dict_not_a_mapping(self) -> None:
+    @pytest.mark.parametrize("data", [1, None, "access_code", [("access_code", 1)]])
+    def test_dict_not_a_mapping(self, data: Any) -> None:
         """Test from_dict with something that is not a mapping."""
         with pytest.raises(ValueError):
-            AccessData.from_dict(1)  # type: ignore[arg-type]
+            AccessData.from_dict(data)
 
 
 class TestDPTAccessData:
@@ -155,6 +158,8 @@ class TestDPTAccessData:
             {"access_code": 1, "permission": "a"},
             AccessData(access_code="a"),  # type: ignore[arg-type]
             AccessData(access_code=1.5),  # type: ignore[arg-type]
+            AccessData(access_code=1, permission=1),  # type: ignore[arg-type]
+            AccessData(access_code=1, encrypted="a"),  # type: ignore[arg-type]
         ],
     )
     def test_to_knx_wrong_value(self, value: Any) -> None:

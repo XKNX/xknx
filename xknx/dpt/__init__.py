@@ -252,10 +252,10 @@ from .dpt_29 import (
     DPTReactiveEnergy8Byte,
 )
 from .dpt_222 import (
-    DPTRoomTemperatureSetpoints,
-    DPTRoomTemperatureSetpointShifts,
-    RoomTemperatureSetpoints,
-    RoomTemperatureSetpointShifts,
+    DPTRoomTemperatureSetpoints3,
+    DPTRoomTemperatureSetpointShifts3,
+    RoomTemperatureSetpoints3,
+    RoomTemperatureSetpointShifts3,
 )
 from .dpt_225 import (
     DPTScalingSpeed,

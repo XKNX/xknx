@@ -33,6 +33,7 @@ class TestStatusSAB:
     @pytest.mark.parametrize(
         ("data", "value"),
         [
+            # an empty dict is a valid telegram: positions invalid, no status bit set
             ({}, StatusSAB()),
             (
                 {"height_position": 0, "slats_position": 100},
@@ -81,10 +82,13 @@ class TestStatusSAB:
             {"slats_position": "a"},
             {"slats_position": [1]},
             {"locked": 1},
+            {"forced": 0},
             {"failure": "true"},
             {"weather_alarm": None},
             [1, 2],
             None,
+            1,
+            "locked",
         ],
     )
     def test_dict_invalid(self, data: Any) -> None:

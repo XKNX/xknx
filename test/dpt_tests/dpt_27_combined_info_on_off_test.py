@@ -22,6 +22,7 @@ class TestCombinedInfoOnOff:
     @pytest.mark.parametrize(
         ("data", "value"),
         [
+            # an empty dict is a valid telegram with every output not valid
             ({}, CombinedInfoOnOff()),
             ({"output_1": True}, CombinedInfoOnOff(output_1=True)),
             ({"output_16": False}, CombinedInfoOnOff(output_16=False)),
@@ -41,22 +42,22 @@ class TestCombinedInfoOnOff:
         # fields default to `None`
         assert value.as_dict() == ALL_NONE | data
 
-    def test_dict_int_values(self) -> None:
-        """Test from_dict accepting 0 and 1."""
-        assert CombinedInfoOnOff.from_dict(
-            {"output_1": 1, "output_2": 0}
-        ) == CombinedInfoOnOff(output_1=True, output_2=False)
-
     @pytest.mark.parametrize(
         "data",
         [
             {"output_1": "a"},
+            {"output_1": 1},
+            {"output_2": 0},
             {"output_3": 2},
             {"output_16": "on"},
             {"output_4": 0.5},
+            1,
+            None,
+            "output_1",
+            [("output_1", True)],
         ],
     )
-    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+    def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid values."""
         with pytest.raises(ValueError):
             CombinedInfoOnOff.from_dict(data)
@@ -125,6 +126,7 @@ class TestDPTCombinedInfoOnOff:
             (0x00, 0x01, 0x00, 0x01),
             {"output_1": "a"},
             {"output_2": 2},
+            {"output_3": 1},
             CombinedInfoOnOff(output_1="a"),  # type: ignore[arg-type]
             CombinedInfoOnOff(output_16=1),  # type: ignore[arg-type]
         ],

@@ -13,7 +13,7 @@ from .payload import DPTArray, DPTBinary
 _RANGE_PERCENT = {"value_min": 0, "value_max": 100}
 
 # Status bit fields in order of their bit number in the B16 attributes field.
-# Bits 11 to 13 are reserved and shall be 0 - KNX v02.02.01 - Datapoint Types 03.07.02 - §7.4
+# Bits 11 to 13 are reserved and shall be 0.
 _STATUS_BITS = (
     "upper_end_position",
     "lower_end_position",
@@ -97,7 +97,11 @@ class StatusSAB(DPTComplexData):
 
 
 class DPTStatusSAB(DPTComplex[StatusSAB]):
-    """Abstraction for KNX 4 octet status shutter & sunblind actuator (DPT 241.800)."""
+    """
+    Abstraction for KNX 4 octet status shutter & sunblind actuator (DPT 241.800).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §7.4
+    """
 
     data_type = StatusSAB
     payload_type = DPTArray
@@ -112,10 +116,10 @@ class DPTStatusSAB(DPTComplex[StatusSAB]):
         raw = cls.validate_payload(payload)
         attributes = raw[2] << 8 | raw[3]
         return StatusSAB(
-            height_position=DPTScaling.from_knx(DPTArray(raw[0]))
+            height_position=DPTScaling.from_knx(DPTArray((raw[0],)))
             if attributes >> _VALID_HEIGHT_POSITION_BIT & 0b1
             else None,
-            slats_position=DPTScaling.from_knx(DPTArray(raw[1]))
+            slats_position=DPTScaling.from_knx(DPTArray((raw[1],)))
             if attributes >> _VALID_SLATS_POSITION_BIT & 0b1
             else None,
             **{

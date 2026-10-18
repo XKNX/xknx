@@ -22,12 +22,9 @@ class TestScalingSpeed:
     @pytest.mark.parametrize(
         ("data", "value"),
         [
-            ({"time_period": 4000, "percent": 100}, ScalingSpeed(4000, 100.0)),
-            ({"time_period": "100", "percent": "0.4"}, ScalingSpeed(100, 0.4)),
-            (
-                {"time_period": 6_553_500, "percent": 75.3},
-                ScalingSpeed(6_553_500, 75.3),
-            ),
+            ({"time_period": 4000, "percent": 100}, ScalingSpeed(4000, 100)),
+            ({"time_period": "100", "percent": "1"}, ScalingSpeed(100, 1)),
+            ({"time_period": 6_553_500, "percent": 75}, ScalingSpeed(6_553_500, 75)),
         ],
     )
     def test_dict_scaling_speed(
@@ -44,25 +41,32 @@ class TestScalingSpeed:
     def test_dict_scaling_step_time(self) -> None:
         """Test from_dict and as_dict methods of ScalingStepTime."""
         value = ScalingStepTime.from_dict({"time_period": 15, "percent": 100})
-        assert value == ScalingStepTime(15, 100.0)
-        assert value.as_dict() == {"time_period": 15, "percent": 100.0}
+        assert value == ScalingStepTime(15, 100)
+        assert value.as_dict() == {"time_period": 15, "percent": 100}
 
     @pytest.mark.parametrize(
         "data",
         [
+            # both fields are required - there is no invalid marker in the telegram
             {},
             {"time_period": 100},
             {"percent": 50},
             {"time_period": None, "percent": 50},
             {"time_period": "a", "percent": 50},
             {"time_period": 100, "percent": "a"},
+            {"time_period": 100, "percent": "0.4"},
             {"time_period": [], "percent": 50},
+            # not a mapping
+            1,
+            None,
+            "time_period",
+            [("time_period", 100), ("percent", 50)],
         ],
     )
     @pytest.mark.parametrize("data_class", [ScalingSpeed, ScalingStepTime])
     def test_dict_invalid(
         self,
-        data: dict[str, Any],
+        data: Any,
         data_class: type[ScalingSpeed | ScalingStepTime],
     ) -> None:
         """Test from_dict with invalid data."""
@@ -77,13 +81,12 @@ class TestDPTScalingSpeed:
         ("value", "raw"),
         [
             # spec examples
-            (ScalingSpeed(4000, 100.0), (0x00, 0x28, 0xFF)),
-            (ScalingSpeed(12_000, 75.3), (0x00, 0x78, 0xC0)),
-            (ScalingSpeed(2000, 100.0), (0x00, 0x14, 0xFF)),
+            (ScalingSpeed(4000, 100), (0x00, 0x28, 0xFF)),
+            (ScalingSpeed(2000, 100), (0x00, 0x14, 0xFF)),
             # limits
-            (ScalingSpeed(100, 0.4), (0x00, 0x01, 0x01)),
-            (ScalingSpeed(6_553_500, 100.0), (0xFF, 0xFF, 0xFF)),
-            (ScalingSpeed(25_600, 50.2), (0x01, 0x00, 0x80)),
+            (ScalingSpeed(100, 1), (0x00, 0x01, 0x03)),
+            (ScalingSpeed(6_553_500, 100), (0xFF, 0xFF, 0xFF)),
+            (ScalingSpeed(25_600, 50), (0x01, 0x00, 0x80)),
         ],
     )
     def test_value(self, value: ScalingSpeed, raw: tuple[int, ...]) -> None:
@@ -93,16 +96,36 @@ class TestDPTScalingSpeed:
         assert DPTScalingSpeed.from_knx(knx_value) == value
 
     def test_spec_example_percent(self) -> None:
-        """75 % of the spec example encodes like DPT_Scaling (5.001)."""
+        """75 % of the spec example (C0h) is encoded like DPT 5.001 (BFh)."""
+        assert DPTScalingSpeed.from_knx(DPTArray((0x00, 0x78, 0xC0))) == ScalingSpeed(
+            12_000, 75
+        )
         assert DPTScalingSpeed.to_knx(ScalingSpeed(12_000, 75)) == DPTArray(
             (0x00, 0x78, 0xBF)
         )
 
-    @pytest.mark.parametrize("raw_percent", range(1, 256))
-    def test_percent_round_trip(self, raw_percent: int) -> None:
-        """Test every percent raw value survives a round trip."""
-        raw = DPTArray((0x00, 0x01, raw_percent))
-        assert DPTScalingSpeed.to_knx(DPTScalingSpeed.from_knx(raw)) == raw
+    @pytest.mark.parametrize(
+        ("time_period", "raw_time_period"),
+        [
+            (100, 0x01),
+            (150, 0x01),
+            (199, 0x01),
+            (200, 0x02),
+            (250, 0x02),
+            (6_553_599, 0xFFFF),
+        ],
+    )
+    def test_time_period_rounding(self, time_period: int, raw_time_period: int) -> None:
+        """Test the time period is truncated to 100 ms like DPT 7.004."""
+        assert DPTScalingSpeed.to_knx(ScalingSpeed(time_period, 100)) == DPTArray(
+            (raw_time_period >> 8, raw_time_period & 0xFF, 0xFF)
+        )
+
+    @pytest.mark.parametrize("percent", range(1, 101))
+    def test_percent_round_trip(self, percent: int) -> None:
+        """Test every percent value survives a round trip."""
+        value = ScalingSpeed(100, percent)
+        assert DPTScalingSpeed.from_knx(DPTScalingSpeed.to_knx(value)) == value
 
     def test_to_knx_from_dict(self) -> None:
         """Test DPTScalingSpeed serializing from a dict."""
@@ -115,13 +138,15 @@ class TestDPTScalingSpeed:
         [
             ScalingSpeed(99, 50),
             ScalingSpeed(0, 50),
-            ScalingSpeed(6_553_501, 50),
-            ScalingSpeed(1000, 0.3),
+            ScalingSpeed(-100, 50),
+            ScalingSpeed(6_553_600, 50),
             ScalingSpeed(1000, 0),
-            ScalingSpeed(1000, 100.1),
+            ScalingSpeed(1000, 0.1),  # type: ignore[arg-type]
+            ScalingSpeed(1000, 101),
             ScalingSpeed(1000, -1),
             ScalingSpeed("a", 50),  # type: ignore[arg-type]
             ScalingSpeed(1000, "a"),  # type: ignore[arg-type]
+            ScalingSpeed(None, 50),  # type: ignore[arg-type]
             {"time_period": 1000},
             {"time_period": 1000, "percent": "a"},
             None,
@@ -135,16 +160,19 @@ class TestDPTScalingSpeed:
             DPTScalingSpeed.to_knx(value)
 
     @pytest.mark.parametrize(
-        "raw",
+        ("raw", "value"),
         [
-            (0x00, 0x00, 0xFF),  # time period 0
-            (0x00, 0x28, 0x00),  # percent 0
+            ((0x00, 0x00, 0xFF), ScalingSpeed(0, 100)),  # time period 0
+            ((0x00, 0x28, 0x00), ScalingSpeed(4000, 0)),  # percent 0
+            ((0x00, 0x00, 0x00), ScalingSpeed(0, 0)),
+            ((0x00, 0x28, 0x01), ScalingSpeed(4000, 0)),  # 0,4 % rounds to 0
         ],
     )
-    def test_from_knx_out_of_range(self, raw: tuple[int, ...]) -> None:
-        """Test DPTScalingSpeed parsing of out of range values."""
-        with pytest.raises(ConversionError):
-            DPTScalingSpeed.from_knx(DPTArray(raw))
+    def test_from_knx_out_of_range(
+        self, raw: tuple[int, ...], value: ScalingSpeed
+    ) -> None:
+        """Test DPTScalingSpeed parsing of out of range values is lenient."""
+        assert DPTScalingSpeed.from_knx(DPTArray(raw)) == value
 
     @pytest.mark.parametrize(
         "payload",
@@ -177,11 +205,10 @@ class TestDPTScalingSpeed:
             },
             {
                 "name": "percent",
-                "type": "float",
+                "type": "integer",
                 "required": True,
-                "value_min": 0.4,
-                "value_max": 100.0,
-                "resolution": 0.4,
+                "value_min": 1,
+                "value_max": 100,
             },
         ]
 
@@ -193,13 +220,12 @@ class TestDPTScalingStepTime:
         ("value", "raw"),
         [
             # spec examples
-            (ScalingStepTime(15, 100.0), (0x00, 0x0F, 0xFF)),
-            (ScalingStepTime(62, 75.3), (0x00, 0x3E, 0xC0)),
-            (ScalingStepTime(31, 100.0), (0x00, 0x1F, 0xFF)),
+            (ScalingStepTime(15, 100), (0x00, 0x0F, 0xFF)),
+            (ScalingStepTime(31, 100), (0x00, 0x1F, 0xFF)),
             # limits
-            (ScalingStepTime(1, 0.4), (0x00, 0x01, 0x01)),
-            (ScalingStepTime(65_535, 100.0), (0xFF, 0xFF, 0xFF)),
-            (ScalingStepTime(256, 50.2), (0x01, 0x00, 0x80)),
+            (ScalingStepTime(1, 1), (0x00, 0x01, 0x03)),
+            (ScalingStepTime(65_535, 100), (0xFF, 0xFF, 0xFF)),
+            (ScalingStepTime(256, 50), (0x01, 0x00, 0x80)),
         ],
     )
     def test_value(self, value: ScalingStepTime, raw: tuple[int, ...]) -> None:
@@ -207,6 +233,15 @@ class TestDPTScalingStepTime:
         knx_value = DPTScalingStepTime.to_knx(value)
         assert knx_value == DPTArray(raw)
         assert DPTScalingStepTime.from_knx(knx_value) == value
+
+    def test_spec_example_percent(self) -> None:
+        """75 % of the spec example (C0h) is encoded like DPT 5.001 (BFh)."""
+        assert DPTScalingStepTime.from_knx(
+            DPTArray((0x00, 0x3E, 0xC0))
+        ) == ScalingStepTime(62, 75)
+        assert DPTScalingStepTime.to_knx(ScalingStepTime(62, 75)) == DPTArray(
+            (0x00, 0x3E, 0xBF)
+        )
 
     def test_to_knx_from_dict(self) -> None:
         """Test DPTScalingStepTime serializing from a dict."""
@@ -220,8 +255,8 @@ class TestDPTScalingStepTime:
             ScalingStepTime(0, 50),
             ScalingStepTime(65_536, 50),
             ScalingStepTime(-1, 50),
-            ScalingStepTime(15, 0.3),
-            ScalingStepTime(15, 100.1),
+            ScalingStepTime(15, 0),
+            ScalingStepTime(15, 101),
             ScalingStepTime(15, "a"),  # type: ignore[arg-type]
             {"percent": 50},
             None,
@@ -234,16 +269,17 @@ class TestDPTScalingStepTime:
             DPTScalingStepTime.to_knx(value)
 
     @pytest.mark.parametrize(
-        "raw",
+        ("raw", "value"),
         [
-            (0x00, 0x00, 0xFF),  # time period 0
-            (0x00, 0x0F, 0x00),  # percent 0
+            ((0x00, 0x00, 0xFF), ScalingStepTime(0, 100)),  # time period 0
+            ((0x00, 0x0F, 0x00), ScalingStepTime(15, 0)),  # percent 0
         ],
     )
-    def test_from_knx_out_of_range(self, raw: tuple[int, ...]) -> None:
-        """Test DPTScalingStepTime parsing of out of range values."""
-        with pytest.raises(ConversionError):
-            DPTScalingStepTime.from_knx(DPTArray(raw))
+    def test_from_knx_out_of_range(
+        self, raw: tuple[int, ...], value: ScalingStepTime
+    ) -> None:
+        """Test DPTScalingStepTime parsing of out of range values is lenient."""
+        assert DPTScalingStepTime.from_knx(DPTArray(raw)) == value
 
     @pytest.mark.parametrize(
         "payload",
@@ -275,10 +311,9 @@ class TestDPTScalingStepTime:
             },
             {
                 "name": "percent",
-                "type": "float",
+                "type": "integer",
                 "required": True,
-                "value_min": 0.4,
-                "value_max": 100.0,
-                "resolution": 0.4,
+                "value_min": 1,
+                "value_max": 100,
             },
         ]
