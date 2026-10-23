@@ -127,6 +127,53 @@ class TestSyncSecureData:
             tpci=tpci.TDataConnected(sequence_number=0),
         ) == (3, 4)
 
+    @pytest.mark.parametrize(
+        ("serial_number", "challenge", "match"),
+        [
+            (bytes(5), CHALLENGE, "Invalid KNX Serial Number"),
+            (bytes(6), bytes(7), "Invalid challenge"),
+        ],
+    )
+    def test_sync_request_invalid_fields(
+        self, serial_number: bytes, challenge: bytes, match: str
+    ) -> None:
+        """KNX Serial Number and Challenge have 6 octets each."""
+        with pytest.raises(DataSecureError, match=match):
+            SecureData.init_sync_request(
+                key=TOOL_KEY,
+                scf=SecurityControlField.from_knx(0x92),
+                sequence_number=1,
+                serial_number=serial_number,
+                challenge=challenge,
+                address_fields_raw=TOOL_TO_DEVICE,
+                address_type=CEMIAddressType.INDIVIDUAL,
+                frame_format=CEMIFrameFormat.STANDARD,
+                tpci=tpci.TDataConnected(sequence_number=0),
+            )
+
+    def test_sync_pdus_invalid_length(self) -> None:
+        """S-A_Sync_Req and S-A_Sync_Res carry 12 octets besides SeqNr and MAC."""
+        secured_data = SecureData(
+            sequence_number_bytes=bytes(6),
+            secured_apdu=bytes(11),
+            message_authentication_code=bytes(4),
+        )
+        frame = {
+            "key": TOOL_KEY,
+            "address_fields_raw": TOOL_TO_DEVICE,
+            "address_type": CEMIAddressType.INDIVIDUAL,
+            "frame_format": CEMIFrameFormat.STANDARD,
+            "tpci": tpci.TDataConnected(sequence_number=0),
+        }
+        with pytest.raises(DataSecureError, match="S-A_Sync_Req-PDU"):
+            secured_data.get_sync_request_challenge(
+                scf=SecurityControlField.from_knx(0x92), **frame
+            )
+        with pytest.raises(DataSecureError, match="S-A_Sync_Res-PDU"):
+            secured_data.get_sync_response_sequence_numbers(
+                scf=SecurityControlField.from_knx(0x93), challenge=CHALLENGE, **frame
+            )
+
     def test_sync_response_wrong_key(self) -> None:
         """A response that does not verify with the key is rejected."""
         s_apdu = _secure(SYNC_RES)
@@ -240,6 +287,48 @@ class TestToolAccess:
         with pytest.raises(DataSecureError, match="MAC verification failed"):
             self.data_secure.received_cemi(response)
         assert not self.data_secure.tool_access_synchronized(DEVICE)
+
+    def test_sync_response_sequence_number_0(self) -> None:
+        """A response with a next valid Sequence Number 0 does not synchronize."""
+        with patch("secrets.token_bytes", return_value=CHALLENGE):
+            self.data_secure.sync_request(DEVICE)
+        scf = SecurityControlField.from_knx(0x93)
+        secured_data = SecureData.init_sync_response(
+            key=TOOL_KEY,
+            scf=scf,
+            challenge=CHALLENGE,
+            random=bytes.fromhex("aaaaaaaaaaaa"),
+            sequence_number_remote=0,
+            sequence_number_local=4,
+            address_fields_raw=DEVICE_TO_TOOL,
+            address_type=CEMIAddressType.INDIVIDUAL,
+            frame_format=CEMIFrameFormat.STANDARD,
+            tpci=tpci.TDataConnected(sequence_number=0),
+        )
+        response = _cemi(
+            DEVICE,
+            TOOL,
+            tpci.TDataConnected(sequence_number=0),
+            apci.SecureAPDU(scf=scf, secured_data=secured_data),
+        )
+        with pytest.raises(DataSecureError, match="Invalid Sequence Number"):
+            self.data_secure.received_cemi(response)
+        assert not self.data_secure.tool_access_synchronized(DEVICE)
+
+    def test_unexpected_service_from_device(self) -> None:
+        """A device doesn't send S-A_Sync_Req to a tool."""
+        request = _cemi(
+            DEVICE, TOOL, tpci.TDataConnected(sequence_number=0), _secure(SYNC_REQ)
+        )
+        with pytest.raises(DataSecureError, match="Unexpected Tool Access service"):
+            self.data_secure.received_cemi(request)
+
+    def test_secured_frame_without_sync_request(self) -> None:
+        """A frame secured already, and no pending S-A_Sync_Req, is sent as it is."""
+        frame = _cemi(
+            TOOL, DEVICE, tpci.TDataConnected(sequence_number=0), _secure(SYNC_REQ)
+        )
+        assert self.data_secure.outgoing_cemi(frame) == frame
 
     def test_control_frames_plain(self) -> None:
         """Transport layer control frames have no APDU and stay plain."""
