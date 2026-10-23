@@ -8,9 +8,24 @@ nav_order: 2
 
 # Unreleased changes
 
+### Breaking changes
+
+- `apci.FunctionPropertyExtStateResponse.return_code` is an `int` instead of a `ReturnCode`. KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3 defines return code ranges without assigning codes to them, and its NOTE 12 states that existing Function Properties may return codes not compatible with the unified return code schema. A response carrying such a code raised `ConversionError` while parsing, so it was dropped.
+  ```python
+  response.return_code == ReturnCode.E_SUCCESS  # before
+  response.return_code == ReturnCode.E_SUCCESS.value  # now
+  ReturnCode(response.return_code)  # now - for a code defined in ReturnCode
+  ```
+
 ### Management
 
 - Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
+- Add connectionless point-to-point communication - KNX v01.02.03 - Transport Layer 03.03.04 - §1.5, telegrams sent as `T_Data_Individual` without a transport connection. `async with xknx.management.connectionless(address) as connectionless:` provides a `ConnectionlessP2P` with `send()`, `receive()` and `request()`, like `Broadcast` and `BroadcastContext` for one device. While it is open, the `T_Data_Individual` telegrams the device sends are handed to it - they were dropped as unhandled before, so a response to a connectionless request could not be received. `receive(expected, timeout)` yields every telegram of the device carrying `expected` until `timeout` elapses, for procedures that need more than the first response. `request()` returns the first telegram carrying the payload's `RESPONSE_TYPE` and skips any other, and raises `ManagementConnectionTimeout` if none arrives within `timeout` (keyword, default 6 seconds). Concurrent `request()` calls are sent one after the other, as nothing in a response tells which request it answers. A `connection()` to the same device may be open at the same time.
+- Add `dm_function_property_write_r` and `dmp_ext_function_property_write_r`, plus their connectionless variants `dm_function_property_write_r_cl` and `dmp_ext_function_property_write_r_cl`, to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.30.1/§3.30.2, calling a Function Property of an Interface Object addressed by its index or by its type and instance. The procedures may use either communication mode: the plain names take an open `P2PConnection`, the `_r_cl` variants a `ConnectionlessP2P` (suffix RCl - §1.2 Table 1). All return the device's `FunctionPropertyStateResponse` / `FunctionPropertyExtStateResponse` - its return code is Function Property specific, so it is left to the caller. A response for another Interface Object or Property raises `ManagementConnectionError`. `FunctionPropertyCommand` and `FunctionPropertyExtCommand` derive from `APCIRequest` now, so `request()` verifies and narrows their response like for `FunctionPropertyStateRead` (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.1/§3.4.8.1: the remote application shall respond).
+
+### Bugfixes
+
+- `FunctionPropertyStateResponse` parses a response without `return_code` and `data` - KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3, the answer of a device to a Function Property service on a Property that is not of the Property Datatype PDT_Function. It raised `ConversionError` before. `return_code` is `None` for such a response. `to_knx()` raises `ConversionError` for a `FunctionPropertyStateResponse` with `data` but without `return_code`.
 
 ### DPT
 
