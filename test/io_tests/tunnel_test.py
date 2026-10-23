@@ -629,6 +629,54 @@ class TestUDPTunnel:
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    async def test_feature_get_acknowledged_on_repeat(
+        self,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a feature request acknowledged only on its repetition succeeds."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel.sequence_number = 23
+        self.tunnel._sequence.expected = 15
+        feature_get = call(
+            KNXIPFrame.init_from_body(
+                TunnellingFeatureGet(
+                    communication_channel_id=1,
+                    sequence_counter=23,
+                    feature_type=TunnellingFeatureType.MAX_APDU_LENGTH,
+                )
+            ),
+            addr=None,
+        )
+        response = TunnellingFeatureResponse(
+            communication_channel_id=1,
+            sequence_counter=15,
+            feature_type=TunnellingFeatureType.MAX_APDU_LENGTH,
+            data=bytes.fromhex("00f8"),
+        )
+
+        task = asyncio.create_task(
+            self.tunnel.feature_get(TunnellingFeatureType.MAX_APDU_LENGTH)
+        )
+        # no ACK for the first try - repeated with the same sequence counter
+        await time_travel(1)
+        assert mock_transport_send.call_args_list == [feature_get, feature_get]
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(TunnellingAck(sequence_counter=23)), HPAI()
+        )
+        await time_travel(0)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(response), HPAI()
+        )
+        await time_travel(0)
+        assert await task == response
+        assert self.tunnel.sequence_number == 24
+        mock_transport_stop.assert_not_called()
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
     async def test_feature_get_tunnel_closed(
         self,
         mock_transport_stop: Mock,
