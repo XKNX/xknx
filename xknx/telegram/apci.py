@@ -3961,7 +3961,19 @@ class PropertyValueRead(APCIRequest[PropertyValueResponse]):
 
 @dataclass(slots=True)
 class PropertyDescriptionResponse(APCI):
-    """PropertyDescriptionResponse service."""
+    """
+    PropertyDescriptionResponse service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1
+    A_PropertyDescription_Response-PDU: `type_` is the whole octet holding the
+    write_enable bit and the 6 bit PDT, `access` the octet holding the 4 bit
+    read_level and write_level. `writable`, `pdt`, `read_level` and
+    `write_level` give the single fields.
+
+    If the Interface Object or the Property doesn't exist, `type_`, `max_count`
+    and `access` are all zero, so `max_count == 0` means the Property doesn't
+    exist and `pdt` then reads as PDT_CONTROL.
+    """
 
     CODE: ClassVar = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
 
@@ -3971,6 +3983,26 @@ class PropertyDescriptionResponse(APCI):
     type_: int = 0
     max_count: int = 1
     access: int = 0
+
+    @property
+    def writable(self) -> bool:
+        """Return whether the Property can be written."""
+        return bool(self.type_ & 0x80)
+
+    @property
+    def pdt(self) -> int:
+        """Return the Property Datatype (see `xknx.profile.PropertyDataType`)."""
+        return self.type_ & 0x3F
+
+    @property
+    def read_level(self) -> int:
+        """Return the access level required to read the Property."""
+        return self.access >> 4
+
+    @property
+    def write_level(self) -> int:
+        """Return the access level required to write the Property."""
+        return self.access & 0x0F
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
