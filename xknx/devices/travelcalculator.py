@@ -141,18 +141,25 @@ class TravelCalculator:
         relative_position = self._travel_to_position - self._last_known_position
 
         def position_reached_or_exceeded(relative_position: int) -> bool:
-            """Return if designated position was reached."""
+            """Return if designated position was reached or overshot."""
             return (
-                relative_position <= 0
-                and self.travel_direction == TravelStatus.DIRECTION_DOWN
-            ) or (
-                relative_position >= 0
-                and self.travel_direction == TravelStatus.DIRECTION_UP
+                # Reached - regardless of travel_direction. This is also the case right
+                # after stop(), where travel_direction is STOPPED and there is no
+                # travel time left to divide by; the clock may not even have advanced
+                # since (15.6 ms resolution on Windows).
+                relative_position == 0
+                # Overshot the target in the direction of travel
+                or (
+                    relative_position < 0
+                    and self.travel_direction == TravelStatus.DIRECTION_DOWN
+                )
+                or (
+                    relative_position > 0
+                    and self.travel_direction == TravelStatus.DIRECTION_UP
+                )
             )
 
-        # Stopped at the target, there is no travel time left to divide by - the
-        # clock may not even have advanced since (15.6 ms resolution on Windows).
-        if relative_position == 0 or position_reached_or_exceeded(relative_position):
+        if position_reached_or_exceeded(relative_position):
             return self._travel_to_position
 
         remaining_travel_time = self.calculate_travel_time(
