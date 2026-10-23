@@ -15,7 +15,6 @@ documents don't specify this encoding.
 from __future__ import annotations
 
 import base64
-import binascii
 from dataclasses import dataclass
 from typing import Final
 
@@ -68,7 +67,8 @@ class FactoryDefaultSetupKey:
 
         Separators and white space are ignored, letters may be lower case, and the
         digits 0, 1 and 8 are read as the letters O, L and B. Raise
-        `InvalidSecureConfiguration` for a code of the wrong length or with a wrong CRC.
+        `InvalidSecureConfiguration` for a code of the wrong length, with a character
+        outside the code's alphabet or with a wrong CRC.
         """
         text = "".join(char for char in code.upper() if char.isalnum()).translate(
             _MISTYPED
@@ -80,7 +80,7 @@ class FactoryDefaultSetupKey:
         try:
             # 36 characters carry 180 bits: 22 octets, the CRC nibble and 4 zero bits
             data = base64.b32decode(text + "AAAA")
-        except binascii.Error as exc:
+        except ValueError as exc:  # binascii.Error, or a non-ASCII letter
             raise InvalidSecureConfiguration(f"Invalid FDSK code: {exc}") from exc
         serial_number = data[:_SERIAL_NUMBER_LENGTH]
         key = data[_SERIAL_NUMBER_LENGTH : _SERIAL_NUMBER_LENGTH + _KEY_LENGTH]

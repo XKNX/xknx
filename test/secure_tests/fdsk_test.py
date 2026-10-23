@@ -52,10 +52,13 @@ def test_round_trip() -> None:
         # one changed character of the key
         (CODE.replace("CAQDAQ", "CAQDAR"), "CRC mismatch"),
         (CODE.replace("A", "!", 1), "36 characters"),
+        # not in the alphabet of the code (A-Z, 2-7)
+        (CODE.replace("A", "9", 1), "Invalid FDSK code"),
+        (CODE.replace("A", "Ä", 1), "Invalid FDSK code"),
     ],
 )
 def test_invalid_code(code: str, message: str) -> None:
-    """A code of the wrong length or with a wrong CRC is rejected."""
+    """A code of the wrong length, with a wrong character or CRC is rejected."""
     with pytest.raises(InvalidSecureConfiguration, match=message):
         FactoryDefaultSetupKey.from_code(code)
 
