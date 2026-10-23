@@ -171,7 +171,7 @@ class TunnellingFeatureResponse(_TunnellingFeature, KNXIPBodyResponse):
         return_code: ReturnCode = ReturnCode.E_SUCCESS,
         data: bytes = b"",
     ) -> None:
-        """Initialize TunnellingFeatureSet object."""
+        """Initialize TunnellingFeatureResponse object."""
         super().__init__(
             communication_channel_id=communication_channel_id,
             sequence_counter=sequence_counter,

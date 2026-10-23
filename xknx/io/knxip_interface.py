@@ -33,6 +33,7 @@ from .self_description import request_description
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
 
 if TYPE_CHECKING:
+    from xknx.knxip import TunnellingFeatureResponse, TunnellingFeatureType
     from xknx.xknx import XKNX
 
     from .interface import Interface
@@ -490,6 +491,43 @@ class KNXIPInterface:
             return await self._interface.request_description()
         return None
 
+    async def _feature_tunnel(self) -> _Tunnel:
+        """
+        Return the connected tunnel if its server supports Tunnelling Feature services.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §3.5 NOTE 3: a server without them
+        ignores the request, so the client checks its description first. The
+        server has to announce Tunnelling v2, which is Service Family version 02h
+        for Tunnelling - KNX v01.06.02 - Core 03.08.02 - §7.6.2/§7.7.2.
+        """
+        tunnel = self._interface
+        if not isinstance(tunnel, _Tunnel):
+            raise CommunicationError("KNX/IP interface is not a connected tunnel")
+        gateway = await self.gateway_info()
+        if gateway is None:
+            raise CommunicationError("Could not read the tunnelling server description")
+        # `supports_tunnelling_tcp` is set for a Tunnelling version >= 2
+        if not gateway.supports_tunnelling_tcp:
+            raise CommunicationError(
+                "Tunnelling server does not announce Tunnelling v2 - "
+                "Tunnelling Feature services are not supported"
+            )
+        return tunnel
+
+    async def tunnelling_feature_get(
+        self, feature_type: TunnellingFeatureType
+    ) -> TunnellingFeatureResponse:
+        """Read an Interface Feature of the tunnelling server - see `_Tunnel.feature_get()`."""
+        tunnel = await self._feature_tunnel()
+        return await tunnel.feature_get(feature_type)
+
+    async def tunnelling_feature_set(
+        self, feature_type: TunnellingFeatureType, data: bytes
+    ) -> TunnellingFeatureResponse:
+        """Write an Interface Feature of the tunnelling server - see `_Tunnel.feature_set()`."""
+        tunnel = await self._feature_tunnel()
+        return await tunnel.feature_set(feature_type, data)
+
 
 async def _cancel_other_tasks() -> None:
     """Cancel all tasks of the running loop except the current one."""
@@ -608,3 +646,21 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
                 self._interface.request_description()
             )
         return None
+
+    async def tunnelling_feature_get(
+        self, feature_type: TunnellingFeatureType
+    ) -> TunnellingFeatureResponse:
+        """Read an Interface Feature of the tunnelling server - see `_Tunnel.feature_get()`."""
+        tunnel = await self._feature_tunnel()
+        return await self._await_from_connection_thread(
+            tunnel.feature_get(feature_type)
+        )
+
+    async def tunnelling_feature_set(
+        self, feature_type: TunnellingFeatureType, data: bytes
+    ) -> TunnellingFeatureResponse:
+        """Write an Interface Feature of the tunnelling server - see `_Tunnel.feature_set()`."""
+        tunnel = await self._feature_tunnel()
+        return await self._await_from_connection_thread(
+            tunnel.feature_set(feature_type, data)
+        )

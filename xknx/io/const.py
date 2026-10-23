@@ -17,6 +17,10 @@ HEARTBEAT_RATE: Final = CONNECTION_ALIVE_TIME - (CONNECTIONSTATE_REQUEST_TIMEOUT
 DEVICE_CONFIGURATION_REQUEST_TIMEOUT: Final = 10
 DEVICE_CONFIGURATION_REQUEST_REPETITIONS: Final = 3
 
+# A tunnelling server answers a TUNNELLING_FEATURE_GET or _SET within this
+# many seconds after confirming it.
+TUNNELLING_FEATURE_RESPONSE_TIMEOUT: Final = 3
+
 # Maximum time an authenticated secure session may remain unused (without
 # any communication over this session) until the session will be dropped.
 SESSION_TIMEOUT: Final = 60
