@@ -11,6 +11,7 @@ nav_order: 2
 ### DPT
 
 - Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
+- Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
 - Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
 - Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
 - Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)

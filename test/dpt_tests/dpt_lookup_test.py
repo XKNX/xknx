@@ -144,6 +144,7 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
         ("energy", DPTEnergy, 14, 31, "J"),
         ("energy_direction", DPTEnergyDirection, 1, 1201, None),
         ("enthalpy", DPTEnthalpy, 9, 60000, "H"),
+        ("error_class_system", DPTErrorClassSystem, 20, 11, None),
         ("flow_rate_m3h", DPTFlowRateM3H, 13, 2, "m³/h"),
         ("force", DPTForce, 14, 32, "N"),
         ("forcing_signal", DPTForceSign, 21, 100, None),
