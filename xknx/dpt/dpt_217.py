@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any
 
 from .dpt import DPTComplex, DPTComplexData
 from .payload import DPTArray, DPTBinary
@@ -21,24 +21,23 @@ class KNXVersion(DPTComplexData):
     `revision_number`: int 0..63 - incremented for minor changes
 
     Invalid, void or undefined version information is encoded as
-    31.31.63 (`KNXVersion.INVALID`, see `is_invalid`). It is decoded and
+    31.31.63 (`KNXVersion.invalid()`, see `is_invalid`). It is decoded and
     encoded like any other value.
     """
-
-    INVALID: ClassVar[KNXVersion]
 
     magic_number: int = field(metadata={"value_min": 0, "value_max": 31})
     version_number: int = field(metadata={"value_min": 0, "value_max": 31})
     revision_number: int = field(metadata={"value_min": 0, "value_max": 63})
 
+    @classmethod
+    def invalid(cls) -> KNXVersion:
+        """Return the encoding of invalid version information (31.31.63)."""
+        return cls(magic_number=31, version_number=31, revision_number=63)
+
     @property
     def is_invalid(self) -> bool:
         """Return whether this is the encoding of invalid version information."""
-        return (
-            self.magic_number,
-            self.version_number,
-            self.revision_number,
-        ) == (31, 31, 63)
+        return self == KNXVersion.invalid()
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> KNXVersion:
@@ -64,11 +63,14 @@ class KNXVersion(DPTComplexData):
         }
 
     def __str__(self) -> str:
-        """Return the version as `magic_number.version_number.revision_number`."""
+        """
+        Return the version as `magic_number.version_number.revision_number`.
+
+        This is the M.V.R notation of the spec. A user interface normally
+        doesn't show the magic number, see KNX v02.02.01 - Datapoint Types
+        03.07.02 - §3.42.
+        """
         return f"{self.magic_number}.{self.version_number}.{self.revision_number}"
-
-
-KNXVersion.INVALID = KNXVersion(31, 31, 63)
 
 
 class DPTVersion(DPTComplex[KNXVersion]):
@@ -77,7 +79,12 @@ class DPTVersion(DPTComplex[KNXVersion]):
 
     KNX v02.02.01 - Datapoint Types 03.07.02 - §3.42: format U5U5U6 -
     Magic Number, Version Number, Revision Number. Used for software, hardware
-    and data-interface versions, eg. `PID_VERSION` of an Interface Object.
+    and data-interface versions, e.g. `PID_VERSION` of an Interface Object.
+
+    KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §3.2 lists
+    `PID_VERSION` as `PDT_VERSION (U6U6U6)`, but §4.1 of the same document
+    defines `PDT_VERSION` as DPT_Version `U5U5U6` in 2 octets. Only 5 + 5 + 6
+    bits fit in 2 octets, so this is the encoding used here.
     """
 
     data_type = KNXVersion

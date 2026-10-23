@@ -24,9 +24,11 @@ class TestKNXVersion:
             {"magic_number": 1, "version_number": 2},
             {"magic_number": "a", "version_number": 2, "revision_number": 3},
             {"magic_number": None, "version_number": 2, "revision_number": 3},
+            1,
+            None,
         ],
     )
-    def test_dict_invalid(self, data: dict[str, Any]) -> None:
+    def test_dict_invalid(self, data: Any) -> None:
         """Test from_dict with invalid data."""
         with pytest.raises(ValueError):
             KNXVersion.from_dict(data)
@@ -37,8 +39,8 @@ class TestKNXVersion:
 
     def test_invalid(self) -> None:
         """Test the encoding of invalid version information."""
-        assert KNXVersion(31, 31, 63) == KNXVersion.INVALID
-        assert KNXVersion.INVALID.is_invalid
+        assert KNXVersion(31, 31, 63) == KNXVersion.invalid()
+        assert KNXVersion.invalid().is_invalid
         assert KNXVersion(31, 31, 63).is_invalid
         assert not KNXVersion(31, 31, 62).is_invalid
         assert not KNXVersion(0, 0, 0).is_invalid
@@ -66,7 +68,7 @@ class TestDPTVersion:
 
     def test_dpt_version_invalid(self) -> None:
         """Test DPTVersion with invalid version information."""
-        assert DPTVersion.to_knx(KNXVersion.INVALID) == DPTArray((0xFF, 0xFF))
+        assert DPTVersion.to_knx(KNXVersion.invalid()) == DPTArray((0xFF, 0xFF))
         assert DPTVersion.from_knx(DPTArray((0xFF, 0xFF))).is_invalid
 
     def test_dpt_version_to_knx_from_dict(self) -> None:
