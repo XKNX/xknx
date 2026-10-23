@@ -529,12 +529,23 @@ class KeyringSAXContentHandler(ContentHandler):
         self.output.append(2)
 
     def append_string(self, value: str | bytes) -> None:
-        """Append a string to a byte array for signature verification."""
+        """
+        Append a string to a byte array for signature verification.
 
+        The string is prefixed with its length in octets as a 7-bit encoded integer
+        (LEB128): 7 bits per octet, least significant group first, the high bit set on
+        all but the last octet - as `System.IO.BinaryWriter.Write(string)` writes it,
+        which the keyring signature of the KNX Falcon library is computed with. A
+        length below 128 is a single octet.
+        """
         if isinstance(value, str):
             value = value.encode("utf-8")
 
-        self.output.append(len(value))
+        length = len(value)
+        while length >= 0x80:
+            self.output.append(length & 0x7F | 0x80)
+            length >>= 7
+        self.output.append(length)
         self.output.extend(value)
 
 
