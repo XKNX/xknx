@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import VerificationError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.procedures.device.dmp_ext_load_state_machine_write_r_co_io import (
     dmp_ext_load_state_machine_write_r_co_io,
 )
@@ -16,6 +16,7 @@ from .load_state_machine_helpers import (
     PID_LOAD_STATE_CONTROL,
     connect,
     ext_response,
+    property_response,
     sent_requests,
 )
 
@@ -51,6 +52,17 @@ async def test_dmp_ext_load_state_machine_write_r_co_io(xknx: XKNX) -> None:
     )
     assert state is LoadState.UNLOADED
     assert sent_requests(xknx) == [_ext_command(b"\x04" + bytes(9))]
+
+
+async def test_dmp_ext_load_state_machine_write_r_co_io_unexpected_response(
+    xknx: XKNX,
+) -> None:
+    """Test that a response of another service raises."""
+    conn = await connect(xknx, [property_response(b"\x02")])
+    with pytest.raises(ManagementConnectionError, match="unexpected response"):
+        await dmp_ext_load_state_machine_write_r_co_io(
+            conn, ResourceObjectType.OBJECT_APPLICATION_PROGRAM, 1, LoadEvent.UNLOAD
+        )
 
 
 async def test_dmp_ext_load_state_machine_write_r_co_io_load_completing(

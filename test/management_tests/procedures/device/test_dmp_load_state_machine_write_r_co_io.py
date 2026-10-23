@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import VerificationError
+from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.procedures.device.dmp_load_state_machine_write_r_co_io import (
     dmp_load_state_machine_write_r_co_io,
     load_event_data_relative_allocation,
@@ -73,6 +73,21 @@ async def test_dmp_load_state_machine_write_r_co_io_verify_fails(xknx: XKNX) -> 
     conn = await connect(xknx, [property_response(b"\x03")])
     with pytest.raises(VerificationError, match="ERROR, expected LOADED"):
         await dmp_load_state_machine_write_r_co_io(conn, 3, LoadEvent.LOAD_COMPLETED)
+
+
+async def test_dmp_load_state_machine_write_r_co_io_no_operation(xknx: XKNX) -> None:
+    """Test that verify accepts any state for an event without an expected one."""
+    conn = await connect(xknx, [property_response(b"\x03")])
+    state = await dmp_load_state_machine_write_r_co_io(conn, 3, LoadEvent.NO_OPERATION)
+    assert state is LoadState.ERROR
+    assert len(sent_requests(xknx)) == 1
+
+
+async def test_dmp_load_state_machine_write_r_co_io_not_written(xknx: XKNX) -> None:
+    """Test that a response with nr_of_elem=0 (write failed) raises."""
+    conn = await connect(xknx, [property_response(b"", count=0)])
+    with pytest.raises(ManagementConnectionError, match="nr_of_elem=0"):
+        await dmp_load_state_machine_write_r_co_io(conn, 3, LoadEvent.START_LOADING)
 
 
 async def test_dmp_load_state_machine_write_r_co_io_event_data(xknx: XKNX) -> None:

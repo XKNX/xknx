@@ -73,6 +73,26 @@ async def test_dmp_load_state_machine_write_r_co_mem_reads_at_most_three_times(
     assert requests[1:] == [apci.MemoryRead(address=0xB6EA, count=1)] * 3
 
 
+async def test_dmp_load_state_machine_write_r_co_mem_reached_on_last_read(
+    xknx: XKNX,
+) -> None:
+    """Test that the expected state is accepted on the third and last read."""
+    conn = await connect(
+        xknx,
+        [
+            None,
+            memory_response(2, 0xB6EA),
+            memory_response(2, 0xB6EA),
+            memory_response(1, 0xB6EA),
+        ],
+    )
+    state = await dmp_load_state_machine_write_r_co_mem(
+        conn, ResourceObjectType.OBJECT_ADDRESS_TABLE, LoadEvent.LOAD_COMPLETED
+    )
+    assert state is LoadState.LOADED
+    assert len(sent_requests(xknx)) == 4
+
+
 async def test_dmp_load_state_machine_write_r_co_mem_no_verify(xknx: XKNX) -> None:
     """Test that verify=False reads the state once and returns it."""
     conn = await connect(xknx, [None, memory_response(3)])
