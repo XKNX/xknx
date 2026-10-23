@@ -7,7 +7,10 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.procedures import dm_function_property_write_r
+from xknx.management.procedures import (
+    dm_function_property_write_r,
+    dm_function_property_write_r_cl,
+)
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
 RESPONDER_TIMEOUT = 1
@@ -109,7 +112,7 @@ async def test_dm_function_property_write_r_connectionless(
             )
 
         responder = asyncio.create_task(respond())
-        result = await dm_function_property_write_r(
+        result = await dm_function_property_write_r_cl(
             connectionless, object_index=3, property_id=52
         )
         await responder
@@ -155,7 +158,7 @@ async def test_dm_function_property_write_r_wrong_property(
 
         responder = asyncio.create_task(respond())
         with pytest.raises(ManagementConnectionError):
-            await dm_function_property_write_r(
+            await dm_function_property_write_r_cl(
                 connectionless, object_index=3, property_id=52
             )
         await responder
@@ -171,5 +174,5 @@ async def test_dm_function_property_write_r_out_of_range(
     xknx = xknx_setup
     async with xknx.management.connectionless(IndividualAddress("4.0.10")) as conn:
         with pytest.raises(ValueError):
-            await dm_function_property_write_r(conn, object_index, property_id)
+            await dm_function_property_write_r_cl(conn, object_index, property_id)
     xknx.cemi_handler.send_telegram.assert_not_called()
