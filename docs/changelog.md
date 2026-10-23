@@ -11,6 +11,7 @@ nav_order: 2
 ### Management
 
 - Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
+- `nm_individual_address_write` takes an optional keyword-only `wait_for_programming_mode` (seconds, greater than 0, otherwise `ValueError` is raised) to wait for a device in programming mode, e.g. while the user presses its programming button: A_IndividualAddress_Read is repeated with a time-out of `PROGRAMMING_MODE_POLL_TIMEOUT` (1 s) until a device answers, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2 describes; the last read is shortened to end at the deadline. Without it, programming mode is read once with a time-out of 3 s (KNX v02.01.02 - Management Procedures 03.05.02 - §2.2) as before.
 
 ### DPT
 
