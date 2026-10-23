@@ -4,6 +4,7 @@
 from .const import (
     LoadEvent,
     LoadState,
+    PropertyDataType,
     ResourceDevicePropertyId,
     ResourceEModeChannelPropertyId,
     ResourceEModeDevicePropertyId,

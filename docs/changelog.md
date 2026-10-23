@@ -10,17 +10,33 @@ nav_order: 2
 
 ### Management
 
+- Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
 - Add the Load State Machine procedures of KNX v02.01.02 - Management Procedures 03.05.02 - §3.31-§3.33 to `xknx.management.procedures`, working on an already-open `P2PConnection`:
   - property based (the Property `property_id`, default `PID_LOAD_STATE_CONTROL`, of the Interface Object at `object_index`): `dmp_load_state_machine_write_r_co_io` (§3.31.3), `dm_load_state_machine_verify_r_io` (§3.32.3) and `dmp_load_state_machine_read_r_io` (§3.33.3);
   - with `A_FunctionPropertyExtCommand` / `A_FunctionPropertyExtState_Read`, addressing the Interface Object by type and instance: `dmp_ext_load_state_machine_write_r_co_io` (§3.31.5), `dmp_ext_load_state_machine_verify_r_co_io` (§3.32.4) and `dmp_ext_load_state_machine_read_r_co_io` (§3.33.4);
   - memory mapped, only for mask version 070nh (BIM M112): `dmp_load_state_machine_write_r_co_mem` (§3.31.2), `dm_load_state_machine_verify_r_co_mem` (§3.32.2) and `dmp_load_state_machine_read_r_co_mem` (§3.33.2).
-
   The write procedures take a `LoadEvent` and up to 9 octets of event data (10 for the memory mapped variant) and return the resulting `LoadState`. `load_event_relative_allocation` and `load_event_data_relative_allocation` build the event data of the Additional Load Controls Relative Allocation (0Ah) and Data Relative Allocation (0Bh) of §3.31.3.4. With `verify`, the default for all three, the resulting state is checked against the one the event leads to (KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.3, Table 94) and read again while the device reports an optional intermediate state - `LOAD_COMPLETING` for every event, `UNLOADING` for Unload - for up to 30 seconds (§4.23.2.1); `poll_interval` is at most 3 seconds (§4.23.2.4.1), a longer one raises `ValueError`. The memory mapped variant reads the state up to 3 times as §3.31.2 specifies. A wrong state, or an intermediate state outlasting the timeout, raises `VerificationError`. A device going offline during `LOAD_COMPLETING` raises `ManagementConnectionTimeout`; re-establishing the connection is left to the caller.
 - Add `dmp_download_loadable_part_r_co_io` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.4, the complete download sequence of one loadable part through its property based Load State Machine: an optional Unload, Start Loading, optional Additional Load Controls, the data transfer done by a caller supplied `load` coroutine called with the connection (e.g. `functools.partial(dmp_mem_write_r_co, address=..., data=...)`), and Load Completed - each step verified with `dmp_load_state_machine_write_r_co_io`.
 - Add `LoadState` and `LoadEvent` to `xknx.profile.const` - KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.1, Table 92 and §4.23.2.3.2, Table 93.
 
 ### DPT
 
+- Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
+- Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
+- Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
+- Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion`
+- Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)
+- Add DPT 225.001 (`DPTScalingSpeed`, value_type `"scaling_speed"`) and DPT 225.002 (`DPTScalingStepTime`, value_type `"scaling_step_time"`)
+- Add DPT 240.800 (`DPTCombinedPosition`, value_type `"combined_position"`)
+- Add DPT 241.800 (`DPTStatusSAB`, value_type `"status_sab"`)
+- Add DPT 21.001, 21.002, 21.100-21.106, 21.601, 21.1000-21.1002, 21.1010, 21.1200 and 21.1201 8-bit sets (`DPTStatusGen`, `DPTDeviceControl`, `DPTForceSign`, ...) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.22, §4.4, §6.4.1, §8.2, §9.6, §9.7.
+- Add DPT 22.100 `DPTStatusDHWC`, 22.101 `DPTStatusRHCC`, 22.1000 `DPTMedia` and 22.1010 `DPTChannelActivation16` 16-bit sets, 25.1000 `DPTDoubleNibble` and 30.1010 `DPTChannelActivation24` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1, §4.5.2, §8.3.1, §8.3.2, §8.4, §8.5.1.
+- Add DPT 206.100 `DPTHVACModeNext`, 206.102 `DPTDHWModeNext`, 206.104 `DPTOccModeNext` and 206.105 `DPTBuildingModeNext` with the new enums `DHWMode` (20.103), `OccupancyMode` (20.003) and `BuildingMode` (20.002) in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.
+- Add DPT 207.100 `DPTStatusBUC`, 207.101 `DPTLockSign`, 207.102 `DPTValueDemBOC`, 207.104 `DPTActPosDemAbs`, 207.105 `DPTStatusAct` and 207.600 `DPTStatusLightingActuator` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13, §6.5.1.
+- Add DPT 219.001 `DPTAlarmInfo`, 229.001 `DPTMeteringValue` and 230.1000 `DPTMBusAddress` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.29, §3.45.1, §8.6. The enums they use are in `xknx.dpt.dpt_20`: `Priority` (20.004), `ApplicationArea` (20.006), `ErrorClassSystem` (20.011), `ErrorClassHVAC` (20.012) and `MeteringDeviceType` (20.114).
+- Add DPT 234.001 `DPTLanguageCodeAlpha2ASCII`, 234.002 `DPTRegionCodeAlpha2ASCII`, 236.001 `DPTPrioritisedModeControl`, 237.600 `DPTDALIControlGearDiagnostic`, 238.001 `DPTSceneConfig` and 238.600 `DPTDALIDiagnostics` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.47, §3.49, §6.7.1, §3.50.1, §6.8.1.
+- Add the DALI emergency converter DPTs 244.600 `DPTConverterStatus`, 245.600 `DPTConverterTestResult`, 246.600 `DPTBatteryInfo`, 247.600 `DPTConverterTestInfo`, 248.600 `DPTConverterInfoFix` and 272.600 `DPTConverterInfo` - KNX v02.02.01 - Datapoint Types 03.07.02 - §6.11-§6.15, §6.22.
+- Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
 # 4.0.0 Typed and tidy 2026-10-15
@@ -1747,6 +1763,7 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
+
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1755,6 +1772,7 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
