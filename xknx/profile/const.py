@@ -135,6 +135,36 @@ _PROPERTY_DATA_TYPE_SIZES: dict[PropertyDataType, int] = {
 ResourcePropertyId = IntEnum
 
 
+class LoadState(IntEnum):
+    """
+    State of a Load State Machine, read from PID_LOAD_STATE_CONTROL.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.1, Table 92. UNLOADING and
+    LOAD_COMPLETING are optional intermediate states.
+    """
+
+    UNLOADED = 0
+    LOADED = 1
+    LOADING = 2
+    ERROR = 3
+    UNLOADING = 4
+    LOAD_COMPLETING = 5
+
+
+class LoadEvent(IntEnum):
+    """
+    Event for a Load State Machine, the first octet written to PID_LOAD_STATE_CONTROL.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.2, Table 93.
+    """
+
+    NO_OPERATION = 0x00
+    START_LOADING = 0x01
+    LOAD_COMPLETED = 0x02
+    ADDITIONAL_LOAD_CONTROLS = 0x03
+    UNLOAD = 0x04
+
+
 class ResourceGenericPropertyId(ResourcePropertyId):
     """Enum base class for Property Ids."""
 
