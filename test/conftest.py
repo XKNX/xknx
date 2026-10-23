@@ -1,6 +1,7 @@
 """Conftest for XKNX."""
 
 import asyncio
+import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -14,20 +15,26 @@ class EventLoopClockAdvancer:
     # thanks to @dermotduffy for his asyncio.sleep mock
     # https://github.com/dermotduffy/hyperion-py/blob/main/tests/client_test.py#L273
 
-    __slots__ = ("_base_time", "loop", "offset")
+    __slots__ = ("_loop_start", "_perf_start", "loop", "offset")
 
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         """Initialize."""
         self.offset = 0.0
-        self._base_time = loop.time
         self.loop = loop
+        # The loop clock (time.monotonic) ticks in steps of 15.6 ms on Windows, and the
+        # loop runs every timer due within that resolution. Follow it with the
+        # high-resolution performance counter instead, so an advance by a few
+        # milliseconds is exact there too.
+        self._loop_start = loop.time()
+        self._perf_start = time.perf_counter()
+        self.loop._clock_resolution = time.get_clock_info("perf_counter").resolution  # type: ignore[attr-defined]
 
         # incorporate offset timing into the event loop
         self.loop.time = self.time  # type: ignore[method-assign]
 
     def time(self) -> float:
         """Return loop time adjusted by offset."""
-        return self._base_time() + self.offset
+        return self._loop_start + (time.perf_counter() - self._perf_start) + self.offset
 
     async def _exhaust_callbacks(self) -> None:
         """Run the loop until all ready callbacks are executed."""
