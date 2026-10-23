@@ -6,9 +6,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from xknx import XKNX
-from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
+from xknx.cemi import (
+    CEMIBusmonData,
+    CEMIFrame,
+    CEMIInfo,
+    CEMILData,
+    CEMIMessageCode,
+)
 from xknx.dpt import DPTArray
-from xknx.exceptions import ConfirmationError
+from xknx.exceptions import CommunicationError, ConfirmationError
+from xknx.io import UDPTunnel
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,
@@ -279,3 +286,79 @@ def test_incoming_cemi_no_data_secure_keys(
     assert xknx.connection_manager.cemi_count_incoming == 1
     assert xknx.connection_manager.cemi_count_incoming_error == 0
     assert xknx.connection_manager.undecoded_data_secure == 1
+
+
+@patch("xknx.management.management.Management.process")
+def test_incoming_busmonitor_frame(mock_management_process: MagicMock) -> None:
+    """Test L_Busmon.ind frames are passed to busmonitor callbacks only."""
+    xknx = XKNX()
+    received: list[CEMIFrame] = []
+    unregister = xknx.cemi_handler.register_busmonitor_frame_received_cb(
+        received.append
+    )
+    # L_Busmon.ind with status and timestamp of a GroupValueWrite to 1/2/12
+    raw = bytes.fromhex("2b0703010004021234bc110a0a0ce100813e")
+    xknx.cemi_handler.handle_raw_cemi(raw)
+
+    assert received == [
+        CEMIFrame(
+            code=CEMIMessageCode.L_BUSMON_IND,
+            info=CEMIInfo(bytes.fromhex("03010004021234")),
+            data=CEMIBusmonData(raw_frame=bytes.fromhex("bc110a0a0ce100813e")),
+        )
+    ]
+    assert xknx.telegrams.qsize() == 0
+    mock_management_process.assert_not_called()
+    assert xknx.connection_manager.cemi_count_incoming == 1
+    assert xknx.connection_manager.cemi_count_incoming_error == 0
+
+    # acknowledgement frame
+    xknx.cemi_handler.handle_raw_cemi(bytes.fromhex("2b00cc"))
+    assert len(received) == 2
+    assert received[1].data == CEMIBusmonData(raw_frame=b"\xcc")
+
+    unregister()
+    xknx.cemi_handler.handle_raw_cemi(raw)
+    assert len(received) == 2
+    assert xknx.connection_manager.cemi_count_incoming == 3
+    # unregistering twice is a no-op
+    unregister()
+
+
+def test_busmonitor_frame_callback_error(caplog: pytest.LogCaptureFixture) -> None:
+    """Test an exception in a busmonitor callback does not stop other callbacks."""
+    xknx = XKNX()
+    failing_cb = MagicMock(side_effect=ValueError("test"))
+    working_cb = MagicMock()
+    xknx.cemi_handler.register_busmonitor_frame_received_cb(failing_cb)
+    xknx.cemi_handler.register_busmonitor_frame_received_cb(working_cb)
+
+    xknx.cemi_handler.handle_raw_cemi(bytes.fromhex("2b00cc"))
+    failing_cb.assert_called_once()
+    working_cb.assert_called_once()
+    assert "Unexpected error in busmonitor_frame_received_cb" in caplog.text
+
+    xknx.cemi_handler.unregister_busmonitor_frame_received_cb(failing_cb)
+    xknx.cemi_handler.handle_raw_cemi(bytes.fromhex("2b00cc"))
+    failing_cb.assert_called_once()
+    assert working_cb.call_count == 2
+
+
+async def test_send_telegram_busmonitor() -> None:
+    """Test sending a telegram over a bus monitor tunnel raises instead of waiting."""
+    xknx = XKNX()
+    xknx.knxip_interface._interface = UDPTunnel(
+        xknx,
+        cemi_received_callback=MagicMock(),
+        gateway_ip="192.168.1.2",
+        gateway_port=3671,
+        local_ip="192.168.1.1",
+        busmonitor=True,
+    )
+    test_telegram = Telegram(
+        destination_address=GroupAddress(1),
+        payload=apci.GroupValueWrite(DPTArray((1,))),
+    )
+    with pytest.raises(CommunicationError, match=r"not possible in bus monitor mode"):
+        await xknx.cemi_handler.send_telegram(test_telegram)
+    assert xknx.connection_manager.cemi_count_outgoing_error == 1

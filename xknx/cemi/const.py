@@ -47,6 +47,26 @@ class CEMIMessageCode(Enum):
     M_RESET_IND = 0xF0  # Reset confirmation
 
 
+class CEMIAdditionalInfoType(IntEnum):
+    """
+    Type IDs of cEMI Additional Information.
+
+    KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.4.3.1
+    """
+
+    PL_MEDIUM_INFO = 0x01
+    RF_MEDIUM_INFO = 0x02
+    BUSMONITOR_STATUS_INFO = 0x03
+    TIMESTAMP_RELATIVE = 0x04
+    TIME_DELAY_UNTIL_SENDING = 0x05
+    EXTENDED_RELATIVE_TIMESTAMP = 0x06
+    BIBAT_INFO = 0x07
+    RF_MULTI_INFO = 0x08
+    PREAMBLE_AND_POSTAMBLE = 0x09
+    RF_FAST_ACK_INFO = 0x0A
+    MANUFACTURER_SPECIFIC_DATA = 0xFE
+
+
 class CEMIErrorCode(IntEnum):
     """Enum class for CEMI Error Codes."""
 
