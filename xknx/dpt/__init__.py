@@ -321,6 +321,7 @@ from .dpt_207 import (
     LightingActuatorStatus,
     LockingSignal,
 )
+from .dpt_217 import DPTVersion, KNXVersion
 from .dpt_219 import AlarmInfo, DPTAlarmInfo
 from .dpt_222 import (
     DPTRoomTemperatureSetpoints3,

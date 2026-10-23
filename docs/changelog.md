@@ -13,6 +13,7 @@ nav_order: 2
 - Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
 - Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
 - Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
+- Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion`
 - Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)
 - Add DPT 225.001 (`DPTScalingSpeed`, value_type `"scaling_speed"`) and DPT 225.002 (`DPTScalingStepTime`, value_type `"scaling_step_time"`)
 - Add DPT 240.800 (`DPTCombinedPosition`, value_type `"combined_position"`)

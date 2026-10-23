@@ -319,6 +319,7 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
         ("trigger", DPTTrigger, 1, 17, None),
         ("up_down", DPTUpDown, 1, 8, None),
         ("ventilation_controller_status", DPTStatusAHU, 21, 106, None),
+        ("version", DPTVersion, 217, 1, None),
         ("virtual_dry_contact", DPTVirtualDryContact, 21, 1200, None),
         ("voltage", DPTVoltage, 9, 20, "mV"),
         ("volume", DPTVolume, 14, 76, "m³"),
