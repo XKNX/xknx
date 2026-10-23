@@ -13,11 +13,19 @@ nav_order: 2
 - Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
 - Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
 - Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
+- Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion`
 - Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)
 - Add DPT 225.001 (`DPTScalingSpeed`, value_type `"scaling_speed"`) and DPT 225.002 (`DPTScalingStepTime`, value_type `"scaling_step_time"`)
 - Add DPT 240.800 (`DPTCombinedPosition`, value_type `"combined_position"`)
 - Add DPT 241.800 (`DPTStatusSAB`, value_type `"status_sab"`)
-- Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.42, the 2 octet `U5U5U6` encoding of `magic_number`, `version_number` and `revision_number`. It is the format of `PID_VERSION` and of other version information like software, hardware or data-interface versions; `str(KNXVersion(0, 0, 13))` gives `"0.0.13"`. Invalid version information is encoded as 31.31.63 - `KNXVersion.INVALID`, checked by `is_invalid`.
+- Add DPT 21.001, 21.002, 21.100-21.106, 21.601, 21.1000-21.1002, 21.1010, 21.1200 and 21.1201 8-bit sets (`DPTStatusGen`, `DPTDeviceControl`, `DPTForceSign`, ...) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.22, §4.4, §6.4.1, §8.2, §9.6, §9.7.
+- Add DPT 22.100 `DPTStatusDHWC`, 22.101 `DPTStatusRHCC`, 22.1000 `DPTMedia` and 22.1010 `DPTChannelActivation16` 16-bit sets, 25.1000 `DPTDoubleNibble` and 30.1010 `DPTChannelActivation24` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1, §4.5.2, §8.3.1, §8.3.2, §8.4, §8.5.1.
+- Add DPT 206.100 `DPTHVACModeNext`, 206.102 `DPTDHWModeNext`, 206.104 `DPTOccModeNext` and 206.105 `DPTBuildingModeNext` with the new enums `DHWMode` (20.103), `OccupancyMode` (20.003) and `BuildingMode` (20.002) in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.
+- Add DPT 207.100 `DPTStatusBUC`, 207.101 `DPTLockSign`, 207.102 `DPTValueDemBOC`, 207.104 `DPTActPosDemAbs`, 207.105 `DPTStatusAct` and 207.600 `DPTStatusLightingActuator` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13, §6.5.1.
+- Add DPT 219.001 `DPTAlarmInfo`, 229.001 `DPTMeteringValue` and 230.1000 `DPTMBusAddress` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.29, §3.45.1, §8.6. The enums they use are in `xknx.dpt.dpt_20`: `Priority` (20.004), `ApplicationArea` (20.006), `ErrorClassSystem` (20.011), `ErrorClassHVAC` (20.012) and `MeteringDeviceType` (20.114).
+- Add DPT 234.001 `DPTLanguageCodeAlpha2ASCII`, 234.002 `DPTRegionCodeAlpha2ASCII`, 236.001 `DPTPrioritisedModeControl`, 237.600 `DPTDALIControlGearDiagnostic`, 238.001 `DPTSceneConfig` and 238.600 `DPTDALIDiagnostics` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.47, §3.49, §6.7.1, §3.50.1, §6.8.1.
+- Add the DALI emergency converter DPTs 244.600 `DPTConverterStatus`, 245.600 `DPTConverterTestResult`, 246.600 `DPTBatteryInfo`, 247.600 `DPTConverterTestInfo`, 248.600 `DPTConverterInfoFix` and 272.600 `DPTConverterInfo` - KNX v02.02.01 - Datapoint Types 03.07.02 - §6.11-§6.15, §6.22.
+- Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
 # 4.0.0 Typed and tidy 2026-10-15
@@ -1744,6 +1752,7 @@ Using `asyncio` interface, XKNX has now to be stated and stopped asynchronously:
 import asyncio
 from xknx import XKNX, Outlet
 
+
 async def main():
     xknx = XKNX()
     await xknx.start()
@@ -1752,6 +1761,7 @@ async def main():
     await asyncio.sleep(2)
     outlet.set_off()
     await xknx.stop()
+
 
 # pylint: disable=invalid-name
 loop = asyncio.get_event_loop()
