@@ -575,6 +575,40 @@ class TestUDPTunnel:
         mock_transport_stop.assert_called_once()
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+    async def test_connect_rejected_keeps_error(
+        self,
+        mock_transport_connect: Mock,
+        mock_transport_getsockname: Mock,
+        mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a rejected data link layer tunnel keeps the original error."""
+        mock_transport_getsockname.return_value = ("192.168.1.1", 12345)
+
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                ConnectResponse(
+                    communication_channel=0,
+                    status_code=ErrorCode.E_NO_MORE_CONNECTIONS,
+                )
+            ),
+            HPAI("192.168.1.2", 3671),
+        )
+        with pytest.raises(CommunicationError) as exc_info:
+            await connection_task
+        cause = exc_info.value.__cause__
+        assert isinstance(cause, RequestResponseError)
+        assert cause.error_code is ErrorCode.E_NO_MORE_CONNECTIONS
+        assert "bus monitor" not in str(cause)
+        mock_transport_stop.assert_called_once()
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
     async def test_tunnel_request_description(
         self,

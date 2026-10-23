@@ -54,6 +54,7 @@ def test_standard_frame() -> None:
         dst_addr=GroupAddress("1/2/12"),
         tpdu=bytes.fromhex("0081"),
     )
+    assert frame != STANDARD_FRAME
 
     assert frame.telegram() == Telegram(
         destination_address=GroupAddress("1/2/12"),
