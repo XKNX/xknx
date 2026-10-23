@@ -27,6 +27,10 @@ nav_order: 2
 - Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
+### Bugfixes
+
+- `KNXDateTime.from_dict()` (DPT 19.001) accepts `day_of_week: None`, which `KNXDateTime.as_dict()` writes for an invalid day of week, so the dict of a received date and time can be read back and sent again.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes
