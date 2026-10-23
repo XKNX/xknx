@@ -150,7 +150,9 @@ class TravelCalculator:
                 and self.travel_direction == TravelStatus.DIRECTION_UP
             )
 
-        if position_reached_or_exceeded(relative_position):
+        # Stopped at the target, there is no travel time left to divide by - the
+        # clock may not even have advanced since (15.6 ms resolution on Windows).
+        if relative_position == 0 or position_reached_or_exceeded(relative_position):
             return self._travel_to_position
 
         remaining_travel_time = self.calculate_travel_time(
