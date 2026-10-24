@@ -20,6 +20,10 @@ from xknx.typing import DPTParsable
 
 _GA_DPT_LOGGER = logging.getLogger("xknx.ga_dpt")
 
+# module constants: `A | B` in `isinstance()` builds a new `UnionType` on every call
+_DEVICE_GROUP_ADDRESS_TYPES = (GroupAddress, InternalGroupAddress)
+_GROUP_VALUE_PAYLOAD_TYPES = (GroupValueWrite, GroupValueResponse)
+
 
 class GroupAddressDPT:
     """Class for mapping group addresses to data point types for eager decoding."""
@@ -63,10 +67,10 @@ class GroupAddressDPT:
         """Update telegram data with decoded value."""
         if telegram.decoded_data is not None:
             return
-        if not isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
+        if not isinstance(telegram.payload, _GROUP_VALUE_PAYLOAD_TYPES):
             return
         assert isinstance(  # GroupValueWrite and GroupValueResponse can not have IndividualAddress
-            telegram.destination_address, GroupAddress | InternalGroupAddress
+            telegram.destination_address, _DEVICE_GROUP_ADDRESS_TYPES
         )
         if (transcoder := self.get(telegram.destination_address)) is None:
             return
