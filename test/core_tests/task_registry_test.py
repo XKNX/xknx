@@ -1,6 +1,7 @@
 """Unit test for task registry."""
 
 import asyncio
+import logging
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -78,6 +79,56 @@ class TestTaskRegistry:
         xknx.task_registry.stop()
         assert len(xknx.task_registry.tasks) == 0
         assert task.done()
+
+    async def test_start_task_after_stop(self) -> None:
+        """Test tasks started after stop() are only registered until start()."""
+        xknx = XKNX()
+        mock = AsyncMock()
+        task = Task(name="test", target=mock)
+
+        xknx.task_registry.stop()
+        xknx.task_registry.start_task(task)
+        assert task in xknx.task_registry.tasks
+        assert task.xknx is xknx
+        assert task.done()
+        await asyncio.sleep(0)
+        mock.assert_not_called()
+        # the task can be removed again
+        xknx.task_registry.remove_task(task)
+        assert not xknx.task_registry.tasks
+        assert task.xknx is None
+
+        xknx.task_registry.start_task(task)
+        assert task.done()
+        # start() starts the registered task
+        xknx.task_registry.start()
+        assert not task.done()
+        await xknx.task_registry.block_till_done()
+        mock.assert_awaited_once()
+        assert task.done()
+        # started again normally after start()
+        task_2 = Task(name="test_2", target=mock)
+        xknx.task_registry.start_task(task_2)
+        assert not task_2.done()
+        xknx.task_registry.stop()
+
+    async def test_task_exception_logged(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test an exception raised by the target is logged and stops the task."""
+        xknx = XKNX()
+        mock = Mock(side_effect=ValueError("test"))
+        task = Task(name="test", target=mock, repeat_after=1)
+
+        with caplog.at_level(logging.ERROR, logger="xknx.log"):
+            xknx.task_registry.start_task(task)
+            await xknx.task_registry.block_till_done()
+        assert task.done()
+        mock.assert_called_once()
+        assert len(caplog.records) == 1
+        assert caplog.records[0].getMessage() == "Unexpected error in task test"
+        assert caplog.records[0].exc_info is not None
+        assert isinstance(caplog.records[0].exc_info[1], ValueError)
 
     #
     # TEST CONNECTION HANDLING
@@ -295,3 +346,51 @@ class TestTaskRegistry:
         # after task is finished it should remove itself from the background registry
         assert task.done()
         assert task not in xknx.task_registry._background_task
+
+    async def test_background_exception_logged(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test an exception in a background task is logged."""
+
+        async def failing() -> None:
+            """Raise."""
+            raise ValueError("test")
+
+        xknx = XKNX()
+        with caplog.at_level(logging.ERROR, logger="xknx.log"):
+            xknx.task_registry.background(failing())
+            await asyncio.sleep(0)  # run the task
+            await asyncio.sleep(0)  # run the done callback
+        assert not xknx.task_registry._background_task
+        assert len(caplog.records) == 1
+        assert (
+            caplog.records[0].getMessage()
+            == f"Unexpected error in background task {failing.__qualname__}"
+        )
+        assert caplog.records[0].exc_info is not None
+        assert isinstance(caplog.records[0].exc_info[1], ValueError)
+
+    async def test_background_cancelled_on_stop(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test background tasks are cancelled on stop() - without logging an error."""
+        mock = AsyncMock()
+
+        async def callback() -> None:
+            """Wait forever."""
+            await asyncio.sleep(100)
+            await mock()
+
+        xknx = XKNX()
+        xknx.task_registry.background(callback())
+        task = next(iter(xknx.task_registry._background_task))
+        await asyncio.sleep(0)
+
+        with caplog.at_level(logging.ERROR, logger="xknx.log"):
+            xknx.task_registry.stop()
+            await asyncio.sleep(0)  # cancel the task
+            await asyncio.sleep(0)  # run the done callback
+        assert task.cancelled()
+        assert not xknx.task_registry._background_task
+        mock.assert_not_awaited()
+        assert not caplog.records

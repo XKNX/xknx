@@ -58,18 +58,20 @@ class _RoutingFlowControl:
         "_loop",
         "_ready",
         "_received_busy_frames",
+        "_send_lock",
         "_timer_task",
         "_wait_start_time",
         "_wait_time_ms",
     )
 
     def __init__(self) -> None:
-        self._last_busy_frame_time: float = 0.0
+        self._last_busy_frame_time: float | None = None
         self._last_sent_routing_indication_time: float = 0.0
         self._loop = asyncio.get_running_loop()
         self._ready = asyncio.Event()
         self._ready.set()
         self._received_busy_frames: int = 0
+        self._send_lock = asyncio.Lock()
         self._timer_task: asyncio.Task[None] | None = None
         self._wait_start_time: float | None = None
         self._wait_time_ms: int = 0
@@ -85,13 +87,19 @@ class _RoutingFlowControl:
         # limit RoutingIndication transmission rate according to
         # KNX v01.01.02 - Communication Medium KNX IP 03.02.06 - §2.1
         # simplified version - pause 20 ms after transmit a RoutingIndication
-        elapsed = self._loop.time() - self._last_sent_routing_indication_time
-        if elapsed < ROUTING_INDICATION_WAIT_TIME:
-            await asyncio.sleep(ROUTING_INDICATION_WAIT_TIME - elapsed)
+        # The lock serializes concurrent senders so that each one waits for the
+        # pause after the previously sent frame (and for the ROUTING_BUSY wait
+        # time) instead of all of them sending at once.
+        async with self._send_lock:
+            elapsed = self._loop.time() - self._last_sent_routing_indication_time
+            if elapsed < ROUTING_INDICATION_WAIT_TIME:
+                await asyncio.sleep(ROUTING_INDICATION_WAIT_TIME - elapsed)
 
-        await self._ready.wait()
-        yield
-        self._last_sent_routing_indication_time = self._loop.time()
+            await self._ready.wait()
+            try:
+                yield
+            finally:
+                self._last_sent_routing_indication_time = self._loop.time()
 
     def handle_routing_busy(self, routing_busy: RoutingBusy) -> None:
         """Handle incoming RoutingBusy."""
@@ -99,15 +107,23 @@ class _RoutingFlowControl:
         now = self._loop.time()
         previous_busy_frame_time = self._last_busy_frame_time
         self._last_busy_frame_time = now
+        # N shall be incremented by one with each ROUTING_BUSY Frame received after
+        # 10 ms have passed since the last ROUTING_BUSY - also for the first one and
+        # for frames received while the slowduration fade out is still running.
+        # KNX v01.05.02 - Routing 03.08.05 - §2.3.5
+        if (
+            previous_busy_frame_time is None
+            or (now - previous_busy_frame_time) > BUSY_INCREMENT_COOLDOWN
+        ):
+            self._received_busy_frames += 1
         if self._wait_start_time is None:
             logger.info(
-                "RoutingBusy received: %s",
+                "RoutingBusy received: %s - number %s in moving time window",
                 routing_busy,
+                self._received_busy_frames,
             )
         else:
-            # only apply if we have already received a RoutingBusy frame and are still pausing
-            if (now - previous_busy_frame_time) > BUSY_INCREMENT_COOLDOWN:
-                self._received_busy_frames += 1
+            assert previous_busy_frame_time is not None
             logger.debug(
                 "RoutingBusy received: %s - %s ms since previous - number %s in moving time window",
                 routing_busy,

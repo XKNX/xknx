@@ -114,30 +114,35 @@ class UDPTransport(KNXIPTransport):
     ) -> socket.socket:
         """Create UDP multicast socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setblocking(False)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setblocking(False)
 
-        sock.setsockopt(
-            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(own_ip)
-        )
-        sock.setsockopt(
-            socket.IPPROTO_IP,
-            socket.IP_ADD_MEMBERSHIP,
-            socket.inet_aton(remote_addr[0]) + socket.inet_aton(own_ip),
-        )
-        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+            sock.setsockopt(
+                socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(own_ip)
+            )
+            sock.setsockopt(
+                socket.IPPROTO_IP,
+                socket.IP_ADD_MEMBERSHIP,
+                socket.inet_aton(remote_addr[0]) + socket.inet_aton(own_ip),
+            )
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
-        if sys.platform == "win32":
-            # '' represents INADDR_ANY
-            sock.bind(("", remote_addr[1]))
-        elif sys.platform == "darwin":
-            # allows multiple sockets to the same port by multiple processes
-            # behaves like SO_REUSEADDR for bind for INADDR_ANY
-            # (GatewayScanner opens multiple sockets)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            sock.bind(("", remote_addr[1]))
-        else:
-            sock.bind((remote_addr[0], remote_addr[1]))
+            if sys.platform == "win32":
+                # '' represents INADDR_ANY
+                sock.bind(("", remote_addr[1]))
+            elif sys.platform == "darwin":
+                # allows multiple sockets to the same port by multiple processes
+                # behaves like SO_REUSEADDR for bind for INADDR_ANY
+                # (GatewayScanner opens multiple sockets)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+                sock.bind(("", remote_addr[1]))
+            else:
+                sock.bind((remote_addr[0], remote_addr[1]))
+        except BaseException:
+            # don't leak the file descriptor when joining the group or binding fails
+            sock.close()
+            raise
 
         return sock
 

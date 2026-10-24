@@ -8,9 +8,10 @@ DEFAULT_INDIVIDUAL_ADDRESS: Final = IndividualAddress("15.15.250")
 DEFAULT_MCAST_GRP: Final = "224.0.23.12"
 DEFAULT_MCAST_PORT: Final = 3671
 
-CONNECTION_ALIVE_TIME: Final = 120
+# The client shall send a CONNECTIONSTATE_REQUEST every 60 seconds; the server
+# shall answer within 10 seconds - KNX v01.06.02 - Core 03.08.02 - §5.4.
 CONNECTIONSTATE_REQUEST_TIMEOUT: Final = 10
-HEARTBEAT_RATE: Final = CONNECTION_ALIVE_TIME - (CONNECTIONSTATE_REQUEST_TIMEOUT * 5)
+HEARTBEAT_RATE: Final = 60
 
 # A DeviceConfigurationRequest that stays unacknowledged for this long is
 # repeated this many times, after which the connection is terminated.

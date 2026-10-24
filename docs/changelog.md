@@ -8,6 +8,13 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- Routing: outgoing ROUTING_INDICATION frames of concurrent senders (TelegramQueue, Management) are serialized by the flow control so each one keeps the pause after the previously sent frame and the ROUTING_BUSY wait time, instead of being sent in a burst - KNX v01.01.02 - Communication Medium KNX IP 03.02.06 - §2.1.
+- Routing: the number of received ROUTING_BUSY frames `N` - used for the random wait time extension and the slowduration - counts every frame received more than 10 ms after the previous one, including the first one - KNX v01.05.02 - Routing 03.08.05 - §2.3.5. Before, the first frame was never counted.
+- Tunnelling / Device Management: send a CONNECTIONSTATE_REQUEST heartbeat every 60 seconds instead of every 70 seconds - KNX v01.06.02 - Core 03.08.02 - §5.4. `CONNECTION_ALIVE_TIME` was removed from `xknx.io.const`.
+- Routing: close the multicast socket when configuring or binding it fails instead of leaking it.
+
 ### Management
 
 - Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
@@ -36,6 +43,12 @@ nav_order: 2
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
+- `ValueReader` (used by `RemoteValue.read_state()` and the StateUpdater): the response timeout starts when the GroupValueRead is actually sent instead of when it is queued, so reads waiting behind other outgoing telegrams no longer time out before reaching the bus ("Could not sync group address"). A GroupValueRead that can't be sent within 10 seconds is given up with a warning.
+- StateUpdater: a state update received while a read for the same `RemoteValue` is running no longer frees its `parallel_reads` slot before the read has finished.
+
+### Internals
+
+- TaskRegistry: exceptions of `Task` targets and of `background()` tasks are logged with the task name instead of being noticed only as "Task exception was never retrieved" at garbage collection. `background()` tasks are cancelled on `stop()`. Tasks started after `stop()` - e.g. by device telegrams processed while XKNX is shutting down - are only registered and started on the next `start()`, instead of running unmanaged.
 
 # 4.0.0 Typed and tidy 2026-10-15
 
