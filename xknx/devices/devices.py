@@ -15,6 +15,9 @@ from xknx.typing import DeviceCallbackType
 
 from .device import Device
 
+# module constant: `A | B` in `isinstance()` builds a new `UnionType` on every call
+_DEVICE_GROUP_ADDRESS_TYPES = (GroupAddress, InternalGroupAddress)
+
 
 class Devices:
     """Class for handling a vector/array of devices."""
@@ -104,9 +107,7 @@ class Devices:
 
     def process(self, telegram: Telegram) -> None:
         """Process telegram."""
-        if isinstance(
-            telegram.destination_address, GroupAddress | InternalGroupAddress
-        ):
+        if isinstance(telegram.destination_address, _DEVICE_GROUP_ADDRESS_TYPES):
             for device in self.devices_by_group_address(telegram.destination_address):
                 device.process(telegram)
 

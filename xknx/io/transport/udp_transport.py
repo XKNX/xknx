@@ -44,7 +44,8 @@ class UDPTransport(KNXIPTransport):
 
         def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
             """Call assigned callback. Callback for datagram received."""
-            raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
+            if raw_socket_logger.isEnabledFor(logging.DEBUG):
+                raw_socket_logger.debug("Received from %s: %s", addr, data.hex())
             self.data_received_callback(data, addr)
 
         def error_received(self, exc: Exception) -> None:
@@ -92,13 +93,14 @@ class UDPTransport(KNXIPTransport):
             try:
                 knxipframe, _ = KNXIPFrame.from_knx(raw)
             except CouldNotParseKNXIP as couldnotparseknxip:
-                knx_logger.debug(
-                    "Unsupported KNXIPFrame from %s:%s: %s in %s",
-                    source[0],
-                    source[1],
-                    couldnotparseknxip.description,
-                    raw.hex(),
-                )
+                if knx_logger.isEnabledFor(logging.DEBUG):
+                    knx_logger.debug(
+                        "Unsupported KNXIPFrame from %s:%s: %s in %s",
+                        source[0],
+                        source[1],
+                        couldnotparseknxip.description,
+                        raw.hex(),
+                    )
             else:
                 knx_logger.debug(
                     "Received from %s:%s: %s",

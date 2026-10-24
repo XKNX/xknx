@@ -44,6 +44,47 @@ from .tunnelling_feature import (
 )
 from .tunnelling_request import TunnellingRequest
 
+# KNX/IP body class per service type - the service types xknx implements
+_BODY_CLASSES: dict[KNXIPServiceType, type[KNXIPBody]] = {
+    body_class.SERVICE_TYPE: body_class
+    for body_class in (
+        # Core
+        SearchRequest,
+        SearchRequestExtended,
+        SearchResponse,
+        SearchResponseExtended,
+        DescriptionRequest,
+        DescriptionResponse,
+        ConnectRequest,
+        ConnectResponse,
+        ConnectionStateRequest,
+        ConnectionStateResponse,
+        DisconnectRequest,
+        DisconnectResponse,
+        # Device Management
+        DeviceConfigurationRequest,
+        DeviceConfigurationAck,
+        # Tunnelling
+        TunnellingRequest,
+        TunnellingAck,
+        TunnellingFeatureGet,
+        TunnellingFeatureInfo,
+        TunnellingFeatureResponse,
+        TunnellingFeatureSet,
+        # Routing
+        RoutingIndication,
+        RoutingBusy,
+        RoutingLostMessage,
+        # Secure
+        SecureWrapper,
+        SessionAuthenticate,
+        SessionRequest,
+        SessionResponse,
+        SessionStatus,
+        TimerNotify,
+    )
+}
+
 
 class KNXIPFrame:
     """Class for KNX/IP Frames."""
@@ -78,74 +119,12 @@ class KNXIPFrame:
         # limit data to self.header.total_length for streaming socket data
         raw_body = data[pos_body : header.total_length]
 
-        body: KNXIPBody
-        # Core
-        if header.service_type_ident == KNXIPServiceType.SEARCH_REQUEST:
-            body = SearchRequest()
-        elif header.service_type_ident == KNXIPServiceType.SEARCH_REQUEST_EXTENDED:
-            body = SearchRequestExtended()
-        elif header.service_type_ident == KNXIPServiceType.SEARCH_RESPONSE:
-            body = SearchResponse()
-        elif header.service_type_ident == KNXIPServiceType.SEARCH_RESPONSE_EXTENDED:
-            body = SearchResponseExtended()
-        elif header.service_type_ident == KNXIPServiceType.DESCRIPTION_REQUEST:
-            body = DescriptionRequest()
-        elif header.service_type_ident == KNXIPServiceType.DESCRIPTION_RESPONSE:
-            body = DescriptionResponse()
-        elif header.service_type_ident == KNXIPServiceType.CONNECT_REQUEST:
-            body = ConnectRequest()
-        elif header.service_type_ident == KNXIPServiceType.CONNECT_RESPONSE:
-            body = ConnectResponse()
-        elif header.service_type_ident == KNXIPServiceType.CONNECTIONSTATE_REQUEST:
-            body = ConnectionStateRequest()
-        elif header.service_type_ident == KNXIPServiceType.CONNECTIONSTATE_RESPONSE:
-            body = ConnectionStateResponse()
-        elif header.service_type_ident == KNXIPServiceType.DISCONNECT_REQUEST:
-            body = DisconnectRequest()
-        elif header.service_type_ident == KNXIPServiceType.DISCONNECT_RESPONSE:
-            body = DisconnectResponse()
-        # Device Management
-        elif header.service_type_ident == KNXIPServiceType.DEVICE_CONFIGURATION_REQUEST:
-            body = DeviceConfigurationRequest()
-        elif header.service_type_ident == KNXIPServiceType.DEVICE_CONFIGURATION_ACK:
-            body = DeviceConfigurationAck()
-        # Tunnelling
-        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_REQUEST:
-            body = TunnellingRequest()
-        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_ACK:
-            body = TunnellingAck()
-        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_GET:
-            body = TunnellingFeatureGet()
-        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_INFO:
-            body = TunnellingFeatureInfo()
-        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_RESPONSE:
-            body = TunnellingFeatureResponse()
-        elif header.service_type_ident == KNXIPServiceType.TUNNELLING_FEATURE_SET:
-            body = TunnellingFeatureSet()
-        # Routing
-        elif header.service_type_ident == KNXIPServiceType.ROUTING_INDICATION:
-            body = RoutingIndication()
-        elif header.service_type_ident == KNXIPServiceType.ROUTING_BUSY:
-            body = RoutingBusy()
-        elif header.service_type_ident == KNXIPServiceType.ROUTING_LOST_MESSAGE:
-            body = RoutingLostMessage()
-        # Secure
-        elif header.service_type_ident == KNXIPServiceType.SECURE_WRAPPER:
-            body = SecureWrapper()
-        elif header.service_type_ident == KNXIPServiceType.SESSION_AUTHENTICATE:
-            body = SessionAuthenticate()
-        elif header.service_type_ident == KNXIPServiceType.SESSION_REQUEST:
-            body = SessionRequest()
-        elif header.service_type_ident == KNXIPServiceType.SESSION_RESPONSE:
-            body = SessionResponse()
-        elif header.service_type_ident == KNXIPServiceType.SESSION_STATUS:
-            body = SessionStatus()
-        elif header.service_type_ident == KNXIPServiceType.TIMER_NOTIFY:
-            body = TimerNotify()
-        else:
+        try:
+            body = _BODY_CLASSES[header.service_type_ident]()
+        except KeyError:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {header.service_type_ident.name}"
-            )
+            ) from None
         body.from_knx(raw_body)
         return KNXIPFrame(header=header, body=body), data[header.total_length :]
 

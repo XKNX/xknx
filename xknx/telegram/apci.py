@@ -5305,3 +5305,106 @@ class SecureAPDU(APCI):
     def __str__(self) -> str:
         """Return object as readable string."""
         return f'<SecureAPDU scf="{self.scf}" secured_data={self.secured_data!r} />'
+
+
+# Concrete APCI service classes - resolved by `APCI.from_knx()`
+_APCI_CLASSES: tuple[type[APCI], ...] = (
+    GroupValueRead,
+    GroupValueWrite,
+    GroupValueResponse,
+    IndividualAddressWrite,
+    IndividualAddressResponse,
+    IndividualAddressRead,
+    ADCResponse,
+    ADCRead,
+    FunctionPropertyExtCommand,
+    FunctionPropertyExtStateResponse,
+    FunctionPropertyExtStateRead,
+    SystemNetworkParameterResponse,
+    SystemNetworkParameterRead,
+    SystemNetworkParameterWrite,
+    PropertyExtValueWriteConRes,
+    PropertyExtValueWriteCon,
+    PropertyExtValueWriteUnCon,
+    PropertyExtValueInfoReport,
+    PropertyExtValueResponse,
+    PropertyExtValueRead,
+    PropertyExtDescriptionResponse,
+    PropertyExtDescriptionRead,
+    MemoryExtendedWriteResponse,
+    MemoryExtendedWrite,
+    MemoryExtendedReadResponse,
+    MemoryExtendedRead,
+    MemoryWrite,
+    MemoryResponse,
+    MemoryRead,
+    DeviceDescriptorResponse,
+    DeviceDescriptorRead,
+    Restart,
+    RestartMasterResetResponse,
+    RestartMasterReset,
+    UserMemoryWrite,
+    UserMemoryResponse,
+    UserMemoryRead,
+    UserMemoryBitWrite,
+    UserManufacturerInfoResponse,
+    UserManufacturerInfoRead,
+    FunctionPropertyCommand,
+    FunctionPropertyStateResponse,
+    FunctionPropertyStateRead,
+    FilterTableOpen,
+    FilterTableWrite,
+    FilterTableResponse,
+    FilterTableRead,
+    RouterMemoryWrite,
+    RouterMemoryResponse,
+    RouterMemoryRead,
+    RouterStatusWrite,
+    RouterStatusResponse,
+    RouterStatusRead,
+    MemoryBitWrite,
+    AuthorizeResponse,
+    AuthorizeRequest,
+    KeyResponse,
+    KeyWrite,
+    PropertyValueResponse,
+    PropertyValueWrite,
+    PropertyValueRead,
+    PropertyDescriptionResponse,
+    PropertyDescriptionRead,
+    NetworkParameterResponse,
+    NetworkParameterRead,
+    IndividualAddressSerialResponse,
+    IndividualAddressSerialRead,
+    IndividualAddressSerialWrite,
+    DomainAddressWrite,
+    DomainAddressResponse,
+    DomainAddressRead,
+    DomainAddressSelectiveRead,
+    NetworkParameterWrite,
+    LinkWrite,
+    LinkResponse,
+    LinkRead,
+    GroupPropValueRead,
+    GroupPropValueResponse,
+    GroupPropValueWrite,
+    GroupPropValueInfoReport,
+    DomainAddressSerialNumberResponse,
+    DomainAddressSerialNumberRead,
+    DomainAddressSerialNumberWrite,
+    FileStreamInfoReport,
+    SecureAPDU,
+)
+# full 10 bit APCI -> class; services with data in the low 6 bits only match
+# with those bits cleared and are found by their 4 bit service below
+_APCI_CLASSES_BY_CODE: dict[int, type[APCI]] = {
+    apci_class.CODE.value: apci_class for apci_class in _APCI_CLASSES
+}
+# 4 bit APCI service -> class, for services carrying data in the low 6 bits
+# (or none at all) - `APCIUserService` and `APCIExtendedService` as well as
+# `APCIService` members with bits set there are specific 10 bit codes
+_APCI_CLASSES_BY_SERVICE: dict[int, type[APCI]] = {
+    apci_class.CODE.value: apci_class
+    for apci_class in _APCI_CLASSES
+    if isinstance(apci_class.CODE, APCIService) and not apci_class.CODE.value & 0x3F
+}
