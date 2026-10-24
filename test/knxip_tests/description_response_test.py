@@ -1,5 +1,10 @@
 """Unit test for KNX/IP DescriptionResponse objects."""
 
+from unittest.mock import patch
+
+import pytest
+
+from xknx.exceptions import CouldNotParseKNXIP
 from xknx.knxip import (
     DescriptionResponse,
     DIBDeviceInformation,
@@ -56,3 +61,19 @@ class TestKNXIPDescriptionResponse:
         """Test device_name if no DIBDeviceInformation is present."""
         description_response = DescriptionResponse()
         assert description_response.device_name == "UNKNOWN"
+
+    @pytest.mark.parametrize("dib_length", [0, 1])
+    def test_dib_too_short(self, dib_length: int) -> None:
+        """Test a DIB with a structure length below its header raises instead of looping."""
+        raw = bytes.fromhex("06 10 02 04 00 08") + bytes((dib_length, 0x02))
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_dib_consuming_no_data(self) -> None:
+        """Test a DIB parser returning length 0 raises instead of looping forever."""
+        raw = bytes.fromhex("02 03")
+        with (
+            patch("xknx.knxip.dib.DIBGeneric.from_knx", return_value=0),
+            pytest.raises(CouldNotParseKNXIP),
+        ):
+            DescriptionResponse().from_knx(raw)

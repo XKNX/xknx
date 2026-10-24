@@ -138,3 +138,21 @@ class TestKNXIPTunnellingFeature:
         raw = bytes.fromhex("06 10 04 23 00 0e 04 01 17 00 03 01 01 00")
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
+
+    def test_response_unknown_status_code(self) -> None:
+        """Test parsing wrong Response (unknown status code) raises CouldNotParseKNXIP."""
+        raw = bytes.fromhex("06 10 04 23 00 0e 04 01 17 55 03 00 01 00")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_response_unknown_feature_type(self) -> None:
+        """Test parsing wrong Response (unknown feature type) raises CouldNotParseKNXIP."""
+        raw = bytes.fromhex("06 10 04 23 00 0e 04 01 17 00 ee 00 01 00")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_from_knx_empty_body(self) -> None:
+        """Test parsing Get without body raises CouldNotParseKNXIP."""
+        raw = bytes.fromhex("06 10 04 22 00 06")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
