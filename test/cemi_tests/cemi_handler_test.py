@@ -68,6 +68,138 @@ async def test_wait_for_l2_confirmation(time_travel: EventLoopClockAdvancer) -> 
         assert xknx.connection_manager.cemi_count_outgoing_error == 1
 
 
+async def test_negative_l2_confirmation(time_travel: EventLoopClockAdvancer) -> None:
+    """Test a negative L_DATA.con raises ConfirmationError."""
+    xknx = XKNX()
+    xknx.knxip_interface = AsyncMock()
+
+    test_telegram = Telegram(
+        destination_address=GroupAddress(1),
+        payload=apci.GroupValueWrite(DPTArray((1,))),
+    )
+    negative_confirmation = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_CON,
+        data=CEMILData.init_from_telegram(test_telegram),
+    )
+    assert isinstance(negative_confirmation.data, CEMILData)
+    negative_confirmation.data.flags.confirm_error = True
+
+    task = asyncio.create_task(xknx.cemi_handler.send_telegram(test_telegram))
+    await time_travel(0)
+    xknx.knxip_interface.send_cemi.assert_called_once()
+    assert not task.done()
+
+    xknx.cemi_handler.handle_cemi_frame(negative_confirmation)
+    await time_travel(0)
+    assert task.done()
+    with pytest.raises(ConfirmationError, match=r"negative confirmation"):
+        await task
+    assert xknx.connection_manager.cemi_count_outgoing == 0
+    assert xknx.connection_manager.cemi_count_outgoing_error == 1
+
+    # a positive confirmation afterwards is not affected by the previous error
+    task = asyncio.create_task(xknx.cemi_handler.send_telegram(test_telegram))
+    await time_travel(0)
+    xknx.cemi_handler.handle_cemi_frame(
+        CEMIFrame(
+            code=CEMIMessageCode.L_DATA_CON,
+            data=CEMILData.init_from_telegram(test_telegram),
+        )
+    )
+    await time_travel(0)
+    await task
+    assert xknx.connection_manager.cemi_count_outgoing == 1
+    assert xknx.connection_manager.cemi_count_outgoing_error == 1
+
+
+async def test_concurrent_send_awaits_own_confirmation(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test concurrent send_telegram calls are confirmed one at a time."""
+    xknx = XKNX()
+    xknx.knxip_interface = AsyncMock()
+
+    telegram_1 = Telegram(
+        destination_address=GroupAddress(1),
+        payload=apci.GroupValueWrite(DPTArray((1,))),
+    )
+    telegram_2 = Telegram(
+        destination_address=GroupAddress(2),
+        payload=apci.GroupValueWrite(DPTArray((2,))),
+    )
+
+    def confirmation(telegram: Telegram) -> CEMIFrame:
+        return CEMIFrame(
+            code=CEMIMessageCode.L_DATA_CON,
+            data=CEMILData.init_from_telegram(telegram),
+        )
+
+    task_1 = asyncio.create_task(xknx.cemi_handler.send_telegram(telegram_1))
+    task_2 = asyncio.create_task(xknx.cemi_handler.send_telegram(telegram_2))
+    await time_travel(0)
+    # only the first telegram is sent until it is confirmed
+    assert xknx.knxip_interface.send_cemi.call_count == 1
+    assert xknx.knxip_interface.send_cemi.call_args.args[0].data.telegram(
+        TelegramDirection.OUTGOING
+    ).destination_address == GroupAddress(1)
+    assert not task_1.done()
+    assert not task_2.done()
+
+    xknx.cemi_handler.handle_cemi_frame(confirmation(telegram_1))
+    await time_travel(0)
+    assert task_1.done()
+    await task_1
+    # the first confirmation doesn't release the second telegram
+    assert not task_2.done()
+    assert xknx.knxip_interface.send_cemi.call_count == 2
+    assert xknx.knxip_interface.send_cemi.call_args.args[0].data.telegram(
+        TelegramDirection.OUTGOING
+    ).destination_address == GroupAddress(2)
+
+    xknx.cemi_handler.handle_cemi_frame(confirmation(telegram_2))
+    await time_travel(0)
+    assert task_2.done()
+    await task_2
+    assert xknx.connection_manager.cemi_count_outgoing == 2
+    assert xknx.connection_manager.cemi_count_outgoing_error == 0
+
+
+async def test_confirmation_timeout_releases_next_send(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test a telegram timing out doesn't block the next one."""
+    xknx = XKNX()
+    xknx.knxip_interface = AsyncMock()
+
+    test_telegram = Telegram(
+        destination_address=GroupAddress(1),
+        payload=apci.GroupValueWrite(DPTArray((1,))),
+    )
+    task_1 = asyncio.create_task(xknx.cemi_handler.send_telegram(test_telegram))
+    task_2 = asyncio.create_task(xknx.cemi_handler.send_telegram(test_telegram))
+    await time_travel(0)
+    assert xknx.knxip_interface.send_cemi.call_count == 1
+
+    await time_travel(3)
+    assert task_1.done()
+    with pytest.raises(ConfirmationError, match=r"timed out"):
+        await task_1
+    # the second telegram was sent after the first timed out
+    assert xknx.knxip_interface.send_cemi.call_count == 2
+    assert not task_2.done()
+
+    xknx.cemi_handler.handle_cemi_frame(
+        CEMIFrame(
+            code=CEMIMessageCode.L_DATA_CON,
+            data=CEMILData.init_from_telegram(test_telegram),
+        )
+    )
+    await time_travel(0)
+    await task_2
+    assert xknx.connection_manager.cemi_count_outgoing == 1
+    assert xknx.connection_manager.cemi_count_outgoing_error == 1
+
+
 @patch("xknx.management.management.Management.process")
 def test_incoming_cemi(mock_management_process: MagicMock) -> None:
     """Test incoming CEMI."""

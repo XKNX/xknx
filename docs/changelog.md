@@ -33,6 +33,11 @@ nav_order: 2
 - Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
+### Connection
+
+- Negative L_Data.con confirmations raise `ConfirmationError` instead of being treated as a successfully sent telegram - KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.5.3.4: the Confirm flag of the control field is set when the cEMI Server could not transmit the frame, e.g. no acknowledge on the bus. The sent telegram was counted as `cemi_count_outgoing` and management procedures waited for a response that could never come; now `cemi_count_outgoing_error` is incremented and management procedures fail right away.
+- Outgoing telegrams await their data link layer confirmation one at a time, so a confirmation can no longer be attributed to the wrong telegram when management and group telegrams are sent concurrently. An L_Data.con doesn't tell which L_Data.req it confirms, so a confirmation arriving while two telegrams were waiting released both, and a late confirmation released the next telegram before its own.
+
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
