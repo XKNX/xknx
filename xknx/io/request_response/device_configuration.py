@@ -39,3 +39,12 @@ class DeviceConfiguration(RequestResponse[DeviceConfigurationAck]):
     def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(self.device_configuration_request)
+
+    def _matches_request(self, body: DeviceConfigurationAck) -> bool:
+        """Return whether the ACK confirms this request - not a stale one of a repeated frame."""
+        return (
+            body.communication_channel_id
+            == self.device_configuration_request.communication_channel_id
+            and body.sequence_counter
+            == self.device_configuration_request.sequence_counter
+        )
