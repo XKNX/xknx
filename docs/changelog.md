@@ -21,6 +21,7 @@ nav_order: 2
 
 - IP Secure Routing: `disconnect()` while the secure timer synchronizes makes `connect()` raise `CommunicationError` instead of reporting CONNECTED with an unauthenticated timer that dropped every received frame. A second TIMER_NOTIFY answering the synchronization no longer raises `InvalidStateError`.
 - IP Secure: wait 10 seconds for SESSION_RESPONSE (`SESSION_REQUEST_TIMEOUT`) instead of 1 second - KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.3.5.2.1.1 `timeoutAuthentication`.
+- Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
 
 ### Management
 
