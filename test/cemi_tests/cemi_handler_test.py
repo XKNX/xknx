@@ -224,6 +224,56 @@ def test_unexpected_parse_error_does_not_crash(
 
 
 @patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
+@patch("logging.Logger.exception")
+def test_unexpected_handling_error_does_not_crash(
+    mock_exception: MagicMock,
+    mock_telegram_received: MagicMock,
+) -> None:
+    """Test an unexpected error while handling a parsed frame is contained."""
+    xknx = XKNX()
+    mock_telegram_received.side_effect = RuntimeError("boom")
+    # L_Data.ind GroupValueWrite from 1.1.22 to to 5/1/22 with DPT9 payload 0C 3F
+    raw = bytes.fromhex("2900bcd011162916030080 0c 3f")
+
+    # An exception from anything downstream of parsing must not propagate out
+    # of the receive path; it is logged (with traceback) and counted, not raised.
+    xknx.cemi_handler.handle_raw_cemi(raw)
+    mock_telegram_received.assert_called_once()
+    mock_exception.assert_called_once()
+    assert xknx.connection_manager.cemi_count_incoming == 1
+    assert xknx.connection_manager.cemi_count_incoming_error == 1
+
+
+@patch(
+    "xknx.management.management.Management.process",
+    side_effect=asyncio.InvalidStateError("invalid state"),
+)
+@patch("logging.Logger.exception")
+def test_management_error_does_not_crash(
+    mock_exception: MagicMock,
+    mock_management_process: MagicMock,
+) -> None:
+    """Test an error in the synchronous management handling is contained."""
+    xknx = XKNX()
+    xknx.current_address = IndividualAddress("1.1.1")
+    raw = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_IND,
+        data=CEMILData.init_from_telegram(
+            Telegram(
+                destination_address=IndividualAddress("1.1.1"),
+                tpci=tpci.TConnect(),
+            )
+        ),
+    ).to_knx()
+
+    xknx.cemi_handler.handle_raw_cemi(raw)
+    mock_management_process.assert_called_once()
+    mock_exception.assert_called_once()
+    assert xknx.connection_manager.cemi_count_incoming == 1
+    assert xknx.connection_manager.cemi_count_incoming_error == 1
+
+
+@patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
 @patch("logging.Logger.debug")
 def test_incoming_from_own_ia(
     mock_debug: MagicMock, mock_telegram_received: MagicMock

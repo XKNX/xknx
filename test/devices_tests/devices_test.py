@@ -6,8 +6,10 @@ import pytest
 
 from xknx import XKNX
 from xknx.devices import BinarySensor, Device, Light, Switch
-from xknx.telegram import GroupAddress
+from xknx.dpt import DPTBinary
+from xknx.telegram import GroupAddress, Telegram
 from xknx.telegram.address import InternalGroupAddress
+from xknx.telegram.apci import GroupValueWrite
 
 
 class TestDevices:
@@ -224,6 +226,50 @@ class TestDevices:
             xknx.devices.process(xknx.telegrams.get_nowait())
         assert light1.state
 
+    def test_process_device_exception(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Test a device raising in process() doesn't keep others from processing."""
+        xknx = XKNX()
+        switch1 = Switch(xknx, name="Switch 1", group_address="1/2/3")
+        switch2 = Switch(xknx, name="Switch 2", group_address="1/2/3")
+        xknx.devices.async_add(switch1)
+        xknx.devices.async_add(switch2)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        with patch.object(switch1, "process", side_effect=RuntimeError("boom")):
+            xknx.devices.process(telegram)
+
+        assert switch2.state is True
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
+        assert "Switch 1" in caplog.records[0].message
+        assert caplog.records[0].exc_info is not None
+
+    def test_process_device_removes_device(self) -> None:
+        """Test a device removing devices from its process() callback."""
+        xknx = XKNX()
+        switch1 = Switch(xknx, name="Switch 1", group_address="1/2/3")
+        switch2 = Switch(xknx, name="Switch 2", group_address="1/2/3")
+        switch3 = Switch(xknx, name="Switch 3", group_address="1/2/3")
+        xknx.devices.async_add(switch1)
+        xknx.devices.async_add(switch2)
+        xknx.devices.async_add(switch3)
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+
+        def remove_devices(_telegram: Telegram) -> None:
+            xknx.devices.async_remove(switch1)
+            xknx.devices.async_remove(switch2)
+
+        with patch.object(switch1, "process", side_effect=remove_devices):
+            xknx.devices.process(telegram)
+        assert list(xknx.devices) == [switch3]
+        # the devices registered when the telegram arrived are all processed
+        assert switch3.state is True
+
     #
     # TEST SYNC
     #
@@ -289,3 +335,41 @@ class TestDevices:
         after_update_callback2.assert_not_called()
         after_update_callback1.reset_mock()
         after_update_callback2.reset_mock()
+
+    @patch.multiple(Device, __abstractmethods__=set())
+    def test_device_updated_callback_exception(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test a raising device updated callback doesn't skip other callbacks."""
+        xknx = XKNX()
+        device = Device(xknx, name="TestDevice")
+        xknx.devices.async_add(device)
+        raising_cb = Mock(side_effect=RuntimeError("boom"))
+        other_cb = Mock()
+        xknx.devices.register_device_updated_cb(raising_cb)
+        xknx.devices.register_device_updated_cb(other_cb)
+
+        device.after_update()
+        raising_cb.assert_called_once_with(device)
+        other_cb.assert_called_once_with(device)
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
+        assert caplog.records[0].exc_info is not None
+
+    @patch.multiple(Device, __abstractmethods__=set())
+    def test_device_updated_callback_unregisters_itself(self) -> None:
+        """Test a device updated callback unregistering itself while being called."""
+        xknx = XKNX()
+        device = Device(xknx, name="TestDevice")
+        xknx.devices.async_add(device)
+        other_cb = Mock()
+
+        def unregister_self(_device: Device) -> None:
+            xknx.devices.unregister_device_updated_cb(unregister_self)
+
+        xknx.devices.register_device_updated_cb(unregister_self)
+        xknx.devices.register_device_updated_cb(other_cb)
+
+        device.after_update()
+        other_cb.assert_called_once_with(device)
+        assert xknx.devices.device_updated_cbs == [other_cb]

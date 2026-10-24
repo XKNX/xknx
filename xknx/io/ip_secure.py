@@ -349,9 +349,13 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
         if isinstance(knxipframe.body, SecureWrapper):
             if not self.initialized:
-                raise CouldNotParseKNXIP(
-                    "Received SecureWrapper while Secure session not initialized"
+                # raising here would close the TCP connection from inside the
+                # transport's receive callback - just discard the frame
+                ip_secure_logger.warning(
+                    "Discarding SecureWrapper received while Secure session not initialized: %s",
+                    knxipframe,
                 )
+                return
             new_sequence_number = int.from_bytes(
                 knxipframe.body.sequence_information, "big"
             )
