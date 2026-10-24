@@ -7,10 +7,12 @@ import pytest
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CommunicationError, CouldNotParseTelegram
+from xknx.exceptions import CommunicationError, ConversionError, CouldNotParseTelegram
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueWrite
+
+from ..conftest import EventLoopClockAdvancer
 
 
 class TestTelegramQueue:
@@ -94,6 +96,97 @@ class TestTelegramQueue:
         async_sleep_mock.assert_not_called()
 
         await xknx.telegram_queue.stop()
+
+    async def test_stop_before_start(self) -> None:
+        """Test stop() before start() doesn't break a following start()."""
+        xknx = XKNX()
+        telegram_received_cb = Mock()
+        xknx.telegram_queue.register_telegram_received_cb(telegram_received_cb)
+        telegram_in = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await xknx.telegram_queue.stop()
+        assert xknx.telegram_queue._consumer_task is None
+        assert xknx.telegrams.qsize() == 0  # no stale sentinel
+
+        await xknx.telegram_queue.start()
+        xknx.telegrams.put_nowait(telegram_in)
+        async with asyncio.timeout(1):
+            await xknx.telegrams.join()
+        telegram_received_cb.assert_called_once_with(telegram_in)
+        async with asyncio.timeout(1):
+            await xknx.telegram_queue.stop()
+        assert xknx.telegram_queue._consumer_task.done()
+
+    async def test_start_twice(self) -> None:
+        """Test a second start() doesn't start a second consumer."""
+        xknx = XKNX()
+        await xknx.telegram_queue.start()
+        consumer_task = xknx.telegram_queue._consumer_task
+        await xknx.telegram_queue.start()
+        assert xknx.telegram_queue._consumer_task is consumer_task
+        async with asyncio.timeout(1):
+            await xknx.telegram_queue.stop()
+        assert consumer_task.done()
+        assert xknx.telegrams.qsize() == 0
+
+    async def test_stop_twice(self) -> None:
+        """Test a second stop() doesn't leave a sentinel for the next start()."""
+        xknx = XKNX()
+        telegram_received_cb = Mock()
+        xknx.telegram_queue.register_telegram_received_cb(telegram_received_cb)
+        telegram_in = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await xknx.telegram_queue.start()
+        await xknx.telegram_queue.stop()
+        await xknx.telegram_queue.stop()
+        assert xknx.telegrams.qsize() == 0
+
+        await xknx.telegram_queue.start()
+        xknx.telegrams.put_nowait(telegram_in)
+        async with asyncio.timeout(1):
+            await xknx.telegrams.join()
+        telegram_received_cb.assert_called_once_with(telegram_in)
+        async with asyncio.timeout(1):
+            await xknx.telegram_queue.stop()
+
+    @patch("xknx.cemi.CEMIHandler.send_telegram", new_callable=AsyncMock)
+    async def test_rate_limit_restart(
+        self, send_telegram_mock: AsyncMock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test rate limiter working after stop() and start() of the queue."""
+        xknx = XKNX(
+            rate_limit=20,  # 50 ms per outgoing telegram
+        )
+        telegram_out = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.OUTGOING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await xknx.telegram_queue.start()
+        xknx.telegrams.put_nowait(telegram_out)
+        await time_travel(0)
+        assert send_telegram_mock.call_count == 1
+        # stop within the rate limit interval - the rate limiter task is cancelled
+        async with asyncio.timeout(1):
+            await xknx.telegram_queue.stop()
+        assert xknx.telegram_queue._rate_limiter is None
+
+        await xknx.telegram_queue.start()
+        xknx.telegrams.put_nowait(telegram_out)
+        xknx.telegrams.put_nowait(telegram_out)
+        await time_travel(0)
+        assert send_telegram_mock.call_count == 2
+        await time_travel(0.05)
+        assert send_telegram_mock.call_count == 3
+        async with asyncio.timeout(1):
+            await xknx.telegrams.join()
+            await xknx.telegram_queue.stop()
 
     #
     # TEST REGISTER
@@ -444,6 +537,82 @@ class TestTelegramQueue:
             ),
         ]
         logging_exception_mock.assert_has_calls(log_calls)
+
+    async def test_callback_unregister_itself(self) -> None:
+        """Test a callback unregistering itself doesn't skip the next callback."""
+        xknx = XKNX()
+        callback_2 = Mock()
+
+        def unregister_itself(_telegram: Telegram) -> None:
+            xknx.telegram_queue.unregister_telegram_received_cb(callback_1)
+
+        callback_1 = xknx.telegram_queue.register_telegram_received_cb(
+            unregister_itself
+        )
+        registered_2 = xknx.telegram_queue.register_telegram_received_cb(callback_2)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await xknx.telegram_queue.process_telegram_incoming(telegram)
+        assert xknx.telegram_queue.telegram_received_cbs == [registered_2]
+        callback_2.assert_called_once_with(telegram)
+
+    def test_data_secure_group_key_issue_callback_unregister_itself(self) -> None:
+        """Test a data secure callback unregistering itself doesn't skip the next one."""
+        xknx = XKNX()
+        callback_2 = Mock()
+
+        def unregister_itself(_telegram: Telegram) -> None:
+            unsub()
+
+        unsub = xknx.telegram_queue.register_data_secure_group_key_issue_cb(
+            unregister_itself
+        )
+        xknx.telegram_queue.register_data_secure_group_key_issue_cb(callback_2)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        xknx.telegram_queue.received_data_secure_group_key_issue(telegram)
+        assert xknx.telegram_queue._data_secure_group_key_issue_cbs == [callback_2]
+        callback_2.assert_called_once_with(telegram)
+
+    @patch("logging.Logger.exception")
+    @patch("xknx.xknx.Devices.process")
+    async def test_callback_filter_raising(
+        self, devices_process_mock: MagicMock, logging_exception_mock: MagicMock
+    ) -> None:
+        """Test a raising address filter doesn't prevent other callbacks and devices."""
+        xknx = XKNX()
+        bad_filter = Mock(spec=AddressFilter)
+        bad_filter.match.side_effect = ConversionError("Boom")
+        bad_callback = Mock()
+        good_callback = Mock()
+
+        xknx.telegram_queue.register_telegram_received_cb(
+            bad_callback, address_filters=[bad_filter]
+        )
+        xknx.telegram_queue.register_telegram_received_cb(good_callback)
+
+        telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            direction=TelegramDirection.INCOMING,
+            payload=GroupValueWrite(DPTBinary(1)),
+        )
+        await xknx.telegram_queue.process_telegram_incoming(telegram)
+
+        bad_callback.assert_not_called()
+        good_callback.assert_called_once_with(telegram)
+        devices_process_mock.assert_called_once_with(telegram)
+        logging_exception_mock.assert_called_once_with(
+            "Unexpected error while processing telegram_received_cb for %s",
+            telegram,
+        )
 
     @patch("logging.Logger.exception")
     async def test_callback_raising(self, logging_exception_mock: MagicMock) -> None:

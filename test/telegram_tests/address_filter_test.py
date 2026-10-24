@@ -4,7 +4,7 @@ import pytest
 
 from xknx.exceptions import ConversionError
 from xknx.telegram import AddressFilter
-from xknx.telegram.address import GroupAddress, InternalGroupAddress
+from xknx.telegram.address import GroupAddress, GroupAddressType, InternalGroupAddress
 
 
 class TestAddressFilter:
@@ -143,6 +143,48 @@ class TestAddressFilter:
         """Test if wrong address format raises exception."""
         with pytest.raises(ConversionError):
             AddressFilter("2-/2,3/4/5/1,5-/*")
+
+    @pytest.mark.parametrize(
+        ("address_format", "valid_patterns", "invalid_patterns"),
+        [
+            (GroupAddressType.LONG, ["1/*/*", "1/*", "*"], []),
+            (GroupAddressType.SHORT, ["1/*", "*"], ["1/*/*"]),
+            (GroupAddressType.FREE, ["*"], ["1/*/*", "1/*"]),
+        ],
+    )
+    def test_initialize_address_format_mismatch(
+        self,
+        address_format: GroupAddressType,
+        valid_patterns: list[str],
+        invalid_patterns: list[str],
+    ) -> None:
+        """Test patterns with more levels than the address format raise on init."""
+        GroupAddress.address_format = address_format
+        try:
+            for pattern in valid_patterns:
+                AddressFilter(pattern)
+            for pattern in invalid_patterns:
+                with pytest.raises(ConversionError, match="more levels"):
+                    AddressFilter(pattern)
+        finally:
+            GroupAddress.address_format = GroupAddressType.LONG
+
+    def test_match_address_format_mismatch(self) -> None:
+        """Test matching a filter with more levels than the address format raises."""
+        af3 = AddressFilter("1/*/*")
+        af2 = AddressFilter("1/*")
+        try:
+            GroupAddress.address_format = GroupAddressType.SHORT
+            with pytest.raises(ConversionError):
+                af3.match(GroupAddress("1/2/3"))
+            assert af2.match(GroupAddress("1/2/3"))
+            GroupAddress.address_format = GroupAddressType.FREE
+            with pytest.raises(ConversionError):
+                af3.match(GroupAddress("1/2/3"))
+            with pytest.raises(ConversionError):
+                af2.match(GroupAddress("1/2/3"))
+        finally:
+            GroupAddress.address_format = GroupAddressType.LONG
 
     def test_adjust_range(self) -> None:
         """Test helper function _adjust_range."""
