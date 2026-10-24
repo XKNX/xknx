@@ -34,11 +34,29 @@ from fnmatch import fnmatch
 
 from xknx.exceptions import ConversionError
 
-from .address import GroupAddress, InternalGroupAddress, parse_device_group_address
+from .address import (
+    GroupAddress,
+    GroupAddressType,
+    InternalGroupAddress,
+    parse_device_group_address,
+)
+
+# number of "/"-separated levels of a group address in each address format
+_ADDRESS_FORMAT_LEVELS = {
+    GroupAddressType.FREE: 1,
+    GroupAddressType.SHORT: 2,
+    GroupAddressType.LONG: 3,
+}
 
 
 class AddressFilter:
-    """Class for filtering Addresses according to patterns."""
+    """
+    Class for filtering Addresses according to patterns.
+
+    A pattern for group addresses may not have more levels than the current
+    `GroupAddress.address_format` - which is set by `XKNX(address_format=...)`,
+    so create AddressFilters after the XKNX instance.
+    """
 
     def __init__(self, pattern: str) -> None:
         """Initialize AddressFilter class."""
@@ -55,6 +73,15 @@ class AddressFilter:
             self.level_filters.append(AddressFilter.LevelFilter(part))
         if len(self.level_filters) > 3:
             raise ConversionError("Too many parts within pattern.", pattern=pattern)
+        if (
+            len(self.level_filters)
+            > _ADDRESS_FORMAT_LEVELS[GroupAddress.address_format]
+        ):
+            raise ConversionError(
+                f"Pattern has more levels than the {GroupAddress.address_format.name} "
+                "group address format. Create AddressFilter after XKNX().",
+                pattern=pattern,
+            )
 
     def match(self, address: str | int | GroupAddress | InternalGroupAddress) -> bool:
         """Test if provided address matches Addressfilter."""
@@ -78,8 +105,8 @@ class AddressFilter:
 
     def _match_level3(self, address: GroupAddress) -> bool:
         if address.main is None or address.middle is None:
-            raise ConnectionError(
-                f"Match level 3 incompatible with address level {GroupAddress.address_format}"
+            raise ConversionError(
+                f"Match level 3 incompatible with address format {GroupAddress.address_format.name}",
             )
         return bool(
             self.level_filters[0].match(address.main)
@@ -89,8 +116,8 @@ class AddressFilter:
 
     def _match_level2(self, address: GroupAddress) -> bool:
         if address.main is None:
-            raise ConnectionError(
-                f"Match level 2 incompatible with address level {GroupAddress.address_format}"
+            raise ConversionError(
+                f"Match level 2 incompatible with address format {GroupAddress.address_format.name}",
             )
         return bool(
             self.level_filters[0].match(address.main)
