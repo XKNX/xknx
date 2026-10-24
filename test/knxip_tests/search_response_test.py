@@ -1,5 +1,7 @@
 """Unit test for KNX/IP SearchResponse objects."""
 
+from unittest.mock import patch
+
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP
@@ -65,3 +67,12 @@ class TestKNXIPSearchResponse:
         )
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
+
+    def test_dib_consuming_no_data(self) -> None:
+        """Test a DIB parser returning length 0 raises instead of looping forever."""
+        raw = bytes.fromhex("08 01 c0 a8 2a 0a 0e 57") + bytes.fromhex("02 03")
+        with (
+            patch("xknx.knxip.dib.DIBGeneric.from_knx", return_value=0),
+            pytest.raises(CouldNotParseKNXIP),
+        ):
+            SearchResponse().from_knx(raw)

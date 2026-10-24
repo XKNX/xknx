@@ -6,7 +6,9 @@ from xknx.io.transport import TCPTransport
 from xknx.knxip import ConnectionStateResponse, ErrorCode, KNXIPFrame, TunnellingAck
 
 VALID_FRAME = KNXIPFrame.init_from_body(
-    ConnectionStateResponse(communication_channel_id=1, status_code=ErrorCode.E_NO_ERROR)
+    ConnectionStateResponse(
+        communication_channel_id=1, status_code=ErrorCode.E_NO_ERROR
+    )
 )
 VALID_RAW = VALID_FRAME.to_knx()
 # ROUTING_SYSTEM_BROADCAST is a known service type without a body parser in xknx
@@ -22,6 +24,7 @@ class TestTCPTransport:
 
     def setup_method(self) -> None:
         """Set up test class."""
+        # pylint: disable=attribute-defined-outside-init
         self.transport = TCPTransport(remote_addr=("192.168.1.2", 3671))
         self.handle_mock = Mock()
         self.transport.register_callback(self.handle_mock)
@@ -87,13 +90,17 @@ class TestTCPTransport:
 
     def test_total_length_zero_drops_buffer(self) -> None:
         """Test a header with total length 0 does not recurse endlessly."""
-        self.transport.data_received_callback(bytes.fromhex("06 10 05 30 00 00") + VALID_RAW)
+        self.transport.data_received_callback(
+            bytes.fromhex("06 10 05 30 00 00") + VALID_RAW
+        )
         self.handle_mock.assert_not_called()
         assert self.transport._buffer == b""
 
     def test_dib_length_zero_does_not_hang(self) -> None:
         """Test a DESCRIPTION_RESPONSE with a DIB of structure length 0 is skipped."""
-        self.transport.data_received_callback(bytes.fromhex("06 10 02 04 00 08 00 03") + VALID_RAW)
+        self.transport.data_received_callback(
+            bytes.fromhex("06 10 02 04 00 08 00 03") + VALID_RAW
+        )
         self.handle_mock.assert_called_once()
         assert self.handle_mock.call_args[0][0] == VALID_FRAME
 

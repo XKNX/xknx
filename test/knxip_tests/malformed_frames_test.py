@@ -10,7 +10,7 @@ import threading
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP
-from xknx.knxip import DIBGeneric, DescriptionResponse, KNXIPFrame
+from xknx.knxip import DescriptionResponse, DIBGeneric, KNXIPFrame
 
 PARSE_TIMEOUT = 2  # seconds
 
@@ -84,7 +84,9 @@ def parse_guarded(raw: bytes) -> KNXIPFrame:
             id="total_length_0",
         ),
         pytest.param(
-            bytes.fromhex("06 10 05 30 00 00 06 10 05 30 00 11 29 00 bc e0 00 01 00 01 01 00 80"),
+            bytes.fromhex(
+                "06 10 05 30 00 00 06 10 05 30 00 11 29 00 bc e0 00 01 00 01 01 00 80"
+            ),
             id="total_length_0_with_trailing_frame",
         ),
         pytest.param(
