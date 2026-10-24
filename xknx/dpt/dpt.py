@@ -12,6 +12,7 @@ import types
 from typing import (
     Any,
     ClassVar,
+    Final,
     Generic,
     Literal,
     NotRequired,
@@ -30,6 +31,34 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from xknx.typing import DPTParsable
 
 from .payload import DPTArray, DPTBinary
+
+# The subtype used for a main number without sub number when xknx has no class for the
+# whole main number. "Datapoint Types with the same main number thus have the same format
+# and encoding. [...] A different subnumber indicates a different dimension (different
+# range and/or different unit)." - KNX v02.02.01 - Datapoint Types 03.07.02 - §1.1
+# The table is explicit, so a class added for another subtype never changes the result.
+# Main numbers whose subtypes give the same encoding different meanings and that have no
+# default subtype in the KNX master data have no entry: 20 (enumerations), 232, 251, 252
+# and 254 (RGB and HSV variants).
+_MAIN_NUMBER_SUBTYPES: Final[dict[int, int]] = {
+    3: 7,  # default subtype in the KNX master data; 3.008 has the same format
+    4: 2,  # ISO 8859-1 includes ASCII (4.001): decodes both
+    10: 1,  # default subtype in the KNX master data
+    11: 1,  # the only subtype in the KNX master data
+    15: 0,  # the only subtype in the KNX master data
+    16: 1,  # default subtype in the KNX master data; ISO 8859-1 includes ASCII (16.000)
+    17: 1,  # the only subtype in the KNX master data
+    18: 1,  # the only subtype in the KNX master data
+    19: 1,  # default subtype in the KNX master data
+    26: 1,  # the only subtype in the KNX master data
+    27: 1,  # the only subtype in the KNX master data
+    235: 1,  # the only subtype in the KNX master data
+    240: 800,  # the only subtype in the KNX master data
+    241: 800,  # the only subtype in the KNX master data
+    242: 600,  # the only subtype in the KNX master data
+    249: 600,  # the only subtype in the KNX master data
+    250: 600,  # the only subtype in the KNX master data
+}
 
 
 class DPTBase(ABC):
@@ -174,11 +203,23 @@ class DPTBase(ABC):
     def transcoder_by_dpt(
         cls: type[Self], dpt_main: int, dpt_sub: int | None = None
     ) -> type[Self] | None:
-        """Return Class reference of DPTBase subclass with matching DPT number."""
+        """
+        Return Class reference of DPTBase subclass with matching DPT number.
+
+        Without `dpt_sub`, a class for the whole main number is returned. If there is none,
+        the class of the subtype listed for the main number in `_MAIN_NUMBER_SUBTYPES` is
+        returned, or None for a main number without entry.
+        """
         for dpt in cls.dpt_class_tree():
-            if dpt.has_distinct_dpt_numbers():
-                if dpt_main == dpt.dpt_main_number and dpt_sub == dpt.dpt_sub_number:
-                    return dpt
+            if (
+                dpt.has_distinct_dpt_numbers()
+                and dpt_main == dpt.dpt_main_number
+                and dpt_sub == dpt.dpt_sub_number
+            ):
+                return dpt
+        # `is not None`: 15.000 has the sub number 0
+        if dpt_sub is None and (sub := _MAIN_NUMBER_SUBTYPES.get(dpt_main)) is not None:
+            return cls.transcoder_by_dpt(dpt_main, sub)
         return None
 
     @classmethod

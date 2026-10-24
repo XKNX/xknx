@@ -348,3 +348,64 @@ def test_dpt_lookup(
     assert dpt is dpt_class
     assert DPTBase.transcoder_by_dpt(dpt_main=main, dpt_sub=sub) is dpt_class
     assert dpt.unit == unit
+
+
+@pytest.mark.parametrize(
+    ("main", "dpt_class"),
+    [
+        (3, DPTControlDimming),
+        (4, DPTCharacterLatin1),
+        (10, DPTTime),
+        (11, DPTDate),
+        (15, DPTAccessData),
+        (16, DPTLatin1),
+        (17, DPTSceneNumber),
+        (18, DPTSceneControl),
+        (19, DPTDateTime),
+        (26, DPTSceneInfo),
+        (27, DPTCombinedInfoOnOff),
+        (235, DPTTariffActiveEnergy),
+        (240, DPTCombinedPosition),
+        (241, DPTStatusSAB),
+        (242, DPTColorXYY),
+        (249, DPTColorTemperatureTransition),
+        (250, DPTColorTemperatureControl),
+    ],
+)
+def test_main_number_subtype(main: int, dpt_class: type[DPTBase]) -> None:
+    """Test a main number without a class of its own finds the class of its listed subtype."""
+    assert DPTBase.transcoder_by_dpt(dpt_main=main) is dpt_class
+    assert DPTBase.parse_transcoder(main) is dpt_class
+    assert DPTBase.parse_transcoder(f"DPT-{main}") is dpt_class
+    assert DPTBase.parse_transcoder({"main": main, "sub": None}) is dpt_class
+
+
+@pytest.mark.parametrize("main", [20, 222, 225, 232, 251, 252, 254])
+def test_main_number_ambiguous(main: int) -> None:
+    """Test a main number whose subtypes have different meanings stays unresolved."""
+    assert DPTBase.transcoder_by_dpt(dpt_main=main) is None
+    assert DPTBase.parse_transcoder(main) is None
+
+
+def test_main_number_subtypes_exist() -> None:
+    """Test every listed subtype has a class and its main number has none of its own."""
+    # pylint: disable-next=import-outside-toplevel
+    from xknx.dpt.dpt import _MAIN_NUMBER_SUBTYPES
+
+    for main, sub in _MAIN_NUMBER_SUBTYPES.items():
+        assert DPTBase.transcoder_by_dpt(dpt_main=main, dpt_sub=sub) is not None
+        assert not any(
+            dpt.dpt_main_number == main and dpt.dpt_sub_number is None
+            for dpt in DPTBase.dpt_class_tree()
+            if dpt.has_distinct_dpt_numbers()
+        )
+
+
+def test_main_number_class_preferred() -> None:
+    """Test the class of the whole main number wins over subtype classes."""
+    assert DPTBase.transcoder_by_dpt(dpt_main=9) is DPT2ByteFloat
+
+
+def test_main_number_unknown() -> None:
+    """Test an unknown main number finds nothing."""
+    assert DPTBase.transcoder_by_dpt(dpt_main=999) is None
