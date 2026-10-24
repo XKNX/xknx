@@ -1,6 +1,7 @@
 """Tests for KNX/IP routing connections."""
 
 import asyncio
+from itertools import pairwise
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from xknx import XKNX
@@ -126,6 +127,61 @@ class TestFlowControl:
         assert task.done()
         mock.reset_mock()
 
+    async def test_throttling_serializes_concurrent_senders(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test concurrent senders are sent one after the other with the pause in between."""
+        flow_control = _RoutingFlowControl()
+        send_times: list[float] = []
+
+        async def test_send() -> None:
+            async with flow_control.throttle():
+                send_times.append(flow_control._loop.time())
+
+        # a frame was just sent
+        await test_send()
+        send_times.clear()
+        # concurrent senders - eg. TelegramQueue and Management
+        tasks = [asyncio.create_task(test_send()) for _ in range(3)]
+        await asyncio.sleep(0)
+        assert not send_times
+        await time_travel(ROUTING_INDICATION_WAIT_TIME)
+        assert len(send_times) == 1
+        await time_travel(ROUTING_INDICATION_WAIT_TIME)
+        assert len(send_times) == 2
+        await time_travel(ROUTING_INDICATION_WAIT_TIME)
+        assert len(send_times) == 3
+        assert all(task.done() for task in tasks)
+        assert all(
+            later - earlier >= ROUTING_INDICATION_WAIT_TIME
+            for earlier, later in pairwise(send_times)
+        )
+
+    @patch("random.random")
+    async def test_routing_busy_no_burst(
+        self, random_mock: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test senders waiting for RoutingBusy don't send all at once afterwards."""
+        flow_control = _RoutingFlowControl()
+        mock = Mock()
+        random_mock.return_value = 0.5
+
+        async def test_send() -> None:
+            async with flow_control.throttle():
+                mock()
+
+        flow_control.handle_routing_busy(RoutingBusy(wait_time=100))
+        tasks = [asyncio.create_task(test_send()) for _ in range(2)]
+        await asyncio.sleep(0)
+        assert mock.call_count == 0
+        # wait time and random extension for the first RoutingBusy frame
+        await time_travel(0.1 + BUSY_RANDOM_TIME_FACTOR * random_mock())
+        assert mock.call_count == 1
+        await time_travel(ROUTING_INDICATION_WAIT_TIME)
+        assert mock.call_count == 2
+        assert all(task.done() for task in tasks)
+        flow_control.cancel()
+
     @patch("random.random")
     async def test_routing_busy(
         self, random_mock: Mock, time_travel: EventLoopClockAdvancer
@@ -142,48 +198,59 @@ class TestFlowControl:
 
         test_busy = RoutingBusy(wait_time=test_wait_time_ms)
 
+        # the first RoutingBusy frame counts
         flow_control.handle_routing_busy(test_busy)
+        assert flow_control._received_busy_frames == 1
         task = asyncio.create_task(test_send())
         await asyncio.sleep(0)
         assert mock.call_count == 0
         await time_travel(test_wait_time_ms / 1000)
+        assert mock.call_count == 0  # not yet resolved, wait for additional random time
+        await time_travel(1 * BUSY_RANDOM_TIME_FACTOR * random_mock())
         assert mock.call_count == 1
         assert task.done()
-        # no slowduration for just 1 RoutingBusy
+        # slowduration for 1 RoutingBusy and decrement
+        assert not flow_control._timer_task.done()
+        await time_travel(1 * BUSY_SLOWDURATION_TIME_FACTOR)
+        assert flow_control._received_busy_frames == 1
+        await time_travel(BUSY_DECREMENT_TIME)
+        assert flow_control._received_busy_frames == 0
         assert flow_control._timer_task.done()
         mock.reset_mock()
 
         # multiple RoutingBusy frames
         flow_control.handle_routing_busy(test_busy)
-        # after cooldown - with different wait times updating wait time for 2x time
-        # not counting one frame due to cooldown time
-        await time_travel(BUSY_INCREMENT_COOLDOWN)
-        flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
         assert flow_control._received_busy_frames == 1
         assert flow_control._wait_time_ms == test_wait_time_ms
         # doesn't count in same 10 ms window but updates wait time
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms * 2))
         assert flow_control._received_busy_frames == 1
         assert flow_control._wait_time_ms == test_wait_time_ms * 2
-        # add second busy frame after cooldown has passed
+        # counts after cooldown - lower wait time than remaining doesn't update wait time
         await time_travel(BUSY_INCREMENT_COOLDOWN)
         flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms // 2))
-        assert flow_control._wait_time_ms == test_wait_time_ms * 2
         assert flow_control._received_busy_frames == 2
+        assert flow_control._wait_time_ms == test_wait_time_ms * 2
+        # counts after cooldown - higher wait time than remaining updates wait time
+        await time_travel(BUSY_INCREMENT_COOLDOWN)
+        flow_control.handle_routing_busy(RoutingBusy(wait_time=test_wait_time_ms * 3))
+        assert flow_control._received_busy_frames == 3
+        assert flow_control._wait_time_ms == test_wait_time_ms * 3
 
         task = asyncio.create_task(test_send())
+        await asyncio.sleep(0)
         assert mock.call_count == 0
-        await time_travel(test_wait_time_ms * 2 / 1000 - BUSY_INCREMENT_COOLDOWN)
+        await time_travel(test_wait_time_ms * 3 / 1000)
         assert mock.call_count == 0  # not yet resolved, wait for additional random time
-        await time_travel(
-            flow_control._received_busy_frames * BUSY_RANDOM_TIME_FACTOR * random_mock()
-        )
+        await time_travel(3 * BUSY_RANDOM_TIME_FACTOR * random_mock())
         assert mock.call_count == 1
         assert task.done()
         # slowduration
         assert not flow_control._timer_task.done()
-        await time_travel(2 * BUSY_SLOWDURATION_TIME_FACTOR)  # _received_busy_frames 2
-        await time_travel(BUSY_DECREMENT_TIME)  # and decrement time
-        assert not flow_control._timer_task.done()
-        await time_travel(BUSY_DECREMENT_TIME)  # and second decrement time
+        await time_travel(3 * BUSY_SLOWDURATION_TIME_FACTOR)
+        assert flow_control._received_busy_frames == 3
+        for remaining in (2, 1, 0):
+            assert not flow_control._timer_task.done()
+            await time_travel(BUSY_DECREMENT_TIME)
+            assert flow_control._received_busy_frames == remaining
         assert flow_control._timer_task.done()

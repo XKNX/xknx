@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from xknx.exceptions import CommunicationError
-from xknx.io.const import HEARTBEAT_RATE
+from xknx.io.const import CONNECTIONSTATE_REQUEST_TIMEOUT, HEARTBEAT_RATE
 from xknx.io.data_connection import (
     ConnectionHeartbeat,
     IncomingSequenceCounter,
@@ -57,6 +57,11 @@ class TestIncomingSequenceCounter:
 
 class TestConnectionHeartbeat:
     """Test class for the connection heartbeat."""
+
+    def test_heartbeat_timing(self) -> None:
+        """Test the heartbeat timing - KNX v01.06.02 - Core 03.08.02 - §5.4."""
+        assert HEARTBEAT_RATE == 60
+        assert CONNECTIONSTATE_REQUEST_TIMEOUT == 10
 
     async def test_regular_heartbeat(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test that a ConnectionStateRequest is sent every HEARTBEAT_RATE seconds."""

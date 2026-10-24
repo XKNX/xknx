@@ -1,7 +1,8 @@
 """Unit test for StateUpdater."""
 
+import asyncio
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -189,6 +190,45 @@ class TestStateUpdater:
         xknx.state_updater._workers[
             id(remote_value_1)
         ].update_received.assert_not_called()
+
+    async def test_parallel_reads_update_received(self) -> None:
+        """Test update_received() while reading doesn't free a parallel read slot too early."""
+        xknx = XKNX()
+        xknx.state_updater._semaphore = asyncio.Semaphore(value=1)
+        read_1_running = asyncio.Event()
+        read_1_finish = asyncio.Event()
+
+        async def read_state_1(wait_for_result: bool = False) -> None:
+            """Read state of remote_value_1 - finishes when told to."""
+            read_1_running.set()
+            await read_1_finish.wait()
+
+        remote_value_1 = Mock(read_state=read_state_1)
+        remote_value_2 = Mock(read_state=AsyncMock())
+
+        xknx.state_updater.register_remote_value(remote_value_1)
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+        await read_1_running.wait()
+        assert xknx.state_updater._semaphore.locked()
+        # a telegram for remote_value_1 was received while reading - the
+        # tracker is reset, the read itself is shielded and keeps running
+        xknx.state_updater.update_received(remote_value_1)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        assert xknx.state_updater._semaphore.locked()
+        # the next read has to wait for the running one
+        xknx.state_updater.register_remote_value(remote_value_2)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        remote_value_2.read_state.assert_not_awaited()
+
+        read_1_finish.set()
+        for _ in range(10):
+            await asyncio.sleep(0)
+        remote_value_2.read_state.assert_awaited_once_with(wait_for_result=True)
+        assert not xknx.state_updater._semaphore.locked()
+        xknx.state_updater.stop()
 
     async def test_stop_start_state_updater_when_reconnecting(self) -> None:
         """Test start/stop state updater after reconnect."""
