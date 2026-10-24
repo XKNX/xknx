@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
+
 ### Management
 
 - Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.

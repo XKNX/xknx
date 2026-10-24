@@ -58,6 +58,7 @@ class CEMIHandler:
         # Only one L_Data.req is in flight at a time: the L_Data.con carries no
         # reference to the request it confirms, so a confirmation can only be
         # attributed to the telegram currently waiting for it.
+        # KNX v01.02.03 - Transport Layer 03.03.04 - §3.6
         self._send_lock = asyncio.Lock()
 
     def data_secure_init(self, keyring: Keyring | None) -> None:
@@ -68,7 +69,12 @@ class CEMIHandler:
             self.data_secure = DataSecure.init_from_keyring(keyring)
 
     async def send_telegram(self, telegram: Telegram) -> None:
-        """Create a CEMIFrame from a Telegram and send it to the CEMI Server."""
+        """
+        Create a CEMIFrame from a Telegram and send it to the CEMI Server.
+
+        Returns when the L_Data.con for this request was received. Concurrent calls
+        are serialized so a confirmation can never be attributed to the wrong request.
+        """
         cemi_data = CEMILData.init_from_telegram(
             telegram=telegram,
             src_addr=(
