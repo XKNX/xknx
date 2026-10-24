@@ -6,6 +6,7 @@ DPT 6.010.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -28,7 +29,7 @@ class SetpointShiftMode(Enum):
 class RemoteValueSetpointShift(RemoteValue[float]):
     """Abstraction for remote value of KNX DPT 6.010."""
 
-    __slots__ = ("_internal_dpt_class", "setpoint_shift_step")
+    __slots__ = ("_internal_dpt_class", "_step_precision", "setpoint_shift_step")
 
     def __init__(
         self,
@@ -56,6 +57,9 @@ class RemoteValueSetpointShift(RemoteValue[float]):
             setpoint_shift_mode.value if setpoint_shift_mode is not None else None
         )
         self.setpoint_shift_step = setpoint_shift_step
+        # decimal places of the step - decoded values are rounded to it
+        _exponent = Decimal(str(setpoint_shift_step)).normalize().as_tuple().exponent
+        self._step_precision = max(0, -_exponent) if isinstance(_exponent, int) else 0
 
     def to_knx(self, value: float) -> DPTArray:
         """Convert value to payload."""
@@ -64,7 +68,8 @@ class RemoteValueSetpointShift(RemoteValue[float]):
                 f"Setpoint shift DPT not initialized for {self.device_name}"
             )
         if self._internal_dpt_class == DPTValue1Count:
-            converted_value = int(value / self.setpoint_shift_step)
+            # round to the nearest step - int() would truncate 0.3 / 0.1 == 2.9999... to 2
+            converted_value = round(value / self.setpoint_shift_step)
             return DPTValue1Count.to_knx(converted_value)
         return DPTTemperature.to_knx(value)
 
@@ -75,7 +80,8 @@ class RemoteValueSetpointShift(RemoteValue[float]):
 
         payload_value = self._internal_dpt_class.from_knx(payload)
         if self._internal_dpt_class == DPTValue1Count:
-            return payload_value * self.setpoint_shift_step
+            # round to the precision of the step to avoid 3 * 0.1 == 0.30000000000000004
+            return round(payload_value * self.setpoint_shift_step, self._step_precision)
         return payload_value
 
     def _determine_dpt_class(

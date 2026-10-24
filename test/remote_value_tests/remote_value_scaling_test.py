@@ -1,6 +1,10 @@
 """Unit test for RemoteValueScaling objects."""
 
+import pytest
+
 from xknx import XKNX
+from xknx.dpt import DPTArray
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueScaling
 
 
@@ -120,3 +124,33 @@ class TestRemoteValueScaling:
         xknx = XKNX()
         remote_value = RemoteValueScaling(xknx)
         assert remote_value.unit_of_measurement == "%"
+
+    def test_to_knx_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for values outside of the range."""
+        xknx = XKNX()
+        remote_value = RemoteValueScaling(xknx, group_address="1/2/3")
+        assert remote_value.to_knx(0) == DPTArray((0,))
+        assert remote_value.to_knx(100) == DPTArray((255,))
+        with pytest.raises(ConversionError):
+            remote_value.to_knx(150)
+        with pytest.raises(ConversionError):
+            remote_value.to_knx(-10)
+
+        inverted = RemoteValueScaling(
+            xknx, group_address="1/2/3", range_from=100, range_to=0
+        )
+        assert inverted.to_knx(0) == DPTArray((255,))
+        assert inverted.to_knx(100) == DPTArray((0,))
+        with pytest.raises(ConversionError):
+            inverted.to_knx(101)
+        with pytest.raises(ConversionError):
+            inverted.to_knx(-1)
+
+    def test_to_knx_invalid_range(self) -> None:
+        """Test to_knx raises ConversionError instead of ZeroDivisionError for an empty range."""
+        xknx = XKNX()
+        remote_value = RemoteValueScaling(
+            xknx, group_address="1/2/3", range_from=50, range_to=50
+        )
+        with pytest.raises(ConversionError):
+            remote_value.to_knx(50)

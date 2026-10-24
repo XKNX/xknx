@@ -48,7 +48,7 @@ class DPT2ByteSigned(DPTNumeric):
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = int(float(value) / cls.resolution)
+            knx_value = round(float(value) / cls.resolution)
             if not (cls.value_min <= knx_value <= cls.value_max):
                 raise ValueError("Value out of range")
             return DPTArray(struct.pack(cls._struct_format, knx_value))

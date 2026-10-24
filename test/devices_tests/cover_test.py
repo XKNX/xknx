@@ -971,6 +971,69 @@ class TestCover:
                 payload=GroupValueWrite(DPTBinary(True)),
             )
 
+    async def test_auto_stop_second_set_position(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test the auto stopper survives processing the up/down telegrams of two set_position calls."""
+        xknx = XKNX()
+        cover = Cover(
+            xknx,
+            name="TestCoverAutoStop",
+            group_address_long="1/2/1",
+            group_address_stop="1/2/2",
+            travel_time_down=10,
+            travel_time_up=10,
+        )
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1517000000.0
+            await cover.set_position(0)
+            _ = xknx.telegrams.get_nowait()
+
+            await cover.set_position(50)
+            await time_travel(1)
+            mock_time.return_value = 1517000001.0
+            # new target before the first telegram was processed
+            await cover.set_position(80)
+            assert xknx.telegrams.qsize() == 2
+            telegram_1 = xknx.telegrams.get_nowait()
+            telegram_2 = xknx.telegrams.get_nowait()
+            assert telegram_1 == telegram_2
+            assert telegram_1.payload == GroupValueWrite(DPTBinary(True))
+            # both telegrams were sent for the auto stopper - processing them shall not cancel it
+            cover.process(telegram_1)
+            cover.process(telegram_2)
+            assert not cover._auto_stop_task.done()
+            assert cover._auto_stop_pending_telegrams == 0
+
+            await time_travel(6)
+            mock_time.return_value = 1517000007.0
+            assert xknx.telegrams.qsize() == 0
+            await time_travel(1)
+            mock_time.return_value = 1517000008.0
+            assert xknx.telegrams.qsize() == 1
+            assert xknx.telegrams.get_nowait() == Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+            # an up/down telegram from the bus cancels the auto stopper
+            await cover.set_position(50)
+            _ = xknx.telegrams.get_nowait()
+            assert not cover._auto_stop_task.done()
+            cover.process(
+                Telegram(
+                    destination_address=GroupAddress("1/2/1"),
+                    payload=GroupValueWrite(DPTBinary(False)),
+                )
+            )
+            assert cover._auto_stop_pending_telegrams == 0
+            cover.process(
+                Telegram(
+                    destination_address=GroupAddress("1/2/1"),
+                    payload=GroupValueWrite(DPTBinary(False)),
+                )
+            )
+            assert cover._auto_stop_task.done()
+
     async def test_periodic_update(self, time_travel: EventLoopClockAdvancer) -> None:
         """Test periodic update functionality."""
         xknx = XKNX()

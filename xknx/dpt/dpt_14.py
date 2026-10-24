@@ -60,7 +60,8 @@ class DPT4ByteFloat(DPTNumeric):
         try:
             knx_value = float(value)
             return DPTArray(struct.pack(">f", knx_value))
-        except (ValueError, struct.error) as err:
+        except (ValueError, OverflowError, struct.error) as err:
+            # OverflowError: struct.pack(">f", 1e39) - float too large for 4 octets
             raise ConversionError(
                 f"Could not serialize {cls.dpt_name()}", value=value
             ) from err

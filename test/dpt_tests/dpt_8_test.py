@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from xknx.dpt import DPT2ByteSigned, DPTArray
+from xknx.dpt import DPT2ByteSigned, DPTArray, DPTDeltaTime10Msec, DPTPercentV16
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -60,3 +60,15 @@ class TestDPT2ByteSigned:
             pack_mock.side_effect = struct.error()
             with pytest.raises(ConversionError):
                 DPT2ByteSigned.to_knx(1234)
+
+    def test_to_knx_rounding(self) -> None:
+        """Test values are rounded to the resolution instead of truncated."""
+        # 0.29 / 0.01 == 28.999999999999996 - int() would give 28
+        assert DPTPercentV16.to_knx(0.29) == DPTArray((0x00, 0x1D))
+        assert DPTPercentV16.to_knx(-0.29) == DPTArray((0xFF, 0xE3))
+        assert DPTPercentV16.from_knx(DPTArray((0x00, 0x1D))) == 0.29
+        assert DPTDeltaTime10Msec.to_knx(19) == DPTArray((0x00, 0x02))
+        assert DPTDeltaTime10Msec.to_knx(-19) == DPTArray((0xFF, 0xFE))
+        assert DPTDeltaTime10Msec.to_knx(327_674) == DPTArray((0x7F, 0xFF))
+        with pytest.raises(ConversionError):
+            DPTDeltaTime10Msec.to_knx(327_676)

@@ -150,6 +150,17 @@ class TestTravelCalculator:
             assert travelcalculator.position_reached()
             assert not travelcalculator.is_traveling()
 
+    def test_travel_time_zero(self) -> None:
+        """Test a cover without travel time reaches its target immediately."""
+        travelcalculator = TravelCalculator(0, 0)
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1580000000.0
+            travelcalculator.set_position(80)
+            travelcalculator.start_travel(60)
+            assert travelcalculator.current_position() == 60
+            assert travelcalculator.position_reached()
+            assert not travelcalculator.is_traveling()
+
     def test_travel_down_with_updates(self) -> None:
         """Test travel down with position updates from bus."""
         travelcalculator = TravelCalculator(25, 50)

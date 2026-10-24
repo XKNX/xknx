@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from xknx.dpt import DPTArray, DPTBinary
-from xknx.exceptions import CouldNotParseTelegram
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from .remote_value import GroupAddressesType, RemoteValue, RVCallbackType
 
@@ -48,7 +48,28 @@ class RemoteValueScaling(RemoteValue[int]):
         self.range_to = range_to
 
     def to_knx(self, value: float) -> DPTArray:
-        """Convert value to payload."""
+        """Convert value to payload. Raises ConversionError when `value` is out of range."""
+        if self.range_from == self.range_to:
+            raise ConversionError(
+                "Scaling range invalid - `range_from` equals `range_to`",
+                range_from=self.range_from,
+                range_to=self.range_to,
+                device_name=self.device_name,
+                feature_name=self.feature_name,
+            )
+        if not (
+            min(self.range_from, self.range_to)
+            <= value
+            <= max(self.range_from, self.range_to)
+        ):
+            raise ConversionError(
+                "Value out of range",
+                value=value,
+                range_from=self.range_from,
+                range_to=self.range_to,
+                device_name=self.device_name,
+                feature_name=self.feature_name,
+            )
         knx_value = self._calc_to_knx(self.range_from, self.range_to, value)
         return DPTArray(knx_value)
 

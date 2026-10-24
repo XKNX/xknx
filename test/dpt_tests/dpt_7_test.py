@@ -2,7 +2,7 @@
 
 import pytest
 
-from xknx.dpt import DPTArray, DPTUElCurrentmA
+from xknx.dpt import DPTArray, DPTTimePeriod10Msec, DPTUElCurrentmA
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -58,3 +58,13 @@ class TestDPT2byte:
         """Test DPTUElCurrentmA parsing with wrong value."""
         with pytest.raises(CouldNotParseTelegram):
             DPTUElCurrentmA.from_knx(DPTArray((0xFF, 0x4E, 0x12)))
+
+    def test_to_knx_rounding(self) -> None:
+        """Test values are rounded to the resolution instead of floored."""
+        assert DPTUElCurrentmA.to_knx(38.6) == DPTArray((0x00, 0x27))
+        assert DPTUElCurrentmA.to_knx(38.4) == DPTArray((0x00, 0x26))
+        assert DPTTimePeriod10Msec.to_knx(19) == DPTArray((0x00, 0x02))
+        assert DPTTimePeriod10Msec.to_knx(14) == DPTArray((0x00, 0x01))
+        assert DPTTimePeriod10Msec.to_knx(655_354) == DPTArray((0xFF, 0xFF))
+        with pytest.raises(ConversionError):
+            DPTTimePeriod10Msec.to_knx(655_356)

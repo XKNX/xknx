@@ -166,7 +166,13 @@ class TravelCalculator:
             from_position=self._last_known_position,
             to_position=self._travel_to_position,
         )
-        if time.time() > self._last_known_position_timestamp + remaining_travel_time:
+        if (
+            # No travel time configured - there is nothing to divide by and the
+            # target is reached immediately
+            remaining_travel_time <= 0
+            or time.time()
+            >= self._last_known_position_timestamp + remaining_travel_time
+        ):
             return self._travel_to_position
 
         progress = (

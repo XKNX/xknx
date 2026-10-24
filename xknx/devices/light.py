@@ -356,14 +356,9 @@ class Light(Device):
 
     def _initial_individual_color_debounce_telegrams(self) -> int:
         """Reset individual color debounce telegram counter."""
-        return sum(
-            (
-                self.red.switch.initialized or self.red.brightness.initialized,
-                self.green.switch.initialized or self.green.brightness.initialized,
-                self.blue.switch.initialized or self.blue.brightness.initialized,
-                self.white.switch.initialized or self.white.brightness.initialized,
-            )
-        )
+        # each initialized RemoteValue (switch and brightness of each color) calls
+        # the debounce callback on its own, so count all of them
+        return sum(rv.initialized for rv in self._iter_debounce_remote_values())
 
     def _debouncer_finished(self) -> None:
         """Reset debouncer after all telegrams were processed."""

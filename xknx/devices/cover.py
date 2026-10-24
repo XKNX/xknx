@@ -145,7 +145,9 @@ class Cover(Device):
             name=f"cover.auto_stopper_{id(self)}",
             target=self.stop,
         )
-        self._auto_stop_requested: bool = False
+        # number of up/down telegrams sent by `set_position()` for the auto stopper
+        # that are still queued; processing them shall not cancel the auto stopper
+        self._auto_stop_pending_telegrams: int = 0
         self._periodic_update_task = Task(
             name=f"cover.periodic_update_{id(self)}",
             target=self._periodic_updater,
@@ -165,7 +167,7 @@ class Cover(Device):
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
         self.xknx.task_registry.remove_task(self._auto_stop_task)
-        self._auto_stop_requested = False
+        self._auto_stop_pending_telegrams = 0
         self.xknx.task_registry.remove_task(self._periodic_update_task)
 
     async def set_down(self) -> None:
@@ -288,12 +290,14 @@ class Cover(Device):
         )
         self._auto_stop_task.wait_before_start = stop_in_seconds
         self.xknx.task_registry.start_task(self._auto_stop_task)
-        self._auto_stop_requested = True
+        # each call sends one up/down telegram - count them all so that processing
+        # a previous one doesn't cancel the auto stopper restarted by a later call
+        self._auto_stop_pending_telegrams += 1
 
     def _cancel_auto_stopper(self) -> None:
         """Cancel the auto stopper task."""
         self._auto_stop_task.cancel()
-        self._auto_stop_requested = False
+        self._auto_stop_pending_telegrams = 0
 
     def _target_position_from_rv(self, new_target_postion: int) -> None:
         """Update the target position from RemoteValue (Callback)."""
@@ -340,9 +344,9 @@ class Cover(Device):
         """Process incoming and outgoing GROUP WRITE telegram."""
         # call after_update to account for travelcalculator changes
         if self.updown.process(telegram):
-            if self._auto_stop_requested:
+            if self._auto_stop_pending_telegrams > 0:
                 # Don't cancel auto stopper if we initiated the up/down telegram for it
-                self._auto_stop_requested = False
+                self._auto_stop_pending_telegrams -= 1
             else:
                 self._cancel_auto_stopper()
             if (
