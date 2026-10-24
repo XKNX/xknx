@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import aclosing, asynccontextmanager
 import logging
 import time
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, NoReturn, overload
 
 from xknx.exceptions import (
     CommunicationError,
@@ -37,8 +37,11 @@ if TYPE_CHECKING:
     from xknx.xknx import XKNX
 logger = logging.getLogger("xknx.management")
 
+# KNX v01.02.03 - Transport Layer 03.03.04 - §4 Parameters of Transport Layer
 MANAGEMENT_ACK_TIMEOUT = 3
 MANAGEMENT_CONNECTION_TIMEOUT = 6
+# repetitions of an unacknowledged T_Data_Connected before the connection is closed
+MANAGEMENT_MAX_REP_COUNT = 3
 # telegrams per second a point-to-point connection sends at most
 MANAGEMENT_RATE_LIMIT = 20
 
@@ -97,21 +100,23 @@ class Management:
         if address in self._connections:
             raise ManagementConnectionError(f"Connection to {address} already exists.")
         p2p_connection = P2PConnection(self.xknx, address, rate_limit)
-        try:
-            await p2p_connection.connect()
-        except ManagementConnectionError as exc:
-            logger.error("Establishing connection to %s failed: %s", address, exc)
-            raise
-        self._connections[address] = p2p_connection
 
         def remove_connection_hook() -> None:
             """Remove connection from management."""
-            try:
+            if self._connections.get(address) is p2p_connection:
                 del self._connections[address]
-            except KeyError:
-                logger.error("Connection to %s already closed.", address)
 
         p2p_connection.disconnect_hook = remove_connection_hook
+        # register before the T_Connect is sent so that a concurrent `connect()`
+        # to the same address is refused and a T_Disconnect the device answers
+        # with right away reaches the connection
+        self._connections[address] = p2p_connection
+        try:
+            await p2p_connection.connect()
+        except ManagementConnectionError as exc:
+            remove_connection_hook()
+            logger.error("Establishing connection to %s failed: %s", address, exc)
+            raise
         return p2p_connection
 
     async def disconnect(self, address: IndividualAddress) -> None:
@@ -138,7 +143,9 @@ class Management:
         try:
             yield conn
         finally:
-            await self.disconnect(address)
+            # the transport layer may have closed it already, e.g. after a timeout
+            if self._connections.get(address) is conn:
+                await self.disconnect(address)
 
     @asynccontextmanager
     async def connectionless(
@@ -452,7 +459,7 @@ class P2PConnectionless:
         async with self._request_lock:
             if self.rate_limit:
                 # time in seconds since the last request operation
-                time_diff = time.time() - self._last_response_time
+                time_diff = time.monotonic() - self._last_response_time
                 wait_time = 1 / self.rate_limit
                 if time_diff < wait_time:
                     await asyncio.sleep(wait_time - time_diff)
@@ -463,24 +470,41 @@ class P2PConnectionless:
             await self.send(payload)
             async with aclosing(self.receive(expected, timeout=timeout)) as telegrams:
                 async for telegram in telegrams:
-                    self._last_response_time = time.time()
+                    self._last_response_time = time.monotonic()
                     return telegram
             raise ManagementConnectionTimeout(f"Timeout while waiting for {expected}")
 
 
 class P2PConnection:
-    """Class to manage a point-to-point connection with a KNX device."""
+    """
+    Class to manage a point-to-point connection with a KNX device.
+
+    Implements the client side of the connection-oriented Transport Layer state
+    machine, KNX v01.02.03 - Transport Layer 03.03.04 - §5 (Style 3, §5.4.3, as
+    amended by KNX AN210 v02 TL Style 3 Rework - §2.2.1). The events (E..) and
+    actions (A..) named in the comments are the ones of its §5.2 and §5.3.
+    Timing per its §4 and §5.5.1.9: a sent T_Data_Connected is repeated up to
+    `MANAGEMENT_MAX_REP_COUNT` times when it is not acknowledged within
+    `MANAGEMENT_ACK_TIMEOUT` seconds, and the connection is closed when nothing
+    is sent or received for `MANAGEMENT_CONNECTION_TIMEOUT` seconds.
+
+    The Transport Layer allows no parallel services on a connection, so
+    `send_data()` and `request()` calls are serialized.
+    """
 
     __slots__ = (
         "_ack_waiter",
+        "_closed_by_peer",
         "_connected",
+        "_connection_timer",
         "_expected_sequence_number",
         "_last_response_time",
+        "_lock",
         "_response_waiter",
+        "_sequence_number_send",
         "address",
         "disconnect_hook",
         "rate_limit",
-        "sequence_number",
         "xknx",
     )
 
@@ -496,24 +520,29 @@ class P2PConnection:
         self.disconnect_hook: Callable[[], None]
         self.rate_limit = rate_limit
 
-        self.sequence_number = self._sequence_number_generator()
+        # SeqNoSend / SeqNoRcv of the Transport Layer state machine
+        self._sequence_number_send = 0
         self._expected_sequence_number = 0
         self._connected = False
+        self._closed_by_peer = False
+        self._connection_timer: asyncio.TimerHandle | None = None
+        self._lock = asyncio.Lock()
 
         self._last_response_time: float = 0
 
-        self._ack_waiter: asyncio.Future[TAck | TNak] | None = None
-        self._response_waiter: asyncio.Future[Telegram] = (
-            asyncio.get_event_loop().create_future()
-        )
+        # the T_ACK / T_NAK for the T_Data_Connected `_send_data` is waiting
+        # for, or None when the acknowledge timeout elapsed
+        self._ack_waiter: asyncio.Future[TAck | TNak | None] | None = None
+        # the response `request` is waiting for - only set while one is pending
+        self._response_waiter: asyncio.Future[Telegram] | None = None
 
-    @staticmethod
-    def _sequence_number_generator() -> Generator[int, None, None]:
-        """Generate sequence numbers."""
-        seq_num = 0
-        while True:
-            yield seq_num
-            seq_num = seq_num + 1 & 0xF
+    def _telegram(self, tpci: TConnect | TDisconnect | TAck | TNak) -> Telegram:
+        """Build a Transport Layer control telegram to the device."""
+        return Telegram(
+            destination_address=self.address,
+            source_address=self.xknx.current_address,
+            tpci=tpci,
+        )
 
     async def connect(self) -> None:
         """
@@ -523,39 +552,38 @@ class P2PConnection:
         03.03.07 - §3.5.1: "T_Connect.ind and T_Disconnect.ind are mapped transparently to
         A_Connect.ind and A_Disconnect.ind service and passed to the user of Application Layer."
         """
-        connect = Telegram(
-            destination_address=self.address,
-            source_address=self.xknx.current_address,
-            tpci=TConnect(),
-        )
+        # E25 -> CONNECTING, A12. A T_Disconnect received while the T_Connect is
+        # on its way (E02 -> A5) clears `_connected` again.
+        self._connected = True
         try:
-            await self.xknx.cemi_handler.send_telegram(connect)
+            await self.xknx.cemi_handler.send_telegram(self._telegram(TConnect()))
         except ConfirmationError as exc:
-            self._response_waiter.cancel()
+            self._connected = False
             raise ManagementConnectionError(
                 f"Connection to {self.address} failed: {exc}"
             ) from exc
         except CommunicationError as exc:
-            self._response_waiter.cancel()
+            self._connected = False
             raise ManagementConnectionError("Error while sending Telegram") from exc
-        self._connected = True
+        if not self._connected:
+            raise ManagementConnectionRefused(
+                f"Connection to {self.address} refused by the device."
+            )
+        self._restart_connection_timer()
 
     async def disconnect(self) -> None:
         """Disconnect from the KNX device. Sends T_Disconnect-PDU (= A_Disconnect, see connect())."""
         if not self._connected:
             self.disconnect_hook()  # remove connection from management class
-            raise ManagementConnectionRefused(
-                "Management connection disconnected by the peer."
-            )
-        self._connected = False
-
-        disconnect = Telegram(
-            destination_address=self.address,
-            source_address=self.xknx.current_address,
-            tpci=TDisconnect(),
-        )
+            if self._closed_by_peer:
+                raise ManagementConnectionRefused(
+                    "Management connection disconnected by the peer."
+                )
+            return  # closed by us before - the T_Disconnect was sent then
+        # E26 -> A14
+        self._close(ManagementConnectionError("Management connection closed."))
         try:
-            await self.xknx.cemi_handler.send_telegram(disconnect)
+            await self.xknx.cemi_handler.send_telegram(self._telegram(TDisconnect()))
         except ConfirmationError as exc:
             raise ManagementConnectionError(
                 f"Disconnect from {self.address} failed: {exc}"
@@ -563,34 +591,121 @@ class P2PConnection:
         except CommunicationError as exc:
             raise ManagementConnectionError("Error while sending Telegram") from exc
         finally:
-            if self._ack_waiter:
-                self._ack_waiter.cancel()
-            self._response_waiter.cancel()
             self.disconnect_hook()  # remove connection from management class
+
+    def _close(self, exc: ManagementConnectionError) -> None:
+        """
+        Mark the connection closed and fail whatever is waiting on it with `exc`.
+
+        This is the local part of A5 / A6 / A14: state CLOSED, timers stopped,
+        T_Disconnect.ind to the user. Sending a T_Disconnect-PDU (A6, A14) and
+        removing the connection from `Management` is up to the caller.
+        """
+        self._connected = False
+        self._closed_by_peer = isinstance(exc, ManagementConnectionRefused)
+        self._stop_connection_timer()
+        for waiter in (self._ack_waiter, self._response_waiter):
+            if waiter is not None and not waiter.done():
+                waiter.set_exception(exc)
+
+    async def _abort(self, exc: ManagementConnectionError) -> NoReturn:
+        """
+        Close the connection on an error (A6): send T_Disconnect-PDU and raise `exc`.
+
+        The connection is removed from `Management` before, so a late telegram
+        of the device is not handed to it anymore.
+        """
+        self._close(exc)
+        self.disconnect_hook()
+        try:
+            await self.xknx.cemi_handler.send_telegram(self._telegram(TDisconnect()))
+        except (ConfirmationError, CommunicationError) as send_exc:
+            logger.warning(
+                "%s: sending T_Disconnect while closing failed: %s",
+                self.address,
+                send_exc,
+            )
+        raise exc
+
+    def _restart_connection_timer(self) -> None:
+        """
+        (Re)start the connection timeout timer.
+
+        KNX v01.02.03 - Transport Layer 03.03.04 - §5: it is started when the
+        connection is opened and restarted whenever a T_Data_Connected is sent
+        or a telegram of the connection is received (A2, A3, A4, A7, A8, A9).
+        """
+        self._stop_connection_timer()
+        self._connection_timer = asyncio.get_running_loop().call_later(
+            MANAGEMENT_CONNECTION_TIMEOUT, self._connection_timeout
+        )
+
+    def _stop_connection_timer(self) -> None:
+        """Stop the connection timeout timer."""
+        if self._connection_timer is not None:
+            self._connection_timer.cancel()
+            self._connection_timer = None
+
+    def _connection_timeout(self) -> None:
+        """Close the connection after `MANAGEMENT_CONNECTION_TIMEOUT` without traffic (E16 -> A6)."""
+        self._connection_timer = None
+        logger.info(
+            "%s: connection timed out - nothing received for %s seconds.",
+            self.address,
+            MANAGEMENT_CONNECTION_TIMEOUT,
+        )
+        self._close(
+            ManagementConnectionTimeout(
+                f"Connection to {self.address} timed out - nothing received for "
+                f"{MANAGEMENT_CONNECTION_TIMEOUT} seconds."
+            )
+        )
+        self.disconnect_hook()
+        self.xknx.task_registry.background(
+            self.xknx.cemi_handler.send_telegram(self._telegram(TDisconnect()))
+        )
+
+    def _ack_timeout(self) -> None:
+        """Acknowledge timeout (E17 / E18) - wake `_send_data` to repeat the telegram or close."""
+        if self._ack_waiter is not None and not self._ack_waiter.done():
+            self._ack_waiter.set_result(None)
+        # the repetition (A9) restarts the connection timer - do it right away
+        # so it can not expire before `_send_data` gets to run, e.g. when the
+        # event loop was stalled and both timers are due at once
+        self._restart_connection_timer()
 
     def _send_control(self, tpci: TAck | TNak) -> None:
         """Acknowledge a received telegram - sent in the background."""
-        telegram = Telegram(
-            destination_address=self.address,
-            source_address=self.xknx.current_address,
-            tpci=tpci,
-        )
         self.xknx.task_registry.background(
-            self.xknx.cemi_handler.send_telegram(telegram)
+            self.xknx.cemi_handler.send_telegram(self._telegram(tpci))
         )
 
     def process(self, telegram: Telegram) -> None:
         """Process incoming telegrams."""
         if isinstance(telegram.tpci, TDisconnect):
+            # E02 -> A5. The connection stays registered in `Management` until
+            # `disconnect()` is called, which raises to tell the peer closed it.
             logger.info("%s disconnected management session.", self.address)
-            self._connected = False
-            if self._ack_waiter:
-                self._response_waiter.set_exception(ManagementConnectionRefused())
-            if not self._response_waiter.done():
-                self._response_waiter.set_exception(ManagementConnectionRefused())
+            self._close(
+                ManagementConnectionRefused(
+                    "Management connection disconnected by the peer."
+                )
+            )
             return
         if isinstance(telegram.tpci, TAck | TNak):
-            if not self._ack_waiter:
+            if telegram.tpci.sequence_number != self._sequence_number_send:
+                # E09 / E11 -> A0: KNX AN210 v02 TL Style 3 Rework - §2.2.1
+                # a T_ACK with a wrong sequence number is ignored like a T_NAK
+                # with one - it is most probably a repetition on the medium
+                logger.warning(
+                    "Received %s with unexpected sequence number from %s: %s (expected: %s)",
+                    type(telegram.tpci).__name__,
+                    self.address,
+                    telegram.tpci.sequence_number,
+                    self._sequence_number_send,
+                )
+                return
+            if self._ack_waiter is None or self._ack_waiter.done():
                 logger.warning("Received unexpected ACK/NAK: %s", telegram)
                 return
             self._ack_waiter.set_result(telegram.tpci)
@@ -609,10 +724,12 @@ class P2PConnection:
         if sequence_number == self._expected_sequence_number:
             self._send_control(TAck(sequence_number=sequence_number))  # A2
             self._expected_sequence_number = sequence_number + 1 & 0xF
+            self._restart_connection_timer()
         elif sequence_number == self._expected_sequence_number - 1 & 0xF:
             # a repetition of the telegram we processed last - acknowledge it
             # again, the previous acknowledgement apparently did not arrive
             self._send_control(TAck(sequence_number=sequence_number))  # A3
+            self._restart_connection_timer()
             logger.debug(
                 "Received repeated sequence number %s from %s",
                 sequence_number,
@@ -621,13 +738,16 @@ class P2PConnection:
             return
         else:
             self._send_control(TNak(sequence_number=sequence_number))  # A4
+            self._restart_connection_timer()
             logger.warning(
                 "Received unexpected sequence number: %s (expected: %s)",
                 sequence_number,
                 self._expected_sequence_number,
             )
             return
-        if self._response_waiter.done():
+        if self._response_waiter is None or self._response_waiter.done():
+            # nothing is waiting for it - e.g. a response arriving after its
+            # request timed out. It must not be taken for the next one's.
             logger.warning(
                 "Received unexpected point-to-point telegram for %s: %s",
                 self.address,
@@ -641,16 +761,26 @@ class P2PConnection:
         Send a payload to the KNX device.
 
         If `wait_for_ack` is True (default), waits for the device to ACK the
-        telegram - resending once after a timeout - and validates the ACK's
-        sequence number. The response itself still has to be processed by
-        `_receive` before sending the next telegram. Set `wait_for_ack=False`
-        for commands the device doesn't ACK back.
+        telegram, repeating it up to `MANAGEMENT_MAX_REP_COUNT` times when no
+        ACK or a NAK arrives within `MANAGEMENT_ACK_TIMEOUT` seconds. If it is
+        still not acknowledged, the connection is closed with a T_Disconnect
+        and `ManagementConnectionTimeout` (no ACK) or `ManagementConnectionError`
+        (NAK) is raised. The response itself still has to be processed by
+        `request()`. Set `wait_for_ack=False` for commands the device doesn't
+        ACK back.
+
+        Concurrent calls, and `request()` calls, are serialized.
         """
+        async with self._lock:
+            await self._send_data(payload, wait_for_ack)
+
+    async def _send_data(self, payload: APCI, wait_for_ack: bool) -> None:
+        """Send a payload to the KNX device - the caller holds `_lock`."""
         if not self._connected:
             raise ManagementConnectionRefused(
                 "Management connection disconnected by the peer."
             )
-        seq_num = next(self.sequence_number)
+        seq_num = self._sequence_number_send
         telegram = Telegram(
             destination_address=self.address,
             source_address=self.xknx.current_address,
@@ -659,28 +789,51 @@ class P2PConnection:
         )
         if not wait_for_ack:
             await self.xknx.cemi_handler.send_telegram(telegram)
+            # A7 and, as if acknowledged, A8
+            self._sequence_number_send = seq_num + 1 & 0xF
+            self._restart_connection_timer()
             return
 
-        self._ack_waiter = asyncio.get_event_loop().create_future()
+        loop = asyncio.get_running_loop()
+        ack: TAck | TNak | None = None
         try:
-            await self.xknx.cemi_handler.send_telegram(telegram)
-            async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
-                ack = await self._ack_waiter
-        except TimeoutError:
-            logger.info(
-                "%s: timeout while waiting for ACK. Resending Telegram.", self.address
-            )
-            # resend once after 3 seconds without ACK
-            # on timeout the Future is cancelled so create a new
-            self._ack_waiter = asyncio.get_event_loop().create_future()
-            await self.xknx.cemi_handler.send_telegram(telegram)
-            try:
-                async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
+            # A7, then A9 for each repetition
+            for rep_count in range(MANAGEMENT_MAX_REP_COUNT + 1):
+                if rep_count:
+                    logger.info(
+                        "%s: %s for %s. Repeating Telegram (%s/%s).",
+                        self.address,
+                        "no ACK received" if ack is None else "NAK received",
+                        telegram,
+                        rep_count,
+                        MANAGEMENT_MAX_REP_COUNT,
+                    )
+                # create it before sending so an ACK arriving while the send is
+                # confirmed, or a disconnect, is not missed
+                self._ack_waiter = loop.create_future()
+                await self.xknx.cemi_handler.send_telegram(telegram)
+                self._restart_connection_timer()
+                ack_timer = loop.call_later(MANAGEMENT_ACK_TIMEOUT, self._ack_timeout)
+                try:
                     ack = await self._ack_waiter
-            except TimeoutError:
-                raise ManagementConnectionTimeout(
-                    "No ACK received for repeated telegram."
-                ) from None
+                finally:
+                    ack_timer.cancel()
+                if isinstance(ack, TAck):
+                    break  # E08
+                # E17 / E18 (ack is None) or E12 / E13 (NAK)
+            else:
+                # E18 / E13 -> A6
+                if ack is None:
+                    await self._abort(
+                        ManagementConnectionTimeout(
+                            f"No ACK received for repeated telegram: {telegram}"
+                        )
+                    )
+                await self._abort(
+                    ManagementConnectionError(
+                        f"Received NAK for repeated telegram: {telegram}"
+                    )
+                )
         except ConfirmationError as exc:
             raise ManagementConnectionError(
                 f"Error while sending Telegram: {exc}"
@@ -689,29 +842,20 @@ class P2PConnection:
             raise ManagementConnectionError("Error while sending Telegram") from exc
         finally:
             self._ack_waiter = None
-
-        if isinstance(ack, TNak):
-            raise ManagementConnectionError(
-                f"Received no_ack from sending Telegram: {telegram}"
-            )
-        if ack.sequence_number != seq_num:
-            raise ManagementConnectionError(
-                f"Ack sequence number {ack.sequence_number} does not match request sequence number of {telegram}"
-            )
+        # A8
+        self._sequence_number_send = seq_num + 1 & 0xF
+        self._restart_connection_timer()
 
     async def _receive(self, expected_payload: type[APCI] | None) -> Telegram:
-        """Wait for a telegram from the KNX device."""
-        try:
-            async with asyncio.timeout(MANAGEMENT_CONNECTION_TIMEOUT):
-                telegram = await self._response_waiter
-        except TimeoutError:
-            raise ManagementConnectionTimeout(
-                f"Timeout while waiting for {expected_payload}"
-            ) from None
-        finally:
-            # set up new Future for the next request
-            self._response_waiter = asyncio.get_event_loop().create_future()
+        """
+        Wait for the response to the pending request.
 
+        The response waiter is failed by `_close()` when the connection is
+        closed meanwhile - with `ManagementConnectionTimeout` when nothing was
+        received for `MANAGEMENT_CONNECTION_TIMEOUT` seconds.
+        """
+        assert self._response_waiter is not None
+        telegram = await self._response_waiter
         if expected_payload and not isinstance(telegram.payload, expected_payload):
             raise ManagementConnectionError(
                 f"Received unexpected telegram: {telegram.payload}"
@@ -729,22 +873,38 @@ class P2PConnection:
         Send a payload to the KNX device and wait for the response.
 
         The response is verified against `type(payload).RESPONSE_TYPE` if the
-        payload defines one - see `APCIRequest`.
+        payload defines one - see `APCIRequest`. Raises
+        `ManagementConnectionTimeout` when no response arrives within
+        `MANAGEMENT_CONNECTION_TIMEOUT` seconds - the connection is closed then.
+
+        Concurrent calls, and `send_data()` calls, are serialized.
         """
-        if not self._connected:
-            raise ManagementConnectionRefused(
-                "Management connection disconnected by the peer."
+        async with self._lock:
+            if not self._connected:
+                raise ManagementConnectionRefused(
+                    "Management connection disconnected by the peer."
+                )
+
+            if self.rate_limit:
+                # time in seconds since the last request operation
+                time_diff = time.monotonic() - self._last_response_time
+                wait_time = 1 / self.rate_limit
+                if time_diff < wait_time:
+                    await asyncio.sleep(wait_time - time_diff)
+
+            expected = (
+                payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
             )
-
-        if self.rate_limit:
-            # time in seconds since the last request operation
-            time_diff = time.time() - self._last_response_time
-            wait_time = 1 / self.rate_limit
-            if time_diff < wait_time:
-                await asyncio.sleep(wait_time - time_diff)
-
-        expected = payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
-        await self.send_data(payload)
-        response = await self._receive(expected)
-        self._last_response_time = time.time()
-        return response
+            # accept a response from now on - it may even arrive before the ACK
+            self._response_waiter = asyncio.get_running_loop().create_future()
+            try:
+                await self._send_data(payload, wait_for_ack=True)
+                response = await self._receive(expected)
+            finally:
+                waiter, self._response_waiter = self._response_waiter, None
+                if waiter.done() and not waiter.cancelled():
+                    # `_close()` may have failed it while `_send_data` raised -
+                    # retrieve it so asyncio doesn't log it as never retrieved
+                    waiter.exception()
+            self._last_response_time = time.monotonic()
+            return response

@@ -7,7 +7,11 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.management import MANAGEMENT_CONNECTION_TIMEOUT
+from xknx.management.management import (
+    MANAGEMENT_ACK_TIMEOUT,
+    MANAGEMENT_CONNECTION_TIMEOUT,
+    MANAGEMENT_MAX_REP_COUNT,
+)
 from xknx.management.procedures.network.nm_individual_address_write import (
     nm_individual_address_write,
 )
@@ -79,9 +83,10 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         nm_individual_address_write(xknx, individual_address_new)
     )
 
-    # make sure first request (address check) times out
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    # make sure first request (address check) times out - the telegram is
+    # repeated 3 times, then the connection is closed
+    for _ in range(MANAGEMENT_MAX_REP_COUNT + 1):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
@@ -95,6 +100,8 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         call(connect),
         call(device_desc_read),
         call(device_desc_read),  # due to retransmit
+        call(device_desc_read),
+        call(device_desc_read),
         call(disconnect),
         call(individual_address_read),
         call(individual_address_write),
@@ -143,11 +150,15 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
     await time_travel(0)  # start
     await time_travel(3)  # first timeout
     await time_travel(3)  # second timeout
+    await time_travel(3)  # third timeout
+    await time_travel(3)  # fourth timeout - the connection is closed
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
         call(device_desc_read),
         call(device_desc_read),  # due to retransmit
+        call(device_desc_read),
+        call(device_desc_read),
         call(disconnect),
         call(individual_address_read),
     ]
@@ -159,7 +170,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
         match="More than one KNX device is in programming mode",
     ):
         await task
-    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
+    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 7
 
 
 async def test_nm_individual_address_write_no_device_programming_mode(
@@ -194,14 +205,15 @@ async def test_nm_individual_address_write_no_device_programming_mode(
         call(connect),
         call(device_desc_read),
     ]
-    # first timeout - retransmit DeviceDescriptorRead
+    # first timeout - retransmit DeviceDescriptorRead, 3 times
+    for repetition in range(2, 5):
+        await time_travel(3)
+        assert xknx.cemi_handler.send_telegram.call_args_list[repetition:] == [
+            call(device_desc_read),
+        ]
+    # retries also timed out - connection closed
     await time_travel(3)
-    assert xknx.cemi_handler.send_telegram.call_args_list[2:] == [
-        call(device_desc_read),
-    ]
-    # retry also timed out
-    await time_travel(3)
-    assert xknx.cemi_handler.send_telegram.call_args_list[3:] == [
+    assert xknx.cemi_handler.send_telegram.call_args_list[5:] == [
         call(disconnect),
         call(individual_address_read),
     ]
@@ -211,7 +223,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
         ManagementConnectionError, match="No device in programming mode"
     ):
         await task
-    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 5
+    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 7
 
 
 async def test_nm_individual_address_write_address_occupied_by_disconnect(
@@ -220,10 +232,10 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     """
     Test nm_individual_address_write when device refuses connection during address check.
 
-    Device sends TDisconnect → nm_individual_address_check(xknx, address) already handles
-    this internally (its own connection context manager's finally raises
-    ManagementConnectionRefused from disconnect() after the peer already disconnected, and its
-    own except swallows it) → returns True.
+    The device answers the DeviceDescriptorRead with a TDisconnect instead of an ACK.
+    The pending request fails with ManagementConnectionRefused right away - the telegram
+    is not repeated - and nm_individual_address_check treats that as "address occupied"
+    (KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 1) → returns True.
     """
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -241,12 +253,6 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
         direction=TelegramDirection.INCOMING,
         tpci=tpci.TDisconnect(),
     )
-    ack_from_device = Telegram(
-        source_address=individual_address,
-        destination_address=IndividualAddress(0),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
     individual_address_read = Telegram(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
     )
@@ -260,13 +266,11 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
         call(device_desc_read),
     ]
 
-    # device sends disconnect (address occupied) then ACK for the DeviceDescriptorRead
+    # device sends disconnect (address occupied) instead of an ACK
     xknx.management.process(disconnect_from_device)
-    xknx.management.process(ack_from_device)
 
-    # nm_individual_address_check's own connection context manager finally raises
-    # ManagementConnectionRefused (peer already disconnected, no TDisconnect sent by us);
-    # its own except swallows it and returns True; IndividualAddressRead broadcast is sent
+    # the address check reports the address as occupied without waiting for the
+    # ACK timeout; no TDisconnect is sent by us; IndividualAddressRead broadcast is sent
     await time_travel(0)
     assert xknx.cemi_handler.send_telegram.call_args_list[2:] == [
         call(individual_address_read),
@@ -385,26 +389,31 @@ async def test_nm_individual_address_write_programming_failed(
         nm_individual_address_write(xknx, individual_address_new)
     )
 
-    # make sure first request (address check) times out
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    # make sure first request (address check) times out - the telegram is
+    # repeated 3 times, then the connection is closed
+    for _ in range(MANAGEMENT_MAX_REP_COUNT + 1):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
 
-    # device experienced error, so set connection request timeout
+    # device experienced error, so the check after the write times out as well
     await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    for _ in range(MANAGEMENT_MAX_REP_COUNT + 1):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
         call(device_desc_read),
         call(device_desc_read),  # due to retransmit
+        call(device_desc_read),
+        call(device_desc_read),
         call(disconnect),
         call(individual_address_read),
         call(individual_address_write),
         call(connect),
+        call(device_desc_read),
+        call(device_desc_read),
         call(device_desc_read),
         call(device_desc_read),
         call(disconnect),

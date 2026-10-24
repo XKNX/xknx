@@ -17,6 +17,7 @@ from xknx.exceptions import (
 from xknx.management.management import (
     MANAGEMENT_ACK_TIMEOUT,
     MANAGEMENT_CONNECTION_TIMEOUT,
+    MANAGEMENT_MAX_REP_COUNT,
 )
 from xknx.telegram import (
     GroupAddress,
@@ -79,7 +80,7 @@ async def test_connect() -> None:
 
 
 async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
-    """Test ACK timeout handling."""
+    """Test ACK timeout handling: 3 repetitions, then the connection is closed."""
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     _ia = IndividualAddress("4.0.1")
@@ -92,6 +93,7 @@ async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
         tpci=tpci.TDataConnected(0),
         payload=apci.DeviceDescriptorRead(descriptor=0),
     )
+    disconnect = Telegram(destination_address=_ia, tpci=tpci.TDisconnect())
     task = asyncio.create_task(
         conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
     )
@@ -99,18 +101,28 @@ async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(device_desc_read),
     ]
-    await time_travel(MANAGEMENT_ACK_TIMEOUT)
-    # telegram repeated
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(device_desc_read),
-        call(device_desc_read),
-    ]
+    for repetition in range(1, MANAGEMENT_MAX_REP_COUNT + 1):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+        # telegram repeated - KNX v01.02.03 - Transport Layer 03.03.04 - §5.3 A9
+        assert xknx.cemi_handler.send_telegram.call_args_list == [
+            call(device_desc_read)
+        ] * (repetition + 1)
+        assert not task.done()
     await time_travel(MANAGEMENT_ACK_TIMEOUT)
     with pytest.raises(ManagementConnectionTimeout):
-        # still no ACK -> timeout
+        # still no ACK -> timeout, connection closed (E18 -> A6)
         await task
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(disconnect)
+    assert _ia not in xknx.management._connections
+    # the sequence number was not consumed by the failed telegram
+    assert conn._sequence_number_send == 0
 
+    # closed by the transport layer already - nothing more to send
+    xknx.cemi_handler.send_telegram.reset_mock()
     await conn.disconnect()
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
 
 
 async def test_failed_connect_disconnect() -> None:
@@ -227,16 +239,17 @@ async def test_incoming_sequence_numbers() -> None:
             tpci=control,
         )
 
-    # in sequence - acknowledged and handed to whoever waits for it
+    # in sequence - acknowledged and handed to the pending request
+    connection._response_waiter = asyncio.get_running_loop().create_future()
     xknx.management.process(incoming(0))
     await asyncio.sleep(0)
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(outgoing(tpci.TAck(0)))
     ]
-    assert connection._response_waiter.done()
+    assert connection._response_waiter.result() == incoming(0)
 
     # a repetition of it - acknowledged again, but not processed a second time
-    connection._response_waiter = asyncio.get_event_loop().create_future()
+    connection._response_waiter = asyncio.get_running_loop().create_future()
     xknx.management.process(incoming(0))
     await asyncio.sleep(0)
     assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
@@ -251,6 +264,15 @@ async def test_incoming_sequence_numbers() -> None:
         outgoing(tpci.TNak(7))
     )
     assert not connection._response_waiter.done()
+
+    # in sequence while no request is pending - acknowledged, but dropped
+    connection._response_waiter = None
+    xknx.management.process(incoming(1))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        outgoing(tpci.TAck(1))
+    )
+    assert connection._response_waiter is None
 
 
 async def test_incoming_unnumbered_telegram_from_connected_device() -> None:
@@ -276,7 +298,7 @@ async def test_incoming_unnumbered_telegram_from_connected_device() -> None:
     # not acknowledged - it is not part of the point-to-point connection - and
     # not mistaken for its response either
     xknx.cemi_handler.send_telegram.assert_not_called()
-    assert not connection._response_waiter.done()
+    assert connection._response_waiter is None
 
 
 async def test_incoming_wrong_address() -> None:
@@ -568,6 +590,364 @@ async def test_p2p_rate_limit(
     await task
 
 
+def _connected_telegram(
+    ia: IndividualAddress, tpci_: tpci.TPCI, payload: apci.APCI | None = None
+) -> Telegram:
+    """Build an incoming telegram of the point-to-point connection with `ia`."""
+    return Telegram(
+        source_address=ia,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci_,
+        payload=payload,
+    )
+
+
+async def test_disconnect_while_waiting_for_ack() -> None:
+    """Test a T_Disconnect of the device fails the pending request right away."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=0)))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+
+    xknx.management.process(_connected_telegram(ia, tpci.TDisconnect()))
+    with pytest.raises(ManagementConnectionRefused):
+        await task
+    # neither repeated nor answered with a T_Disconnect of our own (E02 -> A5)
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+    # a late ACK of the device is not an error
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.disconnect()
+    assert ia not in xknx.management._connections
+
+
+async def test_disconnect_while_connecting() -> None:
+    """Test a T_Disconnect the device answers the T_Connect with refuses the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+
+    async def refuse(telegram: Telegram) -> None:
+        # the device answers before the T_Connect is confirmed
+        xknx.management.process(_connected_telegram(ia, tpci.TDisconnect()))
+
+    xknx.cemi_handler.send_telegram.side_effect = refuse
+    with pytest.raises(ManagementConnectionRefused):
+        await xknx.management.connect(ia)
+    assert ia not in xknx.management._connections
+
+
+async def test_concurrent_connect_same_address() -> None:
+    """Test a second connect to the same address while the first is pending is refused."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    confirmed = asyncio.Event()
+
+    async def wait_for_confirmation(telegram: Telegram) -> None:
+        await confirmed.wait()
+
+    xknx.cemi_handler.send_telegram.side_effect = wait_for_confirmation
+    task_1 = asyncio.create_task(xknx.management.connect(ia))
+    await asyncio.sleep(0)
+    with pytest.raises(ManagementConnectionError, match="already exists"):
+        await xknx.management.connect(ia)
+    confirmed.set()
+    conn = await task_1
+    assert xknx.management._connections[ia] is conn
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+
+
+async def test_repeated_ack_ignored() -> None:
+    """Test a repeated T_ACK, and one with a wrong sequence number, is ignored."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=0)))
+    await asyncio.sleep(0)
+    # KNX AN210 v02 TL Style 3 Rework - §2.2.1: E09 -> A0, a T_ACK with a wrong
+    # sequence number is ignored - most probably a repetition on the medium
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(5)))
+    await asyncio.sleep(0)
+    assert not task.done()
+    assert conn._connected
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))  # repeated
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), apci.DeviceDescriptorResponse())
+    )
+    response = await task
+    assert isinstance(response.payload, apci.DeviceDescriptorResponse)
+    assert conn._sequence_number_send == 1
+    await conn.disconnect()
+
+
+async def test_nak_repeats_telegram(time_travel: EventLoopClockAdvancer) -> None:
+    """Test a T_NAK repeats the telegram (E12 -> A9) and the sequence number is kept."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    device_desc_read = Telegram(
+        destination_address=ia,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
+    task = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=0)))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [call(device_desc_read)]
+
+    # a T_NAK with a wrong sequence number is ignored (E11 -> A0)
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(3)))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [call(device_desc_read)]
+
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(0)))
+    await asyncio.sleep(0)
+    # repeated right away with the same sequence number
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(device_desc_read),
+        call(device_desc_read),
+    ]
+    assert not task.done()
+    # a NAK and a timeout count alike - 3 repetitions, then the connection is closed
+    await time_travel(MANAGEMENT_ACK_TIMEOUT)
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(0)))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(device_desc_read),
+        call(device_desc_read),
+        call(device_desc_read),
+        call(device_desc_read),
+    ]
+    assert not task.done()
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(0)))
+    with pytest.raises(ManagementConnectionError, match="NAK"):
+        await task
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        Telegram(destination_address=ia, tpci=tpci.TDisconnect())
+    )
+    assert ia not in xknx.management._connections
+
+
+async def test_nak_then_ack_advances_sequence_number() -> None:
+    """Test the sequence number is advanced once a repeated telegram is acknowledged."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(0)))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    await task
+    assert conn._sequence_number_send == 1
+    assert xknx.cemi_handler.send_telegram.call_count == 2
+
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        Telegram(
+            destination_address=ia,
+            tpci=tpci.TDataConnected(1),
+            payload=apci.Restart(),
+        )
+    )
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(1)))
+    await task
+    await conn.disconnect()
+
+
+async def test_send_error_on_repetition() -> None:
+    """Test a send error of a repeated telegram is raised as ManagementConnectionError."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    xknx.cemi_handler.send_telegram.side_effect = [None, ConfirmationError("")]
+
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(0)))
+    with pytest.raises(ManagementConnectionError, match="Error while sending"):
+        await task
+    assert xknx.cemi_handler.send_telegram.call_count == 2
+
+    xknx.cemi_handler.send_telegram.side_effect = [None, CommunicationError("")]
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TNak(0)))
+    with pytest.raises(ManagementConnectionError, match="Error while sending"):
+        await task
+    xknx.cemi_handler.send_telegram.side_effect = None
+    await conn.disconnect()
+
+
+async def test_late_response_not_taken_for_next_request(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test a response arriving while no request is pending is dropped."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=0)))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    # no response within the connection timeout - the connection is closed
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    with pytest.raises(ManagementConnectionTimeout):
+        await task
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        Telegram(destination_address=ia, tpci=tpci.TDisconnect())
+    )
+    assert ia not in xknx.management._connections
+
+    # the device answers late, after we reconnected
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    late_response = _connected_telegram(
+        ia, tpci.TDataConnected(0), apci.DeviceDescriptorResponse(value=1)
+    )
+    xknx.management.process(late_response)
+    await asyncio.sleep(0)
+    # acknowledged - that is a transport layer duty - but not stored
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(Telegram(destination_address=ia, tpci=tpci.TAck(0)))
+    ]
+    assert conn._response_waiter is None
+
+    task = asyncio.create_task(
+        conn.request(apci.PropertyValueRead(object_index=0, property_id=1))
+    )
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    await asyncio.sleep(0)
+    assert not task.done()
+    xknx.management.process(
+        _connected_telegram(
+            ia, tpci.TDataConnected(1), apci.PropertyValueResponse(object_index=0)
+        )
+    )
+    response = await task
+    assert isinstance(response.payload, apci.PropertyValueResponse)
+    await conn.disconnect()
+
+
+async def test_connection_timeout(time_travel: EventLoopClockAdvancer) -> None:
+    """Test an idle connection is closed after the connection timeout (E16 -> A6)."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT - 1)
+    # a telegram of the device restarts the timer
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), apci.DeviceDescriptorResponse())
+    )
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT - 1)
+    assert conn._connected
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(Telegram(destination_address=ia, tpci=tpci.TAck(0)))
+    ]
+    await time_travel(1)
+    assert not conn._connected
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        Telegram(destination_address=ia, tpci=tpci.TDisconnect())
+    )
+    assert ia not in xknx.management._connections
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.request(apci.DeviceDescriptorRead(descriptor=0))
+    # nothing left to do
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await conn.disconnect()
+    xknx.cemi_handler.send_telegram.assert_not_called()
+
+    # the connection context does not try to close it a second time
+    async with xknx.management.connection(ia) as conn:
+        xknx.cemi_handler.send_telegram.reset_mock()
+        await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(Telegram(destination_address=ia, tpci=tpci.TDisconnect()))
+    ]
+
+
+async def test_concurrent_requests_serialized() -> None:
+    """Test concurrent requests on one connection are sent one after the other."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    def read(seq: int) -> Telegram:
+        return Telegram(
+            destination_address=ia,
+            tpci=tpci.TDataConnected(seq),
+            payload=apci.DeviceDescriptorRead(descriptor=seq),
+        )
+
+    task_0 = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=0)))
+    task_1 = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=1)))
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [call(read(0))]
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    await asyncio.sleep(0)
+    # the second request waits for the first one's response
+    assert xknx.cemi_handler.send_telegram.call_args_list == [call(read(0))]
+    response_0 = _connected_telegram(
+        ia, tpci.TDataConnected(0), apci.DeviceDescriptorResponse(descriptor=0)
+    )
+    xknx.management.process(response_0)
+    assert await task_0 == response_0
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(read(1))
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(1)))
+    response_1 = _connected_telegram(
+        ia, tpci.TDataConnected(1), apci.DeviceDescriptorResponse(descriptor=1)
+    )
+    xknx.management.process(response_1)
+    assert await task_1 == response_1
+    await conn.disconnect()
+
+
+async def test_disconnect_fails_pending_request() -> None:
+    """Test disconnecting while a request is pending fails it with ManagementConnectionError."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+
+    task = asyncio.create_task(conn.request(apci.DeviceDescriptorRead(descriptor=0)))
+    await asyncio.sleep(0)
+    await xknx.management.disconnect(ia)
+    with pytest.raises(ManagementConnectionError):
+        await task
+    assert ia not in xknx.management._connections
+
+
 def _individual_telegram(
     payload: apci.APCI, source: IndividualAddress, destination: IndividualAddress
 ) -> Telegram:
@@ -827,6 +1207,7 @@ async def test_connectionless_alongside_connection() -> None:
     )
 
     conn = await xknx.management.connect(ia)
+    conn._response_waiter = asyncio.get_running_loop().create_future()
     async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
         task = asyncio.create_task(
             connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
