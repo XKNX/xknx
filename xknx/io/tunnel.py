@@ -25,6 +25,7 @@ from xknx.knxip import (
     ConnectRequestInformation,
     DisconnectRequest,
     DisconnectResponse,
+    ErrorCode,
     HostProtocol,
     KNXIPFrame,
     KNXIPServiceType,
@@ -56,6 +57,7 @@ class _Tunnel(Interface):
 
     __slots__ = (
         "_data_endpoint_addr",
+        "_established",
         "_heartbeat",
         "_reconnect_task",
         "_requested_address",
@@ -90,6 +92,7 @@ class _Tunnel(Interface):
         self.sequence_number = 0
         self.cemi_received_callback = cemi_received_callback
         self._data_endpoint_addr: tuple[str, int] | None = None
+        self._established = False
         self._heartbeat = ConnectionHeartbeat(
             name="Tunnel",
             send_connectionstate=self._connectionstate_request,
@@ -161,6 +164,7 @@ class _Tunnel(Interface):
     def _tunnel_established(self) -> None:
         """Set up interface when the tunnel is ready."""
         self.sequence_number = 0
+        self._established = True
         self.start_heartbeat()
 
     def _tunnel_lost(self) -> None:
@@ -214,12 +218,41 @@ class _Tunnel(Interface):
                     self.auto_reconnect_wait,
                 )
                 await asyncio.sleep(self.auto_reconnect_wait)
+            except Exception:  # pylint: disable=broad-except
+                # an unexpected error must not end the reconnect task silently -
+                # the tunnel would stay disconnected forever
+                attempt += 1
+                logger.exception(
+                    "Unexpected error while reconnecting to KNX bus. Trying again in %s seconds.",
+                    self.auto_reconnect_wait,
+                )
+                await asyncio.sleep(self.auto_reconnect_wait)
             else:
                 logger.info("Successfully reconnected to KNX bus.")
                 break
 
+    async def _await_reconnect(self, reconnect_task: asyncio.Task[None]) -> None:
+        """
+        Wait for a running reconnect task to finish.
+
+        Raise CommunicationError when the reconnect was cancelled (eg. by `disconnect()`),
+        re-raise if the current task itself is being cancelled - without cancelling
+        the reconnect task along with it, so the tunnel still comes back.
+        """
+        try:
+            await asyncio.shield(reconnect_task)
+        except asyncio.CancelledError:
+            current_task = asyncio.current_task()
+            # cancelling() > 0: our caller (or asyncio.timeout) requested the cancellation
+            if current_task is not None and current_task.cancelling():
+                raise
+            raise CommunicationError(
+                "Sending telegram failed. Reconnect was cancelled."
+            ) from None
+
     def _prepare_disconnect(self) -> None:
         """Prepare for disconnect. Stop tunnel related tasks and set connection state."""
+        self._established = False
         self.stop_heartbeat()
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
@@ -326,10 +359,7 @@ class _Tunnel(Interface):
         async with self._send_lock:
             # don't drop frames when reconnecting - wait for reconnect to finish
             if self._reconnect_task is not None:
-                try:
-                    await self._reconnect_task
-                except asyncio.CancelledError:
-                    pass
+                await self._await_reconnect(self._reconnect_task)
             yield
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
@@ -377,6 +407,18 @@ class _Tunnel(Interface):
     ) -> None:
         """Handle incoming requests."""
         if isinstance(knxipframe.body, TunnellingRequest):
+            if knxipframe.body.communication_channel_id != self.communication_channel:
+                # KNX v01.06.02 - Core 03.08.02 - §5.3.3: the server assigns a
+                # Communication Channel ID to each established channel - a frame of
+                # another channel is not ours. Neither acknowledge it nor let it
+                # touch our sequence counter.
+                logger.debug(
+                    "Received TunnellingRequest for another communication channel "
+                    "than %s. Discarding frame: %s",
+                    self.communication_channel,
+                    knxipframe.body,
+                )
+                return
             self._tunnelling_request_received(knxipframe.body)
         elif isinstance(knxipframe.body, DisconnectRequest):
             self._disconnect_request_received(knxipframe.body)
@@ -393,15 +435,28 @@ class _Tunnel(Interface):
         self, disconnect_request: DisconnectRequest
     ) -> None:
         """Handle incoming disconnect request."""
-        logger.warning("Received DisconnectRequest from tunnelling server.")
-        # We should not receive DisconnectRequest for other communication_channels
-        # If we do we close our communication_channel before reconnection.
-        if disconnect_request.communication_channel_id == self.communication_channel:
+        if disconnect_request.communication_channel_id != self.communication_channel:
+            # Not our communication channel - answer that we don't know it
+            # (E_CONNECTION_ID: no active data connection with the specified ID,
+            # KNX v01.06.02 - Core 03.08.02 - §7.8.4 Table 9) and keep our tunnel.
+            logger.debug(
+                "Received DisconnectRequest for another communication channel "
+                "than %s: %s",
+                self.communication_channel,
+                disconnect_request,
+            )
             disconnect_response = DisconnectResponse(
-                communication_channel_id=self.communication_channel,
+                communication_channel_id=disconnect_request.communication_channel_id,
+                status_code=ErrorCode.E_CONNECTION_ID,
             )
             self.transport.send(KNXIPFrame.init_from_body(disconnect_response))
-            self.communication_channel = None
+            return
+        logger.warning("Received DisconnectRequest from tunnelling server.")
+        disconnect_response = DisconnectResponse(
+            communication_channel_id=self.communication_channel,
+        )
+        self.transport.send(KNXIPFrame.init_from_body(disconnect_response))
+        self.communication_channel = None
         self._tunnel_lost()
 
     ####################
@@ -514,6 +569,7 @@ class UDPTunnel(_Tunnel):
         """
         raw_cemi = cemi.to_knx()
         async with self._send_ready():
+            communication_channel = self.communication_channel
             try:
                 try:
                     await self._tunnelling_request(raw_cemi)
@@ -529,20 +585,28 @@ class UDPTunnel(_Tunnel):
                 else:
                     return
 
-                if self._reconnect_task is None:
-                    self._tunnel_lost()
-                if self._reconnect_task is None:
-                    # _tunnel_lost() sets self._reconnect_task when auto-reconnect is True
-                    raise CommunicationError(
-                        "Sending TunnellingRequest failed twice. No reconnect.", True
+                if (
+                    self._reconnect_task is None
+                    and self.communication_channel != communication_channel
+                ):
+                    # the tunnel was reconnected (eg. by a failed heartbeat) while
+                    # sending - the frames were sent on the old channel, so just
+                    # retry on the new one instead of reconnecting a healthy tunnel
+                    logger.debug(
+                        "Tunnel was reconnected while sending TunnellingRequest. "
+                        "Retrying on communication channel %s.",
+                        self.communication_channel,
                     )
-                try:
-                    await self._reconnect_task
-                except asyncio.CancelledError:
-                    raise CommunicationError(
-                        "Sending TunnellingRequest failed twice. Reconnect was cancelled.",
-                        True,
-                    ) from None
+                else:
+                    if self._reconnect_task is None:
+                        self._tunnel_lost()
+                    if self._reconnect_task is None:
+                        # _tunnel_lost() sets self._reconnect_task when auto-reconnect is True
+                        raise CommunicationError(
+                            "Sending TunnellingRequest failed twice. No reconnect.",
+                            True,
+                        )
+                    await self._await_reconnect(self._reconnect_task)
 
                 try:
                     await self._tunnelling_request(raw_cemi)
@@ -699,11 +763,22 @@ class TCPTunnel(_Tunnel):
         """Initialize transport transport."""
         self.transport = TCPTransport(
             remote_addr=(self.gateway_ip, self.gateway_port),
-            connection_lost_cb=self._tunnel_lost,
+            connection_lost_cb=self._connection_lost,
         )
 
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
+
+    def _connection_lost(self) -> None:
+        """Handle the TCP connection being closed by the peer or the network. Transport callback."""
+        if not self._established:
+            # Lost while `connect()` still waits for the ConnectResponse or the secure
+            # session handshake: the pending request fails or times out and `connect()`
+            # raises to its caller. Starting a reconnect here would leave an orphaned
+            # reconnect loop behind that one.
+            logger.debug("TCP connection lost before the tunnel was established.")
+            return
+        self._tunnel_lost()
 
     async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
         """Send Telegram to tunnelling device."""
@@ -750,5 +825,5 @@ class SecureTunnel(TCPTunnel):
             user_id=self._user_id,
             user_password=self._user_password,
             device_authentication_password=self._device_authentication_password,
-            connection_lost_cb=self._tunnel_lost,
+            connection_lost_cb=self._connection_lost,
         )

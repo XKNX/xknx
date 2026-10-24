@@ -33,6 +33,18 @@ nav_order: 2
 - Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
 
+### Connection
+
+- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: the KNX/IP interface is stopped before the outgoing queue is drained, so pending telegrams fail with `CommunicationError` instead of waiting for the reconnect.
+- Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
+- Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
+- Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.
+- UDP tunnel: a telegram whose TUNNELLING_REQUESTs went unanswered while the heartbeat already reconnected the tunnel is retried on the new communication channel instead of reconnecting the healthy new tunnel once more.
+- TCP tunnel: a connection lost while `connect()` still waits for the CONNECT_RESPONSE or the secure session handshake no longer leaves an orphaned reconnect loop behind the failed connection attempt.
+- Tunnel: the automatic reconnect keeps retrying after an unexpected exception instead of ending silently with the tunnel disconnected.
+- TCP transport: a partial frame left in the receive buffer is dropped when the connection is closed or reopened instead of corrupting the first frame of the next connection.
+- TCP transport: establishing the TCP connection times out after `TCP_CONNECT_TIMEOUT` (10 seconds) with a `CommunicationError` instead of waiting for the OS connect timeout (~2 minutes for a dropped SYN).
+
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
