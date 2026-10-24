@@ -201,6 +201,41 @@ class TestDateTime:
     #
     # TEST HAS GROUP ADDRESS
     #
+    @pytest.mark.parametrize(
+        ("test_cls", "raw"),
+        [
+            # February 31st - encodable in DPT 11.001 (day 1..31)
+            (DateDevice, (0x1F, 0x02, 0x18)),
+            # 24:00:00 - allowed by DPT 19.001
+            (DateTimeDevice, (0x7C, 0x01, 0x07, 0x18, 0x00, 0x00, 0x00, 0x00)),
+            # time fields not valid (NT)
+            (DateTimeDevice, (0x7C, 0x01, 0x07, 0x09, 0x0D, 0x0E, 0x02, 0x00)),
+            # year not valid (NY)
+            (DateTimeDevice, (0x7C, 0x01, 0x07, 0x09, 0x0D, 0x0E, 0x10, 0x00)),
+        ],
+    )
+    async def test_value_not_convertible(
+        self,
+        test_cls: type[DateDevice | DateTimeDevice],
+        raw: tuple[int, ...],
+    ) -> None:
+        """Test value is None for payloads the DPT accepts but datetime can't represent."""
+        xknx = XKNX()
+        test_device = test_cls(
+            xknx,
+            name="Test",
+            group_address="1/2/3",
+            localtime=False,
+        )
+        test_device.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(raw)),
+            )
+        )
+        assert test_device.remote_value.value is not None
+        assert test_device.value is None
+
     async def test_has_group_address_localtime(self) -> None:
         """Test if has_group_address function works."""
         xknx = XKNX()

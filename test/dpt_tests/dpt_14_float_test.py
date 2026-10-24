@@ -77,6 +77,13 @@ class TestDPT4ByteFloat:
         with pytest.raises(ConversionError):
             DPT4ByteFloat.to_knx("fnord")
 
+    def test_4byte_float_to_knx_overflow(self) -> None:
+        """Test serializing a value too large for a 4 octet float."""
+        with pytest.raises(ConversionError):
+            DPT4ByteFloat.to_knx(1e39)
+        with pytest.raises(ConversionError):
+            DPT4ByteFloat.to_knx(-1e39)
+
     def test_4byte_float_from_knx_wrong_parameter(self) -> None:
         """Test parsing of DPT4ByteFloat with wrong value (wrong number of bytes)."""
         with pytest.raises(CouldNotParseTelegram):

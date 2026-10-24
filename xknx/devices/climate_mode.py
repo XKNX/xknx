@@ -8,6 +8,8 @@ Controller modes use DPT 20.105.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from functools import partial
+import logging
 from typing import TYPE_CHECKING, Any
 
 from xknx.dpt.dpt_1 import HeatCool
@@ -28,6 +30,8 @@ from .device import Device, DeviceCallbackType
 if TYPE_CHECKING:
     from xknx.telegram import GroupValueTelegram
     from xknx.xknx import XKNX
+
+logger = logging.getLogger("xknx.log")
 
 
 class ClimateMode(Device):
@@ -94,7 +98,9 @@ class ClimateMode(Device):
             device_name=self.name,
             feature_name="Operation mode Comfort",
             operation_mode=HVACOperationMode.COMFORT,
-            after_update_cb=self._set_internal_operation_mode,
+            after_update_cb=partial(
+                self._set_internal_operation_mode_binary, HVACOperationMode.COMFORT
+            ),
         )
         self.remote_value_operation_mode_standby = RemoteValueBinaryOperationMode(
             xknx,
@@ -104,7 +110,9 @@ class ClimateMode(Device):
             device_name=self.name,
             feature_name="Operation mode Standby",
             operation_mode=HVACOperationMode.STANDBY,
-            after_update_cb=self._set_internal_operation_mode,
+            after_update_cb=partial(
+                self._set_internal_operation_mode_binary, HVACOperationMode.STANDBY
+            ),
         )
         self.remote_value_operation_mode_economy = RemoteValueBinaryOperationMode(
             xknx,
@@ -114,7 +122,9 @@ class ClimateMode(Device):
             device_name=self.name,
             feature_name="Operation mode Economy",
             operation_mode=HVACOperationMode.ECONOMY,
-            after_update_cb=self._set_internal_operation_mode,
+            after_update_cb=partial(
+                self._set_internal_operation_mode_binary, HVACOperationMode.ECONOMY
+            ),
         )
         self.remote_value_operation_mode_protection = RemoteValueBinaryOperationMode(
             xknx,
@@ -124,7 +134,10 @@ class ClimateMode(Device):
             device_name=self.name,
             feature_name="Operation mode Protection",
             operation_mode=HVACOperationMode.BUILDING_PROTECTION,
-            after_update_cb=self._set_internal_operation_mode,
+            after_update_cb=partial(
+                self._set_internal_operation_mode_binary,
+                HVACOperationMode.BUILDING_PROTECTION,
+            ),
         )
         self.remote_value_heat_cool = RemoteValueBinaryHeatCool(
             xknx,
@@ -190,6 +203,15 @@ class ClimateMode(Device):
         yield self.remote_value_operation_mode_protection
         yield self.remote_value_operation_mode_standby
 
+    def _iter_binary_operation_modes(
+        self,
+    ) -> Iterator[RemoteValueBinaryOperationMode]:
+        """Iterate the binary operation mode RemoteValue classes."""
+        yield self.remote_value_operation_mode_comfort
+        yield self.remote_value_operation_mode_economy
+        yield self.remote_value_operation_mode_protection
+        yield self.remote_value_operation_mode_standby
+
     def _set_internal_operation_mode(
         self, operation_mode: HVACOperationMode | None
     ) -> None:
@@ -197,6 +219,35 @@ class ClimateMode(Device):
         if operation_mode is not None and operation_mode != self.operation_mode:
             self.operation_mode = operation_mode
             self.after_update()
+
+    def _set_internal_operation_mode_binary(
+        self,
+        binary_mode: HVACOperationMode,
+        operation_mode: HVACOperationMode | None,
+    ) -> None:
+        """
+        Set internal value of operation mode from a binary operation mode object.
+
+        `operation_mode` is `None` when the object for `binary_mode` was switched off.
+        When no other binary operation mode object is on and the binary objects are
+        the only source of the operation mode, this means Standby.
+        """
+        if operation_mode is None:
+            if (
+                self.remote_value_operation_mode.initialized
+                or self.remote_value_controller_status.initialized
+            ):
+                # a combined object is the source of the operation mode
+                return
+            if binary_mode != self.operation_mode:
+                # an inactive mode was switched off - eg. the previous mode after
+                # the new one was already set
+                return
+            if any(rv.value is not None for rv in self._iter_binary_operation_modes()):
+                # another mode is on
+                return
+            operation_mode = HVACOperationMode.STANDBY
+        self._set_internal_operation_mode(operation_mode)
 
     def _set_internal_controller_mode(
         self, controller_mode: HVACControllerMode
@@ -234,7 +285,7 @@ class ClimateMode(Device):
             )
 
         for rv in self._iter_remote_values():
-            if rv.writable:
+            if rv.writable and not self._skip_uninitialized_status(rv):
                 rv.set_operation_mode(operation_mode)
 
         self._set_internal_operation_mode(operation_mode)
@@ -250,10 +301,26 @@ class ClimateMode(Device):
             )
 
         for rv in self._iter_remote_values():
-            if rv.writable:
+            if rv.writable and not self._skip_uninitialized_status(rv):
                 rv.set_controller_mode(controller_mode)
 
         self._set_internal_controller_mode(controller_mode)
+
+    def _skip_uninitialized_status(self, rv: RemoteValueClimateModeBase[Any]) -> bool:
+        """
+        Return if `rv` is a controller status RemoteValue that can not be written yet.
+
+        A new controller status can only be derived from a known one. Skipping it
+        instead of raising keeps the other RemoteValues from being left out.
+        """
+        if isinstance(rv, RemoteValueHVACStatus) and rv.value is None:
+            logger.debug(
+                "%s - %s not initialized. Skipping it when writing new mode.",
+                self.name,
+                rv.feature_name,
+            )
+            return True
+        return False
 
     @property
     def operation_modes(self) -> list[HVACOperationMode]:
@@ -275,8 +342,8 @@ class ClimateMode(Device):
                 if only_writable and not rv.writable:
                     continue
                 operation_modes.extend(rv.supported_operation_modes())
-        # remove duplicates
-        return list(set(operation_modes))
+        # remove duplicates - keeping the order
+        return list(dict.fromkeys(operation_modes))
 
     def gather_controller_modes(
         self, only_writable: bool = True
@@ -288,8 +355,8 @@ class ClimateMode(Device):
                 if only_writable and not rv.writable:
                     continue
                 controller_modes.extend(rv.supported_controller_modes())
-        # remove duplicates
-        return list(set(controller_modes))
+        # remove duplicates - keeping the order
+        return list(dict.fromkeys(controller_modes))
 
     def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

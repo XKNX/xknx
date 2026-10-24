@@ -115,6 +115,39 @@ class TestBinarySensor:
         # once for 'on' and once for 'off'
         assert after_update_callback.call_count == 2
 
+    async def test_process_reset_after_group_value_response(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test a GroupValueResponse 'on' after the reset is seen as a change."""
+        xknx = XKNX()
+        after_update_callback = Mock()
+        binaryinput = BinarySensor(
+            xknx,
+            name="TestInput",
+            group_address_state="1/2/3",
+            reset_after=1,
+            device_updated_cb=after_update_callback,
+        )
+        response_on = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueResponse(DPTBinary(1)),
+        )
+        binaryinput.process(response_on)
+        assert binaryinput.state
+        after_update_callback.assert_called_once()
+
+        await time_travel(1)
+        assert not binaryinput.state
+        assert binaryinput.remote_value.value is False
+        assert after_update_callback.call_count == 2
+
+        binaryinput.process(response_on)
+        assert binaryinput.state
+        assert after_update_callback.call_count == 3
+        await time_travel(1)
+        assert not binaryinput.state
+        assert after_update_callback.call_count == 4
+
     async def test_process_wrong_payload(self) -> None:
         """Test process wrong telegram (wrong payload type)."""
         xknx = XKNX()

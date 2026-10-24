@@ -108,15 +108,16 @@ class TestDPTScalingSpeed:
         ("time_period", "raw_time_period"),
         [
             (100, 0x01),
-            (150, 0x01),
-            (199, 0x01),
+            (149, 0x01),
+            (151, 0x02),
+            (199, 0x02),
             (200, 0x02),
-            (250, 0x02),
-            (6_553_599, 0xFFFF),
+            (249, 0x02),
+            (6_553_549, 0xFFFF),
         ],
     )
     def test_time_period_rounding(self, time_period: int, raw_time_period: int) -> None:
-        """Test the time period is truncated to 100 ms like DPT 7.004."""
+        """Test the time period is rounded to 100 ms like DPT 7.004."""
         assert DPTScalingSpeed.to_knx(ScalingSpeed(time_period, 100)) == DPTArray(
             (raw_time_period >> 8, raw_time_period & 0xFF, 0xFF)
         )
@@ -136,9 +137,10 @@ class TestDPTScalingSpeed:
     @pytest.mark.parametrize(
         "value",
         [
-            ScalingSpeed(99, 50),
+            ScalingSpeed(49, 50),
             ScalingSpeed(0, 50),
             ScalingSpeed(-100, 50),
+            ScalingSpeed(6_553_551, 50),
             ScalingSpeed(6_553_600, 50),
             ScalingSpeed(1000, 0),
             ScalingSpeed(1000, 0.1),  # type: ignore[arg-type]
