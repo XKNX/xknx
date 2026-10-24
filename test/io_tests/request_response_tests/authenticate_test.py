@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xknx.exceptions import RequestResponseError
+from xknx.io.const import SESSION_REQUEST_TIMEOUT
 from xknx.io.request_response import Authenticate
 from xknx.knxip import (
     HPAI,
@@ -29,6 +30,7 @@ class TestAuthenticate:
             user_id=user_id,
             message_authentication_code=mac,
         )
+        assert authenticate.timeout_in_seconds == SESSION_REQUEST_TIMEOUT == 10
         authenticate.timeout_in_seconds = 0
 
         assert authenticate.AWAITED_RESPONSE_CLASS is SessionStatus

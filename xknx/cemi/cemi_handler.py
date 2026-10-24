@@ -163,7 +163,10 @@ class CEMIHandler:
                     "Could not decrypt CEMI frame: %s",
                     err,
                 )
-                self.handle_data_secure_key_issue(cemi.data, _cemi_data_is_data_secure)
+                if err.key_issue:
+                    self.handle_data_secure_key_issue(
+                        cemi.data, _cemi_data_is_data_secure
+                    )
                 return
 
         # direction passed on creation so incoming telegrams never pick up a context

@@ -3,8 +3,12 @@
 import asyncio
 from unittest.mock import AsyncMock, Mock, call, patch
 
+import pytest
+
 from xknx import XKNX
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
+from xknx.core import XknxConnectionState
+from xknx.exceptions import CommunicationError
 from xknx.io import Routing
 from xknx.io.routing import (
     BUSY_DECREMENT_TIME,
@@ -12,6 +16,7 @@ from xknx.io.routing import (
     BUSY_RANDOM_TIME_FACTOR,
     BUSY_SLOWDURATION_TIME_FACTOR,
     ROUTING_INDICATION_WAIT_TIME,
+    SecureRouting,
     _RoutingFlowControl,
 )
 from xknx.knxip import KNXIPFrame, RoutingBusy, RoutingIndication
@@ -86,6 +91,32 @@ class TestRouting:
             "192.168.1.2",
             5,
         )
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.connect")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_secure_routing_disconnect_while_synchronizing(
+        self,
+        _mock_super_send: Mock,
+        _mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test disconnecting while the secure timer synchronizes doesn't report CONNECTED."""
+        routing = SecureRouting(
+            self.xknx,
+            individual_address=None,
+            cemi_received_callback=AsyncMock(),
+            local_ip="192.168.1.1",
+            backbone_key=bytes(16),
+        )
+        connect_task = asyncio.create_task(routing.connect())
+        await time_travel(0)
+        assert self.xknx.connection_manager.state == XknxConnectionState.CONNECTING
+        await routing.disconnect()
+        assert self.xknx.connection_manager.state == XknxConnectionState.DISCONNECTED
+        with pytest.raises(CommunicationError):
+            await connect_task
+        assert self.xknx.connection_manager.state == XknxConnectionState.DISCONNECTED
+        assert not routing.transport.secure_timer.timer_authenticated
 
 
 class TestFlowControl:

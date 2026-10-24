@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xknx.cemi import CEMIFrame, CEMILData, CEMIMessageCode
-from xknx.exceptions import IPSecureError, KNXSecureValidationError
+from xknx.exceptions import CommunicationError, IPSecureError, KNXSecureValidationError
 from xknx.io.const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT, XKNX_SERIAL_NUMBER
 from xknx.io.ip_secure import SecureGroup, SecureSequenceTimer
 from xknx.knxip import (
@@ -614,3 +614,192 @@ class TestSecureGroup:
         # discarded by handle_knxipframe instead of raising
         secure_group.data_received_callback(nested.to_knx(), ("192.168.1.2", 3671))
         frame_received_mock.assert_not_called()
+
+    async def test_synchronize_double_timer_notify(
+        self,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test two TimerNotify frames answering the synchronization don't raise."""
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+        connect_task = asyncio.create_task(secure_group.connect())
+        await time_travel(0)
+        _message_tag = self.assert_timer_notify(
+            mock_super_send.call_args[0][0],
+            serial_number=XKNX_SERIAL_NUMBER,
+        )
+        with patch("xknx.io.ip_secure.SecureSequenceTimer.verify_timer_notify_mac"):
+            for timer_value in (ONE_HOUR_MS, ONE_HOUR_MS + 500):
+                timer_update = KNXIPFrame.init_from_body(
+                    TimerNotify(
+                        timer_value=timer_value,
+                        serial_number=XKNX_SERIAL_NUMBER,
+                        message_tag=_message_tag,
+                    )
+                )
+                # second one arrives before the synchronization task resumed
+                secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
+        await time_travel(0)
+        assert connect_task.done()
+        assert connect_task.exception() is None
+        assert secure_timer.timer_authenticated
+        assert secure_timer._expected_notify_handler is None
+        assert ONE_HOUR_MS <= secure_timer.current_timer_value() <= ONE_HOUR_MS + 50
+        secure_group.stop()
+        # a late answer after stop() is ignored
+        with patch("xknx.io.ip_secure.SecureSequenceTimer.verify_timer_notify_mac"):
+            secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
+
+    async def test_synchronize_stopped(
+        self,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test stop() while synchronizing raises CommunicationError from connect()."""
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+        connect_task = asyncio.create_task(secure_group.connect())
+        await time_travel(0)
+        _message_tag = self.assert_timer_notify(
+            mock_super_send.call_args[0][0],
+            serial_number=XKNX_SERIAL_NUMBER,
+        )
+        secure_group.stop()
+        with pytest.raises(
+            CommunicationError, match=r"Timer synchronization aborted.*"
+        ):
+            await connect_task
+        assert not secure_timer.timer_authenticated
+        assert secure_timer._expected_notify_handler is None
+        assert secure_timer._notify_timer_handle is None
+        # a late answer is ignored
+        timer_update = KNXIPFrame.init_from_body(
+            TimerNotify(
+                timer_value=ONE_HOUR_MS,
+                serial_number=XKNX_SERIAL_NUMBER,
+                message_tag=_message_tag,
+            )
+        )
+        with patch("xknx.io.ip_secure.SecureSequenceTimer.verify_timer_notify_mac"):
+            secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
+        assert not secure_timer.timer_authenticated
+
+    async def test_synchronize_cancelled(
+        self,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test cancelling the connecting task while synchronizing propagates."""
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+        connect_task = asyncio.create_task(secure_group.connect())
+        await time_travel(0)
+        connect_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await connect_task
+        assert not secure_timer.timer_authenticated
+        assert secure_timer._expected_notify_handler is None
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.handle_knxipframe")
+    @patch(
+        "xknx.io.ip_secure.SecureGroup.decrypt_frame",
+        return_value=True,  # we are only interested in timer value
+    )
+    async def test_synchronize_timer_never_decreased(
+        self,
+        mock_decrypt_frame: Mock,
+        mock_super_handle_knxipframe: Mock,
+        mock_super_send: Mock,
+        mock_super_connect: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test timer values received while synchronizing are used and never decreased."""
+        secure_group = SecureGroup(
+            local_addr=self.mock_addr,
+            remote_addr=(DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT),
+            backbone_key=self.mock_backbone_key,
+            latency_ms=1000,
+        )
+        secure_timer = secure_group.secure_timer
+        connect_task = asyncio.create_task(secure_group.connect())
+        await time_travel(0)
+        _message_tag = self.assert_timer_notify(
+            mock_super_send.call_args[0][0],
+            serial_number=XKNX_SERIAL_NUMBER,
+        )
+        # SecureWrapper received while synchronizing: timer value is taken,
+        # encapsulated data is not processed
+        wrapper = KNXIPFrame.init_from_body(
+            SecureWrapper(sequence_information=(3 * ONE_HOUR_MS).to_bytes(6, "big"))
+        )
+        secure_group.handle_knxipframe(wrapper, HPAI(*self.mock_addr))
+        mock_decrypt_frame.assert_called_once()
+        mock_super_handle_knxipframe.assert_not_called()
+        assert not secure_timer.timer_authenticated
+        _leeway_for_ci = 50  # ms
+        assert (
+            3 * ONE_HOUR_MS
+            <= secure_timer.current_timer_value()
+            <= 3 * ONE_HOUR_MS + _leeway_for_ci
+        )
+        # an older SecureWrapper does not decrease the timer
+        wrapper_old = KNXIPFrame.init_from_body(
+            SecureWrapper(sequence_information=(2 * ONE_HOUR_MS).to_bytes(6, "big"))
+        )
+        secure_group.handle_knxipframe(wrapper_old, HPAI(*self.mock_addr))
+        mock_super_handle_knxipframe.assert_not_called()
+        assert secure_timer.current_timer_value() >= 3 * ONE_HOUR_MS
+        # a SecureWrapper with an invalid MAC is not used
+        mock_decrypt_frame.side_effect = KNXSecureValidationError("test")
+        wrapper_invalid = KNXIPFrame.init_from_body(
+            SecureWrapper(sequence_information=(9 * ONE_HOUR_MS).to_bytes(6, "big"))
+        )
+        secure_group.handle_knxipframe(wrapper_invalid, HPAI(*self.mock_addr))
+        assert secure_timer.current_timer_value() < 4 * ONE_HOUR_MS
+        # the answer to our TimerNotify carries an older value - timer is not decreased
+        timer_update = KNXIPFrame.init_from_body(
+            TimerNotify(
+                timer_value=ONE_HOUR_MS,
+                serial_number=XKNX_SERIAL_NUMBER,
+                message_tag=_message_tag,
+            )
+        )
+        with patch("xknx.io.ip_secure.SecureSequenceTimer.verify_timer_notify_mac"):
+            secure_group.handle_knxipframe(timer_update, HPAI(*self.mock_addr))
+        await time_travel(0)
+        assert connect_task.done()
+        assert secure_timer.timer_authenticated
+        assert (
+            3 * ONE_HOUR_MS
+            <= secure_timer.current_timer_value()
+            <= 3 * ONE_HOUR_MS + _leeway_for_ci
+        )
+        # update() is forward-only
+        secure_timer.update(ONE_HOUR_MS)
+        assert secure_timer.current_timer_value() >= 3 * ONE_HOUR_MS
+        secure_timer.update(4 * ONE_HOUR_MS)
+        assert (
+            4 * ONE_HOUR_MS
+            <= secure_timer.current_timer_value()
+            <= 4 * ONE_HOUR_MS + _leeway_for_ci
+        )
+        secure_group.stop()
