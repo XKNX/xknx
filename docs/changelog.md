@@ -20,6 +20,7 @@ nav_order: 2
 ### DPT
 
 - Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
+- Add DPT 24.001 `DPTVariableLatin1` (value_type "variable_latin_1") and DPT 28.001 `DPTUTF8` (value_type "utf_8") - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.24 and §3.27.1. Unlike the 14 octet DPT 16 strings their length is variable: the string is terminated by a single NULL and the payload carries no length information. `payload_length` is the longest payload an L_Data_Extended frame carries (253 octets, the NULL included); a longer string raises `ConversionError`. A received payload is read up to its first NULL.
 - Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
 - Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
 - Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion`

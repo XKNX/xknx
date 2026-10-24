@@ -287,9 +287,11 @@ from .dpt_22 import (
     RoomHeatingCoolingControllerStatus,
     SupportedMedia,
 )
+from .dpt_24 import DPTVariableLatin1
 from .dpt_25 import DoubleNibble, DPTDoubleNibble
 from .dpt_26 import DPTSceneInfo, SceneInfo
 from .dpt_27 import CombinedInfoOnOff, DPTCombinedInfoOnOff
+from .dpt_28 import DPTUTF8
 from .dpt_29 import (
     DPT8ByteSigned,
     DPTActiveEnergy8Byte,
