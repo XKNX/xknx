@@ -52,7 +52,7 @@ class Management:
         """Initialize Management class."""
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
-        self._connectionless: dict[IndividualAddress, ConnectionlessP2P] = {}
+        self._connectionless: dict[IndividualAddress, P2PConnectionless] = {}
         self.broadcast = Broadcast(xknx)
 
     def process(self, telegram: Telegram) -> None:
@@ -143,7 +143,7 @@ class Management:
     @asynccontextmanager
     async def connectionless(
         self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
-    ) -> AsyncGenerator[ConnectionlessP2P, None]:
+    ) -> AsyncGenerator[P2PConnectionless, None]:
         """
         Provide connectionless point-to-point communication with a KNX device.
 
@@ -160,7 +160,7 @@ class Management:
             raise ManagementConnectionError(
                 f"Connectionless communication with {address} already exists."
             )
-        connectionless = ConnectionlessP2P(self.xknx, address, rate_limit)
+        connectionless = P2PConnectionless(self.xknx, address, rate_limit)
         self._connectionless[address] = connectionless
         try:
             yield connectionless
@@ -291,7 +291,7 @@ class BroadcastContext:
                 yield telegram
 
 
-class ConnectionlessP2P:
+class P2PConnectionless:
     """
     Connectionless point-to-point communication with a KNX device.
 
@@ -305,6 +305,10 @@ class ConnectionlessP2P:
 
     `send()`, `receive()` and `request()` work like their counterparts of
     `Broadcast` and `BroadcastContext`, for the telegrams of one device.
+
+    Named `P2PConnectionless` rather than `ConnectionlessP2P` so it sits next
+    to `P2PConnection`: both are the point-to-point channel to one device, the
+    suffix tells the transport mode apart.
     """
 
     __slots__ = (
@@ -322,7 +326,7 @@ class ConnectionlessP2P:
         address: IndividualAddress,
         rate_limit: int = MANAGEMENT_RATE_LIMIT,
     ) -> None:
-        """Initialize ConnectionlessP2P class."""
+        """Initialize P2PConnectionless class."""
         self.xknx = xknx
         self.address = address
         self.rate_limit = rate_limit
