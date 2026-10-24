@@ -96,8 +96,15 @@ class ConnectionManager:
             self.connected.clear()
             self.connected_since = None
 
-        for connection_state_change_cb in self._connection_state_changed_cbs:
-            connection_state_change_cb(state)
+        # iterate over a copy: callbacks may unregister themselves while being called
+        for connection_state_change_cb in tuple(self._connection_state_changed_cbs):
+            try:
+                connection_state_change_cb(state)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Unexpected error in connection state changed callback for %s",
+                    state,
+                )
 
     @property
     def state(self) -> XknxConnectionState:

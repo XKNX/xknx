@@ -8,12 +8,15 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator
+import logging
 
 from xknx.telegram import Telegram
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
 from xknx.typing import DeviceCallbackType
 
 from .device import Device
+
+logger = logging.getLogger("xknx.log")
 
 
 class Devices:
@@ -99,16 +102,34 @@ class Devices:
 
     def device_updated(self, device: Device) -> None:
         """Call all registered device updated callbacks of device."""
-        for device_updated_cb in self.device_updated_cbs:
-            device_updated_cb(device)
+        # iterate over a copy: callbacks may (un)register callbacks while being called
+        for device_updated_cb in tuple(self.device_updated_cbs):
+            try:
+                device_updated_cb(device)
+            except Exception:  # pylint: disable=broad-exception-caught
+                logger.exception(
+                    "Unexpected error in device updated callback for %s", device
+                )
 
     def process(self, telegram: Telegram) -> None:
         """Process telegram."""
         if isinstance(
             telegram.destination_address, GroupAddress | InternalGroupAddress
         ):
-            for device in self.devices_by_group_address(telegram.destination_address):
-                device.process(telegram)
+            # iterate over a copy: a device callback may add or remove devices
+            for device in tuple(
+                self.devices_by_group_address(telegram.destination_address)
+            ):
+                try:
+                    device.process(telegram)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    # one broken device shall not keep the others listening on
+                    # the same group address from processing the telegram
+                    logger.exception(
+                        "Unexpected error while processing %s in device %s",
+                        telegram,
+                        device,
+                    )
 
     async def sync(self) -> None:
         """Read state of devices from KNX bus."""

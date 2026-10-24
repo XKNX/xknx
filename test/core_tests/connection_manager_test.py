@@ -6,6 +6,8 @@ import threading
 from typing import Any
 from unittest.mock import Mock, patch
 
+import pytest
+
 from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.io import ConnectionConfig
@@ -45,6 +47,39 @@ class TestConnectionManager:
         )
         xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
         connection_state_changed_cb.assert_not_called()
+
+    async def test_callback_exception(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Test a raising callback neither propagates nor skips other callbacks."""
+        xknx = XKNX()
+        raising_cb = Mock(side_effect=RuntimeError("boom"))
+        other_cb = Mock()
+        xknx.connection_manager.register_connection_state_changed_cb(raising_cb)
+        xknx.connection_manager.register_connection_state_changed_cb(other_cb)
+
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        raising_cb.assert_called_once_with(XknxConnectionState.CONNECTED)
+        other_cb.assert_called_once_with(XknxConnectionState.CONNECTED)
+        assert xknx.connection_manager.state == XknxConnectionState.CONNECTED
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "ERROR"
+        assert caplog.records[0].exc_info is not None
+
+    async def test_callback_unregisters_itself(self) -> None:
+        """Test a callback unregistering itself while being called."""
+        xknx = XKNX()
+        other_cb = Mock()
+
+        def unregister_self(state: XknxConnectionState) -> None:
+            xknx.connection_manager.unregister_connection_state_changed_cb(
+                unregister_self
+            )
+
+        xknx.connection_manager.register_connection_state_changed_cb(unregister_self)
+        xknx.connection_manager.register_connection_state_changed_cb(other_cb)
+
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        other_cb.assert_called_once_with(XknxConnectionState.CONNECTED)
+        assert xknx.connection_manager._connection_state_changed_cbs == [other_cb]
 
     #
     # TEST PROCESS

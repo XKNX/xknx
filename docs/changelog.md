@@ -35,6 +35,7 @@ nav_order: 2
 
 ### Bugfixes
 
+- Guard the KNXnet/IP receive path: an exception in a frame handler, device or callback is logged instead of closing the connection or skipping other handlers. A KNX Data Secure frame whose decrypted APDU can't be parsed is dropped like one that can't be decrypted, and a `SECURE_WRAPPER` arriving before the IP Secure session is established is discarded instead of raising.
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
 
 # 4.0.0 Typed and tidy 2026-10-15
