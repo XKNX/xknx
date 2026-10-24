@@ -1,6 +1,9 @@
 """Unit test for KNX/IP TCP transport."""
 
+import logging
 from unittest.mock import Mock
+
+import pytest
 
 from xknx.io.transport import TCPTransport
 from xknx.knxip import (
@@ -89,3 +92,18 @@ class TestTCPTransport:
         # the transport keeps working for the next chunk
         self.transport.data_received_callback(self.response_raw)
         assert self.received_bodies() == [ConnectionStateResponse]
+
+
+async def test_factory_debug_log(caplog: pytest.LogCaptureFixture) -> None:
+    """Test received data is logged in hex only when debug logging is enabled."""
+    callback = Mock()
+    factory = TCPTransport.TCPTransportFactory(
+        data_received_callback=callback, connection_lost_callback=Mock()
+    )
+    caplog.set_level(logging.INFO, logger="xknx.raw_socket")
+    factory.data_received(b"\x06\x10")
+    assert "0610" not in caplog.text
+    caplog.set_level(logging.DEBUG, logger="xknx.raw_socket")
+    factory.data_received(b"\x06\x10")
+    assert "0610" in caplog.text
+    assert callback.call_count == 2
