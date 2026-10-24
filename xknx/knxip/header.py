@@ -29,6 +29,10 @@ class KNXIPHeader:
             raise CouldNotParseKNXIP("wrong connection header length")
         # set immediately, as we need it for tcp stream parsing before raising exception
         self.total_length = data[4] * 256 + data[5]
+        if self.total_length < KNXIPHeader.HEADERLENGTH:
+            # the total length includes the header
+            # KNX v01.06.02 - Core 03.08.02 - §2.3.5
+            raise CouldNotParseKNXIP(f"total length too small: {self.total_length}")
         if data[1] != KNXIPHeader.PROTOCOLVERSION:
             raise CouldNotParseKNXIP("wrong protocol version")
 

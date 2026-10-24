@@ -38,3 +38,15 @@ class TestKNXIPTunnellingAck:
         raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x0A, 0x04, 0x2A, 0x17))
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
+
+    def test_from_knx_empty_body(self) -> None:
+        """Test parsing TunnellingAck without body raises CouldNotParseKNXIP."""
+        raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x06))
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_from_knx_unknown_status_code(self) -> None:
+        """Test parsing TunnellingAck with unknown status code raises CouldNotParseKNXIP."""
+        raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, 0x0A, 0x04, 0x2A, 0x17, 0x55))
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)

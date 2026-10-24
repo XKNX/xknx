@@ -166,6 +166,10 @@ def test_incoming_management_telegram(
         # <CouldNotParseCEMI description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
         # communication_channel_id: 0x02   sequence_counter: 0x81
         bytes.fromhex("2900b06010fa10ff00"),
+        # empty cEMI - no message code
+        b"",
+        # L_DATA_IND without additional info length
+        bytes.fromhex("29"),
     ],
 )
 @patch("xknx.cemi.cemi_handler.CEMIHandler.handle_cemi_frame")

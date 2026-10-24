@@ -9,8 +9,10 @@ a search response and one device supporting multiple KNX connections may send mu
 
 from __future__ import annotations
 
+from xknx.exceptions import CouldNotParseKNXIP
+
 from .body import KNXIPBody
-from .dib import DIB, DIBDeviceInformation
+from .dib import DIB, DIB_HEADER_LENGTH, DIBDeviceInformation
 from .hpai import HPAI
 from .knxip_enum import KNXIPServiceType
 
@@ -34,7 +36,11 @@ class SearchResponse(KNXIPBody):
         pos = self.control_endpoint.from_knx(raw)
         while raw[pos:]:
             dib = DIB.determine_dib(raw[pos:])
-            pos += dib.from_knx(raw[pos:])
+            dib_length = dib.from_knx(raw[pos:])
+            if dib_length < DIB_HEADER_LENGTH:
+                # guard against looping forever on a DIB that consumed no data
+                raise CouldNotParseKNXIP(f"DIB wrong length: {dib_length}")
+            pos += dib_length
             self.dibs.append(dib)
         return pos
 
