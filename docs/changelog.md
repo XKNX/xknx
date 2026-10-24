@@ -14,6 +14,7 @@ nav_order: 2
 - Routing: the number of received ROUTING_BUSY frames `N` - used for the random wait time extension and the slowduration - counts every frame received more than 10 ms after the previous one, including the first one - KNX v01.05.02 - Routing 03.08.05 - §2.3.5. Before, the first frame was never counted.
 - Tunnelling / Device Management: send a CONNECTIONSTATE_REQUEST heartbeat every 60 seconds instead of every 70 seconds - KNX v01.06.02 - Core 03.08.02 - §5.4. `CONNECTION_ALIVE_TIME` was removed from `xknx.io.const`.
 - Routing: close the multicast socket when configuring or binding it fails instead of leaking it.
+- Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
 
 ### Management
 
