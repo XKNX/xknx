@@ -14,7 +14,10 @@ from xknx.exceptions import (
     ManagementConnectionRefused,
     ManagementConnectionTimeout,
 )
-from xknx.management.management import MANAGEMENT_ACK_TIMEOUT
+from xknx.management.management import (
+    MANAGEMENT_ACK_TIMEOUT,
+    MANAGEMENT_CONNECTION_TIMEOUT,
+)
 from xknx.telegram import (
     GroupAddress,
     IndividualAddress,
@@ -563,3 +566,351 @@ async def test_p2p_rate_limit(
     send_responses(1)
 
     await task
+
+
+def _individual_telegram(
+    payload: apci.APCI, source: IndividualAddress, destination: IndividualAddress
+) -> Telegram:
+    """Build an incoming T_Data_Individual telegram."""
+    return Telegram(
+        source_address=source,
+        destination_address=destination,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataIndividual(),
+        payload=payload,
+    )
+
+
+def _descriptor_response(
+    xknx: XKNX, source: IndividualAddress, value: int = 0x07B0
+) -> Telegram:
+    """Build an incoming connectionless A_DeviceDescriptor_Response."""
+    return _individual_telegram(
+        apci.DeviceDescriptorResponse(descriptor=0, value=value),
+        source,
+        xknx.current_address,
+    )
+
+
+async def test_connectionless_request() -> None:
+    """Test a connectionless request and its response."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _descriptor_response(xknx, ia)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        assert xknx.cemi_handler.send_telegram.call_args_list == [
+            call(
+                Telegram(
+                    source_address=xknx.current_address,
+                    destination_address=ia,
+                    tpci=tpci.TDataIndividual(),
+                    payload=apci.DeviceDescriptorRead(descriptor=0),
+                )
+            )
+        ]
+        xknx.management.process(response)
+        assert await task == response
+    assert not xknx.management._connectionless
+
+
+async def test_connectionless_request_skips_unrelated_telegrams() -> None:
+    """Test that a request only returns the response it waits for."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _descriptor_response(xknx, ia)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        # another service from the device
+        xknx.management.process(
+            _individual_telegram(apci.Restart(), ia, xknx.current_address)
+        )
+        # the expected service from another device
+        xknx.management.process(_descriptor_response(xknx, IndividualAddress("4.0.2")))
+        # a connected telegram from the device belongs to a connection
+        xknx.management.process(
+            Telegram(
+                source_address=ia,
+                destination_address=xknx.current_address,
+                direction=TelegramDirection.INCOMING,
+                tpci=tpci.TDataConnected(0),
+                payload=response.payload,
+            )
+        )
+        await asyncio.sleep(0)
+        assert not task.done()
+        xknx.management.process(response)
+        assert await task == response
+
+
+async def test_connectionless_request_without_response_type() -> None:
+    """Test that a payload without response type returns the next telegram."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _individual_telegram(apci.Restart(), ia, xknx.current_address)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(connectionless.request(apci.Restart()))
+        await asyncio.sleep(0)
+        xknx.management.process(response)
+        assert await task == response
+
+
+async def test_connectionless_request_discards_earlier_telegrams() -> None:
+    """Test that a late response to an earlier request is not returned."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _descriptor_response(xknx, ia)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        xknx.management.process(_descriptor_response(xknx, ia, value=0x0010))
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        xknx.management.process(response)
+        assert await task == response
+
+
+async def test_connectionless_request_timeout(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that a request without response times out."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        await time_travel(MANAGEMENT_CONNECTION_TIMEOUT - 1)
+        assert not task.done()
+        await time_travel(1)
+        with pytest.raises(ManagementConnectionTimeout):
+            await task
+
+
+async def test_connectionless_request_timeout_keyword(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that a request waits for the given timeout."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0), timeout=1)
+        )
+        await asyncio.sleep(0)
+        await time_travel(0.9)
+        assert not task.done()
+        await time_travel(0.1)
+        with pytest.raises(ManagementConnectionTimeout):
+            await task
+
+
+async def test_connectionless_receive(time_travel: EventLoopClockAdvancer) -> None:
+    """Test that receive yields every expected response until the timeout."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response_1 = _descriptor_response(xknx, ia, value=0x0001)
+    response_2 = _descriptor_response(xknx, ia, value=0x0002)
+
+    async def receive_all() -> list[Telegram]:
+        return [
+            telegram
+            async for telegram in connectionless.receive(
+                apci.DeviceDescriptorResponse, timeout=1
+            )
+        ]
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        await connectionless.send(apci.DeviceDescriptorRead(descriptor=0))
+        task = asyncio.create_task(receive_all())
+        await asyncio.sleep(0)
+        xknx.management.process(response_1)
+        xknx.management.process(
+            _individual_telegram(apci.Restart(), ia, xknx.current_address)
+        )
+        xknx.management.process(response_2)
+        await time_travel(0.9)
+        assert not task.done()
+        await time_travel(0.1)
+        assert await task == [response_1, response_2]
+
+
+async def test_connectionless_receive_any_telegram() -> None:
+    """Test that receive without an APCI class yields any telegram of the device."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    restart = _individual_telegram(apci.Restart(), ia, xknx.current_address)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        xknx.management.process(restart)
+        async for telegram in connectionless.receive():
+            assert telegram == restart
+            break
+
+
+async def test_connectionless_send_discards_earlier_telegrams() -> None:
+    """Test that receive after send does not yield telegrams queued before."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _descriptor_response(xknx, ia)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        xknx.management.process(_descriptor_response(xknx, ia, value=0x0010))
+        await connectionless.send(apci.DeviceDescriptorRead(descriptor=0))
+        xknx.management.process(response)
+        async for telegram in connectionless.receive(apci.DeviceDescriptorResponse):
+            assert telegram == response
+            break
+
+
+async def test_connectionless_concurrent_requests() -> None:
+    """Test that concurrent requests are sent one after the other."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response_1 = _descriptor_response(xknx, ia, value=0x0001)
+    response_2 = _descriptor_response(xknx, ia, value=0x0002)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task_1 = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        task_2 = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        # the second request waits for the response to the first one
+        assert len(xknx.cemi_handler.send_telegram.call_args_list) == 1
+        xknx.management.process(response_1)
+        assert await task_1 == response_1
+        await asyncio.sleep(0)
+        assert len(xknx.cemi_handler.send_telegram.call_args_list) == 2
+        assert not task_2.done()
+        xknx.management.process(response_2)
+        assert await task_2 == response_2
+
+
+async def test_connectionless_alongside_connection() -> None:
+    """Test a connectionless context and a connection to the same device."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _descriptor_response(xknx, ia)
+    connected_response = Telegram(
+        source_address=ia,
+        destination_address=xknx.current_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorResponse(descriptor=0, value=0x0010),
+    )
+
+    conn = await xknx.management.connect(ia)
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        xknx.management.process(connected_response)
+        await asyncio.sleep(0)
+        assert not task.done()
+        assert conn._response_waiter.result() == connected_response
+        xknx.management.process(response)
+        assert await task == response
+    await conn.disconnect()
+
+
+async def test_connectionless_send_errors() -> None:
+    """Test that send errors are raised as ManagementConnectionError."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+
+    async with xknx.management.connectionless(ia) as connectionless:
+        xknx.cemi_handler.send_telegram.side_effect = ConfirmationError("")
+        with pytest.raises(ManagementConnectionError):
+            await connectionless.send(apci.Restart())
+        xknx.cemi_handler.send_telegram.side_effect = CommunicationError("")
+        with pytest.raises(ManagementConnectionError):
+            await connectionless.send(apci.Restart())
+
+
+async def test_connectionless_one_context_per_device() -> None:
+    """Test that a second context for the same device is refused."""
+    xknx = XKNX()
+    ia = IndividualAddress("4.0.1")
+
+    async with xknx.management.connectionless(ia):
+        with pytest.raises(ManagementConnectionError):
+            async with xknx.management.connectionless(ia):
+                pass
+        async with xknx.management.connectionless(IndividualAddress("4.0.2")):
+            assert len(xknx.management._connectionless) == 2
+    assert not xknx.management._connectionless
+
+
+async def test_connectionless_telegram_without_context_is_ignored() -> None:
+    """Test that T_Data_Individual telegrams without an open context are dropped."""
+    xknx = XKNX()
+    ia = IndividualAddress("4.0.1")
+
+    with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
+        xknx.cemi_handler.telegram_received(
+            _individual_telegram(apci.Restart(), ia, xknx.current_address)
+        )
+        await asyncio.sleep(0)
+        send_telegram.assert_not_called()
+
+
+@pytest.mark.parametrize("rate_limit", [0, 1])
+async def test_connectionless_rate_limit(
+    time_travel: EventLoopClockAdvancer, rate_limit: int
+) -> None:
+    """Test rate limit for connectionless requests."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _descriptor_response(xknx, ia)
+
+    async with xknx.management.connectionless(ia, rate_limit) as connectionless:
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        xknx.management.process(response)
+        await task
+        xknx.cemi_handler.reset_mock()
+
+        task = asyncio.create_task(
+            connectionless.request(apci.DeviceDescriptorRead(descriptor=0))
+        )
+        await asyncio.sleep(0)
+        if rate_limit:
+            await time_travel(0.5 / rate_limit)
+            # the request is still queued
+            assert not xknx.cemi_handler.send_telegram.call_args_list
+            await time_travel(0.5 / rate_limit)
+        assert len(xknx.cemi_handler.send_telegram.call_args_list) == 1
+        xknx.management.process(response)
+        await task
