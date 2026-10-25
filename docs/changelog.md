@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Connection
 
+- Add `GatewayScanner(all_interfaces=True)` to send the search requests from every local IPv4 address (loopback and link-local ones left out) and merge the gateways found. Without it, and without `local_ip`, the search goes out only from the address the system routes the multicast group through - on a host with WSL, Hyper-V, a VM or a VPN that is often a virtual adapter without any gateway behind it. An address that cannot send is skipped; the search fails only if none can. `xknx.io.util.get_search_ips()` returns these addresses.
 - Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
 
 ### Management

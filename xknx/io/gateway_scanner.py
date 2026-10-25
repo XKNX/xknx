@@ -217,10 +217,19 @@ class GatewayScanner:
         timeout_in_seconds: float = 3.0,
         stop_on_found: int | None = None,
         scan_filter: GatewayScanFilter | None = None,
+        all_interfaces: bool = False,
     ) -> None:
-        """Initialize GatewayScanner class."""
+        """
+        Initialize GatewayScanner class.
+
+        Without `local_ip` the search requests are sent from the local address the system
+        routes the multicast group through - or, with `all_interfaces`, from every local IPv4
+        address but loopback and link-local ones. That finds gateways also when multicast is
+        routed through a network without any, e.g. a virtual adapter of a VM, WSL or a VPN.
+        """
         self.xknx = xknx
         self.local_ip = local_ip
+        self.all_interfaces = all_interfaces
         self.timeout_in_seconds = timeout_in_seconds
         self.stop_on_found = stop_on_found
         self.scan_filter = scan_filter or GatewayScanFilter()
@@ -252,30 +261,32 @@ class GatewayScanner:
         self, queue: asyncio.Queue[GatewayDescriptor | None] | None = None
     ) -> None:
         """Scan for gateways."""
-        _local_ip = self.local_ip or await util.get_default_local_ip(
-            remote_ip=self.xknx.multicast_group
-        )
-        if _local_ip is None:
+        local_ips = await self._local_ips()
+        if not local_ips:
             if queue is not None:
                 queue.put_nowait(None)
             raise XKNXException("No usable network interface found.")
-        local_ip = await util.validate_ip(_local_ip)
-        interface_name = util.get_local_interface_name(local_ip=local_ip)
-        logger.debug("Searching on %s / %s", interface_name, local_ip)
 
-        udp_transport = UDPTransport(
-            local_addr=(local_ip, 0),
-            remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
-        )
-        udp_transport.register_callback(
-            partial(self._response_rec_callback, interface=interface_name, queue=queue),
-            [
-                KNXIPServiceType.SEARCH_RESPONSE,
-                KNXIPServiceType.SEARCH_RESPONSE_EXTENDED,
-            ],
-        )
+        udp_transports: list[UDPTransport] = []
+        for local_ip in local_ips:
+            interface_name = util.get_local_interface_name(local_ip=local_ip)
+            logger.debug("Searching on %s / %s", interface_name, local_ip)
+            udp_transport = UDPTransport(
+                local_addr=(local_ip, 0),
+                remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+            )
+            udp_transport.register_callback(
+                partial(
+                    self._response_rec_callback, interface=interface_name, queue=queue
+                ),
+                [
+                    KNXIPServiceType.SEARCH_RESPONSE,
+                    KNXIPServiceType.SEARCH_RESPONSE_EXTENDED,
+                ],
+            )
+            udp_transports.append(udp_transport)
         try:
-            await self._send_search_requests(udp_transport=udp_transport)
+            await self._send_on_all(udp_transports)
             async with asyncio.timeout(self.timeout_in_seconds):
                 await self._response_received_event.wait()
         except TimeoutError:
@@ -283,9 +294,41 @@ class GatewayScanner:
         except asyncio.CancelledError:
             pass
         finally:
-            udp_transport.stop()
+            for udp_transport in udp_transports:
+                udp_transport.stop()
             if queue is not None:
                 queue.put_nowait(None)
+
+    async def _local_ips(self) -> list[str]:
+        """Return the local addresses to send search requests from."""
+        if self.local_ip:
+            return [await util.validate_ip(self.local_ip)]
+        if self.all_interfaces:
+            return util.get_search_ips()
+        default_ip = await util.get_default_local_ip(
+            remote_ip=self.xknx.multicast_group
+        )
+        return [await util.validate_ip(default_ip)] if default_ip else []
+
+    async def _send_on_all(self, udp_transports: list[UDPTransport]) -> None:
+        """Send search requests from every transport; raise only if none could send."""
+        if len(udp_transports) == 1:
+            await self._send_search_requests(udp_transport=udp_transports[0])
+            return
+        error: OSError | None = None
+        sent = False
+        for udp_transport in udp_transports:
+            try:
+                await self._send_search_requests(udp_transport=udp_transport)
+            except OSError as err:
+                logger.debug(
+                    "Search on %s failed: %s", udp_transport.local_addr[0], err
+                )
+                error = err
+            else:
+                sent = True
+        if not sent and error is not None:
+            raise error
 
     @staticmethod
     async def _send_search_requests(udp_transport: UDPTransport) -> None:
