@@ -8,7 +8,7 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import XKNXException
-from xknx.io import GatewayScanFilter, GatewayScanner
+from xknx.io import GatewayScanFilter, GatewayScanner, util
 from xknx.io.gateway_scanner import GatewayDescriptor
 from xknx.io.transport import UDPTransport
 from xknx.knxip import (
@@ -544,3 +544,85 @@ def fake_router_search_response() -> KNXIPFrame:
     frame_body.dibs.append(svc_families)
 
     return KNXIPFrame.init_from_body(frame_body)
+
+
+def _adapter(*ips: str) -> Mock:
+    """Return an ifaddr adapter with IPv4 `ips`."""
+    adapter = Mock()
+    adapter.ips = [Mock(ip=ip, is_IPv4=True, nice_name="eth") for ip in ips]
+    return adapter
+
+
+def test_search_ips() -> None:
+    """Every IPv4 address but loopback and link-local ones is searched from, once."""
+    adapters = [
+        _adapter("172.17.64.1"),
+        _adapter("169.254.41.236"),
+        _adapter("192.168.16.172", "127.0.0.1"),
+        _adapter("192.168.16.172"),
+    ]
+    with patch("ifaddr.get_adapters", return_value=adapters):
+        assert util.get_search_ips() == ["172.17.64.1", "192.168.16.172"]
+
+
+@patch("xknx.io.gateway_scanner.UDPTransport.connect")
+@patch("xknx.io.gateway_scanner.UDPTransport.send")
+async def test_scan_all_interfaces(
+    udp_transport_send_mock: Mock,
+    udp_transport_connect_mock: Mock,
+) -> None:
+    """With all_interfaces the search requests go out from every local address."""
+    xknx = XKNX()
+    gateway_scanner = GatewayScanner(xknx, timeout_in_seconds=0, all_interfaces=True)
+    with (
+        patch(
+            "xknx.io.util.get_search_ips",
+            return_value=["172.17.64.1", "192.168.16.172"],
+        ),
+        patch(
+            "xknx.io.util.get_default_local_ip",
+        ) as default_local_ip_mock,
+        patch(
+            "xknx.io.gateway_scanner.UDPTransport.getsockname",
+            return_value=("10.1.1.2", 56789),
+        ),
+    ):
+        assert await gateway_scanner.scan() == []
+    default_local_ip_mock.assert_not_called()
+    assert udp_transport_connect_mock.call_count == 2
+    assert udp_transport_send_mock.call_count == 4
+
+
+async def test_scan_all_interfaces_errors() -> None:
+    """One address that cannot send does not stop the search; all of them failing raises."""
+    xknx = XKNX()
+    failing = {"172.17.64.1"}
+
+    async def connect(self: UDPTransport) -> None:
+        if self.local_addr[0] in failing:
+            raise OSError("unreachable")
+
+    with (
+        patch(
+            "xknx.io.util.get_search_ips",
+            return_value=["172.17.64.1", "192.168.16.172"],
+        ),
+        patch("xknx.io.gateway_scanner.UDPTransport.connect", connect),
+        patch("xknx.io.gateway_scanner.UDPTransport.send") as send_mock,
+        patch(
+            "xknx.io.gateway_scanner.UDPTransport.getsockname",
+            return_value=("192.168.16.172", 56789),
+        ),
+    ):
+        scanner = GatewayScanner(xknx, timeout_in_seconds=0, all_interfaces=True)
+        assert await scanner.scan() == []
+        assert send_mock.call_count == 2
+        failing.add("192.168.16.172")
+        scanner = GatewayScanner(xknx, timeout_in_seconds=0, all_interfaces=True)
+        with pytest.raises(OSError, match="unreachable"):
+            await scanner.scan()
+    # Without any address to search from.
+    with patch("xknx.io.util.get_search_ips", return_value=[]):
+        scanner = GatewayScanner(xknx, timeout_in_seconds=0, all_interfaces=True)
+        with pytest.raises(XKNXException):
+            await scanner.scan()
