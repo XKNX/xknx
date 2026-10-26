@@ -20,5 +20,8 @@ DEVICE_CONFIGURATION_REQUEST_REPETITIONS: Final = 3
 # Maximum time an authenticated secure session may remain unused (without
 # any communication over this session) until the session will be dropped.
 SESSION_TIMEOUT: Final = 60
+# Maximum time the authentication process for newly created secure sessions
+# may last until the unauthenticated session will be dropped by the server.
+SESSION_REQUEST_TIMEOUT: Final = 10
 SESSION_KEEPALIVE_RATE: Final = SESSION_TIMEOUT - 10
 XKNX_SERIAL_NUMBER: Final = bytes.fromhex("00 00 78 6b 6e 78")

@@ -8,8 +8,19 @@ nav_order: 2
 
 # Unreleased changes
 
+### New Features
+
+- Data Secure: persist sequence numbers across restarts - KNX v02.01.01 - Application Layer 03.03.07 - §5.3.1. `DataSecure.get_individual_address_table()` returns a snapshot of the last valid sequence number per sender and `restore_individual_address_table()` takes such a snapshot back, only ever raising values; `get_sequence_number_sending()` / `restore_sequence_number_sending()` do the same for the own sequence number sending. Reachable via `xknx.cemi_handler.data_secure`. Without this, secured telegrams captured since the keyring export could be replayed once per sender after every restart.
+
+### Protocol
+
+- Data Secure: a received frame repeating the last valid sequence number of its sender is silently dropped at DEBUG level and no longer reported to `data_secure_group_key_issue` callbacks - KNX v02.01.01 - Application Layer 03.03.07 - §5.3.1. It is a frame repeated by the Data Link Layer, not a replay; it was logged as WARNING "Sequence number too low" before. `DataSecureError` gets a `key_issue` attribute.
+- IP Secure Routing: the multicast timer is never decreased - KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.2.2.2. While synchronizing, the timer values of received SECURE_WRAPPER frames are taken into account like those of TIMER_NOTIFY frames (§2.2.2.3.2.8); a TIMER_NOTIFY answering the synchronization with an older value no longer sets the timer back.
+
 ### Connection
 
+- IP Secure Routing: `disconnect()` while the secure timer synchronizes makes `connect()` raise `CommunicationError` instead of reporting CONNECTED with an unauthenticated timer that dropped every received frame. A second TIMER_NOTIFY answering the synchronization no longer raises `InvalidStateError`.
+- IP Secure: wait 10 seconds for SESSION_RESPONSE (`SESSION_REQUEST_TIMEOUT`) instead of 1 second - KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.3.5.2.1.1 `timeoutAuthentication`.
 - Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
 
 ### Management

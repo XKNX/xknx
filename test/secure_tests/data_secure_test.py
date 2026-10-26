@@ -1,6 +1,7 @@
 """Tests for KNX Data Secure."""
 
 import asyncio
+import logging
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -320,13 +321,147 @@ class TestDataSecure:
             test_group_response_cemi.data.payload.secured_data.sequence_number_bytes
             == seq_num.to_bytes(6, "big")
         )
-        # sequence number already used
-        self.data_secure._individual_address_table[IndividualAddress("4.0.9")] = seq_num
+        # a higher sequence number was already received
+        self.data_secure._individual_address_table[IndividualAddress("4.0.9")] = (
+            seq_num + 1
+        )
         with pytest.raises(
             DataSecureError,
             match=r"Sequence number too low.*",
-        ):
+        ) as exc_info:
             self.data_secure.received_cemi(test_group_response_cemi.data)
+        assert exc_info.value.log_level == logging.WARNING
+        assert exc_info.value.key_issue is True
+        # handle_cemi_frame reports it as key issue
+        key_issue_cb = MagicMock()
+        self.xknx.telegram_queue.register_data_secure_group_key_issue_cb(key_issue_cb)
+        self.xknx.cemi_handler.handle_cemi_frame(test_group_response_cemi)
+        key_issue_cb.assert_called_once()
+        assert self.xknx.connection_manager.undecoded_data_secure == 1
+
+    def test_data_secure_group_receive_repeated_frame(
+        self, test_group_response_cemi: CEMIFrame, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test incoming DataSecure group communication repeating the last valid sequence number."""
+        seq_num = 155806854986
+        source_address = IndividualAddress("4.0.9")
+        assert (
+            test_group_response_cemi.data.payload.secured_data.sequence_number_bytes
+            == seq_num.to_bytes(6, "big")
+        )
+        # sequence number already used - eg. frame repeated by the Data Link Layer
+        self.data_secure._individual_address_table[source_address] = seq_num
+        with pytest.raises(
+            DataSecureError,
+            match=r"Repeated frame from 4\.0\.9.*",
+        ) as exc_info:
+            self.data_secure.received_cemi(test_group_response_cemi.data)
+        assert exc_info.value.log_level == logging.DEBUG
+        assert exc_info.value.key_issue is False
+        assert self.data_secure._individual_address_table[source_address] == seq_num
+
+        # handle_cemi_frame drops it silently - no key issue reported
+        key_issue_cb = MagicMock()
+        self.xknx.telegram_queue.register_data_secure_group_key_issue_cb(key_issue_cb)
+        with (
+            patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received") as mock_rec,
+            caplog.at_level(logging.DEBUG, logger="xknx.data_secure"),
+        ):
+            self.xknx.cemi_handler.handle_cemi_frame(test_group_response_cemi)
+        mock_rec.assert_not_called()
+        key_issue_cb.assert_not_called()
+        assert self.xknx.connection_manager.undecoded_data_secure == 0
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelno == logging.DEBUG
+        assert "Repeated frame from 4.0.9" in caplog.records[0].getMessage()
+        assert self.data_secure._individual_address_table[source_address] == seq_num
+
+    def test_individual_address_table_persistence(
+        self, test_group_response_cemi: CEMIFrame
+    ) -> None:
+        """Test exporting and restoring the Security Individual Address Table."""
+        source_address = IndividualAddress("4.0.9")
+        keyring_seq_num = 155806854915
+        assert self.data_secure._individual_address_table == {
+            IndividualAddress("4.0.0"): 155806720116,
+            IndividualAddress("4.0.1"): 0,
+            source_address: keyring_seq_num,
+            IndividualAddress("5.0.0"): 146212262858,
+            IndividualAddress("5.0.1"): 0,
+        }
+        snapshot = self.data_secure.get_individual_address_table()
+        assert snapshot == self.data_secure._individual_address_table
+        # a copy - not the live table
+        assert snapshot is not self.data_secure._individual_address_table
+        snapshot[source_address] = 1
+        assert (
+            self.data_secure._individual_address_table[source_address]
+            == keyring_seq_num
+        )
+
+        # receiving a frame updates the table, the snapshot reflects it
+        self.data_secure.received_cemi(test_group_response_cemi.data)
+        received_seq_num = 155806854986
+        assert (
+            self.data_secure.get_individual_address_table()[source_address]
+            == received_seq_num
+        )
+
+        # restore never lowers values, raises known senders, ignores unknown senders
+        self.data_secure.restore_individual_address_table(
+            {
+                source_address: received_seq_num - 10,  # lower - ignored
+                IndividualAddress("4.0.1"): 42,  # higher - taken
+                IndividualAddress("1.2.3"): 100,  # unknown sender - ignored
+            }
+        )
+        assert self.data_secure._individual_address_table == {
+            IndividualAddress("4.0.0"): 155806720116,
+            IndividualAddress("4.0.1"): 42,
+            source_address: received_seq_num,
+            IndividualAddress("5.0.0"): 146212262858,
+            IndividualAddress("5.0.1"): 0,
+        }
+        # a fresh DataSecure from the keyring restored from the snapshot rejects a replay
+        self.xknx.cemi_handler.data_secure_init(TestDataSecure.secure_test_keyring)
+        fresh_data_secure = self.xknx.cemi_handler.data_secure
+        assert (
+            fresh_data_secure._individual_address_table[source_address]
+            == keyring_seq_num
+        )
+        fresh_data_secure.restore_individual_address_table(
+            self.data_secure.get_individual_address_table()
+        )
+        assert (
+            fresh_data_secure._individual_address_table[source_address]
+            == received_seq_num
+        )
+        with pytest.raises(DataSecureError, match=r"Repeated frame from 4\.0\.9.*"):
+            fresh_data_secure.received_cemi(test_group_response_cemi.data)
+
+    def test_sequence_number_sending_persistence(self) -> None:
+        """Test exporting and restoring the sequence number sending."""
+        self.data_secure._sequence_number_sending = 1000
+        assert self.data_secure.get_sequence_number_sending() == 1000
+        # getter does not increment
+        assert self.data_secure.get_sequence_number_sending() == 1000
+        assert self.data_secure.get_sequence_number() == 1000
+        assert self.data_secure.get_sequence_number_sending() == 1001
+
+        # restore takes the higher value
+        self.data_secure.restore_sequence_number_sending(500)
+        assert self.data_secure.get_sequence_number_sending() == 1001
+        self.data_secure.restore_sequence_number_sending(5000)
+        assert self.data_secure.get_sequence_number_sending() == 5000
+        assert self.data_secure.get_sequence_number() == 5000
+
+        for invalid in (0, -1, 0xFFFFFFFFFFFF + 1):
+            with pytest.raises(
+                DataSecureError,
+                match=r"Sequence number sending to restore out of range.*",
+            ):
+                self.data_secure.restore_sequence_number_sending(invalid)
+        assert self.data_secure.get_sequence_number_sending() == 5001
 
     def test_data_secure_group_receive_wrong_mac(
         self, test_group_response_cemi: CEMIFrame

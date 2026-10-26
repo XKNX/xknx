@@ -15,6 +15,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 
 from xknx.exceptions import (
+    CommunicationError,
     CouldNotParseKNXIP,
     IPSecureError,
     KNXSecureValidationError,
@@ -489,12 +490,6 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
             self.secure_timer.handle_timer_notify(knxipframe.body)
             return
         if isinstance(knxipframe.body, SecureWrapper):
-            if not self.secure_timer.timer_authenticated:
-                ip_secure_logger.debug(
-                    "Discarding received SecureWrapper before timer synchronisazion finished: %s",
-                    knxipframe,
-                )
-                return
             secure_wrapper = knxipframe.body
             try:
                 knxipframe = self.decrypt_frame(knxipframe)
@@ -506,6 +501,20 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
                 knx_logger.debug(
                     "Unsupported encrypted KNXIPFrame: %s",
                     couldnotparseknxip.description,
+                )
+                return
+            if not self.secure_timer.timer_authenticated:
+                # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.2.3.2.8
+                # While acquiring an authentic timer value the encapsulated data
+                # shall not be processed, but the most recent timer value of all
+                # received TIMER_NOTIFY and SECURE_WRAPPER frames shall be taken
+                # as the initial timer value.
+                self.secure_timer.update(
+                    int.from_bytes(secure_wrapper.sequence_information, "big")
+                )
+                ip_secure_logger.debug(
+                    "Discarding received SecureWrapper before timer synchronisation finished: %s",
+                    knxipframe,
                 )
                 return
             if not self.secure_timer.validate_secure_wrapper(secure_wrapper):
@@ -643,8 +652,15 @@ class SecureSequenceTimer:
         return self._monotonic_ms() + self._clock_difference
 
     def update(self, new_value: int) -> None:
-        """Update timer value."""
-        self._clock_difference = new_value - self._monotonic_ms()
+        """
+        Update timer value if `new_value` is higher than the current timer value.
+
+        KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.2.2.1 and §2.2.2.2.2
+        Synchronization is only allowed in the forward direction.
+        The device timer shall not be decreased in any case.
+        """
+        if new_value > self.current_timer_value():
+            self._clock_difference = new_value - self._monotonic_ms()
 
     def reschedule(self, update: tuple[bytes, bytes] | None = None) -> None:
         """
@@ -751,7 +767,11 @@ class SecureSequenceTimer:
             raise KNXSecureValidationError("MAC verification failed")
 
     async def synchronize(self) -> None:
-        """Synchronize timer with remote time keeper."""
+        """
+        Synchronize timer with remote time keeper.
+
+        Raise `CommunicationError` if the synchronization was aborted by `stop()`.
+        """
         message_tag = random.randbytes(2)
         waiter_fut: asyncio.Future[int] = self._loop.create_future()
         self._expected_notify_handler = message_tag, waiter_fut
@@ -762,6 +782,8 @@ class SecureSequenceTimer:
                 + 2 * self.latency_tolerance_ms / 1000
             ):
                 timer_value = await waiter_fut
+            # the timer is only moved forward - the highest timer value received
+            # from TimerNotify or SecureWrapper frames while waiting is kept
             self.update(new_value=timer_value)
         except TimeoutError:
             # use highest received timer value of TimerNotify or SecureWrapper frames
@@ -770,7 +792,12 @@ class SecureSequenceTimer:
             )
             self.timekeeper = True
         except asyncio.CancelledError:
-            return
+            if (task := asyncio.current_task()) is not None and task.cancelling():
+                # the awaiting task was cancelled - not our waiter by `stop()`
+                raise
+            raise CommunicationError(
+                "Timer synchronization aborted before an authentic timer value was received"
+            ) from None
         finally:
             self._expected_notify_handler = None
         self.timer_authenticated = True
@@ -818,7 +845,8 @@ class SecureSequenceTimer:
             and timer_notify.message_tag == self._expected_notify_handler[0]
         ):
             fut = self._expected_notify_handler[1]
-            fut.set_result(received_timer_value)
+            if not fut.done():  # already resolved by another notify or cancelled
+                fut.set_result(received_timer_value)
             return
         # §2.2.2.3.2.5 Events: E1 - E4
         if received_timer_value > local_timer_value:
