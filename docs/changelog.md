@@ -43,6 +43,18 @@ nav_order: 2
 - Add DPT 22.102 (`DPTCombinedStatusHVA`, value_type `"combined_status_hva"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.3. Its value `CombinedStatusHVA` carries the valve position, the short circuit and overload alarms and the valve kick, service mode, manual operation, forced position, locked position and calibration mode status of a heating/cooling valve actuator.
 - Add DPT 22.103 (`DPTCombinedStatusRTC`, value_type `"combined_status_rtc"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.2. Its value `CombinedStatusRTC` carries the fault, `heat_cool_mode` (`HeatCool`), dew point, frost and overheat alarm, controller inactive, additional stage and heating/cooling enabled status of an RTC (Room Temperature Controller). Like DPT 21.107 it becomes mandatory one year after publication and replaces `DPTHVACStatus`; DPT 22.101 `DPTStatusRHCC` becomes optional.
 
+### Connection
+
+- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: the KNX/IP interface is stopped before the outgoing queue is drained, so pending telegrams fail with `CommunicationError` instead of waiting for the reconnect.
+- Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
+- Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
+- Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.
+- UDP tunnel: a telegram whose TUNNELLING_REQUESTs went unanswered while the heartbeat already reconnected the tunnel is retried on the new communication channel instead of reconnecting the healthy new tunnel once more.
+- TCP tunnel: a connection lost while `connect()` still waits for the CONNECT_RESPONSE or the secure session handshake no longer leaves an orphaned reconnect loop behind the failed connection attempt.
+- Tunnel: the automatic reconnect keeps retrying after an unexpected exception instead of ending silently with the tunnel disconnected.
+- TCP transport: a partial frame left in the receive buffer is dropped when the connection is closed or reopened instead of corrupting the first frame of the next connection.
+- TCP transport: establishing the TCP connection times out after `TCP_CONNECT_TIMEOUT` (10 seconds) with a `CommunicationError` instead of waiting for the OS connect timeout (~2 minutes for a dropped SYN).
+
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.

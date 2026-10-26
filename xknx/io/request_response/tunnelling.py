@@ -37,3 +37,11 @@ class Tunnelling(RequestResponse[TunnellingAck]):
     def _create_knxipframe(self) -> KNXIPFrame:
         """Create KNX/IP Frame object to be sent to device."""
         return KNXIPFrame.init_from_body(self.tunnelling_request)
+
+    def _matches_request(self, body: TunnellingAck) -> bool:
+        """Return whether the ACK confirms this request - not a stale one of a repeated frame."""
+        return (
+            body.communication_channel_id
+            == self.tunnelling_request.communication_channel_id
+            and body.sequence_counter == self.tunnelling_request.sequence_counter
+        )

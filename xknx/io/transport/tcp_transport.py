@@ -11,6 +11,7 @@ from collections.abc import Callable
 import logging
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
+from xknx.io.const import TCP_CONNECT_TIMEOUT
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -121,11 +122,27 @@ class TCPTransport(KNXIPTransport):
             connection_lost_callback=self._connection_lost,
         )
         loop = asyncio.get_running_loop()
-        (self.transport, _) = await loop.create_connection(
-            lambda: tcp_transport_factory,
-            host=self.remote_hpai.ip_addr,
-            port=self.remote_hpai.port,
-        )
+        # drop a partial frame left over from a previous connection
+        self._buffer = b""
+        try:
+            # the OS connect timeout is way longer (eg. ~127 seconds on Linux
+            # for a dropped SYN) than anything useful for a KNX connection
+            async with asyncio.timeout(TCP_CONNECT_TIMEOUT):
+                (self.transport, _) = await loop.create_connection(
+                    lambda: tcp_transport_factory,
+                    host=self.remote_hpai.ip_addr,
+                    port=self.remote_hpai.port,
+                )
+        except TimeoutError:
+            raise CommunicationError(
+                f"TCP connection to {self.remote_hpai} could not be established "
+                f"within {TCP_CONNECT_TIMEOUT} seconds"
+            ) from None
+
+    def stop(self) -> None:
+        """Stop socket and drop buffered data of the closed connection."""
+        super().stop()
+        self._buffer = b""
 
     def _connection_lost(self) -> None:
         """Call assigned callback. Callback for connection lost."""

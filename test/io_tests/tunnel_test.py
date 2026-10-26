@@ -82,6 +82,7 @@ class TestUDPTunnel:
     ) -> None:
         """Test Tunnel for calling send_ack on frames."""
         raw_cemi = raw[10:]
+        self.tunnel.communication_channel = 0x02
         self.tunnel._sequence.expected = 0x21
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
@@ -108,6 +109,7 @@ class TestUDPTunnel:
         test_cemi = CEMIFrame.from_knx(raw_ind[10:])
         test_telegram = test_cemi.data.telegram()
         test_telegram.direction = TelegramDirection.INCOMING
+        self.tunnel.communication_channel = 0x02
         self.tunnel._sequence.expected = 0x81
 
         response_telegram = Telegram(
@@ -442,6 +444,282 @@ class TestUDPTunnel:
         assert self.tunnel._reconnect_task is None
 
     @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    async def test_tunnel_request_other_channel_ignored(
+        self, mock_transport_send: Mock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test a TunnellingRequest of another communication channel is dropped silently."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel._sequence.expected = 10
+
+        cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_IND,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress(1),
+                    payload=GroupValueWrite(DPTArray((1,))),
+                )
+            ),
+        )
+        foreign_frame = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                communication_channel_id=2,
+                sequence_counter=10,
+                raw_cemi=cemi.to_knx(),
+            )
+        )
+        self.tunnel._request_received(foreign_frame, None, None)
+        await time_travel(0)
+        # not ACKed, not processed, sequence counter untouched, no reconnect scheduled
+        mock_transport_send.assert_not_called()
+        self.cemi_received_mock.assert_not_called()
+        assert self.tunnel._sequence.expected == 10
+        assert self.tunnel._invalid_sequence_number_reconnect_task is None
+
+        own_frame = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                communication_channel_id=1,
+                sequence_counter=10,
+                raw_cemi=cemi.to_knx(),
+            )
+        )
+        self.tunnel._request_received(own_frame, None, None)
+        await time_travel(0)
+        mock_transport_send.assert_called_once_with(
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=1, sequence_counter=10)
+            ),
+            addr=None,
+        )
+        self.cemi_received_mock.assert_called_once_with(cemi.to_knx())
+        assert self.tunnel._sequence.expected == 11
+
+    @pytest.mark.parametrize("own_channel", [1, None])
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.tunnel.UDPTunnel._tunnel_lost")
+    async def test_disconnect_request_other_channel(
+        self,
+        mock_tunnel_lost: Mock,
+        mock_transport_send: Mock,
+        own_channel: int | None,
+    ) -> None:
+        """Test a DisconnectRequest of another communication channel is rejected."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = own_channel
+
+        self.tunnel._request_received(
+            KNXIPFrame.init_from_body(
+                DisconnectRequest(
+                    communication_channel_id=2,
+                    control_endpoint=HPAI("192.168.1.2", 3671),
+                )
+            ),
+            None,
+            None,
+        )
+        mock_transport_send.assert_called_once_with(
+            KNXIPFrame.init_from_body(
+                DisconnectResponse(
+                    communication_channel_id=2,
+                    status_code=ErrorCode.E_CONNECTION_ID,
+                )
+            )
+        )
+        mock_tunnel_lost.assert_not_called()
+        assert self.tunnel.communication_channel == own_channel
+
+    async def test_send_ready_reconnect_cancelled(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test sending while reconnecting distinguishes a cancelled reconnect from an own cancellation."""
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress(1),
+                    payload=GroupValueWrite(DPTArray((1,))),
+                )
+            ),
+        )
+
+        async def _reconnect_forever() -> None:
+            await asyncio.sleep(3600)
+
+        # the reconnect task is cancelled (eg. by `disconnect()`)
+        self.tunnel._reconnect_task = asyncio.create_task(_reconnect_forever())
+        send_task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
+        await time_travel(0)
+        assert not send_task.done()
+        self.tunnel._reconnect_task.cancel()
+        await time_travel(0)
+        with pytest.raises(CommunicationError, match="Reconnect was cancelled"):
+            await send_task
+
+        # the sending task itself is cancelled - propagated, not swallowed
+        self.tunnel._reconnect_task = asyncio.create_task(_reconnect_forever())
+        send_task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
+        await time_travel(0)
+        send_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await send_task
+        assert not self.tunnel._reconnect_task.done()
+
+        # a timeout around the send is a cancellation of the sending task too
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(1):
+                send_task = asyncio.ensure_future(self.tunnel.send_cemi(test_cemi))
+                await time_travel(1)
+                await send_task
+        assert not self.tunnel._reconnect_task.done()
+        self.tunnel._reconnect_task.cancel()
+
+    @patch("xknx.io.tunnel.UDPTunnel.connect")
+    async def test_reconnect_unexpected_error(
+        self, mock_connect: AsyncMock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test the reconnect task keeps retrying after an unexpected exception."""
+        self.tunnel.auto_reconnect = True
+        mock_connect.side_effect = [ValueError("unexpected"), None]
+
+        self.tunnel._tunnel_lost()
+        await time_travel(0)
+        assert mock_connect.call_count == 1
+        assert self.tunnel._reconnect_task is not None
+        assert not self.tunnel._reconnect_task.done()
+
+        await time_travel(self.tunnel.auto_reconnect_wait)
+        assert mock_connect.call_count == 2
+        assert self.tunnel._reconnect_task is None
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.transport.udp_transport.UDPTransport.stop")
+    async def test_tunnel_send_awaits_running_reconnect(
+        self,
+        _mock_transport_stop: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a telegram failing twice waits for a running reconnect and is sent on the new channel."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel.sequence_number = 23
+
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress(1),
+                    payload=GroupValueWrite(DPTArray((1,))),
+                ),
+                src_addr=self.tunnel._src_address,
+            ),
+        )
+
+        def request(channel: int) -> KNXIPFrame:
+            return KNXIPFrame.init_from_body(
+                TunnellingRequest(
+                    communication_channel_id=channel,
+                    sequence_counter=23,
+                    raw_cemi=test_cemi.to_knx(),
+                )
+            )
+
+        async def _reconnect() -> None:
+            await asyncio.sleep(3)
+            self.tunnel.communication_channel = 2
+
+        task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
+        await time_travel(0)
+        assert mock_transport_send.call_args_list == [call(request(1), addr=None)]
+        mock_transport_send.reset_mock()
+        # no ACK - a heartbeat failure started a reconnect meanwhile
+        self.tunnel._reconnect_task = asyncio.create_task(_reconnect())
+        await time_travel(1)
+        assert mock_transport_send.call_args_list == [call(request(1), addr=None)]
+        mock_transport_send.reset_mock()
+        # no ACK again - the running reconnect is awaited
+        await time_travel(1)
+        mock_transport_send.assert_not_called()
+        assert not task.done()
+        await time_travel(1)
+        assert mock_transport_send.call_args_list == [call(request(2), addr=None)]
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=2, sequence_counter=23)
+            ),
+            HPAI(),
+        )
+        await time_travel(0)
+        assert task.done()
+        await task
+        assert self.tunnel.sequence_number == 24
+        self.tunnel._reconnect_task = None
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
+    @patch("xknx.io.tunnel.UDPTunnel._tunnel_lost")
+    async def test_tunnel_send_retry_after_reconnect(
+        self,
+        mock_tunnel_lost: Mock,
+        mock_transport_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a telegram is retried on the new channel when the tunnel reconnected while sending."""
+        self.tunnel.transport.transport = Mock()
+        self.tunnel.communication_channel = 1
+        self.tunnel.sequence_number = 23
+
+        test_cemi = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress(1),
+                    payload=GroupValueWrite(DPTArray((1,))),
+                ),
+                src_addr=self.tunnel._src_address,
+            ),
+        )
+
+        def request(channel: int) -> KNXIPFrame:
+            return KNXIPFrame.init_from_body(
+                TunnellingRequest(
+                    communication_channel_id=channel,
+                    sequence_counter=23,
+                    raw_cemi=test_cemi.to_knx(),
+                )
+            )
+
+        task = asyncio.create_task(self.tunnel.send_cemi(test_cemi))
+        await time_travel(0)
+        assert mock_transport_send.call_args_list == [call(request(1), addr=None)]
+        mock_transport_send.reset_mock()
+        # no ACK - meanwhile a heartbeat failure reconnected the tunnel
+        self.tunnel.communication_channel = 2
+        await time_travel(1)
+        assert mock_transport_send.call_args_list == [call(request(2), addr=None)]
+        mock_transport_send.reset_mock()
+        # (an ACK of the old channel is ignored)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=1, sequence_counter=23)
+            ),
+            HPAI(),
+        )
+        await time_travel(1)
+        # not reconnected again - retried on the new channel
+        mock_tunnel_lost.assert_not_called()
+        assert mock_transport_send.call_args_list == [call(request(2), addr=None)]
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=2, sequence_counter=23)
+            ),
+            HPAI(),
+        )
+        await time_travel(0)
+        assert task.done()
+        await task
+        assert self.tunnel.sequence_number == 24
+
+    @patch("xknx.io.transport.udp_transport.UDPTransport.send")
     @patch("xknx.io.transport.udp_transport.UDPTransport.getsockname")
     async def test_tunnel_request_description(
         self,
@@ -693,3 +971,52 @@ class TestTCPTunnel:
         await time_travel(0)
         # third retry had an error - tunnel lost
         mock_tunnel_lost.assert_called_once()
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.stop")
+    @patch("xknx.io.tunnel.TCPTunnel._tunnel_lost")
+    async def test_connection_lost_while_connecting(
+        self,
+        mock_tunnel_lost: MagicMock,
+        mock_transport_stop: MagicMock,
+        mock_transport_send: MagicMock,
+        mock_transport_connect: MagicMock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test a TCP connection lost before the tunnel is established doesn't start a reconnect."""
+        self.tunnel.auto_reconnect = True
+
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        mock_transport_connect.assert_called_once()
+        # connection closed while waiting for the ConnectResponse
+        self.tunnel.transport._connection_lost_cb()
+        mock_tunnel_lost.assert_not_called()
+        # the pending ConnectRequest times out and `connect()` raises to its caller
+        await time_travel(10)
+        with pytest.raises(CommunicationError):
+            await connection_task
+        mock_tunnel_lost.assert_not_called()
+
+        # established tunnel - connection lost starts a reconnect
+        connection_task = asyncio.create_task(self.tunnel.connect())
+        await time_travel(0)
+        self.tunnel.transport.handle_knxipframe(
+            KNXIPFrame.init_from_body(
+                ConnectResponse(
+                    communication_channel=23,
+                    data_endpoint=HPAI(protocol=HostProtocol.IPV4_TCP),
+                    crd=ConnectResponseData(individual_address=IndividualAddress(7)),
+                )
+            ),
+            HPAI(ip_addr="192.168.1.2", port=3671, protocol=HostProtocol.IPV4_TCP),
+        )
+        await connection_task
+        self.tunnel._connection_lost()
+        mock_tunnel_lost.assert_called_once()
+        # not established anymore after disconnecting
+        mock_tunnel_lost.reset_mock()
+        self.tunnel._prepare_disconnect()
+        self.tunnel._connection_lost()
+        mock_tunnel_lost.assert_not_called()
