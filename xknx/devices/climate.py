@@ -9,10 +9,12 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 import logging
+import math
 from typing import TYPE_CHECKING, Any
 
 from xknx.devices.fan import FanSpeedMode
-from xknx.dpt import DPTHumidity
+from xknx.dpt import DPTArray, DPTBinary, DPTHumidity, DPTScaling
+from xknx.exceptions import DeviceIllegalValue
 from xknx.remote_value import (
     GroupAddressesType,
     RemoteValue,
@@ -41,6 +43,25 @@ DEFAULT_SETPOINT_SHIFT_MIN = -6
 DEFAULT_TEMPERATURE_STEP = 0.1
 
 
+class _RemoteValueValvePosition(RemoteValue[float]):
+    """Decode valve position without rounding small nonzero values to zero."""
+
+    __slots__ = ()
+
+    def from_knx(self, payload: DPTArray | DPTBinary) -> float:
+        """Preserve the wire resolution for threshold comparisons."""
+        return DPTScaling.validate_payload(payload)[0] * 100 / 255
+
+    def to_knx(self, value: float) -> DPTArray:
+        """Encode percent using the existing scaling transcoder."""
+        return DPTScaling.to_knx(value)
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return percent."""
+        return "%"
+
+
 class Climate(Device):
     """Class for managing the climate."""
 
@@ -63,6 +84,12 @@ class Climate(Device):
         on_off_invert: bool = False,
         group_address_active_state: GroupAddressesType = None,
         group_address_command_value_state: GroupAddressesType = None,
+        group_address_heating_active_state: GroupAddressesType = None,
+        group_address_heating_command_value_state: GroupAddressesType = None,
+        heating_activity_threshold: float = 0.0,
+        group_address_cooling_active_state: GroupAddressesType = None,
+        group_address_cooling_command_value_state: GroupAddressesType = None,
+        cooling_activity_threshold: float = 0.0,
         sync_state: bool | int | float | str = True,
         min_temp: float | None = None,
         max_temp: float | None = None,
@@ -145,6 +172,68 @@ class Climate(Device):
             after_update_cb=self.after_update,
         )
 
+        heating_configured = bool(
+            group_address_heating_active_state
+            or group_address_heating_command_value_state
+        )
+        cooling_configured = bool(
+            group_address_cooling_active_state
+            or group_address_cooling_command_value_state
+        )
+        if heating_configured != cooling_configured:
+            raise DeviceIllegalValue(
+                "Independent feedback requires both valve channels",
+                value=(heating_configured, cooling_configured),
+            )
+        self.has_independent_activity = heating_configured
+        for threshold in (heating_activity_threshold, cooling_activity_threshold):
+            if (
+                isinstance(threshold, bool)
+                or not math.isfinite(threshold)
+                or not 0 <= threshold < 100
+            ):
+                raise DeviceIllegalValue(
+                    "Activity threshold must be finite and in [0, 100)", value=threshold
+                )
+        self.heating_activity_threshold = heating_activity_threshold
+        self.cooling_activity_threshold = cooling_activity_threshold
+
+        self.heating_active = RemoteValueSwitch(
+            xknx,
+            group_address_state=group_address_heating_active_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Heating active",
+            after_update_cb=self.after_update,
+        )
+
+        self.heating_command_value = _RemoteValueValvePosition(
+            xknx,
+            group_address_state=group_address_heating_command_value_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Heating command value",
+            after_update_cb=self.after_update,
+        )
+
+        self.cooling_active = RemoteValueSwitch(
+            xknx,
+            group_address_state=group_address_cooling_active_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Cooling active",
+            after_update_cb=self.after_update,
+        )
+
+        self.cooling_command_value = _RemoteValueValvePosition(
+            xknx,
+            group_address_state=group_address_cooling_command_value_state,
+            sync_state=sync_state,
+            device_name=self.name,
+            feature_name="Cooling command value",
+            after_update_cb=self.after_update,
+        )
+
         self.fan_speed: RemoteValueDptValue1Ucount | RemoteValueScaling
         self.fan_speed_mode = fan_speed_mode
 
@@ -209,6 +298,10 @@ class Climate(Device):
         yield self.on
         yield self.active
         yield self.command_value
+        yield self.heating_active
+        yield self.heating_command_value
+        yield self.cooling_active
+        yield self.cooling_command_value
         yield self.fan_speed
         yield self.swing
         yield self.horizontal_swing
@@ -248,6 +341,47 @@ class Climate(Device):
         if self.command_value.value is not None:
             return bool(self.command_value.value)
         return None
+
+    @staticmethod
+    def _valve_activity(
+        active: RemoteValueSwitch,
+        command_value: _RemoteValueValvePosition,
+        threshold: float,
+    ) -> bool | None:
+        """Use configured binary feedback first, including its unknown state."""
+        if active.initialized:
+            return active.value
+        if command_value.value is not None:
+            return command_value.value > threshold
+        return None
+
+    @property
+    def is_heating(self) -> bool | None:
+        """Return observed heating activity, independent of the selected mode."""
+        return self._valve_activity(
+            self.heating_active,
+            self.heating_command_value,
+            self.heating_activity_threshold,
+        )
+
+    @property
+    def is_cooling(self) -> bool | None:
+        """Return observed cooling activity, independent of the selected mode."""
+        return self._valve_activity(
+            self.cooling_active,
+            self.cooling_command_value,
+            self.cooling_activity_threshold,
+        )
+
+    @property
+    def valve_activity_conflict(self) -> bool | None:
+        """Return whether both valves are active; None if this is unknown."""
+        heating, cooling = self.is_heating, self.is_cooling
+        if heating is False or cooling is False:
+            return False
+        if heating is None or cooling is None:
+            return None
+        return True
 
     async def turn_on(self) -> None:
         """Set power status to on."""
