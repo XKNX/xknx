@@ -43,6 +43,11 @@ nav_order: 2
 - Add DPT 22.102 (`DPTCombinedStatusHVA`, value_type `"combined_status_hva"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.3. Its value `CombinedStatusHVA` carries the valve position, the short circuit and overload alarms and the valve kick, service mode, manual operation, forced position, locked position and calibration mode status of a heating/cooling valve actuator.
 - Add DPT 22.103 (`DPTCombinedStatusRTC`, value_type `"combined_status_rtc"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.2. Its value `CombinedStatusRTC` carries the fault, `heat_cool_mode` (`HeatCool`), dew point, frost and overheat alarm, controller inactive, additional stage and heating/cooling enabled status of an RTC (Room Temperature Controller). Like DPT 21.107 it becomes mandatory one year after publication and replaces `DPTHVACStatus`; DPT 22.101 `DPTStatusRHCC` becomes optional.
 
+### Connection
+
+- Negative L_Data.con confirmations raise `ConfirmationError` instead of being treated as a successfully sent telegram - KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.5.3.4: the Confirm flag of the control field is set when the cEMI Server could not transmit the frame, e.g. no acknowledge on the bus. The sent telegram was counted as `cemi_count_outgoing` and management procedures waited for a response that could never come; now `cemi_count_outgoing_error` is incremented and management procedures fail right away.
+- Outgoing telegrams await their data link layer confirmation one at a time, so a confirmation can no longer be attributed to the wrong telegram when management and group telegrams are sent concurrently. An L_Data.con doesn't tell which L_Data.req it confirms, so a confirmation arriving while two telegrams were waiting released both, and a late confirmation released the next telegram before its own.
+
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.

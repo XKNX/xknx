@@ -40,16 +40,24 @@ REQUEST_TO_CONFIRMATION_TIMEOUT = 3
 class CEMIHandler:
     """Class for handling CEMI frames from/to the TelegramQueue."""
 
-    __slots__ = ("_l_data_confirmation_event", "_send_lock", "data_secure", "xknx")
+    __slots__ = (
+        "_l_data_confirmation_error",
+        "_l_data_confirmation_event",
+        "_send_lock",
+        "data_secure",
+        "xknx",
+    )
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize CEMIHandler class."""
         self.xknx = xknx
         self.data_secure: DataSecure | None = None
         self._l_data_confirmation_event = asyncio.Event()
-        # Only one L_Data.req may be outstanding at a time: the L_Data.con is
-        # matched to its request by order only, so sends are serialized until
-        # the confirmation of the previous request has arrived.
+        # Confirm flag of the latest L_Data.con - True for a negative confirmation
+        self._l_data_confirmation_error = False
+        # Only one L_Data.req is in flight at a time: the L_Data.con carries no
+        # reference to the request it confirms, so a confirmation can only be
+        # attributed to the telegram currently waiting for it.
         # KNX v01.02.03 - Transport Layer 03.03.04 - §3.6
         self._send_lock = asyncio.Lock()
 
@@ -87,6 +95,7 @@ class CEMIHandler:
 
         async with self._send_lock:
             self._l_data_confirmation_event.clear()
+            self._l_data_confirmation_error = False
             try:
                 await self.xknx.knxip_interface.send_cemi(cemi)
             except (ConversionError, CommunicationError) as ex:
@@ -102,6 +111,9 @@ class CEMIHandler:
                 raise ConfirmationError(
                     f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
                 ) from None
+            if self._l_data_confirmation_error:
+                self.xknx.connection_manager.cemi_count_outgoing_error += 1
+                raise ConfirmationError(f"L_DATA_CON negative confirmation for {cemi}")
             self.xknx.connection_manager.cemi_count_outgoing += 1
 
     def handle_raw_cemi(self, raw_cemi: bytes) -> None:
@@ -133,7 +145,11 @@ class CEMIHandler:
             return
 
         if cemi.code is CEMIMessageCode.L_DATA_CON:
-            # L_DATA_CON confirmation frame signals ready to send next telegram
+            # L_DATA_CON confirmation frame signals ready to send next telegram.
+            # Its Confirm flag tells whether the cEMI Server could transmit the
+            # frame: "C: Confirm Flag: 1 = Error; 0 = No Error"
+            # KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.5.3.4
+            self._l_data_confirmation_error = cemi.data.flags.confirm_error
             self._l_data_confirmation_event.set()
             logger.debug("Incoming CEMI confirmation: %s", cemi)
             return

@@ -151,6 +151,15 @@ def test_to_knx_ignores_received_frame_type() -> None:
     assert raw == control_field(0xBC, 0xE0)
 
 
+def test_confirm_error() -> None:
+    """Test the Confirm flag - the lsb of Ctrl1 - 3/6/3 §4.1.5.3.4 L_Data.con."""
+    assert CEMIFlags.from_knx(control_field(0xBC, 0xE0)).confirm_error is False
+    assert CEMIFlags.from_knx(control_field(0xBD, 0xE0)).confirm_error is True
+    # the Frame Type bit is not set by `CEMIFlags.to_knx()`
+    assert CEMIFlags(confirm_error=True).to_knx() >> 8 == 0x3D
+    assert CEMIFlags().to_knx() >> 8 == 0x3C
+
+
 def test_round_trip() -> None:
     """Test parsing and serializing yields the same control field."""
     for ctrl1 in (0xBC, 0xB0, 0x9C, 0xBF, 0x3C):
