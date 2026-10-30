@@ -14,6 +14,7 @@ from xknx.dpt import (
     DPTFrequency,
     DPTPhaseAngleDeg,
     DPTPower,
+    DPTReactivePower,
 )
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
@@ -31,6 +32,12 @@ class TestDPT4ByteFloat:
     def test_14_033(self) -> None:
         """Test parsing DPTFrequency unit."""
         assert DPTFrequency.unit == "Hz"
+
+    def test_14_081(self) -> None:
+        """Test DPTReactivePower object."""
+        assert DPTReactivePower.from_knx(DPTArray((0x43, 0xC6, 0x80, 00))) == 397
+        assert DPTReactivePower.to_knx(-397) == DPTArray((0xC3, 0xC6, 0x80, 00))
+        assert DPTReactivePower.unit == "VAr"
 
     def test_14_055(self) -> None:
         """Test DPTPhaseAngleDeg object."""
