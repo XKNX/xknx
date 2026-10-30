@@ -56,6 +56,28 @@ class TestXknxModule:
         await xknx.stop()
 
     @patch("xknx.io.KNXIPInterface._start", new_callable=AsyncMock)
+    async def test_xknx_start_twice(self, start_mock: AsyncMock) -> None:
+        """Test a second start() is ignored."""
+        xknx = XKNX(state_updater=True)
+
+        await xknx.start()
+        consumer_task = xknx.telegram_queue._consumer_task
+        connection_state_cbs = list(
+            xknx.connection_manager._connection_state_changed_cbs
+        )
+        await xknx.start()
+        start_mock.assert_called_once()
+        assert xknx.telegram_queue._consumer_task is consumer_task
+        # no double registration of task registry and state updater callbacks
+        assert (
+            xknx.connection_manager._connection_state_changed_cbs
+            == connection_state_cbs
+        )
+        await xknx.stop()
+        assert not xknx.started.is_set()
+        assert not xknx.connection_manager._connection_state_changed_cbs
+
+    @patch("xknx.io.KNXIPInterface._start", new_callable=AsyncMock)
     async def test_xknx_start_as_context_manager(
         self, ipinterface_mock: AsyncMock
     ) -> None:

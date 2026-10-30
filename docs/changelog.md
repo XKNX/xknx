@@ -43,8 +43,15 @@ nav_order: 2
 - Add DPT 22.102 (`DPTCombinedStatusHVA`, value_type `"combined_status_hva"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.3. Its value `CombinedStatusHVA` carries the valve position, the short circuit and overload alarms and the valve kick, service mode, manual operation, forced position, locked position and calibration mode status of a heating/cooling valve actuator.
 - Add DPT 22.103 (`DPTCombinedStatusRTC`, value_type `"combined_status_rtc"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.2. Its value `CombinedStatusRTC` carries the fault, `heat_cool_mode` (`HeatCool`), dew point, frost and overheat alarm, controller inactive, additional stage and heating/cooling enabled status of an RTC (Room Temperature Controller). Like DPT 21.107 it becomes mandatory one year after publication and replaces `DPTHVACStatus`; DPT 22.101 `DPTStatusRHCC` becomes optional.
 
+### Internals
+
+- `TelegramQueue.start()` and `stop()` are idempotent: a second `start()` keeps the running consumer, `stop()` without a running consumer no longer leaves a stop sentinel in `xknx.telegrams` that would end the next started consumer right away. `XKNX.start()` logs a warning and returns when already started instead of registering its callbacks a second time.
+- `TelegramQueue` iterates copies of its callback lists, so a callback unregistering itself no longer skips the callback registered after it for that telegram.
+
 ### Bugfixes
 
+- `AddressFilter` raises `ConversionError` on initialization when a pattern has more levels than the group address format of `XKNX(address_format=...)` (e.g. `"1/*/*"` with `GroupAddressType.SHORT`), instead of raising the builtin `ConnectionError` on every matched telegram - which prevented all other `telegram_received_cb`s and devices from processing incoming telegrams. Create `AddressFilter`s after the `XKNX` instance. A raising address filter is now logged for its callback only.
+- `TelegramQueue`: the outgoing rate limiter works after a `stop()` and `start()` of the queue (e.g. on reconnect) when the previous stop happened within the rate limit interval. Before, outgoing telegrams were not sent anymore and `xknx.stop()` hung.
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
 
 # 4.0.0 Typed and tidy 2026-10-15
