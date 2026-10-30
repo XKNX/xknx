@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 import pytest
 
-from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IPSecureError
+from xknx.exceptions import CommunicationError, IPSecureError
 from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.ip_secure import SecureSession
 from xknx.knxip import (
@@ -210,8 +210,10 @@ class TestSecureSession:
             mock_transport.close.assert_called_once()
             assert self.session._keepalive_task is None
 
-    def test_uninitialized(self) -> None:
-        """Test for raising when an encrypted Frame arrives at an uninitialized Session."""
+    def test_uninitialized(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Test an encrypted Frame arriving at an uninitialized Session is discarded."""
+        frame_received_mock = Mock()
+        self.session.register_callback(frame_received_mock)
         secure_wrapper_frame = KNXIPFrame.init_from_body(
             SecureWrapper(
                 secure_session_id=self.mock_session_id,
@@ -224,8 +226,12 @@ class TestSecureSession:
                 ),
             )
         )
-        with pytest.raises(CouldNotParseKNXIP):
-            self.session.handle_knxipframe(secure_wrapper_frame, HPAI(*self.mock_addr))
+        # raising here would close the TCP connection from inside the receive callback
+        self.session.handle_knxipframe(secure_wrapper_frame, HPAI(*self.mock_addr))
+        frame_received_mock.assert_not_called()
+        assert len(caplog.records) == 1
+        assert caplog.records[0].levelname == "WARNING"
+        assert "Secure session not initialized" in caplog.records[0].message
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.connect")
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")

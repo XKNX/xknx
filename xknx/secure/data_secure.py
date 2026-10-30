@@ -10,7 +10,7 @@ import logging
 import time
 
 from xknx.cemi import CEMILData
-from xknx.exceptions import DataSecureError
+from xknx.exceptions import ConversionError, DataSecureError, UnsupportedAPCIService
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, SecureAPDU
 
@@ -215,7 +215,14 @@ class DataSecure:
                 frame_format=cemi_data.flags.frame_format,
                 tpci=cemi_data.tpci,
             )
-        decrypted_payload = APCI.from_knx(plain_apdu_raw)
+        try:
+            decrypted_payload = APCI.from_knx(plain_apdu_raw)
+        except (ConversionError, UnsupportedAPCIService) as err:
+            raise DataSecureError(
+                f"Could not parse plain APDU {plain_apdu_raw.hex()} "
+                f"from {cemi_data.src_addr} to {cemi_data.dst_addr}: {err}",
+                log_level=logging.WARNING,
+            ) from err
         _LOGGER.debug("Unpacked APDU %s from %s", decrypted_payload, s_apdu)
 
         plain_cemi_data = copy(cemi_data)
