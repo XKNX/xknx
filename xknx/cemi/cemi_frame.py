@@ -15,6 +15,8 @@ Documentation within:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 from xknx.exceptions import (
     ConversionError,
@@ -30,6 +32,7 @@ from xknx.telegram.tpci import TPCI, TDataBroadcast
 from .const import (
     MAX_NPDU_LENGTH,
     STANDARD_FRAME_MAX_NPDU_LENGTH,
+    CEMIAdditionalInfoType,
     CEMIErrorCode,
     CEMIMessageCode,
 )
@@ -42,16 +45,119 @@ from .flags import (
 )
 
 
+@dataclass(slots=True)
+class CEMIBusmonitorStatus:
+    """
+    Busmonitor Error Flags of a cEMI L_Busmon.ind - Additional Information Type 03h.
+
+    Status octet `FBPxLsss` - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.5.8.1
+    """
+
+    frame_error: bool = False
+    bit_error: bool = False
+    parity_error: bool = False
+    overflow: bool = False
+    lost: bool = False
+    sequence_number: int = 0
+
+    @classmethod
+    def from_knx(cls, raw: int) -> CEMIBusmonitorStatus:
+        """Parse the status octet."""
+        return cls(
+            frame_error=bool(raw & 0x80),
+            bit_error=bool(raw & 0x40),
+            parity_error=bool(raw & 0x20),
+            overflow=bool(raw & 0x10),
+            lost=bool(raw & 0x08),
+            sequence_number=raw & 0x07,
+        )
+
+    def to_knx(self) -> int:
+        """Serialize to the status octet."""
+        if not 0 <= self.sequence_number <= 0x07:
+            raise ConversionError(
+                f"Sequence number out of range: {self.sequence_number}"
+            )
+        return (
+            (0x80 if self.frame_error else 0)
+            | (0x40 if self.bit_error else 0)
+            | (0x20 if self.parity_error else 0)
+            | (0x10 if self.overflow else 0)
+            | (0x08 if self.lost else 0)
+            | self.sequence_number
+        )
+
+
 class CEMIInfo:
     """
-    Raw helper class for all CEMI additional info.
+    CEMI Additional Information.
 
-    As specified within KNX Chapter 3.6.3/4.1.4.3 "Additional information".
+    `raw` holds all Additional Information fields - each one Type ID octet, one
+    length octet and its data - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.4.3.1.
+    A receiver may ignore any or all of them, so malformed fields are not
+    rejected; parsing stops at the first one exceeding `raw`.
     """
 
     def __init__(self, raw: bytes = bytes(0)) -> None:
         """Initialize CEMILInfo object."""
         self.raw = raw
+
+    @classmethod
+    def init_from_items(cls, items: Iterable[tuple[int, bytes]]) -> CEMIInfo:
+        """Create from (Type ID, data) pairs. Sorted in ascending order of Type IDs."""
+        return cls(
+            b"".join(
+                bytes((type_id, len(data))) + data
+                for type_id, data in sorted(items, key=lambda item: item[0])
+            )
+        )
+
+    def items(self) -> list[tuple[int, bytes]]:
+        """Return the Additional Information fields as (Type ID, data) pairs."""
+        result: list[tuple[int, bytes]] = []
+        index = 0
+        while index + 2 <= len(self.raw):
+            end = index + 2 + self.raw[index + 1]
+            if end > len(self.raw):
+                break
+            result.append((self.raw[index], self.raw[index + 2 : end]))
+            index = end
+        return result
+
+    def get(self, type_id: int) -> bytes | None:
+        """Return the data of the first field of the given Type ID."""
+        for _type_id, data in self.items():
+            if _type_id == type_id:
+                return data
+        return None
+
+    def _get_int(self, type_id: int, length: int) -> int | None:
+        """Return the data of a fixed length field as unsigned integer."""
+        data = self.get(type_id)
+        if data is None or len(data) != length:
+            return None
+        return int.from_bytes(data, "big")
+
+    @property
+    def busmonitor_status(self) -> CEMIBusmonitorStatus | None:
+        """Return the Busmonitor Status Info - Type ID 03h."""
+        status = self._get_int(CEMIAdditionalInfoType.BUSMONITOR_STATUS_INFO, 1)
+        return None if status is None else CEMIBusmonitorStatus.from_knx(status)
+
+    @property
+    def timestamp_relative(self) -> int | None:
+        """Return the 16 bit relative timestamp in ticks - Type ID 04h."""
+        return self._get_int(CEMIAdditionalInfoType.TIMESTAMP_RELATIVE, 2)
+
+    @property
+    def extended_relative_timestamp(self) -> int | None:
+        """
+        Return the 32 bit extended relative timestamp in ticks - Type ID 06h.
+
+        The time base in nanoseconds per tick is held by PID_TIME_BASE of the cEMI
+        Server - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.4.3.3
+        """
+        return self._get_int(CEMIAdditionalInfoType.EXTENDED_RELATIVE_TIMESTAMP, 4)
 
     def calculated_length(self) -> int:
         """Get length of CEMI info."""
@@ -60,6 +166,10 @@ class CEMIInfo:
     @staticmethod
     def from_knx(raw: bytes) -> tuple[CEMIInfo, bytes]:
         """Parse/deserialize from CEMI raw data."""
+        if not raw or len(raw) <= raw[0]:
+            raise CouldNotParseCEMI(
+                f"CEMI Additional Information exceeds frame; CEMI: {raw.hex()}"
+            )
         length = raw[0]
         return CEMIInfo(raw[1 : length + 1]), raw[length + 1 :]
 
@@ -334,6 +444,39 @@ class CEMILData(CEMIData):
             f'tpci="{self.tpci}" '
             f'payload="{self.payload}")'
         )
+
+
+class CEMIBusmonData(CEMIData):
+    """
+    Representation of a CEMI L_Busmon.ind.
+
+    `raw_frame` holds every octet of the frame as received on the medium,
+    including the check octet - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.5.8.1.
+    Use `xknx.cemi.parse_tp1_frame()` to decode a frame of the TP1 medium.
+    """
+
+    def __init__(self, *, raw_frame: bytes) -> None:
+        """Initialize CEMIBusmonData object."""
+        self.raw_frame = raw_frame
+
+    def calculated_length(self) -> int:
+        """Get length of CEMI data."""
+        return len(self.raw_frame)
+
+    def to_knx(self) -> bytes:
+        """Serialize to CEMI raw data."""
+        return self.raw_frame
+
+    @classmethod
+    def from_knx(cls, raw: bytes) -> CEMIBusmonData:
+        """Parse/deserialize from CEMI raw data."""
+        if not raw:
+            raise CouldNotParseCEMI("CEMI L_Busmon.ind without frame data")
+        return cls(raw_frame=raw)
+
+    def __repr__(self) -> str:
+        """Return object as readable string."""
+        return f'CEMIBusmonData(raw_frame="{self.raw_frame.hex()}")'
 
 
 class CEMIMPropInfo:
@@ -686,6 +829,13 @@ class CEMIFrame:
                 code=code,
                 info=info,
                 data=CEMILData.from_knx(remainder),
+            )
+        if code is CEMIMessageCode.L_BUSMON_IND:
+            info, remainder = CEMIInfo.from_knx(raw[1:])
+            return CEMIFrame(
+                code=code,
+                info=info,
+                data=CEMIBusmonData.from_knx(remainder),
             )
         if code == CEMIMessageCode.M_PROP_READ_REQ:
             return CEMIFrame(code=code, data=CEMIMPropReadRequest.from_knx(raw[1:]))
