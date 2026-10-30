@@ -198,7 +198,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
 
     __slots__ = (
         "_device_authentication_code",
-        "_keepalive_task",
+        "_keepalive_handle",
         "_key",
         "_peer_public_key",
         "_private_key",
@@ -242,7 +242,7 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         self._sequence_number: int = 0
         self._sequence_number_received: int = -1
         self.initialized: bool = False
-        self._keepalive_task: asyncio.Task[None] | None = None
+        self._keepalive_handle: asyncio.TimerHandle | None = None
         self._session_status_handler: KNXIPTransport.Callback | None = None
 
     async def connect(self) -> None:
@@ -385,9 +385,8 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
             return
         super().handle_knxipframe(knxipframe, source)
 
-    async def _session_keepalive(self) -> None:
-        """Keep session alive."""
-        await asyncio.sleep(SESSION_KEEPALIVE_RATE)
+    def _session_keepalive(self) -> None:
+        """Keep session alive. Called by the keepalive timer."""
         self.send(
             KNXIPFrame.init_from_body(
                 SessionStatus(status=SecureSessionStatusCode.STATUS_KEEPALIVE)
@@ -419,16 +418,18 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         return MESSAGE_TAG_TUNNELLING
 
     def start_keepalive_task(self) -> None:
-        """Start or restart session keepalive task."""
-        if self._keepalive_task:
-            self._keepalive_task.cancel()
-        self._keepalive_task = asyncio.create_task(self._session_keepalive())
+        """Start or restart the session keepalive timer."""
+        if self._keepalive_handle:
+            self._keepalive_handle.cancel()
+        self._keepalive_handle = asyncio.get_running_loop().call_later(
+            SESSION_KEEPALIVE_RATE, self._session_keepalive
+        )
 
     def stop_keepalive_task(self) -> None:
-        """Stop keepalive task."""
-        if self._keepalive_task:
-            self._keepalive_task.cancel()
-            self._keepalive_task = None
+        """Stop the session keepalive timer."""
+        if self._keepalive_handle:
+            self._keepalive_handle.cancel()
+            self._keepalive_handle = None
 
     def _handle_session_status(
         self, knxipframe: KNXIPFrame, source: HPAI, transport: KNXIPTransport

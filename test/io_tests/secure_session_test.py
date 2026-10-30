@@ -177,7 +177,8 @@ class TestSecureSession:
 
         await connect_task
         assert self.session.initialized is True
-        assert not self.session._keepalive_task.done()
+        assert self.session._keepalive_handle is not None
+        assert not self.session._keepalive_handle.cancelled()
 
         # handle incoming SessionStatus - SessionStatus is only valid encrypted
         session_status_close_frame = KNXIPFrame.init_from_body(
@@ -208,7 +209,49 @@ class TestSecureSession:
             )
             mock_super_send.assert_called_once()
             mock_transport.close.assert_called_once()
-            assert self.session._keepalive_task is None
+            assert self.session._keepalive_handle is None
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_keepalive_rescheduled_on_send(
+        self,
+        mock_super_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test the keepalive timer is restarted by every encrypted frame sent."""
+        self.session._key = bytes(16)
+        self.session.session_id = self.mock_session_id
+        self.session.initialized = True
+        self.session.start_keepalive_task()
+        first_handle = self.session._keepalive_handle
+        assert first_handle is not None
+
+        await time_travel(SESSION_KEEPALIVE_RATE / 2)
+        mock_super_send.assert_not_called()
+        self.session.send(KNXIPFrame.init_from_body(DisconnectRequest()))
+        mock_super_send.assert_called_once()
+        mock_super_send.reset_mock()
+        # the timer was rescheduled, not left running
+        assert first_handle.cancelled()
+        assert self.session._keepalive_handle is not first_handle
+
+        await time_travel(SESSION_KEEPALIVE_RATE / 2)
+        mock_super_send.assert_not_called()  # the original timer would fire now
+        await time_travel(SESSION_KEEPALIVE_RATE / 2)
+        mock_super_send.assert_called_once()  # keepalive frame
+        keepalive_frame = mock_super_send.call_args.args[0]
+        assert isinstance(keepalive_frame.body, SecureWrapper)
+        # the keepalive frame itself restarts the timer
+        assert self.session._keepalive_handle is not None
+        assert not self.session._keepalive_handle.cancelled()
+        mock_super_send.reset_mock()
+        await time_travel(SESSION_KEEPALIVE_RATE)
+        mock_super_send.assert_called_once()
+
+        self.session.stop_keepalive_task()
+        assert self.session._keepalive_handle is None
+        mock_super_send.reset_mock()
+        await time_travel(SESSION_KEEPALIVE_RATE * 2)
+        mock_super_send.assert_not_called()
 
     def test_uninitialized(self) -> None:
         """Test for raising when an encrypted Frame arrives at an uninitialized Session."""

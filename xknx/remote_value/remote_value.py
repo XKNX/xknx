@@ -37,6 +37,10 @@ ValueT = TypeVar("ValueT")
 
 RVCallbackType = Callable[[ValueT], None]
 
+# module constants: `A | B` in `isinstance()` builds a new `UnionType` on every call
+_DEVICE_GROUP_ADDRESS_TYPES = (GroupAddress, InternalGroupAddress)
+_GROUP_VALUE_PAYLOAD_TYPES = (GroupValueWrite, GroupValueResponse)
+
 
 class RemoteValue(ABC, Generic[ValueT]):
     """Class for managing remote knx value."""
@@ -195,13 +199,11 @@ class RemoteValue(ABC, Generic[ValueT]):
     ) -> bool:
         """Process incoming or outgoing telegram."""
         if (
-            not isinstance(
-                telegram.destination_address, GroupAddress | InternalGroupAddress
-            )
+            not isinstance(telegram.destination_address, _DEVICE_GROUP_ADDRESS_TYPES)
             or telegram.destination_address not in self.group_addresses()
         ):
             return False
-        if not isinstance(telegram.payload, GroupValueWrite | GroupValueResponse):
+        if not isinstance(telegram.payload, _GROUP_VALUE_PAYLOAD_TYPES):
             raise CouldNotParseTelegram(
                 "payload not a GroupValueWrite or GroupValueResponse",
                 payload=str(telegram.payload),
