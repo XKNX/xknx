@@ -71,7 +71,13 @@ from .dpt_5 import (
     DPTValue1ByteUnsigned,
     DPTValue1Ucount,
 )
-from .dpt_6 import DPTPercentV8, DPTSignedRelativeValue, DPTValue1Count
+from .dpt_6 import (
+    DPTPercentV8,
+    DPTSignedRelativeValue,
+    DPTStatusMode3,
+    DPTValue1Count,
+    StatusMode3,
+)
 from .dpt_7 import (
     DPT2ByteUnsigned,
     DPT2Ucount,
@@ -104,6 +110,7 @@ from .dpt_9 import (
     DPT2ByteFloat,
     DPTAbsoluteHumidity,
     DPTAirFlow,
+    DPTCoefficient,
     DPTConcentrationUGM3,
     DPTCurrent,
     DPTEnthalpy,
@@ -217,6 +224,7 @@ from .dpt_14 import (
     DPTPowerFactor,
     DPTPressure,
     DPTReactance,
+    DPTReactivePower,
     DPTResistance,
     DPTResistivity,
     DPTSelfInductance,
@@ -244,11 +252,64 @@ from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
 from .dpt_19 import DPTDateTime
 from .dpt_20 import (
+    DPTActuatorConnectType,
+    DPTADAType,
+    DPTAddInfoTypes,
+    DPTAlarmClassType,
+    DPTApplicationArea,
+    DPTBackupMode,
+    DPTBeaufortWindForceScale,
+    DPTBehaviourBusPowerUpDown,
+    DPTBehaviourLockUnlock,
+    DPTBlindsControlMode,
+    DPTBlinkingMode,
+    DPTBuildingMode,
+    DPTBurnerType,
     DPTChangeoverMode,
+    DPTCloudCover,
+    DPTCommMode,
+    DPTConverterControl,
+    DPTConverterDataRequest,
+    DPTConverterTestControl,
+    DPTDALIFadeTime,
+    DPTDamperMode,
+    DPTDHWMode,
+    DPTDimmPBModel,
     DPTEnableHCStage,
+    DPTErrorClassHVAC,
+    DPTFanMode,
+    DPTFuelType,
+    DPTHeaterMode,
+    DPTHumDehumMode,
     DPTHVACContrMode,
+    DPTHVACEmergMode,
     DPTHVACMode,
     DPTHVACStatus,
+    DPTLightApplicationMode,
+    DPTLightControlMode,
+    DPTLoadPriority,
+    DPTLoadTypeDetected,
+    DPTLoadTypeSet,
+    DPTMasterSlaveMode,
+    DPTMeteringDeviceType,
+    DPTOccMode,
+    DPTPBAction,
+    DPTPowerReturnMode,
+    DPTPriority,
+    DPTPSUMode,
+    DPTRFFilterSelect,
+    DPTRFModeSelect,
+    DPTSABBehaviourLockUnlock,
+    DPTSABExceptBehaviour,
+    DPTSCLOMode,
+    DPTSensorSelect,
+    DPTSSSBMode,
+    DPTStartSynchronization,
+    DPTStatusRoomSetp,
+    DPTSwitchOnMode,
+    DPTSwitchPBModel,
+    DPTTimeDelay,
+    DPTValveMode,
 )
 from .dpt_21 import (
     ChannelActivation8,
@@ -300,6 +361,7 @@ from .dpt_22 import (
     RoomHeatingCoolingControllerStatus,
     SupportedMedia,
 )
+from .dpt_23 import DPTAlarmReaction, DPTHVACPBAction, DPTOnOffAction, DPTUpDownAction
 from .dpt_25 import DoubleNibble, DPTDoubleNibble
 from .dpt_26 import DPTSceneInfo, SceneInfo
 from .dpt_27 import CombinedInfoOnOff, DPTCombinedInfoOnOff
