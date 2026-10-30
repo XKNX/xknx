@@ -340,7 +340,7 @@ async def test_dmp_interface_object_scan_r_object_index_exhausted(
         await _wait_for_request(xknx, 2)
         _prop_val(xknx, ia, seq=1, object_index=0, property_id=1, data=b"\x00\x01")
         await _wait_for_request(xknx, 3)
-        _prop_desc(xknx, ia, seq=2, object_index=0, property_id=0, property_index=1)
+        _prop_desc(xknx, ia, seq=2, object_index=0, property_id=0, property_index=0)
 
     responder = asyncio.create_task(respond())
     with (

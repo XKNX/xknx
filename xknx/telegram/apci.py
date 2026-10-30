@@ -492,12 +492,26 @@ class APCIRequest(_APCIWithResponse[APCIResponseT]):
     """
     Base class for point-to-point request services.
 
-    `P2PConnection.request()` infers the expected response from the payload's
-    type alone, verifies the received telegram against it and returns it
-    narrowed to `Telegram[<the response class>]`.
+    `P2PConnection.request()` and `P2PConnectionless.request()` infer the
+    expected response from the payload's type, wait for a received telegram
+    that `is_response()` accepts and return it narrowed to
+    `Telegram[<the response class>]`.
     """
 
     __slots__ = ()
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It has to be a `RESPONSE_TYPE`. Services that address memory or an
+        Interface Object Property also need the response to name the same
+        address or Property, as the remote application answers with the values
+        of the request - KNX v02.01.01 - Application Layer 03.03.07 - §3.4,
+        §3.5. A late response to an earlier request, e.g. one repeated after a
+        timeout, is no response to this one then.
+        """
+        return isinstance(payload, self.RESPONSE_TYPE)
 
 
 class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT]):
@@ -778,6 +792,15 @@ class ADCRead(APCIRequest[ADCResponse]):
     channel: int
     count: int = 1
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It reads the same channel - KNX v02.01.01 - Application Layer 03.03.07 -
+        §3.5.2.
+        """
+        return isinstance(payload, ADCResponse) and payload.channel == self.channel
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 2
@@ -1001,6 +1024,20 @@ class FunctionPropertyExtStateRead(APCIRequest[FunctionPropertyExtStateResponse]
     object_instance: int
     property_id: int
     data: bytes = b""
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object and Property - KNX v02.01.01 -
+        Application Layer 03.03.07 - §3.4.8.2.
+        """
+        return (
+            isinstance(payload, FunctionPropertyExtStateResponse)
+            and payload.interface_object_type == self.interface_object_type
+            and payload.object_instance == self.object_instance
+            and payload.property_id == self.property_id
+        )
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -1352,6 +1389,21 @@ class PropertyExtValueWriteCon(APCIRequest[PropertyExtValueWriteConRes]):
     start_index: int = 0
     data: bytes = b""
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object, Property and start index - KNX
+        v02.01.01 - Application Layer 03.03.07 - §3.4.5.2.
+        """
+        return (
+            isinstance(payload, PropertyExtValueWriteConRes)
+            and payload.interface_object_type == self.interface_object_type
+            and payload.object_instance == self.object_instance
+            and payload.property_id == self.property_id
+            and payload.start_index == self.start_index
+        )
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 9 + len(self.data)
@@ -1653,6 +1705,21 @@ class PropertyExtValueRead(APCIRequest[PropertyExtValueResponse]):
     nr_of_elem: int = 1
     start_index: int = 0
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object, Property and start index - KNX
+        v02.01.01 - Application Layer 03.03.07 - §3.4.5.1.
+        """
+        return (
+            isinstance(payload, PropertyExtValueResponse)
+            and payload.interface_object_type == self.interface_object_type
+            and payload.object_instance == self.object_instance
+            and payload.property_id == self.property_id
+            and payload.start_index == self.start_index
+        )
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 9
@@ -1850,6 +1917,25 @@ class PropertyExtDescriptionRead(APCIRequest[PropertyExtDescriptionResponse]):
     description_type: int = 0
     property_index: int = 0
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object, and the same Property ID, or the
+        same Property index when the request's Property ID is 0 - KNX v02.01.01 -
+        Application Layer 03.03.07 - §3.4.3.2.
+        """
+        return (
+            isinstance(payload, PropertyExtDescriptionResponse)
+            and payload.interface_object_type == self.interface_object_type
+            and payload.object_instance == self.object_instance
+            and (
+                payload.property_id == self.property_id
+                if self.property_id
+                else payload.property_index == self.property_index
+            )
+        )
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 8
@@ -1974,6 +2060,18 @@ class MemoryExtendedWrite(APCIRequest[MemoryExtendedWriteResponse]):
     data: bytes
     count: int = None  # type: ignore[assignment]
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same address - KNX v02.01.01 - Application Layer 03.03.07 -
+        §3.4.9.2.
+        """
+        return (
+            isinstance(payload, MemoryExtendedWriteResponse)
+            and payload.address == self.address
+        )
+
     def __post_init__(self) -> None:
         """Post-initialization steps."""
         if self.count is None:
@@ -2086,6 +2184,18 @@ class MemoryExtendedRead(APCIRequest[MemoryExtendedReadResponse]):
 
     count: int
     address: int
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same address - KNX v02.01.01 - Application Layer 03.03.07 -
+        §3.4.9.1.
+        """
+        return (
+            isinstance(payload, MemoryExtendedReadResponse)
+            and payload.address == self.address
+        )
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -2256,6 +2366,15 @@ class MemoryRead(APCIRequest[MemoryResponse]):
 
     address: int
     count: int = 1
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same address - KNX v02.01.01 - Application Layer 03.03.07 -
+        §3.5.3.
+        """
+        return isinstance(payload, MemoryResponse) and payload.address == self.address
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -2643,6 +2762,17 @@ class UserMemoryRead(APCIRequest[UserMemoryResponse]):
     address: int = 0
     count: int = 1
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same address - KNX v02.01.01 - Application Layer 03.03.07 -
+        §3.5.6.2.
+        """
+        return (
+            isinstance(payload, UserMemoryResponse) and payload.address == self.address
+        )
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 4
@@ -2918,6 +3048,19 @@ class FunctionPropertyStateRead(APCIRequest[FunctionPropertyStateResponse]):
     object_index: int = 0
     property_id: int = 0
     data: bytes = b""
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object and Property - KNX v02.01.01 -
+        Application Layer 03.03.07 - §3.4.7.2.
+        """
+        return (
+            isinstance(payload, FunctionPropertyStateResponse)
+            and payload.object_index == self.object_index
+            and payload.property_id == self.property_id
+        )
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -3832,6 +3975,20 @@ class PropertyValueWrite(APCIRequest[PropertyValueResponse]):
     start_index: int = 0
     data: bytes = b""
 
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object, Property and start index - KNX
+        v02.01.01 - Application Layer 03.03.07 - §3.4.4.2.
+        """
+        return (
+            isinstance(payload, PropertyValueResponse)
+            and payload.object_index == self.object_index
+            and payload.property_id == self.property_id
+            and payload.start_index == self.start_index
+        )
+
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
         return 5 + len(self.data)
@@ -3905,6 +4062,20 @@ class PropertyValueRead(APCIRequest[PropertyValueResponse]):
     property_id: int = 0
     count: int = 1
     start_index: int = 1
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object, Property and start index - KNX
+        v02.01.01 - Application Layer 03.03.07 - §3.4.4.1.
+        """
+        return (
+            isinstance(payload, PropertyValueResponse)
+            and payload.object_index == self.object_index
+            and payload.property_id == self.property_id
+            and payload.start_index == self.start_index
+        )
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
@@ -4064,6 +4235,24 @@ class PropertyDescriptionRead(APCIRequest[PropertyDescriptionResponse]):
     object_index: int = 0
     property_id: int = 0
     property_index: int = 0
+
+    def is_response(self, payload: APCI | None) -> bool:
+        """
+        Return whether `payload` is the response to this request.
+
+        It names the same Interface Object, and the same Property ID, or the
+        same Property index when the request's Property ID is 0 - KNX v02.01.01 -
+        Application Layer 03.03.07 - §3.4.3.1.
+        """
+        return (
+            isinstance(payload, PropertyDescriptionResponse)
+            and payload.object_index == self.object_index
+            and (
+                payload.property_id == self.property_id
+                if self.property_id
+                else payload.property_index == self.property_index
+            )
+        )
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import deque
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import aclosing, asynccontextmanager
 import logging
@@ -432,13 +433,13 @@ class P2PConnectionless:
         """
         Send a payload to the KNX device and wait for the response.
 
-        This is `send()` followed by the first telegram of `receive()`. If the
-        payload is an `APCIRequest`, the first telegram from the device carrying
-        its `RESPONSE_TYPE` is returned and any other telegram is skipped -
-        unlike a connection, the connectionless channel has no sequence to tell
-        a response from unrelated traffic. Otherwise the first telegram from the
-        device is returned. Use `send()` and `receive()` directly to see more
-        than the first response.
+        This is `send()` followed by the first telegram of `receive()` that
+        answers it. If the payload is an `APCIRequest`, that is the first
+        telegram from the device its `is_response()` accepts - one of its
+        `RESPONSE_TYPE`, naming the same address or Property - and any other
+        telegram is skipped. Otherwise the first telegram from the device is
+        returned. Use `send()` and `receive()` directly to see more than the
+        first response.
 
         Telegrams queued before the request is sent are discarded, so a late
         response to an earlier request that timed out is not mistaken for this
@@ -463,6 +464,16 @@ class P2PConnectionless:
             await self.send(payload)
             async with aclosing(self.receive(expected, timeout=timeout)) as telegrams:
                 async for telegram in telegrams:
+                    if isinstance(payload, APCIRequest) and not payload.is_response(
+                        telegram.payload
+                    ):
+                        logger.debug(
+                            "%s: ignoring %s, it is no response to %s",
+                            self.address,
+                            telegram.payload,
+                            payload,
+                        )
+                        continue
                     self._last_response_time = time.time()
                     return telegram
             raise ManagementConnectionTimeout(f"Timeout while waiting for {expected}")
@@ -476,6 +487,7 @@ class P2PConnection:
         "_connected",
         "_expected_sequence_number",
         "_last_response_time",
+        "_queued_responses",
         "_response_waiter",
         "address",
         "disconnect_hook",
@@ -491,6 +503,8 @@ class P2PConnection:
         rate_limit: int = MANAGEMENT_RATE_LIMIT,
     ) -> None:
         """Initialize P2PConnection class."""
+        # telegrams received while `_response_waiter` already holds one, in order
+        self._queued_responses: deque[Telegram] = deque()
         self.xknx = xknx
         self.address = address
         self.disconnect_hook: Callable[[], None]
@@ -628,11 +642,9 @@ class P2PConnection:
             )
             return
         if self._response_waiter.done():
-            logger.warning(
-                "Received unexpected point-to-point telegram for %s: %s",
-                self.address,
-                telegram,
-            )
+            # e.g. a late response to an earlier request right before the
+            # response the waiting request is after - keep it for `_receive()`
+            self._queued_responses.append(telegram)
             return
         self._response_waiter.set_result(telegram)
 
@@ -699,24 +711,66 @@ class P2PConnection:
                 f"Ack sequence number {ack.sequence_number} does not match request sequence number of {telegram}"
             )
 
-    async def _receive(self, expected_payload: type[APCI] | None) -> Telegram:
-        """Wait for a telegram from the KNX device."""
-        try:
-            async with asyncio.timeout(MANAGEMENT_CONNECTION_TIMEOUT):
-                telegram = await self._response_waiter
-        except TimeoutError:
-            raise ManagementConnectionTimeout(
-                f"Timeout while waiting for {expected_payload}"
-            ) from None
-        finally:
-            # set up new Future for the next request
-            self._response_waiter = asyncio.get_event_loop().create_future()
+    def _discard_unclaimed_responses(self, payload: APCI) -> None:
+        """
+        Drop the responses that arrived while no request waited for one.
 
-        if expected_payload and not isinstance(telegram.payload, expected_payload):
-            raise ManagementConnectionError(
-                f"Received unexpected telegram: {telegram.payload}"
+        They answer an earlier request - e.g. a second response to one that was
+        sent again after its acknowledgement got lost - not the one about to be
+        sent.
+        """
+        waiter = self._response_waiter
+        if not waiter.done():
+            return
+        unclaimed = list(self._queued_responses)
+        self._queued_responses.clear()
+        if not waiter.cancelled() and waiter.exception() is None:
+            unclaimed.insert(0, waiter.result())
+        for telegram in unclaimed:
+            logger.debug(
+                "%s: ignoring %s received before %s",
+                self.address,
+                telegram.payload,
+                payload,
             )
-        return telegram
+        self._response_waiter = asyncio.get_event_loop().create_future()
+
+    def _renew_response_waiter(self) -> None:
+        """Set up the Future for the next response, holding a queued one if any."""
+        self._response_waiter = asyncio.get_event_loop().create_future()
+        if self._queued_responses:
+            self._response_waiter.set_result(self._queued_responses.popleft())
+
+    async def _receive(self, request: APCI) -> Telegram:
+        """
+        Wait for the response of the KNX device to `request`.
+
+        For an `APCIRequest` a telegram that `request.is_response()` does not
+        accept is skipped, and the wait goes on until the timeout. Otherwise the
+        first telegram is returned.
+        """
+        expected = request.RESPONSE_TYPE if isinstance(request, APCIRequest) else None
+        deadline = asyncio.get_running_loop().time() + MANAGEMENT_CONNECTION_TIMEOUT
+        while True:
+            try:
+                async with asyncio.timeout_at(deadline):
+                    telegram = await self._response_waiter
+            except TimeoutError:
+                raise ManagementConnectionTimeout(
+                    f"Timeout while waiting for {expected}"
+                ) from None
+            finally:
+                self._renew_response_waiter()
+            if not isinstance(request, APCIRequest) or request.is_response(
+                telegram.payload
+            ):
+                return telegram
+            logger.debug(
+                "%s: ignoring %s, it is no response to %s",
+                self.address,
+                telegram.payload,
+                request,
+            )
 
     @overload
     async def request(
@@ -728,8 +782,12 @@ class P2PConnection:
         """
         Send a payload to the KNX device and wait for the response.
 
-        The response is verified against `type(payload).RESPONSE_TYPE` if the
-        payload defines one - see `APCIRequest`.
+        If the payload is an `APCIRequest`, the response is the first telegram
+        its `is_response()` accepts - one of its `RESPONSE_TYPE`, naming the same
+        address or Property - and any other telegram is skipped. A response that
+        arrived before the request was sent is dropped, as it answers an earlier
+        one. Otherwise the first telegram from the device is returned. Raises
+        `ManagementConnectionTimeout` if no response arrives in time.
         """
         if not self._connected:
             raise ManagementConnectionRefused(
@@ -743,8 +801,8 @@ class P2PConnection:
             if time_diff < wait_time:
                 await asyncio.sleep(wait_time - time_diff)
 
-        expected = payload.RESPONSE_TYPE if isinstance(payload, APCIRequest) else None
+        self._discard_unclaimed_responses(payload)
         await self.send_data(payload)
-        response = await self._receive(expected)
+        response = await self._receive(payload)
         self._last_response_time = time.time()
         return response

@@ -37,7 +37,8 @@ async def dmp_mem_read_r_co(
     :raises ValueError: If size is negative, the address range is out of
         range, or max_apdu_length is not positive
     :raises ManagementConnectionError: If a chunk's response carries fewer
-        octets than requested, or echoes a different address than requested
+        octets than requested (a response echoing a different address is no
+        response to the chunk's request - `P2PConnection.request()` skips it)
     """
     if size < 0:
         raise ValueError(f"size must be >= 0, got {size}")
@@ -66,11 +67,6 @@ async def dmp_mem_read_r_co(
         response = await conn.request(
             apci.MemoryRead(address=current_address, count=chunk_size)
         )
-        if response.payload.address != current_address:
-            raise ManagementConnectionError(
-                f"Memory read failed: requested address {current_address:#06x}, "
-                f"response echoed {response.payload.address:#06x}"
-            )
         if len(response.payload.data) != chunk_size:
             raise ManagementConnectionError(
                 f"Memory read failed: address {current_address:#06x} requested "
