@@ -117,7 +117,9 @@ _PROPERTY_WRITE = PropertyValueWrite(
         (_PROPERTY_WRITE, MemoryResponse(address=0x4003, data=bytes(10)), False),
         (
             _PROPERTY_WRITE,
-            PropertyValueResponse(object_index=1, property_id=5, count=0, start_index=1),
+            PropertyValueResponse(
+                object_index=1, property_id=5, count=0, start_index=1
+            ),
             True,
         ),
         (
@@ -169,7 +171,9 @@ _PROPERTY_WRITE = PropertyValueWrite(
         # Property descriptions: by Property ID, or by index when the ID is 0
         (
             PropertyDescriptionRead(object_index=1, property_id=5),
-            PropertyDescriptionResponse(object_index=1, property_id=5, property_index=3),
+            PropertyDescriptionResponse(
+                object_index=1, property_id=5, property_index=3
+            ),
             True,
         ),
         (
@@ -179,12 +183,16 @@ _PROPERTY_WRITE = PropertyValueWrite(
         ),
         (
             PropertyDescriptionRead(object_index=1, property_id=0, property_index=3),
-            PropertyDescriptionResponse(object_index=1, property_id=5, property_index=3),
+            PropertyDescriptionResponse(
+                object_index=1, property_id=5, property_index=3
+            ),
             True,
         ),
         (
             PropertyDescriptionRead(object_index=1, property_id=0, property_index=3),
-            PropertyDescriptionResponse(object_index=1, property_id=5, property_index=4),
+            PropertyDescriptionResponse(
+                object_index=1, property_id=5, property_index=4
+            ),
             False,
         ),
         (
