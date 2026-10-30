@@ -29,10 +29,16 @@ from xknx.knxip import (
     KNXIPFrame,
     KNXIPServiceType,
     TunnellingAck,
+    TunnellingFeatureGet,
+    TunnellingFeatureInfo,
+    TunnellingFeatureResponse,
+    TunnellingFeatureSet,
+    TunnellingFeatureType,
     TunnellingRequest,
 )
 from xknx.telegram import IndividualAddress
 
+from .const import TUNNELLING_FEATURE_RESPONSE_TIMEOUT
 from .data_connection import (
     ConnectionHeartbeat,
     IncomingSequenceCounter,
@@ -56,6 +62,8 @@ class _Tunnel(Interface):
 
     __slots__ = (
         "_data_endpoint_addr",
+        "_feature_lock",
+        "_feature_response_waiter",
         "_heartbeat",
         "_reconnect_task",
         "_requested_address",
@@ -99,12 +107,23 @@ class _Tunnel(Interface):
         self._requested_address: IndividualAddress | None = None
         self._src_address = IndividualAddress(0)
         self._send_lock = asyncio.Lock()
+        self._feature_lock = asyncio.Lock()
+        # resolved with None when the tunnel is closed
+        self._feature_response_waiter: (
+            tuple[
+                TunnellingFeatureType,
+                asyncio.Future[TunnellingFeatureResponse | None],
+            ]
+            | None
+        ) = None
 
         self._init_transport()
         self.transport.register_callback(
             self._request_received,
             [
                 KNXIPServiceType.TUNNELLING_REQUEST,
+                KNXIPServiceType.TUNNELLING_FEATURE_RESPONSE,
+                KNXIPServiceType.TUNNELLING_FEATURE_INFO,
                 KNXIPServiceType.DISCONNECT_REQUEST,
             ],
         )
@@ -221,6 +240,8 @@ class _Tunnel(Interface):
     def _prepare_disconnect(self) -> None:
         """Prepare for disconnect. Stop tunnel related tasks and set connection state."""
         self.stop_heartbeat()
+        if (pending := self._feature_response_waiter) and not pending[1].done():
+            pending[1].set_result(None)
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
@@ -359,12 +380,121 @@ class _Tunnel(Interface):
         await self._send_tunnelling_request(tunnelling_request)
 
     @abstractmethod
-    async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
-        """Send TunnellingRequest frame to tunnelling device."""
+    async def _send_tunnelling_request(
+        self, frame: TunnellingRequest | TunnellingFeatureGet | TunnellingFeatureSet
+    ) -> None:
+        """Send TunnellingRequest or Tunnelling Feature frame to tunnelling device."""
 
     def _increase_sequence_number(self) -> None:
         """Increase sequence number."""
         self.sequence_number = self.sequence_number + 1 & 0xFF
+
+    async def feature_get(
+        self, feature_type: TunnellingFeatureType
+    ) -> TunnellingFeatureResponse:
+        """
+        Read an Interface Feature of the tunnelling server.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §3.2 TUNNELLING_FEATURE_GET. The
+        response's `return_code` tells whether the feature is supported, e.g.
+        `E_ADDRESS_VOID` for an unknown one (§3.5); its value is in `data`.
+        The value encodings are given in §3.6, e.g. U16 for `MAX_APDU_LENGTH`
+        (§3.6.8), DPT 1.003 for `INTERFACE_FEATURE_INFO_ENABLE` (§3.6.9) and the
+        tunnel's Individual Address for `INTERFACE_INDIVIDUAL_ADDRESS` (§3.6.7).
+        """
+        return await self._feature_request(
+            TunnellingFeatureGet(feature_type=feature_type)
+        )
+
+    async def feature_set(
+        self, feature_type: TunnellingFeatureType, data: bytes
+    ) -> TunnellingFeatureResponse:
+        """
+        Write an Interface Feature of the tunnelling server.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §3.3 TUNNELLING_FEATURE_SET. The
+        response carries the written value and a `return_code`. A
+        TUNNELLING_FEATURE_INFO enabled by `INTERFACE_FEATURE_INFO_ENABLE`
+        (§3.6.9) is acknowledged and dropped.
+        """
+        return await self._feature_request(
+            TunnellingFeatureSet(feature_type=feature_type, data=data)
+        )
+
+    async def _feature_request(
+        self, frame: TunnellingFeatureGet | TunnellingFeatureSet
+    ) -> TunnellingFeatureResponse:
+        """
+        Send a Tunnelling Feature service and wait for its response.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §3.1: it is confirmed and sequence
+        numbered like a TUNNELLING_REQUEST, so it shares the outgoing sequence
+        counter and its error handling (§2.6.1). A server without Tunnelling
+        Feature services ignores it (§3.5), so its support is checked before by
+        `KNXIPInterface.tunnelling_feature_get()` / `tunnelling_feature_set()`.
+        """
+        async with self._feature_lock:
+            try:
+                async with self._send_ready():
+                    if self.communication_channel is None:
+                        raise CommunicationError(
+                            "Sending Tunnelling Feature request failed. "
+                            "No active communication channel."
+                        )
+                    frame.communication_channel_id = self.communication_channel
+                    frame.sequence_counter = self.sequence_number
+                    waiter: asyncio.Future[TunnellingFeatureResponse | None] = (
+                        asyncio.get_running_loop().create_future()
+                    )
+                    self._feature_response_waiter = (frame.feature_type, waiter)
+                    try:
+                        await self._send_feature_frame(frame)
+                    finally:
+                        self._increase_sequence_number()
+                try:
+                    async with asyncio.timeout(TUNNELLING_FEATURE_RESPONSE_TIMEOUT):
+                        response = await waiter
+                except TimeoutError:
+                    raise CommunicationError(
+                        "No TUNNELLING_FEATURE_RESPONSE received for "
+                        f"{frame.feature_type.name}."
+                    ) from None
+                if response is None:
+                    raise CommunicationError(
+                        "Tunnel was closed before a TUNNELLING_FEATURE_RESPONSE "
+                        f"was received for {frame.feature_type.name}."
+                    )
+                return response
+            finally:
+                self._feature_response_waiter = None
+
+    async def _send_feature_frame(
+        self, frame: TunnellingFeatureGet | TunnellingFeatureSet
+    ) -> None:
+        """
+        Send a Tunnelling Feature frame; close the tunnel if it is not acknowledged.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §2.6.1: repeated once with the same
+        sequence counter, then the connection is terminated.
+        """
+        try:
+            await self._send_tunnelling_request(frame)
+        except TunnellingAckError as err:
+            logger.debug("First Tunnelling Feature request try failed. %s", err)
+        else:
+            return
+        try:
+            await self._send_tunnelling_request(frame)
+        except TunnellingAckError as err:
+            logger.debug("Second Tunnelling Feature request try failed. %s", err)
+        else:
+            return
+        if self._reconnect_task is None:
+            self._tunnel_lost()
+        raise CommunicationError(
+            f"Sending Tunnelling Feature request for {frame.feature_type.name} "
+            "failed twice. Tunnel connection lost."
+        )
 
     ####################
     #
@@ -378,6 +508,10 @@ class _Tunnel(Interface):
         """Handle incoming requests."""
         if isinstance(knxipframe.body, TunnellingRequest):
             self._tunnelling_request_received(knxipframe.body)
+        elif isinstance(knxipframe.body, TunnellingFeatureResponse):
+            self._tunnelling_feature_response_received(knxipframe.body)
+        elif isinstance(knxipframe.body, TunnellingFeatureInfo):
+            self._tunnelling_feature_info_received(knxipframe.body)
         elif isinstance(knxipframe.body, DisconnectRequest):
             self._disconnect_request_received(knxipframe.body)
         else:
@@ -388,6 +522,25 @@ class _Tunnel(Interface):
     ) -> None:
         """Handle incoming tunnel request."""
         self.cemi_received_callback(tunneling_request.raw_cemi)
+
+    def _tunnelling_feature_response_received(
+        self, response: TunnellingFeatureResponse
+    ) -> None:
+        """Hand a TunnellingFeatureResponse to the pending feature request."""
+        pending = self._feature_response_waiter
+        if (
+            pending is None
+            or pending[1].done()
+            or response.communication_channel_id != self.communication_channel
+            or response.feature_type != pending[0]
+        ):
+            logger.debug("Received unexpected TunnellingFeatureResponse: %s", response)
+            return
+        pending[1].set_result(response)
+
+    def _tunnelling_feature_info_received(self, info: TunnellingFeatureInfo) -> None:
+        """Drop a TunnellingFeatureInfo - it is not processed."""
+        logger.debug("Dropping TunnellingFeatureInfo: %s", info)
 
     def _disconnect_request_received(
         self, disconnect_request: DisconnectRequest
@@ -555,7 +708,9 @@ class UDPTunnel(_Tunnel):
             finally:
                 self._increase_sequence_number()
 
-    async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
+    async def _send_tunnelling_request(
+        self, frame: TunnellingRequest | TunnellingFeatureGet | TunnellingFeatureSet
+    ) -> None:
         """Send Telegram to tunnelling device."""
         tunnelling = Tunnelling(
             transport=self.transport,
@@ -617,39 +772,72 @@ class UDPTunnel(_Tunnel):
         self, tunneling_request: TunnellingRequest
     ) -> None:
         """Handle incoming tunnelling request."""
-        verdict = self._sequence.evaluate(tunneling_request.sequence_counter)
+        if self._accept_sequenced(tunneling_request):
+            super()._tunnelling_request_received(tunneling_request)
+
+    def _tunnelling_feature_response_received(
+        self, response: TunnellingFeatureResponse
+    ) -> None:
+        """
+        Handle incoming tunnelling feature response.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §3.1: it is acknowledged and its
+        sequence counter checked like a TunnellingRequest from the server.
+        """
+        if self._accept_sequenced(response):
+            super()._tunnelling_feature_response_received(response)
+
+    def _tunnelling_feature_info_received(self, info: TunnellingFeatureInfo) -> None:
+        """
+        Handle incoming tunnelling feature info.
+
+        KNX v01.07.01 - Tunnelling 03.08.04 - §3.1: it is acknowledged and its
+        sequence counter checked like a TunnellingRequest from the server.
+        """
+        if self._accept_sequenced(info):
+            super()._tunnelling_feature_info_received(info)
+
+    def _accept_sequenced(
+        self,
+        frame: TunnellingRequest | TunnellingFeatureResponse | TunnellingFeatureInfo,
+    ) -> bool:
+        """Acknowledge a sequenced frame from the server; return if it is to be processed."""
+        name = type(frame).__name__
+        verdict = self._sequence.evaluate(frame.sequence_counter)
         if verdict is SequenceVerdict.EXPECTED:
             # valid frame received - cancel scheduled reconnect for invalid sequence number
             self._cancel_invalid_sequence_number_reconnect_schedule()
 
             self._send_tunnelling_ack(
-                tunneling_request.communication_channel_id,
-                tunneling_request.sequence_counter,
+                frame.communication_channel_id,
+                frame.sequence_counter,
             )
-            super()._tunnelling_request_received(tunneling_request)
-            return
+            return True
         if verdict is SequenceVerdict.REPEATED:
             self._send_tunnelling_ack(
-                tunneling_request.communication_channel_id,
-                tunneling_request.sequence_counter,
+                frame.communication_channel_id,
+                frame.sequence_counter,
             )
             logger.debug(
-                "Received TunnellingRequest with sequence number one less than expected. "
+                "Received %s with sequence number one less than expected. "
                 "Discarding frame: %s",
-                tunneling_request,
+                name,
+                frame,
             )
-            return
+            return False
         logger.warning(
-            "Received TunnellingRequest with sequence number not equal to expected: %s. "
+            "Received %s with sequence number not equal to expected: %s. "
             "Discarding frame: %s",
+            name,
             self._sequence.expected,
-            tunneling_request,
+            frame,
         )
         # Tunnelling server should repeat that frame and disconnect after that was also not ACKed.
         # According to KNX specification we should just drop the frame.
         # Some interfaces don't initiate a disconnect here so we take a shortcut and disconnect
         # ourselves when we don't receive the expected frame after a short delay (mixed up frames?).
         self._invalid_sequence_number_reconnect_schedule()
+        return False
 
     def _send_tunnelling_ack(
         self, communication_channel_id: int, sequence_counter: int
@@ -705,7 +893,9 @@ class TCPTunnel(_Tunnel):
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
 
-    async def _send_tunnelling_request(self, frame: TunnellingRequest) -> None:
+    async def _send_tunnelling_request(
+        self, frame: TunnellingRequest | TunnellingFeatureGet | TunnellingFeatureSet
+    ) -> None:
         """Send Telegram to tunnelling device."""
         self.transport.send(KNXIPFrame.init_from_body(frame))
 
