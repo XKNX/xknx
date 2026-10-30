@@ -568,6 +568,180 @@ async def test_p2p_rate_limit(
     await task
 
 
+_PROPERTY_WRITE = apci.PropertyValueWrite(
+    object_index=1, property_id=5, count=1, start_index=1, data=bytes(10)
+)
+_PROPERTY_RESPONSE = apci.PropertyValueResponse(
+    object_index=1, property_id=5, count=1, start_index=1, data=b"\x02"
+)
+# a second response to a memory read that was sent again after a lost ACK
+_LATE_MEMORY_RESPONSE = apci.MemoryResponse(address=0x4003, data=bytes(10))
+
+
+def _connected_telegram(
+    source: IndividualAddress, control: tpci.TPCI, payload: apci.APCI | None = None
+) -> Telegram:
+    """Build an incoming telegram of a point-to-point connection."""
+    return Telegram(
+        source_address=source,
+        destination_address=IndividualAddress(0),
+        direction=TelegramDirection.INCOMING,
+        tpci=control,
+        payload=payload,
+    )
+
+
+async def test_p2p_request_skips_a_response_to_another_request() -> None:
+    """Test that a request returns the response naming its Property, not a late one."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+
+    task = asyncio.create_task(conn.request(_PROPERTY_WRITE))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), _LATE_MEMORY_RESPONSE)
+    )
+    await asyncio.sleep(0)
+    # a response about another Property of the same object
+    xknx.management.process(
+        _connected_telegram(
+            ia,
+            tpci.TDataConnected(1),
+            apci.PropertyValueResponse(object_index=1, property_id=6, start_index=1),
+        )
+    )
+    await asyncio.sleep(0)
+    assert not task.done()
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(2), _PROPERTY_RESPONSE)
+    )
+    assert (await task).payload == _PROPERTY_RESPONSE
+
+
+async def test_p2p_request_drops_a_response_received_before_it() -> None:
+    """Test that a response that arrived while no request waited answers none."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+    stale = apci.PropertyValueResponse(
+        object_index=1, property_id=5, count=1, start_index=1, data=b"\x01"
+    )
+    xknx.management.process(_connected_telegram(ia, tpci.TDataConnected(0), stale))
+
+    task = asyncio.create_task(conn.request(_PROPERTY_WRITE))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    await asyncio.sleep(0)
+    assert not task.done()
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(1), _PROPERTY_RESPONSE)
+    )
+    assert (await task).payload == _PROPERTY_RESPONSE
+
+
+async def test_p2p_request_after_back_to_back_responses() -> None:
+    """Test that a response right behind a skipped one is not lost."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+
+    task = asyncio.create_task(conn.request(_PROPERTY_WRITE))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    # e.g. two frames of one TCP segment, handled before the request runs again
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), _LATE_MEMORY_RESPONSE)
+    )
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(1), _PROPERTY_RESPONSE)
+    )
+    assert (await task).payload == _PROPERTY_RESPONSE
+    assert not conn._response_waiter.done()
+
+
+async def test_p2p_request_drops_all_responses_received_before_it() -> None:
+    """Test that every response received while no request waited is dropped."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), _LATE_MEMORY_RESPONSE)
+    )
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(1), _PROPERTY_RESPONSE)
+    )
+
+    task = asyncio.create_task(conn.request(_PROPERTY_WRITE))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    await asyncio.sleep(0)
+    assert not task.done()
+    answer = apci.PropertyValueResponse(
+        object_index=1, property_id=5, count=1, start_index=1, data=b"\x03"
+    )
+    xknx.management.process(_connected_telegram(ia, tpci.TDataConnected(2), answer))
+    assert (await task).payload == answer
+
+
+async def test_p2p_request_takes_a_response_during_the_ack_wait() -> None:
+    """Test that a response arriving before the ACK of the request answers it."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+
+    task = asyncio.create_task(conn.request(_PROPERTY_WRITE))
+    await asyncio.sleep(0)
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), _PROPERTY_RESPONSE)
+    )
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    assert (await task).payload == _PROPERTY_RESPONSE
+
+
+async def test_p2p_request_times_out_without_its_response(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test that only other telegrams end the request with a timeout."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+
+    task = asyncio.create_task(conn.request(_PROPERTY_WRITE))
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    xknx.management.process(
+        _connected_telegram(ia, tpci.TDataConnected(0), _LATE_MEMORY_RESPONSE)
+    )
+    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    with pytest.raises(ManagementConnectionTimeout, match="PropertyValueResponse"):
+        await task
+
+
+async def test_p2p_request_without_response_type_returns_next_telegram() -> None:
+    """Test that a payload without response type returns the next telegram."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, rate_limit=0)
+    echo = apci.MemoryResponse(address=0x4000, data=b"\x01")
+
+    task = asyncio.create_task(
+        conn.request(apci.MemoryWrite(address=0x4000, data=b"\x01"))
+    )
+    await asyncio.sleep(0)
+    xknx.management.process(_connected_telegram(ia, tpci.TAck(0)))
+    xknx.management.process(_connected_telegram(ia, tpci.TDataConnected(0), echo))
+    assert (await task).payload == echo
+
+
 def _individual_telegram(
     payload: apci.APCI, source: IndividualAddress, destination: IndividualAddress
 ) -> Telegram:
@@ -645,6 +819,31 @@ async def test_connectionless_request_skips_unrelated_telegrams() -> None:
                 direction=TelegramDirection.INCOMING,
                 tpci=tpci.TDataConnected(0),
                 payload=response.payload,
+            )
+        )
+        await asyncio.sleep(0)
+        assert not task.done()
+        xknx.management.process(response)
+        assert await task == response
+
+
+async def test_connectionless_request_skips_a_response_to_another_request() -> None:
+    """Test that a response of the right service naming another Property is skipped."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    response = _individual_telegram(_PROPERTY_RESPONSE, ia, xknx.current_address)
+
+    async with xknx.management.connectionless(ia, rate_limit=0) as connectionless:
+        task = asyncio.create_task(connectionless.request(_PROPERTY_WRITE))
+        await asyncio.sleep(0)
+        xknx.management.process(
+            _individual_telegram(
+                apci.PropertyValueResponse(
+                    object_index=2, property_id=5, start_index=1
+                ),
+                ia,
+                xknx.current_address,
             )
         )
         await asyncio.sleep(0)
