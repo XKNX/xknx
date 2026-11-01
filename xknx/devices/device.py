@@ -235,8 +235,9 @@ class Device(ABC):
         """
         is_state_address = False
         for remote_value in self._iter_remote_values():
-            if remote_value.is_state_address(group_address):
-                is_state_address = True
-            elif group_address in remote_value.group_addresses():
-                return False
+            if group_address in remote_value.group_addresses():
+                if remote_value.is_state_address(group_address):
+                    is_state_address = True
+                else:
+                    return False
         return is_state_address
