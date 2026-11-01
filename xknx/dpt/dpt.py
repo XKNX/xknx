@@ -461,8 +461,8 @@ class DPTComplexData(ABC):
                 entry["default"] = (
                     field.default.name.lower() if type_str == "enum" else field.default
                 )
-            elif has_factory_default:
-                factory_val = field.default_factory()  # type: ignore[misc]
+            elif field.default_factory is not MISSING:
+                factory_val = field.default_factory()
                 if factory_val is not None:
                     entry["default"] = factory_val
 
