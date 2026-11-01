@@ -139,3 +139,17 @@ climate_target_temp = Climate(
     group_address_target_temperature_state="2/2/4",
 )
 ```
+
+## Independent heating and cooling activity
+
+Configure at least one source for each valve when enabling independent feedback:
+
+- `group_address_heating_active_state`, `group_address_cooling_active_state`: binary feedback (DPT 1.xxx), where 1 means active.
+- `group_address_heating_command_value_state`, `group_address_cooling_command_value_state`: valve position (DPT 5.001), decoded without rounding away the wire resolution.
+- `heating_activity_threshold`, `cooling_activity_threshold`: default 0%, valid range [0, 100). Percentage feedback is active only when strictly above its channel threshold.
+
+A configured binary source takes priority over its channel's percentage source, even while unknown. Both valve channels must be explicitly configured; mixed binary/percentage sources are supported. No new source falls back to shared activity or the controller mode.
+
+`is_heating` and `is_cooling` return `bool | None`. Before valid feedback is received, the value is unknown. `valve_activity_conflict` is true for two active valves, false if either valve is known inactive, and unknown otherwise. `has_independent_activity` distinguishes the new configuration. These properties describe feedback, not a control command or proof of heat flow.
+
+Existing `is_active` and shared activity configuration are unchanged. Feedback-only remote values participate in normal synchronization, passive-address dispatch and device callbacks. Malformed telegrams retain the last valid value; no additional stale-state timeout is introduced.
