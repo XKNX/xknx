@@ -447,9 +447,11 @@ class DPTComplexData(ABC):
                     "Override get_dict_schema() or set _dict_schema_fields_class in the subclass."
                 )
 
-            has_plain_default = field.default is not MISSING
-            has_factory_default = field.default_factory is not MISSING
-            required = not (nullable or has_plain_default or has_factory_default)
+            required = not (
+                nullable
+                or field.default is not MISSING
+                or field.default_factory is not MISSING
+            )
 
             entry: DPTComplexFieldSchema = {
                 "name": field.name,
