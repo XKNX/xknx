@@ -219,7 +219,7 @@ class TestDPTBaseSubclass:
     def test_validate_payload_array(self) -> None:
         """Test validate_payload method."""
 
-        class DPTArrayTest(DPTBase):
+        class DPTArrayTest(DPTBase):  # pylint: disable=abstract-method
             """Mock class for testing array payloads."""
 
             payload_type = DPTArray
@@ -239,7 +239,7 @@ class TestDPTBaseSubclass:
     def test_validate_payload_binary(self) -> None:
         """Test validate_payload method."""
 
-        class DPTBinaryTest(DPTBase):
+        class DPTBinaryTest(DPTBase):  # pylint: disable=abstract-method
             """Mock class for testing binary payloads."""
 
             payload_type = DPTBinary
