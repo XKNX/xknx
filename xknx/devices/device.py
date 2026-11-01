@@ -155,15 +155,17 @@ class Device(ABC):
     ) -> None:
         """Execute callbacks after internal state has been changed."""
         if (telegram := _processing_telegram.get()) is not None:
-            destination = telegram.destination_address
-            self.last_update = DeviceUpdate(
-                telegram=telegram,
-                context=telegram.context,
-                from_state_address=isinstance(
-                    destination, GroupAddress | InternalGroupAddress
+            # reused for further callbacks of the same telegram - eg. travel updates
+            if self.last_update.telegram is not telegram:
+                destination = telegram.destination_address
+                self.last_update = DeviceUpdate(
+                    telegram=telegram,
+                    context=telegram.context,
+                    from_state_address=isinstance(
+                        destination, GroupAddress | InternalGroupAddress
+                    )
+                    and self.is_state_address(destination),
                 )
-                and self.is_state_address(destination),
-            )
         else:
             self.last_update = DeviceUpdate(context=_current_telegram_context.get())
         # callbacks read `last_update` - work they schedule shall not inherit the cause
