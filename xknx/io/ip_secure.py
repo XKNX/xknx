@@ -21,6 +21,7 @@ from xknx.exceptions import (
 )
 from xknx.knxip import (
     HPAI,
+    DisconnectRequest,
     KNXIPFrame,
     KNXIPServiceType,
     SecureWrapper,
@@ -28,6 +29,7 @@ from xknx.knxip import (
     SessionResponse,
     SessionStatus,
     TimerNotify,
+    TunnellingRequest,
 )
 from xknx.knxip.knxip_enum import SecureSessionStatusCode
 from xknx.secure.security_primitives import (
@@ -201,11 +203,13 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         "_keepalive_task",
         "_key",
         "_peer_public_key",
+        "_plain_tunnelling_warned",
         "_private_key",
         "_sequence_number",
         "_sequence_number_received",
         "_session_status_handler",
         "_user_password",
+        "_wrapped_tunnelling_received",
         "initialized",
         "public_key",
         "session_id",
@@ -244,6 +248,8 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         self.initialized: bool = False
         self._keepalive_task: asyncio.Task[None] | None = None
         self._session_status_handler: KNXIPTransport.Callback | None = None
+        self._wrapped_tunnelling_received: bool = False
+        self._plain_tunnelling_warned: bool = False
 
     async def connect(self) -> None:
         """Connect transport."""
@@ -251,6 +257,8 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         self._private_key, self.public_key = generate_ecdh_key_pair()
         self._sequence_number = 0
         self._sequence_number_received = -1
+        self._wrapped_tunnelling_received = False
+        self._plain_tunnelling_warned = False
         request_session = Session(
             transport=self,
             ecdh_client_public_key=self.public_key,
@@ -375,15 +383,53 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
                 return
             self._sequence_number_received = new_sequence_number
             knx_logger.debug("Decrypted frame: %s", knxipframe)
-        elif self.initialized or not isinstance(knxipframe.body, SessionResponse):
+            if not self._wrapped_tunnelling_received and isinstance(
+                knxipframe.body, TunnellingRequest
+            ):
+                self._wrapped_tunnelling_received = True
+        elif self.initialized:
+            # Everything received after the session is initialized shall be wrapped.
+            # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.4.1
+            if not self._tolerate_plain_tunnelling_frame(knxipframe):
+                ip_secure_logger.warning(
+                    "Discarding received unencrypted frame: %s", knxipframe
+                )
+                return
+        elif not isinstance(knxipframe.body, SessionResponse):
             # SessionResponse is the only frame received in plain - and only until
             # the session is initialized. Everything else shall be ignored.
             # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.4.1
             ip_secure_logger.warning(
-                "Discarding received unencrypted frame: %s", knxipframe
+                "Discarding received unencrypted frame - expected SessionResponse: %s",
+                knxipframe,
             )
             return
         super().handle_knxipframe(knxipframe, source)
+
+    def _tolerate_plain_tunnelling_frame(self, knxipframe: KNXIPFrame) -> bool:
+        """
+        Return True if a plain tunnelling frame is accepted in the initialized session.
+
+        Some servers send the TunnellingRequests of a tunnel created within the
+        secure session unwrapped. Tolerate them, but only until the server sends a
+        wrapped TunnellingRequest, so a conforming server stays protected against
+        injected plain frames.
+        """
+        if self._wrapped_tunnelling_received or not isinstance(
+            knxipframe.body, TunnellingRequest | DisconnectRequest
+        ):
+            return False
+        if not self._plain_tunnelling_warned:
+            self._plain_tunnelling_warned = True
+            ip_secure_logger.warning(
+                "Received unencrypted tunnelling data from %s in secure session. "
+                "The tunnelling traffic of this connection is not encrypted. "
+                "Accepting plain tunnelling frames until the server sends a wrapped "
+                "one: %s",
+                self.remote_hpai,
+                knxipframe,
+            )
+        return True
 
     async def _session_keepalive(self) -> None:
         """Keep session alive."""

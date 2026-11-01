@@ -10,6 +10,7 @@ nav_order: 2
 
 ### Connection
 
+- Accept unwrapped `TunnellingRequest` and `DisconnectRequest` frames in a KNX IP Secure session from servers that send them this way, until a wrapped `TunnellingRequest` is received. Since 4.0.0 they were discarded, so no telegram and no L_Data.con arrived from such servers. One warning per session is logged. All other unwrapped frames stay discarded. `TunnellingRequest`s of another communication channel are dropped by every tunnel type.
 - Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
 
 ### Management
