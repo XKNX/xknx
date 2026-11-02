@@ -1,6 +1,7 @@
 """Unit test for StateUpdater."""
 
 import asyncio
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -228,6 +229,40 @@ class TestStateUpdater:
             await asyncio.sleep(0)
         remote_value_2.read_state.assert_awaited_once_with(wait_for_result=True)
         assert not xknx.state_updater._semaphore.locked()
+        xknx.state_updater.stop()
+
+    async def test_read_error_after_update_received(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test an error of a read still running after update_received() is logged."""
+        xknx = XKNX()
+        xknx.state_updater._semaphore = asyncio.Semaphore(value=1)
+        read_running = asyncio.Event()
+        read_finish = asyncio.Event()
+
+        async def read_state(wait_for_result: bool = False) -> None:
+            """Read state - fails when told to finish."""
+            read_running.set()
+            await read_finish.wait()
+            raise ValueError("read failed")
+
+        remote_value = Mock(read_state=read_state)
+        xknx.state_updater.register_remote_value(remote_value)
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+        await read_running.wait()
+        # the tracker is cancelled while the shielded read keeps running
+        xknx.state_updater.update_received(remote_value)
+        await asyncio.sleep(0)
+        assert xknx.state_updater._semaphore.locked()
+
+        with caplog.at_level(logging.ERROR, logger="xknx.state_updater"):
+            read_finish.set()
+            for _ in range(10):
+                await asyncio.sleep(0)
+        assert not xknx.state_updater._semaphore.locked()
+        assert "Unexpected error reading state of" in caplog.text
+        assert "read failed" in caplog.text
         xknx.state_updater.stop()
 
     async def test_stop_start_state_updater_when_reconnecting(self) -> None:
