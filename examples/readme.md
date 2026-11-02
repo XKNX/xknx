@@ -10,6 +10,7 @@
 |[Disconnect](./example_disconnect.py)|Example on how to disconnect/reset all available tunneling channels|
 |[Gateway scanner](./example_gatewayscanner.py)|Example for GatewayScanner|
 |[Secure Tunnel](./example_secure.py)|Example for connecting to a KNX IP Secure Tunnel|
+|[IP Secure server PoC](./poc_ip_secure_server.py)|Proof of concept KNXnet/IP Tunnelling Server with IP Secure that logs the (decrypted) connection process of a client like ETS|
 |[Send telegrams](./example_send_telegrams.py)|Example for sending generic telegrams|
 |[Telegram monitor](./example_telegram_monitor.py)|An example telegram monitor|
 |[Value reader](./example_value_reader.py)|Example on how to read a value from KNX bus|
