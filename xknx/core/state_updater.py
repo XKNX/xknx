@@ -145,6 +145,7 @@ class StateUpdater:
             """Schedule to read the state from the KNX bus - one at a time."""
             async with self._semaphore:
                 # wait until there is nothing else to send to the bus
+                # (this may take a while under continuous outgoing traffic)
                 await self.xknx.telegram_queue.outgoing_queue.join()
                 logger.debug(
                     "StateUpdater reading %s for %s - %s",
@@ -154,7 +155,21 @@ class StateUpdater:
                 )
                 # shield from cancellation so update_received() don't cancel the
                 # ValueReader leaving the telegram_received_cb until next telegram
-                await asyncio.shield(remote_value.read_state(wait_for_result=True))
+                read_task = asyncio.create_task(
+                    remote_value.read_state(wait_for_result=True)
+                )
+                try:
+                    await asyncio.shield(read_task)
+                except asyncio.CancelledError:
+                    # keep holding the semaphore until the shielded read has finished
+                    # so `parallel_reads` is not exceeded by the next tracker
+                    try:
+                        await read_task
+                    except Exception:  # pylint: disable=broad-except
+                        logger.exception(
+                            "Unexpected error reading state of %s", remote_value
+                        )
+                    raise
 
         tracker_options = self.parse_tracker_options(tracker_options, str(remote_value))
         tracker = _StateTracker(
