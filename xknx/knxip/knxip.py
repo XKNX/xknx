@@ -7,6 +7,8 @@ Depending on the service_type_ident different types of body classes are instanti
 
 from __future__ import annotations
 
+import struct
+
 from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
 
 from .body import KNXIPBody
@@ -146,7 +148,14 @@ class KNXIPFrame:
             raise CouldNotParseKNXIP(
                 f"KNXIPServiceType not implemented: {header.service_type_ident.name}"
             )
-        body.from_knx(raw_body)
+        try:
+            body.from_knx(raw_body)
+        except (IndexError, ValueError, struct.error) as err:
+            # Safety net for truncated bodies and unknown enum values so that a
+            # malformed frame is always reported as CouldNotParseKNXIP.
+            raise CouldNotParseKNXIP(
+                f"Could not parse {body.__class__.__name__}: {err!r}"
+            ) from err
         return KNXIPFrame(header=header, body=body), data[header.total_length :]
 
     def to_knx(self) -> bytes:

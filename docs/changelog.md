@@ -49,6 +49,11 @@ nav_order: 2
 - Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
 - Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
 
+### Connection
+
+- Harden KNXnet/IP frame parsing: malformed DIBs, headers and bodies raise `CouldNotParseKNXIP` instead of hanging the event loop or closing the TCP connection. The TCP transport skips an unparsable frame by its total length and keeps processing the stream.
+- cEMI: empty or truncated frames raise `CouldNotParseCEMI` instead of `IndexError`.
+
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.

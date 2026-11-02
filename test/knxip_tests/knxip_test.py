@@ -36,3 +36,19 @@ class TestKNXIPFrame:
         raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3")
         with pytest.raises(IncompleteKNXIPFrame):
             KNXIPFrame.from_knx(raw)
+
+    def test_total_length_zero(self) -> None:
+        """Test a frame with total length 0 is rejected instead of returned as rest."""
+        raw = bytes.fromhex("06 10 05 30 00 00 06 10 05 30 00 00")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_body_parser_errors_are_wrapped(self) -> None:
+        """Test IndexError / ValueError of a body parser are raised as CouldNotParseKNXIP."""
+        # TunnellingAck body of 2 bytes - the parser would read past the end
+        with pytest.raises(CouldNotParseKNXIP) as exc_info:
+            KNXIPFrame.from_knx(bytes.fromhex("06 10 04 21 00 08 04 2A"))
+        assert not isinstance(exc_info.value, IncompleteKNXIPFrame)
+        # DisconnectResponse with unknown status code - ErrorCode() raises ValueError
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(bytes.fromhex("06 10 02 0A 00 08 01 55"))

@@ -11,7 +11,7 @@ from collections.abc import Callable
 import logging
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
-from xknx.knxip import HPAI, HostProtocol, KNXIPFrame
+from xknx.knxip import HPAI, HostProtocol, KNXIPFrame, KNXIPHeader
 
 from .ip_transport import KNXIPTransport
 
@@ -82,37 +82,57 @@ class TCPTransport(KNXIPTransport):
         self._buffer = b""
 
     def data_received_callback(self, raw: bytes) -> None:
-        """Parse and process KNXIP frame. Callback for having received data over TCP."""
+        """Parse and process KNXIP frames. Callback for having received data over TCP."""
         if self._buffer:
             raw = self._buffer + raw
             self._buffer = b""
-        if not raw:
-            return
-        try:
-            knxipframe, next_frame_part = KNXIPFrame.from_knx(raw)
-        except IncompleteKNXIPFrame:
-            self._buffer = raw
-            raw_socket_logger.debug(
-                "Incomplete KNX/IP frame. Waiting for rest: %s", raw.hex()
-            )
-            return
-        except CouldNotParseKNXIP as couldnotparseknxip:
-            knx_logger.debug(
-                "Unsupported KNXIPFrame from %s: %s in %s",
-                self.remote_hpai,
-                couldnotparseknxip.description,
-                raw.hex(),
-            )
-        else:
+        while raw:
+            try:
+                knxipframe, raw = KNXIPFrame.from_knx(raw)
+            except IncompleteKNXIPFrame:
+                self._buffer = raw
+                raw_socket_logger.debug(
+                    "Incomplete KNX/IP frame. Waiting for rest: %s", raw.hex()
+                )
+                return
+            except CouldNotParseKNXIP as couldnotparseknxip:
+                knx_logger.debug(
+                    "Unsupported KNXIPFrame from %s: %s in %s",
+                    self.remote_hpai,
+                    couldnotparseknxip.description,
+                    raw.hex(),
+                )
+                raw = self._skip_frame(raw)
+                continue
             knx_logger.debug(
                 "Received from %s: %s",
                 self.remote_hpai,
                 knxipframe,
             )
             self.handle_knxipframe(knxipframe, self.remote_hpai)
-        # parse data after current KNX/IP frame
-        if next_frame_part:
-            self.data_received_callback(next_frame_part)
+
+    def _skip_frame(self, raw: bytes) -> bytes:
+        """
+        Return the data after the unparsable KNX/IP frame at the start of `raw`.
+
+        The frame is skipped by the total length of its header. When not even the
+        header can be parsed, the stream framing is lost and all data is dropped.
+        """
+        header = KNXIPHeader()
+        try:
+            header.from_knx(raw)
+        except CouldNotParseKNXIP:
+            # total_length is set before the header raises for an unknown service type
+            pass
+        if header.total_length >= KNXIPHeader.HEADERLENGTH:
+            return raw[header.total_length :]
+        knx_logger.warning(
+            "Invalid KNX/IP header from %s. Dropping %d bytes of received data: %s",
+            self.remote_hpai,
+            len(raw),
+            raw.hex(),
+        )
+        return b""
 
     async def connect(self) -> None:
         """Connect TCP socket."""

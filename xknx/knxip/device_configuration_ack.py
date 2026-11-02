@@ -32,10 +32,10 @@ class DeviceConfigurationAck(KNXIPBodyResponse):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if raw[0] != DeviceConfigurationAck.BODY_LENGTH:  # structure_length field
-            raise CouldNotParseKNXIP("DeviceConfigurationAck body has invalid length")
         if len(raw) != DeviceConfigurationAck.BODY_LENGTH:
             raise CouldNotParseKNXIP("DeviceConfigurationAck body has wrong length")
+        if raw[0] != DeviceConfigurationAck.BODY_LENGTH:  # structure_length field
+            raise CouldNotParseKNXIP("DeviceConfigurationAck body has invalid length")
         self.communication_channel_id = raw[1]
         self.sequence_counter = raw[2]
         self.status_code = ErrorCode(raw[3])
