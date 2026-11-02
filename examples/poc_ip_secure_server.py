@@ -646,6 +646,7 @@ class ClientSession(asyncio.Protocol):
         self._timer: asyncio.TimerHandle | None = None
         self.channels: dict[int, Channel] = {}
         self.created = time.monotonic()
+        self._authenticate_received = False
 
     # ----- asyncio.Protocol -----
 
@@ -695,6 +696,14 @@ class ClientSession(asyncio.Protocol):
             time.monotonic() - self.created,
             self.state,
         )
+        if self.state == "UNAUTHENTICATED" and not self._authenticate_received:
+            log.warning(
+                "    HINT: the client closed the connection after SESSION_RESPONSE without "
+                "sending SESSION_AUTHENTICATE. ETS does this when the MAC of our "
+                "SESSION_RESPONSE does not verify, i.e. the device authentication code "
+                "the client uses differs from ours (%r).",
+                self.config.device_authentication_password,
+            )
         self._cancel_timer()
         for channel in list(self.channels.values()):
             self.server.release_channel(channel, reason="tcp connection lost")
@@ -953,6 +962,7 @@ class ClientSession(asyncio.Protocol):
         )
         self.sequence_out = 0
         self.sequence_in = -1
+        self._authenticate_received = False
         self.state = "UNAUTHENTICATED"
         self.send_plain(
             SessionResponse(
@@ -970,6 +980,11 @@ class ClientSession(asyncio.Protocol):
 
     def handle_session_authenticate(self, auth: SessionAuthenticate) -> None:
         """SESSION_AUTHENTICATE -> SESSION_STATUS (03_08_09 §2.2.3.8)."""
+        self._authenticate_received = True
+        log.info(
+            "    the client accepted our SESSION_RESPONSE MAC: its device authentication "
+            "code matches ours"
+        )
         user_id = auth.user_id
         if user_id == 0 or user_id >= 0x80:
             log.warning("    reserved user id %d -> AUTHENTICATION_FAILED", user_id)
