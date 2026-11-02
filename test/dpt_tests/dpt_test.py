@@ -1,5 +1,6 @@
 """Unit test for KNX binary/integer objects."""
 
+import gc
 from inspect import isabstract
 from typing import Any
 
@@ -163,6 +164,70 @@ class TestDPTBase:
         """Test parsing invalid data."""
         with pytest.raises(ValueError):
             DPTBase.get_dpt(value)
+
+    @pytest.mark.parametrize(
+        ("value_type", "expected"),
+        [
+            ("DPT-9", DPT2ByteFloat),
+            ("dpt-9.001", DPTTemperature),
+            ("DPT 9.001", DPTTemperature),
+            (" 9.001 ", DPTTemperature),
+            # `strip(" DPT-")` stripped a character set - these resolved to DPT 9
+            ("TPD-9", None),
+            ("PPP9", None),
+            ("9-", None),
+            # `isdigit()` accepts "²" - `int()` does not
+            ("²", None),
+        ],
+    )
+    def test_parse_transcoder_dpt_prefix(
+        self, value_type: str, expected: type[DPTBase] | None
+    ) -> None:
+        """Test parsing of strings with and without "DPT" prefix."""
+        assert DPTBase.parse_transcoder(value_type) is expected
+
+    def test_transcoder_lookup_cache(self) -> None:
+        """Test the lookup tables are cached per base class and updated for new subclasses."""
+        # pylint: disable=import-outside-toplevel
+        from xknx.dpt import dpt as dpt_module
+
+        dpt_module._TRANSCODERS_BY_DPT.clear()
+        dpt_module._TRANSCODERS_BY_VALUE_TYPE.clear()
+        assert DPTBase.transcoder_by_dpt(9, 1) is DPTTemperature
+        assert DPTNumeric.transcoder_by_value_type("temperature") is DPTTemperature
+        assert DPT2ByteFloat.transcoder_by_value_type("string") is None
+        assert set(dpt_module._TRANSCODERS_BY_DPT) == {DPTBase}
+        assert set(dpt_module._TRANSCODERS_BY_VALUE_TYPE) == {DPTNumeric, DPT2ByteFloat}
+        # the same table object is returned on the next lookup
+        table = dpt_module._TRANSCODERS_BY_DPT[DPTBase]
+        assert DPTBase.transcoder_by_dpt(9, 1) is DPTTemperature
+        assert dpt_module._TRANSCODERS_BY_DPT[DPTBase] is table
+
+        class DPTTestSubclass(DPT2ByteFloat):
+            """User defined transcoder."""
+
+            dpt_main_number = 9
+            dpt_sub_number = 9999
+            value_type = "test_subclass_lookup_cache"
+
+        try:
+            # tables are invalidated by the new subclass definition
+            assert not dpt_module._TRANSCODERS_BY_DPT
+            assert not dpt_module._TRANSCODERS_BY_VALUE_TYPE
+            assert DPTBase.transcoder_by_dpt(9, 9999) is DPTTestSubclass
+            assert DPTBase.parse_transcoder("9.9999") is DPTTestSubclass
+            assert DPTNumeric.parse_transcoder("test_subclass_lookup_cache") is (
+                DPTTestSubclass
+            )
+            assert DPTBase.get_dpt({"main": 9, "sub": 9999}) is DPTTestSubclass
+            assert DPTTestSubclass.transcoder_by_dpt(9, 9999) is DPTTestSubclass
+        finally:
+            # don't leak the test class into other tests iterating dpt_class_tree()
+            dpt_module._TRANSCODERS_BY_DPT.clear()
+            dpt_module._TRANSCODERS_BY_VALUE_TYPE.clear()
+            del DPTTestSubclass
+            gc.collect()
+        assert DPTBase.transcoder_by_dpt(9, 9999) is None
 
     def test_parse_transcoder_from_subclass(self) -> None:
         """Test parsing only subclasses of a DPT class."""

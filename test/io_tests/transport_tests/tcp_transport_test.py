@@ -112,3 +112,11 @@ class TestTCPTransport:
         self.transport.data_received_callback(ack.to_knx())
         self.handle_mock.assert_called_once()
         assert self.handle_mock.call_args[0][0] == ack
+
+    def test_coalesced_frames(self) -> None:
+        """Test a chunk holding many frames is parsed without recursion."""
+        count = 2000  # recursion per frame hit the recursion limit at ~1000
+        self.transport.data_received_callback(VALID_RAW * count)
+        assert self.handle_mock.call_count == count
+        assert self.handle_mock.call_args[0][0] == VALID_FRAME
+        assert self.transport._buffer == b""

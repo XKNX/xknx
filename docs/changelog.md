@@ -57,6 +57,14 @@ nav_order: 2
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
+- Address parsing: `GroupAddress` and `IndividualAddress` raise `CouldNotParseAddress` instead of `ValueError` for strings of non-ASCII digits like `"²"` (which `str.isdigit()` accepts but `int()` rejects) and reject a trailing newline (`"1/2/3\n"`). The `ValueError` escaped `GroupAddressDPT.set()` and aborted the whole group address to DPT mapping.
+- `DPTBase.parse_transcoder()` no longer resolves strings like `"TPD-9"` or `"PPP9"` to DPT 9: only a leading `"DPT"` / `"DPT-"` prefix is removed, not any of its characters.
+
+### Internals
+
+- DPT lookups by number or `value_type` (`DPTBase.transcoder_by_dpt()`, `transcoder_by_value_type()`, `parse_transcoder()`, `get_dpt()`) use lazily built lookup tables per base class instead of walking all transcoder classes on every call - about 100 times faster, which matters when `GroupAddressDPT.set()` maps thousands of group addresses. The tables are rebuilt when a new `DPTBase` subclass is defined.
+- `KNXIPFrame.from_knx()` resolves the body class from a lookup table instead of a chain of comparisons.
+- IP Secure: the session keepalive is a rescheduled `loop.call_later()` timer instead of a task cancelled and recreated for every frame sent.
 
 # 4.0.0 Typed and tidy 2026-10-15
 
