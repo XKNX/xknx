@@ -377,6 +377,14 @@ class _Tunnel(Interface):
     ) -> None:
         """Handle incoming requests."""
         if isinstance(knxipframe.body, TunnellingRequest):
+            if knxipframe.body.communication_channel_id != self.communication_channel:
+                logger.warning(
+                    "Discarding TunnellingRequest of other communication channel "
+                    "(own: %s): %s",
+                    self.communication_channel,
+                    knxipframe.body,
+                )
+                return
             self._tunnelling_request_received(knxipframe.body)
         elif isinstance(knxipframe.body, DisconnectRequest):
             self._disconnect_request_received(knxipframe.body)

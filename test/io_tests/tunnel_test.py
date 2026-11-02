@@ -82,12 +82,26 @@ class TestUDPTunnel:
     ) -> None:
         """Test Tunnel for calling send_ack on frames."""
         raw_cemi = raw[10:]
+        self.tunnel.communication_channel = 2
         self.tunnel._sequence.expected = 0x21
 
         self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
         await asyncio.sleep(0)
         self.cemi_received_mock.assert_called_once_with(raw_cemi)
         send_ack_mock.assert_called_once_with(raw[7], raw[8])
+
+    @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
+    async def test_tunnel_request_other_channel(self, send_ack_mock: Mock) -> None:
+        """Test TunnellingRequests of other communication channels are dropped."""
+        # communication_channel_id: 0x02   sequence_counter: 0x21
+        raw = bytes.fromhex("0610 0420 0014 04 02 21 00 2900b06010fa10ff0080")
+        self.tunnel.communication_channel = 1
+        self.tunnel._sequence.expected = 0x21
+
+        self.tunnel.transport.data_received_callback(raw, ("192.168.1.2", 3671))
+        await asyncio.sleep(0)
+        self.cemi_received_mock.assert_not_called()
+        send_ack_mock.assert_not_called()
 
     @patch("xknx.io.UDPTunnel._send_tunnelling_ack")
     @patch("xknx.io.UDPTunnel.send_cemi")
@@ -108,6 +122,7 @@ class TestUDPTunnel:
         test_cemi = CEMIFrame.from_knx(raw_ind[10:])
         test_telegram = test_cemi.data.telegram()
         test_telegram.direction = TelegramDirection.INCOMING
+        self.tunnel.communication_channel = 2
         self.tunnel._sequence.expected = 0x81
 
         response_telegram = Telegram(
