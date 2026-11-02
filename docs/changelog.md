@@ -6,7 +6,7 @@ nav_order: 2
 
 # Changelog
 
-# Unreleased changes
+# 4.1.0 Connectionless and DPTs galore 2026-11-02
 
 ### Connection
 
@@ -17,6 +17,8 @@ nav_order: 2
 - Routing: close the multicast socket when configuring or binding it fails instead of leaking it.
 - Accept unwrapped `TunnellingRequest` and `DisconnectRequest` frames in a KNX IP Secure session from servers that send them this way, until a wrapped `TunnellingRequest` is received. Since 4.0.0 they were discarded, so no telegram and no L_Data.con arrived from such servers. One warning per session is logged. All other unwrapped frames stay discarded. `TunnellingRequest`s of another communication channel are dropped by every tunnel type.
 - Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
+- Harden KNXnet/IP frame parsing: malformed DIBs, headers and bodies raise `CouldNotParseKNXIP` instead of hanging the event loop or closing the TCP connection. The TCP transport skips an unparsable frame by its total length and keeps processing the stream.
+- cEMI: empty or truncated frames raise `CouldNotParseCEMI` instead of `IndexError`.
 
 ### Management
 
@@ -54,11 +56,6 @@ nav_order: 2
 - Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
 - Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
 
-### Connection
-
-- Harden KNXnet/IP frame parsing: malformed DIBs, headers and bodies raise `CouldNotParseKNXIP` instead of hanging the event loop or closing the TCP connection. The TCP transport skips an unparsable frame by its total length and keeps processing the stream.
-- cEMI: empty or truncated frames raise `CouldNotParseCEMI` instead of `IndexError`.
-
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
@@ -70,7 +67,6 @@ nav_order: 2
 ### Internals
 
 - TaskRegistry: exceptions of `Task` targets and of `background()` tasks are logged with the task name instead of being noticed only as "Task exception was never retrieved" at garbage collection. `background()` tasks are cancelled on `stop()`. Tasks started after `stop()` - e.g. by device telegrams processed while XKNX is shutting down - are only registered and started on the next `start()`, instead of running unmanaged.
-
 - DPT lookups by number or `value_type` (`DPTBase.transcoder_by_dpt()`, `transcoder_by_value_type()`, `parse_transcoder()`, `get_dpt()`) use lazily built lookup tables per base class instead of walking all transcoder classes on every call - about 100 times faster, which matters when `GroupAddressDPT.set()` maps thousands of group addresses. The tables are rebuilt when a new `DPTBase` subclass is defined.
 - `KNXIPFrame.from_knx()` resolves the body class from a lookup table instead of a chain of comparisons.
 - IP Secure: the session keepalive is a rescheduled `loop.call_later()` timer instead of a task cancelled and recreated for every frame sent.
