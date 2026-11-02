@@ -138,6 +138,18 @@ class TestTravelCalculator:
             assert travelcalculator.current_position() == 68
             assert travelcalculator.position_reached()
 
+    def test_stop_without_time_passing(self) -> None:
+        """Test the position right after stopping, before the clock advances."""
+        travelcalculator = TravelCalculator(25, 50)
+        with patch("time.time") as mock_time:
+            mock_time.return_value = 1580000000.0
+            travelcalculator.set_position(80)
+            travelcalculator.start_travel(60)
+            travelcalculator.stop()
+            assert travelcalculator.current_position() == 80
+            assert travelcalculator.position_reached()
+            assert not travelcalculator.is_traveling()
+
     def test_travel_down_with_updates(self) -> None:
         """Test travel down with position updates from bus."""
         travelcalculator = TravelCalculator(25, 50)

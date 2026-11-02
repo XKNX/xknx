@@ -8,10 +8,50 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- Accept unwrapped `TunnellingRequest` and `DisconnectRequest` frames in a KNX IP Secure session from servers that send them this way, until a wrapped `TunnellingRequest` is received. Since 4.0.0 they were discarded, so no telegram and no L_Data.con arrived from such servers. One warning per session is logged. All other unwrapped frames stay discarded. `TunnellingRequest`s of another communication channel are dropped by every tunnel type.
+- Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
+
+### Management
+
+- Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
+- Add connectionless point-to-point communication - KNX v01.02.03 - Transport Layer 03.03.04 - §1.5, telegrams sent as `T_Data_Individual` without a transport connection. `async with xknx.management.connectionless(address) as connectionless:` provides a `P2PConnectionless` with `send()`, `receive()` and `request()`, like `Broadcast` and `BroadcastContext` for one device. While it is open, the `T_Data_Individual` telegrams the device sends are handed to it - they were dropped as unhandled before, so a response to a connectionless request could not be received. `receive(expected, timeout)` yields every telegram of the device carrying `expected` until `timeout` elapses, for procedures that need more than the first response. `request()` returns the first telegram carrying the payload's `RESPONSE_TYPE` and skips any other, and raises `ManagementConnectionTimeout` if none arrives within `timeout` (keyword, default 6 seconds). Concurrent `request()` calls are sent one after the other, as nothing in a response tells which request it answers. A `connection()` to the same device may be open at the same time.
+
+### DPT
+
+- Add DPT 15.000 (`DPTAccessData`, value_type `"access_data"`)
+- Add DPT 26.001 (`DPTSceneInfo`, value_type `"scene_info"`)
+- Add DPT 27.001 (`DPTCombinedInfoOnOff`, value_type `"combined_info_on_off"`)
+- Add DPT 217.001 (`DPTVersion`, value_type `"version"`) with `KNXVersion`
+- Add DPT 222.100 (`DPTRoomTemperatureSetpoints3`, value_type `"room_temperature_setpoints_3"`) and DPT 222.101 (`DPTRoomTemperatureSetpointShifts3`, value_type `"room_temperature_setpoint_shifts_3"`)
+- Add DPT 225.001 (`DPTScalingSpeed`, value_type `"scaling_speed"`) and DPT 225.002 (`DPTScalingStepTime`, value_type `"scaling_step_time"`)
+- Add DPT 240.800 (`DPTCombinedPosition`, value_type `"combined_position"`)
+- Add DPT 241.800 (`DPTStatusSAB`, value_type `"status_sab"`)
+- Add DPT 21.001, 21.002, 21.100-21.106, 21.601, 21.1000-21.1002, 21.1010, 21.1200 and 21.1201 8-bit sets (`DPTStatusGen`, `DPTDeviceControl`, `DPTForceSign`, ...) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.22, §4.4, §6.4.1, §8.2, §9.6, §9.7.
+- Add DPT 22.100 `DPTStatusDHWC`, 22.101 `DPTStatusRHCC`, 22.1000 `DPTMedia` and 22.1010 `DPTChannelActivation16` 16-bit sets, 25.1000 `DPTDoubleNibble` and 30.1010 `DPTChannelActivation24` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.5.1, §4.5.2, §8.3.1, §8.3.2, §8.4, §8.5.1.
+- Add DPT 206.100 `DPTHVACModeNext`, 206.102 `DPTDHWModeNext`, 206.104 `DPTOccModeNext` and 206.105 `DPTBuildingModeNext` with the new enums `DHWMode` (20.103), `OccupancyMode` (20.003) and `BuildingMode` (20.002) in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.12.
+- Add DPT 207.100 `DPTStatusBUC`, 207.101 `DPTLockSign`, 207.102 `DPTValueDemBOC`, 207.104 `DPTActPosDemAbs`, 207.105 `DPTStatusAct` and 207.600 `DPTStatusLightingActuator` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.13, §6.5.1.
+- Add DPT 219.001 `DPTAlarmInfo`, 229.001 `DPTMeteringValue` and 230.1000 `DPTMBusAddress` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.29, §3.45.1, §8.6. The enums they use are in `xknx.dpt.dpt_20`: `Priority` (20.004), `ApplicationArea` (20.006), `ErrorClassSystem` (20.011), `ErrorClassHVAC` (20.012) and `MeteringDeviceType` (20.114).
+- Add DPT 234.001 `DPTLanguageCodeAlpha2ASCII`, 234.002 `DPTRegionCodeAlpha2ASCII`, 236.001 `DPTPrioritisedModeControl`, 237.600 `DPTDALIControlGearDiagnostic`, 238.001 `DPTSceneConfig` and 238.600 `DPTDALIDiagnostics` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.47, §3.49, §6.7.1, §3.50.1, §6.8.1.
+- Add the DALI emergency converter DPTs 244.600 `DPTConverterStatus`, 245.600 `DPTConverterTestResult`, 246.600 `DPTBatteryInfo`, 247.600 `DPTConverterTestInfo`, 248.600 `DPTConverterInfoFix` and 272.600 `DPTConverterInfo` - KNX v02.02.01 - Datapoint Types 03.07.02 - §6.11-§6.15, §6.22.
+- Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
+- Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+- Add DPT 5.100 (`DPTFanStage`, value_type `"fan_stage"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.5. A discrete fan stage 0...255, 0 is off.
+- Add DPT 20.107 (`DPTChangeoverMode`, value_type `"changeover_mode"`) with the enum `ChangeoverMode` in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.3.
+- Add DPT 20.116 (`DPTEnableHCStage`, value_type `"enable_hc_stage"`) with the enum `EnableHCStage` in `xknx.dpt.dpt_20` - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.6.
+- Add DPT 21.107 (`DPTCombinedStatusRTSM`, value_type `"combined_status_rtsm"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.1. Its value `CombinedStatusRTSM` carries the window, presence, comfort push button, comfort prolongation User and HVAC Mode User status of an RTSM (Room Temperature Setpoint Manager). §9.1 makes it mandatory one year after publication, and disallows the "Eberle status octet" `DPTHVACStatus` from then on.
+- Add DPT 22.102 (`DPTCombinedStatusHVA`, value_type `"combined_status_hva"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.3. Its value `CombinedStatusHVA` carries the valve position, the short circuit and overload alarms and the valve kick, service mode, manual operation, forced position, locked position and calibration mode status of a heating/cooling valve actuator.
+- Add DPT 22.103 (`DPTCombinedStatusRTC`, value_type `"combined_status_rtc"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.2. Its value `CombinedStatusRTC` carries the fault, `heat_cool_mode` (`HeatCool`), dew point, frost and overheat alarm, controller inactive, additional stage and heating/cooling enabled status of an RTC (Room Temperature Controller). Like DPT 21.107 it becomes mandatory one year after publication and replaces `DPTHVACStatus`; DPT 22.101 `DPTStatusRHCC` becomes optional.
+
 ### Devices
 
 - Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
 - Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
+
+### Bugfixes
+
+- Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
 
 # 4.0.0 Typed and tidy 2026-10-15
 

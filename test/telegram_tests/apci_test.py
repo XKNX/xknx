@@ -4,6 +4,7 @@ import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.exceptions import ConversionError, UnsupportedAPCIService
+from xknx.profile import PropertyDataType
 from xknx.secure.data_secure_asdu import (
     SecurityAlgorithmIdentifier,
     SecurityALService,
@@ -4087,6 +4088,29 @@ class TestPropertyDescriptionResponse:
             str(payload)
             == '<PropertyDescriptionResponse object_index="1" property_id="4" property_index="8" type="3" max_count="5" access="7" />'
         )
+
+    def test_description_fields(self) -> None:
+        """Test the write_enable, type and access fields."""
+        payload = APCI.from_knx(
+            bytes([0x03, 0xD9, 0x02, 0x17, 0x03, 0x94, 0x00, 0x10, 0x32])
+        )
+
+        assert isinstance(payload, PropertyDescriptionResponse)
+        assert payload.type_ == 0x94
+        assert payload.writable is True
+        assert payload.pdt == PropertyDataType.PDT_GENERIC_04
+        assert payload.max_count == 16
+        assert payload.read_level == 3
+        assert payload.write_level == 2
+
+    def test_description_fields_read_only(self) -> None:
+        """Test a Property without write_enable."""
+        payload = PropertyDescriptionResponse(type_=0x12, access=0xF0)
+
+        assert payload.writable is False
+        assert payload.pdt == PropertyDataType.PDT_GENERIC_02
+        assert payload.read_level == 15
+        assert payload.write_level == 0
 
 
 class TestNetworkParameterRead:
