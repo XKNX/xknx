@@ -105,16 +105,18 @@ class _RoutingFlowControl:
         """Handle incoming RoutingBusy."""
         self._ready.clear()
         now = self._loop.time()
-        previous_busy_frame_time = self._last_busy_frame_time
+        # seconds since the previous ROUTING_BUSY frame - None for the first one
+        since_previous = (
+            None
+            if self._last_busy_frame_time is None
+            else now - self._last_busy_frame_time
+        )
         self._last_busy_frame_time = now
         # N shall be incremented by one with each ROUTING_BUSY Frame received after
         # 10 ms have passed since the last ROUTING_BUSY - also for the first one and
         # for frames received while the slowduration fade out is still running.
         # KNX v01.05.02 - Routing 03.08.05 - §2.3.5
-        if (
-            previous_busy_frame_time is None
-            or (now - previous_busy_frame_time) > BUSY_INCREMENT_COOLDOWN
-        ):
+        if since_previous is None or since_previous > BUSY_INCREMENT_COOLDOWN:
             self._received_busy_frames += 1
         if self._wait_start_time is None:
             logger.info(
@@ -123,11 +125,10 @@ class _RoutingFlowControl:
                 self._received_busy_frames,
             )
         else:
-            assert previous_busy_frame_time is not None
             logger.debug(
                 "RoutingBusy received: %s - %s ms since previous - number %s in moving time window",
                 routing_busy,
-                round((now - previous_busy_frame_time) * 1000),
+                None if since_previous is None else round(since_previous * 1000),
                 self._received_busy_frames,
             )
             # discard frame if wait time is lower than remaining time

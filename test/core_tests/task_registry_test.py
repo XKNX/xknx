@@ -81,35 +81,27 @@ class TestTaskRegistry:
         assert task.done()
 
     async def test_start_task_after_stop(self) -> None:
-        """Test tasks started after stop() are only registered until start()."""
+        """Test tasks started after stop() are ignored until start()."""
         xknx = XKNX()
         mock = AsyncMock()
         task = Task(name="test", target=mock)
 
         xknx.task_registry.stop()
         xknx.task_registry.start_task(task)
-        assert task in xknx.task_registry.tasks
-        assert task.xknx is xknx
+        assert not xknx.task_registry.tasks
+        assert task.xknx is None
         assert task.done()
         await asyncio.sleep(0)
         mock.assert_not_called()
-        # the task can be removed again
-        xknx.task_registry.remove_task(task)
-        assert not xknx.task_registry.tasks
-        assert task.xknx is None
 
-        xknx.task_registry.start_task(task)
-        assert task.done()
-        # start() starts the registered task
+        # started normally again after start()
         xknx.task_registry.start()
+        xknx.task_registry.start_task(task)
+        assert task in xknx.task_registry.tasks
         assert not task.done()
         await xknx.task_registry.block_till_done()
         mock.assert_awaited_once()
         assert task.done()
-        # started again normally after start()
-        task_2 = Task(name="test_2", target=mock)
-        xknx.task_registry.start_task(task_2)
-        assert not task_2.done()
         xknx.task_registry.stop()
 
     async def test_task_exception_logged(

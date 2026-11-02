@@ -160,19 +160,18 @@ class TaskRegistry:
         """
         Register a task and start it. If it is already running, it will be restarted.
 
-        After the registry was stopped the task is only registered; it is started
-        when the registry is started again. Telegrams processed while XKNX is
-        shutting down would otherwise leave device tasks running with nobody
-        cancelling them.
+        After the registry was stopped this is a no-op until it is started again:
+        telegrams processed while XKNX is shutting down would otherwise leave
+        device tasks running with nobody cancelling them.
         """
         self.remove_task(task)
+        if self._stopped:
+            logger.debug("Not starting task %s - TaskRegistry is stopped.", task.name)
+            return
         _task = task
         # set xknx to flag registration and allow starting the task
         _task.xknx = self.xknx
         self.tasks.add(_task)
-        if self._stopped:
-            logger.debug("Not starting task %s - TaskRegistry is stopped.", _task.name)
-            return
         # ruff: noqa: SLF001
         _task._start()  # pylint: disable=protected-access
 
@@ -184,14 +183,11 @@ class TaskRegistry:
             self.tasks.remove(task)
 
     def start(self) -> None:
-        """Start task registry and tasks registered while it was stopped."""
+        """Start task registry."""
         self._stopped = False
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
-        for task in self.tasks:
-            if task._task is None:  # pylint: disable=protected-access
-                task._start()  # pylint: disable=protected-access
 
     def stop(self) -> None:
         """Stop task registry and cancel all tasks - including background tasks."""
@@ -226,7 +222,9 @@ class TaskRegistry:
         them from being garbage collected while they are still running.
         """
         # Add task to the set. This creates a strong reference so it can't be garbage collected.
-        task = asyncio.create_task(async_func, name=async_func.__qualname__)
+        task = asyncio.create_task(
+            async_func, name=getattr(async_func, "__qualname__", None)
+        )
         self._background_task.add(task)
         # Remove the reference again after completion and log any exception -
         # nobody awaits the task, so it would otherwise only show up as
