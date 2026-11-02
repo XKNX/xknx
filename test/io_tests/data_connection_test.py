@@ -60,7 +60,7 @@ class TestConnectionHeartbeat:
 
     def test_heartbeat_timing(self) -> None:
         """Test the heartbeat timing - KNX v01.06.02 - Core 03.08.02 - §5.4."""
-        assert HEARTBEAT_RATE == 60
+        assert HEARTBEAT_RATE == 30
         assert CONNECTIONSTATE_REQUEST_TIMEOUT == 10
 
     async def test_regular_heartbeat(self, time_travel: EventLoopClockAdvancer) -> None:
