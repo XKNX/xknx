@@ -58,7 +58,7 @@ class StateUpdater:
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
         # running reads by state address - resolves to True when the state was read,
         # False when the reading tracker was cancelled before sending the GroupValueRead
-        self._pending_reads: dict[DeviceGroupAddress | None, asyncio.Future[bool]] = {}
+        self._pending_reads: dict[DeviceGroupAddress, asyncio.Future[bool]] = {}
 
         # used to determine if a RemoteValue shall register a tracker by default
         self.default_use_updater = bool(default_tracker_option)
@@ -145,10 +145,12 @@ class StateUpdater:
         tracker_options: TrackerOptionType = True,
     ) -> None:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
+        group_address = remote_value.group_address_state
+        if group_address is None:
+            raise ValueError(f"{remote_value} has no state address to read from")
 
         async def read_state_mutex() -> None:
             """Schedule to read the state from the KNX bus - one at a time."""
-            group_address = remote_value.group_address_state
             while (pending := self._pending_reads.get(group_address)) is not None:
                 # another RemoteValue is reading the same group address - the response
                 # is processed by every device, so it updates this one too

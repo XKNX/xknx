@@ -49,6 +49,11 @@ class TestStateUpdater:
         # unregister
         remote_value_2.unregister_state_updater()
         assert len(xknx.state_updater._workers) == 0
+        # nothing to read without a state address
+        remote_value_3: RemoteValue[Any] = RemoteValue(xknx, group_address="1/1/1")
+        with pytest.raises(ValueError):
+            xknx.state_updater.register_remote_value(remote_value_3)
+        assert len(xknx.state_updater._workers) == 0
 
     def test_tracker_parser(self) -> None:
         """Test parsing tracker options."""
