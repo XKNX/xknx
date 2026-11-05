@@ -10,8 +10,10 @@ import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.state_updater import StateTrackerType, _StateTracker
-from xknx.remote_value import RemoteValue
-from xknx.telegram import GroupAddress
+from xknx.dpt import DPTArray
+from xknx.remote_value import RemoteValue, RemoteValueRaw
+from xknx.telegram import GroupAddress, Telegram, TelegramDirection
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse
 
 
 @patch.multiple(RemoteValue, __abstractmethods__=set())
@@ -263,6 +265,195 @@ class TestStateUpdater:
         assert not xknx.state_updater._semaphore.locked()
         assert "Unexpected error reading state of" in caplog.text
         assert "read failed" in caplog.text
+        xknx.state_updater.stop()
+
+    async def test_shared_state_address_single_read(self) -> None:
+        """Test RemoteValues sharing a state address are read with one GroupValueRead."""
+        xknx = XKNX()
+        xknx.state_updater._semaphore = asyncio.Semaphore(value=2)
+        read_1_running = asyncio.Event()
+        read_1_finish = asyncio.Event()
+
+        async def read_state_1(wait_for_result: bool = False) -> None:
+            """Read state of remote_value_1 - finishes when told to."""
+            read_1_running.set()
+            await read_1_finish.wait()
+
+        shared_address = GroupAddress("1/1/1")
+        remote_value_1 = Mock(
+            group_address_state=shared_address, read_state=read_state_1
+        )
+        remote_value_2 = Mock(
+            group_address_state=shared_address, read_state=AsyncMock()
+        )
+        remote_value_3 = Mock(
+            group_address_state=GroupAddress("1/1/3"), read_state=AsyncMock()
+        )
+        remote_value_4 = Mock(
+            group_address_state=GroupAddress("1/1/4"), read_state=AsyncMock()
+        )
+        for remote_value in (
+            remote_value_1,
+            remote_value_2,
+            remote_value_3,
+            remote_value_4,
+        ):
+            xknx.state_updater.register_remote_value(remote_value, "init")
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+        await read_1_running.wait()
+        for _ in range(10):
+            await asyncio.sleep(0)
+        # remote_value_2 waits for the read of remote_value_1 without holding a
+        # `parallel_reads` slot - remote_value_3 is read in the second slot meanwhile
+        remote_value_2.read_state.assert_not_awaited()
+        remote_value_3.read_state.assert_awaited_once_with(wait_for_result=True)
+        remote_value_4.read_state.assert_awaited_once_with(wait_for_result=True)
+        assert not xknx.state_updater._workers[id(remote_value_2)]._task.done()
+
+        read_1_finish.set()
+        for _ in range(10):
+            await asyncio.sleep(0)
+        # the response to the read of remote_value_1 updated remote_value_2 as well
+        remote_value_2.read_state.assert_not_awaited()
+        assert xknx.state_updater._workers[id(remote_value_1)]._task.done()
+        assert xknx.state_updater._workers[id(remote_value_2)]._task.done()
+        assert not xknx.state_updater._pending_reads
+        assert not xknx.state_updater._semaphore.locked()
+        xknx.state_updater.stop()
+
+    async def test_shared_state_address_leader_cancelled(self) -> None:
+        """Test a waiting RemoteValue reads itself when the reading tracker is removed."""
+        xknx = XKNX()
+        xknx.state_updater._semaphore = asyncio.Semaphore(value=1)
+        read_0_running = asyncio.Event()
+        read_0_finish = asyncio.Event()
+
+        async def read_state_0(wait_for_result: bool = False) -> None:
+            """Read state of remote_value_0 - blocks the only slot until told to finish."""
+            read_0_running.set()
+            await read_0_finish.wait()
+
+        shared_address = GroupAddress("1/1/1")
+        remote_value_0 = Mock(
+            group_address_state=GroupAddress("1/1/0"), read_state=read_state_0
+        )
+        remote_value_1 = Mock(
+            group_address_state=shared_address, read_state=AsyncMock()
+        )
+        remote_value_2 = Mock(
+            group_address_state=shared_address, read_state=AsyncMock()
+        )
+        for remote_value in (remote_value_0, remote_value_1, remote_value_2):
+            xknx.state_updater.register_remote_value(remote_value, "init")
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+        await read_0_running.wait()
+        await asyncio.sleep(0)
+        # remote_value_1 waits for the slot, remote_value_2 waits for remote_value_1
+        assert shared_address in xknx.state_updater._pending_reads
+        xknx.state_updater.unregister_remote_value(remote_value_1)
+        for _ in range(10):
+            await asyncio.sleep(0)
+        # remote_value_2 takes over the read
+        assert shared_address in xknx.state_updater._pending_reads
+        remote_value_2.read_state.assert_not_awaited()
+
+        read_0_finish.set()
+        for _ in range(10):
+            await asyncio.sleep(0)
+        remote_value_1.read_state.assert_not_awaited()
+        remote_value_2.read_state.assert_awaited_once_with(wait_for_result=True)
+        assert not xknx.state_updater._pending_reads
+        assert not xknx.state_updater._semaphore.locked()
+        xknx.state_updater.stop()
+
+    async def test_shared_state_address_follower_cancelled(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test a waiting tracker being reset doesn't affect the running read."""
+        xknx = XKNX()
+        xknx.state_updater._semaphore = asyncio.Semaphore(value=1)
+        read_1_running = asyncio.Event()
+        read_1_finish = asyncio.Event()
+
+        async def read_state_1(wait_for_result: bool = False) -> None:
+            """Read state of remote_value_1 - finishes when told to."""
+            read_1_running.set()
+            await read_1_finish.wait()
+
+        shared_address = GroupAddress("1/1/1")
+        remote_value_1 = Mock(
+            group_address_state=shared_address, read_state=read_state_1
+        )
+        remote_value_2 = Mock(
+            group_address_state=shared_address, read_state=AsyncMock()
+        )
+        xknx.state_updater.register_remote_value(remote_value_1)
+        xknx.state_updater.register_remote_value(remote_value_2)
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+        await read_1_running.wait()
+        await asyncio.sleep(0)
+        # a telegram for remote_value_2 was received while waiting - its tracker is reset
+        xknx.state_updater.update_received(remote_value_2)
+        await asyncio.sleep(0)
+        assert shared_address in xknx.state_updater._pending_reads
+        assert xknx.state_updater._semaphore.locked()
+
+        with caplog.at_level(logging.WARNING, logger="xknx"):
+            read_1_finish.set()
+            for _ in range(10):
+                await asyncio.sleep(0)
+        assert not caplog.records
+        remote_value_2.read_state.assert_not_awaited()
+        assert not xknx.state_updater._pending_reads
+        assert not xknx.state_updater._semaphore.locked()
+        xknx.state_updater.stop()
+
+    @patch("xknx.cemi.CEMIHandler.send_telegram", new_callable=AsyncMock)
+    async def test_shared_state_address_one_telegram(
+        self, _send_telegram_mock: AsyncMock, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test one GroupValueRead is sent and its response resolves every reader."""
+        xknx = XKNX()
+        shared_address = GroupAddress("1/1/1")
+        remote_value_1 = RemoteValueRaw(
+            xknx, 1, group_address_state=shared_address, sync_state="init"
+        )
+        remote_value_2 = RemoteValueRaw(
+            xknx, 1, group_address_state=shared_address, sync_state="init"
+        )
+        remote_value_1.register_state_updater()
+        remote_value_2.register_state_updater()
+        xknx.connection_manager._state = XknxConnectionState.CONNECTED
+        xknx.state_updater.start()
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert xknx.telegrams.qsize() == 1
+        assert xknx.telegrams.get_nowait() == Telegram(
+            destination_address=shared_address, payload=GroupValueRead()
+        )
+        xknx.telegrams.task_done()
+        # only one ValueReader - remote_value_2 waits for its result
+        assert len(xknx.telegram_queue.telegram_received_cbs) == 1
+
+        with caplog.at_level(logging.WARNING, logger="xknx"):
+            await xknx.telegram_queue.process_telegram_incoming(
+                Telegram(
+                    destination_address=shared_address,
+                    direction=TelegramDirection.INCOMING,
+                    payload=GroupValueResponse(DPTArray((0x01,))),
+                )
+            )
+            for _ in range(10):
+                await asyncio.sleep(0)
+        assert not caplog.records
+        assert not xknx.telegram_queue.telegram_received_cbs
+        assert xknx.telegrams.qsize() == 0
+        assert xknx.state_updater._workers[id(remote_value_1)]._task.done()
+        assert xknx.state_updater._workers[id(remote_value_2)]._task.done()
+        assert not xknx.state_updater._pending_reads
         xknx.state_updater.stop()
 
     async def test_stop_start_state_updater_when_reconnecting(self) -> None:
