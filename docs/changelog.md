@@ -6,6 +6,21 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Management
+
+- `P2PConnection`: a `T_Disconnect` the device sends while a request waits for its `T_ACK` fails the request with `ManagementConnectionRefused` right away. Before, the telegram was repeated on the closed connection and the request failed with `ManagementConnectionTimeout` after 6 seconds.
+- `P2PConnection`: a `T_Data_Connected` answered with a `T_NAK` is repeated like an unacknowledged one - KNX v01.02.03 - Transport Layer 03.03.04 - §5.4 (E12 → A9). When the last repetition is still not acknowledged, the connection is closed with a `T_Disconnect` (E13/E18 → A6) and `ManagementConnectionTimeout` (no ACK) or `ManagementConnectionError` (NAK) is raised, instead of the connection staying open.
+- `P2PConnection`: a `T_ACK` or `T_NAK` with a wrong sequence number is ignored - KNX AN210 v02 TL Style 3 Rework - §2.2.1 (E09/E11 → A0). Before, it raised `ManagementConnectionError` while the connection was kept open.
+- `P2PConnection`: the outgoing sequence number is advanced only after the telegram was acknowledged (A8), so a repeated telegram and the next one after a failed send carry the right number.
+- `P2PConnection`: the connection is closed with a `T_Disconnect` when nothing is sent or received for 6 seconds - KNX v01.02.03 - Transport Layer 03.03.04 - §5 connection timeout timer (E16 → A6). A `request()` still waiting for its response then raises `ManagementConnectionTimeout` as before, but the connection is closed with it instead of being left open; `Management.connection()` doesn't send a second `T_Disconnect` for it.
+- `P2PConnection`: a `T_Data_Connected` received while no `request()` is pending - e.g. a response arriving after its request timed out - is acknowledged but dropped. Before, it was returned as the response to the next `request()`.
+- `P2PConnection`: concurrent `request()` and `send_data()` calls on one connection are serialized - the Transport Layer allows no parallel services on a connection.
+- `Management.connect()` refuses a second `connect()` to the same address while the first one is still waiting for its `T_Connect` to be confirmed, and a `T_Disconnect` the device answers the `T_Connect` with raises `ManagementConnectionRefused` instead of being dropped.
+- `P2PConnection.disconnect()` fails a pending `request()` with `ManagementConnectionError` instead of cancelling it, and does nothing on a connection the Transport Layer closed before. A `ConfirmationError` or `CommunicationError` while repeating a telegram is raised as `ManagementConnectionError` like for the first transmission.
+- `P2PConnection` and `P2PConnectionless` use a monotonic clock for rate limiting, so a system clock change can not stall or skip the wait.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection

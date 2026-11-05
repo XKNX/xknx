@@ -230,10 +230,10 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
     """
     Test nm_individual_address_write when device refuses connection during address check.
 
-    Device sends TDisconnect → nm_individual_address_check(xknx, address) already handles
-    this internally (its own connection context manager's finally raises
-    ManagementConnectionRefused from disconnect() after the peer already disconnected, and its
-    own except swallows it) → returns True.
+    The device answers the DeviceDescriptorRead with a TDisconnect instead of an ACK.
+    The pending request fails with ManagementConnectionRefused right away - the telegram
+    is not repeated - and nm_individual_address_check treats that as "address occupied"
+    (KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 1) → returns True.
     """
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
@@ -251,12 +251,6 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
         direction=TelegramDirection.INCOMING,
         tpci=tpci.TDisconnect(),
     )
-    ack_from_device = Telegram(
-        source_address=individual_address,
-        destination_address=IndividualAddress(0),
-        direction=TelegramDirection.INCOMING,
-        tpci=tpci.TAck(0),
-    )
     individual_address_read = Telegram(
         GroupAddress("0/0/0"), payload=apci.IndividualAddressRead()
     )
@@ -270,13 +264,11 @@ async def test_nm_individual_address_write_address_occupied_by_disconnect(
         call(device_desc_read),
     ]
 
-    # device sends disconnect (address occupied) then ACK for the DeviceDescriptorRead
+    # device sends disconnect (address occupied) instead of an ACK
     xknx.management.process(disconnect_from_device)
-    xknx.management.process(ack_from_device)
 
-    # nm_individual_address_check's own connection context manager finally raises
-    # ManagementConnectionRefused (peer already disconnected, no TDisconnect sent by us);
-    # its own except swallows it and returns True; IndividualAddressRead broadcast is sent
+    # the address check reports the address as occupied without waiting for the
+    # ACK timeout; no TDisconnect is sent by us; IndividualAddressRead broadcast is sent
     await time_travel(0)
     assert xknx.cemi_handler.send_telegram.call_args_list[2:] == [
         call(individual_address_read),
