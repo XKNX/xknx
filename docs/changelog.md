@@ -10,7 +10,7 @@ nav_order: 2
 
 ### Bugfixes
 
-- StateUpdater: `RemoteValue`s sharing a state address - e.g. a Sensor and a Climate configured with the same `group_address_*_state` - are read with a single GroupValueRead. The others wait for that read instead of sending their own, since its response is processed by every `RemoteValue` of the address anyway. Before, each one sent its own GroupValueRead, back-to-back, 40 ms apart, and some actuators only answer the first one. A waiting `RemoteValue` doesn't occupy a `parallel_reads` slot.
+- StateUpdater: `RemoteValue`s sharing a state address - e.g. a Sensor and a Climate configured with the same `group_address_*_state` - are read with a single GroupValueRead. The others wait for that read instead of sending their own, since its response is processed by every `RemoteValue` of the address anyway.
 
 # 4.1.0 Connectionless and DPTs galore 2026-11-02
 
