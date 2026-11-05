@@ -1,5 +1,6 @@
 """Unit test for XKNX Module."""
 
+import asyncio
 import logging
 from pathlib import Path
 import tempfile
@@ -8,8 +9,13 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from xknx import XKNX
+from xknx.dpt import DPTBinary
 from xknx.exceptions import CommunicationError
-from xknx.io import ConnectionConfig, ConnectionType
+from xknx.io import ConnectionConfig, ConnectionType, UDPTunnel
+from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueWrite
+
+from .conftest import EventLoopClockAdvancer
 
 
 class TestXknxModule:
@@ -133,4 +139,107 @@ class TestXknxModule:
         transport_connect_mock.assert_called_once()
         assert xknx.telegram_queue._consumer_task is None  # not started
         assert not xknx.state_updater.started
+        assert not xknx.started.is_set()
+
+    @patch(
+        "xknx.io.transport.udp_transport.UDPTransport.connect",
+        new_callable=AsyncMock,
+        side_effect=CommunicationError("gateway unreachable"),
+    )
+    async def test_xknx_stop_while_reconnecting(
+        self,
+        _transport_connect_mock: AsyncMock,
+        time_travel: EventLoopClockAdvancer,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Test stop() returns while the tunnel reconnects and a telegram waits for it."""
+        xknx = XKNX()
+        tunnel = UDPTunnel(
+            xknx,
+            cemi_received_callback=xknx.knxip_interface.cemi_received,
+            gateway_ip="127.0.0.2",
+            gateway_port=3671,
+            local_ip="127.0.0.1",
+            auto_reconnect=True,
+            auto_reconnect_wait=3,
+        )
+        with patch(
+            "xknx.io.KNXIPInterface._start",
+            new_callable=AsyncMock,
+            side_effect=lambda: setattr(xknx.knxip_interface, "_interface", tunnel),
+        ):
+            await xknx.start()
+        assert xknx.knxip_interface._interface is tunnel
+
+        # the gateway went away - the tunnel keeps trying to reconnect
+        tunnel._tunnel_lost()
+        await time_travel(0)
+        assert tunnel._reconnect_task is not None
+        # a telegram sent meanwhile waits for the reconnect
+        xknx.telegrams.put_nowait(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            )
+        )
+        await time_travel(0)
+        assert tunnel._send_lock.locked()
+
+        with caplog.at_level(logging.WARNING, logger="xknx.log"):
+            stop_task = asyncio.create_task(xknx.stop())
+            await time_travel(0)
+        assert stop_task.done()
+        await stop_task
+        # the waiting telegram was dropped, not sent
+        assert "Reconnect was cancelled" in caplog.text
+        assert xknx.knxip_interface._interface is None
+        assert tunnel._reconnect_task is None
+        assert not tunnel.auto_reconnect
+        assert xknx.telegram_queue._consumer_task.done()
+        assert not xknx.started.is_set()
+
+    @patch(
+        "xknx.io.transport.udp_transport.UDPTransport.connect", new_callable=AsyncMock
+    )
+    async def test_xknx_stop_flushes_queue(
+        self, _transport_connect_mock: AsyncMock, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test stop() sends queued telegrams before disconnecting while connected."""
+        xknx = XKNX()
+        tunnel = UDPTunnel(
+            xknx,
+            cemi_received_callback=xknx.knxip_interface.cemi_received,
+            gateway_ip="127.0.0.2",
+            gateway_port=3671,
+            local_ip="127.0.0.1",
+        )
+        with patch(
+            "xknx.io.KNXIPInterface._start",
+            new_callable=AsyncMock,
+            side_effect=lambda: setattr(xknx.knxip_interface, "_interface", tunnel),
+        ):
+            await xknx.start()
+        # `async with XKNX() as xknx: group_value_write(...)` - the telegram is queued
+        # right before stop() and shall still be sent
+        xknx.telegrams.put_nowait(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            )
+        )
+        with (
+            patch(
+                "xknx.io.UDPTunnel.send_cemi", new_callable=AsyncMock
+            ) as send_cemi_mock,
+            patch(
+                "xknx.io.UDPTunnel.disconnect", new_callable=AsyncMock
+            ) as disconnect_mock,
+        ):
+            # a confirmation makes CEMIHandler.send_telegram() return
+            send_cemi_mock.side_effect = lambda cemi: (
+                xknx.cemi_handler._l_data_confirmation_event.set()
+            )
+            await xknx.stop()
+        send_cemi_mock.assert_awaited_once()
+        disconnect_mock.assert_awaited_once()
         assert not xknx.started.is_set()

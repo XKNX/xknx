@@ -41,6 +41,7 @@ def _interface_mock() -> Mock:
     mock = Mock()
     mock.start = AsyncMock()
     mock.stop = AsyncMock()
+    mock.stop_reconnect = AsyncMock()
     mock.send_cemi = AsyncMock()
     return mock
 
