@@ -1,6 +1,7 @@
 """Test Secure Session."""
 
 import asyncio
+import logging
 from unittest.mock import Mock, patch
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
@@ -11,6 +12,7 @@ from xknx.io.const import SESSION_KEEPALIVE_RATE
 from xknx.io.ip_secure import SecureSession
 from xknx.knxip import (
     HPAI,
+    ConnectionStateResponse,
     DisconnectRequest,
     KNXIPFrame,
     SecureWrapper,
@@ -177,7 +179,8 @@ class TestSecureSession:
 
         await connect_task
         assert self.session.initialized is True
-        assert not self.session._keepalive_task.done()
+        assert self.session._keepalive_handle is not None
+        assert not self.session._keepalive_handle.cancelled()
 
         # handle incoming SessionStatus - SessionStatus is only valid encrypted
         session_status_close_frame = KNXIPFrame.init_from_body(
@@ -208,7 +211,49 @@ class TestSecureSession:
             )
             mock_super_send.assert_called_once()
             mock_transport.close.assert_called_once()
-            assert self.session._keepalive_task is None
+            assert self.session._keepalive_handle is None
+
+    @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
+    async def test_keepalive_rescheduled_on_send(
+        self,
+        mock_super_send: Mock,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test the keepalive timer is restarted by every encrypted frame sent."""
+        self.session._key = bytes(16)
+        self.session.session_id = self.mock_session_id
+        self.session.initialized = True
+        self.session.start_keepalive_task()
+        first_handle = self.session._keepalive_handle
+        assert first_handle is not None
+
+        await time_travel(SESSION_KEEPALIVE_RATE / 2)
+        mock_super_send.assert_not_called()
+        self.session.send(KNXIPFrame.init_from_body(DisconnectRequest()))
+        mock_super_send.assert_called_once()
+        mock_super_send.reset_mock()
+        # the timer was rescheduled, not left running
+        assert first_handle.cancelled()
+        assert self.session._keepalive_handle is not first_handle
+
+        await time_travel(SESSION_KEEPALIVE_RATE / 2)
+        mock_super_send.assert_not_called()  # the original timer would fire now
+        await time_travel(SESSION_KEEPALIVE_RATE / 2)
+        mock_super_send.assert_called_once()  # keepalive frame
+        keepalive_frame = mock_super_send.call_args.args[0]
+        assert isinstance(keepalive_frame.body, SecureWrapper)
+        # the keepalive frame itself restarts the timer
+        assert self.session._keepalive_handle is not None
+        assert not self.session._keepalive_handle.cancelled()
+        mock_super_send.reset_mock()
+        await time_travel(SESSION_KEEPALIVE_RATE)
+        mock_super_send.assert_called_once()
+
+        self.session.stop_keepalive_task()
+        assert self.session._keepalive_handle is None
+        mock_super_send.reset_mock()
+        await time_travel(SESSION_KEEPALIVE_RATE * 2)
+        mock_super_send.assert_not_called()
 
     def test_uninitialized(self, caplog: pytest.LogCaptureFixture) -> None:
         """Test an encrypted Frame arriving at an uninitialized Session is discarded."""
@@ -479,10 +524,95 @@ class TestSecureSession:
         assert not receive(tunnelling_request_frame)
         assert not receive(disconnect_request_frame)
         # nothing is accepted in plain once the session is established
+        # - except tunnelling data of a server that never wrapped any
         self.session.initialized = True
+        self.session._wrapped_tunnelling_received = True
         assert not receive(session_response_frame)
         assert not receive(tunnelling_request_frame)
         assert not receive(disconnect_request_frame)
+
+    async def test_receive_plain_tunnelling_frames(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test plain tunnelling data of a non-conforming server is tolerated."""
+        frame_received_mock = Mock()
+        self.session.register_callback(frame_received_mock)
+        self.session.initialized = True
+        tunnelling_request_frame = KNXIPFrame.init_from_body(
+            TunnellingRequest(
+                communication_channel_id=16,
+                raw_cemi=bytes.fromhex("2900b06010fa10ff0080"),
+            )
+        )
+        disconnect_request_frame = KNXIPFrame.init_from_body(
+            DisconnectRequest(communication_channel_id=16)
+        )
+        connectionstate_response_frame = KNXIPFrame.init_from_body(
+            ConnectionStateResponse(communication_channel_id=16)
+        )
+
+        def receive(knxipframe: KNXIPFrame) -> bool:
+            """Return True if the plain frame was passed on to the callbacks."""
+            frame_received_mock.reset_mock()
+            self.session.handle_knxipframe(knxipframe, HPAI(*self.mock_addr))
+            return frame_received_mock.called
+
+        def warnings() -> list[str]:
+            """Return the warnings logged by the secure session."""
+            return [
+                record.getMessage()
+                for record in caplog.records
+                if record.name == "xknx.ip_secure" and record.levelno == logging.WARNING
+            ]
+
+        with caplog.at_level(logging.WARNING, logger="xknx.ip_secure"):
+            # tunnelling data is tolerated - with one warning per session
+            assert receive(tunnelling_request_frame)
+            assert len(warnings()) == 1
+            assert "is not encrypted" in warnings()[0]
+            assert "from 127.0.0.1:12345/tcp" in warnings()[0]
+            assert receive(tunnelling_request_frame)
+            assert receive(disconnect_request_frame)
+            assert len(warnings()) == 1
+            # connection management stays discarded
+            assert not receive(connectionstate_response_frame)
+            assert len(warnings()) == 2
+            assert "Discarding received unencrypted frame" in warnings()[1]
+
+            # once the server sent wrapped tunnelling data, plain is discarded
+            caplog.clear()
+            with patch.object(
+                SecureSession, "decrypt_frame", return_value=tunnelling_request_frame
+            ):
+                secure_wrapper_frame = KNXIPFrame.init_from_body(
+                    SecureWrapper(
+                        secure_session_id=self.mock_session_id,
+                        sequence_information=bytes.fromhex("00 00 00 00 00 01"),
+                        serial_number=bytes(6),
+                        message_tag=self.mock_message_tag,
+                        encrypted_data=bytes(16),
+                        message_authentication_code=bytes(16),
+                    )
+                )
+                assert receive(secure_wrapper_frame)
+            assert not warnings()
+            assert not receive(tunnelling_request_frame)
+            assert not receive(disconnect_request_frame)
+            assert len(warnings()) == 2
+
+        # a new session starts tolerant again
+        self.session.initialized = False
+        with (
+            patch("xknx.io.transport.tcp_transport.TCPTransport.connect"),
+            patch(
+                "xknx.io.ip_secure.Session.request",
+                side_effect=CommunicationError("No response"),
+            ),
+            pytest.raises(CommunicationError),
+        ):
+            await self.session.connect()
+        assert not self.session._wrapped_tunnelling_received
+        assert not self.session._plain_tunnelling_warned
 
     @patch("xknx.io.transport.tcp_transport.TCPTransport.send")
     def test_send_plain_frames(self, mock_super_send: Mock) -> None:
