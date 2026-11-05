@@ -12,6 +12,7 @@ from xknx.core import XknxConnectionState
 from xknx.remote_value import RemoteValue
 
 if TYPE_CHECKING:
+    from xknx.telegram.address import DeviceGroupAddress
     from xknx.xknx import XKNX
 
 
@@ -36,6 +37,7 @@ class StateUpdater:
 
     __slots__ = (
         "_default_tracker_option",
+        "_pending_reads",
         "_semaphore",
         "_workers",
         "default_use_updater",
@@ -54,6 +56,9 @@ class StateUpdater:
         self.started = False
         self._workers: dict[int, _StateTracker] = {}
         self._semaphore = asyncio.Semaphore(value=parallel_reads)
+        # running reads by state address - resolves to True when the state was read,
+        # False when the reading tracker was cancelled before sending the GroupValueRead
+        self._pending_reads: dict[DeviceGroupAddress, asyncio.Future[bool]] = {}
 
         # used to determine if a RemoteValue shall register a tracker by default
         self.default_use_updater = bool(default_tracker_option)
@@ -140,36 +145,61 @@ class StateUpdater:
         tracker_options: TrackerOptionType = True,
     ) -> None:
         """Register a RemoteValue to initialize its state and/or track for expiration."""
+        group_address = remote_value.group_address_state
+        if group_address is None:
+            raise ValueError(f"{remote_value} has no state address to read from")
 
         async def read_state_mutex() -> None:
             """Schedule to read the state from the KNX bus - one at a time."""
-            async with self._semaphore:
-                # wait until there is nothing else to send to the bus
-                # (this may take a while under continuous outgoing traffic)
-                await self.xknx.telegram_queue.outgoing_queue.join()
+            # another RemoteValue reading the same group address updates this one
+            # too, since the response is processed by every device. If that read is
+            # cancelled before it was sent, all waiters wake at once: the first one
+            # starts its own read, the others wait on it in the next iteration.
+            while (pending := self._pending_reads.get(group_address)) is not None:
                 logger.debug(
-                    "StateUpdater reading %s for %s - %s",
-                    remote_value.group_address_state,
+                    "StateUpdater waiting for running read of %s for %s - %s",
+                    group_address,
                     remote_value.device_name,
                     remote_value.feature_name,
                 )
-                # shield from cancellation so update_received() don't cancel the
-                # ValueReader leaving the telegram_received_cb until next telegram
-                read_task = asyncio.create_task(
-                    remote_value.read_state(wait_for_result=True)
-                )
-                try:
-                    await asyncio.shield(read_task)
-                except asyncio.CancelledError:
-                    # keep holding the semaphore until the shielded read has finished
-                    # so `parallel_reads` is not exceeded by the next tracker
+                # shielded so cancelling this tracker doesn't cancel the shared future
+                if await asyncio.shield(pending):
+                    return
+            pending = asyncio.get_running_loop().create_future()
+            self._pending_reads[group_address] = pending
+            read_started = False
+            try:
+                async with self._semaphore:
+                    # wait until there is nothing else to send to the bus
+                    # (this may take a while under continuous outgoing traffic)
+                    await self.xknx.telegram_queue.outgoing_queue.join()
+                    logger.debug(
+                        "StateUpdater reading %s for %s - %s",
+                        group_address,
+                        remote_value.device_name,
+                        remote_value.feature_name,
+                    )
+                    # shield from cancellation so update_received() don't cancel the
+                    # ValueReader leaving the telegram_received_cb until next telegram
+                    read_task = asyncio.create_task(
+                        remote_value.read_state(wait_for_result=True)
+                    )
+                    read_started = True
                     try:
-                        await read_task
-                    except Exception:  # pylint: disable=broad-except
-                        logger.exception(
-                            "Unexpected error reading state of %s", remote_value
-                        )
-                    raise
+                        await asyncio.shield(read_task)
+                    except asyncio.CancelledError:
+                        # keep holding the semaphore until the shielded read has finished
+                        # so `parallel_reads` is not exceeded by the next tracker
+                        try:
+                            await read_task
+                        except Exception:  # pylint: disable=broad-except
+                            logger.exception(
+                                "Unexpected error reading state of %s", remote_value
+                            )
+                        raise
+            finally:
+                del self._pending_reads[group_address]
+                pending.set_result(read_started)
 
         tracker_options = self.parse_tracker_options(tracker_options, str(remote_value))
         tracker = _StateTracker(
