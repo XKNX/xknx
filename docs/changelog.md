@@ -62,6 +62,18 @@ nav_order: 2
 - Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
 - Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
 
+### Connection
+
+- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: reconnecting is stopped before the outgoing queue is drained (new `Interface.stop_reconnect()`), so a pending telegram fails with `CommunicationError` instead of waiting for the reconnect. Telegrams queued while the connection is up are still sent before disconnecting.
+- Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
+- Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
+- Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.
+- UDP tunnel: a telegram whose TUNNELLING_REQUESTs went unanswered while the heartbeat already reconnected the tunnel is retried on the new communication channel instead of reconnecting the healthy new tunnel once more.
+- TCP tunnel: a connection lost while `connect()` still waits for the CONNECT_RESPONSE or the secure session handshake no longer leaves an orphaned reconnect loop behind the failed connection attempt.
+- Tunnel: the automatic reconnect keeps retrying after an unexpected exception instead of ending silently with the tunnel disconnected.
+- TCP transport: a partial frame left in the receive buffer is dropped when the connection is closed or reopened instead of corrupting the first frame of the next connection.
+- TCP transport: establishing the TCP connection times out after `TCP_CONNECT_TIMEOUT` (10 seconds) with a `CommunicationError` instead of waiting for the OS connect timeout (~2 minutes for a dropped SYN).
+
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.

@@ -8,6 +8,9 @@ DEFAULT_INDIVIDUAL_ADDRESS: Final = IndividualAddress("15.15.250")
 DEFAULT_MCAST_GRP: Final = "224.0.23.12"
 DEFAULT_MCAST_PORT: Final = 3671
 
+# Time to wait for a TCP connection to a KNXnet/IP server to be established.
+TCP_CONNECT_TIMEOUT: Final = 10
+
 # The client shall send a CONNECTIONSTATE_REQUEST regularly, i.e. every 60 seconds;
 # the server shall answer within 10 seconds - KNX v01.06.02 - Core 03.08.02 - §5.4.
 # ETS 6 sends one every 30 seconds (ETS 5: 60 seconds), which halves the time
