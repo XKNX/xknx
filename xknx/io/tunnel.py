@@ -263,6 +263,18 @@ class _Tunnel(Interface):
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
 
+    async def stop_reconnect(self) -> None:
+        """
+        Stop reconnecting for good - the tunnel is about to be shut down.
+
+        A running reconnect is cancelled, so a telegram waiting for it fails with
+        `CommunicationError` instead of blocking until the gateway is reachable again,
+        and a connection lost from now on is not reconnected either. An established
+        tunnel stays usable until `disconnect()`.
+        """
+        self.auto_reconnect = False
+        self._stop_reconnect()
+
     async def disconnect(self) -> None:
         """Disconnect tunneling connection."""
         self._prepare_disconnect()

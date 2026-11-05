@@ -164,13 +164,14 @@ class XKNX:
         self.devices.async_remove_device_tasks()
         self.task_registry.stop()
         self.state_updater.stop()
-        # Stop the interface before draining the queue: a telegram queued while the
-        # tunnel reconnects waits for the reconnect to finish, which would block
-        # shutdown until the gateway is reachable again. Without an interface,
-        # pending outgoing telegrams fail fast with CommunicationError instead.
-        await self.knxip_interface.stop()
+        # Telegrams still queued are sent while the connection is up. A telegram
+        # waiting for a reconnect would block shutdown until the gateway is reachable
+        # again, so reconnecting is stopped first: the pending telegram then fails
+        # with CommunicationError and the queue drains right away.
+        await self.knxip_interface.stop_reconnect()
         await self.join()
         await self.telegram_queue.stop()
+        await self.knxip_interface.stop()
         self.started.clear()
 
     async def loop_until_sigint(self) -> None:

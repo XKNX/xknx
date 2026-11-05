@@ -64,7 +64,7 @@ nav_order: 2
 
 ### Connection
 
-- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: the KNX/IP interface is stopped before the outgoing queue is drained, so pending telegrams fail with `CommunicationError` instead of waiting for the reconnect.
+- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: reconnecting is stopped before the outgoing queue is drained (new `Interface.stop_reconnect()`), so a pending telegram fails with `CommunicationError` instead of waiting for the reconnect. Telegrams queued while the connection is up are still sent before disconnecting.
 - Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
 - Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
 - Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.

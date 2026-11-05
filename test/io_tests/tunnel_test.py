@@ -541,6 +541,23 @@ class TestUDPTunnel:
         mock_tunnel_lost.assert_not_called()
         assert self.tunnel.communication_channel == own_channel
 
+    async def test_stop_reconnect(self, time_travel: EventLoopClockAdvancer) -> None:
+        """Test stop_reconnect() cancels a running reconnect and disables further ones."""
+        self.tunnel.auto_reconnect = True
+        self.tunnel._tunnel_lost()
+        await time_travel(0)
+        assert self.tunnel._reconnect_task is not None
+
+        await self.tunnel.stop_reconnect()
+        await time_travel(0)
+        assert self.tunnel._reconnect_task is None
+        assert not self.tunnel.auto_reconnect
+        # a connection lost afterwards is not reconnected anymore
+        self.tunnel.transport.transport = None
+        self.tunnel._tunnel_lost()
+        await time_travel(0)
+        assert self.tunnel._reconnect_task is None
+
     async def test_send_ready_reconnect_cancelled(
         self, time_travel: EventLoopClockAdvancer
     ) -> None:
