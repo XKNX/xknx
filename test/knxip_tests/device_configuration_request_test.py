@@ -65,3 +65,9 @@ class TestKNXIPDeviceConfigurationRequest:
         raw = bytes((0x06, 0x10, 0x03, 0x10, 0x00, 0x15, 0x04))
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
+
+    @pytest.mark.parametrize("raw", [b"", b"\x04\x01", b"\x05\x01\x17\x00"])
+    def test_from_knx_invalid_connection_header(self, raw: bytes) -> None:
+        """Test parsing a too short or wrongly sized connection header raises CouldNotParseKNXIP."""
+        with pytest.raises(CouldNotParseKNXIP):
+            DeviceConfigurationRequest().from_knx(raw)

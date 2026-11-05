@@ -35,9 +35,9 @@ class TunnellingRequest(KNXIPBody):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if raw[0] != TunnellingRequest.HEADER_LENGTH:
-            raise CouldNotParseKNXIP("connection header wrong length")
         if len(raw) < TunnellingRequest.HEADER_LENGTH:
+            raise CouldNotParseKNXIP("connection header wrong length")
+        if raw[0] != TunnellingRequest.HEADER_LENGTH:
             raise CouldNotParseKNXIP("connection header wrong length")
         self.communication_channel_id = raw[1]
         self.sequence_counter = raw[2]

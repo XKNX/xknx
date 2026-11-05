@@ -408,13 +408,9 @@ class _Tunnel(Interface):
         """Handle incoming requests."""
         if isinstance(knxipframe.body, TunnellingRequest):
             if knxipframe.body.communication_channel_id != self.communication_channel:
-                # KNX v01.06.02 - Core 03.08.02 - §5.3.3: the server assigns a
-                # Communication Channel ID to each established channel - a frame of
-                # another channel is not ours. Neither acknowledge it nor let it
-                # touch our sequence counter.
-                logger.debug(
-                    "Received TunnellingRequest for another communication channel "
-                    "than %s. Discarding frame: %s",
+                logger.warning(
+                    "Discarding TunnellingRequest of other communication channel "
+                    "(own: %s): %s",
                     self.communication_channel,
                     knxipframe.body,
                 )

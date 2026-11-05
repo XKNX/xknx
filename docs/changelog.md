@@ -8,6 +8,24 @@ nav_order: 2
 
 # Unreleased changes
 
+### Bugfixes
+
+- StateUpdater: `RemoteValue`s sharing a state address - e.g. a Sensor and a Climate configured with the same `group_address_*_state` - are read with a single GroupValueRead. The others wait for that read instead of sending their own, since its response is processed by every `RemoteValue` of the address anyway.
+
+# 4.1.0 Connectionless and DPTs galore 2026-11-02
+
+### Connection
+
+- Routing: outgoing ROUTING_INDICATION frames of concurrent senders (TelegramQueue, Management) are serialized by the flow control so each one keeps the pause after the previously sent frame and the ROUTING_BUSY wait time, instead of being sent in a burst - KNX v01.01.02 - Communication Medium KNX IP 03.02.06 - §2.1.
+- Routing: the number of received ROUTING_BUSY frames `N` - used for the random wait time extension and the slowduration - counts every frame received more than 10 ms after the previous one, including the first one - KNX v01.05.02 - Routing 03.08.05 - §2.3.5. Before, the first frame was never counted.
+- Tunnelling / Device Management: send a CONNECTIONSTATE_REQUEST heartbeat every 30 seconds instead of every 70 seconds. KNX v01.06.02 - Core 03.08.02 - §5.4 asks for one every 60 seconds; ETS 6 sends one every 30 seconds, which halves the time until a dead connection is noticed. `CONNECTION_ALIVE_TIME` was removed from `xknx.io.const`.
+- IP Secure: send the SESSION_STATUS keepalive after 15 seconds of inactivity instead of 50 seconds, like ETS does, leaving a wide margin to the 60 second session timeout.
+- Routing: close the multicast socket when configuring or binding it fails instead of leaking it.
+- Accept unwrapped `TunnellingRequest` and `DisconnectRequest` frames in a KNX IP Secure session from servers that send them this way, until a wrapped `TunnellingRequest` is received. Since 4.0.0 they were discarded, so no telegram and no L_Data.con arrived from such servers. One warning per session is logged. All other unwrapped frames stay discarded. `TunnellingRequest`s of another communication channel are dropped by every tunnel type.
+- Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
+- Harden KNXnet/IP frame parsing: malformed DIBs, headers and bodies raise `CouldNotParseKNXIP` instead of hanging the event loop or closing the TCP connection. The TCP transport skips an unparsable frame by its total length and keeps processing the stream.
+- cEMI: empty or truncated frames raise `CouldNotParseCEMI` instead of `IndexError`.
+
 ### Management
 
 - Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
@@ -32,6 +50,17 @@ nav_order: 2
 - Add the DALI emergency converter DPTs 244.600 `DPTConverterStatus`, 245.600 `DPTConverterTestResult`, 246.600 `DPTBatteryInfo`, 247.600 `DPTConverterTestInfo`, 248.600 `DPTConverterInfoFix` and 272.600 `DPTConverterInfo` - KNX v02.02.01 - Datapoint Types 03.07.02 - §6.11-§6.15, §6.22.
 - Add DPT 255.001 `DPTGeographicalLocation` and the forecasts for 2-octet float values 273.001-273.007 (`DPTForecastTemperature`, `DPTForecastWindSpeed`, `DPTForecastRelativeHumidity`, `DPTForecastAbsoluteHumidity`, `DPTForecastCO2`, `DPTForecastAirPollutants`, `DPTForecastSunIntensity`) - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.52.1, §10.1.
 - Add DPT 275.100 (`DPTRoomTemperatureSetpoints4`, value_type `"room_temperature_setpoints_4"`) and DPT 275.101 (`DPTRoomTemperatureSetpointShifts4`, value_type `"room_temperature_setpoint_shifts_4"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.4. Their values `RoomTemperatureSetpoints4` and `RoomTemperatureSetpointShifts4` carry the `comfort`, `standby`, `economy` and `building_protection` setpoints in °C, or setpoint shifts in K, of the RTSM (Room Temperature Setpoint Manager) and related HVAC function blocks as `float`, or `None` for the invalid data value `0x7FFF`.
+- Add DPT 5.100 (`DPTFanStage`, value_type `"fan_stage"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.5. A discrete fan stage 0...255, 0 is off.
+- Add DPT 20.107 (`DPTChangeoverMode`, value_type `"changeover_mode"`) with the enum `ChangeoverMode` in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.3.
+- Add DPT 20.116 (`DPTEnableHCStage`, value_type `"enable_hc_stage"`) with the enum `EnableHCStage` in `xknx.dpt.dpt_20` - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.6.
+- Add DPT 21.107 (`DPTCombinedStatusRTSM`, value_type `"combined_status_rtsm"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.1. Its value `CombinedStatusRTSM` carries the window, presence, comfort push button, comfort prolongation User and HVAC Mode User status of an RTSM (Room Temperature Setpoint Manager). §9.1 makes it mandatory one year after publication, and disallows the "Eberle status octet" `DPTHVACStatus` from then on.
+- Add DPT 22.102 (`DPTCombinedStatusHVA`, value_type `"combined_status_hva"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.3. Its value `CombinedStatusHVA` carries the valve position, the short circuit and overload alarms and the valve kick, service mode, manual operation, forced position, locked position and calibration mode status of a heating/cooling valve actuator.
+- Add DPT 22.103 (`DPTCombinedStatusRTC`, value_type `"combined_status_rtc"`) - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.2. Its value `CombinedStatusRTC` carries the fault, `heat_cool_mode` (`HeatCool`), dew point, frost and overheat alarm, controller inactive, additional stage and heating/cooling enabled status of an RTC (Room Temperature Controller). Like DPT 21.107 it becomes mandatory one year after publication and replaces `DPTHVACStatus`; DPT 22.101 `DPTStatusRHCC` becomes optional.
+
+### Devices
+
+- Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
+- Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
 
 ### Connection
 
@@ -48,6 +77,17 @@ nav_order: 2
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
+- `ValueReader` (used by `RemoteValue.read_state()` and the StateUpdater): the response timeout starts when the GroupValueRead is actually sent instead of when it is queued, so reads waiting behind other outgoing telegrams no longer time out before reaching the bus ("Could not sync group address"). A GroupValueRead that can't be sent within 10 seconds is given up with a warning.
+- StateUpdater: a state update received while a read for the same `RemoteValue` is running no longer frees its `parallel_reads` slot before the read has finished.
+- Address parsing: `GroupAddress` and `IndividualAddress` raise `CouldNotParseAddress` instead of `ValueError` for strings of non-ASCII digits like `"²"` (which `str.isdigit()` accepts but `int()` rejects) and reject a trailing newline (`"1/2/3\n"`). The `ValueError` escaped `GroupAddressDPT.set()` and aborted the whole group address to DPT mapping.
+- `DPTBase.parse_transcoder()` no longer resolves strings like `"TPD-9"` or `"PPP9"` to DPT 9: only a leading `"DPT"` / `"DPT-"` prefix is removed, not any of its characters.
+
+### Internals
+
+- TaskRegistry: exceptions of `Task` targets and of `background()` tasks are logged with the task name instead of being noticed only as "Task exception was never retrieved" at garbage collection. `background()` tasks are cancelled on `stop()`. Tasks started after `stop()` - e.g. by device telegrams processed while XKNX is shutting down - are only registered and started on the next `start()`, instead of running unmanaged.
+- DPT lookups by number or `value_type` (`DPTBase.transcoder_by_dpt()`, `transcoder_by_value_type()`, `parse_transcoder()`, `get_dpt()`) use lazily built lookup tables per base class instead of walking all transcoder classes on every call - about 100 times faster, which matters when `GroupAddressDPT.set()` maps thousands of group addresses. The tables are rebuilt when a new `DPTBase` subclass is defined.
+- `KNXIPFrame.from_knx()` resolves the body class from a lookup table instead of a chain of comparisons.
+- IP Secure: the session keepalive is a rescheduled `loop.call_later()` timer instead of a task cancelled and recreated for every frame sent.
 
 # 4.0.0 Typed and tidy 2026-10-15
 
