@@ -10,7 +10,7 @@ from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import (
     MANAGEMENT_ACK_TIMEOUT,
     MANAGEMENT_CONNECTION_TIMEOUT,
-    MANAGEMENT_MAX_REP_COUNT,
+    MANAGEMENT_MAX_REPETITIONS,
 )
 from xknx.management.procedures.network.nm_individual_address_write import (
     nm_individual_address_write,
@@ -25,6 +25,15 @@ from xknx.telegram import (
 )
 
 from ....conftest import EventLoopClockAdvancer
+
+# a telegram nobody acknowledges is sent once and repeated, each waiting for an ACK
+SENDS_WITHOUT_ACK = MANAGEMENT_MAX_REPETITIONS + 1
+
+
+async def _no_ack(time_travel: EventLoopClockAdvancer) -> None:
+    """Let a telegram and all its repetitions time out without an ACK."""
+    for _ in range(SENDS_WITHOUT_ACK):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
 
 
 async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) -> None:
@@ -83,10 +92,8 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
         nm_individual_address_write(xknx, individual_address_new)
     )
 
-    # make sure first request (address check) times out - the telegram is
-    # repeated 3 times, then the connection is closed
-    for _ in range(MANAGEMENT_MAX_REP_COUNT + 1):
-        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+    # make sure first request (address check) times out
+    await _no_ack(time_travel)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
@@ -98,10 +105,7 @@ async def test_nm_individual_address_write(time_travel: EventLoopClockAdvancer) 
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
-        call(device_desc_read),
-        call(device_desc_read),  # due to retransmit
-        call(device_desc_read),
-        call(device_desc_read),
+        *[call(device_desc_read)] * SENDS_WITHOUT_ACK,  # due to retransmit
         call(disconnect),
         call(individual_address_read),
         call(individual_address_write),
@@ -148,17 +152,11 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
 
     # make sure first request (address check) times out
     await time_travel(0)  # start
-    await time_travel(3)  # first timeout
-    await time_travel(3)  # second timeout
-    await time_travel(3)  # third timeout
-    await time_travel(3)  # fourth timeout - the connection is closed
+    await _no_ack(time_travel)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
-        call(device_desc_read),
-        call(device_desc_read),  # due to retransmit
-        call(device_desc_read),
-        call(device_desc_read),
+        *[call(device_desc_read)] * SENDS_WITHOUT_ACK,  # due to retransmit
         call(disconnect),
         call(individual_address_read),
     ]
@@ -170,7 +168,7 @@ async def test_nm_individual_address_write_two_devices_in_programming_mode(
         match="More than one KNX device is in programming mode",
     ):
         await task
-    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 7
+    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 3 + SENDS_WITHOUT_ACK
 
 
 async def test_nm_individual_address_write_no_device_programming_mode(
@@ -205,15 +203,15 @@ async def test_nm_individual_address_write_no_device_programming_mode(
         call(connect),
         call(device_desc_read),
     ]
-    # first timeout - retransmit DeviceDescriptorRead, 3 times
-    for repetition in range(2, 5):
-        await time_travel(3)
-        assert xknx.cemi_handler.send_telegram.call_args_list[repetition:] == [
+    # each timeout - retransmit DeviceDescriptorRead
+    for repetition in range(1, SENDS_WITHOUT_ACK):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+        assert xknx.cemi_handler.send_telegram.call_args_list[repetition + 1 :] == [
             call(device_desc_read),
         ]
-    # retries also timed out - connection closed
-    await time_travel(3)
-    assert xknx.cemi_handler.send_telegram.call_args_list[5:] == [
+    # the last repetition also timed out
+    await time_travel(MANAGEMENT_ACK_TIMEOUT)
+    assert xknx.cemi_handler.send_telegram.call_args_list[SENDS_WITHOUT_ACK + 1 :] == [
         call(disconnect),
         call(individual_address_read),
     ]
@@ -223,7 +221,7 @@ async def test_nm_individual_address_write_no_device_programming_mode(
         ManagementConnectionError, match="No device in programming mode"
     ):
         await task
-    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 7
+    assert len(xknx.cemi_handler.send_telegram.call_args_list) == 3 + SENDS_WITHOUT_ACK
 
 
 async def test_nm_individual_address_write_address_occupied_by_disconnect(
@@ -389,33 +387,24 @@ async def test_nm_individual_address_write_programming_failed(
         nm_individual_address_write(xknx, individual_address_new)
     )
 
-    # make sure first request (address check) times out - the telegram is
-    # repeated 3 times, then the connection is closed
-    for _ in range(MANAGEMENT_MAX_REP_COUNT + 1):
-        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+    # make sure first request (address check) times out
+    await _no_ack(time_travel)
 
     # send response to device in programming mode
     xknx.management.process(address_reply_message)
 
-    # device experienced error, so the check after the write times out as well
+    # device experienced error, so set connection request timeout
     await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
-    for _ in range(MANAGEMENT_MAX_REP_COUNT + 1):
-        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+    await _no_ack(time_travel)
 
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(connect),
-        call(device_desc_read),
-        call(device_desc_read),  # due to retransmit
-        call(device_desc_read),
-        call(device_desc_read),
+        *[call(device_desc_read)] * SENDS_WITHOUT_ACK,  # due to retransmit
         call(disconnect),
         call(individual_address_read),
         call(individual_address_write),
         call(connect),
-        call(device_desc_read),
-        call(device_desc_read),
-        call(device_desc_read),
-        call(device_desc_read),
+        *[call(device_desc_read)] * SENDS_WITHOUT_ACK,
         call(disconnect),
     ]
 

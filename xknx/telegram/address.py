@@ -112,9 +112,7 @@ class IndividualAddress(BaseAddress):
     MAX_AREA = 15
     MAX_MAIN = 15
     MAX_LINE = 255
-    ADDRESS_RE = re_compile(
-        r"^(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})$"
-    )
+    ADDRESS_RE = re_compile(r"(?P<area>\d{1,2})\.(?P<main>\d{1,2})\.(?P<line>\d{1,3})")
 
     def __init__(self, address: IndividualAddressableType) -> None:
         """Initialize IndividualAddress class."""
@@ -123,7 +121,8 @@ class IndividualAddress(BaseAddress):
         elif isinstance(address, IndividualAddress):
             self.raw = address.raw
         elif isinstance(address, str):
-            if address.isdigit():
+            # `isdecimal()` rather than `isdigit()`: "²" is a digit `int()` rejects
+            if address.isdecimal():
                 self.raw = int(address)
             else:
                 self.raw = self.__string_to_int(address)
@@ -145,7 +144,8 @@ class IndividualAddress(BaseAddress):
 
         In any other case, we raise an `CouldNotParseAddress` exception.
         """
-        match = self.ADDRESS_RE.match(address)
+        # `fullmatch()` rather than `match()` with `$`: that would allow a trailing newline
+        match = self.ADDRESS_RE.fullmatch(address)
         if not match:
             raise CouldNotParseAddress(address, message="Invalid format")
         area = int(match.group("area"))
@@ -229,7 +229,7 @@ class GroupAddress(BaseAddress):
     MAX_FREE = 65535
 
     ADDRESS_RE = re_compile(
-        r"^(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})$"
+        r"(?P<main>\d{1,2})(/(?P<middle>\d{1,2}))?/(?P<sub>\d{1,4})"
     )
 
     def __init__(self, address: GroupAddressableType) -> None:
@@ -239,7 +239,8 @@ class GroupAddress(BaseAddress):
         elif isinstance(address, GroupAddress):
             self.raw = address.raw
         elif isinstance(address, str):
-            if address.isdigit():
+            # `isdecimal()` rather than `isdigit()`: "²" is a digit `int()` rejects
+            if address.isdecimal():
                 self.raw = int(address)
             else:
                 self.raw = self.__string_to_int(address)
@@ -261,7 +262,8 @@ class GroupAddress(BaseAddress):
 
         In any other case, we raise an `CouldNotParseAddress` exception.
         """
-        match = self.ADDRESS_RE.match(address)
+        # `fullmatch()` rather than `match()` with `$`: that would allow a trailing newline
+        match = self.ADDRESS_RE.fullmatch(address)
         if not match:
             raise CouldNotParseAddress(address, message="Invalid format")
         main = int(match.group("main"))

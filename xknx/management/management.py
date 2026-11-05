@@ -39,9 +39,10 @@ logger = logging.getLogger("xknx.management")
 
 # KNX v01.02.03 - Transport Layer 03.03.04 - §4 Parameters of Transport Layer
 MANAGEMENT_ACK_TIMEOUT = 3
+# KNX v01.02.03 - Transport Layer 03.03.04 - §4: max_rep_count, how often a
+# T_Data_Connected is repeated without an ACK
+MANAGEMENT_MAX_REPETITIONS = 3
 MANAGEMENT_CONNECTION_TIMEOUT = 6
-# repetitions of an unacknowledged T_Data_Connected before the connection is closed
-MANAGEMENT_MAX_REP_COUNT = 3
 # telegrams per second a point-to-point connection sends at most
 MANAGEMENT_RATE_LIMIT = 20
 
@@ -484,7 +485,7 @@ class P2PConnection:
     amended by KNX AN210 v02 TL Style 3 Rework - §2.2.1). The events (E..) and
     actions (A..) named in the comments are the ones of its §5.2 and §5.3.
     Timing per its §4 and §5.5.1.9: a sent T_Data_Connected is repeated up to
-    `MANAGEMENT_MAX_REP_COUNT` times when it is not acknowledged within
+    `MANAGEMENT_MAX_REPETITIONS` times when it is not acknowledged within
     `MANAGEMENT_ACK_TIMEOUT` seconds, and the connection is closed when nothing
     is sent or received for `MANAGEMENT_CONNECTION_TIMEOUT` seconds.
 
@@ -761,7 +762,7 @@ class P2PConnection:
         Send a payload to the KNX device.
 
         If `wait_for_ack` is True (default), waits for the device to ACK the
-        telegram, repeating it up to `MANAGEMENT_MAX_REP_COUNT` times when no
+        telegram, repeating it up to `MANAGEMENT_MAX_REPETITIONS` times when no
         ACK or a NAK arrives within `MANAGEMENT_ACK_TIMEOUT` seconds. If it is
         still not acknowledged, the connection is closed with a T_Disconnect
         and `ManagementConnectionTimeout` (no ACK) or `ManagementConnectionError`
@@ -798,7 +799,7 @@ class P2PConnection:
         ack: TAck | TNak | None = None
         try:
             # A7, then A9 for each repetition
-            for rep_count in range(MANAGEMENT_MAX_REP_COUNT + 1):
+            for rep_count in range(MANAGEMENT_MAX_REPETITIONS + 1):
                 if rep_count:
                     logger.info(
                         "%s: %s for %s. Repeating Telegram (%s/%s).",
@@ -806,7 +807,7 @@ class P2PConnection:
                         "no ACK received" if ack is None else "NAK received",
                         telegram,
                         rep_count,
-                        MANAGEMENT_MAX_REP_COUNT,
+                        MANAGEMENT_MAX_REPETITIONS,
                     )
                 # create it before sending so an ACK arriving while the send is
                 # confirmed, or a disconnect, is not missed
