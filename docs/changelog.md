@@ -8,6 +8,37 @@ nav_order: 2
 
 # Unreleased changes
 
+### Management
+
+- `P2PConnection`: a `T_Disconnect` the device sends while a request waits for its `T_ACK` fails the request with `ManagementConnectionRefused` right away. Before, the telegram was repeated on the closed connection and the request failed with `ManagementConnectionTimeout` after 6 seconds.
+- `P2PConnection`: a `T_Data_Connected` answered with a `T_NAK` is repeated like an unacknowledged one - KNX v01.02.03 - Transport Layer 03.03.04 - §5.4 (E12 → A9). When the last repetition is still not acknowledged, the connection is closed with a `T_Disconnect` (E13/E18 → A6) and `ManagementConnectionTimeout` (no ACK) or `ManagementConnectionError` (NAK) is raised, instead of the connection staying open.
+- `P2PConnection`: a `T_ACK` or `T_NAK` with a wrong sequence number is ignored - KNX AN210 v02 TL Style 3 Rework - §2.2.1 (E09/E11 → A0). Before, it raised `ManagementConnectionError` while the connection was kept open.
+- `P2PConnection`: the outgoing sequence number is advanced only after the telegram was acknowledged (A8), so a repeated telegram and the next one after a failed send carry the right number.
+- `P2PConnection`: the connection is closed with a `T_Disconnect` when nothing is sent or received for 6 seconds - KNX v01.02.03 - Transport Layer 03.03.04 - §5 connection timeout timer (E16 → A6). A `request()` still waiting for its response then raises `ManagementConnectionTimeout` as before, but the connection is closed with it instead of being left open; `Management.connection()` doesn't send a second `T_Disconnect` for it.
+- `P2PConnection`: a `T_Data_Connected` received while no `request()` is pending - e.g. a response arriving after its request timed out - is acknowledged but dropped. Before, it was returned as the response to the next `request()`.
+- `P2PConnection`: concurrent `request()` and `send_data()` calls on one connection are serialized - the Transport Layer allows no parallel services on a connection.
+- `Management.connect()` refuses a second `connect()` to the same address while the first one is still waiting for its `T_Connect` to be confirmed, and a `T_Disconnect` the device answers the `T_Connect` with raises `ManagementConnectionRefused` instead of being dropped.
+- `P2PConnection.disconnect()` fails a pending `request()` with `ManagementConnectionError` instead of cancelling it, and does nothing on a connection the Transport Layer closed before. A `ConfirmationError` or `CommunicationError` while repeating a telegram is raised as `ManagementConnectionError` like for the first transmission.
+- `P2PConnection` and `P2PConnectionless` use a monotonic clock for rate limiting, so a system clock change can not stall or skip the wait.
+
+# 4.1.1 Tunnel robustness 2026-11-05
+
+### Connection
+
+- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: reconnecting is stopped before the outgoing queue is drained (new `Interface.stop_reconnect()`), so a pending telegram fails with `CommunicationError` instead of waiting for the reconnect. Telegrams queued while the connection is up are still sent before disconnecting.
+- Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
+- Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
+- Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.
+- UDP tunnel: a telegram whose TUNNELLING_REQUESTs went unanswered while the heartbeat already reconnected the tunnel is retried on the new communication channel instead of reconnecting the healthy new tunnel once more.
+- TCP tunnel: a connection lost while `connect()` still waits for the CONNECT_RESPONSE or the secure session handshake no longer leaves an orphaned reconnect loop behind the failed connection attempt.
+- Tunnel: the automatic reconnect keeps retrying after an unexpected exception instead of ending silently with the tunnel disconnected.
+- TCP transport: a partial frame left in the receive buffer is dropped when the connection is closed or reopened instead of corrupting the first frame of the next connection.
+- TCP transport: establishing the TCP connection times out after `TCP_CONNECT_TIMEOUT` (10 seconds) with a `CommunicationError` instead of waiting for the OS connect timeout (~2 minutes for a dropped SYN).
+
+### Management
+
+- `P2PConnection.send_data()` repeats a telegram the device doesn't acknowledge up to 3 times instead of once - `max_rep_count` of KNX v01.02.03 - Transport Layer 03.03.04 - §4, used by events E17/E18 of §5.3. A telegram lost twice in a row on a busy or lossy path, e.g. a KNXnet/IP tunnel, no longer fails the request. `MANAGEMENT_MAX_REPETITIONS` holds the number. A device that doesn't answer at all is given up on after 12 seconds instead of 6, which also makes `nm_individual_address_check()` and `nm_individual_address_write()` wait that long for a free address.
+
 ### Bugfixes
 
 - StateUpdater: `RemoteValue`s sharing a state address - e.g. a Sensor and a Climate configured with the same `group_address_*_state` - are read with a single GroupValueRead. The others wait for that read instead of sending their own, since its response is processed by every `RemoteValue` of the address anyway.
@@ -28,17 +59,6 @@ nav_order: 2
 
 ### Management
 
-- `P2PConnection.send_data()` repeats a telegram the device doesn't acknowledge up to 3 times instead of once - `max_rep_count` of KNX v01.02.03 - Transport Layer 03.03.04 - §4, used by events E17/E18 of §5.3. A telegram lost twice in a row on a busy or lossy path, e.g. a KNXnet/IP tunnel, no longer fails the request. `MANAGEMENT_MAX_REPETITIONS` holds the number. A device that doesn't answer at all is given up on after 12 seconds instead of 6, which also makes `nm_individual_address_check()` and `nm_individual_address_write()` wait that long for a free address.
-- `P2PConnection`: a `T_Disconnect` the device sends while a request waits for its `T_ACK` fails the request with `ManagementConnectionRefused` right away. Before, the telegram was repeated on the closed connection and the request failed with `ManagementConnectionTimeout` after 6 seconds.
-- `P2PConnection`: a `T_Data_Connected` answered with a `T_NAK` is repeated like an unacknowledged one - KNX v01.02.03 - Transport Layer 03.03.04 - §5.4 (E12 → A9). When the last repetition is still not acknowledged, the connection is closed with a `T_Disconnect` (E13/E18 → A6) and `ManagementConnectionTimeout` (no ACK) or `ManagementConnectionError` (NAK) is raised, instead of the connection staying open.
-- `P2PConnection`: a `T_ACK` or `T_NAK` with a wrong sequence number is ignored - KNX AN210 v02 TL Style 3 Rework - §2.2.1 (E09/E11 → A0). Before, it raised `ManagementConnectionError` while the connection was kept open.
-- `P2PConnection`: the outgoing sequence number is advanced only after the telegram was acknowledged (A8), so a repeated telegram and the next one after a failed send carry the right number.
-- `P2PConnection`: the connection is closed with a `T_Disconnect` when nothing is sent or received for 6 seconds - KNX v01.02.03 - Transport Layer 03.03.04 - §5 connection timeout timer (E16 → A6). A `request()` still waiting for its response then raises `ManagementConnectionTimeout` as before, but the connection is closed with it instead of being left open; `Management.connection()` doesn't send a second `T_Disconnect` for it.
-- `P2PConnection`: a `T_Data_Connected` received while no `request()` is pending - e.g. a response arriving after its request timed out - is acknowledged but dropped. Before, it was returned as the response to the next `request()`.
-- `P2PConnection`: concurrent `request()` and `send_data()` calls on one connection are serialized - the Transport Layer allows no parallel services on a connection.
-- `Management.connect()` refuses a second `connect()` to the same address while the first one is still waiting for its `T_Connect` to be confirmed, and a `T_Disconnect` the device answers the `T_Connect` with raises `ManagementConnectionRefused` instead of being dropped.
-- `P2PConnection.disconnect()` fails a pending `request()` with `ManagementConnectionError` instead of cancelling it, and does nothing on a connection the Transport Layer closed before. A `ConfirmationError` or `CommunicationError` while repeating a telegram is raised as `ManagementConnectionError` like for the first transmission.
-- `P2PConnection` and `P2PConnectionless` use a monotonic clock for rate limiting, so a system clock change can not stall or skip the wait.
 - Add `xknx.profile.PropertyDataType` - KNX v01.04.01 - Standardized Identifier Tables 03.07.03 - §4.1 Table 6, the Property Datatypes of Interface Object Properties. Its `size` property gives the size in octets per element, or `None` where the PDT alone doesn't fix it. `PropertyDescriptionResponse` gets `writable`, `pdt`, `read_level` and `write_level` properties for the single fields of its `type_` and `access` octets (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1), named like the fields of `PropertyExtDescriptionResponse`. `type_` and `access` keep holding the whole octets. Together they tell the element size of a Property before reading it, e.g. whether a device's Group Object Association Table (`PID_TABLE`) holds 2 or 4 octets per entry.
 - Add connectionless point-to-point communication - KNX v01.02.03 - Transport Layer 03.03.04 - §1.5, telegrams sent as `T_Data_Individual` without a transport connection. `async with xknx.management.connectionless(address) as connectionless:` provides a `P2PConnectionless` with `send()`, `receive()` and `request()`, like `Broadcast` and `BroadcastContext` for one device. While it is open, the `T_Data_Individual` telegrams the device sends are handed to it - they were dropped as unhandled before, so a response to a connectionless request could not be received. `receive(expected, timeout)` yields every telegram of the device carrying `expected` until `timeout` elapses, for procedures that need more than the first response. `request()` returns the first telegram carrying the payload's `RESPONSE_TYPE` and skips any other, and raises `ManagementConnectionTimeout` if none arrives within `timeout` (keyword, default 6 seconds). Concurrent `request()` calls are sent one after the other, as nothing in a response tells which request it answers. A `connection()` to the same device may be open at the same time.
 
@@ -72,18 +92,6 @@ nav_order: 2
 
 - Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
 - Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
-
-### Connection
-
-- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: reconnecting is stopped before the outgoing queue is drained (new `Interface.stop_reconnect()`), so a pending telegram fails with `CommunicationError` instead of waiting for the reconnect. Telegrams queued while the connection is up are still sent before disconnecting.
-- Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
-- Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
-- Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.
-- UDP tunnel: a telegram whose TUNNELLING_REQUESTs went unanswered while the heartbeat already reconnected the tunnel is retried on the new communication channel instead of reconnecting the healthy new tunnel once more.
-- TCP tunnel: a connection lost while `connect()` still waits for the CONNECT_RESPONSE or the secure session handshake no longer leaves an orphaned reconnect loop behind the failed connection attempt.
-- Tunnel: the automatic reconnect keeps retrying after an unexpected exception instead of ending silently with the tunnel disconnected.
-- TCP transport: a partial frame left in the receive buffer is dropped when the connection is closed or reopened instead of corrupting the first frame of the next connection.
-- TCP transport: establishing the TCP connection times out after `TCP_CONNECT_TIMEOUT` (10 seconds) with a `CommunicationError` instead of waiting for the OS connect timeout (~2 minutes for a dropped SYN).
 
 ### Bugfixes
 
