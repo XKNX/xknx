@@ -151,9 +151,11 @@ class StateUpdater:
 
         async def read_state_mutex() -> None:
             """Schedule to read the state from the KNX bus - one at a time."""
+            # another RemoteValue reading the same group address updates this one
+            # too, since the response is processed by every device. If that read is
+            # cancelled before it was sent, all waiters wake at once: the first one
+            # starts its own read, the others wait on it in the next iteration.
             while (pending := self._pending_reads.get(group_address)) is not None:
-                # another RemoteValue is reading the same group address - the response
-                # is processed by every device, so it updates this one too
                 logger.debug(
                     "StateUpdater waiting for running read of %s for %s - %s",
                     group_address,
