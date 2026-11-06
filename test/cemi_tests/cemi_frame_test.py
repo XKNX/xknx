@@ -249,6 +249,26 @@ def test_invalid_invalid_len() -> None:
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
 
 
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b"",  # no message code
+        bytes.fromhex("29"),  # L_DATA_IND without additional info length
+        bytes.fromhex("29 05 00 00"),  # additional info length exceeds data
+    ],
+)
+def test_truncated_cemi(raw: bytes) -> None:
+    """Test truncated cEMI raises CouldNotParseCEMI instead of IndexError."""
+    with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
+        CEMIFrame.from_knx(raw)
+
+
+def test_cemi_info_empty() -> None:
+    """Test CEMIInfo parsing of empty data raises CouldNotParseCEMI."""
+    with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
+        CEMIInfo.from_knx(b"")
+
+
 def test_from_knx_group_address() -> None:
     """Test conversion for a cemi with a group address as destination."""
     frame = CEMIFrame.from_knx(get_data(0x29, 0, 0x80, 0, 0, 1, 0, []))
@@ -463,8 +483,8 @@ def test_busmon_ind_without_frame() -> None:
 
 @pytest.mark.parametrize("raw", ["2b", "2b0503010004"])
 def test_additional_info_exceeds_frame(raw: str) -> None:
-    """Test Additional Information Length exceeding the frame."""
-    with pytest.raises(CouldNotParseCEMI, match=r"Additional Information exceeds"):
+    """Test an L_Busmon.ind whose Additional Information Length exceeds the frame."""
+    with pytest.raises(CouldNotParseCEMI, match=r"CEMI too small"):
         CEMIFrame.from_knx(bytes.fromhex(raw))
 
 
