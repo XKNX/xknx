@@ -96,6 +96,7 @@ class TestUSBTunnel:
         ]
         assert interface.written_cemi() == [
             bytes.fromhex("f6000801341001 00"),  # PID_COMM_MODE := data link layer
+            bytes.fromhex("fc000801341001"),  # PID_COMM_MODE read back
             bytes.fromhex("fc000001391001"),  # PID_SUBNET_ADDR
             bytes.fromhex("fc0000013a1001"),  # PID_DEVICE_ADDR
             bytes.fromhex("fc000001381001"),  # PID_MAX_APDU_LENGTH
@@ -117,17 +118,21 @@ class TestUSBTunnel:
         ]
         await tunnel.disconnect()
 
-    async def test_disconnect_resets(self, fake_hid: FakeHIDModule) -> None:
-        """Test disconnect resets the cEMI server and closes the device."""
+    async def test_disconnect(self, fake_hid: FakeHIDModule) -> None:
+        """Test disconnect closes the device as it is."""
         tunnel = self.tunnel()
         await tunnel.connect()
+        sent = len(fake_hid.interface.written)
         await tunnel.disconnect()
         interface = fake_hid.interface
-        assert interface.written_cemi()[-1] == b"\xf1"
-        assert interface.properties[(8, 52)] == b"\xff"
+        # nothing is sent on disconnect: the next connect sets the mode again
+        assert len(interface.written) == sent
+        assert interface.properties[(8, 52)] == b"\x00"
         assert fake_hid.closed == 1
         assert self.states[-1][0] is XknxConnectionState.DISCONNECTED
-        # the reset indication isn't passed on
+        # a reset indication (e.g. after another client reset it) isn't passed on
+        tunnel.cemi_received_callback = self.cemi_received
+        tunnel._cemi_received(b"\xf0")
         self.cemi_received.assert_not_called()
         with pytest.raises(CommunicationError):
             await tunnel.send_cemi(
@@ -280,6 +285,21 @@ class TestUSBTunnel:
         with pytest.raises(CommunicationError, match="PID_COMM_MODE"):
             await self.tunnel().connect()
 
+    async def test_comm_mode_not_switched(self, fake_hid: FakeHIDModule) -> None:
+        """Test an interface confirming the data link layer without switching to it."""
+        interface = fake_hid.interface
+
+        def ignore(frame: object, original=interface._handle) -> None:  # noqa: ANN001
+            body = getattr(frame, "body", b"")
+            if body[:1] == b"\xf6":
+                interface.send_cemi(bytes((0xF5,)) + body[1:7])
+                return
+            original(frame)
+
+        interface._handle = ignore  # type: ignore[method-assign]
+        with pytest.raises(CommunicationError, match="did not switch.*it is in ff"):
+            await self.tunnel().connect()
+
     async def test_not_found(self, fake_hid: FakeHIDModule) -> None:
         """Test no interface found."""
         fake_hid.enumeration.clear()
@@ -412,8 +432,8 @@ class TestUSBTunnel:
             )
         await tunnel.disconnect()
 
-    async def test_reset_fails(self, fake_hid: FakeHIDModule) -> None:
-        """Test disconnecting when the reset can't be written."""
+    async def test_disconnect_when_writing_fails(self, fake_hid: FakeHIDModule) -> None:
+        """Test disconnecting an interface that no longer takes writes."""
         tunnel = self.tunnel()
         await tunnel.connect()
         fake_hid.interface.write_result = -1

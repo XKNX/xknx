@@ -4,10 +4,12 @@ KNX tunnelling over a KNX USB interface.
 On connect the bus access server is checked and set up - KNX v01.03.04 - Basic and
 System Components - Couplers 09.03 - §3.5.3.3.2: the supported EMI types are read,
 cEMI is activated, and the cEMI server is switched to the data link layer
-(PID_COMM_MODE) - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2.
-The interface's own individual address and maximum APDU length are read from its
-device object. On disconnect the cEMI server is reset (M_Reset.req), which brings
-it back to its start-up state.
+(PID_COMM_MODE, read back to verify) - KNX v01.04.02 - External Message Interface
+03.06.03 - §4.2.2.4.2. The interface's own individual address and maximum APDU
+length are read from its device object. On disconnect the interface is closed as
+it is: whoever connects next sets the communication mode again, as the cEMI server
+may be in any mode until then (KNX v01.04.02 - External Message Interface 03.06.03 -
+§4.2.2.4.2).
 """
 
 from __future__ import annotations
@@ -265,17 +267,27 @@ class USBTunnel(Interface):
             DeviceFeature.DEVICE_DESCRIPTOR_TYPE_0
         )
 
+        communication_mode = bytes(
+            (
+                CommunicationMode.DATA_LINK_LAYER_BUSMONITOR
+                if self.busmonitor
+                else CommunicationMode.DATA_LINK_LAYER,
+            )
+        )
         await self._property_write(
             ResourceObjectType.OBJECT_CEMI_SERVER,
             ResourceCEMIServerPropertyId.PID_COMM_MODE,
-            bytes(
-                (
-                    CommunicationMode.DATA_LINK_LAYER_BUSMONITOR
-                    if self.busmonitor
-                    else CommunicationMode.DATA_LINK_LAYER,
-                )
-            ),
+            communication_mode,
         )
+        active_mode = await self._property_read(
+            ResourceObjectType.OBJECT_CEMI_SERVER,
+            ResourceCEMIServerPropertyId.PID_COMM_MODE,
+        )
+        if active_mode[:1] != communication_mode:
+            raise CommunicationError(
+                f"KNX USB interface did not switch to communication mode "
+                f"{communication_mode.hex()} (it is in {active_mode.hex()})"
+            )
         individual_address = await self._read_individual_address()
         self.xknx.current_address = individual_address
         max_apdu_length = await self._read_max_apdu_length()
@@ -400,21 +412,10 @@ class USBTunnel(Interface):
             self._reconnect_task.cancel()
 
     async def disconnect(self) -> None:
-        """Reset the cEMI server and close the interface."""
-        was_established = self._established
+        """Close the interface."""
         self._prepare_disconnect()
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
-        if was_established and self._device is not None:
-            try:
-                # M_Reset.req has no confirmation; the server answers with
-                # M_Reset.ind once it restarted - KNX v01.04.02 - External
-                # Message Interface 03.06.03 - §4.1.7.5
-                await self._send_tunnel_frame(
-                    bytes((CEMIMessageCode.M_RESET_REQ.value,))
-                )
-            except CommunicationError as ex:
-                logger.debug("Could not reset KNX USB interface: %s", ex)
         await self._close_device()
 
     ####################
