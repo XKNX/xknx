@@ -92,9 +92,15 @@ class Task:
                         return
                     await self.xknx.connection_manager.connected.wait()
 
-            job = self.target()
-            if asyncio.iscoroutine(job):
-                await job
+            try:
+                job = self.target()
+                if asyncio.iscoroutine(job):
+                    await job
+            except Exception:  # pylint: disable=broad-except
+                # log the exception here - the task would otherwise end silently,
+                # noticed only as "Task exception was never retrieved" at garbage collection
+                logger.exception("Unexpected error in task %s", self.name)
+                return
 
             if self.repeat_after is None:
                 break
@@ -139,18 +145,29 @@ class Task:
 class TaskRegistry:
     """Manages async tasks in XKNX."""
 
-    __slots__ = ("_background_task", "tasks", "xknx")
+    __slots__ = ("_background_task", "_stopped", "tasks", "xknx")
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize TaskRegistry class."""
         self.xknx = xknx
         self.tasks: set[Task] = set()
+        # set by stop() and cleared by start() - no tasks are started in between
+        self._stopped = False
 
         self._background_task: set[asyncio.Task[None]] = set()
 
     def start_task(self, task: Task) -> None:
-        """Register a task and start it. If it is already running, it will be restarted."""
+        """
+        Register a task and start it. If it is already running, it will be restarted.
+
+        After the registry was stopped this is a no-op until it is started again:
+        telegrams processed while XKNX is shutting down would otherwise leave
+        device tasks running with nobody cancelling them.
+        """
         self.remove_task(task)
+        if self._stopped:
+            logger.debug("Not starting task %s - TaskRegistry is stopped.", task.name)
+            return
         _task = task
         # set xknx to flag registration and allow starting the task
         _task.xknx = self.xknx
@@ -167,12 +184,14 @@ class TaskRegistry:
 
     def start(self) -> None:
         """Start task registry."""
+        self._stopped = False
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
 
     def stop(self) -> None:
-        """Stop task registry and cancel all tasks."""
+        """Stop task registry and cancel all tasks - including background tasks."""
+        self._stopped = True
         self.xknx.connection_manager.unregister_connection_state_changed_cb(
             self.connection_state_changed_cb
         )
@@ -180,6 +199,8 @@ class TaskRegistry:
         for task in self.tasks:
             task.cancel()
         self.tasks = set()
+        for background_task in self._background_task:
+            background_task.cancel()
 
     async def block_till_done(self) -> None:
         """Await all tracked tasks."""
@@ -201,9 +222,23 @@ class TaskRegistry:
         them from being garbage collected while they are still running.
         """
         # Add task to the set. This creates a strong reference so it can't be garbage collected.
-        task = asyncio.create_task(async_func)
-        # To prevent keeping references to finished tasks forever,
+        task = asyncio.create_task(
+            async_func, name=getattr(async_func, "__qualname__", None)
+        )
         self._background_task.add(task)
-        # make each task remove its own reference from the set after
-        # completion:
-        task.add_done_callback(self._background_task.discard)
+        # Remove the reference again after completion and log any exception -
+        # nobody awaits the task, so it would otherwise only show up as
+        # "Task exception was never retrieved" at garbage collection.
+        task.add_done_callback(self._background_task_done)
+
+    def _background_task_done(self, task: asyncio.Task[None]) -> None:
+        """Discard a finished background task and log its exception, if any."""
+        self._background_task.discard(task)
+        if task.cancelled():
+            return
+        if (exception := task.exception()) is not None:
+            logger.error(
+                "Unexpected error in background task %s",
+                task.get_name(),
+                exc_info=exception,
+            )
