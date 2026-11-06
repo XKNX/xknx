@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Connection
+
+- Add `GatewayScanner(all_interfaces=True)` to send the search requests from every local IPv4 address (loopback ones left out; link-local ones are kept for a gateway on AutoIP) and merge the gateways found. Without it, and without `local_ip`, the search goes out only from the address the system routes the multicast group through - on a host with WSL, Hyper-V, a VM or a VPN that is often a virtual adapter without any gateway behind it. An address that cannot send is skipped; the search fails only if none can. `xknx.io.util.get_search_ips()` returns these addresses.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
