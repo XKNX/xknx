@@ -64,6 +64,7 @@ from .dpt_4 import DPTCharacter, DPTCharacterLatin1
 from .dpt_5 import (
     DPTAngle,
     DPTDecimalFactor,
+    DPTFanStage,
     DPTPercentU8,
     DPTScaling,
     DPTTariff,
@@ -242,11 +243,20 @@ from .dpt_16 import DPTLatin1, DPTString
 from .dpt_17 import DPTSceneNumber
 from .dpt_18 import DPTSceneControl, SceneControl
 from .dpt_19 import DPTDateTime
-from .dpt_20 import DPTErrorClassSystem, DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
+from .dpt_20 import (
+    DPTChangeoverMode,
+    DPTEnableHCStage,
+    DPTErrorClassSystem,
+    DPTHVACContrMode,
+    DPTHVACMode,
+    DPTHVACStatus,
+)
 from .dpt_21 import (
     ChannelActivation8,
+    CombinedStatusRTSM,
     DeviceControl,
     DPTChannelActivation8,
+    DPTCombinedStatusRTSM,
     DPTDeviceControl,
     DPTForceSign,
     DPTForceSignCool,
@@ -279,8 +289,12 @@ from .dpt_21 import (
 )
 from .dpt_22 import (
     ChannelActivation16,
+    CombinedStatusHVA,
+    CombinedStatusRTC,
     DHWControllerStatus,
     DPTChannelActivation16,
+    DPTCombinedStatusHVA,
+    DPTCombinedStatusRTC,
     DPTMedia,
     DPTStatusDHWC,
     DPTStatusRHCC,
@@ -321,6 +335,7 @@ from .dpt_207 import (
     LightingActuatorStatus,
     LockingSignal,
 )
+from .dpt_217 import DPTVersion, KNXVersion
 from .dpt_219 import AlarmInfo, DPTAlarmInfo
 from .dpt_222 import (
     DPTRoomTemperatureSetpoints3,
