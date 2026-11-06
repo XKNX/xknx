@@ -224,7 +224,7 @@ class GatewayScanner:
 
         Without `local_ip` the search requests are sent from the local address the system
         routes the multicast group through - or, with `all_interfaces`, from every local IPv4
-        address but loopback and link-local ones. That finds gateways also when multicast is
+        address but loopback ones. That finds gateways also when multicast is
         routed through a network without any, e.g. a virtual adapter of a VM, WSL or a VPN.
         """
         self.xknx = xknx

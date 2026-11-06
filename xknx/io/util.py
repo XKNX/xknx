@@ -41,12 +41,16 @@ def get_local_ips() -> list[ifaddr.IP]:
 
 
 def get_search_ips() -> list[str]:
-    """Return the local IPv4 addresses to search for gateways from (no loopback or link-local)."""
+    """
+    Return the local IPv4 addresses to search for gateways from (no loopback addresses).
+
+    Link-local addresses are kept: a gateway connected directly to the host, without a
+    DHCP server, can use AutoIP (169.254.x.x) just as the host does.
+    """
     addresses: list[str] = []
     for link in get_local_ips():
         local_ip = cast(str, link.ip)
-        address = ipaddress.IPv4Address(local_ip)
-        if address.is_loopback or address.is_link_local or local_ip in addresses:
+        if ipaddress.IPv4Address(local_ip).is_loopback or local_ip in addresses:
             continue
         addresses.append(local_ip)
     return addresses

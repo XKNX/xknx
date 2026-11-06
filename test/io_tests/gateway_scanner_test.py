@@ -554,7 +554,7 @@ def _adapter(*ips: str) -> Mock:
 
 
 def test_search_ips() -> None:
-    """Every IPv4 address but loopback and link-local ones is searched from, once."""
+    """Every IPv4 address but loopback ones is searched from, once - link-local too."""
     adapters = [
         _adapter("172.17.64.1"),
         _adapter("169.254.41.236"),
@@ -562,7 +562,11 @@ def test_search_ips() -> None:
         _adapter("192.168.16.172"),
     ]
     with patch("ifaddr.get_adapters", return_value=adapters):
-        assert util.get_search_ips() == ["172.17.64.1", "192.168.16.172"]
+        assert util.get_search_ips() == [
+            "172.17.64.1",
+            "169.254.41.236",
+            "192.168.16.172",
+        ]
 
 
 @patch("xknx.io.gateway_scanner.UDPTransport.connect")
