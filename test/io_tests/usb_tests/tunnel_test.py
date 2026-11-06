@@ -297,7 +297,7 @@ class TestUSBTunnel:
             original(frame)
 
         interface._handle = ignore  # type: ignore[method-assign]
-        with pytest.raises(CommunicationError, match="did not switch.*it is in ff"):
+        with pytest.raises(CommunicationError, match=r"did not switch.*it is in ff"):
             await self.tunnel().connect()
 
     async def test_not_found(self, fake_hid: FakeHIDModule) -> None:
