@@ -8,12 +8,13 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError, VerificationError
+from xknx.management.procedures.device.const import LOAD_CONTROL_LENGTH
 from xknx.management.procedures.device.dmp_load_state_machine_write_r_co_io import (
     dmp_load_state_machine_write_r_co_io,
     load_event_data_relative_allocation,
     load_event_relative_allocation,
 )
-from xknx.profile.const import LoadEvent, LoadState
+from xknx.profile.const import LoadEvent, LoadState, PropertyDataType
 from xknx.telegram import apci
 
 from ....conftest import EventLoopClockAdvancer
@@ -32,6 +33,11 @@ def fixture_xknx() -> XKNX:
     xknx = XKNX()
     xknx.cemi_handler = AsyncMock()
     return xknx
+
+
+def test_load_control_length() -> None:
+    """Test the load control written is the write size of PDT_CONTROL."""
+    assert PropertyDataType.PDT_CONTROL.write_size == LOAD_CONTROL_LENGTH
 
 
 async def test_dmp_load_state_machine_write_r_co_io(xknx: XKNX) -> None:

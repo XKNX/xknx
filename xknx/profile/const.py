@@ -97,8 +97,33 @@ class PropertyDataType(IntEnum):
           and PDT_ESCAPE are variable or usage dependent.
         - PDT_REFERENCE is listed with 8 octets in Table 6, but its format in
           §4.2 is 10 octets.
+
+        `read_size` and `write_size` give the size per direction.
         """
         return _PROPERTY_DATA_TYPE_SIZES.get(self)
+
+    @property
+    def read_size(self) -> int | None:
+        """
+        Return the size in octets per element read from a device.
+
+        The same as `size`, except PDT_CONTROL: 1 octet.
+        """
+        if self is PropertyDataType.PDT_CONTROL:
+            return 1
+        return self.size
+
+    @property
+    def write_size(self) -> int | None:
+        """
+        Return the size in octets per element written to a device.
+
+        The same as `size`, except PDT_CONTROL: 10 octets - e.g. the event of
+        PID_LOAD_STATE_CONTROL.
+        """
+        if self is PropertyDataType.PDT_CONTROL:
+            return 10
+        return self.size
 
 
 _PROPERTY_DATA_TYPE_SIZES: dict[PropertyDataType, int] = {
