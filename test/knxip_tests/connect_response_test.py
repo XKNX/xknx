@@ -101,6 +101,18 @@ class TestKNXIPConnectResponse:
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
 
+    def test_from_knx_empty_body(self) -> None:
+        """Test parsing ConnectResponse without body raises CouldNotParseKNXIP."""
+        raw = bytes.fromhex("06 10 02 06 00 06")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_from_knx_unknown_status_code(self) -> None:
+        """Test parsing ConnectResponse with unknown status code raises CouldNotParseKNXIP."""
+        raw = bytes.fromhex("06 10 02 06 00 08 01 55")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
     def test_connect_response_connection_error_gira(self) -> None:
         """
         Test parsing and streaming connection response KNX/IP packet with error e_no_more_connections.
