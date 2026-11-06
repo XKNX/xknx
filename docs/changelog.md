@@ -6,6 +6,18 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Internals
+
+- `TelegramQueue.start()` and `stop()` are idempotent: a second `start()` keeps the running consumer, `stop()` without a running consumer no longer leaves a stop sentinel in `xknx.telegrams` that would end the next started consumer right away. `XKNX.start()` logs a warning and returns when already started instead of registering its callbacks a second time.
+- `TelegramQueue` iterates copies of its callback lists, so a callback unregistering itself no longer skips the callback registered after it for that telegram.
+
+### Bugfixes
+
+- `AddressFilter` raises `ConversionError` on initialization when a pattern has more levels than the group address format of `XKNX(address_format=...)` (e.g. `"1/*/*"` with `GroupAddressType.SHORT`), instead of raising the builtin `ConnectionError` on every matched telegram - which prevented all other `telegram_received_cb`s and devices from processing incoming telegrams. Create `AddressFilter`s after the `XKNX` instance. A raising address filter is now logged for its callback only.
+- `TelegramQueue`: the outgoing rate limiter works after a `stop()` and `start()` of the queue (e.g. on reconnect) when the previous stop happened within the rate limit interval. Before, outgoing telegrams were not sent anymore and `xknx.stop()` hung.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection

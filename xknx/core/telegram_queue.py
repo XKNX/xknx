@@ -12,10 +12,10 @@ Telegrams addressed to IndividualAddresses are not processed by this queue.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from functools import partial
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from xknx.exceptions import CommunicationError, XKNXException
 from xknx.telegram import AddressFilter, Telegram, TelegramDirection
@@ -27,6 +27,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("xknx.log")
 telegram_logger = logging.getLogger("xknx.telegram")
+
+GROUP_ADDRESS_TYPES: Final = (GroupAddress, InternalGroupAddress)
 
 
 class TelegramQueue:
@@ -66,9 +68,7 @@ class TelegramQueue:
                 return False
             if self._match_all:
                 return True
-            if isinstance(
-                telegram.destination_address, GroupAddress | InternalGroupAddress
-            ):
+            if isinstance(telegram.destination_address, GROUP_ADDRESS_TYPES):
                 for address_filter in self.address_filters:
                     if address_filter.match(telegram.destination_address):
                         return True
@@ -93,7 +93,7 @@ class TelegramQueue:
         self._data_secure_group_key_issue_cbs: list[TelegramCallbackType] = []
 
         self.outgoing_queue: asyncio.Queue[Telegram | None] = asyncio.Queue()
-        self._consumer_task: Awaitable[tuple[None, None]] | None = None
+        self._consumer_task: asyncio.Future[tuple[None, None]] | None = None
         self._rate_limiter: asyncio.Task[None] | None = None
 
     def register_telegram_received_cb(
@@ -120,18 +120,25 @@ class TelegramQueue:
         self.telegram_received_cbs.remove(telegram_received_cb)
 
     async def start(self) -> None:
-        """Start telegram queue."""
+        """Start telegram queue. No-op if it is already running."""
+        if self._consumer_task is not None and not self._consumer_task.done():
+            logger.debug("TelegramQueue already running")
+            return
         self._consumer_task = asyncio.gather(
             self._telegram_consumer(), self._outgoing_rate_limiter()
         )
 
     async def stop(self) -> None:
-        """Stop telegram queue."""
+        """Stop telegram queue. No-op if it is not running."""
+        if self._consumer_task is None or self._consumer_task.done():
+            logger.debug("TelegramQueue not running")
+            return
         logger.debug("Stopping TelegramQueue")
-        # If a None object is pushed to the queue, the queue stops
+        # If a None object is pushed to the queue, the queue stops.
+        # Only do this while a consumer is running to read it, else the next
+        # started consumer would stop right away on the stale sentinel.
         self.xknx.telegrams.put_nowait(None)
-        if self._consumer_task is not None:
-            await self._consumer_task
+        await self._consumer_task
 
     async def _telegram_consumer(self) -> None:
         """Endless loop for processing telegrams."""
@@ -173,15 +180,17 @@ class TelegramQueue:
             # Breaking up queue if None is pushed to the queue
             if telegram is None:
                 self.outgoing_queue.task_done()
-                if self._rate_limiter:
+                if self._rate_limiter is not None:
                     self._rate_limiter.cancel()
+                    # drop the cancelled task so a restarted queue doesn't await it
+                    self._rate_limiter = None
                 break
 
             # limit rate to knx bus - defaults to 20 per second
             if self.xknx.rate_limit and not isinstance(
                 telegram.destination_address, InternalGroupAddress
             ):
-                if self._rate_limiter is not None:
+                if self._rate_limiter is not None and not self._rate_limiter.done():
                     await self._rate_limiter
                 self._rate_limiter = asyncio.create_task(
                     asyncio.sleep(1 / self.xknx.rate_limit)
@@ -237,10 +246,11 @@ class TelegramQueue:
 
     def _run_telegram_received_cbs(self, telegram: Telegram) -> None:
         """Run registered callbacks. Don't propagate exceptions."""
-        for callback in self.telegram_received_cbs:
-            if not callback.is_within_filter(telegram):
-                continue
+        # iterate over a copy so a callback unregistering itself doesn't skip the next one
+        for callback in tuple(self.telegram_received_cbs):
             try:
+                if not callback.is_within_filter(telegram):
+                    continue
                 callback.callback(telegram)
             except Exception:  # pylint: disable=broad-except
                 logger.exception(
@@ -279,7 +289,10 @@ class TelegramQueue:
         TDataGroup telegrams with undecodable DataSecure payloads
         or unexpected plain payloads are forwarded.
         """
-        for data_secure_group_key_issue_cb in self._data_secure_group_key_issue_cbs:
+        # iterate over a copy so a callback unregistering itself doesn't skip the next one
+        for data_secure_group_key_issue_cb in tuple(
+            self._data_secure_group_key_issue_cbs
+        ):
             try:
                 data_secure_group_key_issue_cb(telegram)
             except Exception as e:  # pylint: disable=broad-except

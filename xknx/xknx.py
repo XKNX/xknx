@@ -139,6 +139,9 @@ class XKNX:
 
     async def start(self) -> None:
         """Start XKNX module. Connect to KNX/IP devices and start state updater."""
+        if self.started.is_set():
+            logger.warning("XKNX already started. Ignoring start() call.")
+            return
         if self.knxip_interface.connection_config.threaded:
             await self.connection_manager.register_loop()
         self.task_registry.start()
