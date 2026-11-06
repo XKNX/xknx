@@ -37,6 +37,17 @@ from xknx.profile import PropertyDataType
 def test_size(pdt: PropertyDataType, size: int | None) -> None:
     """Test the element size of a Property Datatype."""
     assert pdt.size == size
+    if pdt is not PropertyDataType.PDT_CONTROL:
+        # the same in both directions
+        assert pdt.read_size == size
+        assert pdt.write_size == size
+
+
+def test_control_size_per_direction() -> None:
+    """Test PDT_CONTROL is 1 octet read and 10 octets written."""
+    assert PropertyDataType.PDT_CONTROL.size is None
+    assert PropertyDataType.PDT_CONTROL.read_size == 1
+    assert PropertyDataType.PDT_CONTROL.write_size == 10
 
 
 @pytest.mark.parametrize("value", [*range(0x26, 0x2F), *range(0x37, 0x3C)])
