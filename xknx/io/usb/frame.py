@@ -76,7 +76,7 @@ class USBTransferFrame:
             raise ValueError(
                 f"KNX USB transfer frame too long for {MAX_SEQUENCE_NUMBER} HID reports: {len(data)} octets"
             )
-        reports = []
+        reports: list[bytes] = []
         for index, chunk in enumerate(chunks):
             first = index == 0
             last = index == len(chunks) - 1
