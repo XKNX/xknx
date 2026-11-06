@@ -41,9 +41,15 @@ class ConnectResponse(KNXIPBodyResponse):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-
+        if len(raw) < 2:
+            raise CouldNotParseKNXIP("ConnectResponse body too short")
         self.communication_channel = raw[0]
-        self.status_code = ErrorCode(raw[1])
+        try:
+            self.status_code = ErrorCode(raw[1])
+        except ValueError:
+            raise CouldNotParseKNXIP(
+                f"ConnectResponse unknown status code: {raw[1]:#x}"
+            ) from None
         pos = 2
 
         if self.status_code == ErrorCode.E_NO_ERROR:

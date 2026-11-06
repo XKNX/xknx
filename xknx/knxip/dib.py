@@ -50,9 +50,13 @@ class DIB(ABC):
     @staticmethod
     def determine_dib(raw: bytes) -> DIB:
         """Determine dib type out of dib type code."""
-        if len(raw) < 2:
+        if len(raw) < DIB_HEADER_LENGTH:
             raise CouldNotParseKNXIP("could not parse DIB header")
-        dtc = DIBTypeCode(raw[1])
+        try:
+            dtc = DIBTypeCode(raw[1])
+        except ValueError:
+            # unknown description type codes are kept as DIBGeneric
+            return DIBGeneric()
 
         if dtc == DIBTypeCode.DEVICE_INFO:
             return DIBDeviceInformation()
@@ -86,11 +90,11 @@ class DIBGeneric(DIB):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 2:
+        if len(raw) < DIB_HEADER_LENGTH:
             raise CouldNotParseKNXIP("could not parse DIB header")
 
         dib_length = raw[0]
-        if len(raw) < dib_length:
+        if dib_length < DIB_HEADER_LENGTH or len(raw) < dib_length:
             raise CouldNotParseKNXIP("DIB wrong length")
         try:
             self.dtc = DIBTypeCode(raw[1])
@@ -146,10 +150,13 @@ class DIBDeviceInformation(DIB):
             raise CouldNotParseKNXIP("wrong connection header length")
         if raw[0] != DIBDeviceInformation.LENGTH:
             raise CouldNotParseKNXIP("wrong connection header length")
-        if DIBTypeCode(raw[1]) != DIBTypeCode.DEVICE_INFO:
+        if raw[1] != DIBTypeCode.DEVICE_INFO.value:
             raise CouldNotParseKNXIP("DIB is no device info")
 
-        self.knx_medium = KNXMedium(raw[2])
+        try:
+            self.knx_medium = KNXMedium(raw[2])
+        except ValueError:
+            raise CouldNotParseKNXIP(f"unknown KNX medium: {raw[2]:#x}") from None
         # last bit of device_status. All other bits are unused
         self.programming_mode = bool(raw[3])
         self.individual_address = IndividualAddress.from_knx(raw[4:6])
@@ -264,18 +271,23 @@ class _DIBServiceFamilies(DIB):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 2:
+        if len(raw) < DIB_HEADER_LENGTH:
             raise CouldNotParseKNXIP("DIB header too small")
         length = raw[0]
-        if (len(raw) < length) or (length % 2):
+        if length < DIB_HEADER_LENGTH or len(raw) < length or length % 2:
             raise CouldNotParseKNXIP("DIB wrong size")
-        if DIBTypeCode(raw[1]) != self.type_code:
+        if raw[1] != self.type_code.value:
             raise CouldNotParseKNXIP(
                 f"DIB has wrong type code for {self.__class__.__name__}"
             )
 
-        for pos in range(2, length, 2):
-            name = DIBServiceFamily(raw[pos])
+        for pos in range(DIB_HEADER_LENGTH, length, 2):
+            try:
+                name = DIBServiceFamily(raw[pos])
+            except ValueError:
+                raise CouldNotParseKNXIP(
+                    f"unknown service family: {raw[pos]:#x}"
+                ) from None
             version = raw[pos + 1]
             self.families.append(DIBSuppSVCFamilies.Family(name, version))
         return length
@@ -348,9 +360,9 @@ class DIBTunnelingInfo(DIB):
         if len(raw) < 4:
             raise CouldNotParseKNXIP("DIB header too small")
         length = raw[0]
-        if (len(raw) < length) or (length % 4):
+        if length < 4 or len(raw) < length or length % 4:
             raise CouldNotParseKNXIP("DIB wrong size")
-        if DIBTypeCode(raw[1]) != DIBTypeCode.TUNNELING_INFO:
+        if raw[1] != DIBTypeCode.TUNNELING_INFO.value:
             raise CouldNotParseKNXIP(
                 f"DIB has wrong type code for {self.__class__.__name__}"
             )
