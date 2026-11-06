@@ -15,6 +15,7 @@ from xknx.cemi import (
     CEMIMPropWriteResponse,
     CEMIPriority,
 )
+from xknx.cemi.cemi_frame import CEMIInfo
 from xknx.cemi.const import CEMIErrorCode
 from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
@@ -243,6 +244,26 @@ def test_invalid_invalid_len() -> None:
     """Test for invalid cemi len."""
     with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
         CEMIFrame.from_knx(get_data(0x29, 0, 0, 0, 0, 2, 0, [])[:5])
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        b"",  # no message code
+        bytes.fromhex("29"),  # L_DATA_IND without additional info length
+        bytes.fromhex("29 05 00 00"),  # additional info length exceeds data
+    ],
+)
+def test_truncated_cemi(raw: bytes) -> None:
+    """Test truncated cEMI raises CouldNotParseCEMI instead of IndexError."""
+    with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
+        CEMIFrame.from_knx(raw)
+
+
+def test_cemi_info_empty() -> None:
+    """Test CEMIInfo parsing of empty data raises CouldNotParseCEMI."""
+    with pytest.raises(CouldNotParseCEMI, match=r".*CEMI too small.*"):
+        CEMIInfo.from_knx(b"")
 
 
 def test_from_knx_group_address() -> None:
