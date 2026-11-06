@@ -246,6 +246,7 @@ from .dpt_19 import DPTDateTime
 from .dpt_20 import (
     DPTChangeoverMode,
     DPTEnableHCStage,
+    DPTErrorClassSystem,
     DPTHVACContrMode,
     DPTHVACMode,
     DPTHVACStatus,
