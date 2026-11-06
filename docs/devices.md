@@ -24,11 +24,12 @@ An instantiated device can be added to `xknx.devices` to receive telegrams and s
   light.name = "light.kitchen_ceiling"
   ```
 * `device_updated_cb` List of callbacks for each update.
-* `last_update` Cause of the latest update, set before `device_updated_cb` callbacks are called - a `DeviceUpdate` with the `telegram` causing it (or `None`) and its application defined `context` (`Telegram.context`, or the one of the active `xknx.telegram.telegram_context()`).
+* `last_update` Cause of the latest update, set before `device_updated_cb` callbacks are called - a `DeviceUpdate` with the `telegram` causing it (or `None`), its application defined `context` (`Telegram.context`, or the one of the active `xknx.telegram.telegram_context()`) and `from_state_address` telling if the telegram was sent to a state address of the device.
 * `group_address*` Group address for a specific function. If a list is passed the first element is used for sending / reading,  the rest are passively updating state (listening group address).
 
 * `group_addresses()` Returns a set of all configured group addresses of this Device.
 * `has_group_address(group_address)` Test if device has given group address.
+* `is_state_address(group_address)` Test if the device uses given group address only to receive state - as `group_address_*_state` or a passive address given with it, and not for writing. Telegrams sent there report a state (eg. an actuators feedback) rather than commanding a change.
 * `sync(wait_for_result)` Read states of device from KNX bus via GroupValueRead requests.
 * `register_device_updated_cb(device_updated_cb)` Register device updated callback.
 * `unregister_device_updated_cb(device_updated_cb)` Unregister device updated callback.
@@ -61,6 +62,10 @@ GroupAddress("1/2/2")
 GroupAddress("1/3/3")
 >>> light_p.switch.passive_group_addresses # these are only listening
 [GroupAddress("4/2/10"), GroupAddress("4/2/20"), GroupAddress("4/3/10"), GroupAddress("4/3/20")]
+>>> light_p.is_state_address(GroupAddress("4/3/10")) # passive address given with the state address
+True
+>>> light_p.is_state_address(GroupAddress("4/2/10")) # passive address given with the writing address
+False
 ```
 
 ## [](#header-2)Addresses
