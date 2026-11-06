@@ -24,9 +24,9 @@ Most procedures come in two forms:
   - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.
-  - ``<spec_name>_r_cl(connectionless: ConnectionlessP2P, ...)`` runs the
+  - ``<spec_name>_r_cl(connectionless: P2PConnectionless, ...)`` runs the
     procedure in the point-to-point connectionless communication mode, on a
-    ``ConnectionlessP2P`` from ``xknx.management.connectionless()``. ``RCl`` is
+    ``P2PConnectionless`` from ``xknx.management.connectionless()``. ``RCl`` is
     the suffix of that mode in KNX v02.01.02 - Management Procedures 03.05.02 -
     §1.2, Table 1, e.g. ``dm_function_property_write_r_cl`` (§3.30.1) and
     ``dmp_ext_function_property_write_r_cl`` (§3.30.2).

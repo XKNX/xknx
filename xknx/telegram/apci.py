@@ -459,7 +459,7 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
-class _APCIWithResponse(APCI, Generic[APCIResponseT]):
+class _APCIWithResponse(APCI, ABC, Generic[APCIResponseT]):
     """
     Base class for APCI services with a KNX-spec-defined response.
 
@@ -488,7 +488,7 @@ class _APCIWithResponse(APCI, Generic[APCIResponseT]):
                 return
 
 
-class APCIRequest(_APCIWithResponse[APCIResponseT]):
+class APCIRequest(_APCIWithResponse[APCIResponseT], ABC):
     """
     Base class for point-to-point request services.
 
@@ -500,7 +500,7 @@ class APCIRequest(_APCIWithResponse[APCIResponseT]):
     __slots__ = ()
 
 
-class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT]):
+class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT], ABC):
     """
     Base class for broadcast request services.
 

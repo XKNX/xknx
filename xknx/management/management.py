@@ -38,6 +38,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger("xknx.management")
 
 MANAGEMENT_ACK_TIMEOUT = 3
+# KNX v01.02.03 - Transport Layer 03.03.04 - §4: max_rep_count, how often a
+# T_Data_Connected is repeated without an ACK
+MANAGEMENT_MAX_REPETITIONS = 3
 MANAGEMENT_CONNECTION_TIMEOUT = 6
 # telegrams per second a point-to-point connection sends at most
 MANAGEMENT_RATE_LIMIT = 20
@@ -52,7 +55,7 @@ class Management:
         """Initialize Management class."""
         self.xknx = xknx
         self._connections: dict[IndividualAddress, P2PConnection] = {}
-        self._connectionless: dict[IndividualAddress, ConnectionlessP2P] = {}
+        self._connectionless: dict[IndividualAddress, P2PConnectionless] = {}
         self.broadcast = Broadcast(xknx)
 
     def process(self, telegram: Telegram) -> None:
@@ -143,7 +146,7 @@ class Management:
     @asynccontextmanager
     async def connectionless(
         self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
-    ) -> AsyncGenerator[ConnectionlessP2P, None]:
+    ) -> AsyncGenerator[P2PConnectionless, None]:
         """
         Provide connectionless point-to-point communication with a KNX device.
 
@@ -160,7 +163,7 @@ class Management:
             raise ManagementConnectionError(
                 f"Connectionless communication with {address} already exists."
             )
-        connectionless = ConnectionlessP2P(self.xknx, address, rate_limit)
+        connectionless = P2PConnectionless(self.xknx, address, rate_limit)
         self._connectionless[address] = connectionless
         try:
             yield connectionless
@@ -291,7 +294,7 @@ class BroadcastContext:
                 yield telegram
 
 
-class ConnectionlessP2P:
+class P2PConnectionless:
     """
     Connectionless point-to-point communication with a KNX device.
 
@@ -305,6 +308,10 @@ class ConnectionlessP2P:
 
     `send()`, `receive()` and `request()` work like their counterparts of
     `Broadcast` and `BroadcastContext`, for the telegrams of one device.
+
+    Named `P2PConnectionless` rather than `ConnectionlessP2P` so it sits next
+    to `P2PConnection`: both are the point-to-point channel to one device, the
+    suffix tells the transport mode apart.
     """
 
     __slots__ = (
@@ -322,7 +329,7 @@ class ConnectionlessP2P:
         address: IndividualAddress,
         rate_limit: int = MANAGEMENT_RATE_LIMIT,
     ) -> None:
-        """Initialize ConnectionlessP2P class."""
+        """Initialize P2PConnectionless class."""
         self.xknx = xknx
         self.address = address
         self.rate_limit = rate_limit
@@ -637,7 +644,8 @@ class P2PConnection:
         Send a payload to the KNX device.
 
         If `wait_for_ack` is True (default), waits for the device to ACK the
-        telegram - resending once after a timeout - and validates the ACK's
+        telegram - repeating it up to `MANAGEMENT_MAX_REPETITIONS` times, each
+        after `MANAGEMENT_ACK_TIMEOUT` without an ACK - and validates the ACK's
         sequence number. The response itself still has to be processed by
         `_receive` before sending the next telegram. Set `wait_for_ack=False`
         for commands the device doesn't ACK back.
@@ -657,26 +665,27 @@ class P2PConnection:
             await self.xknx.cemi_handler.send_telegram(telegram)
             return
 
-        self._ack_waiter = asyncio.get_event_loop().create_future()
+        ack: TAck | TNak | None = None
         try:
-            await self.xknx.cemi_handler.send_telegram(telegram)
-            async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
-                ack = await self._ack_waiter
-        except TimeoutError:
-            logger.info(
-                "%s: timeout while waiting for ACK. Resending Telegram.", self.address
-            )
-            # resend once after 3 seconds without ACK
-            # on timeout the Future is cancelled so create a new
-            self._ack_waiter = asyncio.get_event_loop().create_future()
-            await self.xknx.cemi_handler.send_telegram(telegram)
-            try:
-                async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
-                    ack = await self._ack_waiter
-            except TimeoutError:
-                raise ManagementConnectionTimeout(
-                    "No ACK received for repeated telegram."
-                ) from None
+            # KNX v01.02.03 - Transport Layer 03.03.04 - §5.3: E17 repeats the
+            # telegram (A9) while rep_count < max_rep_count
+            for repetition in range(MANAGEMENT_MAX_REPETITIONS + 1):
+                if repetition:
+                    logger.info(
+                        "%s: timeout while waiting for ACK. Resending Telegram (%s/%s).",
+                        self.address,
+                        repetition,
+                        MANAGEMENT_MAX_REPETITIONS,
+                    )
+                # on timeout the Future is cancelled so create a new one
+                self._ack_waiter = asyncio.get_event_loop().create_future()
+                await self.xknx.cemi_handler.send_telegram(telegram)
+                try:
+                    async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
+                        ack = await self._ack_waiter
+                    break
+                except TimeoutError:
+                    continue
         except ConfirmationError as exc:
             raise ManagementConnectionError(
                 f"Error while sending Telegram: {exc}"
@@ -686,6 +695,8 @@ class P2PConnection:
         finally:
             self._ack_waiter = None
 
+        if ack is None:
+            raise ManagementConnectionTimeout("No ACK received for repeated telegram.")
         if isinstance(ack, TNak):
             raise ManagementConnectionError(
                 f"Received no_ack from sending Telegram: {telegram}"

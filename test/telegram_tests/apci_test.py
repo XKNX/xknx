@@ -1,5 +1,7 @@
 """Unit test for APCI objects."""
 
+from unittest.mock import patch
+
 import pytest
 
 from xknx.dpt import DPTArray, DPTBinary
@@ -14,6 +16,7 @@ from xknx.telegram.apci import (
     APCI,
     ADCRead,
     ADCResponse,
+    APCIService,
     AuthorizeRequest,
     AuthorizeResponse,
     DeviceDescriptorRead,
@@ -101,8 +104,62 @@ from xknx.telegram.apci import (
 )
 
 
+def _concrete_apci_classes(cls: type[APCI] = APCI) -> list[type[APCI]]:
+    """Return every APCI subclass with a CODE, in definition order."""
+    result: list[type[APCI]] = []
+    for subclass in cls.__subclasses__():
+        if subclass.CODE is not None:
+            result.append(subclass)
+        result.extend(_concrete_apci_classes(subclass))
+    return result
+
+
+_APCI_CLASSES = _concrete_apci_classes()
+# services carrying data in the low 6 APCI bits - matched by their 4 bit service
+_APCI_SERVICE_CLASSES = [
+    apci_class
+    for apci_class in _APCI_CLASSES
+    if isinstance(apci_class.CODE, APCIService) and not apci_class.CODE.value & 0x3F
+]
+
+
 class TestAPCI:
     """Test class for APCI objects."""
+
+    @pytest.mark.parametrize("apci_class", _APCI_CLASSES)
+    def test_from_knx_dispatch(self, apci_class: type[APCI]) -> None:
+        """Test every APCI class is resolved from its APCI code."""
+        raw = apci_class.CODE.value.to_bytes(2, "big")
+        with patch.object(apci_class, "from_knx") as from_knx_mock:
+            APCI.from_knx(raw)
+        from_knx_mock.assert_called_once_with(raw)
+
+    @pytest.mark.parametrize("apci_class", _APCI_SERVICE_CLASSES)
+    def test_from_knx_dispatch_service_with_data(self, apci_class: type[APCI]) -> None:
+        """Test services carrying data in the low 6 APCI bits are resolved by service."""
+        raw = (apci_class.CODE.value | 0x3F).to_bytes(2, "big")
+        with patch.object(apci_class, "from_knx") as from_knx_mock:
+            APCI.from_knx(raw)
+        from_knx_mock.assert_called_once_with(raw)
+
+    def test_apci_codes_unique(self) -> None:
+        """Test every concrete APCI subclass has its own code."""
+        assert len({apci_class.CODE.value for apci_class in _APCI_CLASSES}) == len(
+            _APCI_CLASSES
+        )
+
+        def concrete_subclasses(cls: type[APCI]) -> set[type[APCI]]:
+            result = set()
+            for subclass in cls.__subclasses__():
+                if subclass.CODE is not None:
+                    result.add(subclass)
+                result |= concrete_subclasses(subclass)
+            return result
+
+        assert set(_APCI_CLASSES) == concrete_subclasses(APCI)
+        assert len({apci_class.CODE.value for apci_class in _APCI_CLASSES}) == len(
+            _APCI_CLASSES
+        )
 
     def test_resolve_apci_unsupported(self) -> None:
         """Test resolve_apci for unsupported services."""

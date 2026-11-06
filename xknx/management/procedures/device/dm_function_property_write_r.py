@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.management import ConnectionlessP2P, P2PConnection
+from xknx.management.management import P2PConnection, P2PConnectionless
 from xknx.telegram import apci
 
 __all__ = ["dm_function_property_write_r", "dm_function_property_write_r_cl"]
@@ -48,7 +48,7 @@ async def dm_function_property_write_r(
 
 
 async def dm_function_property_write_r_cl(
-    connectionless: ConnectionlessP2P,
+    connectionless: P2PConnectionless,
     object_index: int,
     property_id: int,
     command: bytes = b"",
@@ -70,7 +70,7 @@ async def dm_function_property_write_r_cl(
 
 
 async def _function_property_write(
-    conn: P2PConnection | ConnectionlessP2P,
+    conn: P2PConnection | P2PConnectionless,
     object_index: int,
     property_id: int,
     command: bytes,
