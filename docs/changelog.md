@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Bugfixes
+
+- Guard the KNXnet/IP receive path: an exception in a frame handler, device or callback is logged instead of closing the connection or skipping other handlers. A KNX Data Secure frame whose decrypted APDU can't be parsed is dropped like one that can't be decrypted, and a `SECURE_WRAPPER` arriving before the IP Secure session is established is discarded instead of raising.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection

@@ -341,6 +341,39 @@ class TestDataSecure:
         ):
             self.data_secure.received_cemi(test_group_response_cemi.data)
 
+    @patch("xknx.cemi.cemi_handler.CEMIHandler.telegram_received")
+    def test_data_secure_group_receive_invalid_plain_apdu(
+        self,
+        mock_telegram_received: MagicMock,
+        test_group_response_cemi: CEMIFrame,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Test incoming DataSecure group communication with an undecodable plain APDU."""
+        with patch(
+            "xknx.secure.data_secure_asdu.SecureData.get_plain_apdu",
+            return_value=b"\x00",
+        ):
+            with pytest.raises(
+                DataSecureError,
+                match=r"Could not parse plain APDU 00 from 4\.0\.9 to 0/4/0: .*",
+            ):
+                self.data_secure.received_cemi(test_group_response_cemi.data)
+            # the sequence number was consumed by the first attempt
+            self.data_secure._individual_address_table[IndividualAddress("4.0.9")] = (
+                155806854915
+            )
+            # don't raise through handle_cemi_frame()
+            assert (
+                self.xknx.cemi_handler.handle_cemi_frame(test_group_response_cemi)
+                is None
+            )
+
+        mock_telegram_received.assert_not_called()
+        assert self.xknx.connection_manager.undecoded_data_secure == 1
+        assert self.xknx.connection_manager.cemi_count_incoming_error == 0
+        assert "Could not decrypt CEMI frame: Could not parse plain APDU" in caplog.text
+        assert caplog.records[-1].levelname == "WARNING"
+
     def test_data_secure_group_receive_plain_frame(self) -> None:
         """Test incoming DataSecure group communication with plain frame."""
         src_addr = IndividualAddress("4.0.9")

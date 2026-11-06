@@ -69,10 +69,21 @@ class KNXIPTransport(ABC):
     def handle_knxipframe(self, knxipframe: KNXIPFrame, source: HPAI) -> None:
         """Handle KNXIP Frame and call all callbacks matching the service type ident."""
         handled = False
-        for callback in self.callbacks:
+        # iterate over a copy: callbacks may unregister themselves while being called
+        for callback in tuple(self.callbacks):
             if callback.has_service(knxipframe.header.service_type_ident):
-                callback.callback(knxipframe, source, self)
                 handled = True
+                try:
+                    callback.callback(knxipframe, source, self)
+                except Exception:  # pylint: disable=broad-exception-caught
+                    # This runs inside the asyncio protocol callback. An exception
+                    # escaping from here would close the transport (TCP) or skip the
+                    # remaining callbacks (UDP), so log it and carry on.
+                    knx_logger.exception(
+                        "Unexpected error in callback for %s from %s",
+                        knxipframe,
+                        source,
+                    )
         if not handled:
             knx_logger.debug(
                 "Unhandled: %s from: %s",

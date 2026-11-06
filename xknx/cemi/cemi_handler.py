@@ -124,7 +124,15 @@ class CEMIHandler:
             logger.exception("Unexpected error parsing CEMI frame: %s", raw_cemi.hex())
             self.xknx.connection_manager.cemi_count_incoming_error += 1
             return
-        self.handle_cemi_frame(cemi)
+        try:
+            self.handle_cemi_frame(cemi)
+        except Exception:  # pylint: disable=broad-exception-caught
+            # Same last-resort guard for everything downstream of parsing: DataSecure
+            # processing, telegram creation and the synchronous management handling.
+            # An exception escaping here would propagate into the transport's
+            # receive callback and close the connection.
+            logger.exception("Unexpected error handling CEMI frame: %s", cemi)
+            self.xknx.connection_manager.cemi_count_incoming_error += 1
 
     def handle_cemi_frame(self, cemi: CEMIFrame) -> None:
         """Handle incoming CEMI Frames."""
