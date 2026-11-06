@@ -174,3 +174,15 @@ class DPTValue1Ucount(DPTValue1ByteUnsigned):
     dpt_sub_number = 10
     value_type = "pulse"
     unit = "counter pulses"
+
+
+class DPTFanStage(DPTValue1ByteUnsigned):
+    """
+    Abstraction for KNX 1 Octet fan stage (DPT 5.100 DPT_FanStage). 0 is off.
+
+    KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.5
+    """
+
+    dpt_main_number = 5
+    dpt_sub_number = 100
+    value_type = "fan_stage"

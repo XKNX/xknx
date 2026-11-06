@@ -60,6 +60,14 @@ _MAIN_NUMBER_SUBTYPES: Final[dict[int, int]] = {
     250: 600,  # the only subtype in the KNX master data
 }
 
+# Lookup tables per base class, built lazily by `DPTBase._transcoders_by_dpt()` /
+# `DPTBase._transcoders_by_value_type()` and cleared whenever a new subclass is
+# defined (`DPTBase.__init_subclass__`), so user-defined transcoders are found too.
+_TRANSCODERS_BY_DPT: dict[
+    type[DPTBase], dict[tuple[int | None, int | None], type[DPTBase]]
+] = {}
+_TRANSCODERS_BY_VALUE_TYPE: dict[type[DPTBase], dict[str, type[DPTBase]]] = {}
+
 
 class DPTBase(ABC):
     """
@@ -199,6 +207,37 @@ class DPTBase(ABC):
         """Return True if value_type is defined (not inherited)."""
         return "value_type" in cls.__dict__
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Invalidate the lookup tables so the new subclass is found by them."""
+        super().__init_subclass__(**kwargs)
+        _TRANSCODERS_BY_DPT.clear()
+        _TRANSCODERS_BY_VALUE_TYPE.clear()
+
+    @classmethod
+    def _transcoders_by_dpt(
+        cls: type[Self],
+    ) -> Mapping[tuple[int | None, int | None], type[Self]]:
+        """Return lookup table DPT number -> transcoder of `cls` and its subclasses."""
+        if (table := _TRANSCODERS_BY_DPT.get(cls)) is None:
+            table = {}
+            for dpt in cls.dpt_class_tree():
+                if dpt.has_distinct_dpt_numbers():
+                    # first class in tree order wins - like iterating dpt_class_tree()
+                    table.setdefault((dpt.dpt_main_number, dpt.dpt_sub_number), dpt)
+            _TRANSCODERS_BY_DPT[cls] = table
+        return cast("Mapping[tuple[int | None, int | None], type[Self]]", table)
+
+    @classmethod
+    def _transcoders_by_value_type(cls: type[Self]) -> Mapping[str, type[Self]]:
+        """Return lookup table value_type -> transcoder of `cls` and its subclasses."""
+        if (table := _TRANSCODERS_BY_VALUE_TYPE.get(cls)) is None:
+            table = {}
+            for dpt in cls.dpt_class_tree():
+                if dpt.has_distinct_value_type() and dpt.value_type is not None:
+                    table.setdefault(dpt.value_type, dpt)
+            _TRANSCODERS_BY_VALUE_TYPE[cls] = table
+        return cast("Mapping[str, type[Self]]", table)
+
     @classmethod
     def transcoder_by_dpt(
         cls: type[Self], dpt_main: int, dpt_sub: int | None = None
@@ -210,13 +249,8 @@ class DPTBase(ABC):
         the class of the subtype listed for the main number in `_MAIN_NUMBER_SUBTYPES` is
         returned, or None for a main number without entry.
         """
-        for dpt in cls.dpt_class_tree():
-            if (
-                dpt.has_distinct_dpt_numbers()
-                and dpt_main == dpt.dpt_main_number
-                and dpt_sub == dpt.dpt_sub_number
-            ):
-                return dpt
+        if (dpt := cls._transcoders_by_dpt().get((dpt_main, dpt_sub))) is not None:
+            return dpt
         # `is not None`: 15.000 has the sub number 0
         if dpt_sub is None and (sub := _MAIN_NUMBER_SUBTYPES.get(dpt_main)) is not None:
             return cls.transcoder_by_dpt(dpt_main, sub)
@@ -225,11 +259,7 @@ class DPTBase(ABC):
     @classmethod
     def transcoder_by_value_type(cls: type[Self], value_type: str) -> type[Self] | None:
         """Return Class reference of DPTBase subclass with matching value_type."""
-        for dpt in cls.dpt_class_tree():
-            if dpt.has_distinct_value_type():
-                if value_type == dpt.value_type:
-                    return dpt
-        return None
+        return cls._transcoders_by_value_type().get(value_type)
 
     @classmethod
     def parse_transcoder(cls: type[Self], value_type: DPTParsable) -> type[Self] | None:
@@ -249,8 +279,10 @@ class DPTBase(ABC):
             if transcoder is None:
                 # Try to parse the value_type if it is a string but not found by cls.transcoder_by_value_type()
                 # for backwards compatibility (eg. "DPT-5") and strings representing numbers (eg. "7", "9.001")
-                string_type = string_type.upper().strip(" DPT-")
-                if string_type.isdigit():
+                string_type = (
+                    string_type.upper().removeprefix("DPT").lstrip("-").strip()
+                )
+                if string_type.isdecimal():
                     transcoder = cls.transcoder_by_dpt(int(string_type))
                 else:
                     try:
@@ -488,9 +520,11 @@ class DPTComplexData(ABC):
                     "Override get_dict_schema() or set _dict_schema_fields_class in the subclass."
                 )
 
-            has_plain_default = field.default is not MISSING
-            has_factory_default = field.default_factory is not MISSING
-            required = not (nullable or has_plain_default or has_factory_default)
+            required = not (
+                nullable
+                or field.default is not MISSING
+                or field.default_factory is not MISSING
+            )
 
             entry: DPTComplexFieldSchema = {
                 "name": field.name,
@@ -502,8 +536,8 @@ class DPTComplexData(ABC):
                 entry["default"] = (
                     field.default.name.lower() if type_str == "enum" else field.default
                 )
-            elif has_factory_default:
-                factory_val = field.default_factory()  # type: ignore[misc]
+            elif field.default_factory is not MISSING:
+                factory_val = field.default_factory()
                 if factory_val is not None:
                     entry["default"] = factory_val
 

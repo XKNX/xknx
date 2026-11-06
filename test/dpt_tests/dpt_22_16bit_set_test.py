@@ -8,8 +8,12 @@ from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt_1 import HeatCool
 from xknx.dpt.dpt_22 import (
     ChannelActivation16,
+    CombinedStatusHVA,
+    CombinedStatusRTC,
     DHWControllerStatus,
     DPTChannelActivation16,
+    DPTCombinedStatusHVA,
+    DPTCombinedStatusRTC,
     DPTMedia,
     DPTStatusDHWC,
     DPTStatusRHCC,
@@ -43,6 +47,27 @@ RHCC_FLAGS = (
     "dew_point_status",
     "frost_alarm",
     "overheat_alarm",
+)
+HVA_FIELDS = (
+    "valve_open",
+    "short_circuit",
+    "overload",
+    "valve_kick",
+    "service_mode",
+    "manual_operation",
+    "forced_position",
+    "locked_position",
+    "calibration_mode",
+)
+RTC_FLAGS = (
+    "fault",
+    "dew_point_status",
+    "frost_alarm",
+    "overheat_alarm",
+    "controller_inactive",
+    "additional_stage",
+    "heating_enabled",
+    "cooling_enabled",
 )
 MEDIA_FIELDS = ("tp1", "pl110", "rf", "knx_ip")
 CHANNEL_FIELDS = tuple(f"channel_{n}" for n in range(1, 17))
@@ -304,6 +329,261 @@ class TestDPTStatusRHCC:
             DPTBase.parse_transcoder("room_heating_cooling_controller_status")
             is DPTStatusRHCC
         )
+
+
+class TestDPTCombinedStatusHVA:
+    """Test class for KNX DPTCombinedStatusHVA objects."""
+
+    @pytest.mark.parametrize(
+        ("field", "raw"),
+        [
+            ("valve_open", (0x00, 0x01)),
+            ("short_circuit", (0x00, 0x02)),
+            ("overload", (0x00, 0x04)),
+            ("valve_kick", (0x00, 0x08)),
+            ("service_mode", (0x00, 0x10)),
+            ("manual_operation", (0x00, 0x20)),
+            ("forced_position", (0x00, 0x40)),
+            ("locked_position", (0x00, 0x80)),
+            ("calibration_mode", (0x01, 0x00)),
+        ],
+    )
+    def test_single_bit(self, field: str, raw: tuple[int, ...]) -> None:
+        """Test each bit of DPTCombinedStatusHVA."""
+        value = CombinedStatusHVA(**{field: True})
+        assert DPTCombinedStatusHVA.to_knx(value) == DPTArray(raw)
+        assert DPTCombinedStatusHVA.from_knx(DPTArray(raw)) == value
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (CombinedStatusHVA(), (0x00, 0x00)),
+            (CombinedStatusHVA(**dict.fromkeys(HVA_FIELDS, True)), (0x01, 0xFF)),
+            (
+                CombinedStatusHVA(valve_open=True, forced_position=True),
+                (0x00, 0x41),
+            ),
+            (
+                CombinedStatusHVA(service_mode=True, calibration_mode=True),
+                (0x01, 0x10),
+            ),
+        ],
+    )
+    def test_values(self, value: CombinedStatusHVA, raw: tuple[int, ...]) -> None:
+        """Test DPTCombinedStatusHVA parsing and streaming."""
+        assert DPTCombinedStatusHVA.to_knx(value) == DPTArray(raw)
+        assert DPTCombinedStatusHVA.from_knx(DPTArray(raw)) == value
+
+    def test_reserved_bits_ignored(self) -> None:
+        """Test reserved bits 9..15 are ignored on receive."""
+        assert DPTCombinedStatusHVA.from_knx(DPTArray((0xFE, 0x00))) == (
+            CombinedStatusHVA()
+        )
+        assert DPTCombinedStatusHVA.from_knx(DPTArray((0xFF, 0x01))) == (
+            CombinedStatusHVA(valve_open=True, calibration_mode=True)
+        )
+
+    def test_dict(self) -> None:
+        """Test from_dict and as_dict methods."""
+        assert CombinedStatusHVA.from_dict({"valve_kick": True}) == CombinedStatusHVA(
+            valve_kick=True
+        )
+        assert CombinedStatusHVA(locked_position=True).as_dict() == dict.fromkeys(
+            HVA_FIELDS, False
+        ) | {"locked_position": True}
+        assert DPTCombinedStatusHVA.to_knx({"overload": True}) == DPTArray((0x00, 0x04))
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"valve_open": "a"},
+            {"valve_open": None},
+            {"calibration_mode": 2},
+            {"valve_position": True},  # unknown key
+            "valve_open",
+        ],
+    )
+    def test_dict_invalid(self, data: Any) -> None:
+        """Test from_dict with invalid data."""
+        with pytest.raises(ValueError):
+            CombinedStatusHVA.from_dict(data)
+        with pytest.raises(ConversionError):
+            DPTCombinedStatusHVA.to_knx(data)
+
+    def test_to_knx_wrong_value(self) -> None:
+        """Test serializing a field with a wrong value."""
+        with pytest.raises(ConversionError):
+            DPTCombinedStatusHVA.to_knx(CombinedStatusHVA(overload="a"))  # type: ignore[arg-type]
+
+    @pytest.mark.parametrize(
+        "payload",
+        [DPTArray((0x00,)), DPTArray((0x00, 0x00, 0x00)), DPTBinary(1)],
+    )
+    def test_from_knx_wrong_payload(self, payload: DPTArray | DPTBinary) -> None:
+        """Test parsing DPTCombinedStatusHVA with a wrong payload."""
+        with pytest.raises(CouldNotParseTelegram):
+            DPTCombinedStatusHVA.from_knx(payload)
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema of DPTCombinedStatusHVA."""
+        assert DPTCombinedStatusHVA.get_dict_schema() == [
+            {"name": name, "type": "boolean", "required": False, "default": False}
+            for name in HVA_FIELDS
+        ]
+
+    def test_lookup(self) -> None:
+        """Test lookup of DPTCombinedStatusHVA."""
+        assert DPTBase.parse_transcoder("22.102") is DPTCombinedStatusHVA
+        assert DPTBase.parse_transcoder("combined_status_hva") is DPTCombinedStatusHVA
+
+
+class TestDPTCombinedStatusRTC:
+    """Test class for KNX DPTCombinedStatusRTC objects."""
+
+    @pytest.mark.parametrize(
+        ("field", "raw"),
+        [
+            ("fault", (0x00, 0x01)),
+            ("dew_point_status", (0x00, 0x04)),
+            ("frost_alarm", (0x00, 0x08)),
+            ("overheat_alarm", (0x00, 0x10)),
+            ("controller_inactive", (0x00, 0x20)),
+            ("additional_stage", (0x00, 0x40)),
+            ("heating_enabled", (0x00, 0x80)),
+            ("cooling_enabled", (0x01, 0x00)),
+        ],
+    )
+    def test_single_bit(self, field: str, raw: tuple[int, ...]) -> None:
+        """Test each flag of DPTCombinedStatusRTC (with cooling mode, bit 1 = 0)."""
+        value = CombinedStatusRTC(heat_cool_mode=HeatCool.COOL, **{field: True})
+        assert DPTCombinedStatusRTC.to_knx(value) == DPTArray(raw)
+        assert DPTCombinedStatusRTC.from_knx(DPTArray(raw)) == value
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (CombinedStatusRTC(), (0x00, 0x02)),  # default: heating
+            (CombinedStatusRTC(heat_cool_mode=HeatCool.HEAT), (0x00, 0x02)),
+            (CombinedStatusRTC(heat_cool_mode=HeatCool.COOL), (0x00, 0x00)),
+            (CombinedStatusRTC(**dict.fromkeys(RTC_FLAGS, True)), (0x01, 0xFF)),
+            (
+                CombinedStatusRTC(
+                    heat_cool_mode=HeatCool.COOL, **dict.fromkeys(RTC_FLAGS, True)
+                ),
+                (0x01, 0xFD),
+            ),
+            (CombinedStatusRTC(fault=True, heating_enabled=True), (0x00, 0x83)),
+            (
+                CombinedStatusRTC(
+                    heat_cool_mode=HeatCool.COOL,
+                    controller_inactive=True,
+                    cooling_enabled=True,
+                ),
+                (0x01, 0x20),
+            ),
+        ],
+    )
+    def test_values(self, value: CombinedStatusRTC, raw: tuple[int, ...]) -> None:
+        """Test DPTCombinedStatusRTC parsing and streaming."""
+        assert DPTCombinedStatusRTC.to_knx(value) == DPTArray(raw)
+        assert DPTCombinedStatusRTC.from_knx(DPTArray(raw)) == value
+
+    def test_reserved_bits_ignored(self) -> None:
+        """Test reserved bits 9..15 are ignored on receive."""
+        assert DPTCombinedStatusRTC.from_knx(DPTArray((0xFE, 0x00))) == (
+            CombinedStatusRTC(heat_cool_mode=HeatCool.COOL)
+        )
+        assert DPTCombinedStatusRTC.from_knx(DPTArray((0xFF, 0xFF))) == (
+            CombinedStatusRTC(**dict.fromkeys(RTC_FLAGS, True))
+        )
+
+    @pytest.mark.parametrize(
+        ("data", "value"),
+        [
+            ({}, CombinedStatusRTC()),
+            (
+                {"heat_cool_mode": "cool"},
+                CombinedStatusRTC(heat_cool_mode=HeatCool.COOL),
+            ),
+            (
+                {"heat_cool_mode": "heat"},
+                CombinedStatusRTC(heat_cool_mode=HeatCool.HEAT),
+            ),
+            (
+                {"heat_cool_mode": HeatCool.COOL, "dew_point_status": True},
+                CombinedStatusRTC(heat_cool_mode=HeatCool.COOL, dew_point_status=True),
+            ),
+            ({"fault": True}, CombinedStatusRTC(fault=True)),
+            (
+                {"heating_enabled": True, "cooling_enabled": True},
+                CombinedStatusRTC(heating_enabled=True, cooling_enabled=True),
+            ),
+        ],
+    )
+    def test_dict(self, data: dict[str, Any], value: CombinedStatusRTC) -> None:
+        """Test from_dict and as_dict methods."""
+        assert CombinedStatusRTC.from_dict(data) == value
+        assert value.as_dict() == (
+            dict.fromkeys(RTC_FLAGS, False)
+            | {"heat_cool_mode": value.heat_cool_mode.name.lower()}
+            | {key: val for key, val in data.items() if key != "heat_cool_mode"}
+        )
+        assert DPTCombinedStatusRTC.to_knx(data) == DPTCombinedStatusRTC.to_knx(value)
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"heat_cool_mode": "nodem"},
+            {"heat_cool_mode": None},
+            {"fault": "a"},
+            {"frost_alarm": 2},
+            {"faul": True},  # unknown key
+            "fault",
+            None,
+        ],
+    )
+    def test_dict_invalid(self, data: Any) -> None:
+        """Test from_dict with invalid data."""
+        with pytest.raises(ValueError):
+            CombinedStatusRTC.from_dict(data)
+        with pytest.raises(ConversionError):
+            DPTCombinedStatusRTC.to_knx(data)
+
+    def test_to_knx_wrong_value(self) -> None:
+        """Test serializing fields with a wrong value."""
+        with pytest.raises(ConversionError):
+            DPTCombinedStatusRTC.to_knx(CombinedStatusRTC(fault="a"))  # type: ignore[arg-type]
+        with pytest.raises(ConversionError):
+            DPTCombinedStatusRTC.to_knx(CombinedStatusRTC(heat_cool_mode="a"))  # type: ignore[arg-type]
+
+    @pytest.mark.parametrize(
+        "payload",
+        [DPTArray((0x00,)), DPTArray((0x00, 0x00, 0x00)), DPTBinary(1)],
+    )
+    def test_from_knx_wrong_payload(self, payload: DPTArray | DPTBinary) -> None:
+        """Test parsing DPTCombinedStatusRTC with a wrong payload."""
+        with pytest.raises(CouldNotParseTelegram):
+            DPTCombinedStatusRTC.from_knx(payload)
+
+    def test_get_dict_schema(self) -> None:
+        """Test get_dict_schema of DPTCombinedStatusRTC."""
+        boolean = {"type": "boolean", "required": False, "default": False}
+        assert DPTCombinedStatusRTC.get_dict_schema() == [
+            {"name": "fault"} | boolean,
+            {
+                "name": "heat_cool_mode",
+                "type": "enum",
+                "required": False,
+                "default": "heat",
+                "options": ["cool", "heat"],
+            },
+            *({"name": name} | boolean for name in RTC_FLAGS[1:]),
+        ]
+
+    def test_lookup(self) -> None:
+        """Test lookup of DPTCombinedStatusRTC."""
+        assert DPTBase.parse_transcoder("22.103") is DPTCombinedStatusRTC
+        assert DPTBase.parse_transcoder("combined_status_rtc") is DPTCombinedStatusRTC
 
 
 class TestDPTMedia:
