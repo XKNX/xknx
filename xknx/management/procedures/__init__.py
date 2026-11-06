@@ -42,6 +42,8 @@ from .device import (
     ScannedInterfaceObject,
     dm_restart,
     dm_restart_r_co,
+    dm_secure_sync_r_cl,
+    dm_secure_sync_r_cl_conn,
     dmp_authorize2_r_co,
     dmp_authorize_r_co,
     dmp_connect_r_co,

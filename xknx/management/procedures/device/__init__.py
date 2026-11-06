@@ -4,6 +4,7 @@
 from .dm_authorize import FREE_ACCESS_KEY, dmp_authorize2_r_co, dmp_authorize_r_co
 from .dm_connect_r_co import dmp_connect_r_co
 from .dm_restart_r_co import dm_restart, dm_restart_r_co
+from .dm_secure_sync_r_cl import dm_secure_sync_r_cl, dm_secure_sync_r_cl_conn
 from .dmp_interface_object_read_r import dmp_interface_object_read_r
 from .dmp_interface_object_scan_r import (
     ScannedInterfaceObject,

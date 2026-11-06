@@ -17,6 +17,9 @@ from .security_primitives import (
 # Secure APCI is 0x03F1 - in block_0 it is used split into 2 octets
 _APCI_SEC_HIGH = 0x03
 _APCI_SEC_LOW = 0xF1
+# Length of the Sequence Number, KNX Serial Number, Challenge and Random fields.
+_SEQUENCE_NUMBER_LENGTH = 6
+_MAC_LENGTH = 4
 
 
 def block_0(
@@ -33,6 +36,10 @@ def block_0(
     # L_Data_Extended frames are used and 0000b otherwise. Priority, repeat flag,
     # hop count and the Frame Type stay unprotected and may change on the way -
     # KNX v02.01.01 - Application Layer 03.03.07 - §5.1.3.2 Figure 100 and NOTE 16.
+    # `tpci_int` is the TPCI octet as sent (`TPCI.to_knx()`): its upper 6 bits are the
+    # TPCI and its lower 2 bits carry the upper 2 bits of the Secure APCI, e.g. 43h for
+    # a T_Data_Connected with sequence number 0 -
+    # KNX v02.01.01 - Application Layer 03.03.07 - Annex C.1.3.
     return (
         sequence_number
         + address_fields_raw
@@ -40,7 +47,7 @@ def block_0(
             (
                 0,
                 address_type.to_knx() | frame_format,
-                (tpci_int << 2) + _APCI_SEC_HIGH,
+                tpci_int | _APCI_SEC_HIGH,
                 _APCI_SEC_LOW,
                 0,
                 payload_length,
@@ -55,6 +62,83 @@ def counter_0(
 ) -> bytes:
     """Return Block Counter 0 for KNX Data Secure."""
     return sequence_number + address_fields_raw + b"\x00\x00\x00\x00\x01\x00"
+
+
+def _encrypt(
+    key: bytes,
+    nonce: bytes,
+    additional_data: bytes,
+    payload: bytes,
+    address_fields_raw: bytes,
+    address_type: CEMIAddressType,
+    frame_format: CEMIFrameFormat,
+    tpci: TPCI,
+) -> tuple[bytes, bytes]:
+    """
+    Secure `payload` with authentication and confidentiality; return (cipher, MAC).
+
+    `nonce` takes the place of the Sequence Number in B0 and Ctr0 -
+    KNX v02.01.01 - Application Layer 03.03.07 - §5.1.3.5.
+    """
+    mac_cbc = calculate_message_authentication_code_cbc(
+        key=key,
+        additional_data=additional_data,
+        payload=payload,
+        block_0=block_0(
+            sequence_number=nonce,
+            address_fields_raw=address_fields_raw,
+            address_type=address_type,
+            frame_format=frame_format,
+            tpci_int=tpci.to_knx(),
+            payload_length=len(payload),
+        ),
+    )[:_MAC_LENGTH]
+    return encrypt_data_ctr(
+        key=key,
+        counter_0=counter_0(
+            sequence_number=nonce, address_fields_raw=address_fields_raw
+        ),
+        mac_cbc=mac_cbc,
+        payload=payload,
+    )
+
+
+def _decrypt(
+    key: bytes,
+    nonce: bytes,
+    additional_data: bytes,
+    cipher: bytes,
+    mac: bytes,
+    address_fields_raw: bytes,
+    address_type: CEMIAddressType,
+    frame_format: CEMIFrameFormat,
+    tpci: TPCI,
+) -> bytes:
+    """Decrypt `cipher` and verify its MAC (see `_encrypt`)."""
+    plain, mac_tr = decrypt_ctr(
+        key=key,
+        counter_0=counter_0(
+            sequence_number=nonce, address_fields_raw=address_fields_raw
+        ),
+        mac=mac,
+        payload=cipher,
+    )
+    mac_cbc = calculate_message_authentication_code_cbc(
+        key=key,
+        additional_data=additional_data,
+        payload=plain,
+        block_0=block_0(
+            sequence_number=nonce,
+            address_fields_raw=address_fields_raw,
+            address_type=address_type,
+            frame_format=frame_format,
+            tpci_int=tpci.to_knx(),
+            payload_length=len(plain),
+        ),
+    )[:_MAC_LENGTH]
+    if mac_cbc != mac_tr:
+        raise DataSecureError("Data Secure MAC verification failed")
+    return plain
 
 
 class SecurityAlgorithmIdentifier(IntEnum):
@@ -282,6 +366,148 @@ class SecureData:
             return self.secured_apdu
 
         raise DataSecureError(f"Unknown secure algorithm {scf.algorithm}")
+
+    @staticmethod
+    def init_sync_request(
+        key: bytes,
+        scf: SecurityControlField,
+        sequence_number: int,
+        serial_number: bytes,
+        challenge: bytes,
+        address_fields_raw: bytes,
+        address_type: CEMIAddressType,
+        frame_format: CEMIFrameFormat,
+        tpci: TPCI,
+    ) -> SecureData:
+        """
+        Build the Secure Data of an S-A_Sync_Req-PDU.
+
+        SeqNr_local | KNX Serial Number (plain) | Challenge (encrypted) | MAC, with
+        A = SCF | KNX Serial Number and P = Challenge -
+        KNX v02.01.01 - Application Layer 03.03.07 - §5.3.2 Figure 109.
+        """
+        if len(serial_number) != _SEQUENCE_NUMBER_LENGTH:
+            raise DataSecureError(f"Invalid KNX Serial Number: {serial_number.hex()}")
+        if len(challenge) != _SEQUENCE_NUMBER_LENGTH:
+            raise DataSecureError(f"Invalid challenge: {challenge.hex()}")
+        sequence_number_bytes = sequence_number.to_bytes(_SEQUENCE_NUMBER_LENGTH, "big")
+        cipher, mac = _encrypt(
+            key=key,
+            nonce=sequence_number_bytes,
+            additional_data=scf.to_knx() + serial_number,
+            payload=challenge,
+            address_fields_raw=address_fields_raw,
+            address_type=address_type,
+            frame_format=frame_format,
+            tpci=tpci,
+        )
+        return SecureData(
+            sequence_number_bytes=sequence_number_bytes,
+            secured_apdu=serial_number + cipher,
+            message_authentication_code=mac,
+        )
+
+    def get_sync_request_challenge(
+        self,
+        key: bytes,
+        scf: SecurityControlField,
+        address_fields_raw: bytes,
+        address_type: CEMIAddressType,
+        frame_format: CEMIFrameFormat,
+        tpci: TPCI,
+    ) -> tuple[bytes, bytes]:
+        """Verify an S-A_Sync_Req-PDU; return its (KNX Serial Number, Challenge)."""
+        if len(self.secured_apdu) != 2 * _SEQUENCE_NUMBER_LENGTH:
+            raise DataSecureError("Invalid length of S-A_Sync_Req-PDU")
+        serial_number = self.secured_apdu[:_SEQUENCE_NUMBER_LENGTH]
+        challenge = _decrypt(
+            key=key,
+            nonce=self.sequence_number_bytes,
+            additional_data=scf.to_knx() + serial_number,
+            cipher=self.secured_apdu[_SEQUENCE_NUMBER_LENGTH:],
+            mac=self.message_authentication_code,
+            address_fields_raw=address_fields_raw,
+            address_type=address_type,
+            frame_format=frame_format,
+            tpci=tpci,
+        )
+        return serial_number, challenge
+
+    @staticmethod
+    def init_sync_response(
+        key: bytes,
+        scf: SecurityControlField,
+        challenge: bytes,
+        random: bytes,
+        sequence_number_remote: int,
+        sequence_number_local: int,
+        address_fields_raw: bytes,
+        address_type: CEMIAddressType,
+        frame_format: CEMIFrameFormat,
+        tpci: TPCI,
+    ) -> SecureData:
+        """
+        Build the Secure Data of an S-A_Sync_Res-PDU.
+
+        Challenge XOR Random (plain) | SeqNr_remote | SeqNr_local (encrypted) | MAC, with
+        A = SCF, P = SeqNr_remote | SeqNr_local and Random in place of the Sequence Number
+        in B0 and Ctr0 - KNX v02.01.01 - Application Layer 03.03.07 - §5.3.2 Figure 110.
+        """
+        cipher, mac = _encrypt(
+            key=key,
+            nonce=random,
+            additional_data=scf.to_knx(),
+            payload=sequence_number_remote.to_bytes(_SEQUENCE_NUMBER_LENGTH, "big")
+            + sequence_number_local.to_bytes(_SEQUENCE_NUMBER_LENGTH, "big"),
+            address_fields_raw=address_fields_raw,
+            address_type=address_type,
+            frame_format=frame_format,
+            tpci=tpci,
+        )
+        return SecureData(
+            sequence_number_bytes=bytes(
+                a ^ b for a, b in zip(challenge, random, strict=True)
+            ),
+            secured_apdu=cipher,
+            message_authentication_code=mac,
+        )
+
+    def get_sync_response_sequence_numbers(
+        self,
+        key: bytes,
+        scf: SecurityControlField,
+        challenge: bytes,
+        address_fields_raw: bytes,
+        address_type: CEMIAddressType,
+        frame_format: CEMIFrameFormat,
+        tpci: TPCI,
+    ) -> tuple[int, int]:
+        """
+        Verify an S-A_Sync_Res-PDU answering `challenge`; return (SeqNr_remote, SeqNr_local).
+
+        Random is recovered from the field Challenge XOR Random with the own Challenge -
+        KNX v02.01.01 - Application Layer 03.03.07 - §5.3.2.
+        """
+        if len(self.secured_apdu) != 2 * _SEQUENCE_NUMBER_LENGTH:
+            raise DataSecureError("Invalid length of S-A_Sync_Res-PDU")
+        random = bytes(
+            a ^ b for a, b in zip(self.sequence_number_bytes, challenge, strict=True)
+        )
+        plain = _decrypt(
+            key=key,
+            nonce=random,
+            additional_data=scf.to_knx(),
+            cipher=self.secured_apdu,
+            mac=self.message_authentication_code,
+            address_fields_raw=address_fields_raw,
+            address_type=address_type,
+            frame_format=frame_format,
+            tpci=tpci,
+        )
+        return (
+            int.from_bytes(plain[:_SEQUENCE_NUMBER_LENGTH], "big"),
+            int.from_bytes(plain[_SEQUENCE_NUMBER_LENGTH:], "big"),
+        )
 
     def __repr__(self) -> str:
         """Return object as readable string."""

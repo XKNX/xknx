@@ -389,6 +389,14 @@ class Keyring(AttributeReader):
             if ga in rcv_interface.group_addresses
         }
 
+    def get_tool_keys(self) -> dict[IndividualAddress, bytes]:
+        """Get the Tool Keys of all devices that have one."""
+        return {
+            device.individual_address: device.decrypted_tool_key
+            for device in self.devices
+            if device.decrypted_tool_key is not None
+        }
+
     def get_data_secure_senders(self) -> dict[IndividualAddress, int]:
         """
         Get all data secure sending device addresses.
