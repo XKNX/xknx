@@ -104,6 +104,7 @@ class USBTunnel(Interface):
         "_send_lock",
         "auto_reconnect",
         "auto_reconnect_wait",
+        "busmonitor",
         "cemi_received_callback",
         "device_info",
         "path",
@@ -126,6 +127,7 @@ class USBTunnel(Interface):
         path: bytes | None = None,
         auto_reconnect: bool = True,
         auto_reconnect_wait: int = 3,
+        busmonitor: bool = False,
     ) -> None:
         """
         Initialize USBTunnel.
@@ -134,8 +136,13 @@ class USBTunnel(Interface):
         first known KNX USB interface found is used. After it was unplugged it is
         looked up again by vendor and product id and serial number, so it is found
         on another USB port as well.
+
+        With `busmonitor` the cEMI server is switched to the bus monitor mode
+        instead: every frame on the bus is passed on as L_Busmon.ind, and nothing
+        can be sent.
         """
         self.xknx = xknx
+        self.busmonitor = busmonitor
         self.cemi_received_callback = cemi_received_callback
         self.vendor_id = vendor_id
         self.product_id = product_id
@@ -261,7 +268,13 @@ class USBTunnel(Interface):
         await self._property_write(
             ResourceObjectType.OBJECT_CEMI_SERVER,
             ResourceCEMIServerPropertyId.PID_COMM_MODE,
-            bytes((CommunicationMode.DATA_LINK_LAYER,)),
+            bytes(
+                (
+                    CommunicationMode.DATA_LINK_LAYER_BUSMONITOR
+                    if self.busmonitor
+                    else CommunicationMode.DATA_LINK_LAYER,
+                )
+            ),
         )
         individual_address = await self._read_individual_address()
         self.xknx.current_address = individual_address
@@ -524,6 +537,8 @@ class USBTunnel(Interface):
         """Send a CEMIFrame to the KNX bus."""
         if not self._established:
             raise CommunicationError("KNX USB interface not connected")
+        if self.busmonitor:
+            raise CommunicationError("KNX USB interface is in bus monitor mode")
         await self._send_tunnel_frame(cemi.to_knx())
 
     ####################

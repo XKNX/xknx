@@ -172,6 +172,23 @@ class TestUSBTunnel:
         assert self.cemi_received.call_count == 3
         await tunnel.disconnect()
 
+    async def test_busmonitor(self, fake_hid: FakeHIDModule) -> None:
+        """Test the bus monitor mode."""
+        tunnel = self.tunnel(busmonitor=True)
+        await tunnel.connect()
+        interface = fake_hid.interface
+        assert interface.written_cemi()[0] == bytes.fromhex("f60008013410 0101")
+        assert interface.properties[(8, 52)] == b"\x01"
+        busmon = bytes.fromhex("2b0703010304020300bce0102f0012030080346a")
+        interface.send_cemi(busmon)
+        await _until(lambda: self.cemi_received.call_count == 1)
+        assert self.cemi_received.call_args.args[0] == busmon
+        with pytest.raises(CommunicationError, match="bus monitor mode"):
+            await tunnel.send_cemi(
+                CEMIFrame(code=CEMIMessageCode.M_RESET_REQ, data=None)
+            )
+        await tunnel.disconnect()
+
     async def test_bus_connection_info(self, fake_hid: FakeHIDModule) -> None:
         """Test the interface informing about its bus connection."""
         tunnel = self.tunnel()
