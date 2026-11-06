@@ -52,6 +52,10 @@ class ConnectionConfig:
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     * threaded: Run connection logic in separate thread to avoid concurrency issues in HA
     * secure_config: KNX Secure config to use
+    * busmonitor: Open the tunnel in bus monitor mode. Received L_Busmon.ind frames
+        are passed to callbacks registered with
+        `CEMIHandler.register_busmonitor_frame_received_cb()`; sending is not possible.
+        Only for tunnelling connections - AUTOMATIC only uses tunnelling devices.
     """
 
     def __init__(
@@ -71,6 +75,7 @@ class ConnectionConfig:
         scan_filter: GatewayScanFilter | None = None,
         threaded: bool = False,
         secure_config: SecureConfig | None = None,
+        busmonitor: bool = False,
     ) -> None:
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
@@ -89,6 +94,7 @@ class ConnectionConfig:
         self.scan_filter = scan_filter or GatewayScanFilter()
         self.threaded = threaded
         self.secure_config = secure_config
+        self.busmonitor = busmonitor
 
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
