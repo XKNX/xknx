@@ -93,6 +93,10 @@ nav_order: 2
 - `KNXIPFrame.from_knx()` resolves the body class from a lookup table instead of a chain of comparisons.
 - IP Secure: the session keepalive is a rescheduled `loop.call_later()` timer instead of a task cancelled and recreated for every frame sent.
 
+### Bugfixes
+
+- `KNXDateTime.from_dict()` (DPT 19.001) accepts `day_of_week: None`, which `KNXDateTime.as_dict()` writes for an invalid day of week, so the dict of a received date and time can be read back and sent again.
+
 # 4.0.0 Typed and tidy 2026-10-15
 
 ### Breaking changes

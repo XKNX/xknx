@@ -61,7 +61,8 @@ class KNXDateTime(DPTComplexData):
     def from_dict(cls, data: Mapping[str, Any]) -> KNXDateTime:
         """Init from a dictionary."""
         _data = {**data}
-        if "day_of_week" in data:
+        # `as_dict()` writes None for an invalid day of week; keep it as None
+        if data.get("day_of_week") is not None:
             _data["day_of_week"] = KNXDayOfWeek.parse(data["day_of_week"])
         try:
             return cls(**_data)
