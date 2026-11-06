@@ -8,6 +8,7 @@ from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.secure.keyring import (
     InterfaceType,
     Keyring,
+    KeyringSAXContentHandler,
     XMLDevice,
     XMLInterface,
     sync_load_keyring,
@@ -219,3 +220,21 @@ class TestKeyRing:
         assert keyring.created_by == "ETS 5.7.7 (Build 1428)"
         assert keyring.created == "2023-02-06T21:17:09"
         assert keyring.xmlns == "http://knx.org/xml/keyring/1"
+
+
+@pytest.mark.parametrize(
+    ("length", "prefix"),
+    [
+        (0, bytes((0x00,))),
+        (127, bytes((0x7F,))),
+        (128, bytes((0x80, 0x01))),
+        (200, bytes((0xC8, 0x01))),
+        (300, bytes((0xAC, 0x02))),
+        (16384, bytes((0x80, 0x80, 0x01))),
+    ],
+)
+def test_signature_string_length(length: int, prefix: bytes) -> None:
+    """Test strings are signed with a 7-bit encoded length prefix."""
+    handler = KeyringSAXContentHandler("pwd")
+    handler.append_string("a" * length)
+    assert handler.output == prefix + b"a" * length
