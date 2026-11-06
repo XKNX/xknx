@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from xknx.knxip import KNXIPFrame, TunnellingAck, TunnellingRequest
+from xknx.knxip import (
+    KNXIPFrame,
+    TunnellingAck,
+    TunnellingFeatureGet,
+    TunnellingFeatureSet,
+    TunnellingRequest,
+)
 
 from .request_response import RequestResponse
 
@@ -13,7 +19,11 @@ if TYPE_CHECKING:
 
 
 class Tunnelling(RequestResponse[TunnellingAck]):
-    """Class to send TunnelingRequest and wait for TunnelingACK (UDP only)."""
+    """
+    Class to send TunnelingRequest and wait for TunnelingACK (UDP only).
+
+    Tunnelling Feature services are confirmed the same way.
+    """
 
     __slots__ = ("data_endpoint_addr", "tunnelling_request")
 
@@ -23,7 +33,9 @@ class Tunnelling(RequestResponse[TunnellingAck]):
         self,
         transport: UDPTransport,
         data_endpoint: tuple[str, int] | None,
-        tunnelling_request: TunnellingRequest,
+        tunnelling_request: TunnellingRequest
+        | TunnellingFeatureGet
+        | TunnellingFeatureSet,
     ) -> None:
         """Initialize Tunnelling class."""
         self.data_endpoint_addr = data_endpoint
