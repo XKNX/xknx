@@ -14,7 +14,9 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import partial
+import importlib
 import logging
+import sys
 import threading
 from typing import Any, Final
 
@@ -64,15 +66,34 @@ _VENDOR_DEFINED_USAGE_PAGE: Final = 0xFF00
 _READ_TIMEOUT_MS: Final = 100
 
 
-def _hid() -> Any:
-    """Import hidapi."""
+# hidapi backends, in the order they are tried: on Linux the kernel's hidraw driver
+# first - the interface stays with the kernel's HID driver and access is granted by
+# the permissions of /dev/hidraw* - then libusb, e.g. for a kernel without hidraw
+_BACKENDS: Final = ("hidraw", "hid") if sys.platform.startswith("linux") else ("hid",)
+_MISSING_HIDAPI: Final = (
+    "KNX USB interfaces need the 'hidapi' package: pip install xknx[usb]"
+)
+
+
+def _backend(name: str) -> Any:
+    """Import a hidapi backend module."""
     try:
-        import hid  # pylint: disable=import-outside-toplevel
+        return importlib.import_module(name)
     except ImportError as err:
-        raise CommunicationError(
-            "KNX USB interfaces need the 'hidapi' package: pip install xknx[usb]"
-        ) from err
-    return hid
+        raise CommunicationError(_MISSING_HIDAPI) from err
+
+
+def _backends() -> list[tuple[str, Any]]:
+    """Import the hidapi backends available here."""
+    modules: list[tuple[str, Any]] = []
+    for name in _BACKENDS:
+        try:
+            modules.append((name, importlib.import_module(name)))
+        except ImportError:
+            continue
+    if not modules:
+        raise CommunicationError(_MISSING_HIDAPI)
+    return modules
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,9 +106,11 @@ class USBDeviceInfo:
     serial_number: str = ""
     manufacturer: str = ""
     product: str = ""
+    # the hidapi backend module the path belongs to
+    backend: str = "hid"
 
     @classmethod
-    def from_hid(cls, device: dict[str, Any]) -> USBDeviceInfo:
+    def from_hid(cls, device: dict[str, Any], backend: str = "hid") -> USBDeviceInfo:
         """Create from an entry of `hid.enumerate()`."""
         return cls(
             vendor_id=device.get("vendor_id") or 0,
@@ -96,6 +119,7 @@ class USBDeviceInfo:
             serial_number=device.get("serial_number") or "",
             manufacturer=device.get("manufacturer_string") or "",
             product=device.get("product_string") or "",
+            backend=backend,
         )
 
     def __str__(self) -> str:
@@ -122,24 +146,27 @@ def find_usb_interfaces(
 
     Without `vendor_id` only known KNX USB interfaces are listed; with it, every
     HID device of that vendor (and product) is, so an interface missing from the
-    known ones can be used too.
+    known ones can be used too. The interfaces come from the first hidapi backend
+    that finds any.
     """
-    hid = _hid()
-    found: dict[bytes, USBDeviceInfo] = {}
-    for device in hid.enumerate(vendor_id or 0, product_id or 0):
-        info = USBDeviceInfo.from_hid(device)
-        # hidapi reports usage page 0 where the platform doesn't know it (libusb backend)
-        usage_page = device.get("usage_page") or 0
-        if 0 < usage_page < _VENDOR_DEFINED_USAGE_PAGE:
-            continue
-        if vendor_id is None and not is_knx_usb_interface(
-            info.vendor_id, info.product_id
-        ):
-            continue
-        if serial_number and info.serial_number != serial_number:
-            continue
-        found.setdefault(info.path, info)
-    return list(found.values())
+    for backend, hid in _backends():
+        found: dict[bytes, USBDeviceInfo] = {}
+        for device in hid.enumerate(vendor_id or 0, product_id or 0):
+            info = USBDeviceInfo.from_hid(device, backend)
+            # hidapi reports usage page 0 where the platform doesn't know it (libusb)
+            usage_page = device.get("usage_page") or 0
+            if 0 < usage_page < _VENDOR_DEFINED_USAGE_PAGE:
+                continue
+            if vendor_id is None and not is_knx_usb_interface(
+                info.vendor_id, info.product_id
+            ):
+                continue
+            if serial_number and info.serial_number != serial_number:
+                continue
+            found.setdefault(info.path, info)
+        if found:
+            return list(found.values())
+    return []
 
 
 class HIDDevice:
@@ -181,7 +208,7 @@ class HIDDevice:
 
     async def open(self) -> None:
         """Open the device and start reading. Raise CommunicationError on failure."""
-        hid = _hid()
+        hid = _backend(self.info.backend)
         self._loop = asyncio.get_running_loop()
         device = hid.device()
         try:

@@ -230,6 +230,8 @@ def fake_hid(monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeHIDModule]:
     """Replace hidapi by a fake module with a simulated KNX USB interface."""
     module = FakeHIDModule()
     monkeypatch.setitem(sys.modules, "hid", module)
+    # not the real hidraw backend of an installed hidapi on Linux
+    monkeypatch.setitem(sys.modules, "hidraw", None)
     yield module
     for interface in module.interfaces.values():
         interface.unplugged.set()
