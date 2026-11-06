@@ -46,6 +46,7 @@ class CEMIHandler:
     __slots__ = (
         "_busmonitor_frame_received_cbs",
         "_l_data_confirmation_event",
+        "_send_lock",
         "data_secure",
         "xknx",
     )
@@ -55,6 +56,11 @@ class CEMIHandler:
         self.xknx = xknx
         self.data_secure: DataSecure | None = None
         self._l_data_confirmation_event = asyncio.Event()
+        # Only one L_Data.req may be outstanding at a time: the L_Data.con is
+        # matched to its request by order only, so sends are serialized until
+        # the confirmation of the previous request has arrived.
+        # KNX v01.02.03 - Transport Layer 03.03.04 - §3.6
+        self._send_lock = asyncio.Lock()
         self._busmonitor_frame_received_cbs: list[CEMIFrameCallbackType] = []
 
     def register_busmonitor_frame_received_cb(
@@ -85,7 +91,12 @@ class CEMIHandler:
             self.data_secure = DataSecure.init_from_keyring(keyring)
 
     async def send_telegram(self, telegram: Telegram) -> None:
-        """Create a CEMIFrame from a Telegram and send it to the CEMI Server."""
+        """
+        Create a CEMIFrame from a Telegram and send it to the CEMI Server.
+
+        Returns when the L_Data.con for this request was received. Concurrent calls
+        are serialized so a confirmation can never be attributed to the wrong request.
+        """
         cemi_data = CEMILData.init_from_telegram(
             telegram=telegram,
             src_addr=(
@@ -104,23 +115,24 @@ class CEMIHandler:
         else:
             telegram.data_secure = False
 
-        self._l_data_confirmation_event.clear()
-        try:
-            await self.xknx.knxip_interface.send_cemi(cemi)
-        except (ConversionError, CommunicationError) as ex:
-            logger.warning("Could not send CEMI frame: %s for %s", ex, cemi)
-            self.xknx.connection_manager.cemi_count_outgoing_error += 1
-            raise ex
+        async with self._send_lock:
+            self._l_data_confirmation_event.clear()
+            try:
+                await self.xknx.knxip_interface.send_cemi(cemi)
+            except (ConversionError, CommunicationError) as ex:
+                logger.warning("Could not send CEMI frame: %s for %s", ex, cemi)
+                self.xknx.connection_manager.cemi_count_outgoing_error += 1
+                raise ex
 
-        try:
-            async with asyncio.timeout(REQUEST_TO_CONFIRMATION_TIMEOUT):
-                await self._l_data_confirmation_event.wait()
-        except TimeoutError:
-            self.xknx.connection_manager.cemi_count_outgoing_error += 1
-            raise ConfirmationError(
-                f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
-            ) from None
-        self.xknx.connection_manager.cemi_count_outgoing += 1
+            try:
+                async with asyncio.timeout(REQUEST_TO_CONFIRMATION_TIMEOUT):
+                    await self._l_data_confirmation_event.wait()
+            except TimeoutError:
+                self.xknx.connection_manager.cemi_count_outgoing_error += 1
+                raise ConfirmationError(
+                    f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
+                ) from None
+            self.xknx.connection_manager.cemi_count_outgoing += 1
 
     def handle_raw_cemi(self, raw_cemi: bytes) -> None:
         """Parse and handle incoming raw CEMI Frames."""

@@ -75,6 +75,65 @@ async def test_wait_for_l2_confirmation(time_travel: EventLoopClockAdvancer) -> 
         assert xknx.connection_manager.cemi_count_outgoing_error == 1
 
 
+async def test_concurrent_send_waits_for_own_confirmation(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test a second concurrent L_DATA.req is not confirmed by the first one's L_DATA.con."""
+    xknx = XKNX()
+    xknx.knxip_interface = AsyncMock()
+
+    telegram_a = Telegram(
+        destination_address=GroupAddress(1),
+        payload=apci.GroupValueWrite(DPTArray((1,))),
+    )
+    telegram_b = Telegram(
+        destination_address=GroupAddress(2),
+        payload=apci.GroupValueWrite(DPTArray((2,))),
+    )
+    cemi_a = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(telegram_a),
+    )
+    cemi_b = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(telegram_b),
+    )
+    confirmation_a = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_CON,
+        data=CEMILData.init_from_telegram(telegram_a),
+    )
+    confirmation_b = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_CON,
+        data=CEMILData.init_from_telegram(telegram_b),
+    )
+
+    task_a = asyncio.create_task(xknx.cemi_handler.send_telegram(telegram_a))
+    task_b = asyncio.create_task(xknx.cemi_handler.send_telegram(telegram_b))
+    await time_travel(0)
+    # only one L_DATA.req may be outstanding at a time
+    xknx.knxip_interface.send_cemi.assert_called_once_with(cemi_a)
+    assert not task_a.done()
+    assert not task_b.done()
+
+    # the confirmation of A must not confirm B
+    xknx.cemi_handler.handle_cemi_frame(confirmation_a)
+    await time_travel(0)
+    assert task_a.done()
+    await task_a
+    assert not task_b.done()
+    # B is sent only after A was confirmed
+    assert xknx.knxip_interface.send_cemi.call_count == 2
+    xknx.knxip_interface.send_cemi.assert_called_with(cemi_b)
+    assert xknx.connection_manager.cemi_count_outgoing == 1
+
+    xknx.cemi_handler.handle_cemi_frame(confirmation_b)
+    await time_travel(0)
+    assert task_b.done()
+    await task_b
+    assert xknx.connection_manager.cemi_count_outgoing == 2
+    assert xknx.connection_manager.cemi_count_outgoing_error == 0
+
+
 @patch("xknx.management.management.Management.process")
 def test_incoming_cemi(mock_management_process: MagicMock) -> None:
     """Test incoming CEMI."""
@@ -173,6 +232,10 @@ def test_incoming_management_telegram(
         # <CouldNotParseCEMI description="CEMI too small. Length: 9; CEMI: 2900b06010fa10ff00" />
         # communication_channel_id: 0x02   sequence_counter: 0x81
         bytes.fromhex("2900b06010fa10ff00"),
+        # empty cEMI - no message code
+        b"",
+        # L_DATA_IND without additional info length
+        bytes.fromhex("29"),
     ],
 )
 @patch("xknx.cemi.cemi_handler.CEMIHandler.handle_cemi_frame")
