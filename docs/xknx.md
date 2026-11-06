@@ -73,6 +73,18 @@ An explicit connection configuration can be used. In this case a `connection_typ
 KNX Data Secure credentials are sourced from a keyfile exported from ETS.
 IP Secure keys can be configured directly or sourced from a keyfile.
 
+The Data Secure sequence numbers in the keyfile are only as fresh as its export. To reject replays of telegrams received since then, save the current values at shutdown and restore them after a restart - xknx does no file I/O for this itself:
+
+```python
+data_secure = xknx.cemi_handler.data_secure  # None if Data Secure is not configured
+# at shutdown
+table = data_secure.get_individual_address_table()  # dict[IndividualAddress, int]
+sending = data_secure.get_sequence_number_sending()
+# after restart
+data_secure.restore_individual_address_table(table)  # only raises values
+data_secure.restore_sequence_number_sending(sending)  # takes the higher value
+```
+
 A specific tunnel endpoint can be requested by setting `individual_address`.
 For AUTOMATIC connections this setting selects a host from a given keyfile.
 For TCP TUNNELING connections this setting requests a tunnel to that individual address.

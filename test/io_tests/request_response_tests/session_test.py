@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xknx.exceptions import RequestResponseError
+from xknx.io.const import SESSION_REQUEST_TIMEOUT
 from xknx.io.request_response import Session
 from xknx.knxip import HPAI, KNXIPFrame, SessionRequest, SessionResponse, SessionStatus
 
@@ -20,6 +21,8 @@ class TestSession:
             transport_mock,
             ecdh_client_public_key=ecdh_public_key,
         )
+        # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.3.5.2.1.1 timeoutAuthentication
+        assert session.timeout_in_seconds == SESSION_REQUEST_TIMEOUT == 10
         session.timeout_in_seconds = 0
 
         assert session.AWAITED_RESPONSE_CLASS is SessionResponse

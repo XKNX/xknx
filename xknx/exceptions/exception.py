@@ -208,12 +208,23 @@ class DeviceIllegalValue(XKNXException):
 
 
 class DataSecureError(XKNXException):
-    """Exception class for KNX Data Secure handling."""
+    """
+    Exception class for KNX Data Secure handling.
 
-    def __init__(self, message: str, log_level: int = logging.WARNING) -> None:
+    `key_issue` is False when the frame was discarded although the keys are fine,
+    e.g. a repeated frame - it shall then not be reported as a key issue.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        log_level: int = logging.WARNING,
+        key_issue: bool = True,
+    ) -> None:
         """Instantiate exception."""
         super().__init__(message)
         self.log_level = log_level
+        self.key_issue = key_issue
 
 
 class InvalidSecureConfiguration(XKNXException):

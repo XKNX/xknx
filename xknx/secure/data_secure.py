@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from copy import copy
 from datetime import UTC, datetime
@@ -36,6 +36,11 @@ def _initial_sequence_number() -> int:
     return int((time.time() - _SEQUENCE_NUMBER_INIT_TIMESTAMP) * 1000)
 
 
+def _is_valid_sequence_number(sequence_number: int) -> bool:
+    """Return True if `sequence_number` is usable as sequence number sending."""
+    return 0 < sequence_number <= _SEQUENCE_NUMBER_MAX
+
+
 def is_data_secure(cemi_data: CEMILData) -> bool:
     """Return True if the payload frame is DataSecure encrypted / authenticated."""
     return isinstance(cemi_data.payload, SecureAPDU)
@@ -66,7 +71,7 @@ class DataSecure:
         # Holds the last valid sequence number for each individual address.
         # Use sequence_number from keyfile as initial value or 0 from senders for all IAs ?
 
-        if not 0 < self._sequence_number_sending <= _SEQUENCE_NUMBER_MAX:
+        if not _is_valid_sequence_number(self._sequence_number_sending):
             _local_time_info = (
                 f" Local time not set properly? {datetime.now(UTC).isoformat()}"
                 if not last_sequence_number_sending
@@ -97,8 +102,9 @@ class DataSecure:
         """
         ga_key_table = keyring.get_data_secure_group_keys()
         ia_seq_table = keyring.get_data_secure_senders()
-        # TODO: persist local individual_address_table and update from that file on start
-        #       to have more fresh initial sequence numbers
+        # The sequence numbers from the keyring are only as fresh as its export.
+        # Use `get_individual_address_table()` / `restore_individual_address_table()`
+        # to persist and restore the current values across restarts.
         if not ga_key_table:
             return None
         return DataSecure(
@@ -118,6 +124,65 @@ class DataSecure:
         self._sequence_number_sending += 1
         return seq_nr
 
+    def get_sequence_number_sending(self) -> int:
+        """
+        Return the sequence number the next outgoing secured frame will use.
+
+        It does not increment the value. Save it together with
+        `get_individual_address_table()` to restore it after a restart.
+        """
+        return self._sequence_number_sending
+
+    def restore_sequence_number_sending(self, sequence_number: int) -> None:
+        """
+        Restore the sequence number sending from a stored value.
+
+        The stored value is used only if it is higher than the current one, so the
+        sequence number sending is never lowered - a sender shall never reuse a
+        sequence number (KNX v02.01.01 - Application Layer 03.03.07 - §5.3.1).
+        """
+        if not _is_valid_sequence_number(sequence_number):
+            raise DataSecureError(
+                f"Sequence number sending to restore out of range: {sequence_number}",
+                log_level=logging.ERROR,
+            )
+        self._sequence_number_sending = max(
+            self._sequence_number_sending, sequence_number
+        )
+
+    def get_individual_address_table(self) -> dict[IndividualAddress, int]:
+        """
+        Return a snapshot of the Security Individual Address Table.
+
+        It maps each known sender to the last valid sequence number received from
+        it. Save it at shutdown and pass it to `restore_individual_address_table()`
+        after a restart to have fresh values instead of the ones from the keyring,
+        so that frames received in between can not be replayed
+        (KNX v02.01.01 - Application Layer 03.03.07 - §5.3.1 Power down behaviour).
+        """
+        return dict(self._individual_address_table)
+
+    def restore_individual_address_table(
+        self, table: Mapping[IndividualAddress, int]
+    ) -> None:
+        """
+        Restore last valid sequence numbers from a stored snapshot.
+
+        Only raises values: a stored sequence number is used if it is higher than
+        the one currently known for that sender. Senders not known from the
+        keyring are ignored.
+        """
+        for address, sequence_number in table.items():
+            try:
+                last_valid_sequence_number = self._individual_address_table[address]
+            except KeyError:
+                _LOGGER.debug(
+                    "Ignoring stored sequence number for unknown sender %s", address
+                )
+                continue
+            if sequence_number > last_valid_sequence_number:
+                self._individual_address_table[address] = sequence_number
+
     @contextmanager
     def check_sequence_number(
         self, source_address: IndividualAddress, received_sequence_number: int
@@ -135,8 +200,19 @@ class DataSecure:
                 f"Source address not found in Security Individual Address Table: {source_address}",
                 log_level=logging.INFO,
             ) from None
-        if not received_sequence_number > last_valid_sequence_number:
-            # TODO: implement and increment Security Failure Log counter (not when equal)
+        if received_sequence_number == last_valid_sequence_number:
+            # KNX v02.01.01 - Application Layer 03.03.07 - §5.3.1
+            # A frame repeating the last valid sequence number shall be ignored and
+            # shall not count as a security failure: it is most likely a repetition
+            # of a valid frame by the Data Link Layer of the sender.
+            raise DataSecureError(
+                f"Repeated frame from {source_address}: "
+                f"sequence number {received_sequence_number} equals last valid",
+                log_level=logging.DEBUG,
+                key_issue=False,
+            )
+        if received_sequence_number < last_valid_sequence_number:
+            # TODO: implement and increment Security Failure Log counter
             raise DataSecureError(
                 f"Sequence number too low for {source_address}: "
                 f"{received_sequence_number} received, {last_valid_sequence_number} last valid",

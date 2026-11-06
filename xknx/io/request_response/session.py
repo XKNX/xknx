@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from xknx.io.const import SESSION_REQUEST_TIMEOUT
 from xknx.knxip import KNXIPFrame, SessionRequest, SessionResponse
 
 from .request_response import RequestResponse
@@ -23,8 +24,8 @@ class Session(RequestResponse[SessionResponse]):
         ecdh_client_public_key: bytes,
     ) -> None:
         """Initialize Session class."""
-        # TODO: increase timeout to timeoutAuthentication: 10sec ?
-        super().__init__(transport)
+        # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.3.5.2.1.1 timeoutAuthentication
+        super().__init__(transport, timeout_in_seconds=SESSION_REQUEST_TIMEOUT)
         self.ecdh_client_public_key = ecdh_client_public_key
 
     def _create_knxipframe(self) -> KNXIPFrame:

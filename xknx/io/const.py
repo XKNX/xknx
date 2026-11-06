@@ -27,6 +27,9 @@ DEVICE_CONFIGURATION_REQUEST_REPETITIONS: Final = 3
 # any communication over this session) until the session will be dropped -
 # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.3.5.2.1.1 timeoutSession.
 SESSION_TIMEOUT: Final = 60
+# Maximum time the authentication process for newly created secure sessions
+# may last until the unauthenticated session will be dropped by the server.
+SESSION_REQUEST_TIMEOUT: Final = 10
 # The specification only requires the keepalive to be sent before the session
 # timeout elapses. ETS sends one every 14 (ETS 5) / 15 (ETS 6) seconds of
 # inactivity, leaving a wide margin for latency instead of 10 seconds.
