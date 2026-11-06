@@ -6,6 +6,25 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Breaking changes
+
+- `apci.FunctionPropertyExtStateResponse.return_code` is an `int` instead of a `ReturnCode`. KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3 defines return code ranges without assigning codes to them, and its NOTE 12 states that existing Function Properties may return codes not compatible with the unified return code schema. A response carrying such a code raised `ConversionError` while parsing, so it was dropped.
+  ```python
+  response.return_code == ReturnCode.E_SUCCESS  # before
+  response.return_code == ReturnCode.E_SUCCESS.value  # now
+  ReturnCode(response.return_code)  # now - for a code defined in ReturnCode
+  ```
+
+### Management
+
+- Add `dm_function_property_write_r` and `dmp_ext_function_property_write_r`, plus their connectionless variants `dm_function_property_write_r_cl` and `dmp_ext_function_property_write_r_cl`, to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.30.1/§3.30.2, calling a Function Property of an Interface Object addressed by its index or by its type and instance. The procedures may use either communication mode: the plain names take an open `P2PConnection`, the `_r_cl` variants a `P2PConnectionless` (suffix RCl - §1.2 Table 1). All return the device's `FunctionPropertyStateResponse` / `FunctionPropertyExtStateResponse` - its return code is Function Property specific, so it is left to the caller. A response for another Interface Object or Property raises `ManagementConnectionError`. `FunctionPropertyCommand` and `FunctionPropertyExtCommand` derive from `APCIRequest` now, so `request()` verifies and narrows their response like for `FunctionPropertyStateRead` (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.1/§3.4.8.1: the remote application shall respond).
+
+### Bugfixes
+
+- `FunctionPropertyStateResponse` parses a response without `return_code` and `data` - KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3, the answer of a device to a Function Property service on a Property that is not of the Property Datatype PDT_Function. It raised `ConversionError` before. `return_code` is `None` for such a response. `to_knx()` raises `ConversionError` for a `FunctionPropertyStateResponse` with `data` but without `return_code`.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
