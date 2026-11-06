@@ -2,7 +2,15 @@
 
 import pytest
 
-from xknx.dpt import DPTAngle, DPTArray, DPTScaling, DPTTariff, DPTValue1Ucount
+from xknx.dpt import (
+    DPTAngle,
+    DPTArray,
+    DPTBase,
+    DPTFanStage,
+    DPTScaling,
+    DPTTariff,
+    DPTValue1Ucount,
+)
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -133,3 +141,50 @@ class TestDPTTariff:
         """Test parsing of DPTTariff with wrong value (overflow)."""
         with pytest.raises(ConversionError):
             DPTTariff.from_knx(DPTArray((0xFF,)))
+
+
+class TestDPTFanStage:
+    """Test class for KNX 8-bit fan stage."""
+
+    @pytest.mark.parametrize(
+        ("raw", "value"),
+        [
+            ((0x00,), 0),  # off
+            ((0x01,), 1),
+            ((0x03,), 3),
+            ((0xFF,), 255),
+        ],
+    )
+    def test_transcoder(self, raw: tuple[int], value: int) -> None:
+        """Test parsing and streaming of DPTFanStage."""
+        assert DPTFanStage.to_knx(value) == DPTArray(raw)
+        assert DPTFanStage.from_knx(DPTArray(raw)) == value
+
+    def test_to_knx_min_exceeded(self) -> None:
+        """Test parsing of DPTFanStage with wrong value (underflow)."""
+        with pytest.raises(ConversionError):
+            DPTFanStage.to_knx(-1)
+
+    def test_to_knx_max_exceeded(self) -> None:
+        """Test parsing of DPTFanStage with wrong value (overflow)."""
+        with pytest.raises(ConversionError):
+            DPTFanStage.to_knx(256)
+
+    def test_to_knx_wrong_parameter(self) -> None:
+        """Test parsing of DPTFanStage with wrong value (string)."""
+        with pytest.raises(ConversionError):
+            DPTFanStage.to_knx("fnord")
+
+    def test_from_knx_wrong_parameter(self) -> None:
+        """Test parsing of DPTFanStage with wrong value (2 byte array)."""
+        with pytest.raises(CouldNotParseTelegram):
+            DPTFanStage.from_knx(DPTArray((0x01, 0x02)))
+
+    def test_unit(self) -> None:
+        """Test DPTFanStage has no unit."""
+        assert DPTFanStage.unit is None
+
+    def test_lookup(self) -> None:
+        """Test lookup of DPTFanStage."""
+        assert DPTBase.parse_transcoder("5.100") is DPTFanStage
+        assert DPTBase.parse_transcoder("fan_stage") is DPTFanStage

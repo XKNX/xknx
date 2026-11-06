@@ -15,7 +15,7 @@ from xknx.telegram import (
     TelegramDirection,
     telegram_context,
 )
-from xknx.telegram.apci import GroupValueWrite
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from ..conftest import EventLoopClockAdvancer
 
@@ -212,7 +212,7 @@ async def test_binary_sensor_counter(time_travel: EventLoopClockAdvancer) -> Non
     assert not callback
 
     await time_travel(1)
-    assert callback == 2 * [DeviceUpdate(telegram=telegram)]
+    assert callback == 2 * [DeviceUpdate(telegram=telegram, from_state_address=True)]
 
 
 @pytest.mark.parametrize("context", ["automation", None])
@@ -263,3 +263,82 @@ async def test_callback_scheduled_action(
         await time_travel(1)
         # periodic travel update keeps the cause of the action starting the travel
         assert cover_callback == 2 * [DeviceUpdate(context=context)]
+
+
+def test_state_address_update() -> None:
+    """Test a telegram sent to a state address of the device is marked as such."""
+    xknx = XKNX()
+    callback = _UpdateRecorder()
+    switch = Switch(
+        xknx,
+        name="TestSwitch",
+        group_address="1/2/3",
+        group_address_state="1/2/4",
+        device_updated_cb=callback,
+    )
+    state_telegram = _incoming("1/2/4", DPTBinary(1))
+    switch.process(state_telegram)
+    response_telegram = Telegram(
+        destination_address=GroupAddress("1/2/4"),
+        direction=TelegramDirection.INCOMING,
+        payload=GroupValueResponse(DPTBinary(0)),
+        source_address=IndividualAddress("1.1.23"),
+    )
+    switch.process(response_telegram)
+    write_telegram = _incoming("1/2/3", DPTBinary(1))
+    switch.process(write_telegram)
+
+    assert callback == [
+        DeviceUpdate(telegram=state_telegram, from_state_address=True),
+        DeviceUpdate(telegram=response_telegram, from_state_address=True),
+        DeviceUpdate(telegram=write_telegram),
+    ]
+
+
+def test_shared_state_address_update() -> None:
+    """Test an address also used for writing by the device is not a state address."""
+    xknx = XKNX()
+    callback = _UpdateRecorder()
+    cover = Cover(
+        xknx,
+        name="TestCover",
+        group_address_position="1/2/3",
+        group_address_position_state="1/2/3",
+        device_updated_cb=callback,
+    )
+    telegram = _incoming("1/2/3", DPTArray(255))
+    cover.process(telegram)
+    assert callback[0] == DeviceUpdate(telegram=telegram)
+
+
+async def test_cover_travel_updates_from_state_address(
+    time_travel: EventLoopClockAdvancer,
+) -> None:
+    """Test travel updates following a position feedback keep that telegram as cause."""
+    xknx = XKNX()
+    callback = _UpdateRecorder()
+    cover = Cover(
+        xknx,
+        name="TestCover",
+        group_address_long="1/2/1",
+        group_address_position="1/2/3",
+        group_address_position_state="1/2/4",
+        travel_time_down=10,
+        travel_time_up=10,
+        device_updated_cb=callback,
+    )
+    with patch("time.time") as mock_time:
+        mock_time.return_value = 1517000000.0
+        cover.process(_incoming("1/2/4", DPTArray(0)))
+        await time_travel(0)
+        start_telegram = _incoming("1/2/3", DPTArray(255))
+        cover.process(start_telegram)
+        callback.clear()
+
+        mock_time.return_value = 1517000001.0
+        feedback_telegram = _incoming("1/2/4", DPTArray(51))
+        cover.process(feedback_telegram)
+        await time_travel(1)
+        assert callback == 2 * [
+            DeviceUpdate(telegram=feedback_telegram, from_state_address=True)
+        ]
