@@ -61,6 +61,10 @@ class FakeInterface:
         self.answers = True
         # what hidapi's write returns - None: the length written
         self.write_result: int | None = None
+        # EMI1/EMI2: the memory of the BCU (system status, individual address 1.1.5)
+        self.memory: dict[int, bytes] = {0x0060: b"\x1e", 0x0117: b"\x11\x05"}
+        self.accepts_memory_writes = True
+        self.pei_switch = b""
         self.written: list[USBTransferFrame] = []
         self.unplugged = threading.Event()
         self.open_count = 0
@@ -133,6 +137,9 @@ class FakeInterface:
             ):
                 self.features[feature] = frame.body[1:]
             return
+        if frame.service in (EMIID.EMI1, EMIID.EMI2):
+            self._handle_emi(EMIID(frame.service), frame.body)
+            return
         cemi = frame.body
         code = cemi[0]
         if code == 0xFC:  # M_PropRead.req
@@ -153,6 +160,35 @@ class FakeInterface:
         elif code == 0xF1:  # M_Reset.req
             self.properties[(8, 52)] = b"\xff"
             self.send_cemi(b"\xf0")
+
+    def send_emi(self, emi: EMIID, raw: bytes) -> None:
+        """Send an EMI1/EMI2 message from the interface to the host."""
+        self.send_frame(
+            USBTransferFrame(protocol=ProtocolID.KNX_TUNNEL, service=emi, body=raw)
+        )
+
+    def _handle_emi(self, emi: EMIID, raw: bytes) -> None:
+        """Answer like a BCU1 (EMI1) or BCU2 (EMI2) based interface."""
+        codes = {  # PC_Set_Value.req, PC_Get_Value.req/.con, L_Data.con
+            EMIID.EMI1: (0x46, 0x4C, 0x4B, 0x4E),
+            EMIID.EMI2: (0xA6, 0xAC, 0xAB, 0x2E),
+        }[emi]
+        code = raw[0]
+        if code == codes[0] and self.accepts_memory_writes:
+            address = int.from_bytes(raw[2:4], "big")
+            self.memory[address] = raw[4 : 4 + raw[1]]
+        elif code == codes[1]:
+            address = int.from_bytes(raw[2:4], "big")
+            data = self.memory.get(address, bytes(raw[1]))[: raw[1]]
+            self.send_emi(emi, bytes((codes[2], raw[1])) + raw[2:4] + data)
+        elif code == 0xA9:  # PEI_Switch.req
+            self.pei_switch = raw[1:]
+        elif code == 0x11:  # L_Data.req -> L_Data.con with the frame's control field
+            control = 0xB0 | (raw[1] & 0x0C)
+            self.send_emi(
+                emi,
+                bytes((codes[3], control)) + self.memory[0x0117] + raw[4:],
+            )
 
 
 class FakeHIDDevice:

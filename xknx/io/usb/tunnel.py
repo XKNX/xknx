@@ -3,8 +3,8 @@ KNX tunnelling over a KNX USB interface.
 
 On connect the bus access server is checked and set up - KNX v01.03.04 - Basic and
 System Components - Couplers 09.03 - §3.5.3.3.2: the supported EMI types are read,
-cEMI is activated, and the cEMI server is switched to the data link layer
-(PID_COMM_MODE, read back to verify) - KNX v01.04.02 - External Message Interface
+the one used is activated (cEMI where supported), and the cEMI server is switched
+to the data link layer (PID_COMM_MODE, read back to verify) - KNX v01.04.02 - External Message Interface
 03.06.03 - §4.2.2.4.2. The interface's own individual address and maximum APDU
 length are read from its device object. On disconnect the interface is closed as
 it is: whoever connects next sets the communication mode again, as the cEMI server
@@ -31,6 +31,7 @@ from xknx.cemi import (
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import (
     CommunicationError,
+    ConversionError,
     CouldNotParseCEMI,
     UnsupportedCEMIMessage,
 )
@@ -43,6 +44,7 @@ from xknx.profile.const import (
 from xknx.telegram import IndividualAddress
 
 from ..interface import CEMIBytesCallbackType, Interface
+from . import emi
 from .const import (
     DEVICE_FEATURE_GET_TIMEOUT,
     EMIID,
@@ -52,6 +54,7 @@ from .const import (
     ProtocolID,
     SupportedEMIType,
 )
+from .emi import EMILayer
 from .frame import (
     CouldNotParseUSBFrame,
     ReportAssembler,
@@ -72,6 +75,8 @@ LOCAL_MANAGEMENT_TIMEOUT = 3.0
 # APDU length of a short frame - used when the interface doesn't report its own
 DEFAULT_MAX_APDU_LENGTH = 15
 
+_EMI_NAMES = {EMIID.CEMI: "cEMI", EMIID.EMI1: "EMI1", EMIID.EMI2: "EMI2"}
+
 _MANAGEMENT_RESPONSES = {
     CEMIMessageCode.M_PROP_READ_REQ: CEMIMessageCode.M_PROP_READ_CON,
     CEMIMessageCode.M_PROP_WRITE_REQ: CEMIMessageCode.M_PROP_WRITE_CON,
@@ -89,18 +94,27 @@ class USBInterfaceInfo:
     bus_connected: bool
     manufacturer_code: int | None = None
     mask_version: int | None = None
+    # the EMI format used with the interface
+    emi_type: EMIID = EMIID.CEMI
 
 
 class USBTunnel(Interface):
-    """Interface to the KNX bus through a KNX USB interface (cEMI only)."""
+    """
+    Interface to the KNX bus through a KNX USB interface.
+
+    cEMI is used when the interface supports it, else EMI2, else EMI1; frames are
+    passed on as cEMI either way.
+    """
 
     __slots__ = (
         "_assembler",
         "_bus_connected",
         "_device",
+        "_emi",
         "_established",
         "_feature_requests",
         "_info",
+        "_memory_requests",
         "_property_requests",
         "_reconnect_task",
         "_send_lock",
@@ -157,9 +171,11 @@ class USBTunnel(Interface):
         self._assembler = ReportAssembler()
         self._bus_connected = False
         self._device: HIDDevice | None = None
+        self._emi = EMIID.CEMI
         self._established = False
         self._feature_requests: dict[DeviceFeature, asyncio.Future[bytes]] = {}
         self._info: USBInterfaceInfo | None = None
+        self._memory_requests: dict[int, asyncio.Future[bytes]] = {}
         self._property_requests: dict[
             tuple[CEMIMessageCode, int, int, int], asyncio.Future[CEMIFrame]
         ] = {}
@@ -233,7 +249,7 @@ class USBTunnel(Interface):
         )
 
     async def _setup(self) -> None:
-        """Set up the bus access server and the cEMI server for tunnelling."""
+        """Set up the bus access server and the EMI server for tunnelling."""
         assert self.device_info is not None
         supported = SupportedEMIType(
             int.from_bytes(
@@ -241,20 +257,27 @@ class USBTunnel(Interface):
             )
             & (SupportedEMIType.EMI1 | SupportedEMIType.EMI2 | SupportedEMIType.CEMI)
         )
-        if SupportedEMIType.CEMI not in supported:
-            # KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3.3.2:
-            # no tunnelling frame may be sent in an EMI type the interface doesn't support
-            raise CommunicationError(
-                f"KNX USB interface supports only {supported!r}, not cEMI"
-            )
+        # KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3.3.2:
+        # tunnelling frames only in an EMI type the interface supports
+        for emi_id, flag in (
+            (EMIID.CEMI, SupportedEMIType.CEMI),
+            (EMIID.EMI2, SupportedEMIType.EMI2),
+            (EMIID.EMI1, SupportedEMIType.EMI1),
+        ):
+            if flag in supported:
+                self._emi = emi_id
+                break
+        else:
+            raise CommunicationError("KNX USB interface supports no EMI type")
         # an interface with a single EMI type needn't support the Set service; it
         # ignores it then. Some report no active EMI type after power-up until it is set.
-        await self._feature_set(DeviceFeature.ACTIVE_EMI_TYPE, bytes((EMIID.CEMI,)))
-        if supported != SupportedEMIType.CEMI:
+        await self._feature_set(DeviceFeature.ACTIVE_EMI_TYPE, bytes((self._emi,)))
+        if len([flag for flag in SupportedEMIType if flag in supported]) > 1:
             active = await self._feature_get(DeviceFeature.ACTIVE_EMI_TYPE)
-            if active[:1] != bytes((EMIID.CEMI,)):
+            if active[:1] != bytes((self._emi,)):
                 raise CommunicationError(
-                    f"KNX USB interface did not activate cEMI (active EMI type {active.hex()})"
+                    f"KNX USB interface did not activate {_EMI_NAMES[self._emi]} "
+                    f"(active EMI type {active.hex()})"
                 )
         self._bus_connected = bool(
             (await self._feature_get(DeviceFeature.BUS_CONNECTION_STATUS))[:1]
@@ -267,6 +290,35 @@ class USBTunnel(Interface):
             DeviceFeature.DEVICE_DESCRIPTOR_TYPE_0
         )
 
+        if self._emi == EMIID.CEMI:
+            await self._setup_cemi()
+            individual_address = await self._read_individual_address()
+            max_apdu_length = await self._read_max_apdu_length()
+        else:
+            await self._switch_emi_layer(
+                EMILayer.BUSMONITOR if self.busmonitor else EMILayer.DATA_LINK_LAYER
+            )
+            individual_address = await self._read_emi_individual_address()
+            max_apdu_length = emi.MAX_APDU_LENGTH
+        self.xknx.current_address = individual_address
+
+        self._info = USBInterfaceInfo(
+            device=self.device_info,
+            individual_address=individual_address,
+            max_apdu_length=max_apdu_length,
+            supported_emi_types=supported,
+            bus_connected=self._bus_connected,
+            manufacturer_code=manufacturer_code,
+            mask_version=mask_version,
+            emi_type=self._emi,
+        )
+        if not self._bus_connected:
+            logger.warning(
+                "KNX USB interface %s is not connected to the bus", self._info.device
+            )
+
+    async def _setup_cemi(self) -> None:
+        """Switch the cEMI server to the data link layer or the bus monitor mode."""
         communication_mode = bytes(
             (
                 CommunicationMode.DATA_LINK_LAYER_BUSMONITOR
@@ -288,23 +340,36 @@ class USBTunnel(Interface):
                 f"KNX USB interface did not switch to communication mode "
                 f"{communication_mode.hex()} (it is in {active_mode.hex()})"
             )
-        individual_address = await self._read_individual_address()
-        self.xknx.current_address = individual_address
-        max_apdu_length = await self._read_max_apdu_length()
 
-        self._info = USBInterfaceInfo(
-            device=self.device_info,
-            individual_address=individual_address,
-            max_apdu_length=max_apdu_length,
-            supported_emi_types=supported,
-            bus_connected=self._bus_connected,
-            manufacturer_code=manufacturer_code,
-            mask_version=mask_version,
+    async def _switch_emi_layer(self, layer: EMILayer) -> None:
+        """
+        Give access to a layer of an EMI1/EMI2 interface.
+
+        EMI2: PEI_Switch.req; EMI1: the "system status" is written and read back -
+        KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.3, §3.1.4.
+        """
+        if self._emi == EMIID.EMI2:
+            await self._send_tunnel_frame(emi.pei_switch(layer))
+            return
+        status = bytes((emi.SYSTEM_STATUS[layer],))
+        await self._send_tunnel_frame(
+            emi.pc_set_value(self._emi, emi.SYSTEM_STATUS_ADDRESS, status)
         )
-        if not self._bus_connected:
-            logger.warning(
-                "KNX USB interface %s is not connected to the bus", self._info.device
+        if (await self._memory_read(emi.SYSTEM_STATUS_ADDRESS, 1)) != status:
+            raise CommunicationError(
+                f"KNX USB interface did not switch to {layer.value}"
             )
+
+    async def _read_emi_individual_address(self) -> IndividualAddress:
+        """Read the individual address of an EMI1/EMI2 interface from its memory."""
+        try:
+            data = await self._memory_read(emi.INDIVIDUAL_ADDRESS_ADDRESS, 2)
+        except CommunicationError as ex:
+            logger.warning(
+                "Could not read the individual address of the KNX USB interface: %s", ex
+            )
+            return IndividualAddress(0)
+        return IndividualAddress(int.from_bytes(data[:2], "big"))
 
     async def _optional_feature(self, feature: DeviceFeature) -> int | None:
         """Get an optional 2 octet device feature; None when it isn't answered."""
@@ -393,8 +458,12 @@ class USBTunnel(Interface):
                 property_future.set_exception(
                     CommunicationError("USB connection closed")
                 )
+        for memory_future in self._memory_requests.values():
+            if not memory_future.done():
+                memory_future.set_exception(CommunicationError("USB connection closed"))
         self._feature_requests.clear()
         self._property_requests.clear()
+        self._memory_requests.clear()
         self.xknx.connection_manager.connection_state_changed(
             XknxConnectionState.DISCONNECTED
         )
@@ -412,11 +481,34 @@ class USBTunnel(Interface):
             self._reconnect_task.cancel()
 
     async def disconnect(self) -> None:
-        """Close the interface."""
+        """
+        Close the interface.
+
+        An EMI1/EMI2 interface is switched back to its normal mode first: while the
+        external interface has access to the data link layer, the device's own
+        application and object servers do not run (KNX v01.04.02 - External
+        Message Interface 03.06.03 - §3.1.2). A cEMI interface is closed as it is.
+        """
+        was_established = self._established
         self._prepare_disconnect()
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
+        if was_established and self._emi != EMIID.CEMI and self._device is not None:
+            try:
+                await self._send_tunnel_frame(self._normal_mode_request())
+            except CommunicationError as ex:
+                logger.debug("Could not switch KNX USB interface back: %s", ex)
         await self._close_device()
+
+    def _normal_mode_request(self) -> bytes:
+        """Return the EMI message switching an EMI1/EMI2 interface back to normal mode."""
+        if self._emi == EMIID.EMI2:
+            return emi.pei_switch(EMILayer.NORMAL)
+        return emi.pc_set_value(
+            self._emi,
+            emi.SYSTEM_STATUS_ADDRESS,
+            bytes((emi.SYSTEM_STATUS[EMILayer.NORMAL],)),
+        )
 
     ####################
     #
@@ -432,12 +524,29 @@ class USBTunnel(Interface):
             for report in frame.to_reports():
                 await self._device.write(report)
 
-    async def _send_tunnel_frame(self, raw_cemi: bytes) -> None:
+    async def _send_tunnel_frame(self, raw: bytes) -> None:
+        """Send a message in the EMI type in use."""
         await self._write_frame(
             USBTransferFrame(
-                protocol=ProtocolID.KNX_TUNNEL, service=EMIID.CEMI, body=raw_cemi
+                protocol=ProtocolID.KNX_TUNNEL, service=self._emi, body=raw
             )
         )
+
+    async def _memory_read(self, address: int, length: int) -> bytes:
+        """Read the memory of an EMI1/EMI2 interface (PC_Get_Value)."""
+        future: asyncio.Future[bytes] = asyncio.get_running_loop().create_future()
+        self._memory_requests[address] = future
+        try:
+            await self._send_tunnel_frame(emi.pc_get_value(self._emi, address, length))
+            async with asyncio.timeout(LOCAL_MANAGEMENT_TIMEOUT):
+                return await future
+        except TimeoutError:
+            raise CommunicationError(
+                f"KNX USB interface did not answer PC_Get_Value of {address:04x}h"
+            ) from None
+        finally:
+            if self._memory_requests.get(address) is future:
+                del self._memory_requests[address]
 
     async def _feature_get(self, feature: DeviceFeature) -> bytes:
         """Get a device feature of the bus access server - KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3.2.2."""
@@ -540,7 +649,16 @@ class USBTunnel(Interface):
             raise CommunicationError("KNX USB interface not connected")
         if self.busmonitor:
             raise CommunicationError("KNX USB interface is in bus monitor mode")
-        await self._send_tunnel_frame(cemi.to_knx())
+        if self._emi == EMIID.CEMI:
+            await self._send_tunnel_frame(cemi.to_knx())
+            return
+        try:
+            raw = emi.l_data_req_from_cemi(cemi.to_knx())
+        except ConversionError as ex:
+            raise CommunicationError(
+                f"Can't send this through an {_EMI_NAMES[self._emi]} interface: {ex}"
+            ) from ex
+        await self._send_tunnel_frame(raw)
 
     ####################
     #
@@ -560,10 +678,13 @@ class USBTunnel(Interface):
         if frame.protocol == ProtocolID.BUS_ACCESS_SERVER_FEATURE:
             self._feature_frame_received(frame)
         elif frame.protocol == ProtocolID.KNX_TUNNEL:
-            if frame.service != EMIID.CEMI:
+            if frame.service != self._emi:
                 logger.debug("Ignoring KNX USB frame in EMI type %s", frame.service)
                 return
-            self._cemi_received(frame.body)
+            if self._emi == EMIID.CEMI:
+                self._cemi_received(frame.body)
+            else:
+                self._emi_received(frame.body)
         else:
             logger.debug("Ignoring KNX USB frame of protocol %s", frame.protocol)
 
@@ -614,5 +735,19 @@ class USBTunnel(Interface):
                     return
         elif raw_cemi[:1] == bytes((CEMIMessageCode.M_RESET_IND.value,)):
             logger.debug("KNX USB interface was reset")
+            return
+        self.cemi_received_callback(raw_cemi)
+
+    def _emi_received(self, raw: bytes) -> None:
+        """Answer a memory read, or pass an EMI1/EMI2 message on as cEMI."""
+        if (memory := emi.parse_pc_get_value_con(self._emi, raw)) is not None:
+            address, data = memory
+            future = self._memory_requests.get(address)
+            if future is not None and not future.done():
+                future.set_result(data)
+            return
+        raw_cemi = emi.to_cemi(self._emi, raw, self.busmonitor)
+        if raw_cemi is None:
+            logger.debug("Ignoring %s message: %s", _EMI_NAMES[self._emi], raw.hex())
             return
         self.cemi_received_callback(raw_cemi)

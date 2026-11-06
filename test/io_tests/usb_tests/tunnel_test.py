@@ -213,11 +213,11 @@ class TestUSBTunnel:
         await _until(lambda: tunnel.info is not None and tunnel.info.bus_connected)
         await tunnel.disconnect()
 
-    async def test_no_cemi(self, fake_hid: FakeHIDModule) -> None:
-        """Test an interface without cEMI is refused."""
-        fake_hid.interface.features[DeviceFeature.SUPPORTED_EMI_TYPE] = b"\x00\x01"
+    async def test_no_emi_type(self, fake_hid: FakeHIDModule) -> None:
+        """Test an interface without any EMI type is refused."""
+        fake_hid.interface.features[DeviceFeature.SUPPORTED_EMI_TYPE] = b"\x00\x08"
         tunnel = self.tunnel()
-        with pytest.raises(CommunicationError, match="not cEMI"):
+        with pytest.raises(CommunicationError, match="supports no EMI type"):
             await tunnel.connect()
         # nothing tunnelled to it
         assert fake_hid.interface.written_cemi() == []

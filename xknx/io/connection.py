@@ -35,7 +35,7 @@ class ConnectionConfig:
         * ROUTING use KNX/IP multicast routing.
         * TUNNELING connect to a specific KNX/IP tunneling device via UDP.
         * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
-        * USB connect to a KNX USB interface (cEMI) - see `usb_config`.
+        * USB connect to a KNX USB interface (cEMI, EMI2 or EMI1) - see `usb_config`.
     * individual address:
         * AUTOMATIC use a specific tunnel endpoint from a given knxkeys file
         * ROUTING the individual address used as source address for routing

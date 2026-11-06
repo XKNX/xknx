@@ -96,7 +96,7 @@ KNX USB interfaces need the optional `hidapi` package: `pip install xknx[usb]`. 
 
 Without a `USBConfig` the first known KNX USB interface is used. `vendor_id` and `product_id` select an interface, also one that is not among the known ones, `serial_number` one of several, and `path` the one at a hidapi device path. An unplugged interface is connected again when it is back (`auto_reconnect`), also on another USB port.
 
-Interfaces supporting cEMI are supported. On connect the interface is switched to the data link layer, and its own individual address becomes `xknx.current_address`. `xknx.knxip_interface.usb_interface_info()` returns what the interface reported: individual address, maximum APDU length, supported EMI types, bus connection status and KNX manufacturer code.
+cEMI is used where the interface supports it, else EMI2 or EMI1 (older interfaces, standard frames only). On connect the interface is switched to the data link layer, and its own individual address becomes `xknx.current_address`; an EMI1/EMI2 interface is switched back to its normal mode on disconnect. `xknx.knxip_interface.usb_interface_info()` returns what the interface reported: individual address, maximum APDU length, supported EMI types, bus connection status and KNX manufacturer code.
 
 # [](#header-2)Starting
 
