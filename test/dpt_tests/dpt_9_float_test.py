@@ -6,6 +6,7 @@ from xknx.dpt import (
     DPT2ByteFloat,
     DPTAirFlow,
     DPTArray,
+    DPTCoefficient,
     DPTEnthalpy,
     DPTHumidity,
     DPTLux,
@@ -223,6 +224,20 @@ class TestDPTFloat:
     def test_airflow_settings(self) -> None:
         """Test attributes of DPTAirFlow."""
         assert DPTAirFlow.unit == "m³/h"
+
+    #
+    # DPTCoefficient
+    #
+    def test_coefficient(self) -> None:
+        """Test DPTCoefficient (DPT 9.031): no unit, not negative."""
+        assert DPTCoefficient.unit is None
+        assert DPTCoefficient.to_knx(1.5) == DPTArray((0x00, 0x96))
+        assert DPTCoefficient.from_knx(DPTArray((0x00, 0x96))) == 1.5
+        assert DPTCoefficient.to_knx(670433.28) == DPTArray((0x7F, 0xFE))
+        with pytest.raises(ConversionError):
+            DPTCoefficient.to_knx(-0.01)
+        with pytest.raises(ConversionError):
+            DPTCoefficient.to_knx(670760)
 
     #
     # DPTVoltage

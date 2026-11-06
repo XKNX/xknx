@@ -20,6 +20,14 @@ KNX v02.01.02 - Management Procedures 03.05.02 - §2.19
 KNX v01.02.03 - Transport Layer 03.03.04 - §2 TPDU
 ```
 
+KNX Application Notes (AN) are cited by their number and version, then
+their title:
+
+```
+KNX AN<number> v<version> - <Document Title> - §<paragraph>
+KNX AN197 v01 - New Datapoint Types and Connection Codes - §1.4
+```
+
 ### Why the version matters
 
 The KNX Standard is published as a set of separate documents (one per
@@ -61,6 +69,9 @@ if they aren't already established elsewhere in the codebase.
 | v01.03.08 | RF Metering protocol | 10.03 |
 | v01.03.01 | HVAC S-Mode FBs | 07.19.20 |
 | v01.01.01 | Weather data | 07.01.06 |
+| v01.04.02 | External Message Interface | 03.06.03 |
+| v01 | New Datapoint Types and Connection Codes | AN197 |
+| v02 | WGI accepted DPTs 07.17 | AN188 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
