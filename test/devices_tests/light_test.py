@@ -1578,9 +1578,14 @@ class TestLight:
         rgb_callback.assert_not_called()
         rgbw_callback.assert_not_called()
         xknx.devices.process(blue)
-        rgb_callback.assert_called_once()
+        # rgb_light has switch objects too - it waits for them or the timeout
+        rgb_callback.assert_not_called()
         rgbw_callback.assert_not_called()
         xknx.devices.process(white)
+        rgb_callback.assert_not_called()
+        rgbw_callback.assert_called_once()
+        await time_travel(Light.DEBOUNCE_TIMEOUT)
+        rgb_callback.assert_called_once()
         rgbw_callback.assert_called_once()
 
         assert rgb_light.current_color == ((42, 43, 44), None)
@@ -1604,6 +1609,66 @@ class TestLight:
 
         assert rgb_light.current_color == ((42, 43, 44), None)
         assert rgbw_light.current_color == ((42, 43, 44), 50)
+
+    async def test_process_individual_color_debouncer_switch_and_brightness(
+        self, time_travel: EventLoopClockAdvancer
+    ) -> None:
+        """Test the debouncer waits for switch and brightness of every individual color."""
+        xknx = XKNX()
+        callback = Mock()
+        light = Light(
+            xknx,
+            name="TestRGBWLight",
+            group_address_switch_red="1/1/1",
+            group_address_switch_red_state="1/1/2",
+            group_address_brightness_red="1/1/3",
+            group_address_brightness_red_state="1/1/4",
+            group_address_switch_green="1/1/5",
+            group_address_switch_green_state="1/1/6",
+            group_address_brightness_green="1/1/7",
+            group_address_brightness_green_state="1/1/8",
+            group_address_switch_blue="1/1/9",
+            group_address_switch_blue_state="1/1/10",
+            group_address_brightness_blue="1/1/11",
+            group_address_brightness_blue_state="1/1/12",
+            group_address_switch_white="1/1/13",
+            group_address_switch_white_state="1/1/14",
+            group_address_brightness_white="1/1/15",
+            group_address_brightness_white_state="1/1/16",
+            device_updated_cb=callback,
+        )
+        xknx.devices.async_add(light)
+        assert light._individual_color_debounce_telegram_counter == 8
+
+        telegrams = [
+            Telegram(
+                destination_address=GroupAddress(f"1/1/{switch_ga}"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            )
+            for switch_ga in (2, 6, 10, 14)
+        ] + [
+            Telegram(
+                destination_address=GroupAddress(f"1/1/{brightness_ga}"),
+                payload=GroupValueWrite(DPTArray(value)),
+            )
+            for brightness_ga, value in ((4, 42), (8, 43), (12, 44), (16, 50))
+        ]
+        # switch and brightness of each color are reported - no callback in between
+        for telegram in telegrams[:-1]:
+            xknx.devices.process(telegram)
+            callback.assert_not_called()
+        xknx.devices.process(telegrams[-1])
+        callback.assert_called_once()
+        assert light.state is True
+        assert light.current_color == ((42, 43, 44), 50)
+
+        callback.reset_mock()
+        # only brightness reported - callback after timeout
+        for telegram in telegrams[4:]:
+            xknx.devices.process(telegram)
+        callback.assert_not_called()
+        await time_travel(Light.DEBOUNCE_TIMEOUT)
+        callback.assert_called_once()
 
     async def test_process_hs_color(self) -> None:
         """Test process / reading telegrams from telegram queue. Test if color is processed."""

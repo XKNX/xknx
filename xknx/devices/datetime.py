@@ -180,8 +180,17 @@ class DateDevice(_DateTimeBase[RemoteValueDate]):
 
     @property
     def value(self) -> datetime.date | None:
-        """Return the current time value."""
-        return self.remote_value.value.as_date() if self.remote_value.value else None
+        """Return the current date value. None if unknown or not a valid calendar date."""
+        if self.remote_value.value is None:
+            return None
+        try:
+            return self.remote_value.value.as_date()
+        except ValueError as err:
+            # DPT 11.001 only limits the day to 1..31 - eg. February 31st is encodable
+            logger.debug(
+                "%s: date not convertible to datetime.date: %s", self.name, err
+            )
+            return None
 
     async def set(self, value: KNXDate | datetime.date) -> None:
         """Set date and send to KNX bus."""
@@ -204,10 +213,19 @@ class DateTimeDevice(_DateTimeBase[RemoteValueDateTime]):
 
     @property
     def value(self) -> datetime.datetime | None:
-        """Return the current time value."""
-        return (
-            self.remote_value.value.as_datetime() if self.remote_value.value else None
-        )
+        """Return the current date/time value. None if unknown or not representable as datetime."""
+        if self.remote_value.value is None:
+            return None
+        try:
+            return self.remote_value.value.as_datetime()
+        except ValueError as err:
+            # DPT 19.001 allows hour 24 and invalid (None) date or time fields
+            logger.debug(
+                "%s: date/time not convertible to datetime.datetime: %s",
+                self.name,
+                err,
+            )
+            return None
 
     async def set(self, value: KNXDateTime | datetime.datetime) -> None:
         """Set date/time and send to KNX bus."""

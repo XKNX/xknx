@@ -660,6 +660,55 @@ class TestExposeSensor:
 
         await xknx.stop()
 
+    async def test_tasks_restart_after_remove(
+        self,
+        xknx_no_interface: XKNX,
+        time_travel: EventLoopClockAdvancer,
+    ) -> None:
+        """Test periodic send and cooldown work again after the device was removed and re-added."""
+        xknx = xknx_no_interface
+        xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
+        xknx.cemi_handler = AsyncMock()
+        expose_sensor = ExposeSensor(
+            xknx,
+            value_type="switch",
+            name="TestSensor",
+            group_address="1/2/3",
+            cooldown=2,
+            periodic_send=10,
+        )
+        xknx.devices.async_add(expose_sensor)
+        await xknx.start()
+
+        test_telegram = Telegram(
+            destination_address=GroupAddress("1/2/3"),
+            payload=GroupValueWrite(DPTBinary(True)),
+        )
+        await expose_sensor.set(True)
+        await time_travel(0)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+
+        xknx.devices.async_remove(expose_sensor)
+        await time_travel(10)
+        xknx.cemi_handler.send_telegram.assert_not_called()
+
+        xknx.devices.async_add(expose_sensor)
+        await time_travel(10)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+        xknx.cemi_handler.send_telegram.reset_mock()
+        # cooldown still applies - the periodic telegram started it
+        await time_travel(2)
+        await expose_sensor.set(False)
+        await expose_sensor.set(True)
+        await time_travel(0)
+        xknx.cemi_handler.send_telegram.assert_called_once()
+        xknx.cemi_handler.send_telegram.reset_mock()
+        await time_travel(2)
+        xknx.cemi_handler.send_telegram.assert_called_once_with(test_telegram)
+
+        await xknx.stop()
+
     async def test_periodic_send_local_value(
         self,
         xknx_no_interface: XKNX,

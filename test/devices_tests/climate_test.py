@@ -372,9 +372,11 @@ class TestClimate:
             xknx, name="TestClimate", group_address_controller_status="1/2/4"
         )
 
-        # needs to be initialized before it can be sent
-        with pytest.raises(ConversionError):
-            await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
+        # needs to be initialized before it can be sent - skipped until then
+        await climate_mode.set_controller_mode(HVACControllerMode.HEAT)
+        assert xknx.telegrams.qsize() == 0
+        await climate_mode.set_operation_mode(HVACOperationMode.STANDBY)
+        assert xknx.telegrams.qsize() == 0
 
         climate_mode.process(
             Telegram(
@@ -402,6 +404,143 @@ class TestClimate:
             destination_address=GroupAddress("1/2/4"),
             payload=GroupValueWrite(DPTArray((0x22,))),
         )
+
+    async def test_set_mode_skips_uninitialized_controller_status(self) -> None:
+        """Test set_operation_mode and set_controller_mode skip an uninitialized controller status."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            name="TestClimate",
+            group_address_operation_mode="1/2/4",
+            group_address_operation_mode_comfort="1/2/5",
+            group_address_controller_status="1/2/6",
+            group_address_heat_cool="1/2/7",
+        )
+        await climate_mode.set_operation_mode(HVACOperationMode.COMFORT)
+        assert xknx.telegrams.qsize() == 2
+        telegrams = [xknx.telegrams.get_nowait() for _ in range(2)]
+        assert telegrams == [
+            Telegram(
+                destination_address=GroupAddress("1/2/4"),
+                payload=GroupValueWrite(DPTArray(1)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTBinary(True)),
+            ),
+        ]
+        assert climate_mode.operation_mode == HVACOperationMode.COMFORT
+
+        await climate_mode.set_controller_mode(HVACControllerMode.COOL)
+        assert xknx.telegrams.qsize() == 1
+        assert xknx.telegrams.get_nowait() == Telegram(
+            destination_address=GroupAddress("1/2/7"),
+            payload=GroupValueWrite(DPTBinary(False)),
+        )
+        assert climate_mode.controller_mode == HVACControllerMode.COOL
+
+    async def test_binary_operation_modes_all_off_standby(self) -> None:
+        """Test Standby is set when all binary operation mode objects are off."""
+        xknx = XKNX()
+        after_update_callback = Mock()
+        climate_mode = ClimateMode(
+            xknx,
+            name="TestClimate",
+            group_address_operation_mode_comfort="1/2/5",
+            group_address_operation_mode_economy="1/2/6",
+            group_address_operation_mode_protection="1/2/7",
+            device_updated_cb=after_update_callback,
+        )
+
+        def _process(group_address: str, value: bool) -> None:
+            climate_mode.process(
+                Telegram(
+                    destination_address=GroupAddress(group_address),
+                    payload=GroupValueWrite(DPTBinary(value)),
+                )
+            )
+
+        assert climate_mode.operation_mode == HVACOperationMode.STANDBY
+        _process("1/2/5", True)
+        assert climate_mode.operation_mode == HVACOperationMode.COMFORT
+        after_update_callback.assert_called_once()
+        after_update_callback.reset_mock()
+        # comfort switched off, nothing else on -> Standby
+        _process("1/2/5", False)
+        assert climate_mode.operation_mode == HVACOperationMode.STANDBY
+        after_update_callback.assert_called_once()
+        after_update_callback.reset_mock()
+        # switching from economy to protection - the old mode is switched off last
+        _process("1/2/6", True)
+        assert climate_mode.operation_mode == HVACOperationMode.ECONOMY
+        _process("1/2/7", True)
+        assert climate_mode.operation_mode == HVACOperationMode.BUILDING_PROTECTION
+        after_update_callback.reset_mock()
+        _process("1/2/6", False)
+        assert climate_mode.operation_mode == HVACOperationMode.BUILDING_PROTECTION
+        after_update_callback.assert_not_called()
+        _process("1/2/7", False)
+        assert climate_mode.operation_mode == HVACOperationMode.STANDBY
+        after_update_callback.assert_called_once()
+        after_update_callback.reset_mock()
+
+        # own writes don't report Standby while the telegrams are processed
+        _process("1/2/5", True)
+        after_update_callback.reset_mock()
+        await climate_mode.set_operation_mode(HVACOperationMode.ECONOMY)
+        assert climate_mode.operation_mode == HVACOperationMode.ECONOMY
+        after_update_callback.assert_called_once()
+        assert xknx.telegrams.qsize() == 3
+        while not xknx.telegrams.empty():
+            climate_mode.process(xknx.telegrams.get_nowait())
+        assert climate_mode.operation_mode == HVACOperationMode.ECONOMY
+        after_update_callback.assert_called_once()
+
+    async def test_binary_operation_modes_off_with_combined_object(self) -> None:
+        """Test a binary operation mode object switched off is ignored when DPT 20.102 is used."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            name="TestClimate",
+            group_address_operation_mode="1/2/4",
+            group_address_operation_mode_comfort="1/2/5",
+        )
+        climate_mode.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/4"),
+                payload=GroupValueWrite(DPTHVACMode.to_knx(HVACOperationMode.ECONOMY)),
+            )
+        )
+        assert climate_mode.operation_mode == HVACOperationMode.ECONOMY
+        climate_mode.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/5"),
+                payload=GroupValueWrite(DPTBinary(False)),
+            )
+        )
+        assert climate_mode.operation_mode == HVACOperationMode.ECONOMY
+
+    def test_gather_modes_order(self) -> None:
+        """Test gathered modes keep the order of the RemoteValues and their DPTs."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            name="TestClimate",
+            group_address_operation_mode_comfort="1/2/4",
+            group_address_operation_mode="1/2/5",
+            group_address_heat_cool="1/2/6",
+            group_address_controller_mode="1/2/7",
+        )
+        assert climate_mode.operation_modes == [
+            HVACOperationMode.AUTO,
+            HVACOperationMode.COMFORT,
+            HVACOperationMode.STANDBY,
+            HVACOperationMode.ECONOMY,
+            HVACOperationMode.BUILDING_PROTECTION,
+        ]
+        assert climate_mode.controller_modes == [
+            *DPTHVACContrMode.get_valid_values(),
+        ]
 
     async def test_set_operation_mode_with_separate_addresses(self) -> None:
         """Test set_operation_mode with combined and separated group addresses defined."""
@@ -1145,6 +1284,33 @@ class TestClimate:
         assert xknx.telegrams.qsize() == 1
         telegram1 = xknx.telegrams.get_nowait()
         assert telegram1 == Telegram(GroupAddress("1/2/4"), payload=GroupValueRead())
+
+    def test_register_state_updater_mode(self) -> None:
+        """Test the RemoteValues of the mode are registered with the StateUpdater."""
+        xknx = XKNX()
+        climate_mode = ClimateMode(
+            xknx,
+            name="TestClimateMode",
+            group_address_operation_mode="1/2/4",
+            group_address_operation_mode_state="1/2/5",
+            group_address_controller_mode_state="1/2/6",
+        )
+        climate = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_temperature="1/2/1",
+            mode=climate_mode,
+        )
+        xknx.devices.async_add(climate)
+        assert id(climate.temperature) in xknx.state_updater._workers
+        assert (
+            id(climate_mode.remote_value_operation_mode) in xknx.state_updater._workers
+        )
+        assert (
+            id(climate_mode.remote_value_controller_mode) in xknx.state_updater._workers
+        )
+        xknx.devices.async_remove(climate)
+        assert not xknx.state_updater._workers
 
     async def test_sync_humidity(self) -> None:
         """Test sync function / sending group reads to KNX bus for humidity."""

@@ -36,7 +36,7 @@ class DPT2ByteUnsigned(DPTNumeric):
     def to_knx(cls, value: int | float) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         try:
-            knx_value = int(value) // cls.resolution
+            knx_value = round(float(value) / cls.resolution)
             if not cls._test_boundaries(knx_value):
                 raise ValueError("Value out of range")
             return DPTArray((knx_value >> 8, knx_value & 0xFF))

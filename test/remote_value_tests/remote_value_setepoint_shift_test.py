@@ -95,6 +95,28 @@ class TestRemoteValueSetpointShift:
         assert remote_value.setpoint_shift_step == 0.1
         assert remote_value.to_knx(1) == DPTArray((10,))
 
+    def test_dpt_6_rounding(self) -> None:
+        """Test DPT 6.010 values are rounded to the step instead of truncated."""
+        xknx = XKNX()
+        remote_value = RemoteValueSetpointShift(
+            xknx=xknx, setpoint_shift_mode=SetpointShiftMode.DPT6010
+        )
+        # 0.3 / 0.1 == 2.9999999999999996 - int() would give 2
+        assert remote_value.to_knx(0.3) == DPTArray((3,))
+        assert remote_value.to_knx(-0.3) == DPTArray((0xFD,))
+        assert remote_value.to_knx(0.7) == DPTArray((7,))
+        # 3 * 0.1 == 0.30000000000000004
+        assert remote_value.from_knx(DPTArray((3,))) == 0.3
+        assert remote_value.from_knx(DPTArray((0xFD,))) == -0.3
+
+        remote_value_half = RemoteValueSetpointShift(
+            xknx=xknx,
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
+            setpoint_shift_step=0.5,
+        )
+        assert remote_value_half.to_knx(1.5) == DPTArray((3,))
+        assert remote_value_half.from_knx(DPTArray((3,))) == 1.5
+
     def test_to_knx_dpt_9(self) -> None:
         """Test to_knx returning DPT 9.002 payload."""
         xknx = XKNX()

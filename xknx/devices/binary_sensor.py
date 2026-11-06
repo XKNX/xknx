@@ -57,7 +57,7 @@ class BinarySensor(Device):
         if reset_after is not None:
             self._reset_task: Task | None = Task(
                 name=f"binary_sensor.reset_{id(self)}",
-                target=partial(self._set_internal_state, False),
+                target=self._reset_state,
                 wait_before_start=reset_after,
             )
         else:
@@ -113,6 +113,14 @@ class BinarySensor(Device):
                 self.after_update()
         elif self.always_callback:
             self.after_update()
+
+    def _reset_state(self) -> None:
+        """Reset the state to `False` after `reset_after` passed."""
+        # also reset the RemoteValue so a following `GroupValueResponse` carrying
+        # `True` is seen as a change again (`process_group_response` doesn't use
+        # `always_callback`)
+        self.remote_value.value = False
+        self._set_internal_state(False)
 
     async def _counter_task(self, wait_seconds: float) -> None:
         """Trigger when context window has passed once with counter values and once reset."""

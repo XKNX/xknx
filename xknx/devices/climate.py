@@ -234,6 +234,18 @@ class Climate(Device):
             else False
         )
 
+    def register_state_updater(self) -> None:
+        """Register device addresses and the addresses of its mode for StateUpdater."""
+        super().register_state_updater()
+        if self.mode is not None:
+            self.mode.register_state_updater()
+
+    def unregister_state_updater(self) -> None:
+        """Unregister device addresses and the addresses of its mode from StateUpdater."""
+        super().unregister_state_updater()
+        if self.mode is not None:
+            self.mode.unregister_state_updater()
+
     @property
     def is_on(self) -> bool:
         """Return power status."""

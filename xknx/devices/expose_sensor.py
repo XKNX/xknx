@@ -130,12 +130,11 @@ class ExposeSensor(Device):
 
     def async_remove_tasks(self) -> None:
         """Remove async tasks of device."""
+        # keep the Task objects so the device can be started again
         if self._cooldown_task is not None:
             self.xknx.task_registry.remove_task(self._cooldown_task)
-            self._cooldown_task = None
         if self._periodic_send_task is not None:
             self.xknx.task_registry.remove_task(self._periodic_send_task)
-            self._periodic_send_task = None
 
     def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""

@@ -6,6 +6,27 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### DPT
+
+- DPT 7.xxx and DPT 8.xxx `to_knx()` round to the DPT's resolution instead of truncating - eg. DPT 7.003 `19` ms was sent as `10` ms, DPT 8.010 `0.29` % as `0.28` % (resolution 0,01 % - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.9.1). DPT 225.001 `time_period` is rounded to 100 ms accordingly. **Behaviour change**
+- DPT 14.xxx `to_knx()` raises `ConversionError` instead of `OverflowError` for values too large for a 4 octet float (eg. `1e39`).
+
+### Devices
+
+- Cover: a second `set_position()` while the up/down telegram of a previous one is still queued no longer cancels the auto stopper (the cover drove to the end position instead of stopping at the requested position).
+- Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for a cover configured with travel time `0` - the target position is reached immediately.
+- Climate: `RemoteValueSetpointShift` rounds to the nearest `setpoint_shift_step` instead of truncating (`0.3` K at step `0.1` was sent as `0.2` K) and decoded values are rounded to the precision of the step (`0.3` instead of `0.30000000000000004`). **Behaviour change**
+- Climate: the operation mode and controller mode RemoteValues of a `ClimateMode` passed as `mode` are registered with the `StateUpdater` when the `Climate` device is added, so they are read at start and refreshed like the other state addresses.
+- Climate: `ClimateMode.set_operation_mode()` / `set_controller_mode()` skip a controller status RemoteValue (`group_address_controller_status`) whose value isn't known yet instead of raising `ConversionError` after the other RemoteValues were partially written. `operation_modes` / `controller_modes` keep a deterministic order.
+- Climate: with binary operation mode objects (`group_address_operation_mode_comfort` / `_economy` / `_protection`) and no `group_address_operation_mode_standby`, the operation mode is set to `Standby` when the active mode's object is switched off and no other binary object is on - as documented. Previously the last active mode was kept. **Behaviour change**
+- BinarySensor: with `reset_after`, a `GroupValueResponse` carrying `True` after the reset is processed as a change again.
+- ExposeSensor: `cooldown` and `periodic_send` work again after the device was removed and re-added or `xknx` was stopped and started again.
+- Light: the debouncer for individual color objects counts every switch and brightness object of the colors, so the callback isn't run after half of the colors were reported.
+- DateDevice / DateTimeDevice: `value` returns `None` (and logs on debug level) instead of raising `ValueError` for received values the DPT accepts but `datetime` can't represent - eg. February 31st for DPT 11.001 or `24:00:00` and invalid time fields for DPT 19.001.
+- `RemoteValueScaling.to_knx()` (Cover position / angle, Light brightness, Fan speed) raises `ConversionError` for values outside of `range_from`..`range_to` and for `range_from == range_to` instead of producing an invalid payload that failed later when sending.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
