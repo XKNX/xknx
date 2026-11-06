@@ -61,6 +61,8 @@ if they aren't already established elsewhere in the codebase.
 | v01.03.08 | RF Metering protocol | 10.03 |
 | v01.03.01 | HVAC S-Mode FBs | 07.19.20 |
 | v01.01.01 | Weather data | 07.01.06 |
+| v01.03.04 | Basic and System Components - Couplers | 09.03 |
+| v01.04.02 | External Message Interface | 03.06.03 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
@@ -76,6 +78,7 @@ area; a document's number starts with its Volume:
 |---|---|---|
 | 3 — System Specifications | The core protocol stack: physical/data link/network/transport/application layers, management, routing, communication media | 03.02.06, 03.03.04, 03.03.07, 03.05.02, 03.08.05 |
 | 7 — Application Descriptions | Standardized function blocks and their datapoints for application domains like HVAC; some DPTs (e.g. DPT 275) are defined here and not in KNX v02.02.01 - Datapoint Types 03.07.02 | 07.19.20 (HVAC S-Mode FBs) |
+| 9 — Basic and System Components | Requirements for device types like couplers and interfaces, e.g. the KNX USB interface protocol | 09.03 (Couplers) |
 | 10 — Application Specific Standards | Standardized application-level extensions built on top of Volume 3 | 10.01 (Logical Tag Extended) |
 
 Almost everything xknx cites is Volume 3, since that's the wire protocol

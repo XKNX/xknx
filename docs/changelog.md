@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- KNX USB interfaces: `ConnectionConfig(connection_type=ConnectionType.USB, usb_config=USBConfig(...))` connects to the bus through a KNX USB interface supporting cEMI - KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3. The interface is set up on connect (supported and active EMI type, PID_COMM_MODE data link layer - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2) and reset on disconnect; its individual address becomes `xknx.current_address`. `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back. Needs the optional dependency `hidapi`: `pip install xknx[usb]`.
+
 ### Protocol
 
 - Decode and serialize empty `FunctionPropertyStateResponse` messages, including responses encountered during OpenKNX DALI scans. A missing return code is represented as `None`, distinct from success (`0`).

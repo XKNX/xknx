@@ -78,6 +78,26 @@ For AUTOMATIC connections this setting selects a host from a given keyfile.
 For TCP TUNNELING connections this setting requests a tunnel to that individual address.
 For SECURE tunnels this setting selects an interface from a given keyfile.
 
+## KNX USB interfaces
+
+```python
+from xknx.io import ConnectionConfig, ConnectionType, USBConfig
+from xknx.io.usb import find_usb_interfaces
+
+print(find_usb_interfaces())  # the KNX USB interfaces connected to this host
+connection_config = ConnectionConfig(
+    connection_type=ConnectionType.USB,
+    usb_config=USBConfig(serial_number="00C501053FB2"),
+)
+xknx = XKNX(connection_config=connection_config)
+```
+
+KNX USB interfaces need the optional `hidapi` package: `pip install xknx[usb]`. They work without a special driver on Windows, Linux and macOS; on Linux the user needs access to the interface's `/dev/hidraw*` (or `/dev/bus/usb`) device, e.g. through a udev rule.
+
+Without a `USBConfig` the first known KNX USB interface is used. `vendor_id` and `product_id` select an interface, also one that is not among the known ones, `serial_number` one of several, and `path` the one at a hidapi device path. An unplugged interface is connected again when it is back (`auto_reconnect`), also on another USB port.
+
+Interfaces supporting cEMI are supported. On connect the interface is switched to the data link layer, and its own individual address becomes `xknx.current_address`. `xknx.knxip_interface.usb_interface_info()` returns what the interface reported: individual address, maximum APDU length, supported EMI types, bus connection status and KNX manufacturer code.
+
 # [](#header-2)Starting
 
 ```python
