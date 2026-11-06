@@ -465,6 +465,11 @@ class KNXIPInterface:
         )
         await self._interface.connect()
 
+    async def stop_reconnect(self) -> None:
+        """Stop the interface from reconnecting - before draining the telegram queue on shutdown."""
+        if self._interface is not None:
+            await self._interface.stop_reconnect()
+
     async def stop(self) -> None:
         """Stop connected interfae (either Tunneling or Routing)."""
         if self._interface is not None:
@@ -611,6 +616,11 @@ class KNXIPInterfaceThreaded(KNXIPInterface):
             await init_thread
             await self.stop()
             raise
+
+    async def stop_reconnect(self) -> None:
+        """Stop the interface from reconnecting - before draining the telegram queue on shutdown."""
+        if self._interface is not None:
+            await self._await_from_connection_thread(self._interface.stop_reconnect())
 
     async def stop(self) -> None:
         """Stop connected interface (either Tunneling or Routing)."""

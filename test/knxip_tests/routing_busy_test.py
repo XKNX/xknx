@@ -39,3 +39,9 @@ class TestKNXIPRoutingBusy:
         raw = bytes((0x06, 0x10, 0x05, 0x32, 0x00, 0x0C, 0x06, 0x00, 0x00, 0x64, 0x00))
         with pytest.raises(CouldNotParseKNXIP):
             KNXIPFrame.from_knx(raw)
+
+    def test_from_knx_empty_body(self) -> None:
+        """Test parsing RoutingBusy without body raises CouldNotParseKNXIP."""
+        raw = bytes((0x06, 0x10, 0x05, 0x32, 0x00, 0x06))
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)

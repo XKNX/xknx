@@ -4,8 +4,24 @@ from typing import Any
 
 import pytest
 
-from xknx.dpt import DPTArray, DPTHVACContrMode, DPTHVACMode, DPTHVACStatus
-from xknx.dpt.dpt_20 import HeatCool, HVACControllerMode, HVACOperationMode, HVACStatus
+from xknx.dpt import (
+    DPTArray,
+    DPTBase,
+    DPTBinary,
+    DPTChangeoverMode,
+    DPTEnableHCStage,
+    DPTHVACContrMode,
+    DPTHVACMode,
+    DPTHVACStatus,
+)
+from xknx.dpt.dpt_20 import (
+    ChangeoverMode,
+    EnableHCStage,
+    HeatCool,
+    HVACControllerMode,
+    HVACOperationMode,
+    HVACStatus,
+)
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 
@@ -104,6 +120,131 @@ class TestDPTHVACControllerMode:
             DPTHVACContrMode.from_knx(DPTArray((1, 2)))
         with pytest.raises(ConversionError):
             DPTHVACContrMode.from_knx(DPTArray((18,)))
+
+
+class TestDPTChangeoverMode:
+    """Test class for KNX DPT 20.107 changeover mode."""
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (ChangeoverMode.AUTO, 0x00),
+            (ChangeoverMode.COOLING_ONLY, 0x01),
+            (ChangeoverMode.HEATING_ONLY, 0x02),
+        ],
+    )
+    def test_transcoder(self, value: ChangeoverMode, raw: int) -> None:
+        """Test parsing and streaming of DPTChangeoverMode."""
+        assert DPTChangeoverMode.to_knx(value) == DPTArray((raw,))
+        assert DPTChangeoverMode.from_knx(DPTArray((raw,))) is value
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            ("auto", 0x00),
+            ("Cooling_Only", 0x01),
+            ("HEATING_ONLY", 0x02),
+            (0, 0x00),
+            (2, 0x02),
+        ],
+    )
+    def test_to_knx_by_name_or_value(self, value: str | int, raw: int) -> None:
+        """Test serializing DPTChangeoverMode from a name or a raw value."""
+        assert DPTChangeoverMode.to_knx(value) == DPTArray((raw,))
+
+    @pytest.mark.parametrize("value", [3, 255, "heating", "", None, 1.5])
+    def test_to_knx_wrong_value(self, value: Any) -> None:
+        """Test serializing DPTChangeoverMode with a wrong value."""
+        with pytest.raises(ConversionError):
+            DPTChangeoverMode.to_knx(value)
+
+    def test_from_knx_wrong_value(self) -> None:
+        """Test parsing DPTChangeoverMode with a reserved value or wrong payload."""
+        with pytest.raises(ConversionError):
+            DPTChangeoverMode.from_knx(DPTArray((0x03,)))
+        with pytest.raises(ConversionError):
+            DPTChangeoverMode.from_knx(DPTArray((0xFF,)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTChangeoverMode.from_knx(DPTArray((0x00, 0x00)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTChangeoverMode.from_knx(DPTBinary(1))
+
+    def test_valid_values(self) -> None:
+        """Test the valid values of DPTChangeoverMode."""
+        assert DPTChangeoverMode.get_valid_values() == [
+            ChangeoverMode.AUTO,
+            ChangeoverMode.COOLING_ONLY,
+            ChangeoverMode.HEATING_ONLY,
+        ]
+
+    def test_lookup(self) -> None:
+        """Test lookup of DPTChangeoverMode."""
+        assert DPTBase.parse_transcoder("20.107") is DPTChangeoverMode
+        assert DPTBase.parse_transcoder("changeover_mode") is DPTChangeoverMode
+
+
+class TestDPTEnableHCStage:
+    """Test class for KNX DPT 20.116 enable heating/cooling stage."""
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            (EnableHCStage.DISABLED, 0x00),
+            (EnableHCStage.STAGE_A, 0x01),
+            (EnableHCStage.STAGE_B, 0x02),
+            (EnableHCStage.BOTH_STAGES, 0x03),
+        ],
+    )
+    def test_transcoder(self, value: EnableHCStage, raw: int) -> None:
+        """Test parsing and streaming of DPTEnableHCStage."""
+        assert DPTEnableHCStage.to_knx(value) == DPTArray((raw,))
+        assert DPTEnableHCStage.from_knx(DPTArray((raw,))) is value
+
+    @pytest.mark.parametrize(
+        ("value", "raw"),
+        [
+            ("disabled", 0x00),
+            ("Stage_A", 0x01),
+            ("STAGE_B", 0x02),
+            ("both_stages", 0x03),
+            (0, 0x00),
+            (3, 0x03),
+        ],
+    )
+    def test_to_knx_by_name_or_value(self, value: str | int, raw: int) -> None:
+        """Test serializing DPTEnableHCStage from a name or a raw value."""
+        assert DPTEnableHCStage.to_knx(value) == DPTArray((raw,))
+
+    @pytest.mark.parametrize("value", [4, 255, "stage_c", "", None, 1.5])
+    def test_to_knx_wrong_value(self, value: Any) -> None:
+        """Test serializing DPTEnableHCStage with a wrong value."""
+        with pytest.raises(ConversionError):
+            DPTEnableHCStage.to_knx(value)
+
+    def test_from_knx_wrong_value(self) -> None:
+        """Test parsing DPTEnableHCStage with a reserved value or wrong payload."""
+        with pytest.raises(ConversionError):
+            DPTEnableHCStage.from_knx(DPTArray((0x04,)))
+        with pytest.raises(ConversionError):
+            DPTEnableHCStage.from_knx(DPTArray((0xFF,)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTEnableHCStage.from_knx(DPTArray((0x00, 0x00)))
+        with pytest.raises(CouldNotParseTelegram):
+            DPTEnableHCStage.from_knx(DPTBinary(1))
+
+    def test_valid_values(self) -> None:
+        """Test the valid values of DPTEnableHCStage."""
+        assert DPTEnableHCStage.get_valid_values() == [
+            EnableHCStage.DISABLED,
+            EnableHCStage.STAGE_A,
+            EnableHCStage.STAGE_B,
+            EnableHCStage.BOTH_STAGES,
+        ]
+
+    def test_lookup(self) -> None:
+        """Test lookup of DPTEnableHCStage."""
+        assert DPTBase.parse_transcoder("20.116") is DPTEnableHCStage
+        assert DPTBase.parse_transcoder("enable_hc_stage") is DPTEnableHCStage
 
 
 class TestHVACStatus:
