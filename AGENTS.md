@@ -61,6 +61,7 @@ if they aren't already established elsewhere in the codebase.
 | v01.03.08 | RF Metering protocol | 10.03 |
 | v01.03.01 | HVAC S-Mode FBs | 07.19.20 |
 | v01.01.01 | Weather data | 07.01.06 |
+| v01.04.02 | External Message Interface | 03.06.03 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
