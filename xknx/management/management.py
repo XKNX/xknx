@@ -94,12 +94,22 @@ class Management:
         logger.debug("Unhandled management telegram: %r", telegram)
 
     async def connect(
-        self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
+        self,
+        address: IndividualAddress,
+        rate_limit: int = MANAGEMENT_RATE_LIMIT,
+        *,
+        ignore_repeated_acks: bool = False,
     ) -> P2PConnection:
-        """Open a point-to-point connection to a KNX device."""
+        """
+        Open a point-to-point connection to a KNX device.
+
+        See `P2PConnection` for `ignore_repeated_acks`.
+        """
         if address in self._connections:
             raise ManagementConnectionError(f"Connection to {address} already exists.")
-        p2p_connection = P2PConnection(self.xknx, address, rate_limit)
+        p2p_connection = P2PConnection(
+            self.xknx, address, rate_limit, ignore_repeated_acks=ignore_repeated_acks
+        )
         try:
             await p2p_connection.connect()
         except ManagementConnectionError as exc:
@@ -134,10 +144,20 @@ class Management:
 
     @asynccontextmanager
     async def connection(
-        self, address: IndividualAddress, rate_limit: int = MANAGEMENT_RATE_LIMIT
+        self,
+        address: IndividualAddress,
+        rate_limit: int = MANAGEMENT_RATE_LIMIT,
+        *,
+        ignore_repeated_acks: bool = False,
     ) -> AsyncGenerator[P2PConnection, None]:
-        """Provide a point-to-point connection to a KNX device."""
-        conn = await self.connect(address, rate_limit)
+        """
+        Provide a point-to-point connection to a KNX device.
+
+        See `P2PConnection` for `ignore_repeated_acks`.
+        """
+        conn = await self.connect(
+            address, rate_limit, ignore_repeated_acks=ignore_repeated_acks
+        )
         try:
             yield conn
         finally:
@@ -492,6 +512,15 @@ class P2PConnection:
     the waiting `send_data()` or `request()` raises. Later calls raise
     `ManagementConnectionRefused`; `disconnect()` only unregisters the
     connection then, as the T_Disconnect was sent already.
+
+    With `ignore_repeated_acks`, a T_ACK with the sequence number of the
+    telegram acknowledged last is ignored instead of closing the connection. A
+    device acknowledges a repeated T_Data_Connected again (E05 -> A3); when a
+    medium coupler or the interface repeats a frame whose layer 2
+    acknowledgement got lost, that second T_ACK can arrive while the next
+    telegram awaits its own (OPEN_WAIT: E09) or after it (OPEN_IDLE). The
+    state machine closes the connection then, which ends a download on such a
+    line. Any other T_ACK or T_NAK is handled as the state machine requires.
     """
 
     __slots__ = (
@@ -499,12 +528,14 @@ class P2PConnection:
         "_closed_locally",
         "_connected",
         "_expected_sequence_number",
+        "_last_acked_sequence",
         "_last_response_time",
         "_rep_count",
         "_response_waiter",
         "_sequence_awaiting_ack",
         "address",
         "disconnect_hook",
+        "ignore_repeated_acks",
         "rate_limit",
         "sequence_number",
         "xknx",
@@ -515,12 +546,15 @@ class P2PConnection:
         xknx: XKNX,
         address: IndividualAddress,
         rate_limit: int = MANAGEMENT_RATE_LIMIT,
+        *,
+        ignore_repeated_acks: bool = False,
     ) -> None:
         """Initialize P2PConnection class."""
         self.xknx = xknx
         self.address = address
         self.disconnect_hook: Callable[[], None]
         self.rate_limit = rate_limit
+        self.ignore_repeated_acks = ignore_repeated_acks
 
         self.sequence_number = self._sequence_number_generator()
         self._expected_sequence_number = 0
@@ -532,6 +566,8 @@ class P2PConnection:
         self._sequence_awaiting_ack: int | None = None
         # repetitions of that telegram - rep_count of §5
         self._rep_count = 0
+        # SeqNoSend of the telegram the device acknowledged last
+        self._last_acked_sequence: int | None = None
 
         self._last_response_time: float = 0
 
@@ -682,6 +718,18 @@ class P2PConnection:
         """
         name = "ACK" if isinstance(ack, TAck) else "NAK"
         awaited = self._sequence_awaiting_ack
+        if (
+            self.ignore_repeated_acks
+            and isinstance(ack, TAck)
+            and ack.sequence_number == self._last_acked_sequence
+            and ack.sequence_number != awaited
+        ):
+            logger.debug(
+                "%s: ignored repeated ACK %d of the telegram acknowledged last",
+                self.address,
+                ack.sequence_number,
+            )
+            return
         if awaited is None:
             # OPEN_IDLE: E08, E09, E11, E12 and E13 -> A6
             self._close(
@@ -703,6 +751,7 @@ class P2PConnection:
         if isinstance(ack, TAck):
             # E08 -> A8: OPEN_IDLE
             self._sequence_awaiting_ack = None
+            self._last_acked_sequence = awaited
         elif self._rep_count >= MANAGEMENT_MAX_REPETITIONS:
             # E13 -> A6
             self._close(

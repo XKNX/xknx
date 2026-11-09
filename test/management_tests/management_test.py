@@ -19,6 +19,7 @@ from xknx.management.management import (
     MANAGEMENT_ACK_TIMEOUT,
     MANAGEMENT_CONNECTION_TIMEOUT,
     MANAGEMENT_MAX_REPETITIONS,
+    P2PConnection,
 )
 from xknx.telegram import (
     GroupAddress,
@@ -374,6 +375,108 @@ async def test_ack_without_sent_telegram() -> None:
     with pytest.raises(ManagementConnectionRefused, match="is closed"):
         await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
     await conn.disconnect()
+
+
+async def _acknowledged_send(
+    xknx: XKNX, conn: P2PConnection, ia: IndividualAddress, seq: int
+) -> None:
+    """Send a telegram and let the device acknowledge it."""
+    task = asyncio.create_task(
+        conn.send_data(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(seq)))
+    await task
+
+
+async def test_repeated_ack_while_waiting_is_ignored() -> None:
+    """Test a repeated ACK of the last telegram is ignored while the next waits."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, ignore_repeated_acks=True)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await _acknowledged_send(xknx, conn, ia, 0)
+
+    task = asyncio.create_task(
+        conn.send_data(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    # the device acknowledges a repeated frame of telegram 0 again
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    assert not task.done()
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(1)))
+    await task
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0)),
+        call(_descriptor_read(xknx, ia, 1)),
+    ]
+    await conn.disconnect()
+
+
+async def test_repeated_ack_on_idle_connection_is_ignored() -> None:
+    """Test a repeated ACK of the last telegram is ignored on an idle connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, ignore_repeated_acks=True)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await _acknowledged_send(xknx, conn, ia, 0)
+
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    await _acknowledged_send(xknx, conn, ia, 1)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0)),
+        call(_descriptor_read(xknx, ia, 1)),
+    ]
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("ignore_repeated_acks", "control"),
+    [
+        pytest.param(False, tpci.TAck(0), id="repeated-ack-by-default"),
+        pytest.param(True, tpci.TAck(5), id="ack-of-another-telegram"),
+        pytest.param(True, tpci.TNak(0), id="nak-of-last-telegram"),
+    ],
+)
+async def test_other_ack_still_closes(
+    ignore_repeated_acks: bool, control: tpci.TAck | tpci.TNak
+) -> None:
+    """Test only a repeated ACK, and only with the option, keeps the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, ignore_repeated_acks=ignore_repeated_acks)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await _acknowledged_send(xknx, conn, ia, 0)
+
+    task = asyncio.create_task(
+        conn.send_data(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: OPEN_WAIT E09/E11 -> A6
+    xknx.management.process(_from_device(xknx, ia, control))
+    with pytest.raises(ManagementConnectionError, match="does not match"):
+        await task
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        _disconnect(xknx, ia)
+    )
+    await conn.disconnect()
+
+
+async def test_connection_context_passes_ignore_repeated_acks() -> None:
+    """Test the connection context manager hands the option to the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    async with xknx.management.connection(ia, ignore_repeated_acks=True) as conn:
+        assert conn.ignore_repeated_acks
+    async with xknx.management.connection(ia) as conn:
+        assert not conn.ignore_repeated_acks
 
 
 async def test_ack_from_other_device_is_ignored() -> None:
