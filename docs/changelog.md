@@ -6,6 +6,15 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Management
+
+- `P2PConnection` follows the client state machine of KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1 (style 1). A transport layer error closes the connection with action A6 of §5.3 - a T_Disconnect is sent to the device - instead of leaving it open: no ACK after the last repetition (E18, still `ManagementConnectionTimeout`), a NAK after the last repetition (E13), an ACK or NAK of another sequence number while waiting for an ACK (E09, E11), and any ACK or NAK while no telegram awaits one (E08, E09, E11, E12, E13 in OPEN_IDLE) - the latter fail a `request()` waiting for its response with `ManagementConnectionError`. Afterwards `send_data()` and `request()` raise `ManagementConnectionRefused`, and `disconnect()` only unregisters the connection without raising, so the error that closed it is the one the caller sees.
+- `P2PConnection.send_data()` repeats a telegram the device NAKs (E12, action A9) - sharing the `MANAGEMENT_MAX_REPETITIONS` repetitions with the ACK timeout - instead of raising at once.
+- A T_Disconnect from the device (E02) ends a wait for an ACK at once with `ManagementConnectionRefused` - before, only the wait for the response was ended, and a pending `send_data()` kept repeating its telegram to the disconnected device until it raised `ManagementConnectionTimeout` after 12 seconds. Without a waiting request the error is no longer reported as "Future exception was never retrieved". Telegrams the device sends after the connection was closed are ignored instead of being acknowledged.
+- New keyword `ignore_repeated_acks` of `Management.connect()`, `Management.connection()` and `P2PConnection`: a T_ACK with the sequence number of the telegram acknowledged last is ignored instead of closing the connection (E09, or any ACK in OPEN_IDLE). A device acknowledges a repeated telegram again (E05, action A3), so a frame repeated by a medium coupler or the interface after a lost layer 2 acknowledgement can bring a second T_ACK while the next telegram awaits its own. Off by default; any other ACK or NAK is handled as before.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
