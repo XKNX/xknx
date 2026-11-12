@@ -21,8 +21,12 @@ from xknx.dpt import DPTArray
 from xknx.exceptions import ConversionError, CouldNotParseCEMI, UnsupportedCEMIMessage
 from xknx.profile.const import ResourceKNXNETIPPropertyId, ResourceObjectType
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
-from xknx.telegram.apci import GroupValueRead, GroupValueWrite
-from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataGroup
+from xknx.telegram.apci import (
+    FunctionPropertyStateResponse,
+    GroupValueRead,
+    GroupValueWrite,
+)
+from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataConnected, TDataGroup
 
 
 def get_data(
@@ -71,6 +75,21 @@ def test_valid_command() -> None:
     assert frame.data.payload == GroupValueRead()
     assert frame.data.tpci == TDataGroup()
     assert frame.calculated_length() == 11
+    assert frame.to_knx() == raw
+
+
+def test_empty_function_property_response() -> None:
+    """Roundtrip an empty connected response from an OpenKNX DALI gateway."""
+    raw = bytes.fromhex("2900b06010271008034ac9a001")
+    frame = CEMIFrame.from_knx(raw)
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.src_addr == IndividualAddress("1.0.39")
+    assert frame.data.dst_addr == IndividualAddress("1.0.8")
+    assert frame.data.tpci == TDataConnected(sequence_number=2)
+    assert frame.data.payload == FunctionPropertyStateResponse(
+        object_index=160, property_id=1, return_code=None
+    )
+    assert frame.calculated_length() == len(raw)
     assert frame.to_knx() == raw
 
 

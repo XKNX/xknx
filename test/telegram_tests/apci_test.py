@@ -3016,10 +3016,39 @@ class TestFunctionPropertyStateResponse:
             object_index=1, property_id=4, return_code=8, data=b"\x12\x34"
         )
 
-    def test_from_knx_wrong_length(self) -> None:
+    @pytest.mark.parametrize("raw", [b"\x02\xc9", b"\x02\xc9\x01"])
+    def test_from_knx_wrong_length(self, raw: bytes) -> None:
         """Test from_knx raises ConversionError for a too-short APDU."""
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
-            APCI.from_knx(bytes([0x02, 0xC9, 0x01, 0x04]))
+            APCI.from_knx(raw)
+
+    @pytest.mark.parametrize(
+        ("raw", "return_code", "data"),
+        [
+            (b"\x02\xc9\xa0\x01", None, b""),
+            (b"\x02\xc9\xa0\x01\x00", 0, b""),
+            (b"\x02\xc9\xa0\x01\x01", 1, b""),
+            (b"\x02\xc9\xa0\x01\x00\x12\x34", 0, b"\x12\x34"),
+        ],
+    )
+    def test_result_roundtrip(
+        self, raw: bytes, return_code: int | None, data: bytes
+    ) -> None:
+        """Preserve an absent result, a status-only result and state data."""
+        payload = APCI.from_knx(raw)
+        assert payload == FunctionPropertyStateResponse(
+            object_index=160, property_id=1, return_code=return_code, data=data
+        )
+        assert payload.to_knx() == raw
+        assert payload.calculated_length() == len(raw) - 1
+
+    def test_data_requires_return_code(self) -> None:
+        """Reject state data without a return code."""
+        payload = FunctionPropertyStateResponse(return_code=None, data=b"\x01")
+        with pytest.raises(
+            ConversionError, match="Function property data requires a return code"
+        ):
+            payload.to_knx()
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""

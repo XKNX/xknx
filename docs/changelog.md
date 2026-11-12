@@ -6,6 +6,12 @@ nav_order: 2
 
 # Changelog
 
+# Unreleased changes
+
+### Protocol
+
+- Decode and serialize empty `FunctionPropertyStateResponse` messages, including responses encountered during OpenKNX DALI scans. A missing return code is represented as `None`, distinct from success (`0`).
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
