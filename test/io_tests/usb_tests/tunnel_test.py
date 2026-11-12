@@ -417,19 +417,25 @@ class TestUSBTunnel:
         threads: list[threading.Thread] = []
 
         class Loader(importlib.abc.Loader):
+            """Load the fake hidapi module."""
+
             def create_module(self, spec: ModuleSpec) -> ModuleType:
+                """Return the fake hidapi module."""
                 return fake_hid
 
             def exec_module(self, module: ModuleType) -> None:
-                pass
+                """Leave the fake module as it is."""
 
         class Finder(importlib.abc.MetaPathFinder):
+            """Find hidapi and note the thread importing it."""
+
             def find_spec(
                 self,
                 fullname: str,
                 path: Sequence[str] | None,
                 target: ModuleType | None = None,
             ) -> ModuleSpec | None:
+                """Return the spec of the fake hidapi module for `hid`."""
                 if fullname != "hid":
                     return None
                 threads.append(threading.current_thread())
