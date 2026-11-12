@@ -10,7 +10,14 @@ nav_order: 2
 
 ### Connection
 
-- KNX USB interfaces: `ConnectionConfig(connection_type=ConnectionType.USB, usb_config=USBConfig(...))` connects to the bus through a KNX USB interface - KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3. cEMI is used where the interface supports it, else EMI2 or EMI1, whose data link layer messages are converted to and from cEMI - KNX v01.04.02 - External Message Interface 03.06.03 - §3. The interface is set up on connect (supported and active EMI type, PID_COMM_MODE data link layer, read back to verify - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2); its individual address becomes `xknx.current_address`. `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back. `USBTunnel(busmonitor=True)` switches the interface to the bus monitor mode and passes every L_Busmon.ind on. Needs the optional dependency `hidapi`: `pip install xknx[usb]`.
+- KNX USB interfaces: `ConnectionConfig(connection_type=ConnectionType.USB, usb_config=USBConfig(...))` connects to the bus through a KNX USB interface - KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3. Needs the optional dependency `hidapi`: `pip install xknx[usb]`.
+  - cEMI is used where the interface supports it, else EMI2 or EMI1, whose data link layer messages are converted to and from cEMI - KNX v01.04.02 - External Message Interface 03.06.03 - §3. EMI1 and EMI2 carry standard frames only; with Data Secure such an interface is warned about.
+  - On connect the interface is set up: supported and active EMI type, bus connection status, mask version, then the data link layer (cEMI: PID_COMM_MODE, read back to verify - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2). After an M_Reset.ind it is set up again. An EMI1/EMI2 interface is switched back to its normal mode on disconnect.
+  - The interface's individual address becomes `xknx.current_address`. With Data Secure an unknown address fails the connect, and an address that is not one of the keyring's interfaces is warned about.
+  - The connection state follows the interface's bus connection: DISCONNECTED while it reports no bus, CONNECTED again when the bus is back.
+  - `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back.
+  - `USBTunnel(busmonitor=True)` switches the interface to the bus monitor mode and passes every L_Busmon.ind on.
+- `ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA` (57) and `xknx.exceptions.CouldNotParseUSBFrame` added.
 
 ### Protocol
 

@@ -65,6 +65,8 @@ class FakeInterface:
         self.memory: dict[int, bytes] = {0x0060: b"\x1e", 0x0117: b"\x11\x05"}
         self.accepts_memory_writes = True
         self.pei_switch = b""
+        # cEMI: the source the interface puts in an L_Data.con (None: the requested)
+        self.confirmation_source: bytes | None = None
         self.written: list[USBTransferFrame] = []
         self.unplugged = threading.Event()
         self.open_count = 0
@@ -156,10 +158,23 @@ class FakeInterface:
             self.properties[key] = cemi[7:]
             self.send_cemi(bytes((0xF5,)) + cemi[1:7])
         elif code == 0x11:  # L_Data.req -> L_Data.con
-            self.send_cemi(bytes((0x2E,)) + cemi[1:])
+            confirmation = bytes((0x2E,)) + cemi[1:]
+            if self.confirmation_source is not None:
+                offset = 2 + cemi[1] + 2
+                confirmation = (
+                    confirmation[:offset]
+                    + self.confirmation_source
+                    + confirmation[offset + 2 :]
+                )
+            self.send_cemi(confirmation)
         elif code == 0xF1:  # M_Reset.req
-            self.properties[(8, 52)] = b"\xff"
-            self.send_cemi(b"\xf0")
+            self.reset()
+
+    def reset(self) -> None:
+        """Reset like after a power-up: no layer, no active EMI type, M_Reset.ind."""
+        self.properties[(8, 52)] = b"\xff"
+        self.features[DeviceFeature.ACTIVE_EMI_TYPE] = b"\x00"
+        self.send_cemi(b"\xf0")
 
     def send_emi(self, emi: EMIID, raw: bytes) -> None:
         """Send an EMI1/EMI2 message from the interface to the host."""
@@ -179,16 +194,15 @@ class FakeInterface:
             self.memory[address] = raw[4 : 4 + raw[1]]
         elif code == codes[1]:
             address = int.from_bytes(raw[2:4], "big")
-            data = self.memory.get(address, bytes(raw[1]))[: raw[1]]
-            self.send_emi(emi, bytes((codes[2], raw[1])) + raw[2:4] + data)
+            if address in self.memory:
+                data = self.memory[address][: raw[1]]
+                self.send_emi(emi, bytes((codes[2], raw[1])) + raw[2:4] + data)
         elif code == 0xA9:  # PEI_Switch.req
             self.pei_switch = raw[1:]
-        elif code == 0x11:  # L_Data.req -> L_Data.con with the frame's control field
-            control = 0xB0 | (raw[1] & 0x0C)
-            self.send_emi(
-                emi,
-                bytes((codes[3], control)) + self.memory[0x0117] + raw[4:],
-            )
+        elif code == 0x11:  # L_Data.req -> L_Data.con with the frame's priority
+            # the "x" bits set: the host must not interpret them; source unused
+            control = 0xD2 | (raw[1] & 0x0C)
+            self.send_emi(emi, bytes((codes[3], control)) + b"\xff\xff" + raw[4:])
 
 
 class FakeHIDDevice:
@@ -259,6 +273,21 @@ class FakeHIDModule(ModuleType):
     def device(self) -> FakeHIDDevice:
         """Create a device handle."""
         return FakeHIDDevice(self)
+
+
+def make_emi_interface(
+    interface: FakeInterface, emi: EMIID, mask_version: int | None
+) -> None:
+    """Make the simulated interface one with EMI1 or EMI2 only, of a mask version (None: not answered)."""
+    interface.features[DeviceFeature.SUPPORTED_EMI_TYPE] = (1 << (emi - 1)).to_bytes(
+        2, "big"
+    )
+    if mask_version is None:
+        interface.silent_features.add(DeviceFeature.DEVICE_DESCRIPTOR_TYPE_0)
+    else:
+        interface.features[DeviceFeature.DEVICE_DESCRIPTOR_TYPE_0] = (
+            mask_version.to_bytes(2, "big")
+        )
 
 
 @pytest.fixture

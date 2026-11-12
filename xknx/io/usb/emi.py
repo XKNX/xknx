@@ -9,49 +9,48 @@ KNX v01.04.02 - External Message Interface 03.06.03 - §3
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Final
 
+from xknx.cemi import CEMIMessageCode
 from xknx.exceptions import ConversionError
 
 from .const import EMIID
 
-_CEMI_L_DATA_REQ: Final = 0x11
-_CEMI_L_DATA_CON: Final = 0x2E
-_CEMI_L_DATA_IND: Final = 0x29
-_CEMI_L_BUSMON_IND: Final = 0x2B
 # cEMI additional information types - KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.4.3
 _CEMI_BUSMONITOR_STATUS_INFO: Final = 0x03
 _CEMI_TIMESTAMP_RELATIVE: Final = 0x04
 # the longest APDU of a standard frame
 MAX_APDU_LENGTH: Final = 15
 
+# cEMI control field 1 - KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.5.3
+_CEMI_STANDARD_FRAME: Final = 0x80
+_CEMI_NOT_REPEATED: Final = 0x20
+_CEMI_BROADCAST: Final = 0x10
+# EMI control field bits a host may interpret - KNX v01.04.02 - External Message
+# Interface 03.06.03 - §3.3.4.3, §3.3.4.4; the others ("x") shall not be interpreted
+_PRIORITY: Final = 0x0C
+_REPEAT: Final = 0x20
+_CONFIRM: Final = 0x01
 
+
+@dataclass(frozen=True, slots=True)
 class EMIMessageCode:
-    """Message codes of EMI1 and EMI2 - KNX v01.04.02 - External Message Interface 03.06.03 - §2, Table 1."""
+    """Message codes of EMI1 or EMI2 - KNX v01.04.02 - External Message Interface 03.06.03 - §2, Table 1."""
 
-    def __init__(
-        self,
-        *,
-        l_data_con: int,
-        l_data_ind: int,
-        l_busmon_ind: int,
-        pc_set_value_req: int,
-        pc_get_value_req: int,
-        pc_get_value_con: int,
-    ) -> None:
-        """Initialize EMIMessageCode."""
-        self.l_data_req = _CEMI_L_DATA_REQ
-        self.l_data_con = l_data_con
-        self.l_data_ind = l_data_ind
-        self.l_busmon_ind = l_busmon_ind
-        self.pc_set_value_req = pc_set_value_req
-        self.pc_get_value_req = pc_get_value_req
-        self.pc_get_value_con = pc_get_value_con
+    l_data_req: int
+    l_data_con: int
+    l_data_ind: int
+    l_busmon_ind: int
+    pc_set_value_req: int
+    pc_get_value_req: int
+    pc_get_value_con: int
 
 
 MESSAGE_CODES: Final = {
     EMIID.EMI1: EMIMessageCode(
+        l_data_req=0x11,
         l_data_con=0x4E,
         l_data_ind=0x49,
         l_busmon_ind=0x49,
@@ -60,6 +59,7 @@ MESSAGE_CODES: Final = {
         pc_get_value_con=0x4B,
     ),
     EMIID.EMI2: EMIMessageCode(
+        l_data_req=0x11,
         l_data_con=0x2E,
         l_data_ind=0x29,
         l_busmon_ind=0x2B,
@@ -71,9 +71,12 @@ MESSAGE_CODES: Final = {
 
 # EMI2 PEI_Switch.req - KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.4
 PEI_SWITCH_REQ: Final = 0xA9
-# memory location "system status" of EMI1 - KNX v01.04.02 - External Message Interface
+# memory location "system status" - KNX v01.04.02 - External Message Interface
 # 03.06.03 - §3.1.3; KNX v01.10.01 - Resources 03.05.01 - §4.26.3.2
 SYSTEM_STATUS_ADDRESS: Final = 0x0060
+# the local Device Descriptor Type 0 of a BCU 1 or BCU 2 - KNX v01.03.04 - Basic and
+# System Components - Couplers 09.03 - §3.5.3.3.3
+DEVICE_DESCRIPTOR_ADDRESS: Final = 0x004E
 # the individual address: the first entry of the group address table at 0116h -
 # KNX v01.10.01 - Resources 03.05.01 - §4.16.3.1, §4.16.3.2
 INDIVIDUAL_ADDRESS_ADDRESS: Final = 0x0117
@@ -87,25 +90,80 @@ class EMILayer(Enum):
     BUSMONITOR = "busmonitor"
 
 
-# EMI1 "system status" values - KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.3
+# bits of the "system status" - KNX v01.04.02 - External Message Interface 03.06.03 -
+# §3.1.3, Figure 1
+_STATUS_PARITY: Final = 0x80
+_STATUS_USER_PROGRAM: Final = 0x20
+_STATUS_PEI: Final = 0x10
+_STATUS_APPLICATION_LAYER: Final = 0x08
+_STATUS_TRANSPORT_LAYER: Final = 0x04
+# set: busmonitor mode disabled
+_STATUS_NO_BUSMONITOR: Final = 0x02
+
+
+def _with_parity(status: int) -> int:
+    """Set the parity bit for an even parity of the "system status" octet."""
+    status &= ~_STATUS_PARITY
+    return status | (_STATUS_PARITY if status.bit_count() % 2 else 0)
+
+
+# the examples of Figure 1
 SYSTEM_STATUS: Final = {
-    EMILayer.NORMAL: 0x1E,
     EMILayer.DATA_LINK_LAYER: 0x12,
     EMILayer.BUSMONITOR: 0x90,
 }
-# EMI2 system status and redirections - KNX v01.04.02 - External Message Interface
-# 03.06.03 - §3.1.4, Figure 2. Normal mode writes the system status 1Eh (all layers and
-# the user program enabled) instead of 00h (unchanged), so a bus monitor mode is left too.
-_PEI_SWITCH: Final = {
-    EMILayer.NORMAL: bytes((0x1E, 0x12, 0x34, 0x56, 0x78, 0x9A)),
-    EMILayer.DATA_LINK_LAYER: bytes((0x00, 0x18, 0x34, 0x56, 0x78, 0x0A)),
-    EMILayer.BUSMONITOR: bytes((0x90, 0x18, 0x34, 0x56, 0x78, 0x0A)),
+# every layer, the PEI and the user program enabled: the device's own application runs
+# (§3.1.2). Used to leave an external layer when the device's own value isn't known.
+SYSTEM_STATUS_NORMAL: Final = _with_parity(
+    _STATUS_USER_PROGRAM
+    | _STATUS_PEI
+    | _STATUS_APPLICATION_LAYER
+    | _STATUS_TRANSPORT_LAYER
+    | _STATUS_NO_BUSMONITOR
+)
+_OWN_STACK: Final = (
+    _STATUS_APPLICATION_LAYER | _STATUS_TRANSPORT_LAYER | _STATUS_NO_BUSMONITOR
+)
+
+
+def normal_system_status(status: int | None) -> int:
+    """
+    Return the "system status" to switch an EMI interface back to.
+
+    That is the one read before switching - unless it gives an external user access
+    to a layer below the application layer or to the busmonitor (left so by a client
+    that didn't switch back, e.g. Figure 1's data link layer 12h): then every layer,
+    the PEI and the user program are enabled.
+    """
+    if status is not None and status & _OWN_STACK == _OWN_STACK:
+        return status
+    return SYSTEM_STATUS_NORMAL
+
+
+# EMI2 redirections - KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.4, Figure 2
+_REDIRECTIONS: Final = {
+    EMILayer.NORMAL: bytes((0x12, 0x34, 0x56, 0x78, 0x9A)),
+    EMILayer.DATA_LINK_LAYER: bytes((0x18, 0x34, 0x56, 0x78, 0x0A)),
+    EMILayer.BUSMONITOR: bytes((0x18, 0x34, 0x56, 0x78, 0x0A)),
 }
+# 00h: do not change the "system status"
+SYSTEM_STATUS_UNCHANGED: Final = 0x00
 
 
-def pei_switch(layer: EMILayer) -> bytes:
-    """EMI2 PEI_Switch.req to give access to a layer."""
-    return bytes((PEI_SWITCH_REQ,)) + _PEI_SWITCH[layer]
+def pei_switch(layer: EMILayer, system_status: int | None = None) -> bytes:
+    """
+    EMI2 PEI_Switch.req to give access to a layer - KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.4.
+
+    Without `system_status` the one of Figure 2 is used: busmonitor 90h, else 00h
+    (unchanged).
+    """
+    if system_status is None:
+        system_status = (
+            SYSTEM_STATUS[EMILayer.BUSMONITOR]
+            if layer is EMILayer.BUSMONITOR
+            else SYSTEM_STATUS_UNCHANGED
+        )
+    return bytes((PEI_SWITCH_REQ, system_status)) + _REDIRECTIONS[layer]
 
 
 def pc_set_value(emi: EMIID, address: int, data: bytes) -> bytes:
@@ -135,14 +193,14 @@ def parse_pc_get_value_con(emi: EMIID, raw: bytes) -> tuple[int, bytes] | None:
     return int.from_bytes(raw[2:4], "big"), raw[4 : 4 + raw[1]]
 
 
-def l_data_req_from_cemi(raw_cemi: bytes) -> bytes:
+def l_data_req_from_cemi(emi: EMIID, raw_cemi: bytes) -> bytes:
     """
     Convert a cEMI L_Data.req to EMI1/EMI2 - KNX v01.04.02 - External Message Interface 03.06.03 - §3.3.4.2.
 
     The interface puts in its own source address. Raise ConversionError for
     anything else than a standard frame L_Data.req.
     """
-    if len(raw_cemi) < 2 or raw_cemi[0] != _CEMI_L_DATA_REQ:
+    if len(raw_cemi) < 2 or raw_cemi[0] != CEMIMessageCode.L_DATA_REQ.value:
         raise ConversionError(
             f"Only L_Data.req can be sent to an EMI1/EMI2 interface: {raw_cemi.hex()}"
         )
@@ -151,27 +209,32 @@ def l_data_req_from_cemi(raw_cemi: bytes) -> bytes:
         raise ConversionError(f"Invalid cEMI L_Data.req: {raw_cemi.hex()}")
     control_1, control_2 = service[0], service[1]
     length = service[6]
-    if not control_1 & 0x80 or length > MAX_APDU_LENGTH:
+    if not control_1 & _CEMI_STANDARD_FRAME or length > MAX_APDU_LENGTH:
         raise ConversionError(
-            "EMI1/EMI2 interfaces send standard frames only (APDU of up to 15 octets)"
+            "EMI1/EMI2 interfaces send standard frames only (APDU of up to 15 "
+            "octets); most Data Secure telegrams need an extended frame"
         )
     # priority; the acknowledge is left to the data link layer ("don't care")
-    control = control_1 & 0x0C
+    control = control_1 & _PRIORITY
     npci = (control_2 & 0xF0) | length
     return (
-        bytes((_CEMI_L_DATA_REQ, control, 0x00, 0x00))
+        bytes((MESSAGE_CODES[emi].l_data_req, control, 0x00, 0x00))
         + service[4:6]
         + bytes((npci,))
         + service[7:]
     )
 
 
-def to_cemi(emi: EMIID, raw: bytes, busmonitor: bool) -> bytes | None:
+def to_cemi(
+    emi: EMIID, raw: bytes, *, busmonitor: bool, own_address: int = 0
+) -> bytes | None:
     """
     Convert an L_Data.con, L_Data.ind or L_Busmon.ind of an EMI1/EMI2 interface to cEMI.
 
     Return None for other messages. EMI1 uses the same message code for L_Data.ind
-    and L_Busmon.ind, so `busmonitor` tells which one is received.
+    and L_Busmon.ind, so `busmonitor` tells which one is received. The source of an
+    L_Data.con is unused in EMI1/EMI2 - the interface's `own_address` is put in, as
+    it sends with that one.
     """
     if not raw:
         return None
@@ -185,7 +248,7 @@ def to_cemi(emi: EMIID, raw: bytes, busmonitor: bool) -> bytes | None:
         return (
             bytes(
                 (
-                    _CEMI_L_BUSMON_IND,
+                    CEMIMessageCode.L_BUSMON_IND.value,
                     7,
                     _CEMI_BUSMONITOR_STATUS_INFO,
                     1,
@@ -197,20 +260,34 @@ def to_cemi(emi: EMIID, raw: bytes, busmonitor: bool) -> bytes | None:
             + raw[2:4]
             + raw[4:]
         )
-    if code == codes.l_data_con:
-        cemi_code = _CEMI_L_DATA_CON
-    elif code == codes.l_data_ind and not busmonitor:
-        cemi_code = _CEMI_L_DATA_IND
-    else:
-        return None
-    # control, source, destination, AT/NPCI/LG, TPDU - KNX v01.04.02 - External
-    # Message Interface 03.06.03 - §3.3.4.3, §3.3.4.4
+    # control, source (unused in L_Data.con), destination, AT/NPCI/LG, TPDU -
+    # KNX v01.04.02 - External Message Interface 03.06.03 - §3.3.4.3, §3.3.4.4
     if len(raw) < 8:
         return None
     control, npci = raw[1], raw[6]
+    if code == codes.l_data_con:
+        cemi_code = CEMIMessageCode.L_DATA_CON.value
+        control_1 = (
+            _CEMI_STANDARD_FRAME
+            | _CEMI_BROADCAST
+            | (control & (_REPEAT | _PRIORITY | _CONFIRM))
+        )
+        source = own_address.to_bytes(2, "big")
+    elif code == codes.l_data_ind and not busmonitor:
+        cemi_code = CEMIMessageCode.L_DATA_IND.value
+        control_1 = (
+            _CEMI_STANDARD_FRAME
+            | _CEMI_NOT_REPEATED
+            | _CEMI_BROADCAST
+            | (control & _PRIORITY)
+        )
+        source = raw[2:4]
+    else:
+        return None
     return (
-        bytes((cemi_code, 0x00, control, npci & 0xF0))
-        + raw[2:6]
+        bytes((cemi_code, 0x00, control_1, npci & 0xF0))
+        + source
+        + raw[4:6]
         + bytes((npci & 0x0F,))
         + raw[7:]
     )

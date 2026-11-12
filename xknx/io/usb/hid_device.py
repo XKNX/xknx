@@ -27,37 +27,81 @@ from .const import HID_REPORT_LENGTH
 logger = logging.getLogger("xknx.log")
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 
-# USB vendors whose HID devices are KNX USB interfaces, whatever the product id
-KNX_USB_VENDOR_IDS: Final = frozenset(
-    {
-        0x0E77,  # Weinzierl Engineering
-        0x135E,  # Insta
-        0x28C2,  # Tapko Technologies
-        0x2A07,  # ise
-    }
-)
-# further KNX USB interfaces by vendor and product id
+# Known KNX USB interfaces by USB vendor and product id, with the manufacturer selling
+# them. Unless noted otherwise the entries are the list `KNOWN_DEVICES` of the KNX USB
+# proof of concept for xknx by kistlin (https://github.com/kistlin/xknx, branch
+# usb-interface-support, xknx/usb/util.py, MIT licence), which names calimero's
+# knxUsbVendorProductIds of 2020-06-20 as its source. An interface missing here is
+# found by giving its vendor id (and product id) or its path.
 KNX_USB_DEVICE_IDS: Final = frozenset(
     {
-        (0x0111, 0x1022),
-        (0x0403, 0x6898),
-        (0x04CC, 0x0301),
-        (0x0681, 0x0014),
-        (0x0908, 0x02DC),
-        (0x0908, 0x02DD),
-        (0x0908, 0x02E6),
-        (0x145C, 0x1330),
-        (0x145C, 0x1490),
-        (0x147B, 0x2200),
-        (0x147B, 0x5120),
-        (0x16D0, 0x0490),
-        (0x16D0, 0x0491),
-        (0x16D0, 0x0492),
+        (0x0111, 0x1022),  # Makel Elektrik
+        (0x0403, 0x6898),  # Tokka
+        (0x04CC, 0x0301),  # b+b Automations- und Steuerungstechnik
+        (0x0681, 0x0014),  # Siemens HVAC
+        (0x0908, 0x02DC),  # Siemens HVAC
+        (0x0908, 0x02DD),  # Siemens
+        (0x0908, 0x02E6),  # Schrack
+        (0x0E77, 0x0102),  # Weinzierl Engineering
+        (0x0E77, 0x0103),  # Weinzierl Engineering
+        (0x0E77, 0x0104),  # Weinzierl Engineering, GEWISS, Somfy
+        (0x0E77, 0x0111),  # Siemens
+        (0x0E77, 0x0112),  # Siemens
+        (0x0E77, 0x0115),  # CONTROLtronic
+        (0x0E77, 0x0121),  # Gustav Hensel
+        (0x0E77, 0x0141),  # Schneider Electric (MG)
+        (0x0E77, 0x2001),  # Weinzierl Engineering
+        (0x0E77, 0x6910),  # Busch-Jaeger Elektro
+        (0x135E, 0x0020),  # Insta
+        (0x135E, 0x0021),  # Berker
+        (0x135E, 0x0022),  # Gira Giersiepen
+        (0x135E, 0x0023),  # Albrecht Jung
+        (0x135E, 0x0024),  # Merten
+        (0x135E, 0x0025),  # Hager Electro
+        (0x135E, 0x0026),  # Feller
+        (0x135E, 0x0027),  # Panasonic
+        (0x135E, 0x0028),  # Glamox
+        (0x135E, 0x0122),  # Gira Giersiepen
+        (0x135E, 0x0123),  # Albrecht Jung
+        (0x135E, 0x0320),  # Insta
+        (0x135E, 0x0322),  # Gira Giersiepen
+        (0x135E, 0x0323),  # Albrecht Jung
+        (0x135E, 0x0326),  # Feller
+        (0x135E, 0x0329),  # B.E.G.
+        (0x145C, 0x1330),  # Busch-Jaeger Elektro
+        (0x145C, 0x1490),  # Busch-Jaeger Elektro
+        (0x147B, 0x2200),  # ABB
+        (0x147B, 0x5120),  # ABB
+        (0x16D0, 0x0490),  # TAPKO Technologies
+        (0x16D0, 0x0491),  # MDT technologies
+        (0x16D0, 0x0492),  # preussen automation
+        # Schneider Electric SpaceLogic KNX USB Interface DIN Rail - tested with xknx
         (0x16DE, 0x008E),
-        (0x24D5, 0x0106),
-        (0x2D72, 0x0002),
-        (0x36CE, 0x0001),
-        (0x7660, 0x0002),
+        (0x24D5, 0x0106),  # Satel
+        (0x28C2, 0x0002),  # Zennio
+        (0x28C2, 0x0003),  # Ekinex
+        (0x28C2, 0x0004),  # TAPKO Technologies
+        (0x28C2, 0x0005),  # Philips Controls
+        (0x28C2, 0x0006),  # HDL
+        (0x28C2, 0x0007),  # Niko-Zublin
+        (0x28C2, 0x0008),  # TAPKO Technologies
+        (0x28C2, 0x000B),  # VIVO
+        (0x28C2, 0x000C),  # ESYLUX
+        (0x28C2, 0x000D),  # VIVO
+        (0x28C2, 0x000E),  # APRICUM
+        (0x28C2, 0x000F),  # APRICUM
+        (0x28C2, 0x0010),  # Video-Star
+        (0x28C2, 0x0011),  # Griesser
+        (0x28C2, 0x0012),  # Griesser
+        (0x28C2, 0x0013),  # MEAN WELL Enterprises
+        (0x28C2, 0x0014),  # Ergo3
+        (0x28C2, 0x0015),  # Bes - Ingenium
+        (0x28C2, 0x0017),  # Interra
+        (0x28C2, 0x001A),  # VIMAR
+        (0x2A07, 0x0001),  # ise
+        (0x2A07, 0x0002),  # Elsner Elektronik
+        (0x2D72, 0x0002),  # PEAKnx
+        (0x7660, 0x0002),  # KNX Association
     }
 )
 # usage pages below this are standard HID devices (keyboards, mice, ...)
@@ -68,7 +112,8 @@ _READ_TIMEOUT_MS: Final = 100
 
 # hidapi backends, in the order they are tried: on Linux the kernel's hidraw driver
 # first - the interface stays with the kernel's HID driver and access is granted by
-# the permissions of /dev/hidraw* - then libusb, e.g. for a kernel without hidraw
+# the permissions of /dev/hidraw* - then libusb, e.g. for a kernel without hidraw or
+# a /dev/hidraw* the user may not open
 _BACKENDS: Final = ("hidraw", "hid") if sys.platform.startswith("linux") else ("hid",)
 _MISSING_HIDAPI: Final = (
     "KNX USB interfaces need the 'hidapi' package: pip install xknx[usb]"
@@ -83,10 +128,10 @@ def _backend(name: str) -> Any:
         raise CommunicationError(_MISSING_HIDAPI) from err
 
 
-def _backends() -> list[tuple[str, Any]]:
-    """Import the hidapi backends available here."""
+def _backends(names: tuple[str, ...] | None = None) -> list[tuple[str, Any]]:
+    """Import the hidapi backends available here (all of them without `names`)."""
     modules: list[tuple[str, Any]] = []
-    for name in _BACKENDS:
+    for name in names or _BACKENDS:
         try:
             modules.append((name, importlib.import_module(name)))
         except ImportError:
@@ -131,25 +176,18 @@ class USBDeviceInfo:
 
 def is_knx_usb_interface(vendor_id: int, product_id: int) -> bool:
     """Return whether vendor and product id belong to a known KNX USB interface."""
-    return (
-        vendor_id in KNX_USB_VENDOR_IDS or (vendor_id, product_id) in KNX_USB_DEVICE_IDS
-    )
+    return (vendor_id, product_id) in KNX_USB_DEVICE_IDS
 
 
-def find_usb_interfaces(
-    vendor_id: int | None = None,
-    product_id: int | None = None,
-    serial_number: str | None = None,
+def _find(
+    backends: list[tuple[str, Any]],
+    vendor_id: int | None,
+    product_id: int | None,
+    serial_number: str | None,
+    path: bytes | None,
 ) -> list[USBDeviceInfo]:
-    """
-    List the KNX USB interfaces connected to this host.
-
-    Without `vendor_id` only known KNX USB interfaces are listed; with it, every
-    HID device of that vendor (and product) is, so an interface missing from the
-    known ones can be used too. The interfaces come from the first hidapi backend
-    that finds any.
-    """
-    for backend, hid in _backends():
+    """List the KNX USB interfaces of the first backend that finds any."""
+    for backend, hid in backends:
         found: dict[bytes, USBDeviceInfo] = {}
         for device in hid.enumerate(vendor_id or 0, product_id or 0):
             info = USBDeviceInfo.from_hid(device, backend)
@@ -157,8 +195,12 @@ def find_usb_interfaces(
             usage_page = device.get("usage_page") or 0
             if 0 < usage_page < _VENDOR_DEFINED_USAGE_PAGE:
                 continue
-            if vendor_id is None and not is_knx_usb_interface(
-                info.vendor_id, info.product_id
+            if path is not None and info.path != path:
+                continue
+            if (
+                vendor_id is None
+                and path is None
+                and not is_knx_usb_interface(info.vendor_id, info.product_id)
             ):
                 continue
             if serial_number and info.serial_number != serial_number:
@@ -169,12 +211,61 @@ def find_usb_interfaces(
     return []
 
 
+def find_usb_interfaces(
+    vendor_id: int | None = None,
+    product_id: int | None = None,
+    serial_number: str | None = None,
+    path: bytes | None = None,
+) -> list[USBDeviceInfo]:
+    """
+    List the KNX USB interfaces connected to this host.
+
+    Without `vendor_id` and `path` only known KNX USB interfaces are listed; with
+    `vendor_id` every HID device of that vendor (and product) is, and with `path`
+    the HID device at that path, so an interface missing from the known ones can be
+    used too. The interfaces come from the first hidapi backend that finds any.
+
+    This blocks while the operating system enumerates the USB devices - call it
+    through `loop.run_in_executor()` from an event loop.
+    """
+    return _find(_backends(), vendor_id, product_id, serial_number, path)
+
+
+def _in_other_backends(info: USBDeviceInfo) -> list[USBDeviceInfo]:
+    """Find an interface in the backends tried after its own one."""
+    if info.backend not in _BACKENDS:
+        return []
+    names = _BACKENDS[_BACKENDS.index(info.backend) + 1 :]
+    if not names:
+        return []
+    try:
+        backends = _backends(names)
+    except CommunicationError:
+        return []
+    return _find(
+        backends, info.vendor_id, info.product_id, info.serial_number or None, None
+    )
+
+
+def _open_device(info: USBDeviceInfo) -> Any:
+    """Import the backend of an interface and open it. Blocks."""
+    hid = _backend(info.backend)
+    device = hid.device()
+    try:
+        device.open_path(info.path)
+    except (OSError, ValueError) as err:
+        raise CommunicationError(
+            f"Could not open KNX USB interface {info}: {err}"
+        ) from err
+    return device
+
+
 class HIDDevice:
     """
     An open KNX USB interface.
 
     A reader thread passes every incoming HID report to `report_received` in the
-    event loop; when reading fails (eg. the interface was unplugged)
+    event loop; when reading fails (e.g. the interface was unplugged)
     `connection_lost` is called once. Reports are written one after another by a
     worker thread, so the event loop never blocks on USB.
     """
@@ -207,16 +298,38 @@ class HIDDevice:
         self._writer: ThreadPoolExecutor | None = None
 
     async def open(self) -> None:
-        """Open the device and start reading. Raise CommunicationError on failure."""
-        hid = _backend(self.info.backend)
+        """
+        Open the device and start reading. Raise CommunicationError on failure.
+
+        When the interface can't be opened through its backend (e.g. no permission
+        for its /dev/hidraw*), the same interface is looked up and opened through
+        the next backend (libusb); `info` is then the one opened.
+        """
         self._loop = asyncio.get_running_loop()
-        device = hid.device()
         try:
-            await self._loop.run_in_executor(None, device.open_path, self.info.path)
-        except (OSError, ValueError) as err:
-            raise CommunicationError(
-                f"Could not open KNX USB interface {self.info}: {err}"
-            ) from err
+            device = await self._loop.run_in_executor(None, _open_device, self.info)
+        except CommunicationError as err:
+            device = None
+            for alternative in await self._loop.run_in_executor(
+                None, _in_other_backends, self.info
+            ):
+                try:
+                    device = await self._loop.run_in_executor(
+                        None, _open_device, alternative
+                    )
+                except CommunicationError as alternative_err:
+                    logger.debug("%s", alternative_err)
+                    continue
+                logger.debug(
+                    "Opened %s through the %s backend after: %s",
+                    alternative,
+                    alternative.backend,
+                    err,
+                )
+                self.info = alternative
+                break
+            if device is None:
+                raise
         self._device = device
         self._closing.clear()
         self._writer = ThreadPoolExecutor(
@@ -283,6 +396,6 @@ class HIDDevice:
         if self._device is not None:
             device, self._device = self._device, None
             try:
-                device.close()
+                await loop.run_in_executor(None, device.close)
             except (OSError, ValueError) as err:
                 logger.debug("Closing %s failed: %s", self.info, err)

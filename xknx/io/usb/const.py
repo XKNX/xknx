@@ -19,8 +19,16 @@ TRANSFER_HEADER_LENGTH: Final = 8
 
 # KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3.2.1
 DEVICE_FEATURE_GET_TIMEOUT: Final = 1.0
-# KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.4.2
-KNX_TUNNELLING_TIMEOUT: Final = 1.0
+
+# Device Descriptor Type 0 (mask version) of the stand-alone USB interfaces whose own
+# individual address is in the cEMI Server Object (PID_CEMI_SERVER_SNA,
+# PID_CEMI_SERVER_DEVICE_ADDRESS) - KNX v02.01.01 - Configuration Procedures 03.05.03 -
+# §3.13.2.1 Table 6, §3.13.3.2: USB TP1 Interface 1.1 and USB RF Interface 1.1
+CEMI_SERVER_ADDRESS_MASKS: Final = frozenset({0x0310, 0x2311})
+# Device Descriptor Type 0 of the BCU 1 and BCU 2 masks whose individual address is
+# the first entry of the group address table at 0116h - KNX v01.10.01 - Resources
+# 03.05.01 - §4.16.3
+BCU_ADDRESS_MASKS: Final = frozenset({0x0010, 0x0011, 0x0012, 0x0020, 0x0021})
 
 
 class PacketType(IntEnum):

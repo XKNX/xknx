@@ -94,7 +94,7 @@ class KNXIPInterface:
         self.xknx.cemi_handler.data_secure_init(keyring=keyring)
 
         if self.connection_config.connection_type == ConnectionType.USB:
-            await self._start_usb()
+            await self._start_usb(keyring=keyring)
         elif self.connection_config.connection_type == ConnectionType.ROUTING:
             await self._start_routing(local_ip=local_ip)
         elif self.connection_config.connection_type == ConnectionType.ROUTING_SECURE:
@@ -386,7 +386,7 @@ class KNXIPInterface:
         )
         await self._interface.connect()
 
-    async def _start_usb(self) -> None:
+    async def _start_usb(self, keyring: Keyring | None) -> None:
         """Start tunnelling over a KNX USB interface."""
         usb_config = self.connection_config.usb_config
         self._interface = USBTunnel(
@@ -398,6 +398,7 @@ class KNXIPInterface:
             path=usb_config.path,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
+            keyring=keyring,
         )
         await self._interface.connect()
 
