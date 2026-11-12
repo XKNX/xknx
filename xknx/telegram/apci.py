@@ -2857,7 +2857,21 @@ class FunctionPropertyCommand(APCI):
 
 @dataclass(slots=True)
 class FunctionPropertyStateResponse(APCI):
-    """FunctionPropertyStateResponse service."""
+    """
+    FunctionPropertyStateResponse service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.2
+    A_FunctionPropertyState_Response.
+
+    Payload contains a 1 byte object index and a 1 byte Property ID,
+    followed by a 1 byte return_code and function-specific output data
+    of variable length. A return_code of 0 is the positive result,
+    any other value is a function-specific error.
+
+    The negative response defined in §3.4.7.3 (the addressed Property is
+    not of Property Datatype PDT_Function) contains neither return_code
+    nor data. It is represented by `return_code=None`.
+    """
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
 
