@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from xknx.exceptions import XKNXException
+from xknx.exceptions import CouldNotParseUSBFrame
 
 from .const import (
     HID_REPORT_HEADER_LENGTH,
@@ -32,10 +32,6 @@ from .const import (
 logger = logging.getLogger("xknx.log")
 
 _PACKET_TYPES = frozenset(PacketType)
-
-
-class CouldNotParseUSBFrame(XKNXException):
-    """A HID report or KNX USB transfer frame could not be parsed."""
 
 
 @dataclass(slots=True)
@@ -194,12 +190,9 @@ class ReportAssembler:
         end = packet_type in (PacketType.START_AND_END, PacketType.PARTIAL_AND_END)
 
         if start:
-            # sequence 0 isn't allowed, but the single packet examples of
-            # KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3
-            # show it - accept it where it can't be mistaken for anything else
-            if sequence != 1 and not (
-                sequence == 0 and packet_type == PacketType.START_AND_END
-            ):
+            # a start packet has sequence number 1, also a single one; sequence
+            # number 0 is not allowed
+            if sequence != 1:
                 logger.debug("Ignoring start packet with sequence %s", sequence)
                 self._reset()
                 return None

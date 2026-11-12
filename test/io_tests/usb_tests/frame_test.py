@@ -2,18 +2,14 @@
 
 import pytest
 
+from xknx.exceptions import CouldNotParseUSBFrame
 from xknx.io.usb.const import (
     EMIID,
     DeviceFeature,
     DeviceFeatureService,
     ProtocolID,
 )
-from xknx.io.usb.frame import (
-    CouldNotParseUSBFrame,
-    ReportAssembler,
-    USBTransferFrame,
-    device_feature_frame,
-)
+from xknx.io.usb.frame import ReportAssembler, USBTransferFrame, device_feature_frame
 
 
 def _report(hex_data: str) -> bytes:
@@ -170,10 +166,19 @@ class TestReportAssembler:
         assert assembler.feed(single.to_reports()[0]) == single
 
     def test_sequence_zero_single_packet(self) -> None:
-        """Test a single packet with sequence number 0, as in the spec's examples."""
-        frame = ReportAssembler().feed(_report("010309000800010f01000001"))
+        """Test a single packet with sequence number 0 is ignored: 0 is not allowed."""
+        assert ReportAssembler().feed(_report("010309000800010f01000001")) is None
+        frame = ReportAssembler().feed(_report("011309000800010f01000001"))
         assert frame is not None
         assert frame.feature is DeviceFeature.SUPPORTED_EMI_TYPE
+
+    def test_invalid_header_message(self) -> None:
+        """Test the description of a frame that can't be parsed."""
+        with pytest.raises(CouldNotParseUSBFrame) as err:
+            USBTransferFrame.from_data(bytes.fromhex("0008"))
+        assert str(err.value) == (
+            '<CouldNotParseUSBFrame description="KNX USB transfer frame too short: 0008" />'
+        )
 
     def test_invalid_packet_type(self) -> None:
         """Test reports with a reserved packet type are ignored."""
