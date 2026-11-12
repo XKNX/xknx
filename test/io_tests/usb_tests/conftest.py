@@ -69,6 +69,8 @@ class FakeInterface:
         # EMI2: answer PEI_Identify (with the individual address at 0117h)
         self.answers_identify = True
         self.pei_switch = b""
+        # cEMI: properties whose M_PropWrite is refused, with this error code
+        self.refused_writes: dict[tuple[int, int], int] = {}
         # cEMI: the source the interface puts in an L_Data.con (None: the requested)
         self.confirmation_source: bytes | None = None
         # cEMI: the error code refusing the cEMI Transport Layer (None: accepted)
@@ -172,16 +174,19 @@ class FakeInterface:
                 )
         elif code == 0xF6:  # M_PropWrite.req
             key = (int.from_bytes(cemi[1:3], "big"), cemi[4])
+            refusal = self.refused_writes.get(key)
             if (
                 key == (8, 52)
                 and cemi[7:] == b"\x06"
                 and self.transport_layer_refusal is not None
             ):
+                refusal = self.transport_layer_refusal
+            if refusal is not None:
                 # number of elements 0 and the error code
                 self.send_cemi(
                     bytes((0xF5,))
                     + cemi[1:5]
-                    + bytes((cemi[5] & 0x0F, cemi[6], self.transport_layer_refusal))
+                    + bytes((cemi[5] & 0x0F, cemi[6], refusal))
                 )
                 return
             self.properties[key] = cemi[7:]

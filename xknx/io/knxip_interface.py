@@ -396,6 +396,7 @@ class KNXIPInterface:
             product_id=usb_config.product_id,
             serial_number=usb_config.serial_number,
             path=usb_config.path,
+            individual_address=self.connection_config.individual_address,
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
             keyring=keyring,

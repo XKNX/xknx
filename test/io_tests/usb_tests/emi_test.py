@@ -424,6 +424,77 @@ class TestPEIIdentify:
         await tunnel.disconnect()
 
 
+class TestWriteIndividualAddress:
+    """Setting the individual address of an EMI1/EMI2 interface on connect."""
+
+    async def test_emi1(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test DMP_IndividualAddressWrite_LEmi1: PC_Set_Value, then read back."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI1, 0x0012)
+        tunnel = _tunnel(Mock(), individual_address=IndividualAddress("1.1.9"))
+        with caplog.at_level(logging.INFO, logger="xknx.log"):
+            await tunnel.connect()
+        assert _tunnelled(interface)[3:] == [
+            "4c020117",  # read
+            "460201171109",  # written
+            "4c020117",  # read back
+        ]
+        assert interface.memory[0x0117] == b"\x11\x09"
+        assert tunnel.xknx.current_address == IndividualAddress("1.1.9")
+        assert "from 1.1.5 to 1.1.9" in caplog.text
+        await tunnel.disconnect()
+
+    async def test_emi1_same_address(self, fake_hid: FakeHIDModule) -> None:
+        """Test nothing is written when the interface has the address already."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI1, 0x0012)
+        tunnel = _tunnel(Mock(), individual_address=IndividualAddress("1.1.5"))
+        await tunnel.connect()
+        assert not [raw for raw in _tunnelled(interface) if raw.startswith("460201")]
+        await tunnel.disconnect()
+
+    async def test_emi1_not_taken(self, fake_hid: FakeHIDModule) -> None:
+        """Test an address that doesn't read back as written fails the connect."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI1, 0x0012)
+        tunnel = _tunnel(Mock(), individual_address=IndividualAddress("1.1.9"))
+        handle = interface._handle_emi
+
+        def ignore_address_write(emi_id: EMIID, raw: bytes) -> None:
+            if not raw.hex().startswith("460201"):
+                handle(emi_id, raw)
+
+        interface._handle_emi = ignore_address_write  # type: ignore[method-assign]
+        with pytest.raises(CommunicationError, match="it reads back as 1105"):
+            await tunnel.connect()
+        assert fake_hid.closed == 1
+
+    @pytest.mark.parametrize(
+        ("emi_id", "mask_version", "message"),
+        [
+            (EMIID.EMI2, 0x0020, "EMI2 interface with mask version 0020h"),
+            (EMIID.EMI1, 0x0701, "EMI1 interface with mask version 0701h"),
+            (EMIID.EMI1, None, "EMI1 interface with mask version unknown"),
+        ],
+    )
+    async def test_no_procedure(
+        self,
+        fake_hid: FakeHIDModule,
+        emi_id: EMIID,
+        mask_version: int | None,
+        message: str,
+    ) -> None:
+        """Test an interface without a specified procedure fails the connect."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, emi_id, mask_version)
+        tunnel = _tunnel(Mock(), individual_address=IndividualAddress("1.1.9"))
+        with pytest.raises(CommunicationError, match=f"no procedure .* {message}"):
+            await tunnel.connect()
+        assert interface.memory[0x0117] == b"\x11\x05"
+
+
 class TestPreferredEMIType:
     """The EMI type chosen from several."""
 
