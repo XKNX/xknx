@@ -2863,27 +2863,32 @@ class FunctionPropertyStateResponse(APCI):
 
     object_index: int = 0
     property_id: int = 0
-    return_code: int = 0
+    return_code: int | None = 0
     data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 4 + len(self.data)
+        return 3 + int(self.return_code is not None) + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
+        if len(raw) < 4:
             raise ConversionError(
                 f"Invalid length for A_FunctionPropertyState_Response in CEMI: {raw.hex()}"
             )
+
+        if len(raw) == 4:
+            return cls(
+                object_index=raw[2],
+                property_id=raw[3],
+                return_code=None,
+            )
+
         size = len(raw) - 5
-        (
-            object_index,
-            property_id,
-            return_code,
-            data,
-        ) = struct.unpack(f"!BBB{size}s", raw[2:])
+        object_index, property_id, return_code, data = struct.unpack(
+            f"!BBB{size}s", raw[2:]
+        )
         return cls(
             object_index=object_index,
             property_id=property_id,
@@ -2893,6 +2898,14 @@ class FunctionPropertyStateResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if self.return_code is None:
+            if self.data:
+                raise ConversionError("Function property data requires a return code")
+            return encode_cmd_and_payload(
+                self.CODE,
+                appended_payload=bytes((self.object_index, self.property_id)),
+            )
+
         size = len(self.data)
         payload = struct.pack(
             f"!BBB{size}s",
@@ -2901,12 +2914,15 @@ class FunctionPropertyStateResponse(APCI):
             self.return_code,
             self.data,
         )
-
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<FunctionPropertyStateResponse object_index="{self.object_index}" property_id="{self.property_id}" return_code="{self.return_code}" data="{self.data.hex()}" />'
+        return (
+            f'<FunctionPropertyStateResponse object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'return_code="{self.return_code}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
