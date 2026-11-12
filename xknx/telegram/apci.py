@@ -920,6 +920,18 @@ class FunctionPropertyExtStateResponse(APCI):
     Interface Object Type, 12 bit Object Instance, 12 bit Property ID),
     followed by a 1 byte return_code and function-specific output data
     of variable length.
+
+    The return_code is always present. A negative response as defined in
+    §3.4.8.3 of the same document (Property not present, not accessible
+    or not of Property Datatype PDT_FUNCTION or PDT_CONTROL) carries the
+    appropriate generic negative Return Code and no data.
+
+    The function result is defined in a function-specific way, so any
+    1 byte value is a valid return_code. Values of the unified Return
+    Code schema are represented as `ReturnCode`, function-specific
+    values (e.g. from the specific ranges 20h-5Fh and A0h-DFh, or from
+    existing functions not compatible with the schema - see NOTE 12)
+    as `int`.
     """
 
     CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE
@@ -927,7 +939,7 @@ class FunctionPropertyExtStateResponse(APCI):
     interface_object_type: int
     object_instance: int
     property_id: int
-    return_code: ReturnCode
+    return_code: ReturnCode | int
     data: bytes = b""
 
     def calculated_length(self) -> int:
@@ -944,12 +956,12 @@ class FunctionPropertyExtStateResponse(APCI):
         interface_object_type, object_instance, property_id = (
             _unpack_function_property_ext_header(raw)
         )
+        return_code: ReturnCode | int
         try:
             return_code = ReturnCode(raw[7])
         except ValueError:
-            raise ConversionError(
-                f"Invalid return code for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
-            ) from None
+            # function-specific return code
+            return_code = raw[7]
 
         return cls(
             interface_object_type=interface_object_type,
@@ -964,20 +976,32 @@ class FunctionPropertyExtStateResponse(APCI):
         header = _pack_function_property_ext_header(
             self.interface_object_type, self.object_instance, self.property_id
         )
+        return_code = (
+            self.return_code.value
+            if isinstance(self.return_code, ReturnCode)
+            else self.return_code
+        )
+        if not 0 <= return_code <= 0xFF:
+            raise ConversionError(f"Return code out of range: {return_code}")
 
         return encode_cmd_and_payload(
             self.CODE,
-            appended_payload=header + bytes([self.return_code.value]) + self.data,
+            appended_payload=header + bytes([return_code]) + self.data,
         )
 
     def __str__(self) -> str:
         """Return object as readable string."""
+        return_code = (
+            self.return_code.name
+            if isinstance(self.return_code, ReturnCode)
+            else f"0x{self.return_code:02X}"
+        )
         return (
             "<FunctionPropertyExtStateResponse "
             f'interface_object_type="{self.interface_object_type}" '
             f'object_instance="{self.object_instance}" '
             f'property_id="{self.property_id}" '
-            f'return_code="{self.return_code.name}" '
+            f'return_code="{return_code}" '
             f'data="{self.data.hex()}" />'
         )
 
@@ -2857,7 +2881,21 @@ class FunctionPropertyCommand(APCI):
 
 @dataclass(slots=True)
 class FunctionPropertyStateResponse(APCI):
-    """FunctionPropertyStateResponse service."""
+    """
+    FunctionPropertyStateResponse service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.2
+    A_FunctionPropertyState_Response.
+
+    Payload contains a 1 byte object index and a 1 byte Property ID,
+    followed by a 1 byte return_code and function-specific output data
+    of variable length. A return_code of 0 is the positive result,
+    any other value is a function-specific error.
+
+    The negative response defined in §3.4.7.3 of the same document (the addressed Property is
+    not of Property Datatype PDT_Function) contains neither return_code
+    nor data. It is represented by `return_code=None`.
+    """
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
 

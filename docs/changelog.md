@@ -10,7 +10,8 @@ nav_order: 2
 
 ### Protocol
 
-- Decode and serialize empty `FunctionPropertyStateResponse` messages, including responses encountered during OpenKNX DALI scans. A missing return code is represented as `None`, distinct from success (`0`).
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
 
 # 4.1.1 Tunnel robustness 2026-11-05
 
