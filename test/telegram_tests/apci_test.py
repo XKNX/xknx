@@ -726,12 +726,49 @@ class TestFunctionPropertyExtStateResponse:
         with pytest.raises(ConversionError, match=r".*Invalid length.*"):
             APCI.from_knx(bytes.fromhex("01d60011001033"))
 
-    def test_from_knx_invalid_return_code(self) -> None:
-        """Test from_knx raises ConversionError for an unknown return code."""
-        # return_code byte 0x01 is in the "Generic positive" range (01-1F)
-        # reserved by the spec but not assigned to any ReturnCode member.
-        with pytest.raises(ConversionError, match=r".*[Ii]nvalid.*return code.*"):
-            APCI.from_knx(bytes.fromhex("01d6001100103301"))
+    @pytest.mark.parametrize("return_code", [0x01, 0x20, 0x5F, 0xA0, 0xDF])
+    def test_function_specific_return_code(self, return_code: int) -> None:
+        """Test a function-specific return code is preserved as int."""
+        # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3: the function
+        # result is defined in a function-specific way.
+        raw = bytes.fromhex("01d60011001033") + bytes([return_code]) + b"\x12"
+        payload = APCI.from_knx(raw)
+
+        assert payload == FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=return_code,
+            data=b"\x12",
+        )
+        assert payload.to_knx() == raw
+        assert f'return_code="0x{return_code:02X}"' in str(payload)
+
+    def test_negative_response(self) -> None:
+        """Test a negative response with return code but without data."""
+        raw = bytes.fromhex("01d60011001033fe")
+        payload = APCI.from_knx(raw)
+
+        assert payload == FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=ReturnCode.E_DATA_TYPE_CONFLICT,
+        )
+        assert payload.to_knx() == raw
+        assert payload.calculated_length() == len(raw) - 1
+
+    def test_to_knx_return_code_out_of_range(self) -> None:
+        """Test to_knx raises ConversionError for an out of range return_code."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=0x100,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Return code out of range.*"):
+            payload.to_knx()
 
     def test_to_knx(self) -> None:
         """Test the to_knx method."""
