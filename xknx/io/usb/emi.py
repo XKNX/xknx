@@ -71,6 +71,10 @@ MESSAGE_CODES: Final = {
 
 # EMI2 PEI_Switch.req - KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.4
 PEI_SWITCH_REQ: Final = 0xA9
+# EMI2 PEI_Identify.req/.con - KNX v01.04.02 - External Message Interface 03.06.03 -
+# §3.3.9.5, §3.3.9.6, Table 1
+PEI_IDENTIFY_REQ: Final = 0xA7
+PEI_IDENTIFY_CON: Final = 0xA8
 # memory location "system status" - KNX v01.04.02 - External Message Interface
 # 03.06.03 - §3.1.3; KNX v01.10.01 - Resources 03.05.01 - §4.26.3.2
 SYSTEM_STATUS_ADDRESS: Final = 0x0060
@@ -92,52 +96,46 @@ class EMILayer(Enum):
 
 # bits of the "system status" - KNX v01.04.02 - External Message Interface 03.06.03 -
 # §3.1.3, Figure 1
-_STATUS_PARITY: Final = 0x80
-_STATUS_USER_PROGRAM: Final = 0x20
-_STATUS_PEI: Final = 0x10
 _STATUS_APPLICATION_LAYER: Final = 0x08
 _STATUS_TRANSPORT_LAYER: Final = 0x04
 # set: busmonitor mode disabled
 _STATUS_NO_BUSMONITOR: Final = 0x02
-
-
-def _with_parity(status: int) -> int:
-    """Set the parity bit for an even parity of the "system status" octet."""
-    status &= ~_STATUS_PARITY
-    return status | (_STATUS_PARITY if status.bit_count() % 2 else 0)
-
+_OWN_STACK: Final = (
+    _STATUS_APPLICATION_LAYER | _STATUS_TRANSPORT_LAYER | _STATUS_NO_BUSMONITOR
+)
 
 # the examples of Figure 1
 SYSTEM_STATUS: Final = {
     EMILayer.DATA_LINK_LAYER: 0x12,
     EMILayer.BUSMONITOR: 0x90,
 }
-# every layer, the PEI and the user program enabled: the device's own application runs
-# (§3.1.2). Used to leave an external layer when the device's own value isn't known.
-SYSTEM_STATUS_NORMAL: Final = _with_parity(
-    _STATUS_USER_PROGRAM
-    | _STATUS_PEI
-    | _STATUS_APPLICATION_LAYER
-    | _STATUS_TRANSPORT_LAYER
-    | _STATUS_NO_BUSMONITOR
-)
-_OWN_STACK: Final = (
-    _STATUS_APPLICATION_LAYER | _STATUS_TRANSPORT_LAYER | _STATUS_NO_BUSMONITOR
-)
+# written to the "system status" to restart the device into its default -
+# DMP_Restart_LEmi1, KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.4
+RESTART_SYSTEM_STATUS: Final = 0xC0
 
 
-def normal_system_status(status: int | None) -> int:
+def restorable_system_status(status: int | None) -> int | None:
     """
-    Return the "system status" to switch an EMI interface back to.
+    Return the "system status" read before switching, if the interface can go back to it.
 
-    That is the one read before switching - unless it gives an external user access
-    to a layer below the application layer or to the busmonitor (left so by a client
-    that didn't switch back, e.g. Figure 1's data link layer 12h): then every layer,
-    the PEI and the user program are enabled.
+    None when it wasn't read, or when it gives an external user access to a layer
+    below the application layer or to the busmonitor (left so by a client that
+    didn't switch back, e.g. Figure 1's data link layer 12h): the interface is
+    restarted then.
     """
     if status is not None and status & _OWN_STACK == _OWN_STACK:
         return status
-    return SYSTEM_STATUS_NORMAL
+    return None
+
+
+def restart_request(emi: EMIID) -> bytes:
+    """
+    PC_Set_Value.req restarting the device: C0h to the "system status".
+
+    DMP_Restart_LEmi1 - KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.4. No
+    procedure is specified for EMI2; its "system status" is at the same location.
+    """
+    return pc_set_value(emi, SYSTEM_STATUS_ADDRESS, bytes((RESTART_SYSTEM_STATUS,)))
 
 
 # EMI2 redirections - KNX v01.04.02 - External Message Interface 03.06.03 - §3.1.4, Figure 2
@@ -191,6 +189,18 @@ def parse_pc_get_value_con(emi: EMIID, raw: bytes) -> tuple[int, bytes] | None:
     if len(raw) < 4 or raw[0] != MESSAGE_CODES[emi].pc_get_value_con:
         return None
     return int.from_bytes(raw[2:4], "big"), raw[4 : 4 + raw[1]]
+
+
+def parse_pei_identify_con(raw: bytes) -> int | None:
+    """
+    Return the individual address of an EMI2 PEI_Identify.con; None for another message.
+
+    KNX v01.04.02 - External Message Interface 03.06.03 - §3.3.9.6: individual
+    address, then KNX serial number.
+    """
+    if len(raw) < 3 or raw[0] != PEI_IDENTIFY_CON:
+        return None
+    return int.from_bytes(raw[1:3], "big")
 
 
 def l_data_req_from_cemi(emi: EMIID, raw_cemi: bytes) -> bytes:

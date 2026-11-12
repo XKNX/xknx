@@ -64,6 +64,8 @@ class FakeInterface:
         # EMI1/EMI2: the memory of the BCU (system status, individual address 1.1.5)
         self.memory: dict[int, bytes] = {0x0060: b"\x1e", 0x0117: b"\x11\x05"}
         self.accepts_memory_writes = True
+        # EMI2: answer PEI_Identify (with the individual address at 0117h)
+        self.answers_identify = True
         self.pei_switch = b""
         # cEMI: the source the interface puts in an L_Data.con (None: the requested)
         self.confirmation_source: bytes | None = None
@@ -199,6 +201,16 @@ class FakeInterface:
                 self.send_emi(emi, bytes((codes[2], raw[1])) + raw[2:4] + data)
         elif code == 0xA9:  # PEI_Switch.req
             self.pei_switch = raw[1:]
+        elif (
+            code == 0xA7
+            and emi is EMIID.EMI2
+            and self.answers_identify
+            and 0x0117 in self.memory
+        ):
+            # PEI_Identify.con: individual address, KNX serial number
+            self.send_emi(
+                emi, b"\xa8" + self.memory[0x0117] + bytes.fromhex("00c501053fb2")
+            )
         elif code == 0x11:  # L_Data.req -> L_Data.con with the frame's priority
             # the "x" bits set: the host must not interpret them; source unused
             control = 0xD2 | (raw[1] & 0x0C)

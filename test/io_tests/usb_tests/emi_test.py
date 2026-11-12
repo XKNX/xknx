@@ -79,8 +79,8 @@ class TestEMI2:
         tunnel = _tunnel(received)
         await tunnel.connect()
         assert interface.features[DeviceFeature.ACTIVE_EMI_TYPE] == b"\x02"
-        # Figure 2's data link layer, then the individual address of a BCU 2
-        assert _tunnelled(interface) == ["a900183456780a", "ac020117"]
+        # Figure 2's data link layer, then PEI_Identify for the individual address
+        assert _tunnelled(interface) == ["a900183456780a", "a7"]
         assert tunnel.info is not None
         assert tunnel.info.emi_type is EMIID.EMI2
         assert tunnel.info.mask_version == 0x0020
@@ -137,8 +137,10 @@ class TestEMI2:
         tunnel = _tunnel(Mock(), busmonitor=True)
         await tunnel.connect()
         await tunnel.disconnect()
-        # every layer, the PEI and the user program
-        assert interface.pei_switch == bytes.fromhex("be123456789a")
+        # restarted (DMP_Restart_LEmi1) instead of a "system status" of its own
+        assert _tunnelled(interface)[-1] == "a6010060c0"
+        assert interface.memory[0x0060] == b"\xc0"
+        assert interface.pei_switch == bytes.fromhex("90183456780a")
 
     async def test_only_standard_frames(self, fake_hid: FakeHIDModule) -> None:
         """Test what EMI can't carry is refused."""
@@ -225,8 +227,8 @@ class TestEMI1:
     @pytest.mark.parametrize(
         ("before", "after"),
         [
-            # left in the data link layer by another client
-            (b"\x12", b"\xbe"),
+            # left in the data link layer by another client: restarted
+            (b"\x12", b"\xc0"),
             # a user program that doesn't run
             (b"\x1e", b"\x1e"),
             # every layer and the user program
@@ -262,7 +264,9 @@ class TestEMI1:
         tunnel = _tunnel(Mock())
         await tunnel.connect()
         await tunnel.disconnect()
-        assert interface.memory[0x0060] == b"\xbe"
+        # restarted - KNX v02.01.02 - Management Procedures 03.05.02 - §3.7.4
+        assert _tunnelled(interface)[-1] == "46010060c0"
+        assert interface.memory[0x0060] == b"\xc0"
 
     async def test_layer_not_switched(self, fake_hid: FakeHIDModule) -> None:
         """Test an interface that doesn't take the system status."""
@@ -300,21 +304,40 @@ class TestEMI1:
         await tunnel.disconnect()
 
     async def test_individual_address_unknown_with_data_secure(
-        self, fake_hid: FakeHIDModule
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
     ) -> None:
-        """Test Data Secure needs the individual address of the interface."""
+        """Test an unknown individual address with Data Secure: connected, Data Secure telegrams refused."""
         interface = fake_hid.interface
         make_emi_interface(interface, EMIID.EMI1, 0x0012)
         del interface.memory[0x0117]
         xknx = XKNX()
         xknx.cemi_handler.data_secure_init(sync_load_keyring(USB_KEYRING, "test"))
-        with pytest.raises(CommunicationError, match="Data Secure needs it"):
-            await _tunnel(Mock(), xknx=xknx).connect()
-        assert fake_hid.closed == 1
+        tunnel = _tunnel(Mock(), xknx=xknx)
+        with caplog.at_level(logging.WARNING, logger="xknx.log"):
+            await tunnel.connect()
+        assert "Data Secure telegrams are not sent until it is known" in caplog.text
+        assert xknx.cemi_handler.data_secure is not None
+        secure_write = CEMIFrame(
+            code=CEMIMessageCode.L_DATA_REQ,
+            data=xknx.cemi_handler.data_secure.outgoing_cemi(
+                CEMILData.init_from_telegram(
+                    Telegram(
+                        destination_address=GroupAddress("31/7/255"),
+                        payload=GroupValueWrite(DPTBinary(1)),
+                    ),
+                    src_addr=IndividualAddress(0),
+                )
+            ),
+        )
+        with pytest.raises(CommunicationError, match="Data Secure telegrams can't"):
+            await tunnel.send_cemi(secure_write)
+        # plain telegrams are sent
+        await tunnel.send_cemi(GROUP_WRITE)
+        await tunnel.disconnect()
 
 
 class TestMaskVersion:
-    """The individual address is only read for a BCU 1 or BCU 2 mask."""
+    """The individual address is only read from the memory for a BCU 1 or BCU 2 mask."""
 
     @pytest.mark.parametrize("emi_id", [EMIID.EMI1, EMIID.EMI2])
     async def test_other_mask(
@@ -326,6 +349,7 @@ class TestMaskVersion:
         """Test no local device management for a mask without the address at 0117h."""
         interface = fake_hid.interface
         make_emi_interface(interface, emi_id, 0x0701)
+        interface.answers_identify = False
         tunnel = _tunnel(Mock())
         with caplog.at_level(logging.WARNING, logger="xknx.log"):
             await tunnel.connect()
@@ -362,6 +386,7 @@ class TestMaskVersion:
         """Test an interface that tells no mask version at all."""
         interface = fake_hid.interface
         make_emi_interface(interface, emi_id, None)
+        interface.answers_identify = False
         tunnel = _tunnel(Mock())
         with caplog.at_level(logging.WARNING, logger="xknx.log"):
             await tunnel.connect()
@@ -369,6 +394,33 @@ class TestMaskVersion:
         assert tunnel.info.mask_version is None
         assert tunnel.info.individual_address is None
         assert "mask version unknown" in caplog.text
+        await tunnel.disconnect()
+
+
+class TestPEIIdentify:
+    """An EMI2 interface tells its individual address through PEI_Identify."""
+
+    async def test_whatever_the_mask(self, fake_hid: FakeHIDModule) -> None:
+        """Test PEI_Identify gives the address also for a mask without it at 0117h."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI2, 0x0025)
+        tunnel = _tunnel(Mock())
+        await tunnel.connect()
+        assert tunnel.info is not None
+        assert tunnel.info.individual_address == IndividualAddress("1.1.5")
+        assert not [raw for raw in _tunnelled(interface) if raw.endswith("0117")]
+        await tunnel.disconnect()
+
+    async def test_memory_when_not_answered(self, fake_hid: FakeHIDModule) -> None:
+        """Test a BCU 2 that doesn't answer PEI_Identify is read from 0117h."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI2, 0x0020)
+        interface.answers_identify = False
+        tunnel = _tunnel(Mock())
+        await tunnel.connect()
+        assert _tunnelled(interface) == ["a900183456780a", "a7", "ac020117"]
+        assert tunnel.info is not None
+        assert tunnel.info.individual_address == IndividualAddress("1.1.5")
         await tunnel.disconnect()
 
 
@@ -468,15 +520,19 @@ class TestConversion:
         assert emi.pc_get_value(EMIID.EMI2, 0x0117, 2) == bytes.fromhex("ac020117")
 
     def test_system_status(self) -> None:
-        """Test the system status values of Figure 1 and the normal mode."""
-        # the examples of Figure 1 have an even parity
-        for status in (0x90, 0x12, 0x96, 0x1E):
-            assert emi._with_parity(status) == status
-        assert emi.SYSTEM_STATUS_NORMAL == 0xBE
-        assert emi.normal_system_status(None) == 0xBE
-        # busmonitor, data link layer, transport layer: an external client's
+        """Test which system status is restored, and the restart."""
+        assert emi.restorable_system_status(None) is None
+        # busmonitor, data link layer, transport layer of Figure 1: an external client's
         for status in (0x90, 0x12, 0x96):
-            assert emi.normal_system_status(status) == 0xBE
+            assert emi.restorable_system_status(status) is None
         # the application layer with or without the user program
-        assert emi.normal_system_status(0x1E) == 0x1E
-        assert emi.normal_system_status(0xBE) == 0xBE
+        assert emi.restorable_system_status(0x1E) == 0x1E
+        assert emi.restorable_system_status(0xBE) == 0xBE
+        assert emi.restart_request(EMIID.EMI1) == bytes.fromhex("46010060c0")
+        assert emi.restart_request(EMIID.EMI2) == bytes.fromhex("a6010060c0")
+
+    def test_pei_identify_con(self) -> None:
+        """Test reading PEI_Identify.con."""
+        assert emi.parse_pei_identify_con(bytes.fromhex("a8110500c501053fb2")) == 0x1105
+        assert emi.parse_pei_identify_con(bytes.fromhex("a811")) is None
+        assert emi.parse_pei_identify_con(bytes.fromhex("ab0201171105")) is None

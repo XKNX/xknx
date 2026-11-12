@@ -128,6 +128,17 @@ def _backend(name: str) -> Any:
         raise CommunicationError(_MISSING_HIDAPI) from err
 
 
+def import_hidapi_backends() -> None:
+    """
+    Import the hidapi backends on the calling thread. Raise CommunicationError without hidapi.
+
+    Call it before `find_usb_interfaces()` runs in an executor: on macOS hidapi
+    crashes the interpreter at exit when it was first imported on a thread that
+    has ended by then. `USBTunnel` calls it on the event loop's thread.
+    """
+    _backends()
+
+
 def _backends(names: tuple[str, ...] | None = None) -> list[tuple[str, Any]]:
     """Import the hidapi backends available here (all of them without `names`)."""
     modules: list[tuple[str, Any]] = []
@@ -226,7 +237,8 @@ def find_usb_interfaces(
     used too. The interfaces come from the first hidapi backend that finds any.
 
     This blocks while the operating system enumerates the USB devices - call it
-    through `loop.run_in_executor()` from an event loop.
+    through `loop.run_in_executor()` from an event loop, after
+    `import_hidapi_backends()` on the event loop's thread.
     """
     return _find(_backends(), vendor_id, product_id, serial_number, path)
 
@@ -306,6 +318,8 @@ class HIDDevice:
         the next backend (libusb); `info` is then the one opened.
         """
         self._loop = asyncio.get_running_loop()
+        # on this thread, not in the executor - see import_hidapi_backends()
+        import_hidapi_backends()
         try:
             device = await self._loop.run_in_executor(None, _open_device, self.info)
         except CommunicationError as err:

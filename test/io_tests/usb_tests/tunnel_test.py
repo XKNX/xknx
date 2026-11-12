@@ -1,10 +1,15 @@
 """Tests for tunnelling over KNX USB interfaces."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+import importlib.abc
+from importlib.machinery import ModuleSpec
+import importlib.util
 import logging
 from pathlib import Path
 import sys
+import threading
+from types import ModuleType
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -39,16 +44,22 @@ from xknx.telegram.apci import GroupValueWrite
 
 from .conftest import SPACELOGIC_ENUMERATION, FakeHIDModule, FakeInterface
 
-GROUP_WRITE = CEMIFrame(
-    code=CEMIMessageCode.L_DATA_REQ,
-    data=CEMILData.init_from_telegram(
-        Telegram(
-            destination_address=GroupAddress("1/2/3"),
-            payload=GroupValueWrite(DPTBinary(1)),
+
+def _group_write(source: IndividualAddress) -> CEMIFrame:
+    """Return a plain group write L_Data.req."""
+    return CEMIFrame(
+        code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTBinary(1)),
+            ),
+            src_addr=source,
         ),
-        src_addr=IndividualAddress("1.0.2"),
-    ),
-)
+    )
+
+
+GROUP_WRITE = _group_write(IndividualAddress("1.0.2"))
 USB_KEYRING = (
     Path(__file__).parents[2] / "secure_tests" / "resources" / "DataSecure_usb.knxkeys"
 )
@@ -315,14 +326,123 @@ class TestUSBTunnel:
         assert self.xknx.current_address == IndividualAddress("1.1.7")
         await tunnel.disconnect()
 
-    async def test_data_secure_needs_address(self, fake_hid: FakeHIDModule) -> None:
-        """Test Data Secure fails the connect when the address is unknown."""
-        del fake_hid.interface.properties[(0, 57)]
-        self.xknx.cemi_handler.data_secure_init(sync_load_keyring(USB_KEYRING, "test"))
-        with pytest.raises(CommunicationError, match="Data Secure needs it"):
-            await self.tunnel().connect()
-        assert fake_hid.closed == 1
-        assert self.states[-1][0] is XknxConnectionState.DISCONNECTED
+    async def test_cemi_server_address_falls_back(
+        self, fake_hid: FakeHIDModule
+    ) -> None:
+        """Test the Device Object is read when the cEMI Server Object isn't answered."""
+        interface = fake_hid.interface
+        interface.features[DeviceFeature.DEVICE_DESCRIPTOR_TYPE_0] = b"\x03\x10"
+        tunnel = self.tunnel()
+        await tunnel.connect()
+        assert interface.written_cemi()[2:5] == [
+            bytes.fromhex("fc000801391001"),  # PID_CEMI_SERVER_SNA: not answered
+            bytes.fromhex("fc000001391001"),  # PID_SUBNET_ADDR
+            bytes.fromhex("fc0000013a1001"),  # PID_DEVICE_ADDR
+        ]
+        assert self.xknx.current_address == IndividualAddress("1.0.2")
+        await tunnel.disconnect()
+
+    async def test_address_from_confirmation(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test an address that can't be read is taken from the first L_Data.con."""
+        interface = fake_hid.interface
+        del interface.properties[(0, 57)]
+        # the interface puts in its own address for the requested 0.0.0
+        interface.confirmation_source = b"\x10\x02"
+        tunnel = self.tunnel()
+        await tunnel.connect()
+        assert self.xknx.current_address == IndividualAddress(0)
+        # a request with a source of its own doesn't tell the interface's address
+        await tunnel.send_cemi(GROUP_WRITE)
+        await _until(lambda: self.cemi_received.call_count == 1)
+        assert tunnel.info is not None
+        assert tunnel.info.individual_address is None
+        with caplog.at_level(logging.INFO, logger="xknx.log"):
+            await tunnel.send_cemi(_group_write(IndividualAddress(0)))
+            await _until(lambda: self.cemi_received.call_count == 2)
+        assert self.xknx.current_address == IndividualAddress("1.0.2")
+        assert tunnel.info.individual_address == IndividualAddress("1.0.2")
+        assert "sends with the individual address 1.0.2" in caplog.text
+        # no "sent with ... instead of 0.0.0"
+        assert "instead of" not in caplog.text
+        await tunnel.disconnect()
+
+    async def test_data_secure_unknown_address(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test Data Secure telegrams wait for the interface's address; the connect doesn't fail."""
+        interface = fake_hid.interface
+        del interface.properties[(0, 57)]
+        interface.confirmation_source = b"\x10\x02"
+        keyring = sync_load_keyring(USB_KEYRING, "test")
+        self.xknx.cemi_handler.data_secure_init(keyring)
+        tunnel = self.tunnel(keyring=keyring)
+        with caplog.at_level(logging.WARNING, logger="xknx.log"):
+            await tunnel.connect()
+        assert "Data Secure telegrams are not sent until it is known" in caplog.text
+        assert self.states[-1][0] is XknxConnectionState.CONNECTED
+        with pytest.raises(CommunicationError, match="Data Secure telegrams can't"):
+            await tunnel.send_cemi(self._secure_write())
+        assert not [cemi for cemi in interface.written_cemi() if cemi[0] == 0x11]
+        # a plain telegram tells the address; 1.0.2 is not the keyring's 1.0.12
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="xknx.log"):
+            await tunnel.send_cemi(_group_write(IndividualAddress(0)))
+            await _until(lambda: self.cemi_received.call_count == 1)
+        assert "1.0.2, which is no interface of the keyring" in caplog.text
+        assert "may be dropped unless the devices know this address" in caplog.text
+        await tunnel.send_cemi(self._secure_write())
+        await tunnel.disconnect()
+
+    def _secure_write(self) -> CEMIFrame:
+        """Return a Data Secure group write from the interface's address."""
+        data_secure = self.xknx.cemi_handler.data_secure
+        assert data_secure is not None
+        secure_data = data_secure.outgoing_cemi(
+            CEMILData.init_from_telegram(
+                Telegram(
+                    destination_address=GroupAddress("31/7/255"),
+                    payload=GroupValueWrite(DPTBinary(1)),
+                ),
+                src_addr=self.xknx.current_address,
+            )
+        )
+        return CEMIFrame(code=CEMIMessageCode.L_DATA_REQ, data=secure_data)
+
+    async def test_backends_imported_on_the_loop_thread(
+        self, fake_hid: FakeHIDModule, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test hidapi is imported on the event loop's thread, not in the executor."""
+        threads: list[threading.Thread] = []
+
+        class Loader(importlib.abc.Loader):
+            def create_module(self, spec: ModuleSpec) -> ModuleType:
+                return fake_hid
+
+            def exec_module(self, module: ModuleType) -> None:
+                pass
+
+        class Finder(importlib.abc.MetaPathFinder):
+            def find_spec(
+                self,
+                fullname: str,
+                path: Sequence[str] | None,
+                target: ModuleType | None = None,
+            ) -> ModuleSpec | None:
+                if fullname != "hid":
+                    return None
+                threads.append(threading.current_thread())
+                return importlib.util.spec_from_loader(fullname, Loader())
+
+        monkeypatch.delitem(sys.modules, "hid")
+        monkeypatch.setattr(sys, "meta_path", [Finder(), *sys.meta_path])
+        tunnel = self.tunnel()
+        await tunnel.connect()
+        await tunnel.disconnect()
+        # on macOS hidapi crashes the interpreter at exit when imported in a thread
+        # that has ended by then
+        assert threads == [threading.current_thread()]
 
     @pytest.mark.parametrize(("address", "warned"), [(b"\x0c", False), (b"\x02", True)])
     async def test_data_secure_keyring_address(
@@ -353,6 +473,8 @@ class TestUSBTunnel:
         assert usb_tunnel._l_data_source(b"\x2e") is None
         assert usb_tunnel._l_data_source(bytes.fromhex("2e00bce0")) is None
         with caplog.at_level(logging.WARNING, logger="xknx.log"):
+            # too short to tell a source
+            tunnel._check_confirmation_source(bytes.fromhex("2e00bce0"))
             # without a request: compared with the interface's address
             tunnel._cemi_received(bytes.fromhex("2e00bce010020a03010081"))
             assert not caplog.text
@@ -786,6 +908,8 @@ class TestDiscovery:
         )
         with pytest.raises(CommunicationError, match="xknx\\[usb\\]"):
             await device.open()
+        with pytest.raises(CommunicationError, match="xknx\\[usb\\]"):
+            hid_device._open_device(device.info)
 
     async def test_backends_in_order(
         self, fake_hid: FakeHIDModule, monkeypatch: pytest.MonkeyPatch
