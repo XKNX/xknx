@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import partial
 import importlib
@@ -120,23 +120,63 @@ _MISSING_HIDAPI: Final = (
 )
 
 
-def _backend(name: str) -> Any:
-    """Import a hidapi backend module."""
-    try:
+# Serializes the first import of a hidapi backend on macOS (see _import).
+_IMPORT_LOCK: Final = threading.Lock()
+
+
+def _import(name: str) -> Any:
+    """
+    Import a hidapi backend module. Raise ImportError when it is missing.
+
+    hidapi initializes itself when it is imported (`hid_init()`), and on macOS it
+    has to be shut down (`hid_exit()`, at interpreter exit) while the thread that
+    initialized it is still running, else the interpreter crashes at exit
+    (https://github.com/libusb/hidapi/issues/666). A thread of an executor or of
+    `ConnectionConfig(threaded=True)` has ended by then, so on macOS the first
+    import runs on a daemon thread that is kept until the interpreter exits; later
+    imports, from any thread, find the module imported already.
+    """
+    if not _on_macos() or name in sys.modules:
         return importlib.import_module(name)
+    with _IMPORT_LOCK:
+        if name in sys.modules:
+            return importlib.import_module(name)
+        return _import_on_parked_thread(name)
+
+
+def _on_macos() -> bool:
+    """
+    Return whether this runs on macOS.
+
+    A function, so type checkers on other platforms don't take the macOS branch
+    for unreachable.
+    """
+    return sys.platform == "darwin"
+
+
+def _import_on_parked_thread(name: str) -> Any:
+    """Import `name` on a new daemon thread that is kept until the interpreter exits."""
+    result: Future[Any] = Future()
+
+    def run() -> None:
+        try:
+            result.set_result(importlib.import_module(name))
+        except BaseException as err:  # pylint: disable=broad-exception-caught
+            # handed to the importing thread, which raises it
+            result.set_exception(err)
+            return
+        threading.Event().wait()  # kept: hidapi is shut down with this thread alive
+
+    threading.Thread(target=run, name=f"xknx-{name}-import", daemon=True).start()
+    return result.result()
+
+
+def _backend(name: str) -> Any:
+    """Import a hidapi backend module. Raise CommunicationError without hidapi."""
+    try:
+        return _import(name)
     except ImportError as err:
         raise CommunicationError(_MISSING_HIDAPI) from err
-
-
-def import_hidapi_backends() -> None:
-    """
-    Import the hidapi backends on the calling thread. Raise CommunicationError without hidapi.
-
-    Call it before `find_usb_interfaces()` runs in an executor: on macOS hidapi
-    crashes the interpreter at exit when it was first imported on a thread that
-    has ended by then. `USBTunnel` calls it on the event loop's thread.
-    """
-    _backends()
 
 
 def _backends(names: tuple[str, ...] | None = None) -> list[tuple[str, Any]]:
@@ -144,7 +184,7 @@ def _backends(names: tuple[str, ...] | None = None) -> list[tuple[str, Any]]:
     modules: list[tuple[str, Any]] = []
     for name in names or _BACKENDS:
         try:
-            modules.append((name, importlib.import_module(name)))
+            modules.append((name, _import(name)))
         except ImportError:
             continue
     if not modules:
@@ -237,8 +277,7 @@ def find_usb_interfaces(
     used too. The interfaces come from the first hidapi backend that finds any.
 
     This blocks while the operating system enumerates the USB devices - call it
-    through `loop.run_in_executor()` from an event loop, after
-    `import_hidapi_backends()` on the event loop's thread.
+    through `loop.run_in_executor()` from an event loop.
     """
     return _find(_backends(), vendor_id, product_id, serial_number, path)
 
@@ -318,8 +357,6 @@ class HIDDevice:
         the next backend (libusb); `info` is then the one opened.
         """
         self._loop = asyncio.get_running_loop()
-        # on this thread, not in the executor - see import_hidapi_backends()
-        import_hidapi_backends()
         try:
             device = await self._loop.run_in_executor(None, _open_device, self.info)
         except CommunicationError as err:

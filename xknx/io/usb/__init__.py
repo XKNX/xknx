@@ -3,7 +3,6 @@
 from .hid_device import (
     USBDeviceInfo,
     find_usb_interfaces,
-    import_hidapi_backends,
     is_knx_usb_interface,
 )
 from .tunnel import USBInterfaceInfo, USBTunnel
@@ -13,6 +12,5 @@ __all__ = [
     "USBInterfaceInfo",
     "USBTunnel",
     "find_usb_interfaces",
-    "import_hidapi_backends",
     "is_knx_usb_interface",
 ]

@@ -15,7 +15,8 @@ nav_order: 2
   - On connect the interface is set up: supported and active EMI type, bus connection status, mask version, then the data link layer (cEMI: PID_COMM_MODE, read back to verify - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2). After an M_Reset.ind it is set up again. An EMI1/EMI2 interface is switched back to its normal mode on disconnect, or restarted (DMP_Restart_LEmi1) when its mode before isn't known.
   - The interface's individual address becomes `xknx.current_address`: a cEMI interface's from the cEMI Server Object (masks 0310h/2311h) or the Device Object, else from its first L_Data.con; EMI2 through PEI_Identify; EMI1 from 0117h for the BCU 1/BCU 2 masks. With Data Secure, Data Secure telegrams are not sent while the address is unknown, and an address that is none of the keyring's interfaces is warned about.
   - The connection state follows the interface's bus connection: DISCONNECTED while it reports no bus, CONNECTED again when the bus is back.
-  - `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host (`import_hidapi_backends()` before calling it in an executor), `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back.
+  - `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back.
+  - On macOS hidapi is imported on a thread of its own that is kept until the interpreter exits: hidapi has to be shut down while the thread that imported it is still running, else the interpreter crashes at exit (also with `ConnectionConfig(threaded=True)`).
   - `USBTunnel(busmonitor=True)` switches the interface to the bus monitor mode and passes every L_Busmon.ind on.
 - `ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA` (57) and `xknx.exceptions.CouldNotParseUSBFrame` added.
 

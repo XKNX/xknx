@@ -71,7 +71,6 @@ from .hid_device import (
     HIDDevice,
     USBDeviceInfo,
     find_usb_interfaces,
-    import_hidapi_backends,
 )
 
 if TYPE_CHECKING:
@@ -348,8 +347,6 @@ class USBTunnel(Interface):
 
     async def _open(self) -> None:
         """Find and open the interface."""
-        # on this thread, not in the executor - see import_hidapi_backends()
-        import_hidapi_backends()
         loop = asyncio.get_running_loop()
         device_info = await loop.run_in_executor(None, self._find_device)
         self._device = HIDDevice(
