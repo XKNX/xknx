@@ -18,7 +18,9 @@ nav_order: 2
   - `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back.
   - On macOS hidapi is imported on a thread of its own that is kept until the interpreter exits: hidapi has to be shut down while the thread that imported it is still running, else the interpreter crashes at exit (also with `ConnectionConfig(threaded=True)`).
   - `USBTunnel(busmonitor=True)` switches the interface to the bus monitor mode and passes every L_Busmon.ind on.
+  - `ConnectionConfig(individual_address=...)` sets the interface's individual address on connect when it has another one; the change persists in the interface, and the connect fails when it can't be set. cEMI: M_PropWrite of the cEMI Server Object (masks 0310h/2311h) or the Device Object - KNX v02.01.01 - Configuration Procedures 03.05.03 - §3.13.3.2, KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.2; EMI1 with the address at 0117h: DMP_IndividualAddressWrite_LEmi1 with read back - KNX v02.01.02 - Management Procedures 03.05.02 - §3.10.2. EMI2 has no specified procedure.
 - `ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA` (57) and `xknx.exceptions.CouldNotParseUSBFrame` added.
+- `CEMIErrorCode.CEMI_ERROR_ACCESS_DENIED` (0Bh) added - KNX v03 - USB TL for Secure devices AN203 - §2.5.2.
 
 ### Protocol
 

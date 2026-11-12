@@ -67,6 +67,8 @@ class FakeInterface:
         # EMI2: answer PEI_Identify (with the individual address at 0117h)
         self.answers_identify = True
         self.pei_switch = b""
+        # cEMI: properties whose M_PropWrite is refused, with this error code
+        self.refused_writes: dict[tuple[int, int], int] = {}
         # cEMI: the source the interface puts in an L_Data.con (None: the requested)
         self.confirmation_source: bytes | None = None
         self.written: list[USBTransferFrame] = []
@@ -157,6 +159,14 @@ class FakeInterface:
                 )
         elif code == 0xF6:  # M_PropWrite.req
             key = (int.from_bytes(cemi[1:3], "big"), cemi[4])
+            if key in self.refused_writes:
+                # number of elements 0, error code
+                self.send_cemi(
+                    bytes((0xF5,))
+                    + cemi[1:5]
+                    + bytes((cemi[5] & 0x0F, cemi[6], self.refused_writes[key]))
+                )
+                return
             self.properties[key] = cemi[7:]
             self.send_cemi(bytes((0xF5,)) + cemi[1:7])
         elif code == 0x11:  # L_Data.req -> L_Data.con

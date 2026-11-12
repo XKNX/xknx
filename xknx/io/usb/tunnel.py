@@ -25,6 +25,7 @@ import logging
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from xknx.cemi import (
+    CEMIErrorCode,
     CEMIFrame,
     CEMILData,
     CEMIMessageCode,
@@ -205,6 +206,7 @@ class USBTunnel(Interface):
         "busmonitor",
         "cemi_received_callback",
         "device_info",
+        "individual_address",
         "keyring",
         "path",
         "product_id",
@@ -228,6 +230,7 @@ class USBTunnel(Interface):
         auto_reconnect_wait: int = 3,
         busmonitor: bool = False,
         keyring: Keyring | None = None,
+        individual_address: IndividualAddress | None = None,
     ) -> None:
         """
         Initialize USBTunnel.
@@ -248,6 +251,11 @@ class USBTunnel(Interface):
 
         `keyring` is only used to warn, with Data Secure, when the interface's
         individual address is none of the keyring's interfaces.
+
+        With `individual_address` the interface's own individual address is set to
+        it on connect when the interface has another one (see
+        `_write_individual_address()`). The change persists in the interface. When
+        it fails, the connect fails. Without it, the address is only read.
         """
         self.xknx = xknx
         self.busmonitor = busmonitor
@@ -259,6 +267,7 @@ class USBTunnel(Interface):
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
         self.keyring = keyring
+        self.individual_address = individual_address
         self.device_info: USBDeviceInfo | None = None
 
         self._assembler = ReportAssembler()
@@ -405,6 +414,12 @@ class USBTunnel(Interface):
             )
             individual_address = await self._read_emi_individual_address(mask_version)
             max_apdu_length = emi.MAX_APDU_LENGTH
+        if (
+            self.individual_address is not None
+            and individual_address != self.individual_address
+        ):
+            await self._write_individual_address(individual_address, mask_version)
+            individual_address = self.individual_address
         self._check_individual_address(individual_address)
         self.xknx.current_address = individual_address or IndividualAddress(0)
 
@@ -649,6 +664,77 @@ class USBTunnel(Interface):
         if len(data) < 2:
             return None
         return IndividualAddress(int.from_bytes(data[:2], "big"))
+
+    async def _write_individual_address(
+        self, current: IndividualAddress | None, mask_version: int | None
+    ) -> None:
+        """
+        Set the interface's individual address to `individual_address`. Raise CommunicationError when that fails.
+
+        - cEMI: M_PropWrite of the properties it is read from (`_read_cemi_individual_address()`);
+          a positive M_PropWrite.con of both is the confirmation - KNX v02.01.01 -
+          Configuration Procedures 03.05.03 - §3.13.3.2; KNX v01.04.02 - External
+          Message Interface 03.06.03 - §4.2.2.2. An interface in Security Mode
+          refuses it with "access denied" - KNX v03 - USB TL for Secure devices
+          AN203 - §2.2.1, §2.5.2.
+        - EMI1 with the address at 0117h: DMP_IndividualAddressWrite_LEmi1 - PC_Set_Value
+          isn't confirmed, so the address read back is the confirmation - KNX
+          v02.01.02 - Management Procedures 03.05.02 - §3.10.2.
+        - Anything else: no procedure is specified.
+        """
+        assert self.individual_address is not None
+        new = self.individual_address
+        try:
+            if self._emi is EMIID.CEMI:
+                await self._write_cemi_individual_address(new, mask_version)
+            elif self._emi is EMIID.EMI1 and mask_version in BCU_ADDRESS_MASKS:
+                await self._write_emi1_individual_address(new)
+            else:
+                raise CommunicationError(
+                    "no procedure is specified for an "
+                    f"{_EMI_NAMES[self._emi]} interface with mask version "
+                    + ("unknown" if mask_version is None else f"{mask_version:04X}h")
+                )
+        except CommunicationError as ex:
+            raise CommunicationError(
+                f"Could not set the individual address of KNX USB interface "
+                f"{self.device_info} to {new}: {ex}"
+            ) from ex
+        logger.info(
+            "Changed the individual address of KNX USB interface %s from %s to %s",
+            self.device_info,
+            current or "unknown",
+            new,
+        )
+
+    async def _write_cemi_individual_address(
+        self, new: IndividualAddress, mask_version: int | None
+    ) -> None:
+        """Write the individual address of a cEMI interface (M_PropWrite)."""
+        if mask_version in CEMI_SERVER_ADDRESS_MASKS:
+            object_type = ResourceObjectType.OBJECT_CEMI_SERVER
+            subnet_property: ResourcePropertyId = (
+                ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA
+            )
+            device_property: ResourcePropertyId = (
+                ResourceCEMIServerPropertyId.PID_CEMI_SERVER_DEVICE_ADDRESS
+            )
+        else:
+            object_type = ResourceObjectType.OBJECT_DEVICE
+            subnet_property = ResourceDevicePropertyId.PID_SUBNET_ADDR
+            device_property = ResourceDevicePropertyId.PID_DEVICE_ADDR
+        subnet, device = new.to_knx()
+        await self._property_write(object_type, subnet_property, bytes((subnet,)))
+        await self._property_write(object_type, device_property, bytes((device,)))
+
+    async def _write_emi1_individual_address(self, new: IndividualAddress) -> None:
+        """Write the individual address of an EMI1 interface and read it back."""
+        await self._send_tunnel_frame(
+            emi.pc_set_value(self._emi, emi.INDIVIDUAL_ADDRESS_ADDRESS, new.to_knx())
+        )
+        result = await self._memory_read(emi.INDIVIDUAL_ADDRESS_ADDRESS, 2)
+        if result != new.to_knx():
+            raise CommunicationError(f"it reads back as {result.hex()}")
 
     def _check_individual_address(
         self, individual_address: IndividualAddress | None
@@ -944,7 +1030,8 @@ class USBTunnel(Interface):
         assert isinstance(response.data, CEMIMPropReadResponse)
         if response.data.error_code is not None:
             raise CommunicationError(
-                f"Reading property {property_id.name} failed: {response.data.error_code!r}"
+                f"Reading property {property_id.name} failed: "
+                f"{_error_text(response.data.error_code)}"
             )
         return response.data.data
 
@@ -969,7 +1056,8 @@ class USBTunnel(Interface):
         assert isinstance(response.data, CEMIMPropWriteResponse)
         if response.data.error_code is not None:
             raise CommunicationError(
-                f"Writing property {property_id.name} failed: {response.data.error_code!r}"
+                f"Writing property {property_id.name} failed: "
+                f"{_error_text(response.data.error_code)}"
             )
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
@@ -1188,6 +1276,13 @@ def _preferred_emi_type(supported: SupportedEMIType) -> EMIID:
         if flag in supported:
             return emi_id
     raise CommunicationError("KNX USB interface supports no EMI type")
+
+
+def _error_text(error_code: CEMIErrorCode | int) -> str:
+    """Return a cEMI error code as text: its name, or the octet of an unknown one."""
+    if isinstance(error_code, CEMIErrorCode):
+        return error_code.name
+    return f"{error_code:02x}h"
 
 
 def _l_data_source(raw_cemi: bytes) -> IndividualAddress | None:
