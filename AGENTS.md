@@ -63,6 +63,8 @@ if they aren't already established elsewhere in the codebase.
 | v01.01.01 | Weather data | 07.01.06 |
 | v01.03.04 | Basic and System Components - Couplers | 09.03 |
 | v01.04.02 | External Message Interface | 03.06.03 |
+| v02.01.01 | Configuration Procedures | 03.05.03 |
+| v03 | USB TL for Secure devices | AN203 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
@@ -80,6 +82,10 @@ area; a document's number starts with its Volume:
 | 7 — Application Descriptions | Standardized function blocks and their datapoints for application domains like HVAC; some DPTs (e.g. DPT 275) are defined here and not in KNX v02.02.01 - Datapoint Types 03.07.02 | 07.19.20 (HVAC S-Mode FBs) |
 | 9 — Basic and System Components | Requirements for device types like couplers and interfaces, e.g. the KNX USB interface protocol | 09.03 (Couplers) |
 | 10 — Application Specific Standards | Standardized application-level extensions built on top of Volume 3 | 10.01 (Logical Tag Extended) |
+
+Application Notes (`AN<nnn>`, e.g. AN203) amend single documents of the
+Standard and are cited by their number in place of a document number
+(`KNX v03 - USB TL for Secure devices AN203 - §2.2.1`).
 
 Almost everything xknx cites is Volume 3, since that's the wire protocol
 itself. Volume 10 documents are extensions layered on top (e.g. LTE adds
