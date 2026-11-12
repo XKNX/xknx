@@ -31,6 +31,7 @@ from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing, SecureRouting
 from .self_description import request_description
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
+from .usb import USBInterfaceInfo, USBTunnel
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -92,7 +93,9 @@ class KNXIPInterface:
                 )
         self.xknx.cemi_handler.data_secure_init(keyring=keyring)
 
-        if self.connection_config.connection_type == ConnectionType.ROUTING:
+        if self.connection_config.connection_type == ConnectionType.USB:
+            await self._start_usb(keyring=keyring)
+        elif self.connection_config.connection_type == ConnectionType.ROUTING:
             await self._start_routing(local_ip=local_ip)
         elif self.connection_config.connection_type == ConnectionType.ROUTING_SECURE:
             await self._start_secure_routing(local_ip=local_ip, keyring=keyring)
@@ -383,6 +386,23 @@ class KNXIPInterface:
         )
         await self._interface.connect()
 
+    async def _start_usb(self, keyring: Keyring | None) -> None:
+        """Start tunnelling over a KNX USB interface."""
+        usb_config = self.connection_config.usb_config
+        self._interface = USBTunnel(
+            self.xknx,
+            cemi_received_callback=self.cemi_received,
+            vendor_id=usb_config.vendor_id,
+            product_id=usb_config.product_id,
+            serial_number=usb_config.serial_number,
+            path=usb_config.path,
+            individual_address=self.connection_config.individual_address,
+            auto_reconnect=self.connection_config.auto_reconnect,
+            auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
+            keyring=keyring,
+        )
+        await self._interface.connect()
+
     async def _start_routing(self, local_ip: str | None) -> None:
         """Start KNX/IP Routing."""
         multicast_group = self.connection_config.multicast_group
@@ -493,6 +513,12 @@ class KNXIPInterface:
             return self._gateway_info
         if isinstance(self._interface, _Tunnel):
             return await self._interface.request_description()
+        return None
+
+    def usb_interface_info(self) -> USBInterfaceInfo | None:
+        """Return what a connected KNX USB interface reported about itself."""
+        if isinstance(self._interface, USBTunnel):
+            return self._interface.info
         return None
 
 
