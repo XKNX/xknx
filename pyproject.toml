@@ -28,6 +28,9 @@ license = "MIT"
 readme = "README.md"
 requires-python = ">=3.11.0"
 
+[project.optional-dependencies]
+usb = ["hidapi>=0.14"]
+
 [project.urls]
 homepage = "https://xknx.io/"
 repository = "https://github.com/XKNX/xknx.git"

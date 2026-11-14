@@ -22,6 +22,7 @@ class ConnectionType(Enum):
     TUNNELING = auto()
     TUNNELING_TCP = auto()
     TUNNELING_TCP_SECURE = auto()
+    USB = auto()
 
 
 class ConnectionConfig:
@@ -34,6 +35,7 @@ class ConnectionConfig:
         * ROUTING use KNX/IP multicast routing.
         * TUNNELING connect to a specific KNX/IP tunneling device via UDP.
         * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
+        * USB connect to a KNX USB interface (cEMI, EMI2 or EMI1) - see `usb_config`.
     * individual address:
         * AUTOMATIC use a specific tunnel endpoint from a given knxkeys file
         * ROUTING the individual address used as source address for routing
@@ -52,6 +54,7 @@ class ConnectionConfig:
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     * threaded: Run connection logic in separate thread to avoid concurrency issues in HA
     * secure_config: KNX Secure config to use
+    * usb_config: For USB connection, the KNX USB interface to use
     """
 
     def __init__(
@@ -71,6 +74,7 @@ class ConnectionConfig:
         scan_filter: GatewayScanFilter | None = None,
         threaded: bool = False,
         secure_config: SecureConfig | None = None,
+        usb_config: USBConfig | None = None,
     ) -> None:
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
@@ -89,9 +93,43 @@ class ConnectionConfig:
         self.scan_filter = scan_filter or GatewayScanFilter()
         self.threaded = threaded
         self.secure_config = secure_config
+        self.usb_config = usb_config or USBConfig()
 
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
+        return self.__dict__ == other.__dict__
+
+
+class USBConfig:
+    """
+    KNX USB interface configuration.
+
+    Without any value the first known KNX USB interface found is used.
+
+    Handles:
+    * vendor_id: USB vendor id of the interface. With it, interfaces missing
+        from the known KNX USB interfaces are found too.
+    * product_id: USB product id of the interface.
+    * serial_number: USB serial number, to pick one of several interfaces.
+    * path: hidapi device path of the interface.
+    """
+
+    def __init__(
+        self,
+        *,
+        vendor_id: int | None = None,
+        product_id: int | None = None,
+        serial_number: str | None = None,
+        path: bytes | None = None,
+    ) -> None:
+        """Initialize USBConfig class."""
+        self.vendor_id = vendor_id
+        self.product_id = product_id
+        self.serial_number = serial_number
+        self.path = path
+
+    def __eq__(self, other: object) -> bool:
+        """Equality for USBConfig class (used in unit tests)."""
         return self.__dict__ == other.__dict__
 
 
