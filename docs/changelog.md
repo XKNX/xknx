@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Protocol
+
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
 ### Features
 
 - Parse and serialize cEMI L_Busmon.ind frames - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.5.8.1. The new `CEMIBusmonData` holds the frame as received on the medium in `raw_frame`. `CEMIInfo` reads the Additional Information fields now: `items()` and `get()` return them as Type ID and data, `busmonitor_status` the Busmonitor Status Info (03h) as `CEMIBusmonitorStatus`, `timestamp_relative` (04h) and `extended_relative_timestamp` (06h) the timestamps in ticks - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.4.3. `CEMIInfo.init_from_items()` creates it from Type ID and data pairs. An Additional Information Length exceeding the frame raises `CouldNotParseCEMI`.
