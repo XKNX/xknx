@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Protocol
+
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
 ### Connection
 
 - Add `GatewayScanner(all_interfaces=True)` to send the search requests from every local IPv4 address (loopback ones left out; link-local ones are kept for a gateway on AutoIP) and merge the gateways found. Without it, and without `local_ip`, the search goes out only from the address the system routes the multicast group through - on a host with WSL, Hyper-V, a VM or a VPN that is often a virtual adapter without any gateway behind it. An address that cannot send is skipped; the search fails only if none can. `xknx.io.util.get_search_ips()` returns these addresses.
