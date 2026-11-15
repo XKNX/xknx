@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Protocol
+
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
 ### Management
 
 - `P2PConnection` follows the client state machine of KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1 (style 1). A transport layer error closes the connection with action A6 of §5.3 - a T_Disconnect is sent to the device - instead of leaving it open: no ACK after the last repetition (E18, still `ManagementConnectionTimeout`), a NAK after the last repetition (E13), an ACK or NAK of another sequence number while waiting for an ACK (E09, E11), and any ACK or NAK while no telegram awaits one (E08, E09, E11, E12, E13 in OPEN_IDLE) - the latter fail a `request()` waiting for its response with `ManagementConnectionError`. Afterwards `send_data()` and `request()` raise `ManagementConnectionRefused`, and `disconnect()` only unregisters the connection without raising, so the error that closed it is the one the caller sees.
