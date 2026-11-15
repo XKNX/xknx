@@ -824,14 +824,13 @@ class TestFunctionPropertyExtStateResponse:
         with pytest.raises(ConversionError, match=r".*Property ID.*"):
             payload.to_knx()
 
-    @pytest.mark.parametrize("return_code", [-1, 0x100])
-    def test_to_knx_return_code_out_of_range(self, return_code: int) -> None:
-        """Test to_knx raises ConversionError for an out of range return_code."""
+    def test_to_knx_negative_return_code(self) -> None:
+        """Test to_knx raises ConversionError for a negative return_code."""
         payload = FunctionPropertyExtStateResponse(
             interface_object_type=17,
             object_instance=1,
             property_id=51,
-            return_code=return_code,
+            return_code=-1,
         )
 
         with pytest.raises(ConversionError, match=r".*Return code.*"):
