@@ -73,7 +73,7 @@ def property_response(data: bytes, count: int = 1) -> apci.PropertyValueResponse
 
 
 def ext_response(
-    data: bytes, return_code: apci.ReturnCode = apci.ReturnCode.E_SUCCESS
+    data: bytes, return_code: apci.ReturnCode | int = apci.ReturnCode.E_SUCCESS
 ) -> apci.FunctionPropertyExtStateResponse:
     """Return the A_FunctionPropertyExtState_Response of a Load State Machine."""
     return apci.FunctionPropertyExtStateResponse(

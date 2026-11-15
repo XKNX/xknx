@@ -64,6 +64,23 @@ async def test_dmp_ext_load_state_machine_read_r_co_io_errors(
         )
 
 
+@pytest.mark.parametrize(
+    ("return_code", "shown"),
+    [(apci.ReturnCode.E_COMMAND_INVALID, "E_COMMAND_INVALID"), (0x21, "0x21")],
+)
+async def test_dmp_ext_load_state_machine_read_r_co_io_return_code(
+    xknx: XKNX, return_code: apci.ReturnCode | int, shown: str
+) -> None:
+    """Test the error names a generic return code and shows a function-specific one."""
+    # KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3: 21h is in the
+    # function-specific range 20h-5Fh
+    conn = await connect(xknx, [ext_response(b"", return_code)])
+    with pytest.raises(ManagementConnectionError, match=f"device returned {shown}$"):
+        await dmp_ext_load_state_machine_read_r_co_io(
+            conn, ResourceObjectType.OBJECT_APPLICATION_PROGRAM, 1
+        )
+
+
 async def test_dmp_ext_load_state_machine_read_r_co_io_unexpected_response(
     xknx: XKNX,
 ) -> None:

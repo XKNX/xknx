@@ -20,8 +20,15 @@ def ext_state_response_load_state(telegram: Telegram) -> LoadState:
             f"Load State Machine: unexpected response {payload}"
         )
     if payload.return_code is not apci.ReturnCode.E_SUCCESS:
+        # A function-specific return code has no name (KNX v02.01.01 -
+        # Application Layer 03.03.07 - §3.4.8.3).
+        return_code = (
+            payload.return_code.name
+            if isinstance(payload.return_code, apci.ReturnCode)
+            else f"0x{payload.return_code:02X}"
+        )
         raise ManagementConnectionError(
-            f"Load State Machine: device returned {payload.return_code.name}"
+            f"Load State Machine: device returned {return_code}"
         )
     return decode_load_state(payload.data)
 
