@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Protocol
+
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
 ### Management
 
 - `nm_individual_address_write` takes an optional keyword-only `wait_for_programming_mode` (seconds, greater than 0, otherwise `ValueError` is raised) to wait for a device in programming mode, e.g. while the user presses its programming button: A_IndividualAddress_Read is repeated with a time-out of `PROGRAMMING_MODE_POLL_TIMEOUT` (1 s) until a device answers, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2 describes; the last read is shortened to end at the deadline. Without it, programming mode is read once with a time-out of 3 s (KNX v02.01.02 - Management Procedures 03.05.02 - §2.2) as before.
