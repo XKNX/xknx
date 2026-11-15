@@ -8,6 +8,11 @@ nav_order: 2
 
 # Unreleased changes
 
+### Protocol
+
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
 ### Management
 
 - Add `dmp_ext_interface_object_read_r`, `dmp_ext_interface_object_write_con_r`, `dmp_ext_interface_object_write_uncon_r` and `dmp_ext_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.4/§3.25.4/§3.25.5/§3.26.3, the counterparts of the procedures above that address an Interface Object by its Interface Object Type and Object Instance with the `A_PropertyExtValue_*` services instead of by its object index. Blocks are sized by `max_apdu_length` and the 8-bit `nr_of_elem` field of these services, and `write_con_r` fails on a return code other than `E_SUCCESS`.
