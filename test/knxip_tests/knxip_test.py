@@ -1,9 +1,12 @@
 """Unit test for KNX/IP base class."""
 
+from unittest.mock import patch
+
 import pytest
 
 from xknx.exceptions import CouldNotParseKNXIP, IncompleteKNXIPFrame
-from xknx.knxip import KNXIPFrame, KNXIPHeader
+from xknx.knxip import KNXIPBody, KNXIPFrame, KNXIPHeader
+from xknx.knxip.knxip import _BODY_CLASSES
 from xknx.knxip.knxip_enum import KNXIPServiceType
 
 
@@ -17,6 +20,58 @@ class TestKNXIPFrame:
         with pytest.raises(CouldNotParseKNXIP):
             # this is not yet implemented in xknx
             KNXIPFrame.from_knx(header.to_knx())
+
+    @pytest.mark.parametrize("service_type", list(_BODY_CLASSES))
+    def test_from_knx_service_type_dispatch(
+        self, service_type: KNXIPServiceType
+    ) -> None:
+        """Test every implemented service type resolves to the body class declaring it."""
+        body_class = _BODY_CLASSES[service_type]
+        assert service_type == body_class.SERVICE_TYPE
+        header = KNXIPHeader()
+        header.service_type_ident = service_type
+        header.total_length = KNXIPHeader.HEADERLENGTH + 2
+        raw_body = bytes.fromhex("aa bb")
+        with patch.object(body_class, "from_knx", return_value=2) as from_knx_mock:
+            frame, rest = KNXIPFrame.from_knx(header.to_knx() + raw_body + b"\x00")
+        from_knx_mock.assert_called_once_with(raw_body)
+        assert frame.body.__class__ is body_class
+        assert frame.header == header
+        assert rest == b"\x00"
+
+    @pytest.mark.parametrize(
+        "service_type",
+        [
+            service_type
+            for service_type in KNXIPServiceType
+            if service_type not in _BODY_CLASSES
+        ],
+    )
+    def test_from_knx_service_type_unsupported(
+        self, service_type: KNXIPServiceType
+    ) -> None:
+        """Test service types without body class raise CouldNotParseKNXIP."""
+        header = KNXIPHeader()
+        header.service_type_ident = service_type
+        header.total_length = KNXIPHeader.HEADERLENGTH
+        with pytest.raises(
+            CouldNotParseKNXIP,
+            match=f"KNXIPServiceType not implemented: {service_type.name}",
+        ):
+            KNXIPFrame.from_knx(header.to_knx())
+
+    def test_body_classes_complete(self) -> None:
+        """Test every concrete KNXIPBody subclass is dispatched to."""
+
+        def concrete_subclasses(cls: type[KNXIPBody]) -> set[type[KNXIPBody]]:
+            result = set()
+            for subclass in cls.__subclasses__():
+                if subclass.SERVICE_TYPE is not None:
+                    result.add(subclass)
+                result |= concrete_subclasses(subclass)
+            return result
+
+        assert set(_BODY_CLASSES.values()) == concrete_subclasses(KNXIPBody)
 
     def test_double_frame(self) -> None:
         """Test parsing KNX/IP frame from streaming data containing two frames."""
@@ -36,3 +91,19 @@ class TestKNXIPFrame:
         raw = bytes.fromhex("06 10 02 07 00 10 15 00 08 01 C0 A8 C8 0C C3")
         with pytest.raises(IncompleteKNXIPFrame):
             KNXIPFrame.from_knx(raw)
+
+    def test_total_length_zero(self) -> None:
+        """Test a frame with total length 0 is rejected instead of returned as rest."""
+        raw = bytes.fromhex("06 10 05 30 00 00 06 10 05 30 00 00")
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(raw)
+
+    def test_body_parser_errors_are_wrapped(self) -> None:
+        """Test IndexError / ValueError of a body parser are raised as CouldNotParseKNXIP."""
+        # TunnellingAck body of 2 bytes - the parser would read past the end
+        with pytest.raises(CouldNotParseKNXIP) as exc_info:
+            KNXIPFrame.from_knx(bytes.fromhex("06 10 04 21 00 08 04 2A"))
+        assert not isinstance(exc_info.value, IncompleteKNXIPFrame)
+        # DisconnectResponse with unknown status code - ErrorCode() raises ValueError
+        with pytest.raises(CouldNotParseKNXIP):
+            KNXIPFrame.from_knx(bytes.fromhex("06 10 02 0A 00 08 01 55"))

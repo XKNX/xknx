@@ -33,10 +33,10 @@ class RoutingLostMessage(KNXIPBody):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if raw[0] != RoutingLostMessage.BODY_LENGTH:  # structure_length field
-            raise CouldNotParseKNXIP("RoutingLostMessage body has invalid length")
         if len(raw) != RoutingLostMessage.BODY_LENGTH:
             raise CouldNotParseKNXIP("RoutingLostMessage has wrong length")
+        if raw[0] != RoutingLostMessage.BODY_LENGTH:  # structure_length field
+            raise CouldNotParseKNXIP("RoutingLostMessage body has invalid length")
         self.device_state = raw[1]
         self.lost_messages = raw[2] * 256 + raw[3]
         return RoutingLostMessage.BODY_LENGTH

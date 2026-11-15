@@ -8,9 +8,50 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- Climate: add independent binary/scaling heating and cooling feedback, per-valve activity thresholds and conflict reporting. Existing shared activity semantics are unchanged.
+
+### Protocol
+
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
+# 4.1.1 Tunnel robustness 2026-11-05
+
 ### Connection
 
+- `XKNX.stop()` no longer hangs until the gateway is reachable again when the tunnel is reconnecting and a telegram is waiting to be sent: reconnecting is stopped before the outgoing queue is drained (new `Interface.stop_reconnect()`), so a pending telegram fails with `CommunicationError` instead of waiting for the reconnect. Telegrams queued while the connection is up are still sent before disconnecting.
+- Cancelling a task that sends a telegram while the tunnel is reconnecting (e.g. a timeout around `xknx.telegrams.put` consumers or shutdown) no longer cancels the reconnect itself, which left the tunnel disconnected for good.
+- Tunnel: a TUNNELLING_REQUEST of another communication channel is discarded without an ACK and without touching the incoming sequence counter, and a DISCONNECT_REQUEST of another communication channel is answered with `E_CONNECTION_ID` instead of closing our tunnel - KNX v01.06.02 - Core 03.08.02 - §5.3.3, §7.8.4.
+- Tunnel: a TUNNELLING_ACK or DEVICE_CONFIGURATION_ACK only confirms the request with the same communication channel and sequence counter. A stale ACK of a repeated frame no longer confirms the next frame, which silently got lost.
+- UDP tunnel: a telegram whose TUNNELLING_REQUESTs went unanswered while the heartbeat already reconnected the tunnel is retried on the new communication channel instead of reconnecting the healthy new tunnel once more.
+- TCP tunnel: a connection lost while `connect()` still waits for the CONNECT_RESPONSE or the secure session handshake no longer leaves an orphaned reconnect loop behind the failed connection attempt.
+- Tunnel: the automatic reconnect keeps retrying after an unexpected exception instead of ending silently with the tunnel disconnected.
+- TCP transport: a partial frame left in the receive buffer is dropped when the connection is closed or reopened instead of corrupting the first frame of the next connection.
+- TCP transport: establishing the TCP connection times out after `TCP_CONNECT_TIMEOUT` (10 seconds) with a `CommunicationError` instead of waiting for the OS connect timeout (~2 minutes for a dropped SYN).
+
+### Management
+
+- `P2PConnection.send_data()` repeats a telegram the device doesn't acknowledge up to 3 times instead of once - `max_rep_count` of KNX v01.02.03 - Transport Layer 03.03.04 - §4, used by events E17/E18 of §5.3. A telegram lost twice in a row on a busy or lossy path, e.g. a KNXnet/IP tunnel, no longer fails the request. `MANAGEMENT_MAX_REPETITIONS` holds the number. A device that doesn't answer at all is given up on after 12 seconds instead of 6, which also makes `nm_individual_address_check()` and `nm_individual_address_write()` wait that long for a free address.
+
+### Bugfixes
+
+- StateUpdater: `RemoteValue`s sharing a state address - e.g. a Sensor and a Climate configured with the same `group_address_*_state` - are read with a single GroupValueRead. The others wait for that read instead of sending their own, since its response is processed by every `RemoteValue` of the address anyway.
+
+# 4.1.0 Connectionless and DPTs galore 2026-11-02
+
+### Connection
+
+- Routing: outgoing ROUTING_INDICATION frames of concurrent senders (TelegramQueue, Management) are serialized by the flow control so each one keeps the pause after the previously sent frame and the ROUTING_BUSY wait time, instead of being sent in a burst - KNX v01.01.02 - Communication Medium KNX IP 03.02.06 - §2.1.
+- Routing: the number of received ROUTING_BUSY frames `N` - used for the random wait time extension and the slowduration - counts every frame received more than 10 ms after the previous one, including the first one - KNX v01.05.02 - Routing 03.08.05 - §2.3.5. Before, the first frame was never counted.
+- Tunnelling / Device Management: send a CONNECTIONSTATE_REQUEST heartbeat every 30 seconds instead of every 70 seconds. KNX v01.06.02 - Core 03.08.02 - §5.4 asks for one every 60 seconds; ETS 6 sends one every 30 seconds, which halves the time until a dead connection is noticed. `CONNECTION_ALIVE_TIME` was removed from `xknx.io.const`.
+- IP Secure: send the SESSION_STATUS keepalive after 15 seconds of inactivity instead of 50 seconds, like ETS does, leaving a wide margin to the 60 second session timeout.
+- Routing: close the multicast socket when configuring or binding it fails instead of leaking it.
+- Accept unwrapped `TunnellingRequest` and `DisconnectRequest` frames in a KNX IP Secure session from servers that send them this way, until a wrapped `TunnellingRequest` is received. Since 4.0.0 they were discarded, so no telegram and no L_Data.con arrived from such servers. One warning per session is logged. All other unwrapped frames stay discarded. `TunnellingRequest`s of another communication channel are dropped by every tunnel type.
 - Fix concurrent `CEMIHandler.send_telegram()` calls being confirmed by another request's L_Data.con. Only one L_Data.req is outstanding at a time now; the next request is sent once the previous one is confirmed or timed out - KNX v01.02.03 - Transport Layer 03.03.04 - §3.6. Previously, e.g. two `P2PConnection`s to different devices or a broadcast next to a group write could return as confirmed before their own confirmation arrived.
+- Harden KNXnet/IP frame parsing: malformed DIBs, headers and bodies raise `CouldNotParseKNXIP` instead of hanging the event loop or closing the TCP connection. The TCP transport skips an unparsable frame by its total length and keeps processing the stream.
+- cEMI: empty or truncated frames raise `CouldNotParseCEMI` instead of `IndexError`.
 
 ### Management
 
@@ -45,11 +86,23 @@ nav_order: 2
 
 ### Devices
 
-- Climate: add independent binary/scaling heating and cooling feedback, per-valve activity thresholds and conflict reporting. Existing shared activity semantics are unchanged.
+- Add `DeviceUpdate.from_state_address` telling if the telegram causing a device update was sent to a state address of the device - a `group_address_*_state` or a passive address given with it, that isn't also used for writing. Such a telegram reports a state, eg. an actuators feedback, rather than commanding a change. `Device.is_state_address()` and `RemoteValue.is_state_address()` answer the same for any group address.
+- Add `Cover.remaining_travel_time()` (and `TravelCalculator.remaining_travel_time()`) returning the estimated seconds until the designated position is reached - 0 if not traveling.
 
 ### Bugfixes
 
 - Cover: `TravelCalculator` no longer raises `ZeroDivisionError` for the position of a cover asked right after it stopped, before the clock advanced - e.g. within the 15.6 ms resolution of `time.time()` on Windows.
+- `ValueReader` (used by `RemoteValue.read_state()` and the StateUpdater): the response timeout starts when the GroupValueRead is actually sent instead of when it is queued, so reads waiting behind other outgoing telegrams no longer time out before reaching the bus ("Could not sync group address"). A GroupValueRead that can't be sent within 10 seconds is given up with a warning.
+- StateUpdater: a state update received while a read for the same `RemoteValue` is running no longer frees its `parallel_reads` slot before the read has finished.
+- Address parsing: `GroupAddress` and `IndividualAddress` raise `CouldNotParseAddress` instead of `ValueError` for strings of non-ASCII digits like `"²"` (which `str.isdigit()` accepts but `int()` rejects) and reject a trailing newline (`"1/2/3\n"`). The `ValueError` escaped `GroupAddressDPT.set()` and aborted the whole group address to DPT mapping.
+- `DPTBase.parse_transcoder()` no longer resolves strings like `"TPD-9"` or `"PPP9"` to DPT 9: only a leading `"DPT"` / `"DPT-"` prefix is removed, not any of its characters.
+
+### Internals
+
+- TaskRegistry: exceptions of `Task` targets and of `background()` tasks are logged with the task name instead of being noticed only as "Task exception was never retrieved" at garbage collection. `background()` tasks are cancelled on `stop()`. Tasks started after `stop()` - e.g. by device telegrams processed while XKNX is shutting down - are only registered and started on the next `start()`, instead of running unmanaged.
+- DPT lookups by number or `value_type` (`DPTBase.transcoder_by_dpt()`, `transcoder_by_value_type()`, `parse_transcoder()`, `get_dpt()`) use lazily built lookup tables per base class instead of walking all transcoder classes on every call - about 100 times faster, which matters when `GroupAddressDPT.set()` maps thousands of group addresses. The tables are rebuilt when a new `DPTBase` subclass is defined.
+- `KNXIPFrame.from_knx()` resolves the body class from a lookup table instead of a chain of comparisons.
+- IP Secure: the session keepalive is a rescheduled `loop.call_later()` timer instead of a task cancelled and recreated for every frame sent.
 
 # 4.0.0 Typed and tidy 2026-10-15
 
