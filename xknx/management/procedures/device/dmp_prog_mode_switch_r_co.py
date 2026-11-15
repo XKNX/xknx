@@ -4,16 +4,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from xknx.exceptions import ManagementConnectionError
 from xknx.management.management import P2PConnection
+from xknx.profile.const import ResourceDevicePropertyId
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
+from .dm_connect_r_co import dmp_connect_r_co
+from .dmp_interface_object_write_r import dmp_interface_object_write_r
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
 
 if TYPE_CHECKING:
     from xknx import XKNX
 
-__all__ = ["PROG_MODE_ADDRESS", "dm_prog_mode_switch", "dmp_prog_mode_switch_r_co"]
+__all__ = [
+    "PROG_MODE_ADDRESS",
+    "PROG_MODE_MEMORY_MASKS",
+    "PROG_MODE_PROPERTY_MASKS",
+    "dm_prog_mode_switch",
+    "dmp_prog_mode_switch_r_co",
+]
 
 # Location of curr_prog_mode - KNX v01.10.01 - Resources 03.05.01 - §4.26.3.2.
 PROG_MODE_ADDRESS = 0x0060
@@ -21,8 +31,44 @@ PROG_MODE_ADDRESS = 0x0060
 _PROG_MODE_BIT = 0x01
 _PARITY_BIT = 0x80
 
+# Mask versions (Device Descriptor Type 0) whose Programming Mode is curr_prog_mode at 60h
+# (Realisation Type 2, KNX v01.10.01 - Resources 03.05.01 - §4.26.3), as the KNX master data
+# lists them. 0912h and 091Ah list the Device Object's PID_PROGMODE as well.
+PROG_MODE_MEMORY_MASKS = frozenset(
+    {
+        0x0010,
+        0x0011,
+        0x0012,
+        0x0013,
+        0x0020,
+        0x0021,
+        0x0025,
+        0x0700,
+        0x0701,
+        0x0705,
+        0x0900,
+        0x0910,
+        0x0911,
+        0x0912,
+        0x091A,
+        0x1011,
+        0x1012,
+        0x1013,
+        0x1900,
+        0x5705,
+    }
+)
+# Mask versions whose Programming Mode is only the Device Object's PID_PROGMODE (Realisation
+# Type 1, KNX v01.10.01 - Resources 03.05.01 - §4.26.2 and §4.3.5), as the KNX master data
+# lists them.
+PROG_MODE_PROPERTY_MASKS = frozenset(
+    {0x0300, 0x07B0, 0x17B0, 0x2705, 0x27B0, 0x2920, 0x57B0}
+)
 
-async def dmp_prog_mode_switch_r_co(conn: P2PConnection, mode: bool) -> None:
+
+async def dmp_prog_mode_switch_r_co(
+    conn: P2PConnection, mode: bool, verify: bool = False
+) -> None:
     r"""
     Switch the Programming Mode of a device on or off.
 
@@ -30,12 +76,16 @@ async def dmp_prog_mode_switch_r_co(conn: P2PConnection, mode: bool) -> None:
     §3.13.2. Requires an established connection (DM_Connect must be executed
     first). Applies to devices realising the Programming Mode as "Programming
     Mode - Realisation Type 2" (KNX v01.10.01 - Resources 03.05.01 - §4.26.3),
-    i.e. in the memory octet ``curr_prog_mode`` at 60h. Devices of Realisation
-    Type 1 (§4.26.2) use the Device Object's ``PID_PROGMODE`` instead, e.g.::
+    i.e. in the memory octet ``curr_prog_mode`` at 60h (the mask versions in
+    ``PROG_MODE_MEMORY_MASKS``). Devices of Realisation Type 1 (§4.26.2) use
+    the Device Object's ``PID_PROGMODE`` instead, e.g.::
 
         await dmp_interface_object_write_r(
             conn, 0, ResourceDevicePropertyId.PID_PROGMODE, b"\x01"
         )
+
+    :func:`dm_prog_mode_switch` picks the right one by the device's mask
+    version.
 
     ``curr_prog_mode`` is read and written back with ``prog_mode`` (bit 0) set
     according to ``mode``. The shared bits 1 to 6 are kept, and ``p_parity``
@@ -44,38 +94,76 @@ async def dmp_prog_mode_switch_r_co(conn: P2PConnection, mode: bool) -> None:
     is written (KNX v01.10.01 - Resources 03.05.01 - §4.26.3.4.2 and
     §4.26.3.4.3).
 
+    A_Memory_Write is not confirmed at the application layer, so a device that
+    rejects the write (e.g. access protection) goes unnoticed unless
+    ``verify`` reads ``curr_prog_mode`` back. §3.13.2 does not ask for this
+    read-back.
+
     :param conn: Active P2P connection to the device
     :param mode: True to switch the Programming Mode on, False to switch it off
-    :raises ManagementConnectionError: If the device answers the read with no
+    :param verify: If True, read ``curr_prog_mode`` back after writing it
+    :raises ManagementConnectionError: If the device answers a read with no
         data, or with a different address
+    :raises VerificationError: If verify is enabled and the read-back does not
+        match what was written
     """
     (value,) = await dmp_mem_read_r_co(conn, address=PROG_MODE_ADDRESS, size=1)
     # Already in the requested mode: leave curr_prog_mode untouched.
     if bool(value & _PROG_MODE_BIT) == mode:
         return
     value ^= _PROG_MODE_BIT | _PARITY_BIT
-    await dmp_mem_write_r_co(conn, address=PROG_MODE_ADDRESS, data=bytes([value]))
+    await dmp_mem_write_r_co(
+        conn, address=PROG_MODE_ADDRESS, data=bytes([value]), verify=verify
+    )
 
 
 async def dm_prog_mode_switch(
     xknx: XKNX,
     individual_address: IndividualAddressableType,
     mode: bool,
+    verify: bool = False,
 ) -> None:
     """
     Switch the Programming Mode of a device, opening and closing a connection to it.
 
     Connects, switches and disconnects as in KNX v01.10.01 - Resources
-    03.05.01 - §4.26.3.4.2 and §4.26.3.4.3. See
-    :func:`dmp_prog_mode_switch_r_co` for which devices this applies to.
+    03.05.01 - §4.26.3.4.2 and §4.26.3.4.3. The device's mask version (Device
+    Descriptor Type 0) decides where its Programming Mode is: memory 60h
+    (:func:`dmp_prog_mode_switch_r_co`, ``PROG_MODE_MEMORY_MASKS``) or the
+    Device Object's ``PID_PROGMODE`` (``PROG_MODE_PROPERTY_MASKS``, KNX
+    v01.10.01 - Resources 03.05.01 - §4.3.5). A device of another mask version
+    is left untouched.
 
     :param xknx: the XKNX object
     :param individual_address: address of the device
     :param mode: True to switch the Programming Mode on, False to switch it off
-    :raises ManagementConnectionError: If the device answers the read with no
-        data, or with a different address
+    :param verify: If True, confirm the written value: memory 60h is read back,
+        the property's response has to echo it
+    :raises ManagementConnectionError: If the Programming Mode location of the
+        device's mask version is not known, or the device answers with no data,
+        a different address or an error
+    :raises VerificationError: If verify is enabled and the read-back does not
+        match what was written (memory 60h)
+    :raises PropertyVerificationError: If verify is enabled and the response
+        does not echo what was written (PID_PROGMODE)
     """
     async with xknx.management.connection(
         IndividualAddress(individual_address)
     ) as conn:
-        await dmp_prog_mode_switch_r_co(conn, mode)
+        mask_version = await dmp_connect_r_co(conn)
+        if mask_version in PROG_MODE_MEMORY_MASKS:
+            await dmp_prog_mode_switch_r_co(conn, mode, verify=verify)
+        elif mask_version in PROG_MODE_PROPERTY_MASKS:
+            # PDT_BITSET8: bit 0 is the Programming Mode, bits 1-7 are reserved and 0.
+            await dmp_interface_object_write_r(
+                conn,
+                0,
+                ResourceDevicePropertyId.PID_PROGMODE,
+                bytes([int(mode)]),
+                verify=verify,
+            )
+        else:
+            raise ManagementConnectionError(
+                f"Programming Mode location of mask version {mask_version:04X}h "
+                "is not known"
+            )
