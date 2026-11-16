@@ -1004,6 +1004,59 @@ class TestClimate:
             payload=GroupValueWrite(DPTArray((0x01, 0x5E))),
         )  # +3.5
 
+    async def test_target_temperature_step_mode_9002_without_target_feedback(
+        self,
+    ) -> None:
+        """Test a second target request before the target feedback arrived."""
+
+        xknx = XKNX()
+        climate = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_target_temperature_state="1/2/2",
+            group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT9002,
+            setpoint_shift_max=10,
+            setpoint_shift_min=-10,
+        )
+        xknx.devices.async_add(climate)
+
+        # base temperature is 20 °C
+        climate.target_temperature.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPT2ByteFloat().to_knx(20.00)),
+            )
+        )
+        await climate.set_setpoint_shift(0)
+        xknx.devices.process(xknx.telegrams.get_nowait())
+        assert climate.base_temperature == 20.00
+
+        # 20.5 °C = +0.5 °C over the base
+        await climate.set_target_temperature(20.50)
+        _telegram = xknx.telegrams.get_nowait()
+        assert DPT2ByteFloat().from_knx(_telegram.payload.value) == pytest.approx(0.5)
+        xknx.devices.process(_telegram)
+        # the target state is read only, so the requested target did not arrive yet
+        assert climate.target_temperature.value == 20.00
+
+        # 21.0 °C = +1.0 °C over the same base, not +1.5 °C over a base derived
+        # from the new shift and the old target
+        await climate.set_target_temperature(21.00)
+        _telegram = xknx.telegrams.get_nowait()
+        assert DPT2ByteFloat().from_knx(_telegram.payload.value) == pytest.approx(1.0)
+        xknx.devices.process(_telegram)
+
+        # once the target feedback arrives the base is derived from it again:
+        # 21.5 °C with a shift of +1.0 °C gives 20.5 °C, not the frozen 20.0 °C
+        climate.target_temperature.process(
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPT2ByteFloat().to_knx(21.50)),
+            )
+        )
+        assert climate.base_temperature == pytest.approx(20.50)
+
     #
     # TEST TEMPERATURE STEP
     #

@@ -85,6 +85,9 @@ class Climate(Device):
         self.setpoint_shift_min = setpoint_shift_min
         self.setpoint_shift_max = setpoint_shift_max
         self.temperature_step = temperature_step
+        # Base temperature of a request whose target could not be set locally.
+        # It stays until the target temperature arrives from the bus.
+        self._requested_base_temperature: float | None = None
 
         self.temperature = RemoteValueTemp(
             xknx,
@@ -102,7 +105,7 @@ class Climate(Device):
             sync_state=sync_state,
             device_name=self.name,
             feature_name="Target temperature",
-            after_update_cb=self.after_update,
+            after_update_cb=self._after_target_temperature_update,
         )
 
         self._setpoint_shift = RemoteValueSetpointShift(
@@ -298,8 +301,19 @@ class Climate(Device):
 
         Base temperature is the default temperature (setpoint-shift=0) for the active climate mode.
         As this value is usually not available via KNX, we have to derive this from the current
-        target temperature and the current set point shift.
+        target temperature and the current set point shift. While a request waits for the target
+        feedback this is the base that request was calculated from.
         """
+        # A request that could not set the target locally keeps the base it was
+        # derived from, because the shift it sent is already the local one while
+        # the target still waits for its feedback. The shift feedback does not
+        # end this, as it arrives before the target one.
+        if (
+            self._requested_base_temperature is not None
+            and self.target_temperature.value is not None
+            and self._setpoint_shift.value is not None
+        ):
+            return self._requested_base_temperature
         # implies self.initialized_for_setpoint_shift_calculations in a mypy compatible way:
         if (
             self.target_temperature.value is not None
@@ -307,6 +321,11 @@ class Climate(Device):
         ):
             return self.target_temperature.value - self._setpoint_shift.value
         return None
+
+    def _after_target_temperature_update(self, *args: Any) -> None:
+        """Replace the derived base with the one reported by the bus."""
+        self._requested_base_temperature = None
+        self.after_update(*args)
 
     @property
     def setpoint_shift(self) -> float | None:
@@ -335,6 +354,10 @@ class Climate(Device):
         # broadcast new target temperature and set internally
         if self.target_temperature.writable and base_temperature is not None:
             self.target_temperature.set(base_temperature + validated_offset)
+        else:
+            # Without a writable target the local target stays old until feedback
+            # arrives, so keep the base this offset was calculated from.
+            self._requested_base_temperature = base_temperature
 
     @property
     def target_temperature_max(self) -> float | None:
