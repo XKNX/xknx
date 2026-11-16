@@ -277,6 +277,7 @@ from .dpt_20 import (
     DPTDimmPBModel,
     DPTEnableHCStage,
     DPTErrorClassHVAC,
+    DPTErrorClassSystem,
     DPTFanMode,
     DPTFuelType,
     DPTHeaterMode,

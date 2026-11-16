@@ -174,6 +174,7 @@ from xknx.dpt import *  # pylint: disable=wildcard-import,unused-wildcard-import
         ("energy_direction", DPTEnergyDirection, 1, 1201, None),
         ("enthalpy", DPTEnthalpy, 9, 60000, "H"),
         ("error_class_hvac", DPTErrorClassHVAC, 20, 12, None),
+        ("error_class_system", DPTErrorClassSystem, 20, 11, None),
         ("fan_mode", DPTFanMode, 20, 111, None),
         ("fan_stage", DPTFanStage, 5, 100, None),
         ("flow_rate_m3h", DPTFlowRateM3H, 13, 2, "m³/h"),

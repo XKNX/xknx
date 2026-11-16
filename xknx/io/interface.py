@@ -33,6 +33,9 @@ class Interface(ABC):
     async def disconnect(self) -> None:
         """Disconnect from KNX bus."""
 
+    async def stop_reconnect(self) -> None:  # noqa: B027
+        """Stop reconnecting to the KNX bus - before `disconnect()` on shutdown. Default: no-op."""
+
     @abstractmethod
     async def send_cemi(self, cemi: CEMIFrame) -> None:
         """Send CEMIFrame to KNX bus."""
