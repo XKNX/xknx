@@ -21,6 +21,11 @@ nav_order: 2
 
 - Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
 
+### Internal
+
+- Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
+- The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
+
 ### Connection
 
 - Add `GatewayScanner(all_interfaces=True)` to send the search requests from every local IPv4 address (loopback ones left out; link-local ones are kept for a gateway on AutoIP) and merge the gateways found. Without it, and without `local_ip`, the search goes out only from the address the system routes the multicast group through - on a host with WSL, Hyper-V, a VM or a VPN that is often a virtual adapter without any gateway behind it. An address that cannot send is skipped; the search fails only if none can. `xknx.io.util.get_search_ips()` returns these addresses.
