@@ -115,6 +115,7 @@ class Climate(Device):
             setpoint_shift_mode=setpoint_shift_mode,
             setpoint_shift_step=self.temperature_step,
         )
+        self._pending_base_temperature: float | None = None
 
         self.on = RemoteValueSwitch(  # pylint: disable=invalid-name
             xknx,
@@ -299,7 +300,12 @@ class Climate(Device):
         Base temperature is the default temperature (setpoint-shift=0) for the active climate mode.
         As this value is usually not available via KNX, we have to derive this from the current
         target temperature and the current set point shift.
+        A setpoint shift sent by `set_setpoint_shift()` doesn't change the base temperature, but the
+        target temperature may be updated later than the setpoint shift. So the base temperature it
+        was calculated from is kept until the next target temperature telegram is processed.
         """
+        if self._pending_base_temperature is not None:
+            return self._pending_base_temperature
         # implies self.initialized_for_setpoint_shift_calculations in a mypy compatible way:
         if (
             self.target_temperature.value is not None
@@ -331,6 +337,7 @@ class Climate(Device):
             offset, self.setpoint_shift_min, self.setpoint_shift_max
         )
         base_temperature = self.base_temperature
+        self._pending_base_temperature = base_temperature
         self._setpoint_shift.set(validated_offset)
         # broadcast new target temperature and set internally
         if self.target_temperature.writable and base_temperature is not None:
@@ -374,7 +381,11 @@ class Climate(Device):
     def process_group_write(self, telegram: GroupValueTelegram) -> None:
         """Process incoming and outgoing GROUP WRITE telegram."""
         for remote_value in self._iter_remote_values():
-            remote_value.process(telegram)
+            if (
+                remote_value.process(telegram)
+                and remote_value is self.target_temperature
+            ):
+                self._pending_base_temperature = None
 
         if self.mode is not None:
             self.mode.process_group_write(telegram)
