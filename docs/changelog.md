@@ -21,6 +21,11 @@ nav_order: 2
 
 - Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
 
+### Internal
+
+- Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
+- The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
+
 ### Features
 
 - Parse and serialize cEMI L_Busmon.ind frames - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.5.8.1. The new `CEMIBusmonData` holds the frame as received on the medium in `raw_frame`. `CEMIInfo` reads the Additional Information fields now: `items()` and `get()` return them as Type ID and data, `busmonitor_status` the Busmonitor Status Info (03h) as `CEMIBusmonitorStatus`, `timestamp_relative` (04h) and `extended_relative_timestamp` (06h) the timestamps in ticks - KNX v01.04.02 - EMI/IMI 03.06.03 - §4.1.4.3. `CEMIInfo.init_from_items()` creates it from Type ID and data pairs. An Additional Information Length exceeding the frame raises `CouldNotParseCEMI`.
