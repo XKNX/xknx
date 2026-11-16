@@ -13,8 +13,13 @@ nav_order: 2
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
 - Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
 
+### DPT
+
+- Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+
 ### Management
 
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
 - `nm_individual_address_write` takes an optional keyword-only `wait_for_programming_mode` (seconds, greater than 0, otherwise `ValueError` is raised) to wait for a device in programming mode, e.g. while the user presses its programming button: A_IndividualAddress_Read is repeated with a time-out of `PROGRAMMING_MODE_POLL_TIMEOUT` (1 s) until a device answers, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2 describes; the last read is shortened to end at the deadline. Without it, programming mode is read once with a time-out of 3 s (KNX v02.01.02 - Management Procedures 03.05.02 - §2.2) as before.
 
 # 4.1.1 Tunnel robustness 2026-11-05
