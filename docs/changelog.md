@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Devices
+
+- Climate: add independent binary/scaling heating and cooling feedback, per-valve activity thresholds and conflict reporting. Existing shared activity semantics are unchanged.
+
 ### Protocol
 
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
