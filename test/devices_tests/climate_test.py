@@ -21,7 +21,7 @@ from xknx.dpt import (
 )
 from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode, HVACStatus
 from xknx.exceptions import ConversionError, DeviceIllegalValue
-from xknx.telegram import GroupAddress, Telegram
+from xknx.telegram import GroupAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueRead, GroupValueWrite
 
 DPT_20102_MODES = [
@@ -1003,6 +1003,109 @@ class TestClimate:
             destination_address=GroupAddress("1/2/3"),
             payload=GroupValueWrite(DPTArray((0x01, 0x5E))),
         )  # +3.5
+
+    async def test_target_temperature_before_target_temperature_state(self) -> None:
+        """Test setting the target temperature before the previous one is reported."""
+
+        xknx = XKNX()
+        climate = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_target_temperature_state="1/2/2",
+            group_address_setpoint_shift="1/2/3",
+            group_address_setpoint_shift_state="1/2/4",
+            setpoint_shift_mode=SetpointShiftMode.DPT9002,
+        )
+        xknx.devices.async_add(climate)
+
+        def receive(group_address: str, value: float) -> None:
+            xknx.devices.process(
+                Telegram(
+                    destination_address=GroupAddress(group_address),
+                    direction=TelegramDirection.INCOMING,
+                    payload=GroupValueWrite(DPT2ByteFloat.to_knx(value)),
+                )
+            )
+
+        async def set_target_temperature(value: float, setpoint_shift: float) -> None:
+            await climate.set_target_temperature(value)
+            assert xknx.telegrams.qsize() == 1
+            _telegram = xknx.telegrams.get_nowait()
+            assert _telegram == Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPT2ByteFloat.to_knx(setpoint_shift)),
+            )
+            xknx.devices.process(_telegram)
+
+        # base temperature is 21 °C
+        receive("1/2/4", 0)
+        receive("1/2/2", 21)
+        assert climate.base_temperature == 21
+
+        # no state received between the changes
+        await set_target_temperature(21.5, setpoint_shift=0.5)
+        await set_target_temperature(22, setpoint_shift=1)
+        assert climate.base_temperature == 21
+        # setpoint shift state received, target temperature state not yet
+        receive("1/2/4", 1)
+        await set_target_temperature(21.5, setpoint_shift=0.5)
+        assert climate.base_temperature == 21
+
+        # base temperature is derived from a received target temperature again
+        receive("1/2/4", 0.5)
+        receive("1/2/2", 21.5)
+        assert climate.base_temperature == 21
+        receive("1/2/2", 18.5)
+        assert climate.base_temperature == 18
+
+    async def test_target_temperature_before_target_temperature_telegram(self) -> None:
+        """Test setting the target temperature before the previous target temperature telegram is processed."""
+
+        xknx = XKNX()
+        climate = Climate(
+            xknx,
+            name="TestClimate",
+            group_address_target_temperature="1/2/2",
+            group_address_setpoint_shift="1/2/3",
+            setpoint_shift_mode=SetpointShiftMode.DPT6010,
+        )
+        xknx.devices.async_add(climate)
+
+        # base temperature is 20 °C
+        await climate.set_setpoint_shift(3)
+        xknx.devices.process(xknx.telegrams.get_nowait())
+        climate.target_temperature.set(23)
+        xknx.devices.process(xknx.telegrams.get_nowait())
+        assert climate.base_temperature == 20
+
+        await climate.set_target_temperature(24)
+        assert xknx.telegrams.qsize() == 2
+        # setpoint shift telegram processed, target temperature telegram not yet
+        xknx.devices.process(xknx.telegrams.get_nowait())
+        assert climate.base_temperature == 20
+
+        await climate.set_target_temperature(25)
+        assert xknx.telegrams.qsize() == 3
+        _telegrams = [xknx.telegrams.get_nowait() for _ in range(3)]
+        assert _telegrams == [
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPT2ByteFloat.to_knx(24)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/3"),
+                payload=GroupValueWrite(DPTArray(50)),
+            ),
+            Telegram(
+                destination_address=GroupAddress("1/2/2"),
+                payload=GroupValueWrite(DPT2ByteFloat.to_knx(25)),
+            ),
+        ]
+        for _telegram in _telegrams:
+            xknx.devices.process(_telegram)
+        assert climate.target_temperature.value == 25
+        assert climate.setpoint_shift == 5
+        assert climate.base_temperature == 20
 
     #
     # TEST TEMPERATURE STEP

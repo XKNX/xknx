@@ -32,6 +32,10 @@ nav_order: 2
 - Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
 - The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
 
+### Bugfixes
+
+- Climate: `set_target_temperature()` no longer sends a wrong setpoint shift when called again before the new target temperature is reported. The new setpoint shift was paired with the previous target temperature, giving a wrong `base_temperature` - it now keeps the value the last setpoint shift was calculated from until the next target temperature telegram is processed.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
