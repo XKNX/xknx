@@ -112,9 +112,13 @@ in sync with the code. Summary:
 - `<spec_name>_conn(conn: P2PConnection, ...)` operates on an already-open
   connection, for chaining several procedures over one connection. The
   `_conn` suffix is an xknx-only naming convention, not a KNX spec name.
-- Procedures whose KNX spec name already denotes a remote access variant
-  (`_r_co`, `_r`, `_r_io`, `_r_co_io`, `_r_co_mem` - e.g. `dm_restart_r_co`,
-  `dmp_load_state_machine_write_r_co_io`) keep that name instead of `_conn`.
+- Where the spec names a procedure's variants itself, xknx keeps that name
+  instead of `_conn`: `_r_co` for RCo (e.g. `dm_restart_r_co`,
+  `dmp_mem_read_r_co`, `dmp_prog_mode_switch_r_co`), `_r` for R (e.g.
+  `dmp_interface_object_read_r`), and `_r_io`, `_r_co_io` and `_r_co_mem` for
+  R_IO, RCo_IO and RCo_Mem (e.g. `dmp_load_state_machine_write_r_co_io`). A
+  plain `<spec_name>(xknx, ...)` beside one of them (`dm_restart`,
+  `dm_prog_mode_switch`) opens and closes the connection around it.
 
 ## Running tests and checks
 

@@ -34,6 +34,10 @@ from .dmp_load_state_machine_write_r_co_mem import dmp_load_state_machine_write_
 from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
+from .dmp_prog_mode_switch_r_co import (
+    dm_prog_mode_switch,
+    dmp_prog_mode_switch_r_co,
+)
 from .dmp_user_mem_read_r_co import dmp_user_mem_read_r_co
 from .dmp_user_mem_verify_r_co import dmp_user_mem_verify_r_co
 from .dmp_user_mem_write_r_co import dmp_user_mem_write_r_co

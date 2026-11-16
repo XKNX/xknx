@@ -13,8 +13,13 @@ nav_order: 2
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
 - Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
 
+### DPT
+
+- Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+
 ### Management
 
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
 - Add the Load State Machine procedures of KNX v02.01.02 - Management Procedures 03.05.02 - §3.31-§3.33 to `xknx.management.procedures`, working on an already-open `P2PConnection`:
   - property based (the Property `property_id`, default `PID_LOAD_STATE_CONTROL`, of the Interface Object at `object_index`): `dmp_load_state_machine_write_r_co_io` (§3.31.3), `dm_load_state_machine_verify_r_io` (§3.32.3) and `dmp_load_state_machine_read_r_io` (§3.33.3);
   - with `A_FunctionPropertyExtCommand` / `A_FunctionPropertyExtState_Read`, addressing the Interface Object by type and instance: `dmp_ext_load_state_machine_write_r_co_io` (§3.31.5), `dmp_ext_load_state_machine_verify_r_co_io` (§3.32.4) and `dmp_ext_load_state_machine_read_r_co_io` (§3.33.4);

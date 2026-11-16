@@ -26,14 +26,17 @@ Most procedures come in two forms:
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.
 
-Procedures whose KNX spec name already denotes a remote access variant keep
-that name instead of the ``_conn`` suffix: ``_r_co`` (RCo, connection
-oriented), ``_r`` (R), ``_r_io`` (R_IO), ``_r_co_io`` (RCo_IO) and
-``_r_co_mem`` (RCo_Mem) are part of the KNX v02.01.02 - Management Procedures
-03.05.02 procedure names, e.g. ``dm_restart_r_co`` for DM_Restart_RCo (§3.7.3)
-or ``dmp_load_state_machine_write_r_co_io`` for
-DMP_LoadStateMachineWrite_RCo_IO (§3.31.3). Most of them only exist in the
-connection-based form.
+Where the spec itself names a procedure's variants by how they reach the
+device, xknx keeps that spec name instead of ``_conn``: ``_r_co`` for RCo
+(connection-oriented, e.g. ``dm_restart_r_co``, ``dmp_mem_read_r_co``,
+``dmp_prog_mode_switch_r_co``), ``_r`` for R (e.g.
+``dmp_interface_object_read_r``), and ``_r_io``, ``_r_co_io`` and
+``_r_co_mem`` for R_IO, RCo_IO and RCo_Mem, as in KNX v02.01.02 - Management
+Procedures 03.05.02 - §3.7.3 for DM_Restart_RCo or §3.31.3 for
+DMP_LoadStateMachineWrite_RCo_IO (``dmp_load_state_machine_write_r_co_io``).
+Most of these only exist in the connection-based form. A plain
+``<spec_name>(xknx, ...)`` beside one of them (``dm_restart``,
+``dm_prog_mode_switch``) opens and closes the connection around it.
 
 When adding a new procedure follow the workflow:
 
@@ -49,6 +52,7 @@ from .device import (
     ScannedInterfaceObject,
     dm_load_state_machine_verify_r_co_mem,
     dm_load_state_machine_verify_r_io,
+    dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
@@ -69,6 +73,7 @@ from .device import (
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
+    dmp_prog_mode_switch_r_co,
     dmp_user_mem_read_r_co,
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,
