@@ -31,10 +31,14 @@ Most procedures come in two forms:
     §1.2, Table 1, e.g. ``dm_function_property_write_r_cl`` (§3.30.1) and
     ``dmp_ext_function_property_write_r_cl`` (§3.30.2).
 
-Procedures whose KNX name already ends in ``_R`` or in a communication mode
-suffix such as ``_RCo`` (§1.2, Table 1) take ``conn`` under that name, without
-the ``_conn`` suffix, e.g. ``dm_restart_r_co`` or
-``dmp_interface_object_read_r``. ``conn`` is an open ``P2PConnection``.
+Where the spec itself names a procedure's variants by how they reach the
+device, xknx keeps that spec name instead of ``_conn``: ``_r_co`` for RCo
+(connection-oriented, e.g. ``dm_restart_r_co``, ``dmp_mem_read_r_co``,
+``dmp_prog_mode_switch_r_co``) and ``_r`` for R (e.g.
+``dmp_interface_object_read_r``), as in KNX v02.01.02 - Management Procedures
+03.05.02 - §3.7.3 for DM_Restart_RCo. A plain ``<spec_name>(xknx, ...)``
+beside one of them (``dm_restart``, ``dm_prog_mode_switch``) opens and closes
+the connection around it.
 
 When adding a new procedure follow the workflow:
 
@@ -50,6 +54,7 @@ from .device import (
     ScannedInterfaceObject,
     dm_function_property_write_r,
     dm_function_property_write_r_cl,
+    dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
@@ -64,6 +69,7 @@ from .device import (
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
+    dmp_prog_mode_switch_r_co,
     dmp_user_mem_read_r_co,
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,

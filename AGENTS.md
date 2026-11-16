@@ -117,9 +117,12 @@ in sync with the code. Summary:
   v02.01.02 - Management Procedures 03.05.02 - §1.2, Table 1) on a
   `P2PConnectionless` from `xknx.management.connectionless()`, e.g.
   `dm_function_property_write_r_cl`.
-- Procedures whose KNX name already ends in `_R` or `_RCo` (e.g.
-  `dm_restart_r_co`, `dmp_interface_object_read_r`) take `conn` under that
-  name, without the `_conn` suffix. `conn` is an open `P2PConnection`.
+- Where the spec names a procedure's variants itself, xknx keeps that name
+  instead of `_conn`: `_r_co` for RCo (e.g. `dm_restart_r_co`,
+  `dmp_mem_read_r_co`, `dmp_prog_mode_switch_r_co`) and `_r` for R (e.g.
+  `dmp_interface_object_read_r`). A plain `<spec_name>(xknx, ...)` beside one
+  of them (`dm_restart`, `dm_prog_mode_switch`) opens and closes the
+  connection around it.
 
 ## Running tests and checks
 

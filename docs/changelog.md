@@ -13,8 +13,13 @@ nav_order: 2
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
 - Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
 
+### DPT
+
+- Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+
 ### Management
 
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
 - Add `dm_function_property_write_r` and `dmp_ext_function_property_write_r`, plus their connectionless variants `dm_function_property_write_r_cl` and `dmp_ext_function_property_write_r_cl`, to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.30.1/§3.30.2, calling a Function Property of an Interface Object addressed by its index or by its type and instance. The procedures may use either communication mode: the plain names take an open `P2PConnection`, the `_r_cl` variants a `P2PConnectionless` (suffix RCl - §1.2 Table 1). All return the device's `FunctionPropertyStateResponse` / `FunctionPropertyExtStateResponse` - its return code is Function Property specific, so it is left to the caller. A response for another Interface Object or Property raises `ManagementConnectionError`. `FunctionPropertyCommand` and `FunctionPropertyExtCommand` derive from `APCIRequest` now, so `request()` verifies and narrows their response like for `FunctionPropertyStateRead` (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.1/§3.4.8.1: the remote application shall respond).
 
 # 4.1.1 Tunnel robustness 2026-11-05
