@@ -15,9 +15,6 @@ from .dmp_mem_read_r_co import dmp_mem_read_r_co
 from .dmp_mem_verify_r_co import dmp_mem_verify_r_co
 from .dmp_mem_write_r_co import dmp_mem_write_r_co
 from .dmp_prog_mode_switch_r_co import (
-    PROG_MODE_ADDRESS,
-    PROG_MODE_MEMORY_MASKS,
-    PROG_MODE_PROPERTY_MASKS,
     dm_prog_mode_switch,
     dmp_prog_mode_switch_r_co,
 )

@@ -45,9 +45,6 @@ When adding a new procedure follow the workflow:
 # ruff: noqa: F401
 from .device import (
     FREE_ACCESS_KEY,
-    PROG_MODE_ADDRESS,
-    PROG_MODE_MEMORY_MASKS,
-    PROG_MODE_PROPERTY_MASKS,
     ScannedInterfaceObject,
     dm_prog_mode_switch,
     dm_restart,

@@ -8,9 +8,9 @@ import pytest
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.procedures.device.dmp_prog_mode_switch_r_co import (
-    PROG_MODE_ADDRESS,
-    PROG_MODE_MEMORY_MASKS,
-    PROG_MODE_PROPERTY_MASKS,
+    _PROG_MODE_ADDRESS,
+    _PROG_MODE_MEMORY_MASKS,
+    _PROG_MODE_PROPERTY_MASKS,
     dm_prog_mode_switch,
     dmp_prog_mode_switch_r_co,
 )
@@ -68,7 +68,7 @@ def _read(ia: IndividualAddress, seq: int = 0) -> Telegram:
     return Telegram(
         destination_address=ia,
         tpci=tpci.TDataConnected(seq),
-        payload=apci.MemoryRead(address=PROG_MODE_ADDRESS, count=1),
+        payload=apci.MemoryRead(address=_PROG_MODE_ADDRESS, count=1),
     )
 
 
@@ -77,7 +77,7 @@ def _write(ia: IndividualAddress, value: int, seq: int = 1) -> Telegram:
     return Telegram(
         destination_address=ia,
         tpci=tpci.TDataConnected(seq),
-        payload=apci.MemoryWrite(address=PROG_MODE_ADDRESS, data=bytes([value])),
+        payload=apci.MemoryWrite(address=_PROG_MODE_ADDRESS, data=bytes([value])),
     )
 
 
@@ -97,7 +97,7 @@ def _descriptor(mask_version: int) -> apci.DeviceDescriptorResponse:
 
 def _response(value: int) -> apci.MemoryResponse:
     """Return the A_Memory_Response carrying curr_prog_mode."""
-    return apci.MemoryResponse(address=PROG_MODE_ADDRESS, data=bytes([value]))
+    return apci.MemoryResponse(address=_PROG_MODE_ADDRESS, data=bytes([value]))
 
 
 @pytest.mark.parametrize(
@@ -184,7 +184,7 @@ async def test_dmp_prog_mode_switch_r_co_no_data(xknx_setup: XKNX) -> None:
             xknx,
             ia,
             ack_seq=0,
-            payload=apci.MemoryResponse(address=PROG_MODE_ADDRESS, data=b""),
+            payload=apci.MemoryResponse(address=_PROG_MODE_ADDRESS, data=b""),
         )
 
     responder = asyncio.create_task(respond())
@@ -252,7 +252,7 @@ async def test_dmp_prog_mode_switch_r_co_verify_rejected(xknx_setup: XKNX) -> No
     await conn.disconnect()
 
 
-@pytest.mark.parametrize("mask_version", sorted(PROG_MODE_MEMORY_MASKS))
+@pytest.mark.parametrize("mask_version", sorted(_PROG_MODE_MEMORY_MASKS))
 async def test_dm_prog_mode_switch_memory(xknx_setup: XKNX, mask_version: int) -> None:
     """Test dm_prog_mode_switch switches curr_prog_mode at 60h of a memory mask."""
     xknx = xknx_setup
@@ -306,7 +306,7 @@ async def test_dm_prog_mode_switch_unchanged(xknx_setup: XKNX) -> None:
     ]
 
 
-@pytest.mark.parametrize("mask_version", sorted(PROG_MODE_PROPERTY_MASKS))
+@pytest.mark.parametrize("mask_version", sorted(_PROG_MODE_PROPERTY_MASKS))
 @pytest.mark.parametrize("mode", [True, False])
 async def test_dm_prog_mode_switch_property(
     xknx_setup: XKNX, mask_version: int, mode: bool
@@ -384,4 +384,4 @@ async def test_dm_prog_mode_switch_unknown_mask(xknx_setup: XKNX) -> None:
 
 def test_masks_are_either_memory_or_property() -> None:
     """Test no mask version is in both lists."""
-    assert not PROG_MODE_MEMORY_MASKS & PROG_MODE_PROPERTY_MASKS
+    assert not _PROG_MODE_MEMORY_MASKS & _PROG_MODE_PROPERTY_MASKS
