@@ -118,6 +118,8 @@ in sync with the code. Summary:
   `dmp_interface_object_read_r`). A plain `<spec_name>(xknx, ...)` beside one
   of them (`dm_restart`, `dm_prog_mode_switch`) opens and closes the
   connection around it.
+- A function that does what no spec procedure does has no `nm_`/`dm_`/`dmp_`
+  prefix and says "Not in spec" in its docstring (e.g. `prog_mode_switch`).
 
 ## Running tests and checks
 

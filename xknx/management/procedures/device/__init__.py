@@ -17,6 +17,8 @@ from .dmp_mem_write_r_co import dmp_mem_write_r_co
 from .dmp_prog_mode_switch_r_co import (
     dm_prog_mode_switch,
     dmp_prog_mode_switch_r_co,
+    prog_mode_property_switch,
+    prog_mode_switch,
 )
 from .dmp_user_mem_read_r_co import dmp_user_mem_read_r_co
 from .dmp_user_mem_verify_r_co import dmp_user_mem_verify_r_co

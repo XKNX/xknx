@@ -19,7 +19,7 @@ nav_order: 2
 
 ### Management
 
-- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off. `dmp_prog_mode_switch_r_co` works on an already-open connection, `dm_prog_mode_switch` opens and closes its own. Not in spec: `prog_mode_property_switch(conn, mode, verify=False)` switches it through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)` picks memory 60h or `PID_PROGMODE` by the device's mask version.
 
 # 4.1.1 Tunnel robustness 2026-11-05
 
