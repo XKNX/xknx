@@ -17,6 +17,11 @@ nav_order: 2
 
 - Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
 
+### Internal
+
+- Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
+- The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
