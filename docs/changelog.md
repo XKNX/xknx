@@ -13,6 +13,10 @@ nav_order: 2
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
 - Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
 
+### DPT
+
+- Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+
 # 4.1.1 Tunnel robustness 2026-11-05
 
 ### Connection
