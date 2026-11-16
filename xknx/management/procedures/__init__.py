@@ -24,9 +24,15 @@ Most procedures come in two forms:
   - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.
-    ``dm_restart_r_co`` is the one exception — ``RCo`` is the actual KNX
-    v02.01.02 - Management Procedures 03.05.02 - §3.7.3 procedure name for
-    the connection-based variant of DM_Restart, not the xknx convention.
+
+Where the spec itself names a procedure's variants by how they reach the
+device, xknx keeps that spec name instead of ``_conn``: ``_r_co`` for RCo
+(connection-oriented, e.g. ``dm_restart_r_co``, ``dmp_mem_read_r_co``,
+``dmp_prog_mode_switch_r_co``) and ``_r`` for R (e.g.
+``dmp_interface_object_read_r``), as in KNX v02.01.02 - Management Procedures
+03.05.02 - §3.7.3 for DM_Restart_RCo. A plain ``<spec_name>(xknx, ...)``
+beside one of them (``dm_restart``, ``dm_prog_mode_switch``) opens and closes
+the connection around it.
 
 When adding a new procedure follow the workflow:
 
@@ -40,6 +46,7 @@ When adding a new procedure follow the workflow:
 from .device import (
     FREE_ACCESS_KEY,
     ScannedInterfaceObject,
+    dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
@@ -52,6 +59,7 @@ from .device import (
     dmp_mem_read_r_co,
     dmp_mem_verify_r_co,
     dmp_mem_write_r_co,
+    dmp_prog_mode_switch_r_co,
     dmp_user_mem_read_r_co,
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,

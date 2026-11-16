@@ -17,6 +17,10 @@ nav_order: 2
 
 - Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
 
+### Management
+
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
+
 ### Internal
 
 - Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
