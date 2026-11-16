@@ -54,11 +54,12 @@ class TestUDPTransport:
         finally:
             transport.stop()
 
-    async def test_unicast_send_socket(self) -> None:
+    @pytest.mark.parametrize("remote_host", ["127.0.0.1", "localhost"])
+    async def test_unicast_send_socket(self, remote_host: str) -> None:
         """Test multicast options are left alone for a unicast remote address."""
         transport = UDPTransport(
             local_addr=("127.0.0.1", 0),
-            remote_addr=("127.0.0.1", 3671),
+            remote_addr=(remote_host, 3671),
         )
         await transport.connect()
         try:
@@ -76,9 +77,7 @@ class TestUDPTransport:
             local_addr=("127.0.0.1", 0),
             remote_addr=("224.0.0.254", 3671),
         )
-        sock_mock = Mock()
+        sock_mock = Mock(spec=socket.socket)
         sock_mock.setsockopt.side_effect = [None, OSError("Can't assign address")]
-        transport.transport = Mock()
-        transport.transport.get_extra_info.return_value = sock_mock
-        transport._configure_multicast_send()
+        transport._configure_multicast_send(sock_mock)
         assert "Could not set multicast interface to 127.0.0.1" in caplog.text

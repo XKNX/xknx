@@ -176,13 +176,10 @@ class UDPTransport(KNXIPTransport):
         )
         self.local_addr_assigned = self.getsockname()
         if _is_multicast(self.remote_addr[0]):
-            self._configure_multicast_send()
+            self._configure_multicast_send(self.transport.get_extra_info("socket"))
 
-    def _configure_multicast_send(self) -> None:
+    def _configure_multicast_send(self, sock: socket.socket) -> None:
         """Set outgoing interface and TTL for multicast datagrams of the sending socket."""
-        if self.transport is None:
-            return
-        sock = self.transport.get_extra_info("socket")
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, MULTICAST_TTL)
         try:
             # Linux and Windows send multicast from the interface of the bound address;
