@@ -1,12 +1,8 @@
 """Tests for KNX/IP routing indications using multicast."""
 
 import asyncio
-import os
-import sys
 from typing import Final
 from unittest.mock import Mock
-
-import pytest
 
 from xknx import XKNX
 from xknx.dpt.payload import DPTBinary
@@ -19,12 +15,11 @@ from xknx.telegram.tpci import TDataGroup
 # RFC 4727 multicast group for testing purposes
 # to not mess with live installations when running tests
 EXPERIMENTAL_MCAST_GRP: Final = "224.0.0.254"
+# stay on the loopback interface - GitHub's macOS runners
+# can't send multicast from their network interface
+LOOPBACK_IP: Final = "127.0.0.1"
 
 
-@pytest.mark.skipif(
-    sys.platform == "darwin" and "GITHUB_ACTIONS" in os.environ,
-    reason="GitHub's macOS runners can't send multicast (No route to host)",
-)
 async def test_routing_indication_multicast() -> None:
     """Test exchanging routing indication using multicast."""
     routing1_mock = Mock()
@@ -49,6 +44,7 @@ async def test_routing_indication_multicast() -> None:
             connection_config=ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
                 multicast_group=EXPERIMENTAL_MCAST_GRP,
+                local_ip=LOOPBACK_IP,
             ),
             telegram_received_cb=routing1_mock,
         ) as xknx1,
@@ -56,6 +52,7 @@ async def test_routing_indication_multicast() -> None:
             connection_config=ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
                 multicast_group=EXPERIMENTAL_MCAST_GRP,
+                local_ip=LOOPBACK_IP,
             ),
             telegram_received_cb=routing2_callback,
         ),
