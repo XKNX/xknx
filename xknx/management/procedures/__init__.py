@@ -35,9 +35,10 @@ beside one of them (``dm_restart``, ``dm_prog_mode_switch``) opens and closes
 the connection around it.
 
 A function that does what no spec procedure does gets a name without the
-``nm_``/``dm_``/``dmp_`` prefix and says "Not in spec" in its docstring, e.g.
-``prog_mode_switch``, which picks the Programming Mode location by mask
-version.
+``nm_``/``dm_``/``dmp_`` prefix, lives in its own module and says "Not in
+spec" in its docstring, e.g. ``prog_mode_switch``, which picks the
+Programming Mode location by mask version. On an already-open connection it
+takes the ``_conn`` suffix, e.g. ``prog_mode_property_switch_conn``.
 
 When adding a new procedure follow the workflow:
 
@@ -68,7 +69,7 @@ from .device import (
     dmp_user_mem_read_r_co,
     dmp_user_mem_verify_r_co,
     dmp_user_mem_write_r_co,
-    prog_mode_property_switch,
+    prog_mode_property_switch_conn,
     prog_mode_switch,
 )
 from .network import (
