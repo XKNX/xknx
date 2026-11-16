@@ -8,6 +8,10 @@ nav_order: 2
 
 # Unreleased changes
 
+### Climate
+
+- A second target temperature request before the target feedback arrived sends the setpoint shift for the base temperature of the first request, instead of deriving it from the new shift and the old target. Only affects devices with a read-only target state.
+
 ### Protocol
 
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
