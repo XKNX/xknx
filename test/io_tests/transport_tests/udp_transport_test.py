@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xknx.io.transport import UDPTransport
+from xknx.io.transport.udp_transport import MULTICAST_TTL
 
 
 class TestUDPTransport:
@@ -30,3 +31,53 @@ class TestUDPTransport:
         assert sock is sock_mock
         sock_mock.bind.assert_called_once()
         sock_mock.close.assert_not_called()
+
+    @pytest.mark.parametrize("multicast", [True, False])
+    async def test_multicast_send_socket(self, multicast: bool) -> None:
+        """Test interface and TTL are set for sending to a multicast address."""
+        transport = UDPTransport(
+            local_addr=("127.0.0.1", 0),
+            remote_addr=("224.0.0.254", 3671),
+            multicast=multicast,
+        )
+        await transport.connect()
+        try:
+            assert transport.transport is not None
+            sock = transport.transport.get_extra_info("socket")
+            assert (
+                sock.getsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL)
+                == MULTICAST_TTL
+            )
+            assert sock.getsockopt(
+                socket.IPPROTO_IP, socket.IP_MULTICAST_IF, 4
+            ) == socket.inet_aton("127.0.0.1")
+        finally:
+            transport.stop()
+
+    @pytest.mark.parametrize("remote_host", ["127.0.0.1", "localhost"])
+    async def test_unicast_send_socket(self, remote_host: str) -> None:
+        """Test multicast options are left alone for a unicast remote address."""
+        transport = UDPTransport(
+            local_addr=("127.0.0.1", 0),
+            remote_addr=(remote_host, 3671),
+        )
+        await transport.connect()
+        try:
+            assert transport.transport is not None
+            sock = transport.transport.get_extra_info("socket")
+            assert sock.getsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL) == 1
+        finally:
+            transport.stop()
+
+    async def test_multicast_interface_error(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test a refused multicast interface is logged and doesn't fail connect."""
+        transport = UDPTransport(
+            local_addr=("127.0.0.1", 0),
+            remote_addr=("224.0.0.254", 3671),
+        )
+        sock_mock = Mock(spec=socket.socket)
+        sock_mock.setsockopt.side_effect = [None, OSError("Can't assign address")]
+        transport._configure_multicast_send(sock_mock)
+        assert "Could not set multicast interface to 127.0.0.1" in caplog.text
