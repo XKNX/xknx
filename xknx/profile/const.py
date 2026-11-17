@@ -97,8 +97,33 @@ class PropertyDataType(IntEnum):
           and PDT_ESCAPE are variable or usage dependent.
         - PDT_REFERENCE is listed with 8 octets in Table 6, but its format in
           §4.2 is 10 octets.
+
+        `read_size` and `write_size` give the size per direction.
         """
         return _PROPERTY_DATA_TYPE_SIZES.get(self)
+
+    @property
+    def read_size(self) -> int | None:
+        """
+        Return the size in octets per element read from a device.
+
+        The same as `size`, except PDT_CONTROL: 1 octet.
+        """
+        if self is PropertyDataType.PDT_CONTROL:
+            return 1
+        return self.size
+
+    @property
+    def write_size(self) -> int | None:
+        """
+        Return the size in octets per element written to a device.
+
+        The same as `size`, except PDT_CONTROL: 10 octets - e.g. the event of
+        PID_LOAD_STATE_CONTROL.
+        """
+        if self is PropertyDataType.PDT_CONTROL:
+            return 10
+        return self.size
 
 
 _PROPERTY_DATA_TYPE_SIZES: dict[PropertyDataType, int] = {
@@ -133,6 +158,36 @@ _PROPERTY_DATA_TYPE_SIZES: dict[PropertyDataType, int] = {
 
 
 ResourcePropertyId = IntEnum
+
+
+class LoadState(IntEnum):
+    """
+    State of a Load State Machine, read from PID_LOAD_STATE_CONTROL.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.1, Table 92. UNLOADING and
+    LOAD_COMPLETING are optional intermediate states.
+    """
+
+    UNLOADED = 0
+    LOADED = 1
+    LOADING = 2
+    ERROR = 3
+    UNLOADING = 4
+    LOAD_COMPLETING = 5
+
+
+class LoadEvent(IntEnum):
+    """
+    Event for a Load State Machine, the first octet written to PID_LOAD_STATE_CONTROL.
+
+    KNX v01.10.01 - Resources 03.05.01 - §4.23.2.3.2, Table 93.
+    """
+
+    NO_OPERATION = 0x00
+    START_LOADING = 0x01
+    LOAD_COMPLETED = 0x02
+    ADDITIONAL_LOAD_CONTROLS = 0x03
+    UNLOAD = 0x04
 
 
 class ResourceGenericPropertyId(ResourcePropertyId):

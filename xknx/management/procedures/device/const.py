@@ -41,3 +41,23 @@ USER_MEMORY_HEADER_OCTETS = 4
 # count is 4 bits in A_UserMemory_Read/_Write/_Response (1-15 octets,
 # §3.5.6.2/3), max value 2^4 - 1
 USER_MEMORY_MAX_COUNT = (1 << 4) - 1
+
+# The value written to PID_LOAD_STATE_CONTROL is always 10 octets: the event,
+# then additional information for it - KNX v01.10.01 - Resources 03.05.01 -
+# §4.2.5 and KNX v02.01.02 - Management Procedures 03.05.02 - §3.31.3.
+LOAD_CONTROL_LENGTH = 10
+# KNX v01.10.01 - Resources 03.05.01 - §4.23.2.1: "The transitions between the
+# states shall be less than 30 seconds. This time shall be the minimum delay
+# during which a MaC shall wait after sending a load event until
+# interpretation of the load event with the expected state transition to be
+# failed."
+LOAD_STATE_TRANSITION_TIMEOUT = 30.0
+# KNX v01.10.01 - Resources 03.05.01 - §4.23.2.4.1: the period for reading the
+# load state during LoadCompleting "shall not exceed half the TL-timeout, i.e.
+# 3 seconds".
+LOAD_STATE_MAX_POLL_INTERVAL = 3.0
+LOAD_STATE_POLL_INTERVAL = 1.0
+
+# Memory mapped Load State Machines of mask version 070nh (BIM M112) - KNX
+# v02.01.02 - Management Procedures 03.05.02 - §3.31.2, §3.32.2 and §3.33.2.
+MEM_MANAGEMENT_CONTROL_ADDRESS = 0x0104
