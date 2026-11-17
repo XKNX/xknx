@@ -16,6 +16,7 @@ nav_order: 2
 ### DPT
 
 - Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+- `DPTBase.transcoder_by_dpt()` and `parse_transcoder()` find a main number without a sub number (`10`, `"DPT-10"`, `{"main": 10, "sub": None}`) also when xknx has no class for the whole main number, through a fixed table of subtypes: 3.007, 4.002, 10.001, 11.001, 15.000, 16.001, 17.001, 18.001, 19.001, 26.001, 27.001, 235.001, 240.800, 241.800, 242.600, 249.600 and 250.600 - the default subtype of the KNX master data, its only subtype, or (4.002) the character set that includes the other one. KNX v02.02.01 - Datapoint Types 03.07.02 - §1.1: "Datapoint Types with the same main number thus have the same format and encoding." Main numbers whose subtypes give the same encoding different meanings - 20, 222, 225, 232, 251, 252, 254 - still return `None`.
 
 ### Connection
 
