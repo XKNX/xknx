@@ -475,6 +475,27 @@ class TestUSBTunnel:
         assert hid_device._backend("hid") is fake_hid
         assert threads == [threading.current_thread()]
 
+    def test_backend_imported_meanwhile_on_macos(
+        self, fake_hid: FakeHIDModule, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test an import waiting for the lock uses the module another thread imported."""
+        threads = self._note_hid_imports(fake_hid, monkeypatch)
+        monkeypatch.setattr(sys, "platform", "darwin")
+
+        class ImportedMeanwhile:
+            """A lock another thread held while it imported hidapi."""
+
+            def __enter__(self) -> None:
+                sys.modules["hid"] = fake_hid
+
+            def __exit__(self, *args: object) -> None:
+                """Release nothing."""
+
+        monkeypatch.setattr(hid_device, "_IMPORT_LOCK", ImportedMeanwhile())
+        assert hid_device._backend("hid") is fake_hid
+        # found imported: no thread of its own
+        assert not threads
+
     def test_missing_backend_on_macos(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test a missing hidapi is reported from the import thread on macOS."""
 
@@ -873,6 +894,24 @@ class TestHIDDevice:
         await device.close()
         assert fake_hid.closed == 0
 
+    def test_reader_stops_when_the_loop_is_closed(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test the reader thread ends when the event loop was closed first."""
+        info = find_usb_interfaces()[0]
+        report_received = Mock()
+        device = HIDDevice(
+            info, report_received=report_received, connection_lost=Mock()
+        )
+        loop = asyncio.new_event_loop()
+        loop.close()
+        device._loop = loop
+        device._device = Mock(read=Mock(return_value=list(bytes(64))))
+        with caplog.at_level(logging.DEBUG, logger="xknx.log"):
+            device._read_reports()
+        assert "Event loop closed" in caplog.text
+        report_received.assert_not_called()
+
 
 class TestDiscovery:
     """Test finding KNX USB interfaces."""
@@ -1085,6 +1124,10 @@ class TestKNXIPInterfaceUSB:
         assert tunnel.keyring is None
         assert interface.usb_interface_info() is None
         assert await interface.gateway_info() is None
+
+    def test_no_usb_interface_info_without_a_usb_interface(self) -> None:
+        """Test usb_interface_info is None for a connection that is not a USB one."""
+        assert XKNX().knxip_interface.usb_interface_info() is None
 
     def test_usb_config_default(self) -> None:
         """Test the default USB config."""
