@@ -78,6 +78,38 @@ For AUTOMATIC connections this setting selects a host from a given keyfile.
 For TCP TUNNELING connections this setting requests a tunnel to that individual address.
 For SECURE tunnels this setting selects an interface from a given keyfile.
 
+# [](#header-2)Bus monitor
+
+A tunnel can be opened in bus monitor mode by setting `busmonitor=True` in the `ConnectionConfig`. The server then passes every frame received on the bus as cEMI L_Busmon.ind - including acknowledgement frames, repeated frames and telegrams addressed to other devices. These frames are not processed as telegrams; register a callback with `xknx.cemi_handler.register_busmonitor_frame_received_cb()` to receive them. It returns a function to unregister the callback.
+
+```python
+from xknx import XKNX
+from xknx.cemi import CEMIBusmonData, CEMIFrame, TP1DataFrame, parse_tp1_frame
+from xknx.io import ConnectionConfig, ConnectionType
+
+
+def busmonitor_frame_received(cemi: CEMIFrame) -> None:
+    assert isinstance(cemi.data, CEMIBusmonData)
+    status = cemi.info.busmonitor_status  # error flags, lost flag, sequence number
+    frame = parse_tp1_frame(cemi.data.raw_frame)  # TP1DataFrame or TP1Acknowledgement
+    if isinstance(frame, TP1DataFrame):
+        print(frame.telegram(), frame.repeated, frame.checksum_valid, status)
+    else:
+        print(frame.name, status)
+
+
+connection_config = ConnectionConfig(
+    connection_type=ConnectionType.TUNNELING_TCP,
+    gateway_ip="10.1.0.123",
+    busmonitor=True,
+)
+xknx = XKNX(connection_config=connection_config)
+xknx.cemi_handler.register_busmonitor_frame_received_cb(busmonitor_frame_received)
+await xknx.start()
+```
+
+A client in bus monitor mode can't send - sending a telegram raises `CommunicationError`. Bus monitor mode is only available for tunnelling connections: routing raises `XKNXException`, and `ConnectionType.AUTOMATIC` only connects to tunnelling devices. Tunnelling servers support bus monitor mode optionally and may reject it while other tunnels to their KNX subnetwork are open.
+
 # [](#header-2)Starting
 
 ```python
