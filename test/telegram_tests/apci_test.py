@@ -1,5 +1,6 @@
 """Unit test for APCI objects."""
 
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -104,11 +105,21 @@ from xknx.telegram.apci import (
 )
 
 
+def _is_current(cls: type[APCI]) -> bool:
+    """
+    Whether ``cls`` is the class its module holds under its name.
+
+    `@dataclass(slots=True)` replaces a class with a new one; the old one stays
+    among the subclasses until it is garbage collected.
+    """
+    return getattr(sys.modules[cls.__module__], cls.__name__, None) is cls
+
+
 def _concrete_apci_classes(cls: type[APCI] = APCI) -> list[type[APCI]]:
     """Return every APCI subclass with a CODE, in definition order."""
     result: list[type[APCI]] = []
     for subclass in cls.__subclasses__():
-        if subclass.CODE is not None:
+        if subclass.CODE is not None and _is_current(subclass):
             result.append(subclass)
         result.extend(_concrete_apci_classes(subclass))
     return result
@@ -151,7 +162,7 @@ class TestAPCI:
         def concrete_subclasses(cls: type[APCI]) -> set[type[APCI]]:
             result = set()
             for subclass in cls.__subclasses__():
-                if subclass.CODE is not None:
+                if subclass.CODE is not None and _is_current(subclass):
                     result.add(subclass)
                 result |= concrete_subclasses(subclass)
             return result
@@ -699,7 +710,7 @@ class TestFunctionPropertyExtStateResponse:
             interface_object_type=17,
             object_instance=1,
             property_id=51,
-            return_code=ReturnCode.E_SUCCESS,
+            return_code=0x00,
             data=bytes.fromhex("0000"),
         )
 
@@ -776,7 +787,7 @@ class TestFunctionPropertyExtStateResponse:
             interface_object_type=17,
             object_instance=1,
             property_id=51,
-            return_code=ReturnCode.E_ERROR,
+            return_code=0xFF,
             data=bytes.fromhex("0000"),
         )
 
@@ -794,7 +805,7 @@ class TestFunctionPropertyExtStateResponse:
             interface_object_type=0x10000,
             object_instance=1,
             property_id=51,
-            return_code=ReturnCode.E_SUCCESS,
+            return_code=0x00,
         )
 
         with pytest.raises(ConversionError, match=r".*Interface object type.*"):
@@ -806,7 +817,7 @@ class TestFunctionPropertyExtStateResponse:
             interface_object_type=17,
             object_instance=0x1000,
             property_id=51,
-            return_code=ReturnCode.E_SUCCESS,
+            return_code=0x00,
         )
 
         with pytest.raises(ConversionError, match=r".*Object instance.*"):
@@ -818,10 +829,22 @@ class TestFunctionPropertyExtStateResponse:
             interface_object_type=17,
             object_instance=1,
             property_id=0x1000,
-            return_code=ReturnCode.E_SUCCESS,
+            return_code=0x00,
         )
 
         with pytest.raises(ConversionError, match=r".*Property ID.*"):
+            payload.to_knx()
+
+    def test_to_knx_negative_return_code(self) -> None:
+        """Test to_knx raises ConversionError for a negative return_code."""
+        payload = FunctionPropertyExtStateResponse(
+            interface_object_type=17,
+            object_instance=1,
+            property_id=51,
+            return_code=-1,
+        )
+
+        with pytest.raises(ConversionError, match=r".*Return code.*"):
             payload.to_knx()
 
     def test_str(self) -> None:

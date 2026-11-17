@@ -24,6 +24,12 @@ Most procedures come in two forms:
   - ``<spec_name>_conn(conn: P2PConnection, ...)`` operates on an
     already-open connection, for chaining several procedures over one
     connection. This suffix is an xknx convention, not a KNX spec name.
+  - ``<spec_name>_r_cl(connectionless: P2PConnectionless, ...)`` runs the
+    procedure in the point-to-point connectionless communication mode, on a
+    ``P2PConnectionless`` from ``xknx.management.connectionless()``. ``RCl`` is
+    the suffix of that mode in KNX v02.01.02 - Management Procedures 03.05.02 -
+    §1.2, Table 1, e.g. ``dm_function_property_write_r_cl`` (§3.30.1) and
+    ``dmp_ext_function_property_write_r_cl`` (§3.30.2).
 
 Where the spec itself names a procedure's variants by how they reach the
 device, xknx keeps that spec name instead of ``_conn``: ``_r_co`` for RCo
@@ -52,12 +58,16 @@ When adding a new procedure follow the workflow:
 from .device import (
     FREE_ACCESS_KEY,
     ScannedInterfaceObject,
+    dm_function_property_write_r,
+    dm_function_property_write_r_cl,
     dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
     dmp_authorize2_r_co,
     dmp_authorize_r_co,
     dmp_connect_r_co,
+    dmp_ext_function_property_write_r,
+    dmp_ext_function_property_write_r_cl,
     dmp_interface_object_read_r,
     dmp_interface_object_scan_r,
     dmp_interface_object_verify_r,

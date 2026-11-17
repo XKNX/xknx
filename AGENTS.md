@@ -112,6 +112,11 @@ in sync with the code. Summary:
 - `<spec_name>_conn(conn: P2PConnection, ...)` operates on an already-open
   connection, for chaining several procedures over one connection. The
   `_conn` suffix is an xknx-only naming convention, not a KNX spec name.
+- `<spec_name>_r_cl(connectionless: P2PConnectionless, ...)` runs the procedure
+  in the point-to-point connectionless communication mode (suffix `RCl`, KNX
+  v02.01.02 - Management Procedures 03.05.02 - §1.2, Table 1) on a
+  `P2PConnectionless` from `xknx.management.connectionless()`, e.g.
+  `dm_function_property_write_r_cl`.
 - Where the spec names a procedure's variants itself, xknx keeps that name
   instead of `_conn`: `_r_co` for RCo (e.g. `dm_restart_r_co`,
   `dmp_mem_read_r_co`, `dmp_prog_mode_switch_r_co`) and `_r` for R (e.g.
