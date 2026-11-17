@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+import gc
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
@@ -18,6 +19,7 @@ from xknx.management.management import (
     MANAGEMENT_ACK_TIMEOUT,
     MANAGEMENT_CONNECTION_TIMEOUT,
     MANAGEMENT_MAX_REPETITIONS,
+    P2PConnection,
 )
 from xknx.telegram import (
     GroupAddress,
@@ -29,6 +31,41 @@ from xknx.telegram import (
 )
 
 from ..conftest import EventLoopClockAdvancer
+
+
+def _disconnect(xknx: XKNX, address: IndividualAddress) -> Telegram:
+    """Return the T_Disconnect we send to a device."""
+    return Telegram(
+        source_address=xknx.current_address,
+        destination_address=address,
+        tpci=tpci.TDisconnect(),
+    )
+
+
+def _from_device(
+    xknx: XKNX,
+    address: IndividualAddress,
+    tpdu: tpci.TPCI,
+    payload: apci.APCI | None = None,
+) -> Telegram:
+    """Return a telegram a device sends us."""
+    return Telegram(
+        source_address=address,
+        destination_address=xknx.current_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpdu,
+        payload=payload,
+    )
+
+
+def _descriptor_read(xknx: XKNX, address: IndividualAddress, seq: int) -> Telegram:
+    """Return the A_DeviceDescriptor_Read we send in a connection."""
+    return Telegram(
+        source_address=xknx.current_address,
+        destination_address=address,
+        tpci=tpci.TDataConnected(seq),
+        payload=apci.DeviceDescriptorRead(descriptor=0),
+    )
 
 
 async def test_connect() -> None:
@@ -110,9 +147,21 @@ async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
     with pytest.raises(ManagementConnectionTimeout):
         # still no ACK -> timeout
         await task
-    assert xknx.cemi_handler.send_telegram.call_count == MANAGEMENT_MAX_REPETITIONS + 1
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: E18 -> A6, the
+    # connection is closed with a T_Disconnect
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(device_desc_read)
+    ] * (MANAGEMENT_MAX_REPETITIONS + 1) + [call(_disconnect(xknx, _ia))]
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
 
+    # the T_Disconnect was sent already - only unregistered, without raising
+    xknx.cemi_handler.send_telegram.reset_mock()
     await conn.disconnect()
+    xknx.cemi_handler.send_telegram.assert_not_called()
+    # a new connection to the device can be opened
+    await xknx.management.connect(_ia)
 
 
 async def test_ack_after_last_repetition(time_travel: EventLoopClockAdvancer) -> None:
@@ -149,6 +198,430 @@ async def test_ack_after_last_repetition(time_travel: EventLoopClockAdvancer) ->
     assert await task == response
 
     await conn.disconnect()
+
+
+async def _settle() -> None:
+    """Let the tasks woken by a received telegram run."""
+    for _ in range(3):
+        await asyncio.sleep(0)
+
+
+async def test_nak_repeats_telegram(time_travel: EventLoopClockAdvancer) -> None:
+    """Test a NAK of the sent telegram repeats it and restarts the ACK timeout."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    await time_travel(MANAGEMENT_ACK_TIMEOUT - 1)
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: E12 -> A9
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+    await _settle()
+    assert (
+        xknx.cemi_handler.send_telegram.call_args_list
+        == [call(_descriptor_read(xknx, ia, 0))] * 2
+    )
+    # A9 starts the acknowledge timeout timer again
+    await time_travel(MANAGEMENT_ACK_TIMEOUT - 1)
+    assert xknx.cemi_handler.send_telegram.call_count == 2
+    await time_travel(1)
+    assert xknx.cemi_handler.send_telegram.call_count == 3
+
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    response = _from_device(
+        xknx,
+        ia,
+        tpci.TDataConnected(0),
+        apci.DeviceDescriptorResponse(descriptor=0, value=0x07B0),
+    )
+    xknx.management.process(response)
+    assert await task == response
+    await conn.disconnect()
+
+
+async def test_nak_after_last_repetition() -> None:
+    """Test a NAK of the last repetition closes the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    for _ in range(MANAGEMENT_MAX_REPETITIONS):
+        xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+        await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0))
+    ] * (MANAGEMENT_MAX_REPETITIONS + 1)
+
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: E13 -> A6
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+    with pytest.raises(ManagementConnectionError, match="NAK"):
+        await task
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        _disconnect(xknx, ia)
+    )
+    assert xknx.cemi_handler.send_telegram.call_count == MANAGEMENT_MAX_REPETITIONS + 2
+    with pytest.raises(ManagementConnectionRefused, match="is closed"):
+        await conn.send_data(apci.Restart(), wait_for_ack=False)
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    "control",
+    [
+        pytest.param(tpci.TAck(1), id="E09-ack"),
+        pytest.param(tpci.TNak(1), id="E11-nak"),
+    ],
+)
+async def test_ack_with_other_sequence_number(control: tpci.TAck | tpci.TNak) -> None:
+    """Test an ACK/NAK of another sequence number while waiting closes the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: OPEN_WAIT E09/E11 -> A6
+    xknx.management.process(_from_device(xknx, ia, control))
+    with pytest.raises(ManagementConnectionError, match="does not match"):
+        await task
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0)),
+        call(_disconnect(xknx, ia)),
+    ]
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.send_data(apci.Restart())
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    "control",
+    [
+        pytest.param(tpci.TAck(0), id="E08-ack"),
+        pytest.param(tpci.TAck(5), id="E09-ack"),
+        pytest.param(tpci.TNak(0), id="E12-nak"),
+        pytest.param(tpci.TNak(5), id="E11-nak"),
+    ],
+)
+async def test_ack_while_waiting_for_response(control: tpci.TAck | tpci.TNak) -> None:
+    """Test an ACK/NAK when no telegram awaits one closes the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    # OPEN_IDLE, waiting for the response - KNX v01.02.03 - Transport Layer
+    # 03.03.04 - §5.4.1: E08, E09, E11, E12 -> A6
+    xknx.management.process(_from_device(xknx, ia, control))
+    with pytest.raises(ManagementConnectionError, match="no telegram awaits"):
+        await task
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0)),
+        call(_disconnect(xknx, ia)),
+    ]
+    await conn.disconnect()
+
+
+async def test_ack_without_sent_telegram() -> None:
+    """Test an ACK on an idle connection closes it, and its late telegrams are ignored."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_disconnect(xknx, ia))
+    ]
+    # nobody waits for a response - the error must not be reported as never
+    # retrieved
+    assert conn._response_waiter.done()
+    assert isinstance(conn._response_waiter.exception(), ManagementConnectionError)
+
+    # CLOSED: no second T_Disconnect, no ACK for data
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+    xknx.management.process(
+        _from_device(xknx, ia, tpci.TDataConnected(0), apci.DeviceDescriptorResponse())
+    )
+    xknx.management.process(_from_device(xknx, ia, tpci.TDisconnect()))
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+    with pytest.raises(ManagementConnectionRefused, match="is closed"):
+        await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    await conn.disconnect()
+
+
+async def _acknowledged_send(
+    xknx: XKNX, conn: P2PConnection, ia: IndividualAddress, seq: int
+) -> None:
+    """Send a telegram and let the device acknowledge it."""
+    task = asyncio.create_task(
+        conn.send_data(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(seq)))
+    await task
+
+
+async def test_repeated_ack_while_waiting_is_ignored() -> None:
+    """Test a repeated ACK of the last telegram is ignored while the next waits."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, ignore_repeated_acks=True)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await _acknowledged_send(xknx, conn, ia, 0)
+
+    task = asyncio.create_task(
+        conn.send_data(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    # the device acknowledges a repeated frame of telegram 0 again
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    assert not task.done()
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(1)))
+    await task
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0)),
+        call(_descriptor_read(xknx, ia, 1)),
+    ]
+    await conn.disconnect()
+
+
+async def test_repeated_ack_on_idle_connection_is_ignored() -> None:
+    """Test a repeated ACK of the last telegram is ignored on an idle connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, ignore_repeated_acks=True)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await _acknowledged_send(xknx, conn, ia, 0)
+
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    await _acknowledged_send(xknx, conn, ia, 1)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0)),
+        call(_descriptor_read(xknx, ia, 1)),
+    ]
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize(
+    ("ignore_repeated_acks", "control"),
+    [
+        pytest.param(False, tpci.TAck(0), id="repeated-ack-by-default"),
+        pytest.param(True, tpci.TAck(5), id="ack-of-another-telegram"),
+        pytest.param(True, tpci.TNak(0), id="nak-of-last-telegram"),
+    ],
+)
+async def test_other_ack_still_closes(
+    ignore_repeated_acks: bool, control: tpci.TAck | tpci.TNak
+) -> None:
+    """Test only a repeated ACK, and only with the option, keeps the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia, ignore_repeated_acks=ignore_repeated_acks)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    await _acknowledged_send(xknx, conn, ia, 0)
+
+    task = asyncio.create_task(
+        conn.send_data(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: OPEN_WAIT E09/E11 -> A6
+    xknx.management.process(_from_device(xknx, ia, control))
+    with pytest.raises(ManagementConnectionError, match="does not match"):
+        await task
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        _disconnect(xknx, ia)
+    )
+    await conn.disconnect()
+
+
+async def test_connection_context_passes_ignore_repeated_acks() -> None:
+    """Test the connection context manager hands the option to the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    async with xknx.management.connection(ia, ignore_repeated_acks=True) as conn:
+        assert conn.ignore_repeated_acks
+    async with xknx.management.connection(ia) as conn:
+        assert not conn.ignore_repeated_acks
+
+
+async def test_ack_from_other_device_is_ignored() -> None:
+    """Test an ACK/NAK from another device does not touch the connection."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    other = IndividualAddress("4.0.2")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await _settle()
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: E10/E14 stay in
+    # OPEN_WAIT
+    xknx.management.process(_from_device(xknx, other, tpci.TAck(0)))
+    xknx.management.process(_from_device(xknx, other, tpci.TNak(0)))
+    await _settle()
+    assert not task.done()
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await task
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+    await conn.disconnect()
+
+
+async def test_nak_then_ack_before_repetition() -> None:
+    """Test an ACK received after a NAK, before the repetition is sent, confirms it."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await _settle()
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+    # a second NAK before the repetition asks for the same repetition
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await task
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+    await conn.disconnect()
+
+
+async def test_nak_then_error_before_repetition() -> None:
+    """Test a connection closed after a NAK, before the repetition is sent, raises."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(conn.send_data(apci.Restart()))
+    await _settle()
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(0)))
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(3)))
+    with pytest.raises(ManagementConnectionRefused, match="is closed"):
+        await task
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        _disconnect(xknx, ia)
+    )
+    await conn.disconnect()
+
+
+async def test_send_without_ack() -> None:
+    """Test the ACK of a telegram sent without waiting confirms it, a NAK closes."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    await conn.send_data(apci.Restart(), wait_for_ack=False)
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: OPEN_WAIT E08 -> A8
+    xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_count == 1
+
+    await conn.send_data(apci.Restart(), wait_for_ack=False)
+    # nothing repeats it - E13 -> A6
+    xknx.management.process(_from_device(xknx, ia, tpci.TNak(1)))
+    await _settle()
+    assert xknx.cemi_handler.send_telegram.call_args_list[-1] == call(
+        _disconnect(xknx, ia)
+    )
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.send_data(apci.Restart(), wait_for_ack=False)
+    await conn.disconnect()
+
+
+@pytest.mark.parametrize("acknowledged", [False, True])
+async def test_peer_disconnect_wakes_request(
+    time_travel: EventLoopClockAdvancer, acknowledged: bool
+) -> None:
+    """Test a T_Disconnect from the device ends a request waiting for its ACK or response."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    task = asyncio.create_task(
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await _settle()
+    if acknowledged:
+        xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+        await _settle()
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: E02 -> A5
+    xknx.management.process(_from_device(xknx, ia, tpci.TDisconnect()))
+    await _settle()
+    # ended at once - not by the ACK or connection timeout
+    assert task.done()
+    with pytest.raises(ManagementConnectionRefused, match="disconnected by the peer"):
+        await task
+    # A5 sends nothing
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0))
+    ]
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.disconnect()
+
+
+async def test_peer_disconnect_without_waiting_task() -> None:
+    """Test a T_Disconnect on an idle connection is not reported as never retrieved."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    reported: list[dict[str, object]] = []
+    asyncio.get_running_loop().set_exception_handler(
+        lambda _loop, context: reported.append(context)
+    )
+
+    xknx.management.process(_from_device(xknx, ia, tpci.TDisconnect()))
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.disconnect()
+    del conn
+    gc.collect()
+    await _settle()
+    asyncio.get_running_loop().set_exception_handler(None)
+    assert not reported
 
 
 async def test_failed_connect_disconnect() -> None:
