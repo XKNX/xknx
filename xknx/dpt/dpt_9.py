@@ -315,6 +315,22 @@ class DPTConcentrationUGM3(DPT2ByteFloat):
     value_min = 0
 
 
+class DPTCoefficient(DPT2ByteFloat):
+    """
+    DPT 9.031 DPT_Coefficient.
+
+    KNX AN188 v02 - WGI accepted DPTs 07.17 - §4
+    """
+
+    dpt_main_number = 9
+    dpt_sub_number = 31
+    value_type = "coefficient"
+
+    # Like 9.029 and 9.030 its row prints "670 760" as the maximum, which isn't
+    # encodable (see DPTAbsoluteHumidity); the default maximum 670 433,28 applies.
+    value_min = 0
+
+
 class DPTEnthalpy(DPT2ByteFloat):
     """DPT 9.? 2-byte float value (with unit)."""
 

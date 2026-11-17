@@ -16,6 +16,11 @@ nav_order: 2
 ### DPT
 
 - Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+- Add DPT 6.020 (`DPTStatusMode3`, value_type `"status_mode3"`) with its value `StatusMode3` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.7. The five status bits are `True` when set, which the bus encodes as 0, and `mode` is the active mode 0, 1 or 2.
+- Add DPT 9.031 (`DPTCoefficient`, value_type `"coefficient"`) - KNX AN188 v02 - WGI accepted DPTs 07.17 - §4.
+- Add DPT 14.081 (`DPTReactivePower`, value_type `"reactive_power"`, unit "VAr") - KNX AN197 v01 - New Datapoint Types and Connection Codes - §1.4.
+- Add the 8-bit enumerations DPT 20.001-20.008, 20.012-20.014, 20.017, 20.020-20.022, 20.100, 20.101, 20.103, 20.104, 20.106, 20.108-20.115, 20.120-20.122, 20.600-20.613, 20.801-20.804 and 20.1000-20.1003 (`DPTSCLOMode`, `DPTBuildingMode`, `DPTPriority`, `DPTCloudCover`, `DPTDALIFadeTime`, `DPTCommMode`, ...) with their enums in `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, §4.3, §6.3, §7.1, §8.1. The values of DPT 20.1000 are those of PID_COMM_MODE - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2. Reserved values are refused. `Priority` gets `VOID` (3, no priority); `DPTAlarmInfo` keeps representing it as `None`, also when `from_dict` reads `"void"`.
+- Add the 2-bit enumerations DPT 23.001 `DPTOnOffAction`, 23.002 `DPTAlarmReaction`, 23.003 `DPTUpDownAction` and 23.102 `DPTHVACPBAction` with their enums in the new `xknx.dpt.dpt_23` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.23, §4.6.
 
 ### Connection
 

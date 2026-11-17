@@ -108,6 +108,20 @@ class TestAlarmInfo:
             error_class=2,
         )
 
+    def test_dict_void_priority(self) -> None:
+        """Test from_dict reads the 'void' priority as no priority (None)."""
+        assert (
+            AlarmInfo.from_dict(
+                {
+                    "log_number": 0,
+                    "alarm_priority": "void",
+                    "application_area": "lighting",
+                    "error_class": 0,
+                }
+            ).alarm_priority
+            is None
+        )
+
     @pytest.mark.parametrize(
         "data",
         [
@@ -120,7 +134,7 @@ class TestAlarmInfo:
             {"log_number": 0, "application_area": "lighting", "error_class": None},
             {
                 "log_number": 0,
-                "alarm_priority": "void",
+                "alarm_priority": "none",
                 "application_area": "lighting",
                 "error_class": 0,
             },
@@ -373,7 +387,7 @@ class TestDPTAlarmInfo:
                 "name": "alarm_priority",
                 "type": "enum",
                 "required": False,
-                "options": ["high", "medium", "low"],
+                "options": ["high", "medium", "low", "void"],
             },
             {
                 "name": "application_area",

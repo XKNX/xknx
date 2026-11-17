@@ -87,6 +87,9 @@ class AlarmInfo(DPTComplexData):
             alarm_priority = (
                 Priority.parse(_priority) if _priority is not None else None
             )
+            if alarm_priority is Priority.VOID:
+                # 'void' is no priority, which this type represents as None
+                alarm_priority = None
             application_area = ApplicationArea.parse(data["application_area"])
             error_class = int(data["error_class"])
         except KeyError as err:

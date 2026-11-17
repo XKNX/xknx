@@ -793,6 +793,19 @@ class DPTApparentPower(DPT4ByteFloat):
     unit = "VA"
 
 
+class DPTReactivePower(DPT4ByteFloat):
+    """
+    DPT 14.081 DPT_Value_ReactivePower.
+
+    KNX AN197 v01 - New Datapoint Types and Connection Codes - §1.4
+    """
+
+    dpt_main_number = 14
+    dpt_sub_number = 81
+    value_type = "reactive_power"
+    unit = "VAr"
+
+
 class DPTVolumeFluxMeter(DPT4ByteFloat):
     """DPT 14.1200 DPT_Volume_Flux_Meter (volume flux for meters)."""
 
