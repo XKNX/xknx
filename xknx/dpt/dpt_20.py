@@ -1,4 +1,4 @@
-"""Implementation of different KNX DPT HVAC Operation modes."""
+"""Implementation of KNX DPT 20.xxx 1 octet enumerations."""
 
 from __future__ import annotations
 
@@ -98,6 +98,35 @@ class ErrorClassSystem(DPTEnumData):
     INVALID_CONNECTION_NUMBER = 16
     INVALID_GROUP_OBJECT_NUMBER = 17
     GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH = 18
+
+
+class DPTErrorClassSystem(DPTEnum[ErrorClassSystem]):
+    """
+    Abstraction for KNX system error class.
+
+    DPT 20.011 - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21. Also the
+    Datapoint Type of `PID_ERROR_CODE` - KNX v01.10.01 - Resources 03.05.01 -
+    §4.2.28: it holds the last error that occurred before the load state
+    'Error' was set, and is reset to 0 (no fault) when the load state changes
+    from 'Error' to a different state. A device may implement a subset of the
+    error classes only.
+
+    Values 19 to 255 raise `ConversionError`, like undefined values of the
+    other DPT 20 enums. §4.2.28 adds that "the definition of new error codes
+    is an ongoing process", so a device may report a code this enum does not
+    know yet: when reading `PID_ERROR_CODE`, catch `ConversionError` and fall
+    back to the raw number instead of failing the read.
+    """
+
+    dpt_main_number = 20
+    dpt_sub_number = 11
+    value_type = "error_class_system"
+    data_type = ErrorClassSystem
+
+    @classmethod
+    def _to_knx(cls, value: ErrorClassSystem) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 class ErrorClassHVAC(DPTEnumData):

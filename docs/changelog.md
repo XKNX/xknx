@@ -22,7 +22,27 @@ nav_order: 2
 
 ### Protocol
 
-- Decode and serialize empty `FunctionPropertyStateResponse` messages, including responses encountered during OpenKNX DALI scans. A missing return code is represented as `None`, distinct from success (`0`).
+- Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
+- Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+
+### DPT
+
+- Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
+
+### Connection
+
+- Routing and `GatewayScanner`: multicast datagrams are sent from the interface of `local_ip` on macOS too. There the system routing table chose the interface, so with a `local_ip` on another interface telegrams and search requests left through the wrong network or were not sent at all. Linux and Windows already used the interface of `local_ip`.
+- Routing and `GatewayScanner`: multicast datagrams are sent with a TTL of 16 - the default of KNX v01.07.03 - Device Management 03.08.03 - §2.5.18 PID_TTL - instead of 1, so they can pass IP multicast routers. Since 3.7.0 outgoing routing telegrams did not leave the local subnet.
+
+### Management
+
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
+- Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
+
+### Internal
+
+- Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
+- The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
 
 # 4.1.1 Tunnel robustness 2026-11-05
 
