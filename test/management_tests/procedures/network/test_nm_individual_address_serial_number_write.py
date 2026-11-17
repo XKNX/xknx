@@ -7,7 +7,10 @@ import pytest
 
 from xknx import XKNX
 from xknx.exceptions import ManagementConnectionError
-from xknx.management.management import MANAGEMENT_CONNECTION_TIMEOUT
+from xknx.management.management import (
+    MANAGEMENT_ACK_TIMEOUT,
+    MANAGEMENT_MAX_REPETITIONS,
+)
 from xknx.management.procedures.network.nm_individual_address_serial_number_write import (
     nm_individual_address_serial_number_write,
 )
@@ -22,9 +25,12 @@ from xknx.telegram import (
 
 from ....conftest import EventLoopClockAdvancer
 
+# a telegram nobody acknowledges is sent once and repeated, each waiting for an ACK
+SENDS_WITHOUT_ACK = MANAGEMENT_MAX_REPETITIONS + 1
+
 
 def _address_check(individual_address: IndividualAddress) -> list[Telegram]:
-    """Telegrams of an address check nobody answers (with the retransmit)."""
+    """Telegrams of an address check nobody answers (with the repetitions)."""
     device_desc_read = Telegram(
         destination_address=individual_address,
         tpci=tpci.TDataConnected(0),
@@ -32,16 +38,15 @@ def _address_check(individual_address: IndividualAddress) -> list[Telegram]:
     )
     return [
         Telegram(destination_address=individual_address, tpci=tpci.TConnect()),
-        device_desc_read,
-        device_desc_read,
+        *[device_desc_read] * SENDS_WITHOUT_ACK,
         Telegram(destination_address=individual_address, tpci=tpci.TDisconnect()),
     ]
 
 
 async def _address_not_in_use(time_travel: EventLoopClockAdvancer) -> None:
-    """Let the address check time out: no device answers at the new address."""
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
-    await time_travel(MANAGEMENT_CONNECTION_TIMEOUT)
+    """Let the address check time out: no device acknowledges at the new address."""
+    for _ in range(SENDS_WITHOUT_ACK):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
 
 
 def _address_in_use(xknx: XKNX, individual_address: IndividualAddress) -> None:
