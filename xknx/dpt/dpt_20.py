@@ -110,6 +110,12 @@ class DPTErrorClassSystem(DPTEnum[ErrorClassSystem]):
     'Error' was set, and is reset to 0 (no fault) when the load state changes
     from 'Error' to a different state. A device may implement a subset of the
     error classes only.
+
+    Values 19 to 255 raise `ConversionError`, like undefined values of the
+    other DPT 20 enums. §4.2.28 adds that "the definition of new error codes
+    is an ongoing process", so a device may report a code this enum does not
+    know yet: when reading `PID_ERROR_CODE`, catch `ConversionError` and fall
+    back to the raw number instead of failing the read.
     """
 
     dpt_main_number = 20
