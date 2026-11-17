@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import ipaddress
 import logging
 import socket
 import sys
@@ -21,6 +22,18 @@ from .ip_transport import KNXIPTransport
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
 logger = logging.getLogger("xknx.log")
 knx_logger = logging.getLogger("xknx.knx")
+
+# KNX v01.07.03 - Device Management 03.08.03 - §2.5.18 PID_TTL
+# "The default value shall be set to 16."
+MULTICAST_TTL = 16
+
+
+def _is_multicast(host: str) -> bool:
+    """Return True if host is an IPv4 multicast address."""
+    try:
+        return ipaddress.IPv4Address(host).is_multicast
+    except ipaddress.AddressValueError:
+        return False
 
 
 class UDPTransport(KNXIPTransport):
@@ -112,21 +125,17 @@ class UDPTransport(KNXIPTransport):
     def create_multicast_sock(
         own_ip: str, remote_addr: tuple[str, int]
     ) -> socket.socket:
-        """Create UDP multicast socket."""
+        """Create UDP multicast socket for receiving."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setblocking(False)
 
             sock.setsockopt(
-                socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(own_ip)
-            )
-            sock.setsockopt(
                 socket.IPPROTO_IP,
                 socket.IP_ADD_MEMBERSHIP,
                 socket.inet_aton(remote_addr[0]) + socket.inet_aton(own_ip),
             )
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
             if sys.platform == "win32":
                 # '' represents INADDR_ANY
@@ -166,6 +175,24 @@ class UDPTransport(KNXIPTransport):
             local_addr=self.local_addr,
         )
         self.local_addr_assigned = self.getsockname()
+        if _is_multicast(self.remote_addr[0]):
+            self._configure_multicast_send(self.transport.get_extra_info("socket"))
+
+    def _configure_multicast_send(self, sock: socket.socket) -> None:
+        """Set outgoing interface and TTL for multicast datagrams of the sending socket."""
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, MULTICAST_TTL)
+        try:
+            # Linux and Windows send multicast from the interface of the bound address;
+            # macOS uses its routing table unless the interface is set explicitly.
+            sock.setsockopt(
+                socket.IPPROTO_IP,
+                socket.IP_MULTICAST_IF,
+                socket.inet_aton(self.local_addr[0]),
+            )
+        except OSError as err:
+            logger.warning(
+                "Could not set multicast interface to %s: %s", self.local_addr[0], err
+            )
 
     def send(self, knxipframe: KNXIPFrame, addr: tuple[str, int] | None = None) -> None:
         """Send KNXIPFrame to socket."""
