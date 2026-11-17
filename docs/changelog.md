@@ -18,9 +18,20 @@ nav_order: 2
 - Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
 - `DPTBase.transcoder_by_dpt()` and `parse_transcoder()` find a main number without a sub number (`10`, `"DPT-10"`, `{"main": 10, "sub": None}`) also when xknx has no class for the whole main number, through a fixed table of subtypes: 3.007, 4.002, 10.001, 11.001, 15.000, 16.001, 17.001, 18.001, 19.001, 26.001, 27.001, 235.001, 240.800, 241.800, 242.600, 249.600 and 250.600 - the default subtype of the KNX master data, its only subtype, or (4.002) the character set that includes the other one. KNX v02.02.01 - Datapoint Types 03.07.02 - §1.1: "Datapoint Types with the same main number thus have the same format and encoding." Main numbers whose subtypes give the same encoding different meanings - 20, 222, 225, 232, 251, 252, 254 - still return `None`.
 
+### Connection
+
+- Routing and `GatewayScanner`: multicast datagrams are sent from the interface of `local_ip` on macOS too. There the system routing table chose the interface, so with a `local_ip` on another interface telegrams and search requests left through the wrong network or were not sent at all. Linux and Windows already used the interface of `local_ip`.
+- Routing and `GatewayScanner`: multicast datagrams are sent with a TTL of 16 - the default of KNX v01.07.03 - Device Management 03.08.03 - §2.5.18 PID_TTL - instead of 1, so they can pass IP multicast routers. Since 3.7.0 outgoing routing telegrams did not leave the local subnet.
+
 ### Management
 
-- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
+- Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
+
+### Internal
+
+- Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
+- The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
 
 # 4.1.1 Tunnel robustness 2026-11-05
 
