@@ -1,4 +1,4 @@
-"""Keyring class for loading and decrypting knxkeys files."""
+"""Keyring class for loading, decrypting and writing knxkeys files."""
 
 from __future__ import annotations
 
@@ -27,6 +27,11 @@ from xknx.telegram import GroupAddress, IndividualAddress
 from .util import sha256_hash
 
 logger = logging.getLogger("xknx.core")
+
+KEYRING_NAMESPACE: Final = "http://knx.org/xml/keyring/1"
+# encrypted passwords are 8 random bytes, the password and its padding - 2 AES blocks
+_PASSWORD_PREFIX_LENGTH: Final = 8
+_PASSWORD_BLOCK_LENGTH: Final = 32
 
 
 class InterfaceType(enum.Enum):
@@ -94,6 +99,10 @@ class XMLInterface(AttributeReader):
     authentication: str | None = None
     group_addresses: dict[GroupAddress, list[IndividualAddress]]
 
+    def __init__(self) -> None:
+        """Initialize the Interface."""
+        self.group_addresses = {}
+
     def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
         attributes = node.attributes
@@ -147,6 +156,38 @@ class XMLInterface(AttributeReader):
             else None
         )
 
+    def to_xml_element(
+        self, document: Document, password_hash: bytes, initialization_vector: bytes
+    ) -> Element:
+        """Create the node of the interface from its decrypted attributes."""
+        node = document.createElement(self.NODE_NAME)
+        node.setAttribute("IndividualAddress", str(self.individual_address))
+        node.setAttribute("Type", self.type.value)
+        if self.host is not None:
+            node.setAttribute("Host", str(self.host))
+        if self.user_id is not None:
+            node.setAttribute("UserID", str(self.user_id))
+        if self.decrypted_password is not None:
+            node.setAttribute(
+                "Password",
+                _encrypt_password(
+                    self.decrypted_password, password_hash, initialization_vector
+                ),
+            )
+        if self.decrypted_authentication is not None:
+            node.setAttribute(
+                "Authentication",
+                _encrypt_password(
+                    self.decrypted_authentication, password_hash, initialization_vector
+                ),
+            )
+        for address, senders in self.group_addresses.items():
+            group = document.createElement(XMLAssignedGroupAddress.NODE_NAME)
+            group.setAttribute("Address", str(address.raw))
+            group.setAttribute("Senders", " ".join(str(sender) for sender in senders))
+            node.appendChild(group)
+        return node
+
 
 class XMLBackbone(AttributeReader):
     """Backbone in a knxkeys file."""
@@ -177,6 +218,23 @@ class XMLBackbone(AttributeReader):
                 base64.b64decode(self.key), password_hash, initialization_vector
             )
 
+    def to_xml_element(
+        self, document: Document, password_hash: bytes, initialization_vector: bytes
+    ) -> Element:
+        """Create the node of the backbone from its decrypted attributes."""
+        if self.multicast_address is None:
+            raise ValueError("Backbone has no multicast address.")
+        node = document.createElement(self.NODE_NAME)
+        node.setAttribute("MulticastAddress", self.multicast_address)
+        if self.latency is not None:
+            node.setAttribute("Latency", str(self.latency))
+        if self.decrypted_key is not None:
+            node.setAttribute(
+                "Key",
+                _encrypt_key(self.decrypted_key, password_hash, initialization_vector),
+            )
+        return node
+
 
 class XMLGroupAddress(AttributeReader):
     """Group Address in a knxkeys file."""
@@ -202,6 +260,20 @@ class XMLGroupAddress(AttributeReader):
                 base64.b64decode(self.key), password_hash, initialization_vector
             )
 
+    def to_xml_element(
+        self, document: Document, password_hash: bytes, initialization_vector: bytes
+    ) -> Element:
+        """Create the node of the group address from its decrypted attributes."""
+        if self.decrypted_key is None:
+            raise ValueError(f"Group address {self.address} has no key.")
+        node = document.createElement(self.NODE_NAME)
+        node.setAttribute("Address", str(self.address.raw))
+        node.setAttribute(
+            "Key",
+            _encrypt_key(self.decrypted_key, password_hash, initialization_vector),
+        )
+        return node
+
 
 class XMLDevice(AttributeReader):
     """Device in a knxkeys file."""
@@ -215,7 +287,8 @@ class XMLDevice(AttributeReader):
     decrypted_management_password: str | None = None
     decrypted_authentication: str | None = None
     authentication: str
-    sequence_number: int
+    sequence_number: int = 0
+    serial_number: bytes | None = None
 
     def parse_xml(self, node: Element) -> None:
         """Parse all needed attributes from the given node map."""
@@ -231,6 +304,8 @@ class XMLDevice(AttributeReader):
         self.sequence_number = int(
             self.get_attribute_value(attributes.get("SequenceNumber")) or 0
         )
+        if serial_number := self.get_attribute_value(attributes.get("SerialNumber")):
+            self.serial_number = bytes.fromhex(serial_number)
 
     def decrypt_attributes(
         self, password_hash: bytes, initialization_vector: bytes
@@ -269,9 +344,44 @@ class XMLDevice(AttributeReader):
             else None
         )
 
+    def to_xml_element(
+        self, document: Document, password_hash: bytes, initialization_vector: bytes
+    ) -> Element:
+        """Create the node of the device from its decrypted attributes."""
+        node = document.createElement(self.NODE_NAME)
+        node.setAttribute("IndividualAddress", str(self.individual_address))
+        if self.decrypted_tool_key is not None:
+            node.setAttribute(
+                "ToolKey",
+                _encrypt_key(
+                    self.decrypted_tool_key, password_hash, initialization_vector
+                ),
+            )
+        if self.decrypted_management_password is not None:
+            node.setAttribute(
+                "ManagementPassword",
+                _encrypt_password(
+                    self.decrypted_management_password,
+                    password_hash,
+                    initialization_vector,
+                ),
+            )
+        if self.decrypted_authentication is not None:
+            node.setAttribute(
+                "Authentication",
+                _encrypt_password(
+                    self.decrypted_authentication, password_hash, initialization_vector
+                ),
+            )
+        if self.sequence_number:
+            node.setAttribute("SequenceNumber", str(self.sequence_number))
+        if self.serial_number is not None:
+            node.setAttribute("SerialNumber", self.serial_number.hex().upper())
+        return node
+
 
 class Keyring(AttributeReader):
-    """Class for loading and decrypting knxkeys XML files."""
+    """Class for loading, decrypting and writing knxkeys XML files."""
 
     backbone: XMLBackbone | None = None
     interfaces: list[XMLInterface]
@@ -462,6 +572,70 @@ class Keyring(AttributeReader):
         if self.backbone is not None:
             self.backbone.decrypt_attributes(hashed_password, initialization_vector)
 
+    def to_xml(self, password: str) -> bytes:
+        """
+        Serialize the keyring to a knxkeys XML document encrypted and signed with `password`.
+
+        Keys and passwords are taken from the `decrypted_*` attributes - encrypted
+        attributes like `key` or `password` are not used. `project_name`,
+        `created_by` and `created` are written as they are. The initialization
+        vector of the encryption is derived from `created`, so set it to the
+        current time when writing a new keyring.
+        """
+        hashed_password = hash_keyring_password(password.encode("utf-8"))
+        initialization_vector = sha256_hash(self.created.encode("utf-8"))[:16]
+
+        document = Document()
+        root = document.createElement("Keyring")
+        root.setAttribute("Project", self.project_name)
+        root.setAttribute("CreatedBy", self.created_by)
+        root.setAttribute("Created", self.created)
+        # set now to keep the attribute order - the signature doesn't include itself
+        root.setAttribute("Signature", "")
+        root.setAttribute("xmlns", KEYRING_NAMESPACE)
+        document.appendChild(root)
+
+        if self.backbone is not None:
+            root.appendChild(
+                self.backbone.to_xml_element(
+                    document, hashed_password, initialization_vector
+                )
+            )
+        for interface in self.interfaces:
+            root.appendChild(
+                interface.to_xml_element(
+                    document, hashed_password, initialization_vector
+                )
+            )
+        if self.group_addresses:
+            group_addresses_node = root.appendChild(
+                document.createElement("GroupAddresses")
+            )
+            for group_address in self.group_addresses:
+                group_addresses_node.appendChild(
+                    group_address.to_xml_element(
+                        document, hashed_password, initialization_vector
+                    )
+                )
+        if self.devices:
+            devices_node = root.appendChild(document.createElement("Devices"))
+            for device in self.devices:
+                devices_node.appendChild(
+                    device.to_xml_element(
+                        document, hashed_password, initialization_vector
+                    )
+                )
+
+        handler = KeyringSAXContentHandler(password)
+        xml.sax.parseString(
+            document.toprettyxml(indent="  ", encoding="utf-8"), handler
+        )
+        root.setAttribute(
+            "Signature",
+            base64.b64encode(sha256_hash(handler.output)[:16]).decode("ascii"),
+        )
+        return document.toprettyxml(indent="  ", encoding="utf-8")
+
 
 async def load_keyring(
     path: str | os.PathLike[Any], password: str, validate_signature: bool = True
@@ -497,6 +671,20 @@ def sync_load_keyring(
     except Exception as exception:
         logger.exception("There was an error during loading the knxkeys file.")
         raise InvalidSecureConfiguration() from exception
+
+
+async def save_keyring(
+    keyring: Keyring, path: str | os.PathLike[Any], password: str
+) -> None:
+    """Save a keyring as .knxkeys file to the given path in an executor."""
+    await asyncio.to_thread(sync_save_keyring, keyring, path, password)
+
+
+def sync_save_keyring(
+    keyring: Keyring, path: str | os.PathLike[Any], password: str
+) -> None:
+    """Save a keyring as .knxkeys file to the given path - encrypted and signed with `password`."""
+    Path(path).write_bytes(keyring.to_xml(password))
 
 
 class KeyringSAXContentHandler(ContentHandler):
@@ -562,6 +750,47 @@ def decrypt_aes128cbc(
     cipher = Cipher(algorithms.AES(key), modes.CBC(initialization_vector))
     decryptor = cipher.decryptor()
     return bytes(decryptor.update(encrypted_data) + decryptor.finalize())
+
+
+def encrypt_aes128cbc(data: bytes, key: bytes, initialization_vector: bytes) -> bytes:
+    """Encrypt data with AES 128 CBC. `data` length has to be a multiple of 16."""
+    cipher = Cipher(algorithms.AES(key), modes.CBC(initialization_vector))
+    encryptor = cipher.encryptor()
+    return bytes(encryptor.update(data) + encryptor.finalize())
+
+
+def _encrypt_key(key: bytes, password_hash: bytes, initialization_vector: bytes) -> str:
+    """Encrypt a 16 byte key for a knxkeys file."""
+    if len(key) != 16:
+        raise ValueError(f"Key has to be 16 bytes, got {len(key)}.")
+    return base64.b64encode(
+        encrypt_aes128cbc(key, password_hash, initialization_vector)
+    ).decode("ascii")
+
+
+def _encrypt_password(
+    password: str, password_hash: bytes, initialization_vector: bytes
+) -> str:
+    """
+    Encrypt a password for a knxkeys file - the counterpart of `extract_password`.
+
+    The password is prefixed by 8 random bytes and padded to 32 bytes with
+    padding bytes holding the padding length.
+    """
+    encoded = password.encode("utf-8")
+    padding_length = _PASSWORD_BLOCK_LENGTH - _PASSWORD_PREFIX_LENGTH - len(encoded)
+    if padding_length < 1:
+        raise ValueError(
+            f"Password has to be at most {_PASSWORD_BLOCK_LENGTH - _PASSWORD_PREFIX_LENGTH - 1} bytes, got {len(encoded)}."
+        )
+    data = (
+        os.urandom(_PASSWORD_PREFIX_LENGTH)
+        + encoded
+        + bytes([padding_length]) * padding_length
+    )
+    return base64.b64encode(
+        encrypt_aes128cbc(data, password_hash, initialization_vector)
+    ).decode("ascii")
 
 
 def hash_keyring_password(password: bytes) -> bytes:
