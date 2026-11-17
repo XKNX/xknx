@@ -10,8 +10,10 @@ from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt import DPTComplex
 from xknx.dpt.dpt_21 import (
     ChannelActivation8,
+    CombinedStatusRTSM,
     DeviceControl,
     DPTChannelActivation8,
+    DPTCombinedStatusRTSM,
     DPTDeviceControl,
     DPTForceSign,
     DPTForceSignCool,
@@ -93,6 +95,18 @@ BITSETS: list[tuple[type[DPTComplex[Any]], int, str, tuple[str, ...]]] = [
         106,
         "ventilation_controller_status",
         ("fault", "fan_active", "heat", "cool"),
+    ),
+    (
+        DPTCombinedStatusRTSM,
+        107,
+        "combined_status_rtsm",
+        (
+            "window_open",
+            "presence",
+            "comfort_push_button",
+            "comfort_prolongation_user",
+            "hvac_mode_user",
+        ),
     ),
     (
         DPTLightActuatorErrorInfo,
@@ -324,6 +338,20 @@ class TestDPT21Specific:
         """Test DPT 21.104 bit layout."""
         assert DPTFuelTypeSet.to_knx(FuelTypeSet(oil=True, gas=True)) == DPTArray(0x03)
         assert DPTFuelTypeSet.from_knx(DPTArray(0x04)) == FuelTypeSet(solid_state=True)
+
+    def test_combined_status_rtsm(self) -> None:
+        """Test DPT 21.107 bit layout."""
+        assert DPTCombinedStatusRTSM.to_knx(
+            CombinedStatusRTSM(window_open=True, hvac_mode_user=True)
+        ) == DPTArray(0x11)
+        assert DPTCombinedStatusRTSM.to_knx(
+            {"presence": True, "comfort_prolongation_user": True}
+        ) == DPTArray(0x0A)
+        assert DPTCombinedStatusRTSM.from_knx(DPTArray(0x06)) == CombinedStatusRTSM(
+            presence=True, comfort_push_button=True
+        )
+        # reserved bits 5..7 are ignored on receive
+        assert DPTCombinedStatusRTSM.from_knx(DPTArray(0xE0)) == CombinedStatusRTSM()
 
     def test_rf_mode_info(self) -> None:
         """Test DPT 21.1000 defaults and bit layout."""

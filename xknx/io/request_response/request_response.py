@@ -99,6 +99,10 @@ class RequestResponse(Generic[ResponseBodyT]):
         """Build knxipframe (within derived class) and send via transport."""
         self._transport.send(self._create_knxipframe())
 
+    def _matches_request(self, body: ResponseBodyT) -> bool:
+        """Return whether a received response body answers this request. Override to filter."""
+        return True
+
     def _response_rec_callback(
         self, knxipframe: KNXIPFrame, source: HPAI, _: KNXIPTransport
     ) -> None:
@@ -107,6 +111,13 @@ class RequestResponse(Generic[ResponseBodyT]):
         if not isinstance(body, self.AWAITED_RESPONSE_CLASS):
             logger.warning(
                 "Could not understand knxipframe for %s: %s",
+                self.__class__.__name__,
+                knxipframe,
+            )
+            return
+        if not self._matches_request(body):
+            logger.debug(
+                "Ignoring response not matching the request of %s: %s",
                 self.__class__.__name__,
                 knxipframe,
             )
