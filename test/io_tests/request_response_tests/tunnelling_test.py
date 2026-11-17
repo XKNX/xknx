@@ -67,15 +67,37 @@ class TestTunnelling:
                 wrong_knxipframe,
             )
 
+        # Response KNX/IP-Frame of another communication channel or sequence counter
+        # (eg. a stale ACK of a repeated frame) is ignored:
+        for stale_knxipframe in (
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=24, sequence_counter=42)
+            ),
+            KNXIPFrame.init_from_body(
+                TunnellingAck(communication_channel_id=23, sequence_counter=41)
+            ),
+        ):
+            tunnelling._response_rec_callback(stale_knxipframe, HPAI(), None)
+            assert not tunnelling._response_received_event.is_set()
+            assert tunnelling._response is None
+            assert tunnelling._error_code is None
+
         # Response KNX/IP-Frame with error:
         err_knxipframe = KNXIPFrame.init_from_body(
-            TunnellingAck(status_code=ErrorCode.E_CONNECTION_ID)
+            TunnellingAck(
+                communication_channel_id=23,
+                sequence_counter=42,
+                status_code=ErrorCode.E_CONNECTION_ID,
+            )
         )
         tunnelling._response_rec_callback(err_knxipframe, HPAI(), None)
+        assert tunnelling._response_received_event.is_set()
         assert tunnelling._response is None
         assert tunnelling._error_code is ErrorCode.E_CONNECTION_ID
 
         # Correct Response KNX/IP-Frame:
-        res_knxipframe = KNXIPFrame.init_from_body(TunnellingAck())
+        res_knxipframe = KNXIPFrame.init_from_body(
+            TunnellingAck(communication_channel_id=23, sequence_counter=42)
+        )
         tunnelling._response_rec_callback(res_knxipframe, HPAI(), None)
         assert tunnelling._response is not None

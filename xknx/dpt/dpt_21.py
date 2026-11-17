@@ -2,6 +2,7 @@
 Implementation of the KNX 8-bit set data point types (DPT 21.xxx).
 
 KNX v02.02.01 - Datapoint Types 03.07.02
+DPT 21.107 is defined in KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.1.
 """
 
 from __future__ import annotations
@@ -390,6 +391,60 @@ class DPTStatusAHU(DPTComplex[VentilationControllerStatus]):
 
     @classmethod
     def _to_knx(cls, value: VentilationControllerStatus) -> DPTArray:
+        """Serialize to KNX/IP raw data."""
+        return DPTArray(value.to_raw())
+
+
+@dataclass(slots=True)
+class CombinedStatusRTSM(_BitsetData):
+    """
+    Value of DPT 21.107 DPT_CombinedStatus_RTSM.
+
+    `window_open`: True if at least one window is open.
+    `presence`: True if at least one presence detector reports occupancy.
+    `comfort_push_button`: True if at least one comfort push button is pressed.
+    `comfort_prolongation_user`: True if the comfort prolongation User is active.
+    `hvac_mode_user`: True if the HVAC Mode User is active, i.e. not "Auto".
+    """
+
+    window_open: bool = False
+    presence: bool = False
+    comfort_push_button: bool = False
+    comfort_prolongation_user: bool = False
+    hvac_mode_user: bool = False
+
+    _bits: ClassVar[Mapping[str, int]] = {
+        "window_open": 0,
+        "presence": 1,
+        "comfort_push_button": 2,
+        "comfort_prolongation_user": 3,
+        "hvac_mode_user": 4,
+    }
+
+
+class DPTCombinedStatusRTSM(DPTComplex[CombinedStatusRTSM]):
+    """
+    Abstraction for KNX 1 octet Combined Status RTSM (DPT 21.107 DPT_CombinedStatus_RTSM).
+
+    The status of a Room Temperature Setpoint Manager. Together with DPT 22.103
+    it replaces `DPTHVACStatus`, the "Eberle status octet".
+    KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.1
+    """
+
+    data_type = CombinedStatusRTSM
+    payload_type = DPTArray
+    payload_length = 1
+    dpt_main_number = 21
+    dpt_sub_number = 107
+    value_type = "combined_status_rtsm"
+
+    @classmethod
+    def from_knx(cls, payload: DPTArray | DPTBinary) -> CombinedStatusRTSM:
+        """Parse/deserialize from KNX/IP raw data."""
+        return CombinedStatusRTSM.from_raw(cls.validate_payload(payload)[0])
+
+    @classmethod
+    def _to_knx(cls, value: CombinedStatusRTSM) -> DPTArray:
         """Serialize to KNX/IP raw data."""
         return DPTArray(value.to_raw())
 

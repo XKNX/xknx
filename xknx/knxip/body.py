@@ -31,7 +31,7 @@ class KNXIPBody(ABC):
         return self.__dict__ == other.__dict__
 
 
-class KNXIPBodyResponse(KNXIPBody):
+class KNXIPBodyResponse(KNXIPBody, ABC):
     """Base class for all KNX/IP response bodies."""
 
     status_code: ErrorCode = cast(ErrorCode, None)

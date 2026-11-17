@@ -1,4 +1,4 @@
-"""Implementation of different KNX DPT HVAC Operation modes."""
+"""Implementation of KNX DPT 20.xxx 1 octet enumerations."""
 
 from __future__ import annotations
 
@@ -100,6 +100,35 @@ class ErrorClassSystem(DPTEnumData):
     GROUP_OBJECT_TYPE_EXCEEDS_MAX_APDU_LENGTH = 18
 
 
+class DPTErrorClassSystem(DPTEnum[ErrorClassSystem]):
+    """
+    Abstraction for KNX system error class.
+
+    DPT 20.011 - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21. Also the
+    Datapoint Type of `PID_ERROR_CODE` - KNX v01.10.01 - Resources 03.05.01 -
+    §4.2.28: it holds the last error that occurred before the load state
+    'Error' was set, and is reset to 0 (no fault) when the load state changes
+    from 'Error' to a different state. A device may implement a subset of the
+    error classes only.
+
+    Values 19 to 255 raise `ConversionError`, like undefined values of the
+    other DPT 20 enums. §4.2.28 adds that "the definition of new error codes
+    is an ongoing process", so a device may report a code this enum does not
+    know yet: when reading `PID_ERROR_CODE`, catch `ConversionError` and fall
+    back to the raw number instead of failing the read.
+    """
+
+    dpt_main_number = 20
+    dpt_sub_number = 11
+    value_type = "error_class_system"
+    data_type = ErrorClassSystem
+
+    @classmethod
+    def _to_knx(cls, value: ErrorClassSystem) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
+
+
 class ErrorClassHVAC(DPTEnumData):
     """
     Enum for the KNX HVAC error classes; values 5 to 255 are reserved.
@@ -199,6 +228,36 @@ class DPTHVACContrMode(DPTEnum[HVACControllerMode]):
         return DPTArray(value.value)
 
 
+class ChangeoverMode(DPTEnumData):
+    """
+    Enum for the KNX heating/cooling changeover modes.
+
+    DPT 20.107 DPT_ChangeoverMode - KNX v02.02.01 - Datapoint Types 03.07.02 - §4.3
+    """
+
+    AUTO = 0
+    COOLING_ONLY = 1
+    HEATING_ONLY = 2
+
+
+class DPTChangeoverMode(DPTEnum[ChangeoverMode]):
+    """
+    Abstraction for KNX changeover mode (DPT 20.107 DPT_ChangeoverMode).
+
+    KNX v02.02.01 - Datapoint Types 03.07.02 - §4.3
+    """
+
+    dpt_main_number = 20
+    dpt_sub_number = 107
+    value_type = "changeover_mode"
+    data_type = ChangeoverMode
+
+    @classmethod
+    def _to_knx(cls, value: ChangeoverMode) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
+
+
 class MeteringDeviceType(DPTEnumData):
     """
     Enum for the KNX metering device types (measured media).
@@ -226,6 +285,37 @@ class MeteringDeviceType(DPTEnumData):
     WASTE_WATER_METER = 0x28
     GARBAGE = 0x29
     VOID = 0xFF
+
+
+class EnableHCStage(DPTEnumData):
+    """
+    Enum for enabling the heating/cooling stages A and B.
+
+    DPT 20.116 DPT_EnableHCStage - KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.6
+    """
+
+    DISABLED = 0
+    STAGE_A = 1
+    STAGE_B = 2
+    BOTH_STAGES = 3
+
+
+class DPTEnableHCStage(DPTEnum[EnableHCStage]):
+    """
+    Abstraction for KNX enable heating/cooling stage (DPT 20.116 DPT_EnableHCStage).
+
+    KNX v01.03.01 - HVAC S-Mode FBs 07.19.20 - §9.6
+    """
+
+    dpt_main_number = 20
+    dpt_sub_number = 116
+    value_type = "enable_hc_stage"
+    data_type = EnableHCStage
+
+    @classmethod
+    def _to_knx(cls, value: EnableHCStage) -> DPTArray:
+        """Return the raw KNX value for an Enum member."""
+        return DPTArray(value.value)
 
 
 @dataclass(slots=True)
