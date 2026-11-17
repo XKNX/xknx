@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from abc import ABC
+
 from .dpt import DPTEnum, DPTEnumData, EnumDataT
 from .payload import DPTBinary
 
 
-class DPT1BitEnum(DPTEnum[EnumDataT]):
+class DPT1BitEnum(DPTEnum[EnumDataT], ABC):
     """Base class for KNX 1-Bit values encoded as Enums."""
 
     payload_type = DPTBinary

@@ -2,6 +2,7 @@
 
 # ruff: noqa: F401
 from .const import (
+    PropertyDataType,
     ResourceDevicePropertyId,
     ResourceEModeChannelPropertyId,
     ResourceEModeDevicePropertyId,

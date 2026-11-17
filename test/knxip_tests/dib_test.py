@@ -169,3 +169,56 @@ class TestKNXIPDIB:
         assert not dib.slots[IndividualAddress("4.0.8")].free
 
         assert dib.to_knx() == raw
+
+    @pytest.mark.parametrize(
+        "dib_class",
+        [DIBGeneric, DIBSuppSVCFamilies, DIBSecuredServiceFamilies, DIBTunnelingInfo],
+    )
+    @pytest.mark.parametrize("structure_length", [0, 1])
+    def test_dib_structure_length_too_small(
+        self, dib_class: type[DIB], structure_length: int
+    ) -> None:
+        """Test a DIB with a structure length below its minimum size raises."""
+        dib = dib_class()
+        raw = bytes((structure_length, 0x02, 0x02, 0x01))
+        if isinstance(dib, DIBTunnelingInfo):
+            raw = bytes((structure_length, 0x07, 0x00, 0xF8))
+        with pytest.raises(CouldNotParseKNXIP):
+            dib.from_knx(raw)
+
+    def test_dib_tunneling_info_header_only(self) -> None:
+        """Test a tunneling info DIB with a structure length of 2 raises."""
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBTunnelingInfo().from_knx(bytes((0x02, 0x07, 0x00, 0xF8)))
+
+    def test_dib_wrong_type_code(self) -> None:
+        """Test typed DIBs reject other and unknown description type codes."""
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBSuppSVCFamilies().from_knx(bytes((0x04, 0x80, 0x02, 0x01)))
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBSecuredServiceFamilies().from_knx(bytes((0x04, 0x02, 0x02, 0x01)))
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBTunnelingInfo().from_knx(bytes((0x04, 0x80, 0x00, 0xF8)))
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBDeviceInformation().from_knx(bytes((0x36, 0x80)) + bytes(52))
+
+    def test_dib_unknown_service_family(self) -> None:
+        """Test a service families DIB with an unknown family id raises."""
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBSuppSVCFamilies().from_knx(bytes((0x04, 0x02, 0xEE, 0x01)))
+
+    def test_device_info_unknown_medium(self) -> None:
+        """Test a device info DIB with an unknown KNX medium raises."""
+        with pytest.raises(CouldNotParseKNXIP):
+            DIBDeviceInformation().from_knx(bytes((0x36, 0x01, 0x03)) + bytes(51))
+
+    def test_determine_dib_unknown_type_code(self) -> None:
+        """Test an unknown description type code falls back to DIBGeneric."""
+        raw = bytes((0x04, 0x80, 0xAB, 0xCD))
+        dib = DIB.determine_dib(raw)
+        assert isinstance(dib, DIBGeneric)
+        assert dib.from_knx(raw) == 4
+        assert dib.dtc == 0x80
+        assert dib.data == bytes((0xAB, 0xCD))
+        with pytest.raises(CouldNotParseKNXIP):
+            DIB.determine_dib(bytes((0x04,)))
