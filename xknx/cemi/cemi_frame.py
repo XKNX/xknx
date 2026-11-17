@@ -60,7 +60,13 @@ class CEMIInfo:
     @staticmethod
     def from_knx(raw: bytes) -> tuple[CEMIInfo, bytes]:
         """Parse/deserialize from CEMI raw data."""
+        if not raw:
+            raise CouldNotParseCEMI("CEMI too small. Missing additional info length")
         length = raw[0]
+        if len(raw) < length + 1:
+            raise CouldNotParseCEMI(
+                f"CEMI too small. Additional info length: {length}; CEMI: {raw.hex()}"
+            )
         return CEMIInfo(raw[1 : length + 1]), raw[length + 1 :]
 
     def to_knx(self) -> bytes:
@@ -669,6 +675,8 @@ class CEMIFrame:
     @staticmethod
     def from_knx(raw: bytes) -> CEMIFrame:
         """Parse/deserialize from KNX/IP raw data."""
+        if not raw:
+            raise CouldNotParseCEMI("CEMI too small. Missing message code")
         try:
             code = CEMIMessageCode(raw[0])
         except ValueError:

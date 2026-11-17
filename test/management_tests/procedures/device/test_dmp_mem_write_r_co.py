@@ -10,6 +10,8 @@ from xknx.exceptions import ManagementConnectionError, VerificationError
 from xknx.management.procedures.device.dmp_mem_write_r_co import dmp_mem_write_r_co
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
+from ....conftest import EventLoopClockAdvancer
+
 RESPONDER_TIMEOUT = 1
 
 
@@ -288,7 +290,9 @@ async def test_dmp_mem_write_r_co_no_room_for_data(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_mem_write_r_co_write_delay(xknx_setup: XKNX) -> None:
+async def test_dmp_mem_write_r_co_write_delay(
+    xknx_setup: XKNX, time_travel: EventLoopClockAdvancer
+) -> None:
     """Test dmp_mem_write_r_co sleeps write_delay after each chunk when not verifying."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
@@ -296,19 +300,17 @@ async def test_dmp_mem_write_r_co_write_delay(xknx_setup: XKNX) -> None:
     conn = await xknx.management.connect(ia)
     xknx.cemi_handler.send_telegram.reset_mock()
 
-    async def respond() -> None:
-        await _wait_for_calls(xknx, 1)
-        _process_response(xknx, ia, ack_seq=0)
-
-    responder = asyncio.create_task(respond())
-    start = asyncio.get_running_loop().time()
-    await dmp_mem_write_r_co(
-        conn, address=0x1000, data=b"\x01\x02\x03", write_delay=0.05
+    task = asyncio.create_task(
+        dmp_mem_write_r_co(conn, address=0x1000, data=b"\x01\x02\x03", write_delay=0.05)
     )
-    elapsed = asyncio.get_running_loop().time() - start
-    await responder
+    await _wait_for_calls(xknx, 1)
+    _process_response(xknx, ia, ack_seq=0)
+    await time_travel(0.049)
+    assert not task.done()
+    await time_travel(0.001)
+    assert task.done()
+    await task
 
-    assert elapsed >= 0.05
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(
             Telegram(
