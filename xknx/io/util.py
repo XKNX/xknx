@@ -40,6 +40,22 @@ def get_local_ips() -> list[ifaddr.IP]:
     return [ip for iface in ifaddr.get_adapters() for ip in iface.ips if ip.is_IPv4]
 
 
+def get_search_ips() -> list[str]:
+    """
+    Return the local IPv4 addresses to search for gateways from (no loopback addresses).
+
+    Link-local addresses are kept: a gateway connected directly to the host, without a
+    DHCP server, can use AutoIP (169.254.x.x) just as the host does.
+    """
+    addresses: list[str] = []
+    for link in get_local_ips():
+        local_ip = cast(str, link.ip)
+        if ipaddress.IPv4Address(local_ip).is_loopback or local_ip in addresses:
+            continue
+        addresses.append(local_ip)
+    return addresses
+
+
 def get_local_interface_name(local_ip: str) -> str:
     """Return the name of the interface with the given ip."""
     return next((link.nice_name for link in get_local_ips() if link.ip == local_ip), "")
