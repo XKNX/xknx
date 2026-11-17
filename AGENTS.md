@@ -119,6 +119,10 @@ in sync with the code. Summary:
   R_IO, RCo_IO and RCo_Mem (e.g. `dmp_load_state_machine_write_r_co_io`). A
   plain `<spec_name>(xknx, ...)` beside one of them (`dm_restart`,
   `dm_prog_mode_switch`) opens and closes the connection around it.
+- A function that does what no spec procedure does has no `nm_`/`dm_`/`dmp_`
+  prefix, lives in its own module and says "Not in spec" in its docstring
+  (e.g. `prog_mode_switch`); on an already-open connection it takes the
+  `_conn` suffix (e.g. `prog_mode_property_switch_conn`).
 
 ## Running tests and checks
 
