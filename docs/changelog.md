@@ -26,6 +26,7 @@ nav_order: 2
 
 - Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
 - Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
+- Add `dmp_ext_interface_object_read_r`, `dmp_ext_interface_object_write_con_r`, `dmp_ext_interface_object_write_uncon_r` and `dmp_ext_interface_object_verify_r` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.27.4/§3.25.4/§3.25.5/§3.26.3, the counterparts of the procedures above that address an Interface Object by its Interface Object Type and Object Instance with the `A_PropertyExtValue_*` services instead of by its object index. Blocks are sized by `max_apdu_length` and the 8-bit `nr_of_elem` field of these services, and `write_con_r` fails on a return code other than `E_SUCCESS`.
 
 ### Internal
 
