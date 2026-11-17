@@ -26,6 +26,7 @@ nav_order: 2
 
 - Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
 - Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
+- `nm_individual_address_write` takes an optional keyword-only `wait_for_programming_mode` (seconds, greater than 0, otherwise `ValueError` is raised) to wait for a device in programming mode, e.g. while the user presses its programming button: A_IndividualAddress_Read is repeated with a time-out of `PROGRAMMING_MODE_POLL_TIMEOUT` (1 s) until a device answers, as KNX v02.01.02 - Management Procedures 03.05.02 - §2.3 step 2 describes; the last read is shortened to end at the deadline. Without it, programming mode is read once with a time-out of 3 s (KNX v02.01.02 - Management Procedures 03.05.02 - §2.2) as before.
 
 ### Internal
 
