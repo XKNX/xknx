@@ -44,6 +44,10 @@ group_addresses_valid = (
 
 group_addresses_invalid: list[Any] = [
     "0/2049",
+    "1/2/3\n",  # `$` in a regex matches before a trailing newline
+    "²",  # `str.isdigit()` accepts it - `int()` does not
+    "1/2/²",
+    "1/²",
     "0/8/0",
     "0/0/256",
     "32/0",
@@ -83,6 +87,9 @@ individual_addresses_valid: dict[Any, int] = {
 
 individual_addresses_invalid: list[Any] = [
     "15.15.256",
+    "1.2.3\n",  # `$` in a regex matches before a trailing newline
+    "²",  # `str.isdigit()` accepts it - `int()` does not
+    "1.2.²",
     "16.0.0",
     "0.16.0",
     "15.15.255a",

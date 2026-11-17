@@ -17,6 +17,7 @@ from xknx.exceptions import (
 from xknx.management.management import (
     MANAGEMENT_ACK_TIMEOUT,
     MANAGEMENT_CONNECTION_TIMEOUT,
+    MANAGEMENT_MAX_REPETITIONS,
 )
 from xknx.telegram import (
     GroupAddress,
@@ -99,16 +100,53 @@ async def test_ack_timeout(time_travel: EventLoopClockAdvancer) -> None:
     assert xknx.cemi_handler.send_telegram.call_args_list == [
         call(device_desc_read),
     ]
-    await time_travel(MANAGEMENT_ACK_TIMEOUT)
-    # telegram repeated
-    assert xknx.cemi_handler.send_telegram.call_args_list == [
-        call(device_desc_read),
-        call(device_desc_read),
-    ]
+    for repetition in range(1, MANAGEMENT_MAX_REPETITIONS + 1):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+        # telegram repeated
+        assert xknx.cemi_handler.send_telegram.call_args_list == [
+            call(device_desc_read)
+        ] * (repetition + 1)
     await time_travel(MANAGEMENT_ACK_TIMEOUT)
     with pytest.raises(ManagementConnectionTimeout):
         # still no ACK -> timeout
         await task
+    assert xknx.cemi_handler.send_telegram.call_count == MANAGEMENT_MAX_REPETITIONS + 1
+
+    await conn.disconnect()
+
+
+async def test_ack_after_last_repetition(time_travel: EventLoopClockAdvancer) -> None:
+    """Test an ACK to the last repetition of a telegram completes the request."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    _ia = IndividualAddress("4.0.1")
+
+    conn = await xknx.management.connect(_ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+    task = asyncio.create_task(
+        conn.request(payload=apci.DeviceDescriptorRead(descriptor=0))
+    )
+    await asyncio.sleep(0)
+    for _ in range(MANAGEMENT_MAX_REPETITIONS):
+        await time_travel(MANAGEMENT_ACK_TIMEOUT)
+    assert xknx.cemi_handler.send_telegram.call_count == MANAGEMENT_MAX_REPETITIONS + 1
+    xknx.management.process(
+        Telegram(
+            source_address=_ia,
+            destination_address=xknx.current_address,
+            direction=TelegramDirection.INCOMING,
+            tpci=tpci.TAck(0),
+        )
+    )
+    response = Telegram(
+        source_address=_ia,
+        destination_address=xknx.current_address,
+        direction=TelegramDirection.INCOMING,
+        tpci=tpci.TDataConnected(0),
+        payload=apci.DeviceDescriptorResponse(descriptor=0, value=0x07B0),
+    )
+    xknx.management.process(response)
+    assert await task == response
 
     await conn.disconnect()
 
