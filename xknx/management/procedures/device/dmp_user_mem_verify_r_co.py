@@ -50,7 +50,8 @@ async def dmp_user_mem_verify_r_co(
     :raises ValueError: If address is out of range, the address range is out
         of range, or max_apdu_length is not positive
     :raises ManagementConnectionError: If a chunk's response carries fewer
-        octets than requested, or echoes a different address than requested
+        octets than requested (a response echoing a different address is no
+        response to the chunk's request - `P2PConnection.request()` skips it)
     :raises VerificationError: If a block's data doesn't match expected
     """
     if not 0 <= address <= 0xFFFFF:
@@ -82,12 +83,6 @@ async def dmp_user_mem_verify_r_co(
         response = await conn.request(
             apci.UserMemoryRead(address=current_address, count=len(expected_chunk))
         )
-        if response.payload.address != current_address:
-            raise ManagementConnectionError(
-                f"User memory verify failed: requested address "
-                f"{current_address:#07x}, response echoed "
-                f"{response.payload.address:#07x}"
-            )
         if len(response.payload.data) != len(expected_chunk):
             raise ManagementConnectionError(
                 f"User memory verify failed: address {current_address:#07x} "

@@ -106,8 +106,10 @@ async def test_dmp_mem_verify_r_co_mismatch(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_mem_verify_r_co_wrong_address_echoed(xknx_setup: XKNX) -> None:
-    """Test dmp_mem_verify_r_co raises when a response echoes a different address."""
+async def test_dmp_mem_verify_r_co_skips_a_response_echoing_another_address(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_mem_verify_r_co compares the response echoing its address only."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -120,12 +122,20 @@ async def test_dmp_mem_verify_r_co_wrong_address_echoed(xknx_setup: XKNX) -> Non
             xknx,
             ia,
             seq=0,
-            payload=apci.MemoryResponse(address=0x2000, data=b"\x01\x02\x03"),
+            payload=apci.MemoryResponse(address=0x2000, data=b"\x09\x09\x09"),
+        )
+        xknx.management.process(
+            Telegram(
+                source_address=ia,
+                destination_address=xknx.current_address,
+                direction=TelegramDirection.INCOMING,
+                tpci=tpci.TDataConnected(1),
+                payload=apci.MemoryResponse(address=0x1000, data=b"\x01\x02\x03"),
+            )
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match=r"response echoed 0x2000"):
-        await dmp_mem_verify_r_co(conn, address=0x1000, expected_data=b"\x01\x02\x03")
+    await dmp_mem_verify_r_co(conn, address=0x1000, expected_data=b"\x01\x02\x03")
     await responder
 
     await conn.disconnect()

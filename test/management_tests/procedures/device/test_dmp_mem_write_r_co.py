@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, call
 import pytest
 
 from xknx import XKNX
-from xknx.exceptions import ManagementConnectionError, VerificationError
+from xknx.exceptions import VerificationError
 from xknx.management.procedures.device.dmp_mem_write_r_co import dmp_mem_write_r_co
 from xknx.telegram import IndividualAddress, Telegram, TelegramDirection, apci, tpci
 
@@ -198,8 +198,10 @@ async def test_dmp_mem_write_r_co_verify_mismatch(xknx_setup: XKNX) -> None:
     await conn.disconnect()
 
 
-async def test_dmp_mem_write_r_co_verify_wrong_address_echoed(xknx_setup: XKNX) -> None:
-    """Test dmp_mem_write_r_co with verify=True raises when the read-back echoes a different address."""
+async def test_dmp_mem_write_r_co_verify_skips_a_read_back_of_another_address(
+    xknx_setup: XKNX,
+) -> None:
+    """Test dmp_mem_write_r_co with verify=True compares the read-back of its address only."""
     xknx = xknx_setup
     ia = IndividualAddress("4.0.10")
 
@@ -214,15 +216,21 @@ async def test_dmp_mem_write_r_co_verify_wrong_address_echoed(xknx_setup: XKNX) 
             xknx,
             ia,
             ack_seq=1,
-            payload=apci.MemoryResponse(address=0x2000, data=b"\x01\x02\x03"),
+            payload=apci.MemoryResponse(address=0x2000, data=b"\x09\x09\x09"),
             response_seq=0,
+        )
+        xknx.management.process(
+            Telegram(
+                source_address=ia,
+                destination_address=xknx.current_address,
+                direction=TelegramDirection.INCOMING,
+                tpci=tpci.TDataConnected(1),
+                payload=apci.MemoryResponse(address=0x1000, data=b"\x01\x02\x03"),
+            )
         )
 
     responder = asyncio.create_task(respond())
-    with pytest.raises(ManagementConnectionError, match=r"response echoed 0x2000"):
-        await dmp_mem_write_r_co(
-            conn, address=0x1000, data=b"\x01\x02\x03", verify=True
-        )
+    await dmp_mem_write_r_co(conn, address=0x1000, data=b"\x01\x02\x03", verify=True)
     await responder
 
     await conn.disconnect()
