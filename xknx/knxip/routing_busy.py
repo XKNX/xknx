@@ -35,10 +35,10 @@ class RoutingBusy(KNXIPBody):
 
     def from_knx(self, raw: bytes) -> int:
         """Parse/deserialize from KNX/IP raw data."""
-        if raw[0] != RoutingBusy.BODY_LENGTH:  # structure_length field
-            raise CouldNotParseKNXIP("RoutingBusy body has invalid length")
         if len(raw) != RoutingBusy.BODY_LENGTH:
             raise CouldNotParseKNXIP("RoutingBusy has wrong length")
+        if raw[0] != RoutingBusy.BODY_LENGTH:  # structure_length field
+            raise CouldNotParseKNXIP("RoutingBusy body has invalid length")
         self.device_state = raw[1]
         self.wait_time = raw[2] * 256 + raw[3]
         self.control_field = raw[4] * 256 + raw[5]

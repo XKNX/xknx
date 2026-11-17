@@ -57,7 +57,10 @@ if they aren't already established elsewhere in the codebase.
 | v01.01.02 | KNX IP Secure | 03.08.09 |
 | v02.01.01 | Application Interface Layer | 03.04.01 |
 | v01.10.01 | Resources | 03.05.01 |
+| v01.04.01 | Standardized Identifier Tables | 03.07.03 |
+| v01.03.08 | RF Metering protocol | 10.03 |
 | v01.03.01 | HVAC S-Mode FBs | 07.19.20 |
+| v01.01.01 | Weather data | 07.01.06 |
 
 Note that Management Procedures and Application Layer are two different
 documents, cited side by side in places, that carry *different* versions
@@ -108,9 +111,17 @@ in sync with the code. Summary:
   broadcast via `xknx.management`.
 - `<spec_name>_conn(conn: P2PConnection, ...)` operates on an already-open
   connection, for chaining several procedures over one connection. The
-  `_conn` suffix is an xknx-only naming convention, not a KNX spec name —
-  `dm_restart_r_co` is the one exception, since `RCo` is the real KNX name
-  for that connection-based variant of DM_Restart.
+  `_conn` suffix is an xknx-only naming convention, not a KNX spec name.
+- Where the spec names a procedure's variants itself, xknx keeps that name
+  instead of `_conn`: `_r_co` for RCo (e.g. `dm_restart_r_co`,
+  `dmp_mem_read_r_co`, `dmp_prog_mode_switch_r_co`) and `_r` for R (e.g.
+  `dmp_interface_object_read_r`). A plain `<spec_name>(xknx, ...)` beside one
+  of them (`dm_restart`, `dm_prog_mode_switch`) opens and closes the
+  connection around it.
+- A function that does what no spec procedure does has no `nm_`/`dm_`/`dmp_`
+  prefix, lives in its own module and says "Not in spec" in its docstring
+  (e.g. `prog_mode_switch`); on an already-open connection it takes the
+  `_conn` suffix (e.g. `prog_mode_property_switch_conn`).
 
 ## Running tests and checks
 

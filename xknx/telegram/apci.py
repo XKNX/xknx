@@ -459,7 +459,7 @@ class APCI(ABC):
 APCIResponseT = TypeVar("APCIResponseT", bound=APCI)
 
 
-class _APCIWithResponse(APCI, Generic[APCIResponseT]):
+class _APCIWithResponse(APCI, ABC, Generic[APCIResponseT]):
     """
     Base class for APCI services with a KNX-spec-defined response.
 
@@ -488,7 +488,7 @@ class _APCIWithResponse(APCI, Generic[APCIResponseT]):
                 return
 
 
-class APCIRequest(_APCIWithResponse[APCIResponseT]):
+class APCIRequest(_APCIWithResponse[APCIResponseT], ABC):
     """
     Base class for point-to-point request services.
 
@@ -500,7 +500,7 @@ class APCIRequest(_APCIWithResponse[APCIResponseT]):
     __slots__ = ()
 
 
-class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT]):
+class APCIBroadcastRequest(_APCIWithResponse[APCIResponseT], ABC):
     """
     Base class for broadcast request services.
 
@@ -920,6 +920,18 @@ class FunctionPropertyExtStateResponse(APCI):
     Interface Object Type, 12 bit Object Instance, 12 bit Property ID),
     followed by a 1 byte return_code and function-specific output data
     of variable length.
+
+    The return_code is always present. A negative response as defined in
+    §3.4.8.3 of the same document (Property not present, not accessible
+    or not of Property Datatype PDT_FUNCTION or PDT_CONTROL) carries the
+    appropriate generic negative Return Code and no data.
+
+    The function result is defined in a function-specific way, so any
+    1 byte value is a valid return_code. Values of the unified Return
+    Code schema are represented as `ReturnCode`, function-specific
+    values (e.g. from the specific ranges 20h-5Fh and A0h-DFh, or from
+    existing functions not compatible with the schema - see NOTE 12)
+    as `int`.
     """
 
     CODE: ClassVar = APCIService.FUNCTION_PROPERTY_EXT_STATE_RESPONSE
@@ -927,7 +939,7 @@ class FunctionPropertyExtStateResponse(APCI):
     interface_object_type: int
     object_instance: int
     property_id: int
-    return_code: ReturnCode
+    return_code: ReturnCode | int
     data: bytes = b""
 
     def calculated_length(self) -> int:
@@ -944,12 +956,12 @@ class FunctionPropertyExtStateResponse(APCI):
         interface_object_type, object_instance, property_id = (
             _unpack_function_property_ext_header(raw)
         )
+        return_code: ReturnCode | int
         try:
             return_code = ReturnCode(raw[7])
         except ValueError:
-            raise ConversionError(
-                f"Invalid return code for A_FunctionPropertyExtState_Response in CEMI: {raw.hex()}"
-            ) from None
+            # function-specific return code
+            return_code = raw[7]
 
         return cls(
             interface_object_type=interface_object_type,
@@ -964,20 +976,32 @@ class FunctionPropertyExtStateResponse(APCI):
         header = _pack_function_property_ext_header(
             self.interface_object_type, self.object_instance, self.property_id
         )
+        return_code = (
+            self.return_code.value
+            if isinstance(self.return_code, ReturnCode)
+            else self.return_code
+        )
+        if not 0 <= return_code <= 0xFF:
+            raise ConversionError(f"Return code out of range: {return_code}")
 
         return encode_cmd_and_payload(
             self.CODE,
-            appended_payload=header + bytes([self.return_code.value]) + self.data,
+            appended_payload=header + bytes([return_code]) + self.data,
         )
 
     def __str__(self) -> str:
         """Return object as readable string."""
+        return_code = (
+            self.return_code.name
+            if isinstance(self.return_code, ReturnCode)
+            else f"0x{self.return_code:02X}"
+        )
         return (
             "<FunctionPropertyExtStateResponse "
             f'interface_object_type="{self.interface_object_type}" '
             f'object_instance="{self.object_instance}" '
             f'property_id="{self.property_id}" '
-            f'return_code="{self.return_code.name}" '
+            f'return_code="{return_code}" '
             f'data="{self.data.hex()}" />'
         )
 
@@ -2857,33 +2881,52 @@ class FunctionPropertyCommand(APCI):
 
 @dataclass(slots=True)
 class FunctionPropertyStateResponse(APCI):
-    """FunctionPropertyStateResponse service."""
+    """
+    FunctionPropertyStateResponse service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.2
+    A_FunctionPropertyState_Response.
+
+    Payload contains a 1 byte object index and a 1 byte Property ID,
+    followed by a 1 byte return_code and function-specific output data
+    of variable length. A return_code of 0 is the positive result,
+    any other value is a function-specific error.
+
+    The negative response defined in §3.4.7.3 of the same document (the addressed Property is
+    not of Property Datatype PDT_Function) contains neither return_code
+    nor data. It is represented by `return_code=None`.
+    """
 
     CODE: ClassVar = APCIUserService.FUNCTION_PROPERTY_STATE_RESPONSE
 
     object_index: int = 0
     property_id: int = 0
-    return_code: int = 0
+    return_code: int | None = 0
     data: bytes = b""
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""
-        return 4 + len(self.data)
+        return 3 + int(self.return_code is not None) + len(self.data)
 
     @classmethod
     def from_knx(cls, raw: bytes) -> FunctionPropertyStateResponse:
         """Parse/deserialize from KNX/IP raw data."""
-        if len(raw) < 5:
+        if len(raw) < 4:
             raise ConversionError(
                 f"Invalid length for A_FunctionPropertyState_Response in CEMI: {raw.hex()}"
             )
+
+        if len(raw) == 4:
+            return cls(
+                object_index=raw[2],
+                property_id=raw[3],
+                return_code=None,
+            )
+
         size = len(raw) - 5
-        (
-            object_index,
-            property_id,
-            return_code,
-            data,
-        ) = struct.unpack(f"!BBB{size}s", raw[2:])
+        object_index, property_id, return_code, data = struct.unpack(
+            f"!BBB{size}s", raw[2:]
+        )
         return cls(
             object_index=object_index,
             property_id=property_id,
@@ -2893,6 +2936,14 @@ class FunctionPropertyStateResponse(APCI):
 
     def to_knx(self) -> bytearray:
         """Serialize to KNX/IP raw data."""
+        if self.return_code is None:
+            if self.data:
+                raise ConversionError("Function property data requires a return code")
+            return encode_cmd_and_payload(
+                self.CODE,
+                appended_payload=bytes((self.object_index, self.property_id)),
+            )
+
         size = len(self.data)
         payload = struct.pack(
             f"!BBB{size}s",
@@ -2901,12 +2952,15 @@ class FunctionPropertyStateResponse(APCI):
             self.return_code,
             self.data,
         )
-
         return encode_cmd_and_payload(self.CODE, appended_payload=payload)
 
     def __str__(self) -> str:
         """Return object as readable string."""
-        return f'<FunctionPropertyStateResponse object_index="{self.object_index}" property_id="{self.property_id}" return_code="{self.return_code}" data="{self.data.hex()}" />'
+        return (
+            f'<FunctionPropertyStateResponse object_index="{self.object_index}" '
+            f'property_id="{self.property_id}" '
+            f'return_code="{self.return_code}" data="{self.data.hex()}" />'
+        )
 
 
 @dataclass(slots=True)
@@ -3961,7 +4015,19 @@ class PropertyValueRead(APCIRequest[PropertyValueResponse]):
 
 @dataclass(slots=True)
 class PropertyDescriptionResponse(APCI):
-    """PropertyDescriptionResponse service."""
+    """
+    PropertyDescriptionResponse service.
+
+    See KNX v02.01.01 - Application Layer 03.03.07 - §3.4.3.1
+    A_PropertyDescription_Response-PDU: `type_` is the whole octet holding the
+    write_enable bit and the 6 bit PDT, `access` the octet holding the 4 bit
+    read_level and write_level. `writable`, `pdt`, `read_level` and
+    `write_level` give the single fields.
+
+    If the Interface Object or the Property doesn't exist, `type_`, `max_count`
+    and `access` are all zero, so `max_count == 0` means the Property doesn't
+    exist and `pdt` then reads as PDT_CONTROL.
+    """
 
     CODE: ClassVar = APCIExtendedService.PROPERTY_DESCRIPTION_RESPONSE
 
@@ -3971,6 +4037,26 @@ class PropertyDescriptionResponse(APCI):
     type_: int = 0
     max_count: int = 1
     access: int = 0
+
+    @property
+    def writable(self) -> bool:
+        """Return whether the Property can be written."""
+        return bool(self.type_ & 0x80)
+
+    @property
+    def pdt(self) -> int:
+        """Return the Property Datatype (see `xknx.profile.PropertyDataType`)."""
+        return self.type_ & 0x3F
+
+    @property
+    def read_level(self) -> int:
+        """Return the access level required to read the Property."""
+        return self.access >> 4
+
+    @property
+    def write_level(self) -> int:
+        """Return the access level required to write the Property."""
+        return self.access & 0x0F
 
     def calculated_length(self) -> int:
         """Get length of APCI payload."""

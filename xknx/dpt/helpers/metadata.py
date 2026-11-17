@@ -11,10 +11,12 @@ from typing import Final
 
 RANGE_UINT8: Final[dict[str, int]] = {"value_min": 0, "value_max": 255}
 RANGE_UINT16: Final[dict[str, int]] = {"value_min": 0, "value_max": 65_535}
+RANGE_UINT32: Final[dict[str, int]] = {"value_min": 0, "value_max": 4_294_967_295}
 RANGE_INT32: Final[dict[str, int]] = {
     "value_min": -2_147_483_648,
     "value_max": 2_147_483_647,
 }
+RANGE_PERCENT: Final[dict[str, int]] = {"value_min": 0, "value_max": 100}
 # 1..7 higher is more intervals -> slower; 0 stop
 RANGE_STEP_CODE: Final[dict[str, int]] = {"value_min": 0, "value_max": 7}
 RANGE_FADE_TIME_S: Final[dict[str, float]] = {
