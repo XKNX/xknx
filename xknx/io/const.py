@@ -23,6 +23,10 @@ HEARTBEAT_RATE: Final = 30
 DEVICE_CONFIGURATION_REQUEST_TIMEOUT: Final = 10
 DEVICE_CONFIGURATION_REQUEST_REPETITIONS: Final = 3
 
+# A tunnelling server answers a TUNNELLING_FEATURE_GET or _SET within this
+# many seconds after confirming it.
+TUNNELLING_FEATURE_RESPONSE_TIMEOUT: Final = 3
+
 # Maximum time an authenticated secure session may remain unused (without
 # any communication over this session) until the session will be dropped -
 # KNX v01.01.02 - KNX IP Secure 03.08.09 - §2.2.3.5.2.1.1 timeoutSession.
