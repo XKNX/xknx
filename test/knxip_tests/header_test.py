@@ -61,3 +61,21 @@ class TestKNXIPHeader:
         header = KNXIPHeader()
         with pytest.raises(CouldNotParseKNXIP):
             header.from_knx(raw)
+
+    @pytest.mark.parametrize("total_length", [0, 1, 5])
+    def test_from_knx_total_length_too_small(self, total_length: int) -> None:
+        """Test parsing Header with a total length smaller than the header itself."""
+        raw = bytes((0x06, 0x10, 0x04, 0x21, 0x00, total_length))
+        header = KNXIPHeader()
+        with pytest.raises(CouldNotParseKNXIP):
+            header.from_knx(raw)
+        # total_length is set anyway - the TCP transport uses it to skip the frame
+        assert header.total_length == total_length
+
+    def test_from_knx_unknown_service_type_sets_total_length(self) -> None:
+        """Test total length is set before raising for an unknown service type."""
+        raw = bytes((0x06, 0x10, 0x0F, 0x00, 0x00, 0x0A))
+        header = KNXIPHeader()
+        with pytest.raises(CouldNotParseKNXIP):
+            header.from_knx(raw)
+        assert header.total_length == 10
