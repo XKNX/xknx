@@ -17,13 +17,24 @@ nav_order: 2
 
 - Add DPT 20.011 (`DPTErrorClassSystem`, value_type `"error_class_system"`) for the `ErrorClassSystem` enum of `xknx.dpt.dpt_20` - KNX v02.02.01 - Datapoint Types 03.07.02 - §3.21, the system error classes 0 "no fault" to 18. It is the Datapoint Type of `PID_ERROR_CODE` (KNX v01.10.01 - Resources 03.05.01 - §4.2.28).
 
+### Connection
+
+- Routing and `GatewayScanner`: multicast datagrams are sent from the interface of `local_ip` on macOS too. There the system routing table chose the interface, so with a `local_ip` on another interface telegrams and search requests left through the wrong network or were not sent at all. Linux and Windows already used the interface of `local_ip`.
+- Routing and `GatewayScanner`: multicast datagrams are sent with a TTL of 16 - the default of KNX v01.07.03 - Device Management 03.08.03 - §2.5.18 PID_TTL - instead of 1, so they can pass IP multicast routers. Since 3.7.0 outgoing routing telegrams did not leave the local subnet.
+
 ### Management
 
-- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13.2 DMP_ProgModeSwitch_RCo, switching the Programming Mode of a device on or off. `dmp_prog_mode_switch_r_co` applies to devices with the Programming Mode at memory 60h (Realisation Type 2); `dm_prog_mode_switch` uses the Device Object's `PID_PROGMODE` instead for a device of Realisation Type 1, by its mask version.
+- Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
+- Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
 - `P2PConnection` follows the client state machine of KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1 (style 1). A transport layer error closes the connection with action A6 of §5.3 - a T_Disconnect is sent to the device - instead of leaving it open: no ACK after the last repetition (E18, still `ManagementConnectionTimeout`), a NAK after the last repetition (E13), an ACK or NAK of another sequence number while waiting for an ACK (E09, E11), and any ACK or NAK while no telegram awaits one (E08, E09, E11, E12, E13 in OPEN_IDLE) - the latter fail a `request()` waiting for its response with `ManagementConnectionError`. Afterwards `send_data()` and `request()` raise `ManagementConnectionRefused`, and `disconnect()` only unregisters the connection without raising, so the error that closed it is the one the caller sees.
 - `P2PConnection.send_data()` repeats a telegram the device NAKs (E12, action A9) - sharing the `MANAGEMENT_MAX_REPETITIONS` repetitions with the ACK timeout - instead of raising at once.
 - A T_Disconnect from the device (E02) ends a wait for an ACK at once with `ManagementConnectionRefused` - before, only the wait for the response was ended, and a pending `send_data()` kept repeating its telegram to the disconnected device until it raised `ManagementConnectionTimeout` after 12 seconds. Without a waiting request the error is no longer reported as "Future exception was never retrieved". Telegrams the device sends after the connection was closed are ignored instead of being acknowledged.
 - New keyword `ignore_repeated_acks` of `Management.connect()`, `Management.connection()` and `P2PConnection`: a T_ACK with the sequence number of the telegram acknowledged last is ignored instead of closing the connection (E09, or any ACK in OPEN_IDLE). A device acknowledges a repeated telegram again (E05, action A3), so a frame repeated by a medium coupler or the interface after a lost layer 2 acknowledgement can bring a second T_ACK while the next telegram awaits its own. Off by default; any other ACK or NAK is handled as before.
+
+### Internal
+
+- Comment `ResourceDevicePropertyId.PID_PROGMODE` with its Property Datatype PDT_BITSET8 instead of PDT_GENERIC_01 (KNX v01.10.01 - Resources 03.05.01 - §4.3.5).
+- The `DPTErrorClassSystem` docstring notes that a device may report a `PID_ERROR_CODE` this enum does not define yet (KNX v01.10.01 - Resources 03.05.01 - §4.2.28), so a reader should fall back to the raw number on `ConversionError`.
 
 # 4.1.1 Tunnel robustness 2026-11-05
 
