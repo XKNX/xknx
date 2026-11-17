@@ -81,6 +81,8 @@ angle = cover.current_angle()
 # Helper functions to see if cover is traveling or has reached final position
 is_traveling = cover.is_traveling()
 position_reached = cover.position_reached()
+# Estimated seconds until the designated position is reached - 0 if not traveling
+remaining_travel_time = cover.remaining_travel_time()
 
 # Helper functions to see if cover is fully closed or fully open or moving
 is_open = cover.is_open()

@@ -43,6 +43,7 @@ class RemoteValue(ABC, Generic[ValueT]):
 
     __slots__ = (
         "_payload",
+        "_state_group_addresses",
         "_sync_state",
         "_value",
         "after_update_cb",
@@ -69,12 +70,12 @@ class RemoteValue(ABC, Generic[ValueT]):
     ) -> None:
         """Initialize RemoteValue class."""
         self.xknx: XKNX = xknx
-        self.passive_group_addresses: list[DeviceGroupAddress] = []
 
         def unpack_group_addresses(
             addresses: GroupAddressesType,
+            passive: list[DeviceGroupAddress],
         ) -> DeviceGroupAddress | None:
-            """Parse group addresses and assign passive addresses when given."""
+            """Parse group addresses and append passive addresses to `passive`."""
             if addresses is None:
                 return None
             if not isinstance(addresses, list):
@@ -82,16 +83,28 @@ class RemoteValue(ABC, Generic[ValueT]):
             if not addresses:  # empty list
                 return None
             active = addresses[0]
-            passive = [
+            passive.extend(
                 parse_device_group_address(addr)
                 for addr in addresses[1:]
                 if addr is not None
-            ]
-            self.passive_group_addresses.extend(passive)
+            )
             return parse_device_group_address(active) if active is not None else None
 
-        self.group_address = unpack_group_addresses(group_address)
-        self.group_address_state = unpack_group_addresses(group_address_state)
+        passive_write: list[DeviceGroupAddress] = []
+        passive_state: list[DeviceGroupAddress] = []
+        self.group_address = unpack_group_addresses(group_address, passive_write)
+        self.group_address_state = unpack_group_addresses(
+            group_address_state, passive_state
+        )
+        self.passive_group_addresses: list[DeviceGroupAddress] = (
+            passive_write + passive_state
+        )
+        # an address also used for writing is not a state address
+        self._state_group_addresses: frozenset[DeviceGroupAddress] = frozenset(
+            address
+            for address in (self.group_address_state, *passive_state)
+            if address is not None
+        ).difference((self.group_address, *passive_write))
 
         self.device_name: str = "Unknown" if device_name is None else device_name
         self.feature_name: str = "Unknown" if feature_name is None else feature_name
@@ -108,6 +121,15 @@ class RemoteValue(ABC, Generic[ValueT]):
         if self.group_address_state is not None:
             yield self.group_address_state
         yield from self.passive_group_addresses
+
+    def is_state_address(self, group_address: DeviceGroupAddress) -> bool:
+        """
+        Return if `group_address` is only used to receive state by this RemoteValue.
+
+        State addresses are `group_address_state` and the passive addresses given
+        with it. An address also given as `group_address` is a writing address.
+        """
+        return group_address in self._state_group_addresses
 
     def register_state_updater(self) -> None:
         """Register RemoteValue for state updates."""
