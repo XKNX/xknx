@@ -1259,7 +1259,11 @@ class TestKNXIPInterfaceUSB:
             xknx,
             connection_config=ConnectionConfig(
                 connection_type=ConnectionType.USB,
-                usb_config=USBConfig(vendor_id=0x16DE, serial_number="00C501053FB2"),
+                usb_config=USBConfig(
+                    vendor_id=0x16DE,
+                    serial_number="00C501053FB2",
+                    rf_domain_address=bytes(6),
+                ),
                 auto_reconnect_wait=7,
                 individual_address="1.0.12",
             ),
@@ -1273,6 +1277,7 @@ class TestKNXIPInterfaceUSB:
         assert tunnel.serial_number == "00C501053FB2"
         assert tunnel.auto_reconnect_wait == 7
         assert tunnel.individual_address == IndividualAddress("1.0.12")
+        assert tunnel.rf_domain_address == bytes(6)
         assert tunnel.keyring is None
         assert interface.usb_interface_info() is None
         assert await interface.gateway_info() is None
@@ -1284,3 +1289,8 @@ class TestKNXIPInterfaceUSB:
     def test_usb_config_default(self) -> None:
         """Test the default USB config."""
         assert ConnectionConfig().usb_config == USBConfig()
+
+    def test_usb_config_rf_domain_address(self) -> None:
+        """Test an RF Domain Address has 6 octets."""
+        with pytest.raises(ValueError, match="6 octets"):
+            USBConfig(rf_domain_address=bytes(5))

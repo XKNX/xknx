@@ -117,6 +117,8 @@ class USBConfig:
     * product_id: USB product id of the interface.
     * serial_number: USB serial number, to pick one of several interfaces.
     * path: hidapi device path of the interface.
+    * rf_domain_address: 6 octets. A KNX RF interface gets this Domain Address on
+        connect when it has another one; ignored for other interfaces.
     * transport_layer: reach the interface's own device through the cEMI Transport
         Layer instead of the bus, e.g. to download into a KNX device through its own
         USB port. Only management connections to that device work then.
@@ -131,14 +133,18 @@ class USBConfig:
         product_id: int | None = None,
         serial_number: str | None = None,
         path: bytes | None = None,
+        rf_domain_address: bytes | None = None,
         transport_layer: bool = False,
         extraneous_frame_callback: Callable[[USBTransferFrame], None] | None = None,
     ) -> None:
         """Initialize USBConfig class."""
+        if rf_domain_address is not None and len(rf_domain_address) != 6:
+            raise ValueError("An RF Domain Address has 6 octets")
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.serial_number = serial_number
         self.path = path
+        self.rf_domain_address = rf_domain_address
         self.transport_layer = transport_layer
         self.extraneous_frame_callback = extraneous_frame_callback
 
