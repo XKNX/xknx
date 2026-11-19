@@ -160,12 +160,18 @@ class TestRFInterface:
         tunnel = self.tunnel()
         await tunnel.connect()
         interface = fake_hid.interface
-        # PID_RF_DOMAIN_ADDRESS of the RF Medium Object, after the other properties
-        assert interface.written_cemi()[-1] == bytes.fromhex("fc001301381001")
+        # PID_RF_DOMAIN_ADDRESS, then PID_RF_MULTI_TYPE of the RF Medium Object, after the
+        # other properties
+        assert interface.written_cemi()[-2:] == [
+            bytes.fromhex("fc001301381001"),
+            bytes.fromhex("fc001301331001"),
+        ]
         info = tunnel.info
         assert info is not None
         assert info.medium is KNXMedium.RF
         assert info.rf_domain_address == DOMAIN_ADDRESS
+        # a KNX RF Ready interface has no PID_RF_MULTI_TYPE
+        assert not info.rf_multi
 
         await tunnel.send_cemi(GROUP_WRITE)
         request = GROUP_WRITE.to_knx()
@@ -192,12 +198,25 @@ class TestRFInterface:
         interface.properties[(0, 82)] = DOMAIN_ADDRESS
         tunnel = self.tunnel()
         await tunnel.connect()
-        assert interface.written_cemi()[-2:] == [
+        assert interface.written_cemi()[-3:-1] == [
             bytes.fromhex("fc001301381001"),
             bytes.fromhex("fc000001521001"),
         ]
         assert tunnel.info is not None
         assert tunnel.info.rf_domain_address == DOMAIN_ADDRESS
+        await tunnel.disconnect()
+
+    @pytest.mark.parametrize(("value", "rf_multi"), [(b"\x01", True), (b"\x00", False)])
+    async def test_rf_multi_type(
+        self, fake_hid: FakeHIDModule, value: bytes, rf_multi: bool
+    ) -> None:
+        """Test whether an RF interface operates as a KNX RF Multi device."""
+        self.rf_interface(fake_hid)
+        fake_hid.interface.properties[(19, 51)] = value
+        tunnel = self.tunnel()
+        await tunnel.connect()
+        assert tunnel.info is not None
+        assert tunnel.info.rf_multi is rf_multi
         await tunnel.disconnect()
 
     async def test_domain_address_unknown(
