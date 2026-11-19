@@ -48,8 +48,18 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x0E77, 0x0104),  # Weinzierl Engineering, GEWISS, Somfy
         (0x0E77, 0x0111),  # Siemens
         (0x0E77, 0x0112),  # Siemens
+        (0x0E77, 0x0113),  # Interra
+        (0x0E77, 0x0114),  # HDL
         (0x0E77, 0x0115),  # CONTROLtronic
+        (0x0E77, 0x0116),  # GEWISS
         (0x0E77, 0x0117),  # tecget
+        (0x0E77, 0x0118),  # B.E.G.
+        (0x0E77, 0x0119),  # B.E.G.
+        (0x0E77, 0x011A),  # Eelectron
+        (0x0E77, 0x011B),  # Bes - Ingenium
+        (0x0E77, 0x011C),  # Panasonic
+        (0x0E77, 0x011D),  # Schenker Storen
+        (0x0E77, 0x011E),  # Ekinex
         (0x0E77, 0x0121),  # Gustav Hensel
         (0x0E77, 0x0141),  # Schneider Electric (MG)
         (0x0E77, 0x2001),  # Weinzierl Engineering
@@ -112,8 +122,14 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x2A07, 0x0001),  # ise
         (0x2A07, 0x0002),  # Elsner Elektronik
         (0x2A07, 0x0003),  # ise
+        (0x2A07, 0x0004),  # Gira Giersiepen
         (0x2D72, 0x0002),  # PEAKnx
         (0x36CE, 0x0001),  # Video-Star
+        (0x36CE, 0x0002),  # Legrand
+        (0x36CE, 0x0005),  # Arlight
+        (0x36CE, 0x0006),  # Zhongshan Illus Lighting
+        (0x36CE, 0x0007),  # Gaimex
+        (0x36CE, 0x0008),  # Hyundai
         (0x7660, 0x0002),  # KNX Association
     }
 )

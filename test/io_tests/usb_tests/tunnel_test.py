@@ -957,6 +957,9 @@ class TestDiscovery:
         assert not find_usb_interfaces(serial_number="nope")
         assert is_knx_usb_interface(0x135E, 0x0022)
         assert is_knx_usb_interface(0x28C2, 0x001E)
+        # of the KNX Association's registry, also those sold by other manufacturers
+        assert is_knx_usb_interface(0x36CE, 0x0008)
+        assert is_knx_usb_interface(0x0E77, 0x011E)
         assert not is_knx_usb_interface(0x135E, 0x4711)
         assert not is_knx_usb_interface(0x16DE, 0x0001)
 
