@@ -18,7 +18,8 @@ nav_order: 2
   - `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back.
   - On macOS hidapi is imported on a thread of its own that is kept until the interpreter exits: hidapi has to be shut down while the thread that imported it is still running, else the interpreter crashes at exit (also with `ConnectionConfig(threaded=True)`).
   - `USBTunnel(busmonitor=True)` switches the interface to the bus monitor mode and passes every L_Busmon.ind on.
-- `ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA` (57) and `xknx.exceptions.CouldNotParseUSBFrame` added.
+  - KNX RF interfaces (mask 2311h): L_Data.req frames get the RF medium information the interface completes with its own Domain Address and frame number; `USBInterfaceInfo` has the `medium` and the `rf_domain_address`, `xknx.io.usb.rf_medium_info()` reads the RF medium information of a received frame - KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.4.3.2.
+- `ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA` (57), `ResourceRFMediumPropertyId.PID_RF_DOMAIN_ADDRESS` (56) and `xknx.exceptions.CouldNotParseUSBFrame` added.
 
 ### Protocol
 
