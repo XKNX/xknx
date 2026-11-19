@@ -1,6 +1,15 @@
 """KNX v02.01.02 - Management Procedures 03.05.02 - Device Management (DM_*) procedures."""
 
 # ruff: noqa: F401
+from .coupler_temporary_routing import (
+    CouplerSide,
+    broadcast_routing_temp_read_conn,
+    broadcast_routing_temp_write_conn,
+    unicast_white_list_add_conn,
+    unicast_white_list_check_conn,
+    unicast_white_list_retrigger_conn,
+    unicast_white_list_revoke_conn,
+)
 from .dm_authorize import FREE_ACCESS_KEY, dmp_authorize2_r_co, dmp_authorize_r_co
 from .dm_connect_r_co import dmp_connect_r_co
 from .dm_restart_r_co import dm_restart, dm_restart_r_co

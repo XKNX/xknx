@@ -51,7 +51,10 @@ When adding a new procedure follow the workflow:
 # ruff: noqa: F401
 from .device import (
     FREE_ACCESS_KEY,
+    CouplerSide,
     ScannedInterfaceObject,
+    broadcast_routing_temp_read_conn,
+    broadcast_routing_temp_write_conn,
     dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
@@ -71,6 +74,10 @@ from .device import (
     dmp_user_mem_write_r_co,
     prog_mode_property_switch_conn,
     prog_mode_switch,
+    unicast_white_list_add_conn,
+    unicast_white_list_check_conn,
+    unicast_white_list_retrigger_conn,
+    unicast_white_list_revoke_conn,
 )
 from .network import (
     nm_individual_address_check,
