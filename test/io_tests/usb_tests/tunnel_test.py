@@ -956,6 +956,7 @@ class TestDiscovery:
         assert not find_usb_interfaces(path=b"kbd")
         assert not find_usb_interfaces(serial_number="nope")
         assert is_knx_usb_interface(0x135E, 0x0022)
+        assert is_knx_usb_interface(0x28C2, 0x001E)
         assert not is_knx_usb_interface(0x135E, 0x4711)
         assert not is_knx_usb_interface(0x16DE, 0x0001)
 

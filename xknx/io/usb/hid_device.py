@@ -31,8 +31,9 @@ raw_socket_logger = logging.getLogger("xknx.raw_socket")
 # them. Unless noted otherwise the entries are the list `KNOWN_DEVICES` of the KNX USB
 # proof of concept for xknx by kistlin (https://github.com/kistlin/xknx, branch
 # usb-interface-support, xknx/usb/util.py, MIT licence), which names calimero's
-# knxUsbVendorProductIds of 2020-06-20 as its source. An interface missing here is
-# found by giving its vendor id (and product id) or its path.
+# knxUsbVendorProductIds of 2020-06-20 as its source; the later entries are from the
+# KNX Association's list of KNX USB interfaces. An interface missing here is found by
+# giving its vendor id (and product id) or its path.
 KNX_USB_DEVICE_IDS: Final = frozenset(
     {
         (0x0111, 0x1022),  # Makel Elektrik
@@ -48,6 +49,7 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x0E77, 0x0111),  # Siemens
         (0x0E77, 0x0112),  # Siemens
         (0x0E77, 0x0115),  # CONTROLtronic
+        (0x0E77, 0x0117),  # tecget
         (0x0E77, 0x0121),  # Gustav Hensel
         (0x0E77, 0x0141),  # Schneider Electric (MG)
         (0x0E77, 0x2001),  # Weinzierl Engineering
@@ -66,8 +68,11 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x135E, 0x0320),  # Insta
         (0x135E, 0x0322),  # Gira Giersiepen
         (0x135E, 0x0323),  # Albrecht Jung
+        (0x135E, 0x0325),  # Hager Electro
         (0x135E, 0x0326),  # Feller
         (0x135E, 0x0329),  # B.E.G.
+        (0x135E, 0x032A),  # Blumotix
+        (0x135E, 0x032B),  # STEINEL professional
         (0x145C, 0x1330),  # Busch-Jaeger Elektro
         (0x145C, 0x1490),  # Busch-Jaeger Elektro
         (0x147B, 0x2200),  # ABB
@@ -98,8 +103,14 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x28C2, 0x0015),  # Bes - Ingenium
         (0x28C2, 0x0017),  # Interra
         (0x28C2, 0x001A),  # VIMAR
+        (0x28C2, 0x001C),  # OSix
+        (0x28C2, 0x001D),  # Panasonic
+        (0x28C2, 0x001E),  # Shenzhen HeGuang
+        (0x28C2, 0x001F),  # Module Electronic
+        (0x28C2, 0x0020),  # GreenControls Technology
         (0x2A07, 0x0001),  # ise
         (0x2A07, 0x0002),  # Elsner Elektronik
+        (0x2A07, 0x0003),  # ise
         (0x2D72, 0x0002),  # PEAKnx
         (0x7660, 0x0002),  # KNX Association
     }
