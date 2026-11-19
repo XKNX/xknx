@@ -51,7 +51,9 @@ When adding a new procedure follow the workflow:
 # ruff: noqa: F401
 from .device import (
     FREE_ACCESS_KEY,
+    RFSBCMode,
     ScannedInterfaceObject,
+    dm_function_property_write_r,
     dm_prog_mode_switch,
     dm_restart,
     dm_restart_r_co,
@@ -71,6 +73,7 @@ from .device import (
     dmp_user_mem_write_r_co,
     prog_mode_property_switch_conn,
     prog_mode_switch,
+    rf_sbc_control_write,
 )
 from .network import (
     nm_domain_address_read,
@@ -81,4 +84,5 @@ from .network import (
     nm_individual_address_serial_number_read,
     nm_individual_address_serial_number_write,
     nm_individual_address_write,
+    nm_object_index_read,
 )

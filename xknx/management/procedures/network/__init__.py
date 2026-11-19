@@ -17,3 +17,4 @@ from .nm_individual_address_serial_number_write import (
     nm_individual_address_serial_number_write,
 )
 from .nm_individual_address_write import nm_individual_address_write
+from .nm_object_index_read import nm_object_index_read
