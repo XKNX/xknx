@@ -280,7 +280,8 @@ class TestRFDomainAddressWrite:
         tunnel = self.tunnel(XKNX())
         with caplog.at_level(logging.INFO, logger="xknx.log"):
             await tunnel.connect()
-        assert interface.written_cemi()[-1] == (
+        # before the RF Multi type is read
+        assert interface.written_cemi()[-2] == (
             bytes.fromhex("f6001301381001") + self.NEW_DOMAIN_ADDRESS
         )
         assert interface.properties[(19, 56)] == self.NEW_DOMAIN_ADDRESS
@@ -375,4 +376,38 @@ class TestRFDomainAddressOnTheOpenConnection:
         await tunnel.connect()
         with pytest.raises(CommunicationError, match="no KNX RF interface"):
             await tunnel.set_rf_domain_address(self.NEW_DOMAIN_ADDRESS)
+        await tunnel.disconnect()
+
+
+class TestRFMultiTypeOnTheOpenConnection:
+    """Test setting the RF Multi type of a connected KNX USB RF interface."""
+
+    async def test_set(self, fake_hid: FakeHIDModule) -> None:
+        """Test PID_RF_MULTI_TYPE is written and reported."""
+        TestRFInterface.rf_interface(fake_hid)
+        interface = fake_hid.interface
+        tunnel = USBTunnel(XKNX(), cemi_received_callback=Mock(), auto_reconnect=False)
+        await tunnel.connect()
+        interface.written.clear()
+        await tunnel.set_rf_multi_type(True)
+        assert interface.written_cemi() == [bytes.fromhex("f6001301331001") + b"\x01"]
+        assert tunnel.info is not None
+        assert tunnel.info.rf_multi
+        await tunnel.set_rf_multi_type(False)
+        assert not tunnel.info.rf_multi
+        # refused: the error names it
+        interface.refused_writes[(19, 51)] = 0x0B
+        with pytest.raises(CommunicationError, match="Could not set the RF Multi type"):
+            await tunnel.set_rf_multi_type(True)
+        assert not tunnel.info.rf_multi
+        await tunnel.disconnect()
+        with pytest.raises(CommunicationError, match="not connected"):
+            await tunnel.set_rf_multi_type(True)
+
+    async def test_not_for_tp1(self, fake_hid: FakeHIDModule) -> None:
+        """Test a TP1 interface has no RF Multi type."""
+        tunnel = USBTunnel(XKNX(), cemi_received_callback=Mock(), auto_reconnect=False)
+        await tunnel.connect()
+        with pytest.raises(CommunicationError, match="no KNX RF interface"):
+            await tunnel.set_rf_multi_type(True)
         await tunnel.disconnect()
