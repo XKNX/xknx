@@ -463,7 +463,8 @@ class USBTunnel(Interface):
         The first request to the interface: tried again once, with a longer timeout. An
         interface the host may suspend gets a hint with the error.
         """
-        for attempt in range(1, SUPPORTED_EMI_TYPE_ATTEMPTS + 1):
+        attempt = 1
+        while True:
             try:
                 data = await self._feature_get(
                     DeviceFeature.SUPPORTED_EMI_TYPE,
@@ -473,6 +474,7 @@ class USBTunnel(Interface):
             except CommunicationError as ex:
                 if attempt < SUPPORTED_EMI_TYPE_ATTEMPTS:
                     logger.debug("%s, trying again", ex)
+                    attempt += 1
                     await asyncio.sleep(SUPPORTED_EMI_TYPE_PAUSE)
                     continue
                 assert self.device_info is not None
