@@ -223,6 +223,7 @@ class USBTunnel(Interface):
         "keyring",
         "path",
         "product_id",
+        "rf_domain_address",
         "serial_number",
         "vendor_id",
         "xknx",
@@ -243,6 +244,7 @@ class USBTunnel(Interface):
         auto_reconnect_wait: int = 3,
         busmonitor: bool = False,
         keyring: Keyring | None = None,
+        rf_domain_address: bytes | None = None,
     ) -> None:
         """
         Initialize USBTunnel.
@@ -263,6 +265,11 @@ class USBTunnel(Interface):
 
         `keyring` is only used to warn, with Data Secure, when the interface's
         individual address is none of the keyring's interfaces.
+
+        With `rf_domain_address` (6 octets) the Domain Address of a KNX RF interface
+        is set to it on connect when the interface has another one (see
+        `_write_rf_domain_address()`). The change persists in the interface; when it
+        fails, the connect fails. Other interfaces have none; it is ignored for them.
         """
         self.xknx = xknx
         self.busmonitor = busmonitor
@@ -274,6 +281,7 @@ class USBTunnel(Interface):
         self.auto_reconnect = auto_reconnect
         self.auto_reconnect_wait = auto_reconnect_wait
         self.keyring = keyring
+        self.rf_domain_address = rf_domain_address
         self.device_info: USBDeviceInfo | None = None
 
         self._assembler = ReportAssembler()
@@ -422,6 +430,12 @@ class USBTunnel(Interface):
             if self._medium is KNXMedium.RF:
                 rf_domain_address = await self._read_rf_domain_address()
                 rf_multi = await self._read_rf_multi_type()
+                if (
+                    self.rf_domain_address is not None
+                    and rf_domain_address != self.rf_domain_address
+                ):
+                    await self._write_rf_domain_address(rf_domain_address)
+                    rf_domain_address = self.rf_domain_address
         else:
             self._medium = KNXMedium.TP1
             self._warn_emi_data_secure()
@@ -611,6 +625,36 @@ class USBTunnel(Interface):
                 return bytes(data)
         logger.warning("Could not read the RF Domain Address of the KNX USB interface")
         return None
+
+    async def _write_rf_domain_address(self, current: bytes | None) -> None:
+        """
+        Set the Domain Address of an RF interface to `rf_domain_address`. Raise CommunicationError when that fails.
+
+        M_PropWrite of the RF Medium Object, where it is mandatory - KNX v01.10.01 -
+        Resources 03.05.01 - §4.15.8; the interface keeps a copy in the Device Object
+        in step. A positive M_PropWrite.con is the confirmation, and the address
+        applies at once - KNX v02.01.01 - Configuration Procedures 03.05.03 -
+        §3.13.3.2.
+        """
+        assert self.rf_domain_address is not None
+        new = self.rf_domain_address
+        try:
+            await self._property_write(
+                ResourceObjectType.OBJECT_RF_MEDIUM_OBJECT,
+                ResourceRFMediumPropertyId.PID_RF_DOMAIN_ADDRESS,
+                new,
+            )
+        except CommunicationError as ex:
+            raise CommunicationError(
+                f"Could not set the RF Domain Address of KNX USB interface "
+                f"{self.device_info} to {new.hex()}: {ex}"
+            ) from ex
+        logger.info(
+            "Changed the RF Domain Address of KNX USB interface %s from %s to %s",
+            self.device_info,
+            current.hex() if current is not None else "unknown",
+            new.hex(),
+        )
 
     async def _read_rf_multi_type(self) -> bool:
         """

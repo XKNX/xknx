@@ -8,6 +8,7 @@ from unittest.mock import Mock
 import pytest
 
 from xknx import XKNX
+from xknx.exceptions import CommunicationError
 from xknx.io.usb import (
     RFMediumInfo,
     RFSignalStrength,
@@ -141,10 +142,13 @@ class TestRFInterface:
         self.xknx = XKNX()
         self.cemi_received = Mock()
 
-    def tunnel(self) -> USBTunnel:
+    def tunnel(self, rf_domain_address: bytes | None = None) -> USBTunnel:
         """Create a tunnel."""
         return USBTunnel(
-            self.xknx, cemi_received_callback=self.cemi_received, auto_reconnect=False
+            self.xknx,
+            cemi_received_callback=self.cemi_received,
+            auto_reconnect=False,
+            rf_domain_address=rf_domain_address,
         )
 
     @staticmethod
@@ -250,4 +254,82 @@ class TestRFInterface:
             frame.startswith(bytes.fromhex("fc0013"))
             for frame in fake_hid.interface.written_cemi()
         )
+        await tunnel.disconnect()
+
+
+class TestRFDomainAddressWrite:
+    """Test setting the Domain Address of a KNX USB RF interface on connect."""
+
+    NEW_DOMAIN_ADDRESS = bytes.fromhex("00fa00000042")
+
+    def tunnel(self, xknx: XKNX) -> USBTunnel:
+        """Create a tunnel that sets the Domain Address."""
+        return USBTunnel(
+            xknx,
+            cemi_received_callback=Mock(),
+            auto_reconnect=False,
+            rf_domain_address=self.NEW_DOMAIN_ADDRESS,
+        )
+
+    async def test_set(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test another Domain Address is written to the RF Medium Object."""
+        TestRFInterface.rf_interface(fake_hid)
+        interface = fake_hid.interface
+        tunnel = self.tunnel(XKNX())
+        with caplog.at_level(logging.INFO, logger="xknx.log"):
+            await tunnel.connect()
+        assert interface.written_cemi()[-1] == (
+            bytes.fromhex("f6001301381001") + self.NEW_DOMAIN_ADDRESS
+        )
+        assert interface.properties[(19, 56)] == self.NEW_DOMAIN_ADDRESS
+        assert tunnel.info is not None
+        assert tunnel.info.rf_domain_address == self.NEW_DOMAIN_ADDRESS
+        assert "from 00fa12345678 to 00fa00000042" in caplog.text
+        await tunnel.disconnect()
+
+    async def test_same_one_not_written(self, fake_hid: FakeHIDModule) -> None:
+        """Test the Domain Address the interface has already is not written again."""
+        TestRFInterface.rf_interface(fake_hid)
+        interface = fake_hid.interface
+        interface.properties[(19, 56)] = self.NEW_DOMAIN_ADDRESS
+        tunnel = self.tunnel(XKNX())
+        await tunnel.connect()
+        assert not any(
+            frame[0] == 0xF6 and frame[2] == 0x13 for frame in interface.written_cemi()
+        )
+        await tunnel.disconnect()
+
+    async def test_unknown_one_written(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test a Domain Address is written when the interface's own can't be read."""
+        TestRFInterface.rf_interface(fake_hid)
+        del fake_hid.interface.properties[(19, 56)]
+        tunnel = self.tunnel(XKNX())
+        with caplog.at_level(logging.INFO, logger="xknx.log"):
+            await tunnel.connect()
+        assert fake_hid.interface.properties[(19, 56)] == self.NEW_DOMAIN_ADDRESS
+        assert "from unknown to 00fa00000042" in caplog.text
+        await tunnel.disconnect()
+
+    async def test_refused(self, fake_hid: FakeHIDModule) -> None:
+        """Test the connect fails when the interface refuses the Domain Address."""
+        TestRFInterface.rf_interface(fake_hid)
+        fake_hid.interface.refused_writes[(19, 56)] = 0x0B
+        tunnel = self.tunnel(XKNX())
+        with pytest.raises(
+            CommunicationError, match="Could not set the RF Domain Address"
+        ):
+            await tunnel.connect()
+        assert fake_hid.interface.properties[(19, 56)] == DOMAIN_ADDRESS
+
+    async def test_ignored_for_tp1(self, fake_hid: FakeHIDModule) -> None:
+        """Test a TP1 interface gets no Domain Address."""
+        tunnel = self.tunnel(XKNX())
+        await tunnel.connect()
+        assert (19, 56) not in fake_hid.interface.properties
+        assert tunnel.info is not None
+        assert tunnel.info.rf_domain_address is None
         await tunnel.disconnect()
