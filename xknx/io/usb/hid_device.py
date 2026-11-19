@@ -112,6 +112,7 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x2A07, 0x0002),  # Elsner Elektronik
         (0x2A07, 0x0003),  # ise
         (0x2D72, 0x0002),  # PEAKnx
+        (0x36CE, 0x0001),  # Video-Star
         (0x7660, 0x0002),  # KNX Association
     }
 )
