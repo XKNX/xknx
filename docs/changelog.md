@@ -26,6 +26,7 @@ nav_order: 2
 
 - Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
 - Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
+- Add the helpers for the temporary routing through a coupler used as Security Proxy - KNX AN192 v06 - Coupler security extensions - §2.3.1.3 and §2.3.1.4, not in the spec as procedures: `unicast_white_list_add_conn`, `unicast_white_list_revoke_conn`, `unicast_white_list_retrigger_conn` and `unicast_white_list_check_conn` for its Temporary Unicast White Lists (PID_PTP_ROUTING_TEMP), `broadcast_routing_temp_write_conn` and `broadcast_routing_temp_read_conn` for its temporary broadcast and system broadcast routing (PID_BC_ROUTING_TEMP) on a `CouplerSide`. `ResourceRouterPropertyId` has the coupler's PIDs 80 to 84.
 
 ### Internal
 
