@@ -654,8 +654,10 @@ class USBTunnel(Interface):
 
     async def _read_rf_multi_type(self) -> bool:
         """
-        Read whether an RF interface operates as a KNX RF Multi device; a KNX RF Ready one
-        has no PID_RF_MULTI_TYPE - KNX v01.10.01 - Resources 03.05.01 - §4.15.3.
+        Read whether an RF interface operates as a KNX RF Multi device.
+
+        A KNX RF Ready interface has no PID_RF_MULTI_TYPE - KNX v01.10.01 - Resources
+        03.05.01 - §4.15.3.
         """
         try:
             data = await self._property_read(
