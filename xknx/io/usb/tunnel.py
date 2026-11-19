@@ -70,6 +70,8 @@ from .const import (
 from .emi import EMILayer
 from .frame import ReportAssembler, USBTransferFrame, device_feature_frame
 from .hid_device import (
+    KNX_USB_INTERFACE_TIMING,
+    KNX_USB_INTERFACES_WITHOUT_SUSPEND,
     HIDDevice,
     USBDeviceInfo,
     find_usb_interfaces,
@@ -85,6 +87,10 @@ logger = logging.getLogger("xknx.log")
 # recommended request-to-confirmation timeout of a cEMI client is 3 s,
 # KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.5.1
 LOCAL_MANAGEMENT_TIMEOUT = 3.0
+# Device Feature Get Supported EMI Type, the first request to the interface, is tried this often:
+# each time one DEVICE_FEATURE_GET_TIMEOUT longer, after a pause.
+SUPPORTED_EMI_TYPE_ATTEMPTS = 2
+SUPPORTED_EMI_TYPE_PAUSE = 0.2
 # APDU length of a short frame - used when the interface doesn't report its own
 DEFAULT_MAX_APDU_LENGTH = 15
 
@@ -394,11 +400,19 @@ class USBTunnel(Interface):
     async def _setup(self) -> None:
         """Set up the bus access server and the EMI server, in the order of the specification."""
         assert self.device_info is not None
+        ids = (self.device_info.vendor_id, self.device_info.product_id)
+        before, after_emi = KNX_USB_INTERFACE_TIMING.get(ids, (0.0, 0.0))
+        if before:
+            logger.debug("Waiting %s s before communicating with %s", before, ids)
+            await asyncio.sleep(before)
         # KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3.3.2
         supported = await self._get_supported_emi_types()
         self._emi = _preferred_emi_type(supported)
         # §3.5.3.4.2
         await self._activate_emi_type(supported)
+        if after_emi:
+            logger.debug("Waiting %s s after setting the EMI type", after_emi)
+            await asyncio.sleep(after_emi)
         # §3.5.3.4
         self._bus_connected = await self._get_bus_connection_status()
         # §3.5.3.4.1
@@ -443,8 +457,32 @@ class USBTunnel(Interface):
         )
 
     async def _get_supported_emi_types(self) -> SupportedEMIType:
-        """Get the EMI types the interface supports."""
-        data = await self._feature_get(DeviceFeature.SUPPORTED_EMI_TYPE)
+        """
+        Get the EMI types the interface supports.
+
+        The first request to the interface: tried again once, with a longer timeout. An
+        interface the host may suspend gets a hint with the error.
+        """
+        for attempt in range(1, SUPPORTED_EMI_TYPE_ATTEMPTS + 1):
+            try:
+                data = await self._feature_get(
+                    DeviceFeature.SUPPORTED_EMI_TYPE,
+                    timeout=attempt * DEVICE_FEATURE_GET_TIMEOUT,
+                )
+                break
+            except CommunicationError as ex:
+                if attempt < SUPPORTED_EMI_TYPE_ATTEMPTS:
+                    logger.debug("%s, trying again", ex)
+                    await asyncio.sleep(SUPPORTED_EMI_TYPE_PAUSE)
+                    continue
+                assert self.device_info is not None
+                ids = (self.device_info.vendor_id, self.device_info.product_id)
+                if ids in KNX_USB_INTERFACES_WITHOUT_SUSPEND:
+                    raise CommunicationError(
+                        f"{ex}; this interface may need the USB selective suspend "
+                        "(USB power management) switched off for it"
+                    ) from ex
+                raise
         return SupportedEMIType(
             int.from_bytes(data, "big")
             & (SupportedEMIType.EMI1 | SupportedEMIType.EMI2 | SupportedEMIType.CEMI)
@@ -946,14 +984,16 @@ class USBTunnel(Interface):
             f"KNX USB interface did not answer PC_Get_Value of {address:04x}h",
         )
 
-    async def _feature_get(self, feature: DeviceFeature) -> bytes:
+    async def _feature_get(
+        self, feature: DeviceFeature, timeout: float | None = None
+    ) -> bytes:
         """Get a device feature of the bus access server - KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.3.2.2."""
         return await self._features.request(
             feature,
             lambda: self._write_frame(
                 device_feature_frame(DeviceFeatureService.GET, feature)
             ),
-            DEVICE_FEATURE_GET_TIMEOUT,
+            DEVICE_FEATURE_GET_TIMEOUT if timeout is None else timeout,
             f"KNX USB interface did not answer Device Feature Get {feature.name}",
         )
 

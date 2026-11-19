@@ -133,6 +133,38 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x7660, 0x0002),  # KNX Association
     }
 )
+# Seconds to wait after opening these interfaces before the first Device Feature Get, and
+# after setting their active EMI type: the "Timing" of the KNX Association's list of KNX USB
+# interfaces (milliseconds there).
+KNX_USB_INTERFACE_TIMING: Final = {
+    (0x0E77, 0x0111): (1.0, 0.1),  # Siemens
+    (0x145C, 0x1330): (1.0, 0.1),  # Busch-Jaeger Elektro
+}
+# Interfaces that may not answer after the host suspended them: the KNX Association's list
+# marks them "RequiresKnxUsbFix", the switching off of the USB selective suspend (USB power
+# management) for them.
+KNX_USB_INTERFACES_WITHOUT_SUSPEND: Final = frozenset(
+    {
+        (0x0E77, 0x0102),
+        (0x0E77, 0x0103),
+        (0x0E77, 0x0104),
+        (0x0E77, 0x0111),
+        (0x0E77, 0x0112),
+        (0x0E77, 0x0121),
+        (0x0E77, 0x0141),
+        (0x135E, 0x0020),
+        (0x135E, 0x0021),
+        (0x135E, 0x0022),
+        (0x135E, 0x0023),
+        (0x135E, 0x0024),
+        (0x135E, 0x0025),
+        (0x135E, 0x0026),
+        (0x135E, 0x0027),
+        (0x145C, 0x1330),
+        (0x145C, 0x1490),
+        (0x147B, 0x5120),
+    }
+)
 # usage pages below this are standard HID devices (keyboards, mice, ...)
 _VENDOR_DEFINED_USAGE_PAGE: Final = 0xFF00
 # hidapi read timeout in ms - bounds how long closing waits for the reader thread
