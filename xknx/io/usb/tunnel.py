@@ -430,7 +430,6 @@ class USBTunnel(Interface):
             max_apdu_length = await self._read_max_apdu_length()
             if self._medium is KNXMedium.RF:
                 rf_domain_address = await self._read_rf_domain_address()
-                rf_multi = await self._read_rf_multi_type()
                 if (
                     self.rf_domain_address is not None
                     and rf_domain_address != self.rf_domain_address
@@ -439,6 +438,7 @@ class USBTunnel(Interface):
                         self.rf_domain_address, rf_domain_address
                     )
                     rf_domain_address = self.rf_domain_address
+                rf_multi = await self._read_rf_multi_type()
         else:
             self._medium = KNXMedium.TP1
             self._warn_emi_data_secure()
@@ -650,6 +650,31 @@ class USBTunnel(Interface):
             await self._write_rf_domain_address(rf_domain_address, current)
             self._info = replace(self._info, rf_domain_address=rf_domain_address)
         self.rf_domain_address = rf_domain_address
+
+    async def set_rf_multi_type(self, rf_multi: bool) -> None:
+        """
+        Set whether the connected KNX RF interface operates as a KNX RF Multi device.
+
+        M_PropWrite of PID_RF_MULTI_TYPE in the RF Medium Object - KNX v01.10.01 -
+        Resources 03.05.01 - §4.15.3.2, on the open connection. Raise
+        CommunicationError when no KNX RF interface is connected or it refuses it.
+        """
+        if not self._established or self._info is None:
+            raise CommunicationError("KNX USB interface not connected")
+        if self._medium is not KNXMedium.RF:
+            raise CommunicationError("KNX USB interface is no KNX RF interface")
+        try:
+            await self._property_write(
+                ResourceObjectType.OBJECT_RF_MEDIUM_OBJECT,
+                ResourceRFMediumPropertyId.PID_RF_MULTI_TYPE,
+                bytes((int(rf_multi),)),
+            )
+        except CommunicationError as ex:
+            raise CommunicationError(
+                f"Could not set the RF Multi type of KNX USB interface "
+                f"{self.device_info}: {ex}"
+            ) from ex
+        self._info = replace(self._info, rf_multi=rf_multi)
 
     async def _write_rf_domain_address(self, new: bytes, current: bytes | None) -> None:
         """
