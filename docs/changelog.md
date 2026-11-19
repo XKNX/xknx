@@ -12,6 +12,7 @@ nav_order: 2
 
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
 - Accept function-specific return codes in `FunctionPropertyExtStateResponse` instead of failing to decode the telegram (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.8.3). Return codes not in the `ReturnCode` enum are represented as `int`.
+- Add `TDataSystemBroadcast` (T_Data_SystemBroadcast - KNX v01.02.03 - Transport Layer 03.03.04 - §3.5), coded like `TDataBroadcast` and sent and received with the cEMI "System Broadcast" flag 0 (KNX v01.04.02 - External Message Interface 03.06.03 - §4.1.5.3.2). Received system broadcasts were `TDataBroadcast` before; `TDataSystemBroadcast` is a subclass of it, but not equal to it. A device whose Domain Address is unknown, e.g. a new KNX RF device, only receives system broadcasts.
 
 ### DPT
 
@@ -24,6 +25,12 @@ nav_order: 2
 
 ### Management
 
+- `Broadcast.send()` and `Broadcast.request()` take `system_broadcast=True` to send as system broadcast.
+- Add `nm_domain_address_read(xknx, timeout=3, system_broadcast=True)` - KNX v02.01.02 - Management Procedures 03.05.02 - §2.7 NM_DomainAddress_Read, the individual and Domain Addresses of the devices in programming mode.
+- Add `nm_domain_and_individual_address_write2(xknx, domain_address, individual_address, timeout=3, system_broadcast=True)` - KNX v02.01.02 - Management Procedures 03.05.02 - §2.10 NM_DomainAndIndividualAddress_Write2, which gives the device in programming mode its Domain Address and individual address, verifies it connectionless and restarts it: the procedure for KNX RF devices (KNX v02.01.01 - Configuration Procedures 03.05.03 - §2.3.1.3). With `system_broadcast=False` it uses broadcasts, for a device behind a TP1/RF Media Coupler that turns them into system broadcasts (§2.3.1.4).
+- Add `nm_object_index_read(xknx, individual_address, object_type, start_instance=1, number_of_instances=1)` - KNX v02.01.02 - Management Procedures 03.05.02 - §2.23.4 NM_ObjectIndex_Read, the Object Indexes of the instances of an Interface Object Type, read connectionless.
+- Add `dm_function_property_write_r(conn, object_index, property_id, command)` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.30 DM_FunctionProperty_Write_R, returning the `FunctionPropertyStateResponse`.
+- Add `rf_sbc_control_write(xknx, coupler, mode)` with `RFSBCMode` (not in spec): sets PID_RF_SBC_CONTROL (KNX v01.10.01 - Resources 03.05.01 - §4.5.15.1) in the RF Router Object of a KNX TP1/RF Media Coupler, to let it route system broadcast services towards an RF device in another RF domain (KNX v02.01.01 - Configuration Procedures 03.05.03 - §2.3.1.4).
 - Add `dmp_prog_mode_switch_r_co(conn, mode, verify=False)` and `dm_prog_mode_switch(xknx, individual_address, mode, verify=False)` to `xknx.management.procedures` - KNX v02.01.02 - Management Procedures 03.05.02 - §3.13 DM_ProgMode_Switch, switching the Programming Mode of a device at memory 60h (Realisation Type 2) on or off, on an already-open connection or opening and closing its own.
 - Add the helpers `prog_mode_property_switch_conn(conn, mode, verify=False)`, which switches the Programming Mode through the Device Object's `PID_PROGMODE` (Realisation Type 1), and `prog_mode_switch(xknx, individual_address, mode, verify=False)`, which picks memory 60h or `PID_PROGMODE` by the device's mask version. Both are not in the spec.
 

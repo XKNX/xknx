@@ -366,6 +366,21 @@ async def test_broadcast_message() -> None:
         assert send_telegram.call_args_list == [call(test_telegram)]
 
 
+async def test_system_broadcast_message() -> None:
+    """Test sending a system broadcast."""
+    xknx = XKNX()
+    request = Telegram(
+        destination_address=GroupAddress("0/0/0"),
+        tpci=tpci.TDataSystemBroadcast(),
+        payload=apci.IndividualAddressRead(),
+    )
+    with patch("xknx.cemi.CEMIHandler.send_telegram") as send_telegram:
+        await xknx.management.broadcast.send(
+            apci.IndividualAddressRead(), system_broadcast=True
+        )
+        assert send_telegram.call_args_list == [call(request)]
+
+
 def _broadcast_telegram(payload: apci.APCI, source: str) -> Telegram:
     """Build an incoming broadcast telegram."""
     return Telegram(

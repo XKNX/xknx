@@ -124,6 +124,25 @@ class TDataBroadcast(TPCI):
         return 0
 
 
+class TDataSystemBroadcast(TDataBroadcast):
+    """
+    T_Data_SystemBroadcast class - KNX v01.02.03 - Transport Layer 03.03.04 - §3.5.
+
+    Coded like T_Data_Broadcast; sent and received as system broadcast, the cEMI
+    "System Broadcast" flag 0 - KNX v01.04.02 - External Message Interface
+    03.06.03 - §4.1.5.3.2. A device whose Domain Address is unknown (e.g. a new
+    KNX RF device) only receives system broadcasts.
+    """
+
+    __slots__ = ()
+
+    def __eq__(self, other: object) -> bool:
+        """Equal operator."""
+        return isinstance(other, TDataSystemBroadcast)
+
+    __hash__ = None  # type: ignore[assignment]
+
+
 class TDataTagGroup(TPCI):
     """T_Data_Tag_Group class."""
 

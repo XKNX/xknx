@@ -25,7 +25,7 @@ from xknx.exceptions import (
 from xknx.profile.const import ResourceObjectType, ResourcePropertyId
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram, TelegramDirection
 from xknx.telegram.apci import APCI
-from xknx.telegram.tpci import TPCI, TDataBroadcast
+from xknx.telegram.tpci import TPCI, TDataBroadcast, TDataSystemBroadcast
 
 from .const import (
     MAX_NPDU_LENGTH,
@@ -163,7 +163,10 @@ class CEMILData(CEMIData):
             raise TypeError()
 
         return CEMILData(
-            flags=CEMIFlags(priority=priority),
+            flags=CEMIFlags(
+                priority=priority,
+                system_broadcast=isinstance(telegram.tpci, TDataSystemBroadcast),
+            ),
             src_addr=src_addr or telegram.source_address,
             dst_addr=telegram.destination_address,
             tpci=telegram.tpci,
@@ -287,6 +290,8 @@ class CEMILData(CEMIData):
                 f"TPCI not supported: {err.description} - {_tpdu[0]:#10b} "
                 f"from {src_addr} in CEMI: {raw.hex()}"
             ) from err
+        if flags.system_broadcast and isinstance(tpci, TDataBroadcast):
+            tpci = TDataSystemBroadcast()
 
         if tpci.control:
             if _npdu_len:

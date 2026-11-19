@@ -11,6 +11,7 @@ from xknx.telegram.tpci import (
     TDataConnected,
     TDataGroup,
     TDataIndividual,
+    TDataSystemBroadcast,
     TDataTagGroup,
     TDisconnect,
     TNak,
@@ -77,3 +78,12 @@ def test_equality() -> None:
     """Test equality."""
     assert TDataGroup() == TDataGroup()
     assert TDataGroup() != TDataIndividual()
+
+
+def test_system_broadcast() -> None:
+    """Test T_Data_SystemBroadcast is coded like T_Data_Broadcast but no equal of it."""
+    assert TDataSystemBroadcast().to_knx() == TDataBroadcast().to_knx() == 0
+    assert isinstance(TDataSystemBroadcast(), TDataBroadcast)
+    assert TDataSystemBroadcast() == TDataSystemBroadcast()
+    assert TDataSystemBroadcast() != TDataBroadcast()
+    assert TDataBroadcast() != TDataSystemBroadcast()
