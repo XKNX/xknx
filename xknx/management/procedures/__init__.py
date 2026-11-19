@@ -73,6 +73,8 @@ from .device import (
     prog_mode_switch,
 )
 from .network import (
+    nm_domain_address_read,
+    nm_domain_and_individual_address_write2,
     nm_individual_address_check,
     nm_individual_address_check_conn,
     nm_individual_address_read,

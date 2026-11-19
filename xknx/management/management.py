@@ -29,6 +29,7 @@ from xknx.telegram.tpci import (
     TDataBroadcast,
     TDataConnected,
     TDataIndividual,
+    TDataSystemBroadcast,
     TDisconnect,
     TNak,
 )
@@ -192,12 +193,18 @@ class Broadcast:
         for context in self._contexts:
             context.queue.put_nowait(telegram)
 
-    async def send(self, payload: APCI) -> None:
-        """Send a broadcast message."""
+    async def send(self, payload: APCI, *, system_broadcast: bool = False) -> None:
+        """
+        Send a broadcast message.
+
+        With `system_broadcast` it is sent as system broadcast (T_Data_SystemBroadcast):
+        on open media like KNX RF it then also reaches devices of another or no
+        Domain Address.
+        """
         await self.xknx.cemi_handler.send_telegram(
             Telegram(
                 GroupAddress("0/0/0"),
-                tpci=TDataBroadcast(),
+                tpci=TDataSystemBroadcast() if system_broadcast else TDataBroadcast(),
                 payload=payload,
             )
         )
@@ -206,6 +213,8 @@ class Broadcast:
         self,
         payload: APCIBroadcastRequest[APCIResponseT],
         timeout: float | None = 3,
+        *,
+        system_broadcast: bool = False,
     ) -> AsyncGenerator[Telegram[APCIResponseT], None]:
         """
         Broadcast a request service and yield the responses to it.
@@ -218,9 +227,10 @@ class Broadcast:
         rather than returning one telegram like `P2PConnection.request()` does.
         Leaving the loop early is fine. Use `context()` with `send()` and
         `receive()` directly to keep one context across several requests.
+        `system_broadcast` sends the request as system broadcast, see `send()`.
         """
         async with self.context() as context:
-            await self.send(payload)
+            await self.send(payload, system_broadcast=system_broadcast)
             async for telegram in context.receive(
                 payload.RESPONSE_TYPE, timeout=timeout
             ):

@@ -25,8 +25,15 @@ from xknx.telegram.apci import (
     FunctionPropertyStateResponse,
     GroupValueRead,
     GroupValueWrite,
+    IndividualAddressRead,
 )
-from xknx.telegram.tpci import TConnect, TDataBroadcast, TDataConnected, TDataGroup
+from xknx.telegram.tpci import (
+    TConnect,
+    TDataBroadcast,
+    TDataConnected,
+    TDataGroup,
+    TDataSystemBroadcast,
+)
 
 
 def get_data(
@@ -326,6 +333,43 @@ def test_telegram_broadcast() -> None:
     assert frame.data.tpci == TDataBroadcast()
     # test CEMIFrame.telegram property
     assert frame.data.telegram() == _telegram
+
+
+def test_telegram_system_broadcast() -> None:
+    """Test a system broadcast is sent and received with the System Broadcast flag 0."""
+    _telegram = Telegram(
+        destination_address=GroupAddress(0),
+        tpci=TDataSystemBroadcast(),
+        payload=IndividualAddressRead(),
+    )
+    frame = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(_telegram),
+    )
+    assert isinstance(frame.data, CEMILData)
+    assert frame.data.flags == CEMIFlags(
+        priority=CEMIPriority.SYSTEM, system_broadcast=True
+    )
+    raw = frame.to_knx()
+    # Ctrl1 bit 4 (System Broadcast flag) is 0
+    assert not raw[2] & 0x10
+    parsed = CEMIFrame.from_knx(raw)
+    assert isinstance(parsed.data, CEMILData)
+    assert parsed.data.tpci == TDataSystemBroadcast()
+    assert parsed.data.telegram() == _telegram
+    # a broadcast stays a broadcast
+    broadcast = CEMIFrame(
+        code=CEMIMessageCode.L_DATA_REQ,
+        data=CEMILData.init_from_telegram(
+            Telegram(
+                destination_address=GroupAddress(0), payload=IndividualAddressRead()
+            )
+        ),
+    ).to_knx()
+    assert broadcast[2] & 0x10
+    parsed = CEMIFrame.from_knx(broadcast)
+    assert isinstance(parsed.data, CEMILData)
+    assert parsed.data.tpci == TDataBroadcast()
 
 
 def test_telegram_individual_address() -> None:
