@@ -333,3 +333,46 @@ class TestRFDomainAddressWrite:
         assert tunnel.info is not None
         assert tunnel.info.rf_domain_address is None
         await tunnel.disconnect()
+
+
+class TestRFDomainAddressOnTheOpenConnection:
+    """Test setting the Domain Address of a connected KNX USB RF interface."""
+
+    NEW_DOMAIN_ADDRESS = bytes.fromhex("00fa00000042")
+
+    async def test_set(self, fake_hid: FakeHIDModule) -> None:
+        """Test it is written at once and kept for a reconnect."""
+        TestRFInterface.rf_interface(fake_hid)
+        interface = fake_hid.interface
+        tunnel = USBTunnel(XKNX(), cemi_received_callback=Mock(), auto_reconnect=False)
+        await tunnel.connect()
+        interface.written.clear()
+        await tunnel.set_rf_domain_address(self.NEW_DOMAIN_ADDRESS)
+        assert interface.written_cemi() == [
+            bytes.fromhex("f6001301381001") + self.NEW_DOMAIN_ADDRESS
+        ]
+        assert tunnel.info is not None
+        assert tunnel.info.rf_domain_address == self.NEW_DOMAIN_ADDRESS
+        assert tunnel.rf_domain_address == self.NEW_DOMAIN_ADDRESS
+        # the one it has: nothing is written
+        interface.written.clear()
+        await tunnel.set_rf_domain_address(self.NEW_DOMAIN_ADDRESS)
+        assert not interface.written_cemi()
+        # refused: the error names it, the interface keeps its own
+        interface.refused_writes[(19, 56)] = 0x0B
+        with pytest.raises(CommunicationError, match="Could not set the RF Domain"):
+            await tunnel.set_rf_domain_address(DOMAIN_ADDRESS)
+        assert tunnel.info.rf_domain_address == self.NEW_DOMAIN_ADDRESS
+        with pytest.raises(ValueError, match="6 octets"):
+            await tunnel.set_rf_domain_address(bytes(5))
+        await tunnel.disconnect()
+        with pytest.raises(CommunicationError, match="not connected"):
+            await tunnel.set_rf_domain_address(self.NEW_DOMAIN_ADDRESS)
+
+    async def test_not_for_tp1(self, fake_hid: FakeHIDModule) -> None:
+        """Test a TP1 interface has no Domain Address to set."""
+        tunnel = USBTunnel(XKNX(), cemi_received_callback=Mock(), auto_reconnect=False)
+        await tunnel.connect()
+        with pytest.raises(CommunicationError, match="no KNX RF interface"):
+            await tunnel.set_rf_domain_address(self.NEW_DOMAIN_ADDRESS)
+        await tunnel.disconnect()

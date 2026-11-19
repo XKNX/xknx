@@ -270,6 +270,7 @@ class USBTunnel(Interface):
         is set to it on connect when the interface has another one (see
         `_write_rf_domain_address()`). The change persists in the interface; when it
         fails, the connect fails. Other interfaces have none; it is ignored for them.
+        `set_rf_domain_address()` sets it on the open connection.
         """
         self.xknx = xknx
         self.busmonitor = busmonitor
@@ -434,7 +435,9 @@ class USBTunnel(Interface):
                     self.rf_domain_address is not None
                     and rf_domain_address != self.rf_domain_address
                 ):
-                    await self._write_rf_domain_address(rf_domain_address)
+                    await self._write_rf_domain_address(
+                        self.rf_domain_address, rf_domain_address
+                    )
                     rf_domain_address = self.rf_domain_address
         else:
             self._medium = KNXMedium.TP1
@@ -626,9 +629,31 @@ class USBTunnel(Interface):
         logger.warning("Could not read the RF Domain Address of the KNX USB interface")
         return None
 
-    async def _write_rf_domain_address(self, current: bytes | None) -> None:
+    async def set_rf_domain_address(self, rf_domain_address: bytes) -> None:
         """
-        Set the Domain Address of an RF interface to `rf_domain_address`. Raise CommunicationError when that fails.
+        Set the Domain Address of the connected KNX RF interface, on the open connection.
+
+        It applies at once (see `_write_rf_domain_address()`), and becomes the
+        tunnel's `rf_domain_address`, so a reconnect sets it again where the
+        interface lost it. Nothing is written when the interface has it already.
+        Raise CommunicationError when no KNX RF interface is connected or it
+        refuses the address.
+        """
+        if len(rf_domain_address) != 6:
+            raise ValueError("An RF Domain Address has 6 octets")
+        if not self._established or self._info is None:
+            raise CommunicationError("KNX USB interface not connected")
+        if self._medium is not KNXMedium.RF:
+            raise CommunicationError("KNX USB interface is no KNX RF interface")
+        current = self._info.rf_domain_address
+        if current != rf_domain_address:
+            await self._write_rf_domain_address(rf_domain_address, current)
+            self._info = replace(self._info, rf_domain_address=rf_domain_address)
+        self.rf_domain_address = rf_domain_address
+
+    async def _write_rf_domain_address(self, new: bytes, current: bytes | None) -> None:
+        """
+        Set the Domain Address of an RF interface to `new`. Raise CommunicationError when that fails.
 
         M_PropWrite of the RF Medium Object, where it is mandatory - KNX v01.10.01 -
         Resources 03.05.01 - §4.15.8; the interface keeps a copy in the Device Object
@@ -636,8 +661,6 @@ class USBTunnel(Interface):
         applies at once - KNX v02.01.01 - Configuration Procedures 03.05.03 -
         §3.13.3.2.
         """
-        assert self.rf_domain_address is not None
-        new = self.rf_domain_address
         try:
             await self._property_write(
                 ResourceObjectType.OBJECT_RF_MEDIUM_OBJECT,
