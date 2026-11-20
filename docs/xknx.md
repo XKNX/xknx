@@ -100,6 +100,10 @@ cEMI is used where the interface supports it, else EMI2 or EMI1 (older interface
 
 Through a KNX RF interface (mask 2311h) every telegram is sent with the interface's own Domain Address and frame number, which the interface inserts; `usb_interface_info().rf_domain_address` is the Domain Address it uses, and `xknx.io.usb.rf_medium_info(raw_cemi)` returns the RF medium information of a received frame (the sender's Domain Address, or its KNX Serial Number for a system broadcast, signal strength, battery state).
 
+`USBConfig(transport_layer=True)` connects to the interface's own device instead of the bus, through the cEMI Transport Layer - for a KNX device with a USB port of its own, e.g. to download into it locally. Management connections (`xknx.management.connection()`) to that device work as through the bus; group telegrams and other devices can't be reached then, and the bus connection doesn't matter. It needs a cEMI interface that supports it.
+
+Frames of the M-Bus and BatiBus tunnels of the KNX USB protocol (e.g. a KNX RF interface that also receives wireless M-Bus meters) go to `USBConfig(extraneous_frame_callback=...)` as `xknx.io.usb.USBTransferFrame`, and `xknx.knxip_interface.send_usb_extraneous_frame()` sends them; their content is passed on as it is.
+
 Data Secure needs a cEMI interface: an EMI1/EMI2 interface can't send or receive extended frames, which most Data Secure telegrams need - xknx warns about it on connect. Devices ignore Data Secure telegrams from a sender they don't know, and the source address is part of the MAC: while the interface's individual address is unknown, Data Secure telegrams are not sent (receiving works), and an address that is none of the keyring's interfaces is warned about, as its telegrams may be dropped unless the devices know this address as a sender.
 
 # [](#header-2)Starting
