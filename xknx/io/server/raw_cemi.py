@@ -105,6 +105,20 @@ class LDataFrame:
             + self.raw[self._control + 4 :]
         )
 
+    def with_destination(self, destination: IndividualAddress) -> LDataFrame:
+        """Return a point-to-point frame with another destination address."""
+        return LDataFrame(
+            self.raw[: self._control + 4]
+            + destination.to_knx()
+            + self.raw[self._control + 6 :]
+        )
+
+    @property
+    def tpci(self) -> int | None:
+        """Return the first octet of the TPDU, None when the frame has none."""
+        offset = self._control + _L_DATA_HEADER_LENGTH
+        return self.raw[offset] if len(self.raw) > offset else None
+
     def cemi_frame(self) -> CEMIFrame:
         """Return a CEMIFrame that an `Interface` sends as these octets."""
         info, remainder = CEMIInfo.from_knx(self.raw[1:])

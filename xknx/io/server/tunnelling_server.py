@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final, cast
 import uuid
 
 from xknx.cemi import CEMIFrame, CEMIMessageCode
-from xknx.core.connection_state import XknxConnectionState
+from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import (
     CommunicationError,
     ConversionError,
@@ -107,6 +107,12 @@ DISCONNECT_RESPONSE_TIMEOUT: Final = 1.0
 # A TCP connection without KNXnet/IP connection is closed after 10 s without
 # received octets - KNX v01.06.02 - Core 03.08.02 - §8.4.3.2
 TCP_IDLE_TIMEOUT: Final = 10.0
+# A mapped point-to-point partner stays with its tunnel this long after the last frame:
+# the connection_timeout_timer of the transport layer - KNX v01.02.03 - Transport
+# Layer 03.03.04 - §4
+POINT_TO_POINT_TIMEOUT: Final = 6.0
+# TPCI of T_Disconnect - KNX v01.02.03 - Transport Layer 03.03.04 - §2
+_T_DISCONNECT: Final = 0x81
 MAX_DEVICE_MANAGEMENT_CONNECTIONS: Final = 4
 _EPHEMERAL_PORT_ATTEMPTS: Final = 20
 _DYNAMIC_PORTS_START: Final = 49152
@@ -336,9 +342,17 @@ class KNXIPTunnellingServer:
     (KNX v01.07.03 - Device Management 03.08.03 - §4.2) read the server's own Device
     Object and KNXnet/IP Parameter Object; every Property is read-only.
 
-    The interface of `xknx` acknowledges frames on the bus for its own address
-    only: a point-to-point connection from the bus to a tunnel's address works
-    when the interface passes such frames on.
+    The interface of `xknx` receives point-to-point frames for its own address
+    only (and acknowledges only those on the bus). So with `map_point_to_point`
+    (the default, but for a routing connection, which receives every frame) a
+    tunnel's point-to-point frames go out with the interface's own address, and
+    the partner's frames to it go back to that tunnel only, not to `xknx`. A
+    partner belongs to one tunnel until `POINT_TO_POINT_TIMEOUT` after the last
+    frame or a T_Disconnect; another tunnel's frames to it get a negative
+    L_Data.con meanwhile. The source address is part of the MAC of a Data Secure
+    frame, so a tunnel's mapped Data Secure frames can't be verified by the
+    partner; and while a tunnel is connected to a partner, `xknx`'s own
+    connection to it gets no answers.
     """
 
     __slots__ = (
@@ -349,6 +363,7 @@ class KNXIPTunnellingServer:
         "_forwarder",
         "_mac_address",
         "_multicast_transport",
+        "_partners",
         "_port",
         "_send_queue",
         "_serial_number",
@@ -364,6 +379,7 @@ class KNXIPTunnellingServer:
         "individual_addresses",
         "local_ip",
         "manufacturer_code",
+        "map_point_to_point",
         "max_apdu_length",
         "medium",
         "multicast_group",
@@ -393,6 +409,7 @@ class KNXIPTunnellingServer:
         manufacturer_code: int = 0x0000,
         max_apdu_length: int | None = None,
         heartbeat_timeout: float = 120.0,
+        map_point_to_point: bool | None = None,
     ) -> None:
         """
         Initialize KNXIPTunnellingServer class.
@@ -404,7 +421,9 @@ class KNXIPTunnellingServer:
         server also answers SEARCH_REQUESTs sent to `multicast_group` on
         `multicast_port`. The MAC address defaults to the host's, the serial
         number is derived from it. `medium` and `max_apdu_length` default to
-        what a KNX USB interface reported, else TP1 and 15.
+        what a KNX USB interface reported, else TP1 and 15. `map_point_to_point`
+        (None: unless `xknx` is connected by routing) sends the tunnels'
+        point-to-point frames with the interface's own address, see above.
         """
         self.xknx = xknx
         self.individual_addresses = [
@@ -441,6 +460,7 @@ class KNXIPTunnellingServer:
         self.manufacturer_code = manufacturer_code
         self.max_apdu_length = max_apdu_length
         self.heartbeat_timeout = heartbeat_timeout
+        self.map_point_to_point = map_point_to_point
 
         self._port = port
         self._transport: asyncio.DatagramTransport | None = None
@@ -456,6 +476,8 @@ class KNXIPTunnellingServer:
         self._forwarder: asyncio.Task[None] | None = None
         self._unregister_callbacks: list[Callable[[], None]] = []
         self._bus_connected = False
+        # mapped point-to-point partners: the tunnel and the time of the last frame
+        self._partners: dict[IndividualAddress, tuple[ServerConnection, float]] = {}
 
     ####################
     #
@@ -1144,6 +1166,9 @@ class KNXIPTunnellingServer:
         """Forget a closed connection; its individual address is free again."""
         if self._connections.get(connection.communication_channel) is connection:
             del self._connections[connection.communication_channel]
+        for partner, (owner, _) in list(self._partners.items()):
+            if owner is connection:
+                del self._partners[partner]
         connection.stop()
         if isinstance(connection.data_peer, _TCPStream) and not self.has_connections(
             connection.data_peer
@@ -1257,9 +1282,20 @@ class KNXIPTunnellingServer:
                 is not connection
             ):
                 continue
+            tunnel_source = frame.source
+            if (mapped := self._map_outgoing(connection, frame)) is None:
+                logger.debug(
+                    "KNXnet/IP server: %s is connected to another tunnel",
+                    frame.destination,
+                )
+                self._send_cemi(
+                    connection,
+                    frame.with_code(CEMIMessageCode.L_DATA_CON, confirm_error=True).raw,
+                )
+                continue
             try:
                 raw_confirmation = await self.xknx.cemi_handler.send_cemi_frame(
-                    frame.cemi_frame()
+                    mapped.cemi_frame()
                 )
             except (CommunicationError, ConversionError) as err:
                 logger.debug("KNXnet/IP server could not send %s: %s", frame, err)
@@ -1271,6 +1307,12 @@ class KNXIPTunnellingServer:
                 raw_confirmation = frame.with_code(
                     CEMIMessageCode.L_DATA_CON, confirm_error=True
                 ).raw
+            if (
+                mapped is not frame
+                and (sent := LDataFrame.parse(raw_confirmation)) is not None
+            ):
+                # the tunnel sees its own address in its confirmation
+                raw_confirmation = sent.with_source(tunnel_source).raw
             if self._connections.get(connection.communication_channel) is connection:
                 self._send_cemi(connection, raw_confirmation)
             confirmation = LDataFrame.parse(raw_confirmation)
@@ -1280,16 +1322,85 @@ class KNXIPTunnellingServer:
             self._indicate(indication, exclude=connection)
             self._indicate_locally(indication)
 
-    def _cemi_received(self, raw: bytes) -> None:
+    def _map_outgoing(
+        self, connection: ServerConnection, frame: LDataFrame
+    ) -> LDataFrame | None:
+        """
+        Return the frame to send for a tunnel's L_Data.req - None: its partner is another tunnel's.
+
+        A point-to-point frame from the tunnel's own address gets the interface's
+        address, and its partner is mapped to the tunnel (see the class docstring).
+        """
+        own_address = self._own_address()
+        destination = frame.destination
+        if (
+            not self._maps_point_to_point()
+            or not isinstance(destination, IndividualAddress)
+            or connection.individual_address is None
+            or frame.source != connection.individual_address
+            or frame.source == own_address
+        ):
+            return frame
+        now = asyncio.get_running_loop().time()
+        if (entry := self._partners.get(destination)) is not None:
+            owner, last_frame = entry
+            if (
+                owner is not connection
+                and self._connections.get(owner.communication_channel) is owner
+                and now - last_frame < POINT_TO_POINT_TIMEOUT
+            ):
+                return None
+        if frame.tpci == _T_DISCONNECT:
+            self._partners.pop(destination, None)
+        else:
+            self._partners[destination] = (connection, now)
+        return frame.with_source(own_address)
+
+    def _maps_point_to_point(self) -> bool:
+        """Return whether point-to-point frames of the tunnels are mapped to the interface's address."""
+        if self.map_point_to_point is not None:
+            return self.map_point_to_point
+        return self.xknx.connection_manager.connection_type not in (
+            XknxConnectionType.ROUTING,
+            XknxConnectionType.ROUTING_SECURE,
+        )
+
+    def _partner_frame_received(self, frame: LDataFrame) -> bool:
+        """Pass a frame of a mapped point-to-point partner to its tunnel only; whether it was one."""
+        source = frame.source
+        if (
+            not isinstance(frame.destination, IndividualAddress)
+            or frame.destination != self._own_address()
+            or (entry := self._partners.get(source)) is None
+        ):
+            return False
+        connection, _ = entry
+        if self._connections.get(connection.communication_channel) is not connection:
+            del self._partners[source]
+            return False
+        assert connection.individual_address is not None
+        if frame.tpci == _T_DISCONNECT:
+            del self._partners[source]
+        else:
+            self._partners[source] = (connection, asyncio.get_running_loop().time())
+        self._send_cemi(
+            connection, frame.with_destination(connection.individual_address).raw
+        )
+        return True
+
+    def _cemi_received(self, raw: bytes) -> bool:
         """
         Pass a cEMI frame from the interface on to the tunnels. Callback.
 
         An L_Data.con here confirms a frame `xknx` itself sent, which goes to the
-        tunnels as L_Data.ind.
+        tunnels as L_Data.ind. A frame of a mapped point-to-point partner goes to
+        its tunnel only and is taken from `xknx` (returns True).
         """
         code = raw[0] if raw else None
         if code == CEMIMessageCode.L_DATA_IND.value:
             if (frame := LDataFrame.parse(raw)) is not None:
+                if self._partner_frame_received(frame):
+                    return True
                 self._indicate(frame)
         elif code == CEMIMessageCode.L_DATA_CON.value:
             if (frame := LDataFrame.parse(raw)) is not None and not frame.confirm_error:
@@ -1298,6 +1409,7 @@ class KNXIPTunnellingServer:
             for connection in list(self._connections.values()):
                 if connection.layer is TunnellingLayer.BUSMONITOR_LAYER:
                     self._send_cemi(connection, raw)
+        return False
 
     def _indicate(
         self, frame: LDataFrame, exclude: ServerConnection | None = None
