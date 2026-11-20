@@ -106,6 +106,31 @@ Frames of the M-Bus and BatiBus tunnels of the KNX USB protocol (e.g. a KNX RF i
 
 Data Secure needs a cEMI interface: an EMI1/EMI2 interface can't send or receive extended frames, which most Data Secure telegrams need - xknx warns about it on connect. Devices ignore Data Secure telegrams from a sender they don't know, and the source address is part of the MAC: while the interface's individual address is unknown, Data Secure telegrams are not sent (receiving works), and an address that is none of the keyring's interfaces is warned about, as its telegrams may be dropped unless the devices know this address as a sender.
 
+## KNXnet/IP tunnelling server
+
+```python
+from xknx.io.server import KNXIPTunnellingServer
+
+async with XKNX(connection_config=connection_config) as xknx:  # e.g. a KNX USB interface
+    server = KNXIPTunnellingServer(
+        xknx,
+        individual_addresses=["1.1.240", "1.1.241", "1.1.242"],
+        local_ip="0.0.0.0",
+        port=3671,
+        name="xknx bridge",
+    )
+    await server.start()
+    print(server.tunnels)  # communication channel, individual address, client of each tunnel
+    ...
+    await server.stop()
+```
+
+The server makes the bus connection of an XKNX instance - usually a KNX USB interface - a KNXnet/IP interface for other tunnelling clients: another xknx, Home Assistant or a commissioning tool connect to it over UDP or TCP. Each tunnel gets one of `individual_addresses`, which must be free addresses of the line. Telegrams of a tunnel are sent through the interface, with the tunnel's address when their source is 0.0.0; the confirmation goes back to that tunnel. Group telegrams from the bus go to every tunnel, point-to-point telegrams only to the tunnel with that address, and a telegram a tunnel or the XKNX instance sends reaches the other tunnels too. The XKNX instance keeps receiving the bus as before and also receives the telegrams of the tunnels.
+
+The server answers searches (also on 224.0.23.12, unless `discovery=False`) and description requests; its own individual address is `xknx.current_address` unless `individual_address` is given, the MAC address the host's (`mac_address`) and the serial number derived from it (`serial_number`). `tcp=False` offers UDP only. A tunnel without a heartbeat for `heartbeat_timeout` (120) seconds is closed, and `stop()` disconnects every client. Device management connections read the server's own properties, which are read-only. For an interface in bus monitor mode (`USBTunnel(busmonitor=True)`) pass `busmonitor=True`: then one bus monitor tunnel receives every frame on the bus.
+
+The interface acknowledges telegrams on the bus for its own individual address only. So a device answering a point-to-point connection of a tunnel (e.g. of a commissioning tool) to a tunnel address may repeat its telegrams, depending on whether the interface passes such telegrams on.
+
 # [](#header-2)Starting
 
 ```python
