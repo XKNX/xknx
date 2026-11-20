@@ -61,6 +61,9 @@ class CEMIErrorCode(IntEnum):
     CEMI_ERROR_TYPE_CONFLICT = 0x08
     CEMI_ERROR_PROP_INDEX_RANGE = 0x09
     CEMI_ERROR_TEMPORARILY_READ_ONLY = 0x0A
+    # KNX v03 - USB TL for Secure devices AN203 - §2.5.2: property access not allowed
+    # due to enabled security
+    CEMI_ERROR_ACCESS_DENIED = 0x0B
 
     def __repr__(self) -> str:
         """Return object as readable string."""

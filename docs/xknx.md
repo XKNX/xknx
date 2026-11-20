@@ -77,6 +77,60 @@ A specific tunnel endpoint can be requested by setting `individual_address`.
 For AUTOMATIC connections this setting selects a host from a given keyfile.
 For TCP TUNNELING connections this setting requests a tunnel to that individual address.
 For SECURE tunnels this setting selects an interface from a given keyfile.
+For USB connections this setting is written to the KNX USB interface when it has another individual address.
+
+## KNX USB interfaces
+
+```python
+from xknx.io import ConnectionConfig, ConnectionType, USBConfig
+from xknx.io.usb import find_usb_interfaces
+
+print(find_usb_interfaces())  # the KNX USB interfaces connected to this host
+connection_config = ConnectionConfig(
+    connection_type=ConnectionType.USB,
+    usb_config=USBConfig(serial_number="00C501053FB2"),
+)
+xknx = XKNX(connection_config=connection_config)
+```
+
+KNX USB interfaces need the optional `hidapi` package: `pip install xknx[usb]`. They work without a special driver on Windows, Linux and macOS; on Linux the user needs access to the interface's `/dev/hidraw*` (or `/dev/bus/usb`) device, e.g. through a udev rule. An interface that can't be opened through `/dev/hidraw*` is opened through libusb (`/dev/bus/usb`) where that is allowed. `find_usb_interfaces()` blocks while the operating system enumerates the USB devices; from an event loop call it through `loop.run_in_executor()`. On macOS hidapi has to be shut down at exit while the thread that imported it is still running, else the interpreter crashes then; xknx therefore imports it on a thread of its own that is kept until the interpreter exits. That only helps when xknx is the first to import `hid` in the process.
+
+Without a `USBConfig` the first known KNX USB interface is used. `vendor_id` and `product_id` select an interface, also one that is not among the known ones, `serial_number` one of several, and `path` the one at a hidapi device path - `path` alone also selects one that is not among the known ones. An unplugged interface is connected again when it is back (`auto_reconnect`), also on another USB port; of several identical interfaces without a serial number, the one at the old path is preferred, else the first one found is used.
+
+cEMI is used where the interface supports it, else EMI2 or EMI1 (older interfaces, standard frames only). On connect the interface is switched to the data link layer, and its own individual address becomes `xknx.current_address` (a cEMI interface whose address can't be read gives it in its first confirmation); an EMI1/EMI2 interface is switched back to its normal mode on disconnect, or restarted when its mode before isn't known. With `ConnectionConfig(individual_address=...)` the interface's individual address is set to that one when it has another; the change persists in the interface, and the connect fails when it can't be set (an EMI2 interface, an EMI1 interface whose mask doesn't keep the address at 0117h, or a cEMI interface in Security Mode). While the interface reports no bus connection, the connection state is DISCONNECTED and telegrams can't be sent. `xknx.knxip_interface.usb_interface_info()` returns what the interface reported: individual address, maximum APDU length (informational), supported EMI types, bus connection status, KNX manufacturer code, mask version and medium.
+
+Through a KNX RF interface (mask 2311h) every telegram is sent with the interface's own Domain Address and frame number, which the interface inserts; `usb_interface_info().rf_domain_address` is the Domain Address it uses, and `xknx.io.usb.rf_medium_info(raw_cemi)` returns the RF medium information of a received frame (the sender's Domain Address, or its KNX Serial Number for a system broadcast, signal strength, battery state). With `USBConfig(rf_domain_address=...)` (6 octets) the interface's Domain Address is set to that one when it has another; the change persists in the interface, and the connect fails when it can't be set.
+
+`USBConfig(transport_layer=True)` connects to the interface's own device instead of the bus, through the cEMI Transport Layer - for a KNX device with a USB port of its own, e.g. to download into it locally. Management connections (`xknx.management.connection()`) to that device work as through the bus; group telegrams and other devices can't be reached then, and the bus connection doesn't matter. It needs a cEMI interface that supports it.
+
+Frames of the M-Bus and BatiBus tunnels of the KNX USB protocol (e.g. a KNX RF interface that also receives wireless M-Bus meters) go to `USBConfig(extraneous_frame_callback=...)` as `xknx.io.usb.USBTransferFrame`, and `xknx.knxip_interface.send_usb_extraneous_frame()` sends them; their content is passed on as it is.
+
+Data Secure needs a cEMI interface: an EMI1/EMI2 interface can't send or receive extended frames, which most Data Secure telegrams need - xknx warns about it on connect. Devices ignore Data Secure telegrams from a sender they don't know, and the source address is part of the MAC: while the interface's individual address is unknown, Data Secure telegrams are not sent (receiving works), and an address that is none of the keyring's interfaces is warned about, as its telegrams may be dropped unless the devices know this address as a sender.
+
+## KNXnet/IP tunnelling server
+
+```python
+from xknx.io.server import KNXIPTunnellingServer
+
+async with XKNX(connection_config=connection_config) as xknx:  # e.g. a KNX USB interface
+    server = KNXIPTunnellingServer(
+        xknx,
+        individual_addresses=["1.1.240", "1.1.241", "1.1.242"],
+        local_ip="0.0.0.0",
+        port=3671,
+        name="xknx bridge",
+    )
+    await server.start()
+    print(server.tunnels)  # communication channel, individual address, client of each tunnel
+    ...
+    await server.stop()
+```
+
+The server makes the bus connection of an XKNX instance - usually a KNX USB interface - a KNXnet/IP interface for other tunnelling clients: another xknx, Home Assistant or a commissioning tool connect to it over UDP or TCP. Each tunnel gets one of `individual_addresses`, which must be free addresses of the line. Telegrams of a tunnel are sent through the interface, with the tunnel's address when their source is 0.0.0; the confirmation goes back to that tunnel. Group telegrams from the bus go to every tunnel, point-to-point telegrams only to the tunnel with that address, and a telegram a tunnel or the XKNX instance sends reaches the other tunnels too. The XKNX instance keeps receiving the bus as before and also receives the telegrams of the tunnels.
+
+The server answers searches (also on 224.0.23.12, unless `discovery=False`) and description requests; its own individual address is `xknx.current_address` unless `individual_address` is given, the MAC address the host's (`mac_address`) and the serial number derived from it (`serial_number`). `tcp=False` offers UDP only. A tunnel without a heartbeat for `heartbeat_timeout` (120) seconds is closed, and `stop()` disconnects every client. Device management connections read the server's own properties, which are read-only. For an interface in bus monitor mode (`USBTunnel(busmonitor=True)`) pass `busmonitor=True`: then one bus monitor tunnel receives every frame on the bus.
+
+An interface such as a KNX USB interface receives point-to-point telegrams for its own individual address only. So a tunnel's point-to-point telegrams (e.g. of a commissioning tool) go out with the interface's own address, and the device's answers go back to that tunnel only - not to the XKNX instance. A device belongs to one tunnel until 6 s after its last telegram or a T_Disconnect; meanwhile another tunnel's telegrams to it are refused (negative L_Data.con). `map_point_to_point=False` turns that off; it is off by default for a routing connection, which receives every telegram. As the source address is part of their MAC, a tunnel's point-to-point Data Secure telegrams can't be verified by the device then.
 
 # [](#header-2)Starting
 

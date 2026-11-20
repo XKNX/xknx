@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import Enum, auto
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from xknx.secure import Keyring
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter
+
+if TYPE_CHECKING:
+    from .usb.frame import USBTransferFrame
 
 
 class ConnectionType(Enum):
@@ -22,6 +26,7 @@ class ConnectionType(Enum):
     TUNNELING = auto()
     TUNNELING_TCP = auto()
     TUNNELING_TCP_SECURE = auto()
+    USB = auto()
 
 
 class ConnectionConfig:
@@ -34,11 +39,13 @@ class ConnectionConfig:
         * ROUTING use KNX/IP multicast routing.
         * TUNNELING connect to a specific KNX/IP tunneling device via UDP.
         * TUNNELING_TCP connect to a specific KNX/IP tunneling v2 device via TCP.
+        * USB connect to a KNX USB interface (cEMI, EMI2 or EMI1) - see `usb_config`.
     * individual address:
         * AUTOMATIC use a specific tunnel endpoint from a given knxkeys file
         * ROUTING the individual address used as source address for routing
         * TCP TUNNELING request a specific tunnel endpoint
         * SECURE TUNNELING use a specific tunnel endpoint from the knxkeys file
+        * USB write it to the KNX USB interface when the interface has another one
     * local_ip: Local ip or interface name though which xknx should connect.
     * gateway_ip: IP or hostname of KNX/IP tunneling device.
     * gateway_port: Port of KNX/IP tunneling device.
@@ -52,6 +59,7 @@ class ConnectionConfig:
     * scan_filter: For AUTOMATIC connection, limit scan with the given filter
     * threaded: Run connection logic in separate thread to avoid concurrency issues in HA
     * secure_config: KNX Secure config to use
+    * usb_config: For USB connection, the KNX USB interface to use
     """
 
     def __init__(
@@ -71,6 +79,7 @@ class ConnectionConfig:
         scan_filter: GatewayScanFilter | None = None,
         threaded: bool = False,
         secure_config: SecureConfig | None = None,
+        usb_config: USBConfig | None = None,
     ) -> None:
         """Initialize ConnectionConfig class."""
         self.connection_type = connection_type
@@ -89,9 +98,58 @@ class ConnectionConfig:
         self.scan_filter = scan_filter or GatewayScanFilter()
         self.threaded = threaded
         self.secure_config = secure_config
+        self.usb_config = usb_config or USBConfig()
 
     def __eq__(self, other: object) -> bool:
         """Equality for ConnectionConfig class (used in unit tests)."""
+        return self.__dict__ == other.__dict__
+
+
+class USBConfig:
+    """
+    KNX USB interface configuration.
+
+    Without any value the first known KNX USB interface found is used.
+
+    Handles:
+    * vendor_id: USB vendor id of the interface. With it, interfaces missing
+        from the known KNX USB interfaces are found too.
+    * product_id: USB product id of the interface.
+    * serial_number: USB serial number, to pick one of several interfaces.
+    * path: hidapi device path of the interface.
+    * rf_domain_address: 6 octets. A KNX RF interface gets this Domain Address on
+        connect when it has another one; ignored for other interfaces.
+    * transport_layer: reach the interface's own device through the cEMI Transport
+        Layer instead of the bus, e.g. to download into a KNX device through its own
+        USB port. Only management connections to that device work then.
+    * extraneous_frame_callback: gets the frames of the M-Bus and BatiBus tunnels;
+        `KNXIPInterface.send_usb_extraneous_frame()` sends them.
+    """
+
+    def __init__(
+        self,
+        *,
+        vendor_id: int | None = None,
+        product_id: int | None = None,
+        serial_number: str | None = None,
+        path: bytes | None = None,
+        rf_domain_address: bytes | None = None,
+        transport_layer: bool = False,
+        extraneous_frame_callback: Callable[[USBTransferFrame], None] | None = None,
+    ) -> None:
+        """Initialize USBConfig class."""
+        if rf_domain_address is not None and len(rf_domain_address) != 6:
+            raise ValueError("An RF Domain Address has 6 octets")
+        self.vendor_id = vendor_id
+        self.product_id = product_id
+        self.serial_number = serial_number
+        self.path = path
+        self.rf_domain_address = rf_domain_address
+        self.transport_layer = transport_layer
+        self.extraneous_frame_callback = extraneous_frame_callback
+
+    def __eq__(self, other: object) -> bool:
+        """Equality for USBConfig class (used in unit tests)."""
         return self.__dict__ == other.__dict__
 
 
