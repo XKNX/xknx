@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from xknx.cemi import CEMIMessageCode
-from xknx.core.connection_state import XknxConnectionState
+from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import ConversionError
 from xknx.io.server import KNXIPTunnellingServer
 from xknx.io.server.raw_cemi import LDataFrame
@@ -50,6 +50,7 @@ from xknx.knxip import (
     TunnellingLayer,
     TunnellingRequest,
 )
+from xknx.management.management import Management
 from xknx.telegram import GroupAddress, IndividualAddress, TelegramDirection
 from xknx.telegram.apci import GroupValueWrite, ReturnCode
 
@@ -65,6 +66,11 @@ from .conftest import (
 )
 
 GROUP = GroupAddress("1/2/3")
+PARTNER = IndividualAddress("1.1.9")
+# TPDUs of T_Connect, T_Disconnect and T_ACK 0 - KNX v01.02.03 - Transport Layer 03.03.04 - §2
+T_CONNECT = b"\x80"
+T_DISCONNECT = b"\x81"
+T_ACK_0 = b"\xc2"
 
 
 async def _connected(client: RawClient) -> ConnectResponse:
@@ -789,6 +795,187 @@ class TestTunnelling:
         assert repeated.sequence_counter == 0
         backing.interface.receive(l_data(CEMIMessageCode.L_DATA_IND, "1.1.5", GROUP))
         assert (await client.receive_cemi()).sequence_counter == 1
+
+
+class TestPointToPointMapping:
+    """Test point-to-point frames of the tunnels going out with the interface's address."""
+
+    async def _send(
+        self, client: RawClient, channel: int, sequence_counter: int, raw: bytes
+    ) -> LDataFrame:
+        """Send an L_Data.req of a tunnel and return its L_Data.con."""
+        client.send(_tunnelling_request(channel, sequence_counter, raw))
+        await client.receive(TunnellingAck)
+        return LDataFrame((await client.receive_cemi()).raw_cemi)
+
+    async def test_mapped(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        backing: Backing,
+        client: RawClient,
+    ) -> None:
+        """Test the interface's address goes out, and the partner's frames go back to the tunnel only."""
+        process = Mock()
+        # Management has __slots__: patched on the class
+        monkeypatch.setattr(Management, "process", process)
+        channel = (await _connected(client)).communication_channel
+        confirmation = await self._send(
+            client,
+            channel,
+            0,
+            l_data(CEMIMessageCode.L_DATA_REQ, "0.0.0", PARTNER, T_CONNECT),
+        )
+        sent = LDataFrame((await backing.interface.wait_sent())[0])
+        assert sent.source == OWN_ADDRESS
+        assert sent.destination == PARTNER
+        # the tunnel sees its own address in its confirmation
+        assert confirmation.code is CEMIMessageCode.L_DATA_CON
+        assert confirmation.source == IndividualAddress("1.1.240")
+        # the partner's answer to the interface's address goes to the tunnel
+        backing.interface.receive(
+            l_data(CEMIMessageCode.L_DATA_IND, "1.1.9", OWN_ADDRESS, T_ACK_0)
+        )
+        answer = LDataFrame((await client.receive_cemi()).raw_cemi)
+        assert answer.source == PARTNER
+        assert answer.destination == IndividualAddress("1.1.240")
+        # and not to xknx, which would refuse the unknown connection
+        await client.silence(0.1)
+        process.assert_not_called()
+        # other partners of the interface's address still reach xknx
+        backing.interface.receive(
+            l_data(CEMIMessageCode.L_DATA_IND, "1.1.8", OWN_ADDRESS, T_ACK_0)
+        )
+        await client.silence(0.1)
+        process.assert_called_once()
+
+    async def test_partner_of_one_tunnel(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        backing: Backing,
+        server: KNXIPTunnellingServer,
+        client: RawClient,
+    ) -> None:
+        """Test another tunnel can't reach a partner until the first one disconnected or the time ran out."""
+        first = (await _connected(client)).communication_channel
+        other = await RawClient.open(server)
+        try:
+            second = (await _connected(other)).communication_channel
+            to_partner = l_data(CEMIMessageCode.L_DATA_REQ, "0.0.0", PARTNER, T_CONNECT)
+            assert not (await self._send(client, first, 0, to_partner)).confirm_error
+            await other.silence(0.1)
+            assert (await self._send(other, second, 0, to_partner)).confirm_error
+            assert len(backing.interface.sent) == 1
+            # the partner disconnects: free for the other tunnel
+            backing.interface.receive(
+                l_data(CEMIMessageCode.L_DATA_IND, "1.1.9", OWN_ADDRESS, T_DISCONNECT)
+            )
+            assert LDataFrame((await client.receive_cemi()).raw_cemi).source == PARTNER
+            assert not (await self._send(other, second, 1, to_partner)).confirm_error
+            # the first tunnel disconnects itself: free again
+            disconnect = l_data(
+                CEMIMessageCode.L_DATA_REQ, "0.0.0", PARTNER, T_DISCONNECT
+            )
+            assert not (await self._send(other, second, 2, disconnect)).confirm_error
+            await client.silence(0.1)
+            assert not (await self._send(client, first, 1, to_partner)).confirm_error
+            # after the transport layer's connection timeout another tunnel takes over
+            monkeypatch.setattr(
+                "xknx.io.server.tunnelling_server.POINT_TO_POINT_TIMEOUT", 0
+            )
+            assert not (await self._send(other, second, 3, to_partner)).confirm_error
+        finally:
+            other.close()
+
+    async def test_closed_tunnel_frees_its_partners(
+        self, backing: Backing, server: KNXIPTunnellingServer
+    ) -> None:
+        """Test the partners of a closed tunnel reach xknx again."""
+        client = await RawClient.open(server)
+        channel = (await _connected(client)).communication_channel
+        await self._send(
+            client,
+            channel,
+            0,
+            l_data(CEMIMessageCode.L_DATA_REQ, "0.0.0", PARTNER, T_CONNECT),
+        )
+        client.send(
+            DisconnectRequest(
+                communication_channel_id=channel, control_endpoint=client.hpai
+            )
+        )
+        await client.receive(DisconnectResponse)
+        client.close()
+        with patch.object(Management, "process") as process:
+            backing.interface.receive(
+                l_data(CEMIMessageCode.L_DATA_IND, "1.1.9", OWN_ADDRESS, T_ACK_0)
+            )
+            await asyncio.sleep(0.05)
+        process.assert_called_once()
+
+    @pytest.mark.parametrize(
+        ("map_point_to_point", "connection_type", "mapped"),
+        [
+            (None, XknxConnectionType.USB, True),
+            (None, XknxConnectionType.TUNNEL_UDP, True),
+            (None, XknxConnectionType.ROUTING, False),
+            (None, XknxConnectionType.ROUTING_SECURE, False),
+            (False, XknxConnectionType.USB, False),
+            (True, XknxConnectionType.ROUTING, True),
+        ],
+    )
+    async def test_when_mapped(
+        self,
+        backing: Backing,
+        map_point_to_point: bool | None,
+        connection_type: XknxConnectionType,
+        mapped: bool,
+    ) -> None:
+        """Test point-to-point frames are mapped but for a routing connection, which receives every frame."""
+        backing.xknx.connection_manager.connection_type = connection_type
+        server = KNXIPTunnellingServer(
+            backing.xknx,
+            individual_addresses=POOL,
+            local_ip=SERVER_IP,
+            port=0,
+            discovery=False,
+            tcp=False,
+            mac_address=MAC_ADDRESS,
+            map_point_to_point=map_point_to_point,
+        )
+        await server.start()
+        client = await RawClient.open(server)
+        try:
+            channel = (await _connected(client)).communication_channel
+            await self._send(
+                client,
+                channel,
+                0,
+                l_data(CEMIMessageCode.L_DATA_REQ, "0.0.0", PARTNER, T_CONNECT),
+            )
+            sent = LDataFrame((await backing.interface.wait_sent())[0])
+            assert sent.source == (
+                OWN_ADDRESS if mapped else IndividualAddress("1.1.240")
+            )
+        finally:
+            client.close()
+            await server.stop()
+
+    async def test_not_mapped(self, backing: Backing, client: RawClient) -> None:
+        """Test group frames, other sources and the interface's own address keep their source."""
+        channel = (await _connected(client)).communication_channel
+        frames = [
+            l_data(CEMIMessageCode.L_DATA_REQ, "0.0.0", GROUP),
+            l_data(CEMIMessageCode.L_DATA_REQ, "1.1.77", PARTNER, T_CONNECT),
+            l_data(CEMIMessageCode.L_DATA_REQ, "1.1.0", PARTNER, T_CONNECT),
+        ]
+        for sequence_counter, frame in enumerate(frames):
+            await self._send(client, channel, sequence_counter, frame)
+        sent = await backing.interface.wait_sent(3)
+        assert [LDataFrame(raw).source for raw in sent] == [
+            IndividualAddress("1.1.240"),
+            IndividualAddress("1.1.77"),
+            OWN_ADDRESS,
+        ]
 
 
 class TestTunnellingFeatures:

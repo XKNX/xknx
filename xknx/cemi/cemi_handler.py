@@ -63,23 +63,24 @@ class CEMIHandler:
         self._send_lock = asyncio.Lock()
         # the L_Data.con awaited by `send_cemi_frame()`
         self._raw_confirmation: asyncio.Future[bytes] | None = None
-        self._cemi_received_cbs: list[Callable[[bytes], None]] = []
+        self._cemi_received_cbs: list[Callable[[bytes], bool | None]] = []
 
     def register_cemi_received_cb(
-        self, cemi_received_cb: Callable[[bytes], None]
+        self, cemi_received_cb: Callable[[bytes], bool | None]
     ) -> Callable[[], None]:
         """
         Register a callback for the raw cEMI frames received from the interface.
 
         It is called with every frame before the frame is handled - also with frames
         xknx can't parse - except the L_Data.con answering a `send_cemi_frame()`,
-        which that call returns instead. Returns the unregister function.
+        which that call returns instead. A callback returning True takes the frame:
+        it is not handled further. Returns the unregister function.
         """
         self._cemi_received_cbs.append(cemi_received_cb)
         return partial(self.unregister_cemi_received_cb, cemi_received_cb)
 
     def unregister_cemi_received_cb(
-        self, cemi_received_cb: Callable[[bytes], None]
+        self, cemi_received_cb: Callable[[bytes], bool | None]
     ) -> None:
         """Unregister a callback for the raw cEMI frames received from the interface."""
         if cemi_received_cb in self._cemi_received_cbs:
@@ -174,7 +175,8 @@ class CEMIHandler:
             return
         for cemi_received_cb in self._cemi_received_cbs:
             try:
-                cemi_received_cb(raw_cemi)
+                if cemi_received_cb(raw_cemi):
+                    return
             except Exception:  # pylint: disable=broad-exception-caught
                 logger.exception("Unexpected error in cEMI received callback")
         try:

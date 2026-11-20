@@ -351,7 +351,7 @@ async def test_send_cemi_frame(time_travel: EventLoopClockAdvancer) -> None:
     """Test that send_cemi_frame returns the raw L_Data.con, which the callbacks don't get."""
     xknx = XKNX()
     xknx.knxip_interface = AsyncMock()
-    received = MagicMock()
+    received = MagicMock(return_value=None)
     xknx.cemi_handler.register_cemi_received_cb(received)
     request = CEMIFrame.from_knx(bytes.fromhex("1100bce0110a0a03010081"))
     confirmation = bytes.fromhex("2e00bce0110a0a03010081")
@@ -380,7 +380,7 @@ async def test_cemi_received_callbacks() -> None:
     """Test registering and unregistering cEMI received callbacks; an error in one is logged."""
     xknx = XKNX()
     failing = MagicMock(side_effect=RuntimeError("bug"))
-    received = MagicMock()
+    received = MagicMock(return_value=None)
     unregister = xknx.cemi_handler.register_cemi_received_cb(failing)
     xknx.cemi_handler.register_cemi_received_cb(received)
     with patch("logging.Logger.exception") as mock_exception:
@@ -397,3 +397,20 @@ async def test_cemi_received_callbacks() -> None:
     xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
     assert failing.call_count == 2
     assert received.call_count == 2
+
+
+async def test_cemi_received_callback_takes_a_frame() -> None:
+    """Test a frame a callback takes is neither handled nor passed to later callbacks."""
+    xknx = XKNX()
+    taking = MagicMock(return_value=True)
+    later = MagicMock(return_value=None)
+    xknx.cemi_handler.register_cemi_received_cb(taking)
+    xknx.cemi_handler.register_cemi_received_cb(later)
+    xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    taking.assert_called_once_with(RAW_GROUP_WRITE)
+    later.assert_not_called()
+    assert xknx.telegrams.empty()
+    taking.return_value = False
+    xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    later.assert_called_once_with(RAW_GROUP_WRITE)
+    assert not xknx.telegrams.empty()
