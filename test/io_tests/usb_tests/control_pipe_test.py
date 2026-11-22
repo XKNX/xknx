@@ -1,6 +1,7 @@
 """Tests for output reports over the control pipe of KNX USB interfaces."""
 
 import logging
+import os
 from unittest.mock import Mock
 
 import pytest
@@ -250,7 +251,10 @@ class TestOpenControlPipe:
             control_pipe._windows_open(r"\\?\hid#no-such-device")
         with pytest.raises(OSError):
             control_pipe._windows_set_output_report(0, REPORT)
+        # a descriptor that is no longer open, as of a device that is gone
+        closed = os.open(os.devnull, os.O_RDONLY)
+        os.close(closed)
         with pytest.raises(OSError):
-            control_pipe._hidraw_ioctl(-1, control_pipe.hidiocsoutput(64), REPORT)
+            control_pipe._hidraw_ioctl(closed, control_pipe.hidiocsoutput(64), REPORT)
         # nothing to close
         control_pipe._windows_close(0)
