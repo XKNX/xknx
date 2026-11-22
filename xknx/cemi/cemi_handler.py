@@ -9,8 +9,6 @@ can be a remote server when using IP tunnelling or a local server when using IP 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -42,14 +40,7 @@ REQUEST_TO_CONFIRMATION_TIMEOUT = 3
 class CEMIHandler:
     """Class for handling CEMI frames from/to the TelegramQueue."""
 
-    __slots__ = (
-        "_cemi_received_cbs",
-        "_l_data_confirmation_event",
-        "_raw_confirmation",
-        "_send_lock",
-        "data_secure",
-        "xknx",
-    )
+    __slots__ = ("_l_data_confirmation_event", "_send_lock", "data_secure", "xknx")
 
     def __init__(self, xknx: XKNX) -> None:
         """Initialize CEMIHandler class."""
@@ -61,57 +52,6 @@ class CEMIHandler:
         # the confirmation of the previous request has arrived.
         # KNX v01.02.03 - Transport Layer 03.03.04 - §3.6
         self._send_lock = asyncio.Lock()
-        # the L_Data.con awaited by `send_cemi_frame()`
-        self._raw_confirmation: asyncio.Future[bytes] | None = None
-        self._cemi_received_cbs: list[Callable[[bytes], bool | None]] = []
-
-    def register_cemi_received_cb(
-        self, cemi_received_cb: Callable[[bytes], bool | None]
-    ) -> Callable[[], None]:
-        """
-        Register a callback for the raw cEMI frames received from the interface.
-
-        It is called with every frame before the frame is handled - also with frames
-        xknx can't parse - except the L_Data.con answering a `send_cemi_frame()`,
-        which that call returns instead. A callback returning True takes the frame:
-        it is not handled further. Returns the unregister function.
-        """
-        self._cemi_received_cbs.append(cemi_received_cb)
-        return partial(self.unregister_cemi_received_cb, cemi_received_cb)
-
-    def unregister_cemi_received_cb(
-        self, cemi_received_cb: Callable[[bytes], bool | None]
-    ) -> None:
-        """Unregister a callback for the raw cEMI frames received from the interface."""
-        if cemi_received_cb in self._cemi_received_cbs:
-            self._cemi_received_cbs.remove(cemi_received_cb)
-
-    async def send_cemi_frame(self, cemi: CEMIFrame) -> bytes:
-        """
-        Send a cEMI L_Data.req frame as it is and return the raw L_Data.con for it.
-
-        Unlike `send_telegram()` neither the source address nor Data Secure is
-        applied - for frames of another client, e.g. a tunnel of a KNXnet/IP server.
-        Sends are serialized with `send_telegram()`, as the L_Data.con is matched
-        to its request by order only. Raise CommunicationError or ConversionError
-        when the interface can't send the frame, ConfirmationError when no
-        L_Data.con arrives in time.
-        """
-        async with self._send_lock:
-            confirmation: asyncio.Future[bytes] = (
-                asyncio.get_running_loop().create_future()
-            )
-            self._raw_confirmation = confirmation
-            try:
-                await self.xknx.knxip_interface.send_cemi(cemi)
-                async with asyncio.timeout(REQUEST_TO_CONFIRMATION_TIMEOUT):
-                    return await confirmation
-            except TimeoutError:
-                raise ConfirmationError(
-                    f"L_DATA_CON Data Link Layer confirmation timed out for {cemi}"
-                ) from None
-            finally:
-                self._raw_confirmation = None
 
     def data_secure_init(self, keyring: Keyring | None) -> None:
         """Initialize DataSecure."""
@@ -166,19 +106,6 @@ class CEMIHandler:
 
     def handle_raw_cemi(self, raw_cemi: bytes) -> None:
         """Parse and handle incoming raw CEMI Frames."""
-        if self._raw_confirmation is not None and raw_cemi[:1] == bytes(
-            (CEMIMessageCode.L_DATA_CON.value,)
-        ):
-            if not self._raw_confirmation.done():
-                self._raw_confirmation.set_result(raw_cemi)
-            logger.debug("Incoming CEMI confirmation: %s", raw_cemi.hex())
-            return
-        for cemi_received_cb in self._cemi_received_cbs:
-            try:
-                if cemi_received_cb(raw_cemi):
-                    return
-            except Exception:  # pylint: disable=broad-exception-caught
-                logger.exception("Unexpected error in cEMI received callback")
         try:
             cemi = CEMIFrame.from_knx(raw_cemi)
         except CouldNotParseCEMI as cemi_parse_err:
