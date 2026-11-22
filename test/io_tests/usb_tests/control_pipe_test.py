@@ -2,6 +2,8 @@
 
 import logging
 import os
+from pathlib import Path
+import sys
 from unittest.mock import Mock
 
 import pytest
@@ -244,6 +246,19 @@ class TestOpenControlPipe:
     def test_hidiocsoutput(self) -> None:
         """Test the hidraw ioctl request for 64 octet reports."""
         assert control_pipe.hidiocsoutput(64) == 0xC040480B
+
+    def test_on_windows(self) -> None:
+        """Test Windows' HID API is taken on Windows only."""
+        assert control_pipe._on_windows() is (sys.platform == "win32")
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows' HID API")
+    def test_windows_handle_opened_and_closed(self, tmp_path: Path) -> None:
+        """Test a path that exists is opened, shared as hidapi opens it, and closed."""
+        path = tmp_path / "device"
+        path.write_bytes(b"")
+        handle = control_pipe._windows_open(str(path))
+        assert handle
+        control_pipe._windows_close(handle)
 
     def test_operating_system_calls_fail_cleanly(self) -> None:
         """Test the operating system calls raise OSError for what can't be opened or sent."""

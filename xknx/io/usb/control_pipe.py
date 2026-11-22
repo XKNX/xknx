@@ -45,11 +45,9 @@ class ControlPipe(Protocol):
 
     def send(self, report: bytes) -> None:
         """Send one output report (report id first). Raise OSError on failure. Blocks."""
-        ...
 
     def close(self) -> None:
         """Release what was opened for it. Blocks."""
-        ...
 
 
 class _HidapiControlPipe:
