@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import pytest
 
@@ -186,8 +186,9 @@ class RawClient(asyncio.DatagramProtocol, _FrameQueue):
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Keep the transport. Callback."""
-        assert isinstance(transport, asyncio.DatagramTransport)
-        self.transport = transport
+        # Not isinstance: before Python 3.12 the selector event loop's datagram
+        # transport is no asyncio.DatagramTransport.
+        self.transport = cast(asyncio.DatagramTransport, transport)
 
     def datagram_received(self, data: bytes, addr: tuple[str | int, int]) -> None:
         """Queue a received frame. Callback."""
