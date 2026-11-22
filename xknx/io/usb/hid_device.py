@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
+import contextlib
 from dataclasses import dataclass
 from functools import partial
 import importlib
@@ -23,6 +24,7 @@ from typing import Any, Final
 from xknx.exceptions import CommunicationError
 
 from .const import HID_REPORT_LENGTH
+from .control_pipe import ControlPipe, open_control_pipe
 
 logger = logging.getLogger("xknx.log")
 raw_socket_logger = logging.getLogger("xknx.raw_socket")
@@ -384,6 +386,7 @@ class HIDDevice:
 
     __slots__ = (
         "_closing",
+        "_control_pipe",
         "_device",
         "_loop",
         "_reader",
@@ -405,6 +408,8 @@ class HIDDevice:
         self.connection_lost = connection_lost
         self._closing = threading.Event()
         self._device: Any = None
+        # set when the interface takes reports over its control pipe only
+        self._control_pipe: ControlPipe | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._reader: threading.Thread | None = None
         self._writer: ThreadPoolExecutor | None = None
@@ -475,10 +480,43 @@ class HIDDevice:
             logger.debug("Event loop closed - stopped reading from %s", self.info)
 
     def _write_report(self, report: bytes) -> None:
-        """Write one HID report. Runs in the writer thread."""
-        written = self._device.write(report)
-        if written < 0:
-            raise OSError(f"hidapi write returned {written}")
+        """
+        Write one HID report. Runs in the writer thread.
+
+        A report the interface doesn't take over its interrupt OUT endpoint (the
+        write fails or times out) is sent over the control pipe; when that works,
+        all later reports go that way.
+        """
+        if self._control_pipe is not None:
+            self._control_pipe.send(report)
+            return
+        try:
+            written = self._device.write(report)
+        except (OSError, ValueError) as err:
+            interrupt_error = str(err)
+        else:
+            if written >= 0:
+                return
+            interrupt_error = f"hidapi write returned {written}"
+        pipe: ControlPipe | None = None
+        try:
+            pipe = open_control_pipe(self._device, self.info.backend, self.info.path)
+            if pipe is not None:
+                pipe.send(report)
+        except OSError as err:
+            if pipe is not None:
+                with contextlib.suppress(OSError):
+                    pipe.close()
+            raise OSError(f"{interrupt_error}; over the control pipe: {err}") from err
+        if pipe is None:
+            raise OSError(interrupt_error)
+        logger.info(
+            "KNX USB interface %s took no report over its interrupt OUT endpoint "
+            "(%s): sending them over the control pipe",
+            self.info,
+            interrupt_error,
+        )
+        self._control_pipe = pipe
 
     async def write(self, report: bytes) -> None:
         """Write one HID report. Raise CommunicationError on failure."""
@@ -505,6 +543,14 @@ class HIDDevice:
             await loop.run_in_executor(
                 None, partial(writer.shutdown, wait=True, cancel_futures=True)
             )
+        if self._control_pipe is not None:
+            pipe, self._control_pipe = self._control_pipe, None
+            try:
+                await loop.run_in_executor(None, pipe.close)
+            except OSError as err:
+                logger.debug(
+                    "Closing the control pipe of %s failed: %s", self.info, err
+                )
         if self._device is not None:
             device, self._device = self._device, None
             try:
