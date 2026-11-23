@@ -362,6 +362,27 @@ class TestUSBTransportLayer:
         interface.answers = True
         await tunnel.disconnect()
 
+    async def test_keep_alive_pauses_after_a_failure(
+        self, fake_hid: FakeHIDModule, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test a failed keep-alive is retried after a pause, not at once."""
+        monkeypatch.setattr(usb_tunnel, "KEEP_ALIVE_INTERVAL", 0.01)
+        monkeypatch.setattr(usb_tunnel, "KEEP_ALIVE_RETRY_WAIT", 0.1)
+        tunnel = self.tunnel()
+        await tunnel.connect()
+        reads = 0
+
+        async def failing_read(*_: object) -> bytes:
+            nonlocal reads
+            reads += 1
+            await asyncio.sleep(0)
+            raise CommunicationError("write failed")
+
+        monkeypatch.setattr(USBTunnel, "_property_read", failing_read)
+        await asyncio.sleep(0.25)
+        assert 1 <= reads <= 4
+        await tunnel.disconnect()
+
     async def test_keep_alive(
         self, fake_hid: FakeHIDModule, monkeypatch: pytest.MonkeyPatch
     ) -> None:

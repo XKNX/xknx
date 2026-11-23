@@ -41,6 +41,8 @@ _RESERVED: Final = bytes(6)
 # The server may end the connection 25 s after the client's last message (KNX v01.03.04 -
 # Basic and System Components - Couplers 09.03 - §3.5.4.2.5); the client keeps it alive.
 KEEP_ALIVE_INTERVAL: Final = 20.0
+# pause after a keep-alive that failed, e.g. while the interface fails every write
+KEEP_ALIVE_RETRY_WAIT: Final = 1.0
 
 # control field 1 of a received frame: standard frame, not repeated, broadcast, low
 # priority; extended frames for an APDU longer than a standard frame takes
