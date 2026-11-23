@@ -3,10 +3,10 @@ KNX RF through a KNX USB RF interface (mask 2311h).
 
 The medium of an interface is the one of its mask version (Device Descriptor Type 0) -
 KNX v02.01.01 - Configuration Procedures 03.05.03 - §3.13.2.2. On KNX RF every cEMI
-L_Data frame carries the RF medium information - KNX v01.04.02 - External Message
-Interface 03.06.03 - §4.1.4.3.2. A frame is sent with this information left void: the
-interface then inserts its own Domain Address (or its own KNX Serial Number for a
-system broadcast) and its own frame number - KNX v01.01.01 - Mask 2311h 06.03.31 - §3.
+L_Data frame carries the RF medium information. A frame is sent with this information
+left void: the interface then inserts its own Domain Address (or its own KNX Serial
+Number for a system broadcast) and its own frame number - KNX v01.04.02 - External
+Message Interface 03.06.03 - §4.1.4.3.2.
 """
 
 from __future__ import annotations
