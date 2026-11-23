@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 
-from xknx.io.usb import control_pipe
 from xknx.io.usb.const import (
     EMIID,
     DeviceFeature,
@@ -64,13 +63,6 @@ class FakeInterface:
         self.answers = True
         # what hidapi's write returns - None: the length written
         self.write_result: int | None = None
-        # takes reports over the interrupt OUT endpoint (False: hidapi's write times
-        # out and returns -1), and over the control pipe (SET_REPORT)
-        self.interrupt_out = True
-        self.control_pipe = True
-        # reports written over each pipe
-        self.interrupt_reports = 0
-        self.control_pipe_reports = 0
         # EMI1/EMI2: the memory of the BCU (system status, individual address 1.1.5)
         self.memory: dict[int, bytes] = {0x0060: b"\x1e", 0x0117: b"\x11\x05"}
         self.accepts_memory_writes = True
@@ -127,24 +119,11 @@ class FakeInterface:
             return []
 
     def write(self, report: bytes) -> int:
-        """Handle one report from the host over the interrupt OUT endpoint."""
+        """Handle one report from the host."""
         if self.unplugged.is_set():
             raise OSError("device disconnected")
         if self.write_result is not None:
             return self.write_result
-        if not self.interrupt_out:
-            return -1
-        self.interrupt_reports += 1
-        return self._receive(report)
-
-    def set_output_report(self, report: bytes) -> int:
-        """Handle one report from the host over the control pipe (SET_REPORT)."""
-        if self.unplugged.is_set() or not self.control_pipe:
-            return -1
-        self.control_pipe_reports += 1
-        return self._receive(report)
-
-    def _receive(self, report: bytes) -> int:
         frame = self._assembler.feed(report)
         if frame is not None:
             self.written.append(frame)
@@ -310,15 +289,6 @@ class FakeHIDDevice:
         self._module.closed += 1
 
 
-class FakeHIDDeviceWithOutputReport(FakeHIDDevice):
-    """Fake `hid.device` of a binding that offers hidapi's `hid_send_output_report`."""
-
-    def send_output_report(self, data: bytes) -> int:
-        """Send one output report over the control pipe."""
-        assert self._interface is not None
-        return self._interface.set_output_report(bytes(data))
-
-
 class FakeHIDModule(ModuleType):
     """Fake hidapi module with simulated KNX USB interfaces."""
 
@@ -331,8 +301,6 @@ class FakeHIDModule(ModuleType):
         }
         self.closed = 0
         self.close_error = False
-        # the binding offers `send_output_report` (hidapi's Python binding 0.15.0 doesn't)
-        self.output_report = False
 
     @property
     def interface(self) -> FakeInterface:
@@ -355,8 +323,6 @@ class FakeHIDModule(ModuleType):
 
     def device(self) -> FakeHIDDevice:
         """Create a device handle."""
-        if self.output_report:
-            return FakeHIDDeviceWithOutputReport(self)
         return FakeHIDDevice(self)
 
 
@@ -382,8 +348,6 @@ def fake_hid(monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeHIDModule]:
     monkeypatch.setitem(sys.modules, "hid", module)
     # not the real hidraw backend of an installed hidapi on Linux
     monkeypatch.setitem(sys.modules, "hidraw", None)
-    # not Windows' HID API for the paths of the fake `hid`
-    monkeypatch.setattr(control_pipe, "_on_windows", lambda: False)
     yield module
     for interface in module.interfaces.values():
         interface.unplugged.set()
