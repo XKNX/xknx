@@ -4,21 +4,24 @@ from __future__ import annotations
 
 import asyncio
 import socket
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from xknx.cemi import CEMIMessageCode
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.exceptions import ConversionError
-from xknx.io.server import KNXIPTunnellingServer
+from xknx.io.server import KNXIPTunnellingServer, tunnelling_server
 from xknx.io.server.raw_cemi import LDataFrame
+from xknx.io.server.tunnelling_server import _Refused, _TCPStream
 from xknx.knxip import (
     HPAI,
     SRP,
     ConnectionStateRequest,
     ConnectionStateResponse,
     ConnectRequest,
+    ConnectRequestInformation,
     ConnectRequestType,
     ConnectResponse,
     DescriptionRequest,
@@ -1555,3 +1558,191 @@ class TestMore:
         with pytest.raises(OSError):
             await other.start()
         assert other._transport is None
+
+
+class TestFailures:
+    """Test how the server copes with failing sockets, peers and requests."""
+
+    async def test_start_fails_otherwise(self, backing: Backing) -> None:
+        """Test that an error other than OSError on start closes everything and is raised."""
+        server = KNXIPTunnellingServer(
+            backing.xknx, individual_addresses=POOL, local_ip=SERVER_IP, port=0
+        )
+        with (
+            patch.object(
+                KNXIPTunnellingServer,
+                "_open_endpoints",
+                AsyncMock(side_effect=RuntimeError("broken")),
+            ),
+            pytest.raises(RuntimeError, match="broken"),
+        ):
+            await server.start()
+        assert server._transport is None
+        assert server.port == 0
+
+    @pytest.mark.parametrize(
+        ("failing_option", "raises"),
+        [(socket.IP_ADD_MEMBERSHIP, False), (socket.IP_MULTICAST_IF, True)],
+    )
+    def test_udp_socket_options_fail(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        backing: Backing,
+        failing_option: int,
+        raises: bool,
+    ) -> None:
+        """Test that a failed multicast join is only warned about, other failures raise."""
+        created: list[socket.socket] = []
+
+        class _Socket(socket.socket):
+            """A socket refusing one option."""
+
+            def __init__(self, *args: Any) -> None:
+                super().__init__(*args)
+                created.append(self)
+
+            def setsockopt(self, *args: Any) -> None:  # type: ignore[override]
+                if args[0] == socket.IPPROTO_IP and args[1] == failing_option:
+                    raise OSError("not allowed")
+                super().setsockopt(*args)
+
+        monkeypatch.setattr(tunnelling_server.socket, "socket", _Socket)
+        server = KNXIPTunnellingServer(
+            backing.xknx, individual_addresses=POOL, local_ip=SERVER_IP
+        )
+        if raises:
+            with pytest.raises(OSError, match="not allowed"):
+                server._create_udp_socket(True, 0)
+        else:
+            with patch.object(tunnelling_server.logger, "warning") as warning:
+                server._create_udp_socket(True, 0).close()
+            warning.assert_called_once()
+        assert created[0].fileno() == -1
+
+    async def test_discovery_listener_fails(self, backing: Backing) -> None:
+        """Test that the server runs without discovery when it can't listen for it."""
+        server = KNXIPTunnellingServer(
+            backing.xknx, individual_addresses=POOL, local_ip=SERVER_IP, port=0
+        )
+        with (
+            patch.object(
+                tunnelling_server.UDPTransport,
+                "create_multicast_sock",
+                Mock(side_effect=OSError("in use")),
+            ),
+            patch.object(tunnelling_server.logger, "warning") as warning,
+        ):
+            await server.start()
+        try:
+            warning.assert_called_once()
+            assert server.port != 0
+        finally:
+            await server.stop()
+
+    async def test_send_without_socket(self, backing: Backing) -> None:
+        """Test that sending before start or over a closed TCP stream does nothing."""
+        server = KNXIPTunnellingServer(backing.xknx, individual_addresses=POOL)
+        frame = KNXIPFrame.init_from_body(DescriptionRequest())
+        server.send_udp(frame, (SERVER_IP, 3671))
+        _TCPStream(server).send(frame)
+
+    async def test_send_fails(self, server: KNXIPTunnellingServer) -> None:
+        """Test that a datagram the socket can't send is dropped."""
+        transport = server._transport
+        server._transport = Mock(sendto=Mock(side_effect=OSError("unreachable")))
+        try:
+            server.send_udp(
+                KNXIPFrame.init_from_body(DescriptionRequest()), (SERVER_IP, 1)
+            )
+        finally:
+            server._transport = transport
+
+    def test_no_route_to_the_peer(self, backing: Backing) -> None:
+        """Test the address announced to a peer that can't be reached."""
+        server = KNXIPTunnellingServer(backing.xknx, individual_addresses=POOL)
+        assert server._local_ip_for(Mock(address=("256.0.0.1", 3671))) == "0.0.0.0"
+
+    @pytest.mark.parametrize("unknown_cri", [False, True])
+    async def test_connect_request_with_invalid_endpoint(
+        self, client: RawClient, unknown_cri: bool
+    ) -> None:
+        """Test that a CONNECT_REQUEST with an invalid HPAI isn't answered."""
+        invalid = HPAI(SERVER_IP, 0)
+        if unknown_cri:
+            body = invalid.to_knx() + client.hpai.to_knx() + bytes.fromhex("0277")
+            client.send_raw(
+                bytes.fromhex("0610 0205") + (6 + len(body)).to_bytes(2, "big") + body
+            )
+        else:
+            client.send(
+                ConnectRequest(
+                    control_endpoint=invalid,
+                    data_endpoint=client.hpai,
+                    cri=ConnectRequestInformation(),
+                )
+            )
+        await client.silence()
+
+    def test_no_free_channel(self, server: KNXIPTunnellingServer) -> None:
+        """Test that a 256th connection is refused."""
+        server._connections = dict.fromkeys(range(1, 256), Mock())
+        with pytest.raises(_Refused):
+            server._free_channel()
+        server._connections = {}
+
+    async def test_failure_of_a_closed_connection(
+        self, server: KNXIPTunnellingServer, client: RawClient
+    ) -> None:
+        """Test that a connection already closed isn't terminated again."""
+        channel = (await _connected(client)).communication_channel
+        stale = Mock(communication_channel=channel)
+        with patch.object(tunnelling_server.logger, "info") as info:
+            server._connection_failed(stale)
+        info.assert_not_called()
+        assert channel in server._connections
+
+    async def test_unexpected_send_error(
+        self, monkeypatch: pytest.MonkeyPatch, backing: Backing, client: RawClient
+    ) -> None:
+        """Test that an unexpected error sending a frame gives a negative L_Data.con."""
+        monkeypatch.setattr(
+            type(backing.xknx.cemi_handler),
+            "send_cemi_frame",
+            AsyncMock(side_effect=RuntimeError("bug")),
+        )
+        channel = (await _connected(client)).communication_channel
+        with patch.object(tunnelling_server.logger, "exception") as exception:
+            client.send(
+                _tunnelling_request(
+                    channel, 0, l_data(CEMIMessageCode.L_DATA_REQ, "0.0.0", GROUP)
+                )
+            )
+            await client.receive(TunnellingAck)
+            confirmation = LDataFrame((await client.receive_cemi()).raw_cemi)
+        exception.assert_called_once()
+        assert confirmation.code is CEMIMessageCode.L_DATA_CON
+        assert confirmation.confirm_error
+
+    def test_partner_of_a_closed_connection(
+        self, server: KNXIPTunnellingServer
+    ) -> None:
+        """Test that a partner of a closed tunnel is forgotten."""
+        server._partners[PARTNER] = (Mock(communication_channel=7), 0.0)
+        frame = LDataFrame(
+            l_data(CEMIMessageCode.L_DATA_IND, str(PARTNER), OWN_ADDRESS)
+        )
+        assert not server._partner_frame_received(frame)
+        assert PARTNER not in server._partners
+
+    def test_configured_max_apdu_length(self, backing: Backing) -> None:
+        """Test that a configured maximum APDU length is announced."""
+        server = KNXIPTunnellingServer(
+            backing.xknx, individual_addresses=POOL, max_apdu_length=128
+        )
+        assert server._max_apdu_length() == 128
+
+    async def test_unexpected_ack(self, client: RawClient) -> None:
+        """Test that a TUNNELLING_ACK without a request waiting for it is ignored."""
+        channel = (await _connected(client)).communication_channel
+        client.send(TunnellingAck(communication_channel_id=channel, sequence_counter=5))
+        await client.silence()
