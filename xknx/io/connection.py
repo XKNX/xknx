@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from enum import Enum, auto
 import os
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from xknx.secure import Keyring
 from xknx.telegram.address import IndividualAddress, IndividualAddressableType
 
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .gateway_scanner import GatewayScanFilter
-
-if TYPE_CHECKING:
-    from .usb.frame import USBTransferFrame
 
 
 class ConnectionType(Enum):
@@ -116,11 +112,6 @@ class USBConfig:
     * product_id: USB product id of the interface.
     * serial_number: USB serial number, to pick one of several interfaces.
     * path: hidapi device path of the interface.
-    * transport_layer: reach the interface's own device through the cEMI Transport
-        Layer instead of the bus, e.g. to download into a KNX device through its own
-        USB port. Only management connections to that device work then.
-    * extraneous_frame_callback: gets the frames of the M-Bus and BatiBus tunnels;
-        `KNXIPInterface.send_usb_extraneous_frame()` sends them.
     """
 
     def __init__(
@@ -130,16 +121,12 @@ class USBConfig:
         product_id: int | None = None,
         serial_number: str | None = None,
         path: bytes | None = None,
-        transport_layer: bool = False,
-        extraneous_frame_callback: Callable[[USBTransferFrame], None] | None = None,
     ) -> None:
         """Initialize USBConfig class."""
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.serial_number = serial_number
         self.path = path
-        self.transport_layer = transport_layer
-        self.extraneous_frame_callback = extraneous_frame_callback
 
     def __eq__(self, other: object) -> bool:
         """Equality for USBConfig class (used in unit tests)."""

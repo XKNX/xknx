@@ -31,7 +31,7 @@ from .gateway_scanner import GatewayDescriptor, GatewayScanner
 from .routing import Routing, SecureRouting
 from .self_description import request_description
 from .tunnel import SecureTunnel, TCPTunnel, UDPTunnel, _Tunnel
-from .usb import USBInterfaceInfo, USBTransferFrame, USBTunnel
+from .usb import USBInterfaceInfo, USBTunnel
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -399,8 +399,6 @@ class KNXIPInterface:
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
             keyring=keyring,
-            transport_layer=usb_config.transport_layer,
-            extraneous_frame_callback=usb_config.extraneous_frame_callback,
         )
         await self._interface.connect()
 
@@ -521,12 +519,6 @@ class KNXIPInterface:
         if isinstance(self._interface, USBTunnel):
             return self._interface.info
         return None
-
-    async def send_usb_extraneous_frame(self, frame: USBTransferFrame) -> None:
-        """Send a frame of the M-Bus or BatiBus tunnel through the KNX USB interface."""
-        if not isinstance(self._interface, USBTunnel):
-            raise CommunicationError("Not connected through a KNX USB interface")
-        await self._interface.send_extraneous_frame(frame)
 
 
 async def _cancel_other_tasks() -> None:

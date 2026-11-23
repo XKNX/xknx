@@ -25,7 +25,6 @@ import logging
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 from xknx.cemi import (
-    CEMIErrorCode,
     CEMIFrame,
     CEMILData,
     CEMIMessageCode,
@@ -78,7 +77,6 @@ from .hid_device import (
     find_usb_interfaces,
 )
 from .rf import medium_of_mask_version, with_rf_medium_info
-from .transport_layer import KEEP_ALIVE_INTERVAL, TransportLayerMapping
 
 if TYPE_CHECKING:
     from xknx.xknx import XKNX
@@ -109,33 +107,11 @@ _MANAGEMENT_RESPONSES = {
     CEMIMessageCode.M_PROP_WRITE_REQ: CEMIMessageCode.M_PROP_WRITE_CON,
 }
 _CONNECTION_CLOSED = "USB connection closed"
-# the protocols of KNX extraneous information - KNX v01.03.04 - Basic and System
-# Components - Couplers 09.03 - §3.4.1.3.4; KNX v01.04.02 - External Message Interface
-# 03.06.03 - §4.3
-EXTRANEOUS_PROTOCOLS = frozenset({ProtocolID.M_BUS_TUNNEL, ProtocolID.BATIBUS_TUNNEL})
-# why the cEMI server refused the cEMI Transport Layer - KNX v01.03.04 - Basic and System
-# Components - Couplers 09.03 - §3.5.4.2.2
-_TRANSPORT_LAYER_REFUSALS: dict[CEMIErrorCode | int, str] = {
-    CEMIErrorCode.CEMI_ERROR_ILLEGAL_COMMAND: "does not support the cEMI transport layer",
-    CEMIErrorCode.CEMI_ERROR_TEMPORARILY_READ_ONLY: (
-        "already has another transport layer connection"
-    ),
-    CEMIErrorCode.CEMI_ERROR_VOID_DP: "has no communication mode (PID_COMM_MODE)",
-}
 
 # (message code, object type, object instance, property id)
 _PropertyKey = tuple[CEMIMessageCode, int, int, int]
 _K = TypeVar("_K")
 _V = TypeVar("_V")
-
-
-class _PropertyRefused(CommunicationError):
-    """The interface answered a property access with an error code."""
-
-    def __init__(self, message: str, error_code: CEMIErrorCode | int) -> None:
-        """Initialize _PropertyRefused."""
-        super().__init__(message)
-        self.error_code = error_code
 
 
 class _PendingRequests(Generic[_K, _V]):
@@ -207,8 +183,6 @@ class USBInterfaceInfo:
     medium: KNXMedium = KNXMedium.TP1
     rf_domain_address: bytes | None = None
     rf_multi: bool = False
-    # connected to the interface's own device through the cEMI Transport Layer
-    transport_layer: bool = False
 
 
 class USBTunnel(Interface):
@@ -226,9 +200,6 @@ class USBTunnel(Interface):
     so the interface sends it with its own Domain Address and frame number (see
     `xknx.io.usb.rf`); `xknx.io.usb.rf.rf_medium_info()` reads the one of a received
     frame.
-
-    With `transport_layer` the interface's own device is reached through the cEMI
-    Transport Layer instead of the bus (see `xknx.io.usb.transport_layer`).
     """
 
     __slots__ = (
@@ -240,8 +211,6 @@ class USBTunnel(Interface):
         "_features",
         "_identify",
         "_info",
-        "_keep_alive_task",
-        "_last_client_message",
         "_last_request_source",
         "_medium",
         "_memory",
@@ -252,18 +221,15 @@ class USBTunnel(Interface):
         "_send_lock",
         "_setup_task",
         "_source_mismatch_logged",
-        "_transport_layer",
         "auto_reconnect",
         "auto_reconnect_wait",
         "busmonitor",
         "cemi_received_callback",
         "device_info",
-        "extraneous_frame_callback",
         "keyring",
         "path",
         "product_id",
         "serial_number",
-        "transport_layer",
         "vendor_id",
         "xknx",
     )
@@ -283,8 +249,6 @@ class USBTunnel(Interface):
         auto_reconnect_wait: int = 3,
         busmonitor: bool = False,
         keyring: Keyring | None = None,
-        transport_layer: bool = False,
-        extraneous_frame_callback: Callable[[USBTransferFrame], None] | None = None,
     ) -> None:
         """
         Initialize USBTunnel.
@@ -305,26 +269,9 @@ class USBTunnel(Interface):
 
         `keyring` is only used to warn, with Data Secure, when the interface's
         individual address is none of the keyring's interfaces.
-
-        With `transport_layer` the cEMI server is switched to the cEMI Transport Layer:
-        management connections reach the device the interface is part of - e.g. to
-        download into a KNX device through its own USB port - and nothing else can be
-        sent; the bus connection doesn't matter then. It needs a cEMI interface.
-
-        `extraneous_frame_callback` gets the frames of the M-Bus and BatiBus tunnels
-        (`EXTRANEOUS_PROTOCOLS`); `send_extraneous_frame()` sends them. The
-        specification leaves their header octet 6 and body open, so they are passed
-        on as they are.
         """
-        if busmonitor and transport_layer:
-            raise ValueError(
-                "A KNX USB interface can't be in bus monitor mode and use the cEMI "
-                "transport layer at the same time"
-            )
         self.xknx = xknx
         self.busmonitor = busmonitor
-        self.transport_layer = transport_layer
-        self.extraneous_frame_callback = extraneous_frame_callback
         self.cemi_received_callback = cemi_received_callback
         self.vendor_id = vendor_id
         self.product_id = product_id
@@ -344,8 +291,6 @@ class USBTunnel(Interface):
         # EMI2 PEI_Identify: a single request at a time, key None
         self._identify: _PendingRequests[None, int] = _PendingRequests()
         self._info: USBInterfaceInfo | None = None
-        self._keep_alive_task: asyncio.Task[None] | None = None
-        self._last_client_message = 0.0
         self._last_request_source: IndividualAddress | None = None
         self._medium = KNXMedium.TP1
         self._memory: _PendingRequests[int, bytes] = _PendingRequests()
@@ -356,7 +301,6 @@ class USBTunnel(Interface):
         self._send_lock = asyncio.Lock()
         self._setup_task: asyncio.Task[None] | None = None
         self._source_mismatch_logged = False
-        self._transport_layer: TransportLayerMapping | None = None
 
     @property
     def info(self) -> USBInterfaceInfo | None:
@@ -405,8 +349,6 @@ class USBTunnel(Interface):
             XknxConnectionState.CONNECTING, self.connection_type
         )
         self._source_mismatch_logged = False
-        # a new connection: the transport layer's sequence numbers start again
-        self._transport_layer = None
         try:
             await self._open()
             await self._setup()
@@ -423,8 +365,6 @@ class USBTunnel(Interface):
         self._established = True
         self._reconnect_on_loss = True
         logger.debug("Connected to KNX USB interface %s", self._info)
-        if self.transport_layer:
-            self._keep_alive_task = asyncio.create_task(self._keep_alive())
         self._announce_connection_state()
 
     async def _open(self) -> None:
@@ -446,8 +386,8 @@ class USBTunnel(Interface):
         await self._close_device()
 
     def _announce_connection_state(self) -> None:
-        """Set the connection state from the interface's bus connection (not needed for its own device)."""
-        if self._bus_connected or self.transport_layer:
+        """Set the connection state from the interface's bus connection."""
+        if self._bus_connected:
             self.xknx.connection_manager.connection_state_changed(
                 XknxConnectionState.CONNECTED, self.connection_type
             )
@@ -486,12 +426,6 @@ class USBTunnel(Interface):
 
         rf_domain_address: bytes | None = None
         rf_multi = False
-        if self.transport_layer and self._emi is not EMIID.CEMI:
-            # KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.5.4.2
-            raise CommunicationError(
-                f"KNX USB interface speaks {_EMI_NAMES[self._emi]}: the cEMI transport "
-                "layer needs cEMI"
-            )
         if self._emi is EMIID.CEMI:
             # KNX v02.01.01 - Configuration Procedures 03.05.03 - §3.13.2.2; an RF
             # interface only speaks cEMI (§3.13.2.1)
@@ -512,10 +446,6 @@ class USBTunnel(Interface):
             max_apdu_length = emi.MAX_APDU_LENGTH
         self._check_individual_address(individual_address)
         self.xknx.current_address = individual_address or IndividualAddress(0)
-        if self.transport_layer and self._transport_layer is None:
-            # kept over a setup after a reset: xknx's connection goes on with its
-            # sequence numbers
-            self._transport_layer = TransportLayerMapping(individual_address)
 
         self._info = USBInterfaceInfo(
             device=self.device_info,
@@ -529,7 +459,6 @@ class USBTunnel(Interface):
             medium=self._medium,
             rf_domain_address=rf_domain_address,
             rf_multi=rf_multi,
-            transport_layer=self.transport_layer,
         )
 
     async def _get_supported_emi_types(self) -> SupportedEMIType:
@@ -619,25 +548,19 @@ class USBTunnel(Interface):
         return int.from_bytes(data[:2], "big") if len(data) >= 2 else None
 
     async def _set_communication_mode(self) -> None:
-        """Switch the cEMI server to the data link layer, the bus monitor mode or the cEMI Transport Layer and verify it."""
-        if self.transport_layer:
-            mode = CommunicationMode.CEMI_TRANSPORT_LAYER
-        elif self.busmonitor:
-            mode = CommunicationMode.DATA_LINK_LAYER_BUSMONITOR
-        else:
-            mode = CommunicationMode.DATA_LINK_LAYER
-        communication_mode = bytes((mode,))
-        try:
-            await self._property_write(
-                ResourceObjectType.OBJECT_CEMI_SERVER,
-                ResourceCEMIServerPropertyId.PID_COMM_MODE,
-                communication_mode,
+        """Switch the cEMI server to the data link layer or the bus monitor mode and verify it."""
+        communication_mode = bytes(
+            (
+                CommunicationMode.DATA_LINK_LAYER_BUSMONITOR
+                if self.busmonitor
+                else CommunicationMode.DATA_LINK_LAYER,
             )
-        except _PropertyRefused as ex:
-            reason = _TRANSPORT_LAYER_REFUSALS.get(ex.error_code)
-            if mode is CommunicationMode.CEMI_TRANSPORT_LAYER and reason is not None:
-                raise CommunicationError(f"KNX USB interface {reason}") from ex
-            raise
+        )
+        await self._property_write(
+            ResourceObjectType.OBJECT_CEMI_SERVER,
+            ResourceCEMIServerPropertyId.PID_COMM_MODE,
+            communication_mode,
+        )
         active_mode = await self._property_read(
             ResourceObjectType.OBJECT_CEMI_SERVER,
             ResourceCEMIServerPropertyId.PID_COMM_MODE,
@@ -982,9 +905,6 @@ class USBTunnel(Interface):
     def _prepare_disconnect(self) -> None:
         """Set the connection state and fail pending requests."""
         self._established = False
-        if self._keep_alive_task is not None:
-            self._keep_alive_task.cancel()
-            self._keep_alive_task = None
         self._features.fail_all(_CONNECTION_CLOSED)
         self._identify.fail_all(_CONNECTION_CLOSED)
         self._properties.fail_all(_CONNECTION_CLOSED)
@@ -1012,10 +932,7 @@ class USBTunnel(Interface):
         An EMI1/EMI2 interface is switched back to its normal mode first: while the
         external interface has access to the data link layer, the device's own
         application and object servers do not run (KNX v01.04.02 - External
-        Message Interface 03.06.03 - §3.1.2). A cEMI interface is closed as it is,
-        but one in the cEMI Transport Layer is set to "no layer" first, which ends
-        that connection and lets its device's own communication go on - KNX v01.03.04 -
-        Basic and System Components - Couplers 09.03 - §3.5.4.2.6.
+        Message Interface 03.06.03 - §3.1.2). A cEMI interface is closed as it is.
         """
         was_established = self._established
         self._reconnect_on_loss = False
@@ -1023,15 +940,6 @@ class USBTunnel(Interface):
         for task in (self._reconnect_task, self._setup_task):
             if task is not None:
                 task.cancel()
-        if was_established and self.transport_layer and self._device is not None:
-            try:
-                await self._property_write(
-                    ResourceObjectType.OBJECT_CEMI_SERVER,
-                    ResourceCEMIServerPropertyId.PID_COMM_MODE,
-                    bytes((CommunicationMode.NO_LAYER,)),
-                )
-            except CommunicationError as ex:
-                logger.debug("Could not end the cEMI transport layer: %s", ex)
         if was_established and self._emi is not EMIID.CEMI and self._device is not None:
             try:
                 await self._send_tunnel_frame(self._normal_mode_request())
@@ -1079,7 +987,6 @@ class USBTunnel(Interface):
                 raise CommunicationError("KNX USB interface not connected")
             for report in frame.to_reports():
                 await device.write(report)
-            self._last_client_message = asyncio.get_running_loop().time()
 
     async def _send_tunnel_frame(self, raw: bytes) -> None:
         """Send a message in the EMI type in use."""
@@ -1178,9 +1085,8 @@ class USBTunnel(Interface):
         )
         assert isinstance(response.data, CEMIMPropWriteResponse)
         if response.data.error_code is not None:
-            raise _PropertyRefused(
-                f"Writing property {property_id.name} failed: {response.data.error_code!r}",
-                response.data.error_code,
+            raise CommunicationError(
+                f"Writing property {property_id.name} failed: {response.data.error_code!r}"
             )
 
     async def send_cemi(self, cemi: CEMIFrame) -> None:
@@ -1189,9 +1095,6 @@ class USBTunnel(Interface):
             raise CommunicationError("KNX USB interface not connected")
         if self.busmonitor:
             raise CommunicationError("KNX USB interface is in bus monitor mode")
-        if self._transport_layer is not None:
-            await self._send_transport_layer(cemi)
-            return
         if cemi.code is CEMIMessageCode.L_DATA_REQ and not self._bus_connected:
             raise CommunicationError("KNX USB interface is not connected to the bus")
         if (
@@ -1219,62 +1122,6 @@ class USBTunnel(Interface):
             ) from ex
         await self._send_tunnel_frame(raw)
 
-    async def _send_transport_layer(self, cemi: CEMIFrame) -> None:
-        """Send an L_Data.req through the cEMI Transport Layer to the interface's own device."""
-        assert self._transport_layer is not None
-        message, received = self._transport_layer.outgoing(cemi.to_knx())
-        if message is not None:
-            await self._send_tunnel_frame(message)
-        # after this request's own processing, as they would come from the interface
-        loop = asyncio.get_running_loop()
-        for raw_cemi in received:
-            loop.call_soon(self.cemi_received_callback, raw_cemi)
-
-    async def send_extraneous_frame(self, frame: USBTransferFrame) -> None:
-        """
-        Send a frame of the M-Bus or BatiBus tunnel (`EXTRANEOUS_PROTOCOLS`) as it is.
-
-        KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3.4.1.3.4
-        """
-        if frame.protocol not in EXTRANEOUS_PROTOCOLS:
-            raise ValueError(
-                f"Not an M-Bus or BatiBus tunnel frame: protocol {frame.protocol}"
-            )
-        if not self._established:
-            raise CommunicationError("KNX USB interface not connected")
-        await self._write_frame(frame)
-
-    async def _keep_alive(self) -> None:
-        """
-        Keep the cEMI Transport Layer connection alive, and set it up again when it ended.
-
-        The server may end it 25 s after the client's last message; a property read
-        is a message too - KNX v01.03.04 - Basic and System Components - Couplers
-        09.03 - §3.5.4.2.5.
-        """
-        loop = asyncio.get_running_loop()
-        while True:
-            wait = self._last_client_message + KEEP_ALIVE_INTERVAL - loop.time()
-            if wait > 0:
-                # the client sent something meanwhile
-                await asyncio.sleep(wait)
-                continue
-            try:
-                mode = await self._property_read(
-                    ResourceObjectType.OBJECT_CEMI_SERVER,
-                    ResourceCEMIServerPropertyId.PID_COMM_MODE,
-                )
-            except CommunicationError as ex:
-                logger.debug("Could not keep the cEMI transport layer alive: %s", ex)
-                continue
-            if mode[:1] != bytes((CommunicationMode.CEMI_TRANSPORT_LAYER,)):
-                logger.warning(
-                    "KNX USB interface %s left the cEMI transport layer (mode %s)",
-                    self.device_info,
-                    mode.hex(),
-                )
-                self._server_reset()
-
     ####################
     #
     # INCOMING
@@ -1300,11 +1147,6 @@ class USBTunnel(Interface):
                 self._cemi_received(frame.body)
             else:
                 self._emi_received(frame.body)
-        elif (
-            frame.protocol in EXTRANEOUS_PROTOCOLS
-            and self.extraneous_frame_callback is not None
-        ):
-            self.extraneous_frame_callback(frame)
         else:
             logger.debug("Ignoring KNX USB frame of protocol %s", frame.protocol)
 
@@ -1337,9 +1179,8 @@ class USBTunnel(Interface):
         self._bus_connected = connected
         if self._info is not None:
             self._info = replace(self._info, bus_connected=connected)
-        if not self._established or self.transport_layer:
-            # announced when the setup is done; the interface's own device is reached
-            # without the bus
+        if not self._established:
+            # announced when the setup is done
             return
         if connected:
             logger.info("KNX USB interface is connected to the bus again")
@@ -1377,17 +1218,6 @@ class USBTunnel(Interface):
         elif code == CEMIMessageCode.M_RESET_IND.value:
             self._server_reset()
             return
-        elif self._transport_layer is not None:
-            indication = self._transport_layer.incoming(
-                raw_cemi, self.xknx.current_address
-            )
-            if indication is None:
-                logger.debug(
-                    "Ignoring cEMI frame in the cEMI transport layer: %s",
-                    raw_cemi.hex(),
-                )
-                return
-            raw_cemi = indication
         elif code == CEMIMessageCode.L_DATA_CON.value:
             self._check_confirmation_source(raw_cemi)
         self.cemi_received_callback(raw_cemi)
