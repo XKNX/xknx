@@ -399,6 +399,7 @@ class KNXIPInterface:
             auto_reconnect=self.connection_config.auto_reconnect,
             auto_reconnect_wait=self.connection_config.auto_reconnect_wait,
             keyring=keyring,
+            transport_layer=usb_config.transport_layer,
         )
         await self._interface.connect()
 

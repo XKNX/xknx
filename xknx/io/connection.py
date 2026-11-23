@@ -112,6 +112,9 @@ class USBConfig:
     * product_id: USB product id of the interface.
     * serial_number: USB serial number, to pick one of several interfaces.
     * path: hidapi device path of the interface.
+    * transport_layer: reach the interface's own device through the cEMI Transport
+        Layer instead of the bus, e.g. to download into a KNX device through its own
+        USB port. Only management connections to that device work then.
     """
 
     def __init__(
@@ -121,12 +124,14 @@ class USBConfig:
         product_id: int | None = None,
         serial_number: str | None = None,
         path: bytes | None = None,
+        transport_layer: bool = False,
     ) -> None:
         """Initialize USBConfig class."""
         self.vendor_id = vendor_id
         self.product_id = product_id
         self.serial_number = serial_number
         self.path = path
+        self.transport_layer = transport_layer
 
     def __eq__(self, other: object) -> bool:
         """Equality for USBConfig class (used in unit tests)."""
