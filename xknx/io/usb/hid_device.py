@@ -31,9 +31,9 @@ raw_socket_logger = logging.getLogger("xknx.raw_socket")
 # them. Unless noted otherwise the entries are the list `KNOWN_DEVICES` of the KNX USB
 # proof of concept for xknx by kistlin (https://github.com/kistlin/xknx, branch
 # usb-interface-support, xknx/usb/util.py, MIT licence), which names calimero's
-# knxUsbVendorProductIds of 2020-06-20 as its source; the later entries are from the
-# KNX Association's list of KNX USB interfaces. An interface missing here is found by
-# giving its vendor id (and product id) or its path.
+# knxUsbVendorProductIds of 2020-06-20 as its source; the later entries are further KNX
+# USB interface products. An interface missing here is found by giving its vendor
+# id (and product id) or its path.
 KNX_USB_DEVICE_IDS: Final = frozenset(
     {
         (0x0111, 0x1022),  # Makel Elektrik
