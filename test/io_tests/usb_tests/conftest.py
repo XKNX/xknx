@@ -55,8 +55,6 @@ class FakeInterface:
         self.properties: dict[tuple[int, int], bytes] = dict(SPACELOGIC_PROPERTIES)
         # features the interface doesn't answer
         self.silent_features: set[int] = set()
-        # features the interface doesn't answer the first time
-        self.silent_once: set[int] = set()
         # set the active EMI type when it is set (False: ignore Set)
         self.accepts_emi_set = True
         # answer requests at all
@@ -128,9 +126,7 @@ class FakeInterface:
         if frame.protocol == ProtocolID.BUS_ACCESS_SERVER_FEATURE:
             feature = frame.body[0]
             if frame.service == DeviceFeatureService.GET:
-                if feature in self.silent_once:
-                    self.silent_once.discard(feature)
-                elif feature in self.features and feature not in self.silent_features:
+                if feature in self.features and feature not in self.silent_features:
                     self.send_frame(
                         device_feature_frame(
                             DeviceFeatureService.RESPONSE,

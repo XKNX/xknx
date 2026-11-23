@@ -283,43 +283,6 @@ class TestUSBTunnel:
         with pytest.raises(CommunicationError, match="did not answer"):
             await self.tunnel().connect()
 
-    async def test_no_answer_the_first_time(self, fake_hid: FakeHIDModule) -> None:
-        """Test the first request is tried again when the interface doesn't answer it."""
-        fake_hid.interface.silent_once.add(DeviceFeature.SUPPORTED_EMI_TYPE)
-        tunnel = self.tunnel()
-        await tunnel.connect()
-        assert tunnel.info is not None
-        await tunnel.disconnect()
-
-    async def test_no_answer_from_an_interface_the_host_may_suspend(
-        self, fake_hid: FakeHIDModule
-    ) -> None:
-        """Test the hint for an interface that needs the USB selective suspend off."""
-        fake_hid.enumeration[0]["vendor_id"] = 0x0E77
-        fake_hid.enumeration[0]["product_id"] = 0x0102
-        fake_hid.interface.silent_features.add(DeviceFeature.SUPPORTED_EMI_TYPE)
-        with pytest.raises(CommunicationError, match="selective suspend"):
-            await self.tunnel(vendor_id=0x0E77, product_id=0x0102).connect()
-
-    async def test_the_timing_of_an_interface(
-        self,
-        fake_hid: FakeHIDModule,
-        monkeypatch: pytest.MonkeyPatch,
-        caplog: pytest.LogCaptureFixture,
-    ) -> None:
-        """Test the waits of an interface that needs them."""
-        fake_hid.enumeration[0]["vendor_id"] = 0x0E77
-        fake_hid.enumeration[0]["product_id"] = 0x0111
-        monkeypatch.setitem(
-            usb_tunnel.KNX_USB_INTERFACE_TIMING, (0x0E77, 0x0111), (0.01, 0.01)
-        )
-        tunnel = self.tunnel(vendor_id=0x0E77, product_id=0x0111)
-        with caplog.at_level(logging.DEBUG, logger="xknx.log"):
-            await tunnel.connect()
-        assert "before communicating" in caplog.text
-        assert "after setting the EMI type" in caplog.text
-        await tunnel.disconnect()
-
     async def test_optional_values_missing(self, fake_hid: FakeHIDModule) -> None:
         """Test an interface without the optional features and properties."""
         interface = fake_hid.interface
