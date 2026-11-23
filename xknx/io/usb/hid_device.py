@@ -63,6 +63,7 @@ KNX_USB_DEVICE_IDS: Final = frozenset(
         (0x0E77, 0x0121),  # Gustav Hensel
         (0x0E77, 0x0141),  # Schneider Electric (MG)
         (0x0E77, 0x2001),  # Weinzierl Engineering
+        (0x0E77, 0x2002),  # Gira Giersiepen
         (0x0E77, 0x6910),  # Busch-Jaeger Elektro
         (0x135E, 0x0020),  # Insta
         (0x135E, 0x0021),  # Berker
