@@ -33,6 +33,8 @@ _CEMI_BROADCAST: Final = 0x10
 _PRIORITY: Final = 0x0C
 _REPEAT: Final = 0x20
 _CONFIRM: Final = 0x01
+# AT of the octet AT/NPCI/LG: set for a group address - §3.3.4.4
+_GROUP_ADDRESS: Final = 0x80
 
 
 @dataclass(frozen=True, slots=True)
@@ -201,6 +203,24 @@ def parse_pei_identify_con(raw: bytes) -> int | None:
     if len(raw) < 3 or raw[0] != PEI_IDENTIFY_CON:
         return None
     return int.from_bytes(raw[1:3], "big")
+
+
+def individual_destination(emi: EMIID, raw: bytes) -> int | None:
+    """
+    Return the destination of an L_Data.ind to an individual address; None for another message.
+
+    The data link layer of an interface indicates such a frame only when it is
+    addressed to the interface's own individual address - KNX v01.03.02 - Data Link
+    Layer General 03.03.02 - §2.2.1. Only so outside the bus monitor mode, in which
+    EMI1 indicates every frame with the same message code.
+    """
+    if (
+        len(raw) < 8
+        or raw[0] != MESSAGE_CODES[emi].l_data_ind
+        or raw[6] & _GROUP_ADDRESS
+    ):
+        return None
+    return int.from_bytes(raw[4:6], "big") or None
 
 
 def l_data_req_from_cemi(emi: EMIID, raw_cemi: bytes) -> bytes:

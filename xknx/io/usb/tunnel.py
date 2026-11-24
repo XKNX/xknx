@@ -669,7 +669,7 @@ class USBTunnel(Interface):
                 self.device_info,
                 "Data Secure telegrams are not sent until it is known"
                 if data_secure
-                else "using 0.0.0",
+                else "using 0.0.0 until it is known",
             )
             return
         if data_secure:
@@ -1165,6 +1165,13 @@ class USBTunnel(Interface):
         ):
             self._identify.resolve(None, individual_address)
             return
+        if (
+            not self.busmonitor
+            and self._individual_address_unknown()
+            and (own := emi.individual_destination(self._emi, raw)) is not None
+        ):
+            # before it is passed on: xknx takes only what is addressed to its address
+            self._adopt_individual_address(IndividualAddress(own))
         raw_cemi = emi.to_cemi(
             self._emi,
             raw,

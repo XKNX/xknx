@@ -292,6 +292,67 @@ class TestEMI1:
         await tunnel.disconnect()
         assert fake_hid.closed == 1
 
+    async def test_individual_address_from_an_indication(
+        self, fake_hid: FakeHIDModule, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Test an unread individual address is taken from the first frame addressed to the interface."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI1, 0x0012)
+        del interface.memory[0x0117]
+        addresses: list[IndividualAddress] = []
+        received = Mock(side_effect=lambda _raw: addresses.append(xknx.current_address))
+        xknx = XKNX()
+        tunnel = _tunnel(received, xknx=xknx)
+        await tunnel.connect()
+        assert xknx.current_address == IndividualAddress(0)
+        # a group telegram tells nothing about it
+        interface.send_emi(EMIID.EMI1, bytes.fromhex("49bc11140a01e10081"))
+        await _until(lambda: received.call_count == 1)
+        assert tunnel.info is not None
+        assert tunnel.info.individual_address is None
+        # the T_ACK of 1.1.20 to the interface's address, taken before it is passed on
+        with caplog.at_level(logging.INFO, logger="xknx.log"):
+            interface.send_emi(EMIID.EMI1, bytes.fromhex("49b0111411fa60c2"))
+            await _until(lambda: received.call_count == 2)
+        assert addresses == [IndividualAddress(0), IndividualAddress("1.1.250")]
+        assert received.call_args.args[0] == bytes.fromhex("2900b060111411fa00c2")
+        assert tunnel.info.individual_address == IndividualAddress("1.1.250")
+        assert "sends with the individual address 1.1.250" in caplog.text
+        # only the first one
+        interface.send_emi(EMIID.EMI1, bytes.fromhex("49b0111411fb60c2"))
+        await _until(lambda: received.call_count == 3)
+        assert xknx.current_address == IndividualAddress("1.1.250")
+        await tunnel.disconnect()
+
+    async def test_known_individual_address_kept(self, fake_hid: FakeHIDModule) -> None:
+        """Test a read individual address isn't changed by a frame to another one."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI1, 0x0012)
+        received = Mock()
+        tunnel = _tunnel(received)
+        await tunnel.connect()
+        interface.send_emi(EMIID.EMI1, bytes.fromhex("49b0111411fa60c2"))
+        await _until(lambda: received.call_count == 1)
+        assert tunnel.xknx.current_address == IndividualAddress("1.1.5")
+        await tunnel.disconnect()
+
+    async def test_no_individual_address_from_the_busmonitor(
+        self, fake_hid: FakeHIDModule
+    ) -> None:
+        """Test the bus monitor, which shows frames to every address, sets no individual address."""
+        interface = fake_hid.interface
+        make_emi_interface(interface, EMIID.EMI1, 0x0012)
+        del interface.memory[0x0117]
+        received = Mock()
+        tunnel = _tunnel(received, busmonitor=True)
+        await tunnel.connect()
+        interface.send_emi(EMIID.EMI1, bytes.fromhex("49b0111411fa60c2"))
+        await _until(lambda: received.call_count == 1)
+        assert tunnel.info is not None
+        assert tunnel.info.individual_address is None
+        assert tunnel.xknx.current_address == IndividualAddress(0)
+        await tunnel.disconnect()
+
     async def test_individual_address_too_short(self, fake_hid: FakeHIDModule) -> None:
         """Test an interface answering the read of its individual address with one octet."""
         interface = fake_hid.interface
@@ -536,3 +597,24 @@ class TestConversion:
         assert emi.parse_pei_identify_con(bytes.fromhex("a8110500c501053fb2")) == 0x1105
         assert emi.parse_pei_identify_con(bytes.fromhex("a811")) is None
         assert emi.parse_pei_identify_con(bytes.fromhex("ab0201171105")) is None
+
+    def test_individual_destination(self) -> None:
+        """Test the destination of an L_Data.ind to an individual address."""
+        # T_ACK from 1.1.20 to 1.1.250
+        for emi_id, raw in (
+            (EMIID.EMI1, "49b0111411fa60c2"),
+            (EMIID.EMI2, "29b0111411fa60c2"),
+        ):
+            assert emi.individual_destination(emi_id, bytes.fromhex(raw)) == 0x11FA
+        # in EMI1, 29h is no L_Data.ind
+        assert (
+            emi.individual_destination(EMIID.EMI1, bytes.fromhex("29b0111411fa60c2"))
+            is None
+        )
+        # to a group address, to 0.0.0, an L_Data.con, too short
+        for raw in ("49bc11140a01e10081", "49b0111400006000", "4eb0000011fa60c2"):
+            assert emi.individual_destination(EMIID.EMI1, bytes.fromhex(raw)) is None
+        assert (
+            emi.individual_destination(EMIID.EMI1, bytes.fromhex("49b0111411fa"))
+            is None
+        )
