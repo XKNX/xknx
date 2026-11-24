@@ -342,3 +342,75 @@ def test_incoming_cemi_no_data_secure_keys(
     assert xknx.connection_manager.cemi_count_incoming == 1
     assert xknx.connection_manager.cemi_count_incoming_error == 0
     assert xknx.connection_manager.undecoded_data_secure == 1
+
+
+RAW_GROUP_WRITE = bytes.fromhex("2900bce0110a0a03010081")
+
+
+async def test_send_cemi_frame(time_travel: EventLoopClockAdvancer) -> None:
+    """Test that send_cemi_frame returns the raw L_Data.con, which the callbacks don't get."""
+    xknx = XKNX()
+    xknx.knxip_interface = AsyncMock()
+    received = MagicMock(return_value=None)
+    xknx.cemi_handler.register_cemi_received_cb(received)
+    request = CEMIFrame.from_knx(bytes.fromhex("1100bce0110a0a03010081"))
+    confirmation = bytes.fromhex("2e00bce0110a0a03010081")
+
+    task = asyncio.create_task(xknx.cemi_handler.send_cemi_frame(request))
+    await time_travel(0)
+    xknx.knxip_interface.send_cemi.assert_called_once_with(request)
+    # an indication meanwhile is no confirmation
+    xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    received.assert_called_once_with(RAW_GROUP_WRITE)
+    assert not task.done()
+    xknx.cemi_handler.handle_raw_cemi(confirmation)
+    assert await task == confirmation
+    assert received.call_count == 1
+    # the confirmation of a telegram xknx sends goes to the callbacks
+    xknx.cemi_handler.handle_raw_cemi(confirmation)
+    received.assert_called_with(confirmation)
+
+    task = asyncio.create_task(xknx.cemi_handler.send_cemi_frame(request))
+    await time_travel(3)
+    with pytest.raises(ConfirmationError):
+        await task
+
+
+async def test_cemi_received_callbacks() -> None:
+    """Test registering and unregistering cEMI received callbacks; an error in one is logged."""
+    xknx = XKNX()
+    failing = MagicMock(side_effect=RuntimeError("bug"))
+    received = MagicMock(return_value=None)
+    unregister = xknx.cemi_handler.register_cemi_received_cb(failing)
+    xknx.cemi_handler.register_cemi_received_cb(received)
+    with patch("logging.Logger.exception") as mock_exception:
+        xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    mock_exception.assert_called_once()
+    received.assert_called_once_with(RAW_GROUP_WRITE)
+    # unparsable frames are passed on as well
+    xknx.cemi_handler.handle_raw_cemi(b"\x00")
+    received.assert_called_with(b"\x00")
+
+    unregister()
+    unregister()
+    xknx.cemi_handler.unregister_cemi_received_cb(received)
+    xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    assert failing.call_count == 2
+    assert received.call_count == 2
+
+
+async def test_cemi_received_callback_takes_a_frame() -> None:
+    """Test a frame a callback takes is neither handled nor passed to later callbacks."""
+    xknx = XKNX()
+    taking = MagicMock(return_value=True)
+    later = MagicMock(return_value=None)
+    xknx.cemi_handler.register_cemi_received_cb(taking)
+    xknx.cemi_handler.register_cemi_received_cb(later)
+    xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    taking.assert_called_once_with(RAW_GROUP_WRITE)
+    later.assert_not_called()
+    assert xknx.telegrams.empty()
+    taking.return_value = False
+    xknx.cemi_handler.handle_raw_cemi(RAW_GROUP_WRITE)
+    later.assert_called_once_with(RAW_GROUP_WRITE)
+    assert not xknx.telegrams.empty()
