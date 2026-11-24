@@ -7,7 +7,7 @@ Package containing all objects managing Tunneling and Routing Connections..
 - Tunnel uses UDP packets and builds a static tunnel with KNX/IP device.
 """
 
-from .connection import ConnectionConfig, ConnectionType, SecureConfig
+from .connection import ConnectionConfig, ConnectionType, SecureConfig, USBConfig
 from .const import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from .device_management import DeviceManagement
 from .device_management_connection import (
@@ -39,5 +39,6 @@ __all__ = [
     "TCPTunnel",
     "UDPDeviceManagementConnection",
     "UDPTunnel",
+    "USBConfig",
     "knx_interface_factory",
 ]
