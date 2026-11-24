@@ -20,3 +20,4 @@ class XknxConnectionType(Enum):
     TUNNEL_SECURE = "Tunnel IP Secure"
     TUNNEL_TCP = "Tunnel TCP"
     TUNNEL_UDP = "Tunnel UDP"
+    USB = "USB"
