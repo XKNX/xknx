@@ -131,6 +131,19 @@ class CouldNotParseCEMI(XKNXException):
         return f'<CouldNotParseCEMI description="{self.description}" />'
 
 
+class CouldNotParseUSBFrame(XKNXException):
+    """Exception class for a wrong HID report or KNX USB transfer frame."""
+
+    def __init__(self, description: str = "") -> None:
+        """Initialize CouldNotParseUSBFrame class."""
+        super().__init__()
+        self.description = description
+
+    def __str__(self) -> str:
+        """Return object as readable string."""
+        return f'<CouldNotParseUSBFrame description="{self.description}" />'
+
+
 class UnsupportedCEMIMessage(XKNXException):
     """Exception class for unsupported CEMI Messages."""
 

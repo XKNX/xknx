@@ -78,6 +78,30 @@ For AUTOMATIC connections this setting selects a host from a given keyfile.
 For TCP TUNNELING connections this setting requests a tunnel to that individual address.
 For SECURE tunnels this setting selects an interface from a given keyfile.
 
+## KNX USB interfaces
+
+```python
+from xknx.io import ConnectionConfig, ConnectionType, USBConfig
+from xknx.io.usb import find_usb_interfaces
+
+print(find_usb_interfaces())  # the KNX USB interfaces connected to this host
+connection_config = ConnectionConfig(
+    connection_type=ConnectionType.USB,
+    usb_config=USBConfig(serial_number="00C501053FB2"),
+)
+xknx = XKNX(connection_config=connection_config)
+```
+
+KNX USB interfaces need the optional `hidapi` package: `pip install xknx[usb]`. They work without a special driver on Windows, Linux and macOS; on Linux the user needs access to the interface's `/dev/hidraw*` (or `/dev/bus/usb`) device, e.g. through a udev rule. An interface that can't be opened through `/dev/hidraw*` is opened through libusb (`/dev/bus/usb`) where that is allowed. `find_usb_interfaces()` blocks while the operating system enumerates the USB devices; from an event loop call it through `loop.run_in_executor()`. On macOS hidapi has to be shut down at exit while the thread that imported it is still running, else the interpreter crashes then; xknx therefore imports it on a thread of its own that is kept until the interpreter exits. That only helps when xknx is the first to import `hid` in the process.
+
+Without a `USBConfig` the first known KNX USB interface is used. `vendor_id` and `product_id` select an interface, also one that is not among the known ones, `serial_number` one of several, and `path` the one at a hidapi device path - `path` alone also selects one that is not among the known ones. An unplugged interface is connected again when it is back (`auto_reconnect`), also on another USB port; of several identical interfaces without a serial number, the one at the old path is preferred, else the first one found is used.
+
+cEMI is used where the interface supports it, else EMI2 or EMI1 (older interfaces, standard frames only; cEMI and EMI1 have been tested with interfaces, EMI2 has not). On connect the interface is switched to the data link layer, and its own individual address becomes `xknx.current_address` (a cEMI interface whose address can't be read gives it in its first confirmation); an EMI1/EMI2 interface is switched back to its normal mode on disconnect, or restarted when its mode before isn't known. While the interface reports no bus connection, the connection state is DISCONNECTED and telegrams can't be sent. `xknx.knxip_interface.usb_interface_info()` returns what the interface reported: individual address, maximum APDU length (informational), supported EMI types, bus connection status, KNX manufacturer code and mask version.
+
+Through a KNX RF interface (mask 2311h) every telegram is sent with the interface's own Domain Address and frame number, which the interface inserts; `usb_interface_info().rf_domain_address` is the Domain Address it uses, and `xknx.io.usb.rf_medium_info(raw_cemi)` returns the RF medium information of a received frame (the sender's Domain Address, or its KNX Serial Number for a system broadcast, signal strength, battery state). With `USBConfig(rf_domain_address=...)` (6 octets) the interface's Domain Address is set to that one when it has another; the change persists in the interface, and the connect fails when it can't be set.
+
+Data Secure needs a cEMI interface: an EMI1/EMI2 interface can't send or receive extended frames, which most Data Secure telegrams need - xknx warns about it on connect. Devices ignore Data Secure telegrams from a sender they don't know, and the source address is part of the MAC: while the interface's individual address is unknown, Data Secure telegrams are not sent (receiving works), and an address that is none of the keyring's interfaces is warned about, as its telegrams may be dropped unless the devices know this address as a sender.
+
 # [](#header-2)Starting
 
 ```python
