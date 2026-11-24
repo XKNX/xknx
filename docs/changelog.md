@@ -8,6 +8,20 @@ nav_order: 2
 
 # Unreleased changes
 
+### Connection
+
+- KNX USB interfaces: `ConnectionConfig(connection_type=ConnectionType.USB, usb_config=USBConfig(...))` connects to the bus through a KNX USB interface - KNX v01.03.04 - Basic and System Components - Couplers 09.03 - §3. Needs the optional dependency `hidapi`: `pip install xknx[usb]`.
+  - cEMI is used where the interface supports it, else EMI2 or EMI1, whose data link layer messages are converted to and from cEMI - KNX v01.04.02 - External Message Interface 03.06.03 - §3. EMI1 and EMI2 carry standard frames only; with Data Secure such an interface is warned about.
+  - On connect the interface is set up: supported and active EMI type, bus connection status, mask version, then the data link layer (cEMI: PID_COMM_MODE, read back to verify - KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.4.2). After an M_Reset.ind it is set up again. An EMI1/EMI2 interface is switched back to its normal mode on disconnect, or restarted (DMP_Restart_LEmi1) when its mode before isn't known.
+  - The interface's individual address becomes `xknx.current_address`: a cEMI interface's from the cEMI Server Object (masks 0310h/2311h) or the Device Object, else from its first L_Data.con; EMI2 through PEI_Identify; EMI1 from 0117h for the BCU 1/BCU 2 masks. With Data Secure, Data Secure telegrams are not sent while the address is unknown, and an address that is none of the keyring's interfaces is warned about.
+  - The connection state follows the interface's bus connection: DISCONNECTED while it reports no bus, CONNECTED again when the bus is back.
+  - `xknx.io.usb.find_usb_interfaces()` lists the interfaces connected to the host, `KNXIPInterface.usb_interface_info()` what a connected one reported. An unplugged interface is connected again when it is back.
+  - On macOS hidapi is imported on a thread of its own that is kept until the interpreter exits: hidapi has to be shut down while the thread that imported it is still running, else the interpreter crashes at exit (also with `ConnectionConfig(threaded=True)`).
+  - `USBTunnel(busmonitor=True)` switches the interface to the bus monitor mode and passes every L_Busmon.ind on.
+  - `ConnectionConfig(individual_address=...)` sets the interface's individual address on connect when it has another one; the change persists in the interface, and the connect fails when it can't be set. cEMI: M_PropWrite of the cEMI Server Object (masks 0310h/2311h) or the Device Object - KNX v02.01.01 - Configuration Procedures 03.05.03 - §3.13.3.2, KNX v01.04.02 - External Message Interface 03.06.03 - §4.2.2.2; EMI1 with the address at 0117h: DMP_IndividualAddressWrite_LEmi1 with read back - KNX v02.01.02 - Management Procedures 03.05.02 - §3.10.2. EMI2 has no specified procedure.
+- `ResourceCEMIServerPropertyId.PID_CEMI_SERVER_SNA` (57) and `xknx.exceptions.CouldNotParseUSBFrame` added.
+- `CEMIErrorCode.CEMI_ERROR_ACCESS_DENIED` (0Bh) added - KNX v03 - USB TL for Secure devices AN203 - §2.5.2.
+
 ### Protocol
 
 - Decode and serialize negative `FunctionPropertyStateResponse` messages without return code and data (KNX v02.01.01 - Application Layer 03.03.07 - §3.4.7.3). A missing return code is represented as `None`, distinct from success (`0`).
