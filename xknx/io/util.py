@@ -24,9 +24,7 @@ async def get_default_local_ip(remote_ip: str = DEFAULT_MCAST_GRP) -> str | None
         loop = asyncio.get_running_loop()
         try:
             await loop.sock_connect(sock, (remote_ip, DEFAULT_MCAST_PORT))
-            local_ip = sock.getsockname()[0]
-            logger.debug("Using local ip: %s", local_ip)
-            return local_ip  # type: ignore[no-any-return]
+            return sock.getsockname()[0]  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             logger.warning(
                 "The system could not auto detect the source ip for %s on your operating system",
@@ -43,6 +41,13 @@ def get_local_ips() -> list[ifaddr.IP]:
 def get_local_interface_name(local_ip: str) -> str:
     """Return the name of the interface with the given ip."""
     return next((link.nice_name for link in get_local_ips() if link.ip == local_ip), "")
+
+
+def describe_local_interface(local_ip: str) -> str:
+    """Return `<interface name> (<local_ip>)` for log messages. Only the ip if no interface has it."""
+    if interface_name := get_local_interface_name(local_ip):
+        return f"{interface_name} ({local_ip})"
+    return local_ip
 
 
 def get_ip_for_adapter_name(name: str) -> str | None:
@@ -65,9 +70,7 @@ def find_local_ip(gateway_ip: str) -> str | None:
     for link in get_local_ips():
         network = ipaddress.IPv4Network((link.ip, link.network_prefix), strict=False)
         if gateway in network:
-            logger.debug("Using interface: %s", link.nice_name)
             return cast(str, link.ip)
-    logger.debug("No interface on same subnet as gateway found.")
     return None
 
 

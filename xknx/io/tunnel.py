@@ -20,6 +20,7 @@ from xknx.exceptions import (
     RequestResponseError,
     TunnellingAckError,
 )
+from xknx.io import util
 from xknx.knxip import (
     HPAI,
     ConnectRequestInformation,
@@ -776,6 +777,22 @@ class TCPTunnel(_Tunnel):
 
     async def setup_tunnel(self) -> None:
         """Set up tunnel before sending a ConnectionRequest."""
+        if logger.isEnabledFor(logging.DEBUG):
+            # the OS chooses the local interface of a TCP connection
+            try:
+                local_ip = self.transport.getsockname()[0]
+            except (CommunicationError, TypeError):
+                # no socket or no sockname (already closed) - nothing to log
+                return
+            logger.debug(
+                "Socket for %s to %s:%s connected over %s",
+                "secure TCP tunnel"
+                if self.connection_type is XknxConnectionType.TUNNEL_SECURE
+                else "TCP tunnel",
+                self.gateway_ip,
+                self.gateway_port,
+                util.describe_local_interface(local_ip),
+            )
 
     def _connection_lost(self) -> None:
         """Handle the TCP connection being closed by the peer or the network. Transport callback."""

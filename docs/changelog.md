@@ -21,6 +21,7 @@ nav_order: 2
 
 - Routing and `GatewayScanner`: multicast datagrams are sent from the interface of `local_ip` on macOS too. There the system routing table chose the interface, so with a `local_ip` on another interface telegrams and search requests left through the wrong network or were not sent at all. Linux and Windows already used the interface of `local_ip`.
 - Routing and `GatewayScanner`: multicast datagrams are sent with a TTL of 16 - the default of KNX v01.07.03 - Device Management 03.08.03 - §2.5.18 PID_TTL - instead of 1, so they can pass IP multicast routers. Since 3.7.0 outgoing routing telegrams did not leave the local subnet.
+- Debug logs state what a socket is opened for and over which local interface, also when `local_ip` is configured - e.g. `Starting socket for description request to 192.168.1.2:3671 over en0 (192.168.1.50)` or `Initializing socket for UDP tunnel to 192.168.1.2:3671 over en0 (192.168.1.50)` - instead of `Using interface: en0` or `Using local ip: 192.168.1.50`. For TCP tunnels the interface chosen by the OS is logged once the socket is connected.
 
 ### Management
 

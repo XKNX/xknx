@@ -211,7 +211,7 @@ class KNXIPInterface:
         tunnel_address = self.connection_config.individual_address
 
         logger.debug(
-            "Starting tunnel to %s:%s over TCP%s",
+            "Initializing socket for TCP tunnel to %s:%s%s",
             gateway_ip,
             gateway_port,
             f" requesting individual address {tunnel_address}"
@@ -275,7 +275,7 @@ class KNXIPInterface:
             )
 
         logger.debug(
-            "Starting secure tunnel to %s:%s over TCP",
+            "Initializing socket for secure TCP tunnel to %s:%s",
             gateway_ip,
             gateway_port,
         )
@@ -361,14 +361,17 @@ class KNXIPInterface:
             if local_ip is None:
                 raise XKNXException("No network interface found.")
             route_back = True
-            logger.debug("Falling back to default interface and enabling route back.")
+            logger.debug(
+                "No interface on same subnet as %s found. "
+                "Falling back to default interface and enabling route back.",
+                gateway_ip,
+            )
 
         logger.debug(
-            "Starting tunnel from %s:%s to %s:%s",
-            local_ip,
-            local_port,
+            "Initializing socket for UDP tunnel to %s:%s over %s",
             gateway_ip,
             gateway_port,
+            util.describe_local_interface(local_ip),
         )
         self._interface = UDPTunnel(
             self.xknx,
@@ -397,11 +400,11 @@ class KNXIPInterface:
         )
 
         logger.debug(
-            "Starting Routing from %s as %s via %s:%s",
-            local_ip,
+            "Initializing socket for routing as %s via %s:%s over %s",
             individual_address,
             multicast_group,
             multicast_port,
+            util.describe_local_interface(local_ip),
         )
         self._interface = Routing(
             self.xknx,
@@ -446,11 +449,11 @@ class KNXIPInterface:
         )
 
         logger.debug(
-            "Starting Secure Routing from %s as %s via %s:%s",
-            local_ip,
+            "Initializing socket for secure routing as %s via %s:%s over %s",
             individual_address,
             multicast_group,
             multicast_port,
+            util.describe_local_interface(local_ip),
         )
         self._interface = SecureRouting(
             self.xknx,

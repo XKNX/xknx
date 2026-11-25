@@ -52,12 +52,23 @@ async def request_description(
                 f"No network interface found to request gateway info from {gateway_ip}:{gateway_port}"
             )
         route_back = True
+        logger.debug(
+            "No interface on same subnet as %s found. "
+            "Falling back to default interface and enabling route back.",
+            gateway_ip,
+        )
     try:
         local_ip = await util.validate_ip(local_ip, address_name="Local IP")
         gateway_ip = await util.validate_ip(gateway_ip, address_name="Gateway IP")
     except XKNXException as err:
         raise CommunicationError("Invalid address") from err
 
+    logger.debug(
+        "Starting socket for description request to %s:%s over %s",
+        gateway_ip,
+        gateway_port,
+        util.describe_local_interface(local_ip),
+    )
     transport = UDPTransport(
         local_addr=(local_ip, local_port),
         remote_addr=(gateway_ip, gateway_port),
