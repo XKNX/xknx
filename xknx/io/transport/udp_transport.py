@@ -15,6 +15,7 @@ import socket
 import sys
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP
+from xknx.io import util
 from xknx.knxip import HPAI, KNXIPFrame
 
 from .ip_transport import KNXIPTransport
@@ -42,14 +43,17 @@ class UDPTransport(KNXIPTransport):
     class UDPTransportFactory(asyncio.DatagramProtocol):
         """Abstraction for managing the asyncio-udp transports."""
 
-        __slots__ = ("data_received_callback", "transport")
+        __slots__ = ("data_received_callback", "purpose", "transport")
 
         def __init__(
-            self, data_received_callback: Callable[[bytes, tuple[str, int]], None]
+            self,
+            data_received_callback: Callable[[bytes, tuple[str, int]], None],
+            purpose: str = "UDP communication",
         ) -> None:
             """Initialize UDPTransportFactory class."""
             self.transport: asyncio.BaseTransport | None = None
             self.data_received_callback = data_received_callback
+            self.purpose = purpose
 
         def connection_made(self, transport: asyncio.BaseTransport) -> None:
             """Assign transport. Callback after udp connection was made."""
@@ -66,7 +70,7 @@ class UDPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing UDP transport.")
+            logger.debug("Closing socket for %s.", self.purpose)
 
     __slots__ = (
         "local_addr",
@@ -80,8 +84,9 @@ class UDPTransport(KNXIPTransport):
         local_addr: tuple[str, int],
         remote_addr: tuple[str, int],
         multicast: bool = False,
+        purpose: str = "UDP communication",
     ) -> None:
-        """Initialize UDPTransport class."""
+        """Initialize UDPTransport class. `purpose` states in logs what the socket is used for."""
         if not isinstance(local_addr, tuple):
             raise TypeError()
         if not isinstance(remote_addr, tuple):
@@ -89,6 +94,7 @@ class UDPTransport(KNXIPTransport):
         self.local_addr = local_addr
         self.remote_addr = remote_addr
         self.multicast = multicast
+        self.purpose = purpose
 
         self.callbacks = []
         self.local_addr_assigned: tuple[str, int] | None = None
@@ -160,6 +166,7 @@ class UDPTransport(KNXIPTransport):
         loop = asyncio.get_running_loop()
         udp_transport_factory = UDPTransport.UDPTransportFactory(
             data_received_callback=self.data_received_callback,
+            purpose=self.purpose,
         )
         if self.multicast:
             sock = UDPTransport.create_multicast_sock(
@@ -175,6 +182,13 @@ class UDPTransport(KNXIPTransport):
             local_addr=self.local_addr,
         )
         self.local_addr_assigned = self.getsockname()
+        logger.debug(
+            "Started socket for %s to %s:%s over %s",
+            self.purpose,
+            self.remote_addr[0],
+            self.remote_addr[1],
+            util.describe_local_interface(self.local_addr_assigned[0]),
+        )
         if _is_multicast(self.remote_addr[0]):
             self._configure_multicast_send(self.transport.get_extra_info("socket"))
 

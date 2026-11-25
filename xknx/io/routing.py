@@ -209,6 +209,7 @@ class Routing(Interface):
             local_addr=(self.local_ip, 0),
             remote_addr=(self.multicast_group, self.multicast_port),
             multicast=True,
+            purpose="routing",
         )
 
     ####################

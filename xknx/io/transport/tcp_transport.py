@@ -11,6 +11,7 @@ from collections.abc import Callable
 import logging
 
 from xknx.exceptions import CommunicationError, CouldNotParseKNXIP, IncompleteKNXIPFrame
+from xknx.io import util
 from xknx.io.const import TCP_CONNECT_TIMEOUT
 from xknx.knxip import HPAI, HostProtocol, KNXIPFrame, KNXIPHeader
 
@@ -27,15 +28,22 @@ class TCPTransport(KNXIPTransport):
     class TCPTransportFactory(asyncio.Protocol):
         """Abstraction for managing the asyncio-tcp protocol."""
 
-        __slots__ = ("connection_lost_callback", "data_received_callback", "transport")
+        __slots__ = (
+            "connection_lost_callback",
+            "data_received_callback",
+            "purpose",
+            "transport",
+        )
 
         def __init__(
             self,
             data_received_callback: Callable[[bytes], None],
             connection_lost_callback: Callable[[], None],
+            purpose: str = "TCP communication",
         ) -> None:
             """Initialize UDPTransportFactory class."""
             self.transport: asyncio.BaseTransport | None = None
+            self.purpose = purpose
             self.data_received_callback = data_received_callback
             self.connection_lost_callback = connection_lost_callback
 
@@ -63,7 +71,7 @@ class TCPTransport(KNXIPTransport):
 
         def connection_lost(self, exc: Exception | None) -> None:
             """Log error. Callback for connection lost."""
-            logger.debug("Closing TCP transport. %s", exc)
+            logger.debug("Closing socket for %s. %s", self.purpose, exc)
             self.connection_lost_callback()
 
     __slots__ = ("_buffer", "_connection_lost_cb", "remote_hpai")
@@ -72,9 +80,11 @@ class TCPTransport(KNXIPTransport):
         self,
         remote_addr: tuple[str, int],
         connection_lost_cb: Callable[[], None] | None = None,
+        purpose: str = "TCP communication",
     ) -> None:
-        """Initialize TCPTransport class."""
+        """Initialize TCPTransport class. `purpose` states in logs what the socket is used for."""
         self.remote_addr = remote_addr
+        self.purpose = purpose
         self.remote_hpai = HPAI(*remote_addr, protocol=HostProtocol.IPV4_TCP)
 
         self.callbacks = []
@@ -140,6 +150,7 @@ class TCPTransport(KNXIPTransport):
         tcp_transport_factory = TCPTransport.TCPTransportFactory(
             data_received_callback=self.data_received_callback,
             connection_lost_callback=self._connection_lost,
+            purpose=self.purpose,
         )
         loop = asyncio.get_running_loop()
         # drop a partial frame left over from a previous connection
@@ -158,6 +169,14 @@ class TCPTransport(KNXIPTransport):
                 f"TCP connection to {self.remote_hpai} could not be established "
                 f"within {TCP_CONNECT_TIMEOUT} seconds"
             ) from None
+        # the OS chooses the local interface of a TCP connection
+        logger.debug(
+            "Started socket for %s to %s:%s over %s",
+            self.purpose,
+            self.remote_addr[0],
+            self.remote_addr[1],
+            util.describe_local_interface(self.getsockname()[0]),
+        )
 
     def stop(self) -> None:
         """Stop socket and drop buffered data of the closed connection."""

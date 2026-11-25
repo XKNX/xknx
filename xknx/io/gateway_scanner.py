@@ -261,11 +261,11 @@ class GatewayScanner:
             raise XKNXException("No usable network interface found.")
         local_ip = await util.validate_ip(_local_ip)
         interface_name = util.get_local_interface_name(local_ip=local_ip)
-        logger.debug("Searching on %s / %s", interface_name, local_ip)
 
         udp_transport = UDPTransport(
             local_addr=(local_ip, 0),
             remote_addr=(self.xknx.multicast_group, self.xknx.multicast_port),
+            purpose="gateway search",
         )
         udp_transport.register_callback(
             partial(self._response_rec_callback, interface=interface_name, queue=queue),

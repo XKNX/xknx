@@ -223,11 +223,13 @@ class SecureSession(TCPTransport, _IPSecureTransportLayer):
         user_password: str,
         device_authentication_password: str | None = None,
         connection_lost_cb: Callable[[], None] | None = None,
+        purpose: str = "secure TCP communication",
     ) -> None:
         """Initialize SecureSession class."""
         super().__init__(
             remote_addr=remote_addr,
             connection_lost_cb=connection_lost_cb,
+            purpose=purpose,
         )
         self._device_authentication_code: bytes | None = (
             derive_device_authentication_password(device_authentication_password)
@@ -506,12 +508,14 @@ class SecureGroup(UDPTransport, _IPSecureTransportLayer):
         remote_addr: tuple[str, int],
         backbone_key: bytes,
         latency_ms: int = 1000,
+        purpose: str = "secure routing",
     ) -> None:
         """Initialize SecureGroup class."""
         super().__init__(
             local_addr=local_addr,
             remote_addr=remote_addr,
             multicast=True,
+            purpose=purpose,
         )
         self._key = backbone_key
         self.secure_timer = SecureSequenceTimer(

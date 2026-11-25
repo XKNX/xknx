@@ -24,10 +24,11 @@ knx_logger = logging.getLogger("xknx.knx")
 class KNXIPTransport(ABC):
     """Abstract base class for KNX/IP transports."""
 
-    __slots__ = ("callbacks", "local_hpai", "remote_addr", "transport")
+    __slots__ = ("callbacks", "local_hpai", "purpose", "remote_addr", "transport")
 
     callbacks: list[KNXIPTransport.Callback]
     local_hpai: HPAI
+    purpose: str  # what the socket is used for - stated in logs
     remote_addr: tuple[str, int]
     transport: asyncio.BaseTransport | None
 

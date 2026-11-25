@@ -520,6 +520,7 @@ class UDPDeviceManagementConnection(_DeviceManagementConnection):
             local_addr=(self.local_ip, self.local_port),
             remote_addr=(self.gateway_ip, self.gateway_port),
             multicast=False,
+            purpose="UDP device management",
         )
 
     async def _setup_connection(self) -> None:
@@ -632,6 +633,7 @@ class TCPDeviceManagementConnection(_DeviceManagementConnection):
         self.transport = TCPTransport(
             remote_addr=(self.gateway_ip, self.gateway_port),
             connection_lost_cb=self._transport_connection_lost,
+            purpose="TCP device management",
         )
 
     def _transport_connection_lost(self) -> None:
@@ -723,4 +725,5 @@ class SecureDeviceManagementConnection(TCPDeviceManagementConnection):
             user_password=self._user_password,
             device_authentication_password=self._device_authentication_password,
             connection_lost_cb=self._transport_connection_lost,
+            purpose="secure device management",
         )

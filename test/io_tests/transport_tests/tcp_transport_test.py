@@ -179,6 +179,7 @@ class TestTCPTransport:
         # a partial frame received right before the connection was lost
         transport._buffer = response[:3]
         asyncio_transport = Mock()
+        asyncio_transport.get_extra_info.return_value = ("192.168.1.50", 54321)
         with patch.object(
             asyncio.get_running_loop(),
             "create_connection",

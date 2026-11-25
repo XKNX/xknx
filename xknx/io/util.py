@@ -71,6 +71,7 @@ def find_local_ip(gateway_ip: str) -> str | None:
         network = ipaddress.IPv4Network((link.ip, link.network_prefix), strict=False)
         if gateway in network:
             return cast(str, link.ip)
+    logger.debug("No interface on same subnet as gateway found.")
     return None
 
 
