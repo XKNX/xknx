@@ -872,11 +872,8 @@ class P2PConnection:
             while True:
                 # on timeout the Future is cancelled so create a new one
                 self._ack_waiter = asyncio.get_running_loop().create_future()
-                await self.xknx.cemi_handler.send_telegram(telegram)
-                try:
-                    async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
-                        ack = await self._ack_waiter
-                except TimeoutError:
+                ack = await self._send_awaiting_ack(telegram, self._ack_waiter)
+                if ack is None:
                     if self._rep_count >= MANAGEMENT_MAX_REPETITIONS:
                         # E18 -> A6
                         error = ManagementConnectionTimeout(
@@ -907,14 +904,38 @@ class P2PConnection:
                     self._rep_count,
                     MANAGEMENT_MAX_REPETITIONS,
                 )
-        except ConfirmationError as exc:
-            raise ManagementConnectionError(
-                f"Error while sending Telegram: {exc}"
-            ) from exc
         except CommunicationError as exc:
             raise ManagementConnectionError("Error while sending Telegram") from exc
         finally:
             self._ack_waiter = None
+
+    async def _send_awaiting_ack(
+        self, telegram: Telegram, ack_waiter: asyncio.Future[TAck | TNak]
+    ) -> TAck | TNak | None:
+        """
+        Send `telegram` and wait for the device's ACK or NAK - None without one.
+
+        KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: the local confirmation
+        of a T_Data_Connected changes nothing in OPEN_WAIT (E22, action A0). A
+        telegram the interface didn't confirm is repeated like any other the
+        device didn't acknowledge, once the acknowledge timeout passed (E17) -
+        waiting for the confirmation took that long already. An ACK or NAK the
+        device sent meanwhile is taken.
+        """
+        try:
+            await self.xknx.cemi_handler.send_telegram(telegram)
+        except ConfirmationError:
+            if not ack_waiter.done():
+                logger.info(
+                    "%s: the interface didn't confirm the telegram.", self.address
+                )
+                return None
+            return ack_waiter.result()
+        try:
+            async with asyncio.timeout(MANAGEMENT_ACK_TIMEOUT):
+                return await ack_waiter
+        except TimeoutError:
+            return None
 
     async def _receive(self, expected_payload: type[APCI] | None) -> Telegram:
         """Wait for a telegram from the KNX device."""

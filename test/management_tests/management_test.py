@@ -244,6 +244,78 @@ async def test_nak_repeats_telegram(time_travel: EventLoopClockAdvancer) -> None
     await conn.disconnect()
 
 
+async def test_unconfirmed_telegram_is_repeated() -> None:
+    """Test a telegram the interface didn't confirm is repeated, not an error."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    def send(telegram: Telegram) -> None:
+        if xknx.cemi_handler.send_telegram.call_count == 1:
+            # lost by the interface: no L_Data.con, no ACK
+            raise ConfirmationError("")
+        xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+
+    xknx.cemi_handler.send_telegram.side_effect = send
+    # KNX v01.02.03 - Transport Layer 03.03.04 - §5.4.1: E22 -> A0, then the
+    # acknowledge timeout repeats it (E17 -> A9)
+    await conn.send_data(apci.DeviceDescriptorRead(descriptor=0))
+    assert (
+        xknx.cemi_handler.send_telegram.call_args_list
+        == [call(_descriptor_read(xknx, ia, 0))] * 2
+    )
+    xknx.cemi_handler.send_telegram.side_effect = None
+    await conn.disconnect()
+
+
+async def test_ack_of_unconfirmed_telegram_is_taken() -> None:
+    """Test an ACK received while the confirmation was awaited ends the wait."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    def send(telegram: Telegram) -> None:
+        # the device got it, only the confirmation of the interface was lost
+        xknx.management.process(_from_device(xknx, ia, tpci.TAck(0)))
+        raise ConfirmationError("")
+
+    xknx.cemi_handler.send_telegram.side_effect = send
+    await conn.send_data(apci.DeviceDescriptorRead(descriptor=0))
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0))
+    ]
+    xknx.cemi_handler.send_telegram.side_effect = None
+    await conn.disconnect()
+
+
+async def test_never_confirmed_telegram_closes_connection() -> None:
+    """Test a telegram never confirmed closes the connection as a missing ACK does."""
+    xknx = XKNX()
+    xknx.cemi_handler = AsyncMock()
+    ia = IndividualAddress("4.0.1")
+    conn = await xknx.management.connect(ia)
+    xknx.cemi_handler.send_telegram.reset_mock()
+
+    def send(telegram: Telegram) -> None:
+        if isinstance(telegram.tpci, tpci.TDataConnected):
+            raise ConfirmationError("")
+
+    xknx.cemi_handler.send_telegram.side_effect = send
+    with pytest.raises(ManagementConnectionTimeout):
+        await conn.send_data(apci.DeviceDescriptorRead(descriptor=0))
+    # E18 -> A6
+    await asyncio.sleep(0)
+    assert xknx.cemi_handler.send_telegram.call_args_list == [
+        call(_descriptor_read(xknx, ia, 0))
+    ] * (MANAGEMENT_MAX_REPETITIONS + 1) + [call(_disconnect(xknx, ia))]
+    with pytest.raises(ManagementConnectionRefused):
+        await conn.send_data(apci.DeviceDescriptorRead(descriptor=0))
+
+
 async def test_nak_after_last_repetition() -> None:
     """Test a NAK of the last repetition closes the connection."""
     xknx = XKNX()
